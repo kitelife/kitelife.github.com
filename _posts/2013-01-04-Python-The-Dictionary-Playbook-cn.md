@@ -12,7 +12,7 @@ tags: [Python, 翻译]
 
 上演： **字典剧本**
 
-![playbook](/BlackWhite/assets/pics/The_playbook.png)
+![playbook](/assets/pics/The_playbook.png)
 
 1.
 “你在吗？”

@@ -66,7 +66,7 @@ tags: [分布式系统, 翻译]
 
 图1.1是系统的一张功能简化图。
 
-<img src ="/BlackWhite/assets/pics/imageHosting1.jpg" alt="imageHosting1.jpg">
+<img src ="/assets/pics/imageHosting1.jpg" alt="imageHosting1.jpg">
 <center>图1.1：图片托管应用的简化架构图</center>
 
 在这个图片托管例子中，系统必须明显地快速，数据存储可靠，并且所有这些属性高度可扩展。构建该应用的一个小型版本轻而易举，也很容易搭载在单个服务器上；然而，那样本章就没多大意思了。假设我们想构建一个能够发展得和Flickr一样庞大的应用。
@@ -82,7 +82,7 @@ tags: [分布式系统, 翻译]
 现在假设该服务被大量使用；这种情况下很容易看到写操作对读取图片所花时间的影响有多大（因为这两个功能将竞争共享资源）。依赖于这种架构，这个影响会很大。即使上传和下载速度相同（多数IP网络不是这样的，而是以下载速度：上传速度为3：1的比例进行设计），文件读取操作通常是从缓存中读，而写操作最终是要写道磁盘（在最终一致的情况下，也许还要多次写）。即使所有东西都在内存中或者都从磁盘上读取（如SSD），数据库写操作几乎总是比读操作慢。（Pole Position，一个数据库基准测试的开源工具，[http://polepos.org/](http://polepos.org/)，测试结果见[http://polepos.sourceforge.net/results/PolePositionClientServer.pdf](http://polepos.sourceforge.net/results/PolePositionClientServer.pdf)）。
 
 该设计的另一个潜在问题是像Apache或lighttpd这样的web服务器通常有可以维持的并发连接数量的上限（默认值为500左右，但可以更高）。在高流量下，写操作会迅速消耗完允许的并发连接数。由于读操作可以是异步的，或借助于其他性能优化方法，如gzip压缩或分块传输编码，web服务器可以在读操作之间更快速地切换服务，以及在客户端之间快速切换从而能够在每秒内服务于比连接最大值（使用Apache，将最大连接数设置为500，每秒服务数千个读操作请求并不罕见）更多的请求。另一方面，写操作倾向于在图片上传期间维持一个打开的连接，在多数家庭网络中，上传一个1MB的文件需要花费多于1秒的时间，这样web服务器仅可以处理500个这样的并发写操作。
-<img src ="/BlackWhite/assets/pics/imageHosting2.png" alt="imageHosting2.png">
+<img src ="/assets/pics/imageHosting2.png" alt="imageHosting2.png">
 <center>图1.2：切分读写操作</center>
 
 为这类瓶颈做规划是将图片的读写操作切分成独立服务的一个很好的案例。如图1.2所示。这就允许我们单独地对两者中任意一个做扩展（因为通常读操作总是比写操作多），也有助于厘清每个点上正在发生的事情。最后，这也分离了未来的忧患，从而更易于排解故障和对读操作较慢这类问题进行扩展。
@@ -106,7 +106,7 @@ tags: [分布式系统, 翻译]
 服务冗余的另一关键部分是创建一个*无共享(shared-nothing)的架构*。使用这种架构，每个节点的运维工作都能独立于其它节点，也没有中心“大脑”来管理状态或协调节点的行为。这有助于提高可扩展性，因为不需要特殊的条件或了解就能添加新的节点。然而，最重要的是这种系统不会有单点故障，因此对于故障更有弹性。
 
 例如，在我们的图片服务器应用中，所有的图片都在另一处（理想情况是在不同的地理位置，从而能够应对地震或数据中心发生火灾一类的灾难）的硬件上存放着冗余的拷贝，提供图片访问的服务也是冗余的，均潜在地服务于请求（见图1.3.）（负载均衡器是使其成为可能的一种绝佳方法，将在下文详述）。
-<img src ="/BlackWhite/assets/pics/imageHosting3.png" alt="imageHosting3.png">
+<img src ="/assets/pics/imageHosting3.png" alt="imageHosting3.png">
 <center>图1.3：具备冗余的图片托管应用</center>
 
 ### <strong>分区</strong>

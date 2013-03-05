@@ -29,7 +29,7 @@ tags: [理论, 翻译]
 算法读取样本编码后的版本将能够完美地重现原来的数据："A" 5次，"B"
 2次，等等。这个简单算法的使用非常广泛，被称为行程长度编码（RLE）：写下字符的每次行程有多长。以古老的PCX图像格式为例来说明一种广泛使用的标准RLE。
 <center>
-<img src="/BlackWhite/assets/pics/compression-stripes.png"
+<img src="/assets/pics/compression-stripes.png"
 alt="compression-stripes.png">
 </center>
 <center>图1：条纹（<a
@@ -84,7 +84,7 @@ RLE的一个主要问题是它处理的是数据中的连续值：图1中，RLE�
 一个经典的示例是MPEG音频标准---通过去除高频声音相关的额外数据来降低音频文件的大小。这个标准的Layer-3规格允许多种去除数据的设定，这样渐进地从音频样本中去除更多的信息。
 
 <center>
-<img src="/BlackWhite/assets/pics/compression-mp3.gif"
+<img src="/assets/pics/compression-mp3.gif"
 alt="compression-mp3.gif">
 </center>
 <center>

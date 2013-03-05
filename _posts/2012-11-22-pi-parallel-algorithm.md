@@ -6,9 +6,9 @@ tags: [算法, 并行, Python]
 
 我们都知道圆周率pi的值是3.141592653...，那么这个值是怎么算出来的呢？一种方式是通过某种方式算出圆的面积或者周长，然后根据公式$ S = pi \times r^2 $(或$ L = 2 \times pi \times r $)算出pi的值。但如何用计算机通过某种算法计算而得？有没有并行的算法？
 
-[Introduction to Parallel Programming and MapReduce](/BlackWhite/assets/files/mapreduce_intro.pdf)一文中介绍了一种基于概率的并行算法---假设有个正方形，里面有个內切圆。
+[Introduction to Parallel Programming and MapReduce](/assets/files/mapreduce_intro.pdf)一文中介绍了一种基于概率的并行算法---假设有个正方形，里面有个內切圆。
 
-![sample pic](/BlackWhite/assets/pics/inscribe.png)
+![sample pic](/assets/pics/inscribe.png)
 
 设内切圆的半径为$ r $，则
 

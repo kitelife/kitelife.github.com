@@ -1,0 +1,144 @@
+---
+layout: post
+title: 【译文】python周刊-第70期
+tags: [python, python-weekly, 翻译]
+---
+
+原文：[issue 70 of Python Weekly](http://us2.campaign-archive1.com/?u=e2e180baf855ac797ef407fc7&id=7fc9a4c2e2&e=59f9a3c7e0)
+
+译者：[youngsterxyf](https://github.com/youngsterxyf)
+
+**文章，教程和讲座(Articles, Tutorials and Talks)**
+
+[使用Python Hacking超级马里奥(Hacking Super Mario Bros. With Python)](http://jakevdp.github.com/blog/2013/01/13/hacking-super-mario-bros-with-python/)
+
+This post shows how you can use matplotlib's animation tool to create animated
+gifs based on Super Mario Bros in Python.
+
+该文展示如何使用matplotlib的动画工具使用Python创建超级马里奥的动画效果gif图。
+
+[实现一个Python OAuth 2.0 提供方 - 第2部分 - 授权服务提供方(Implementing a Python OAuth 2.0 Provider - Part2 - Authorization Provider)](http://tech.shift.com/post/40299429203/implementing-a-python-oauth-2-0-provider-part-2)
+
+Last week, the first part covered the Basics of the OAuth 2.0 Authorization
+Flow. This second part will walk through how we used pyoauth2 to set up a
+minimal Authorization Provider for SHIFT. This post covers setting up endpoints
+for steps 2 and 5 from the overview.
+
+上周，第一部分阐述了OAuth 2.0授权的基本流程。
+该第二部分将大致讲述怎样使用pyoauth2为SHIFT公司建立一个最基本的授权提供方。该文概述授权流程从第2步到第5步端到端的具体实现。
+
+[优化你的App Engine应用(Optimizing Your App Engine App)](http://proppy-appstats.appspot.com/#1)
+
+In this presentation, Johan Euphrosine, Google Developer Program Engineer,
+   shows Datastore pattern and Anti-pattern and how to optimize your App Engine
+   App with Appstats.
+
+该演讲稿中，谷歌开发者计划工程师，Johan
+Euphrosine，解释了数据存储模式与反模式，以及怎样使用Appstats优化App
+Engine应用。
+
+[使用Rmagic来弥补Python统计分析工具包的缺失(Filling in Python's gaps in statistics packages with Rmagic)](http://www.randalolson.com/2013/01/14/filling-in-pythons-gaps-in-statistics-packages-with-rmagic/)
+
+Rmagic is a package which allows you to run R code within the IPython
+interface. This post explains how it works.
+
+Rmagic是一个允许通过IPython接口执行R代码的Python包。该文解释了Rmagic是如何工作的。
+
+[使用Filepicker和Twilio实现通过短信息服务发送图片(Sending Images via SMS with Filepicker and Twilio)](http://www.twilio.com/blog/2013/01/sending-images-via-sms-with-filepicker-and-twilio.html)
+
+Filepicker.io provides APIs to connect, process, and store any piece of content
+in your web application. For example if you are building an application that
+needs to send files or photos to your users via SMS, then you can use
+Filepicker.io with Twilio to make this happen. Let's explore how to build this.
+
+Filepicker.io提供API用于连接，处理，以及存储你的web应用中的任何内容。例如，如果你正在构建的应用需要通过短消息服务给用户发送文件或照片，那么你可以使用Filepicker.io配合Twilio来实现。该文探讨了如何构建这一功能。
+
+[Versi教程(Versi Tutorial)](http://lightbird.net/larks/versi.html)
+
+Versi is a clone of the Reversi game. The goal of the game is to capture more
+tiles than your enemy. You can capture the enemy's tiles by placing a new piece
+on the blank tile so that one or more of enemy pieces are enclosed on a line
+between your placed piece and one of your existing pieces.
+
+Versi是黑白棋游戏的克隆版本。这个游戏的目标是比你的敌人捕获更多的棋子。你可以在空白之处放置新棋子来捕获敌人的瓷砖，这样，一行中，在刚放置的棋子与你原来就有的棋子之间就包围了一个或多个敌人的棋子。
+
+[使用Pandas与Matplotlib进行蒙特卡洛法Web服务器统计分析(Monte Carlo Web-Server Statistics using Pandas and Matplotlib)](http://ganwellresource.blogspot.com/2013/01/monte-carlo-web-server-statistics-using.html)
+
+The author collected the web-server statistic-data by connecting to random web
+servers and asking it for its name. He was able to maintain 80'0000 concurrent
+connections on linux using tornados ioloop when he hit the limit of the
+upstream-bandwidth at home.
+
+通过连接到随机选择的web服务器并请求其名称，作者收集了一些web服务器统计数据。文中说明作者使用tornado的ioloop能够维持80'0000个并发连接，直到达到家庭带宽的上限。
+
+[使用Django，Node.js以及Socket.IO等实现实时应用(Realtime Django Using Node.js and Socket.IO)](http://maxburstein.com/blog/realtime-django-using-nodejs-and-socketio/)
+
+The goal of this post is to show you how to build a realtime chatroom using
+Django, Redis, and Socket.IO. At a high level this post will show you how you
+can convert your REST based app into a realtime web app.
+
+该文的目的是阐述如何使用Django, Redis,
+    以及Socket.IO构建一个实时网络聊天室。从较高层面来看，该文将阐述如何将基于REST的应用转变为实时web应用。
+
+[科学家们在使用哪个版本的Python解释器以及相关的库？(What Python Installations Are Scientists Using?)](http://astrofrog.github.com/blog/2013/01/13/what-python-installations-are-scientists-using/)
+
+This post gives you an overview of the results of a survey conducted to find
+out what Python, Numpy, and Scipy versions the Scientists are using.
+
+该文概述了一个调查的结果，该调查旨在找出科学家们正在使用哪个版本的Python解释器，Numpy以及Scipy。
+
+[Python与Django Web开发(Web Development with Python and Django)](http://www.slideshare.net/mpirnat/web-development-with-python-and-django)
+
+Slides from CodeMash 2013 Precompiler session, "Web Development with Python and
+Django", including a breezy introduction to the Python programming language and
+the Django web framework. The example code repository is available
+[here](https://github.com/finiteloopsoftware/django-precompiler/).
+
+来自CodeMash 2013预编译器会议的幻灯片，“Python与Django
+Web开发”，生动地介绍了Python程序设计语言和Django
+Web框架。示例代码库见[这里](https://github.com/finiteloopsoftware/django-precompiler/)。
+
+[可替代Bash实用脚本的Python脚本(Python Scripts as a Replacement for Bash Utility Scripts)](http://www.linuxjournal.com/content/python-scripts-replacement-bash-utility-scripts)
+
+Instead of replacing a series of bash commands with one Python script, it often
+is better to have Python do only the heavy lifting in the middle. This allows
+for more modular and reusable scripts, while also tapping into the power of all
+that Python offers. Using stdin as a file object allows Python to read input,
+     which is piped to it from other commands, and writing to stdout allows it
+     to continue passing the information through the piping system. Combining
+     information like this can make for some very powerful programs.
+
+相较于使用一个Python脚本来替换一系列的bash命令，仅使用Python来完成其中的重活会更好些。这样的脚本模块化和可复用性更好，同时利用了Python的优势。将标准输入作为一个文件对象来使用，允许Python读取其他命令通过管道提供给它的输入。写到标准输出也允许Python通过管道系统继续传递信息。像这样把信息结合起来能够产生一些非常强大的程序。
+
+[pytest入门(pytest introduction)](http://pythontesting.net/framework/pytest-introduction/)
+
+A post giving you an overview of pytest, a simple example, then throw pytest at
+my markdown.py project. It also cover fixtures, test discovery, and running
+unittests with pytest.
+
+该文章先概述pytest，而后给出一个简单的示例，并将pytest应用于作者的markdown.py项目。文章也涵盖了Pytest的一些测试夹具，测试发现，以及配合pytest执行unittests。
+
+[PyHacking攻略(PyHacking step by step)](http://raspberry-python.blogspot.com/2013/01/pyhacking-step-by-step.html)
+
+[增强Python Shell以更快速地构建应用，同时减少重复工作(Beefing up the Python Shell to build apps faster and DRYer)](http://benplesser.com/2013/01/10/beefing-up-the-python-shell-to-build-apps-faster-and-dryer/)
+
+[Salt Stack起步---另一个Python实现的配置管理系统(Getting Started with Salt Stack-the Other Configuration Management System Built with Python)](http://www.linuxjournal.com/content/getting-started-salt-stack-other-configuration-management-system-built-python)
+
+[使用Python管理Apple iCloud笔记(Managing Apple iCloud Notes with Python)](http://blog.rootshell.be/2013/01/11/managing-apple-icloud-notes-with-python/)
+
+[如何使用Python实现一个可撤销可重做的Maya命令(How to implement an undoable and redoable Maya command in Python)](http://www.youtube.com/watch?v=BZyXe3MhEyI)
+
+[Python-使用concurrent.futures并行化计算密集型任务(Python - paralellizing CPU-bound tasks with concurrent.futures)](http://eli.thegreenplace.net/2013/01/16/python-paralellizing-cpu-bound-tasks-with-concurrent-futures/)
+
+**有趣的项目，工具和库(Interesting Projects, Tools and Libraries)**
+
+[howdoi](https://github.com/gleitz/howdoi)
+
+Are you a hack programmer? Do you find yourself constantly Googling for how to
+do basic programming tasks? Howdoi gives quick answers to many proragmming
+questions via the command line.
+
+[Baboon Project](http://baboon-project.org/)
+
+Do you waste your time in resolving merge conflicts with your favorite source
+code manager? 

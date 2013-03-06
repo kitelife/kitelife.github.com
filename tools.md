@@ -15,6 +15,7 @@ title: 工具集
 - [awk.vim](https://github.com/vim-scripts/awk.vim)(awk代码自动缩进)
 - [jedi-vim](https://github.com/davidhalter/jedi-vim)(Python代码自动完成，对jedi自动完成库的vim绑定)
 - [pep8](https://github.com/vim-scripts/pep8)(检查Python源码是否符合PEP8风格)
+- [vim-gitgutter](https://github.com/airblade/vim-gitgutter)(A Vim plugin which shows a git diff in the 'gutter' (sign column). It shows whether each line has been added, modified, and where lines have been removed.)
 
 ##Git
 ###书籍：

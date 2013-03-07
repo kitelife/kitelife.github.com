@@ -133,7 +133,7 @@ JPEG应用了MPEG音频所使用算法的一种变种，从包含于图片的频
 <img src="/assets/pics/compression-mpeg-diff.gif" alt="compression-mpeg-diff.gif">
 </center>
 <center>
-图5：连续视频帧，以及它们的不同之处（[NASA JPL](http://jpl.nasa.gov/)）
+图5：连续视频帧，以及它们的不同之处（<a href="http://jpl.nasa.gov/">NASA JPL</a>）
 </center>
 
 图5中，较之第一帧，视频的第二帧显示的变化非常小：仅仅航天飞机的排气羽流有显著的运动。事实上，发射塔后面的航天飞机固体助推器（SRB）(译注：见Wikipedia词条[航天飞机固体助推器](http://zh.wikipedia.org/wiki/%E8%88%AA%E5%A4%A9%E9%A3%9E%E6%9C%BA%E5%9B%BA%E4%BD%93%E5%8A%A9%E6%8E%A8%E5%99%A8))和天空在两帧之间完全没有变化。那么就不用存储图片的这些部分，可能存储一个值：“没有变化”就可以了。
@@ -146,7 +146,7 @@ MPEG视频标准利用了这种内在的冗余作为算法的一部分。理论�
 <img src="/assets/pics/compresion-mpeg-graph.gif" alt="compresion-mpeg-graph.gif">
 </center>
 <center>
-图6：一个4秒的MPEG视频片段的帧大小（[BBC News](http://news.bbc.co.uk/)）
+图6：一个4秒的MPEG视频片段的帧大小（<a href="http://news.bbc.co.uk/">BBC News</a>）
 </center>
 
 上图6中，视频片段每间隔25帧或一秒插入I-帧。后续的每个P-帧都比I-帧小得多，由于政治家在接受采访时一般都不会频繁移动，因此不同视频帧之间的不同之处非常更少。

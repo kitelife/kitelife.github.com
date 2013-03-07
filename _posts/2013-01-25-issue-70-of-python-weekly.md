@@ -60,7 +60,7 @@ tiles than your enemy. You can capture the enemy's tiles by placing a new piece
 on the blank tile so that one or more of enemy pieces are enclosed on a line
 between your placed piece and one of your existing pieces.
 
-Versi是黑白棋游戏的克隆版本。这个游戏的目标是比你的敌人捕获更多的棋子。你可以在空白之处放置新棋子来捕获敌人的瓷砖，这样，一行中，在刚放置的棋子与你原来就有的棋子之间就包围了一个或多个敌人的棋子。
+Versi是黑白棋游戏的克隆版本。这个游戏的目标是比你的敌人捕获更多的棋子。你可以在空白之处放置新棋子来捕获敌人的棋子，这样，一行中，在刚放置的棋子与你原来就有的棋子之间就包围了一个或多个敌人的棋子。
 
 [使用Pandas与Matplotlib进行蒙特卡洛法Web服务器统计分析(Monte Carlo Web-Server Statistics using Pandas and Matplotlib)](http://ganwellresource.blogspot.com/2013/01/monte-carlo-web-server-statistics-using.html)
 

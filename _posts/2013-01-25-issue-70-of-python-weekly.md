@@ -138,7 +138,55 @@ Are you a hack programmer? Do you find yourself constantly Googling for how to
 do basic programming tasks? Howdoi gives quick answers to many proragmming
 questions via the command line.
 
+你是一个程序员新手？你发现自己经常使用Google搜索如何完成一些基本的编程任务？对于许多编程问题，Howdoi能够通过命令行快速地给出答案。
+
 [Baboon Project](http://baboon-project.org/)
 
-Do you waste your time in resolving merge conflicts with your favorite source
-code manager? 
+Do you waste your time in resolving merge conflicts with your favorite source code manager? Do you want to get rid of "Merge Hell"? Baboon is the solution for you! It's a lightweight daemon that detects merge conflicts before they actually happen. In fact, it detects them in real time.
+
+[ToPy](https://code.google.com/p/topy/)
+
+ToPy solves the problem to obtain a 2D(or 3D, depending on the input file) solid-void (black and white) solution. The result is (a) an optimally stiff structure for minimum compliance problems, (b) an optimal distribution of two materials for heat conduction problems and (c) an optimal distribution of material for efficient mobility.
+
+[Simple AI](https://github.com/simpleai-team/simpleai)
+
+This lib implements many of the artificial intelligence algorithms described on the book "Artificial Intelligence, a Modern Approach", from Stuart Russel and Peter Norvig. We strongly recommend you to read the book, or at least the introductory chapters and the ones related to the components you want to use, because we won't explain the algorithms here.
+
+[Radon](https://github.com/rubik/radon)
+
+Radon is a tool for Python that computes various metrics from the source code.
+
+[Scrappy](https://github.com/louist87/Scrappy)
+
+Python module to rename media collections based on scrapes from thetvdb.com. CLI and GUI tools.
+
+[pyelasticssearch](https://github.com/rhec/pyelasticsearch)
+
+pyelasticsearch is a clean, future-proof, high-scale API to elasticsearch.
+
+[import_or_pip](https://github.com/ubershmekel/import_or_pip)
+
+A python module that lets you import a module or pip install it if it isn't found.
+
+[doko](https://bitbucket.org/larsyencken/doko)
+
+A simple command-line utility (and Python module) to determine your current lacation.
+
+**书籍(Books)**
+
+[Python Scripting for ArcGIS](http://www.amazon.com/gp/product/1589482824/ref=as_li_qf_sp_asin_tl?ie=UTF8&tag=pythonweekly-20&linkCode=as2&camp=1789&creative=9325&creativeASIN=1589482824)
+
+Python Scripting for ArcGIS is a guide to help experienced users of ArcGIS for Desktop get started with Python scripting. This book teaches how to write Python code that works with spatial data to automate geoprocessing tasks in ArcGIS. Readers can thus learn the skill set needed to create custom tools.
+
+**即将来临的大事和在线研讨会(Upcoming Events and Webinars)**
+
+[Boston Python Meetup January 2013 - Cambridge, MA](http://meetup.bostonpython.com/events/77229092/)
+
+There will be following two presentations
+
+- Zipline - A new, BSD-licensed quantitative trading system which allows easy backtesting of investment algorithms on historical data.
+- Hython - A lisp variant that's fully hosted on and fully interoperable (in both directions) with Python.
+
+[Django-NYC Meetup January 2013 - New York, NY](http://www.djangonyc.org/events/98408042/)
+
+This month we'll be taking a look at security. Our guide will be Levi Gross from Matasano. Most of the times security talks are boring. They speak about abstract topics like SQL injection and Cross Site Scripting however, rarely do they show you these bugs in the wild (due to the legal concerns). In this talk we will take a practical look at Django's security features and limitations.

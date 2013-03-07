@@ -43,3 +43,4 @@ title: 技术阅读
 
 - [夏の航海士](http://www.soimort.org/)
 
+- [nikic](http://nikic.github.com/)

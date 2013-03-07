@@ -143,7 +143,7 @@ MPEG视频标准利用了这种内在的冗余作为算法的一部分。理论�
 实际上，MPEG视频标准是以“流”来设计的，这样就能够从拍摄（a shot）的中间开始观看视频片段。但若仅提供视频的一个内帧（I-帧），那么预测帧（P-帧）是不可能插入它们的差异的。所以，通常会把I-帧每隔一定时间插入到视频片段中，而不管拍摄是否正在进行。
 
 <center>
-<img src="/assets/pics/compresion-mpeg-graph.gif" alt="compresion-mpeg-graph.gif">
+<img src="/assets/pics/compression-mpeg-graph.gif" alt="compression-mpeg-graph.gif">
 </center>
 <center>
 图6：一个4秒的MPEG视频片段的帧大小（<a href="http://news.bbc.co.uk/">BBC News</a>）

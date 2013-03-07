@@ -4,6 +4,10 @@ title: 【译文】《PHP之道》之PHP基础知识
 tags: [PHP, 翻译]
 ---
 
+原文：[PHP: The Right Way - The Basics](http://wulijun.github.com/php-the-right-way/pages/The-Basics.html)
+
+译者：[youngsterxyf](http://github.com/youngsterxyf)
+
 ##比较操作符
 
 比较操作符往往是PHP的一个被忽视的方面，这会导致很多意想不到的结果。其中的一个问题源于严格比较（布尔值为整数的比较）。

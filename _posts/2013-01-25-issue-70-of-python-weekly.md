@@ -144,49 +144,74 @@ questions via the command line.
 
 Do you waste your time in resolving merge conflicts with your favorite source code manager? Do you want to get rid of "Merge Hell"? Baboon is the solution for you! It's a lightweight daemon that detects merge conflicts before they actually happen. In fact, it detects them in real time.
 
+你还在浪费时间解决你喜爱的源码管理工具中的合并冲突？你想摆脱“合并地狱”么？Baboon就是这样的一个解决方案！它是一个轻量的后台程序，目标是在合并冲突真正发生之前就检测到。事实上，它能够实时检测存在的合并冲突。
+
 [ToPy](https://code.google.com/p/topy/)
 
 ToPy solves the problem to obtain a 2D(or 3D, depending on the input file) solid-void (black and white) solution. The result is (a) an optimally stiff structure for minimum compliance problems, (b) an optimal distribution of two materials for heat conduction problems and (c) an optimal distribution of material for efficient mobility.
+
+ToPy旨在解决获取一个2D（或3D，根据输入文件而定）实-虚（黑和白）结构方案的问题。程序的结果是(a)最小合规问题的一个最佳刚性结构，(b)热传导问题中两种材料的一个最佳分布以及(c)有效流动性问题中材料的一个最佳分布。
 
 [Simple AI](https://github.com/simpleai-team/simpleai)
 
 This lib implements many of the artificial intelligence algorithms described on the book "Artificial Intelligence, a Modern Approach", from Stuart Russel and Peter Norvig. We strongly recommend you to read the book, or at least the introductory chapters and the ones related to the components you want to use, because we won't explain the algorithms here.
 
+这个代码库实现了许多Stuart Russel和Peter Norvig所著“人工智能---一种现代方法”一书中描述的人工智能算法。我们强烈推荐你阅读这本书，或者至少是入门的章节以及与你想要使用的部分相关的章节，因为我们不会解释这些算法。
+
 [Radon](https://github.com/rubik/radon)
 
 Radon is a tool for Python that computes various metrics from the source code.
+
+Radon是一个为Python源码计算多种度量指标的工具。
 
 [Scrappy](https://github.com/louist87/Scrappy)
 
 Python module to rename media collections based on scrapes from thetvdb.com. CLI and GUI tools.
 
+基于从thetvdb.com网站获取的信息对媒体集进行重命名的Python模块。命令行和图形用户界面工具。
+
 [pyelasticssearch](https://github.com/rhec/pyelasticsearch)
 
 pyelasticsearch is a clean, future-proof, high-scale API to elasticsearch.
+
+pyelasticsearch为elasticsearch(译注：一种开源的分布式搜索引擎，官网见http://www.elasticsearch.org/ )提供一个干净的、经得起时间考验的、高可扩展的API。
 
 [import_or_pip](https://github.com/ubershmekel/import_or_pip)
 
 A python module that lets you import a module or pip install it if it isn't found.
 
+该Python模块允许你在程序中import一个模块或者当没找到要import的模块时会使用pip自动安装。
+
 [doko](https://bitbucket.org/larsyencken/doko)
 
-A simple command-line utility (and Python module) to determine your current lacation.
+A simple command-line utility (and Python module) to determine your current location.
+
+一个简单的命令行工具（以及Python模块）用于确定你当前的位置。
 
 **书籍(Books)**
 
-[Python Scripting for ArcGIS](http://www.amazon.com/gp/product/1589482824/ref=as_li_qf_sp_asin_tl?ie=UTF8&tag=pythonweekly-20&linkCode=as2&camp=1789&creative=9325&creativeASIN=1589482824)
+[ArcGIS Python脚本编程(Python Scripting for ArcGIS)](http://www.amazon.com/gp/product/1589482824/ref=as_li_qf_sp_asin_tl?ie=UTF8&tag=pythonweekly-20&linkCode=as2&camp=1789&creative=9325&creativeASIN=1589482824)
 
 Python Scripting for ArcGIS is a guide to help experienced users of ArcGIS for Desktop get started with Python scripting. This book teaches how to write Python code that works with spatial data to automate geoprocessing tasks in ArcGIS. Readers can thus learn the skill set needed to create custom tools.
 
+ArcGIS Python脚本编程是一本帮助有经验的ArchGIS桌面用户入门Python脚本编程的指南。该书讲解了如何编写Python代码处理空间数据以自动化ArcGIS中的地理数据处理任务。因此，读者能够学习到一些用于创建定制化工具的技巧。
+
 **即将来临的大事和在线研讨会(Upcoming Events and Webinars)**
 
-[Boston Python Meetup January 2013 - Cambridge, MA](http://meetup.bostonpython.com/events/77229092/)
+[马萨诸塞州,剑桥-2013年1月-波士顿Python会议(Boston Python Meetup January 2013 - Cambridge, MA)](http://meetup.bostonpython.com/events/77229092/)
 
 There will be following two presentations
 
 - Zipline - A new, BSD-licensed quantitative trading system which allows easy backtesting of investment algorithms on historical data.
 - Hython - A lisp variant that's fully hosted on and fully interoperable (in both directions) with Python.
 
-[Django-NYC Meetup January 2013 - New York, NY](http://www.djangonyc.org/events/98408042/)
+将会有以下两个报告
+
+- Zipline - 一个新的、基于BSD许可协议的量化交易系统，允许轻松地对历史数据进行投资算法的事后检验。
+- Hython - 一个完全模仿Python语法并完全可与Python互操作（双向的）的lisp变种语言。（译注：是这个[hython](https://github.com/MaskRay/Hython)么？）
+
+[纽约州，纽约-2013年1月-Django-NYC会议(Django-NYC Meetup January 2013 - New York, NY)](http://www.djangonyc.org/events/98408042/)
 
 This month we'll be taking a look at security. Our guide will be Levi Gross from Matasano. Most of the times security talks are boring. They speak about abstract topics like SQL injection and Cross Site Scripting however, rarely do they show you these bugs in the wild (due to the legal concerns). In this talk we will take a practical look at Django's security features and limitations.
+
+本月我们将讨论安全问题。我们的指导者为来自Matasano的Levi Gross。多数时候，关于安全的演讲总是很枯燥。他们谈论SQL注入和跨网站脚本攻击一类的抽象话题，却很少向你展示在真实环境下的这些bug（考虑到法律问题）。本次演讲中我们将从实际出发看看Django的安全特性与限制。

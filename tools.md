@@ -61,7 +61,7 @@ title: 工具集
 
 桌面环境：KDE
 
-Shell：Bash
+Shell：Bash + [powerline-shell](https://github.com/milkbikis/powerline-shell)
 
 输入法：Fcitx + Google拼音
 

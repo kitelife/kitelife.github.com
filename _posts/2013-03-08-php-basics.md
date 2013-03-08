@@ -39,6 +39,7 @@ if (strpos('testing', 'test') !== false) {  // true，因为做了严格比较�
 - [比较列表](http://php.net/manual/en/types.comparisons.php)
 
 ##条件语句
+
 ###If语句
 
 在函数或类中使用'if/else'之时，有个常见的误解---'else'必须一起使用以声明潜在的结果。然而，如果，结果是定义返回值，则'else'是不需要的，因为'return'会结束函数，使得'else'变得毫无意义。
@@ -130,7 +131,9 @@ function array()
 ###拼接
 
 - 如果代码行超过了推荐的行长度（120个字符），那么应该考虑拼接代码行
+
 - 为了便于阅读，最好使用拼接操作符而不是拼接赋值操作符
+
 - 在变量原本的命名空间内，当拼接使用了新行，则应该缩进
 
 {% highlight php %}
@@ -156,6 +159,7 @@ $a = 'Multi-line example'       // 拼接操作符(.)
 单引号是创建字符串最简单的方式，并且通常执行速度也是最快的，因为PHP不会解析这种字符串（不解析其中是否存在变量），所以单引号最适用于：
 
 - 不需要解析的字符串
+
 - 将变量写为纯文本值（Writing of a variable into plain text）
 
 {% highlight php%}
@@ -176,7 +180,9 @@ echo 'This is my string, look at how pretty it is.';        //不需要解析一
 双引号是字符串处理的瑞士军刀，但执行速度比较慢，因为字符串要经过解析。双引号最适用于：
 
 - 转义字符串
+
 - 内含多个变量和纯文本的字符串
+
 - 压缩多行拼接，提高可读性
 
 {% highlight php %}

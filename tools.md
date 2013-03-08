@@ -27,6 +27,9 @@ title: 工具集
 ##Latex
 
 ##命令行工具与解决方案
+
+- `ls`逆排序输出结果：`ls -r`；递归遍历目录：`ls -R`
+
 - 系统负载监控：top/htop/nmon
 
 - 查看所有进程：`ps -e`或`ps aux`，另外可通过`ps -e | grep name`来模糊查找是否存在特定进程

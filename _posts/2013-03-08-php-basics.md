@@ -126,6 +126,7 @@ function array()
 - [全局规则](http://php.net/manual/en/userlandnaming.rules.php)
 
 ##字符串
+
 ###拼接
 
 - 如果代码行超过了推荐的行长度（120个字符），那么应该考虑拼接代码行
@@ -223,7 +224,7 @@ Example of string
 spanning multiple lines
 using nowdoc syntax.
 $a does not parse.
-EOD;                    // 结束'EOD'符必须单独一行，并且处于最左边
+EOD;                    // 'EOD'关闭符必须单独一行，并且处于最左边
 
 /**
   * 输出:
@@ -250,7 +251,7 @@ Example of string
 spanning multiple lines
 using heredoc syntax.
 $a are parsed.
-EOD;                    // 关闭'EOD'符号必须单独一行，且处于最左边位置
+EOD;                    // 'EOD'关闭符必须单独一行，且处于最左边位置
 
 /**
   * 输出：

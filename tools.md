@@ -28,6 +28,8 @@ title: 工具集
 
 ##命令行工具与解决方案
 
+- 显示软件包的详细描述信息：`apt-cache show [package_name]`
+
 - `ls`逆排序输出结果：`ls -r`；递归遍历目录：`ls -R`
 
 - 系统负载监控：top/htop/nmon

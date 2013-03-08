@@ -28,6 +28,32 @@ title: 工具集
 
 ##命令行工具与解决方案
 
+- 更新Python第三方软件包：`pip install -U [package_name]` 
+
+- 从命令行安装.deb文件：`sudo dpkg -i package.deb`
+
+- 打印环境变量：`printenv`
+
+- 查看通过USB接口连接的硬件：`lsusb`
+
+- 查看已安装的软件包：`dpkg --get-selections`
+
+- 由大到小输出home目录下的所有文件（递归的）：`du -a ~/ | sort -n -r | less`
+
+- 每隔x秒执行命令command，显示输出：`watch -n [number_of_seconds] [command]`
+
+- 监听来自端口的网络输入，存入文件中：`netcat -l [recieving_port] > file_copied`
+
+- 将命令的输出通过管道经网络传递给目标ip端口：`[command] | netcat -w [number_of_seconds_before_timeout] [target_ip] [target_port]`
+
+- 使用tar压缩文件并将文件作为流输出，通过管道经网络传递给目标ip端口：`sudo tar -czf - [filename] | netcat -w [number_of_seconds_before_timeout] [target_ip] [target_port]`
+
+- `traceroute`：查看到目标机器/ip的网络路由，如`traceroute www.google.com.hk`
+
+- `nmap`：扫描机器检查开放的网络端口，如`nmap 127.0.0.1`---扫描本地机器的开放端口
+
+- `tee`：在标准输出显示的同时输出到文件，如`ls | tee ls.txt`
+
 - 显示软件包的详细描述信息：`apt-cache show [package_name]`
 
 - `ls`逆排序输出结果：`ls -r`；递归遍历目录：`ls -R`

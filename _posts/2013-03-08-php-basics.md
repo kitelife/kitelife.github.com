@@ -148,6 +148,7 @@ $a = 'Multi-line example'       // 拼接操作符(.)
 - [字符串操作符](http://php.net/manual/en/language.operators.string.php)
 
 ###字符串类型
+
 字符串类型在PHP社区内是个不变的特性，但希望本节内容能够解释清楚字符串类型之间的区别以及各自的好处/用法。
 
 **单引号**
@@ -216,6 +217,7 @@ echo "I drank some juice made of {$juice[1]}s";     // $juice[1]将得到解析
 PHP 5.3引入了Nowdoc语法，其行为与单引号相同，除了她适用于多行字符串的使用，而不需要拼接。
 
 {% highlight php %}
+<?php
 $str = <<<'EOD'         // 通过<<<初始化
 Example of string
 spanning multiple lines
@@ -240,6 +242,7 @@ EOD;                    // 结束'EOD'符必须单独一行，并且处于最左
 Heredoc语法的行为与双引号相同，除了它适用于多行字符串的使用，而不需要拼接。
 
 {% highlight php %}
+<?php
 $a = 'Variables';
 
 $str = <<<EOD       // 使用<<<初始化

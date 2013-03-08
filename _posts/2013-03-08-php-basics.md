@@ -32,6 +32,7 @@ vs.
 if (strpos('testing', 'test') !== false) {  // true，因为做了严格比较（0 !== false）
     // code...
 }
+?>
 {% endhighlight %}
 
 - [比较操作符](http://php.net/manual/en/language.operators.comparison.php)
@@ -62,6 +63,7 @@ function test($a)
     }
     return false;       // 不需要else分支
 }
+?>
 {% endhighlight %}
 
 - [If语句](http://php.net/manual/en/control-structures.if.php)
@@ -94,6 +96,7 @@ function test($a)
             return $error;
     }
 }
+?>
 {% endhighlight %}
 
 - [Switch语句](http://php.net/manual/en/control-structures.switch.php)
@@ -118,6 +121,7 @@ function array()
     $iterator = new \ArrayIterator();       // ArrayIterator是一个内置类。
                                             // 若类名之前没有一个反斜杠，解释器会试图在你的命名空间中解析它
 }
+?>
 {% endhighlight %}
 
 - [全局命名空间](http://php.net/manual/en/language.namespaces.global.php)
@@ -126,6 +130,7 @@ function array()
 
 ##字符串
 ###拼接
+<br>
 - 如果代码行超过了推荐的行长度（120个字符），那么应该考虑拼接代码行
 - 为了便于阅读，最好使用拼接操作符而不是拼接赋值操作符
 - 在变量原本的命名空间内，当拼接使用了新行，则应该缩进
@@ -141,6 +146,7 @@ vs.
 $a = 'Multi-line example'       // 拼接操作符(.)
     . "\n"                      // 缩进新行
     . 'of what to do';
+?>
 {% endhighlight %}
 
 - [字符串操作符](http://php.net/manual/en/language.operators.string.php)
@@ -149,6 +155,7 @@ $a = 'Multi-line example'       // 拼接操作符(.)
 字符串类型在PHP社区内是个不变的特性，但希望本节内容能够解释清楚字符串类型之间的区别以及各自的好处/用法。
 
 **单引号**
+
 单引号是创建字符串最简单的方式，并且通常执行速度也是最快的，因为PHP不会解析这种字符串（不解析其中是否存在变量），所以单引号最适用于：
 
 - 不需要解析的字符串
@@ -163,6 +170,7 @@ echo 'This is my string, look at how pretty it is.';        //不需要解析一
   *
   * This is my string, look at how pretty it is.
   */
+?>
 {% endhighlight %}
 
 - [单引号](http://www.php.net/manual/en/language.types.string.php#language.types.string.syntax.single)
@@ -184,7 +192,7 @@ echo 'phptherightway is ' . $adjective . '.'    // 一个单引号的使用示�
 vs.
 
 echo "phptherightway is $adjective.\n I love learning $code!";      // 没有使用多行拼接，
-                                                                    // 双引号允许我们使用可解析的字符串
+?>                                                                  // 双引号允许我们使用可解析的字符串
 {% endhighlight %}
 
 使用双引号创建的字符串中包含变量时，经常出现变量名与后面另一个字符相接触的情况，从而导致PHP不解析该变量，因为它被"伪装"起来了。为了解决这个问题，可以使用一对大括号把变量包围起来。
@@ -205,6 +213,7 @@ echo "I drank some juice made of{$juice}s";     // $juice得到解析
 
 $juice = array('apple', 'orange', 'plum');
 echo "I drank some juice made of {$juice[1]}s";     // $juice[1]将得到解析
+?>
 {% endhighlight %}
 
 - [双引号](http://www.php.net/manual/en/language.types.string.php#language.types.string.syntax.double)
@@ -230,6 +239,7 @@ EOD;                    // 'EOD'关闭符必须单独一行，并且处于最左
   * using nowdoc syntax.
   * $a does not parse.
   */
+?>
 {% endhighlight %}
 
 - [Nowdoc语法](http://www.php.net/manual/en/language.types.string.php#language.types.string.syntax.nowdoc)
@@ -257,6 +267,7 @@ EOD;                    // 'EOD'关闭符必须单独一行，且处于最左边
   * using heredoc syntax.
   * Variables are parsed.
   */
+?>
 {% endhighlight %}
 
 - [Heredoc语法](http://www.php.net/manual/en/language.types.string.php#language.types.string.syntax.heredoc)
@@ -275,6 +286,7 @@ vs.
 // 嵌套三元操作符
 $b = 10;
 echo ($a) ? ($a == 5) ? 'yay' : 'nay' : ($b == 10) ? 'excessive' : ':(';    // 过度嵌套，牺牲了可读性
+?>
 {% endhighlight %}
 
 使用三元操作符'返回'一个值需使用正确的语法。
@@ -288,6 +300,7 @@ vs.
 
 $a = 5;
 return ($a == 5) ? 'yay' : 'nope';          // 这个例子会返回'yay'
+?>
 {% endhighlight %}
 
 - [三元操作符](http://php.net/manual/en/language.operators.comparison.php)
@@ -304,6 +317,7 @@ echo $about;
 vs.
 
 echo 'A very long string of text';          // 仅使用1MB内存
+?>
 {% endhighlight %}
 
 - [性能技巧](https://developers.google.com/speed/articles/optimizing-php)

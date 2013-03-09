@@ -39,6 +39,19 @@ tags: [笔记]
 
 上述文字记录了我重装电脑之前的一些想法，以及给自己提个醒---不要忘记备份各种数据。
 
-最后，附上我的桌面截图：
+---
 
-<img src="/assets/pics/print-scr.png" alt="print-scr.png">
+安装完成后，遇到如下几个问题：
+
+1.
+中文显示不太正常，使用命令`apt-cache search wenquanyi`，找出所有文泉驿开源字体，安装即可。
+
+2.
+`pip install gevent`安装gevent，没法正常编译，只好使用`sudo apt-get install python-gevent`
+
+3.
+[powerline-shell](https://github.com/milkbikis/powerline-shell)中的特殊字体在终端中没法正常显示，按照文档说明的使用工具[fontpatcher](https://github.com/Lokaltog/vim-powerline/tree/develop/fontpatcher)来生成适用于powerline-shell的字体。可fontpatcher依赖于fontforge，`pip install fontforge`却说找不到fontforge，好吧，还是`sudo apt-get install python-fontforge`安装。然后按照普通字体的安装方式安装即可。
+
+最后附上一张重装后的桌面截图：
+
+<img src="assets/pics/print-scr.png" alt="print-scr.png">

@@ -132,6 +132,8 @@ FTP客户端：FileZilla
 
 RSS阅读：Akregator/Google Reader
 
+Email阅读：Thunderbird/Gmail
+
 即时通讯(GTalk/MSN)：Pidgin/KDE IM Contacts/WebQQ
 
 办公套件：LibreOffice

@@ -54,4 +54,4 @@ tags: [笔记]
 
 最后附上一张重装后的桌面截图：
 
-<img src="assets/pics/print-scr.png" alt="print-scr.png">
+<img src="/assets/pics/print-scr.png" alt="print-scr.png">

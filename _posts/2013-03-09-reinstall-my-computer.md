@@ -52,6 +52,12 @@ tags: [笔记]
 3.
 [powerline-shell](https://github.com/milkbikis/powerline-shell)中的特殊字体在终端中没法正常显示，按照文档说明使用工具[fontpatcher](https://github.com/Lokaltog/vim-powerline/tree/develop/fontpatcher)来生成适用于powerline-shell的字体。可fontpatcher依赖于fontforge，`pip install fontforge`却说找不到fontforge，好吧，还是`sudo apt-get install python-fontforge`安装。然后按照普通字体的安装方式安装即可。
 
+4.
+KDE的Nepomuk Semantic Desktop功能耗资源比较厉害，在System Settings -> Desktop Search关闭这项功能。
+
+5.
+添加fcitx输入法开机自启动：`cd ~/.kde/Autostart; ln -s /usr/bin/fcitx`
+
 最后附上一张重装后的桌面截图：
 
 <img src="/assets/pics/print-scr.png" alt="print-scr.png">

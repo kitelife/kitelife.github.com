@@ -16,6 +16,7 @@ title: 工具集
 - [jedi-vim](https://github.com/davidhalter/jedi-vim)(Python代码自动完成，对jedi自动完成库的vim绑定)
 - [pep8](https://github.com/vim-scripts/pep8)(检查Python源码是否符合PEP8风格)
 - [vim-gitgutter](https://github.com/airblade/vim-gitgutter)(A Vim plugin which shows a git diff in the 'gutter' (sign column). It shows whether each line has been added, modified, and where lines have been removed.)
+- [jshint.vim](https://github.com/walm/jshint.vim)（jshint的vim前端插件）
 
 ##Git
 ###书籍：
@@ -29,20 +30,14 @@ title: 工具集
 ##开发工具
 
 - VIM（主力工具）
-
 - Eclipse（Java/Python）
-
 - PyCharm（Python）
-
 - Zend Studio（PHP）
-
 - CodeBlocks（C/C++）
-
 - Racket（Scheme）
-
 - TeXstudio（Latex）（算开发工具么？）
-
 - Git（源码控制）
+- jshint（JavaScript代码检查命令行工具）
 
 ##命令行工具与解决方案
 

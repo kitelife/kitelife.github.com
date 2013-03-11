@@ -68,7 +68,7 @@ if(2 + 2 === 4) return 'nicely done';
 
 如果以后的某个时候，你需要在这种if语句中增加更多的命令，那该怎么办呢？没法子，你就只能重写这块代码了。处理这个问题的底线是对于省略写法保持谨慎。
 
-###使用JS Lint
+###4.使用JS Lint
 
 [JSLint](http://www.jslint.com/)是Douglas Crockford编写的一个调试器。简单地将你的脚本拷贝进去，它就会快速地扫描你的代码中任何明显的问题和错误。
 
@@ -98,7 +98,7 @@ if(2 + 2 === 4) return 'nicely done';
 </html>
 {% endhighlight %}
 
-###在For语句之外声明变量
+###6.在For语句之外声明变量
 
 当执行一个冗长的"for"语句之时，仅仅让解释引擎做必须干的活吧。例如：
 
@@ -228,7 +228,7 @@ o.arms = true;
 o.legs = true;
 {% endhighlight %}
 
-###使用{}而不是New Object()
+###13.使用{}而不是New Object()
 
 JavaScript中有多种创建对象的方式。也许更传统的方式是使用"new"构造器，像这样：
 
@@ -265,7 +265,7 @@ var o = {};
 > "对象字面量使我们能够编写支持很多特性的代码，并对代码的实现者来说代码仍然相对直观。不需要直接调用构造器或维护传递给函数的参数的正确顺序，等等。" --- dyn-web.com
 >
 
-###14.使用[]而不是New Array()
+###14.使用\[\]而不是New Array()
 
 这同样适用于创建一个新数组。
 
@@ -305,7 +305,7 @@ var someItem = 'some string',
 
 相当的不言自明。我不知道这里是否有任何真正的速度提升，但是它使你的代码更加简洁了。
 
-###始终，始终使用分号
+###16.始终，始终使用分号
 
 技术上来说，大多数浏览器都允许你的省略一些分号。
 
@@ -318,7 +318,7 @@ function doSomething() {
 
 话虽如此，但这是一种非常糟糕的做法，可能导致更大的问题，问题查找起来也更困难。
 
-**更好的做法**
+**更好的写法**
 
 {% highlight js %}
 var someItem = 'some string';
@@ -377,13 +377,13 @@ function TimeTracker() {
  })();
 {% endhighlight %}
 
-###原始(raw)JavaScript代码的执行速度始终快于使用代码库
+###22.原始(raw)JavaScript代码的执行速度始终快于使用代码库
 
 JavaScript代码库，如jQuery和Mootools，能够为你节省大量的编码时间---特别是使用AJAX操作。话虽如此，始终谨记代码库的执行速度始终是比不上原始JavaScript代码的（假设了代码的正确性）。
 
 jQuery的"each"方法用来做遍历非常赞，但始终一个原生"for"语句始终会快一些。
 
-###Crockford的JSON.Parse
+###23.Crockford的JSON.Parse
 
 虽然JavaScript 2应该有一个内置的JSON解析器，但写本文之时，我们仍旧需要自己实现。Douglas Crockford，JSON的创造者，已经实现了一个解析器供你使用。可以从[这里](https://github.com/douglascrockford/JSON-js)下载。
 

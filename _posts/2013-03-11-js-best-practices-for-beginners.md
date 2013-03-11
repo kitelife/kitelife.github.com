@@ -128,4 +128,62 @@ for(var i = 0, len = someArray.length; i < len; i++) {
 
 ###7.构建字符串的最快方式
 
+当需要遍历一个数组或者对象之时，不要总是使用你能信手粘来的"for"语句。创造性地找个能够完成工作的最快速的方案。
 
+{% highlight js %}
+var arr = ['item 1', 'item 2', 'item 3', ...];
+var list = '<ul><li>' + arr.join('</li><li>') + '</li></ul>';
+{% endhighlight %}
+
+>
+> "我不会以测试基准来烦你；你只须相信我（或者自己去测试一下）---这是目前为止最快的方式！"
+>
+> 使用原生方法（比如join()），不用管抽象层面背后发生了什么，通常会比任何非原生方法快得多。 --- James Padolsey, james.padolsey.com"
+>
+
+###8.减少全局变量
+
+>
+> "通过将全局的东西封装进单个命名空间，能够大大降低与其他应用、部件、代码库交互混乱的概率。"--- Douglas Crockford
+>
+
+{% highlight js %}
+var name = 'jeffrey';
+var lastname = 'Way';
+
+function doSomething() {...}
+
+console.log(name);      // Jeffrey -- or window.name
+{% endhighlight %}
+
+**更好的做法**
+
+{% highlight js %}
+var DudeNameSpace = {
+    name: 'Jeffrey',
+    lastname: 'Way',
+    doSometing: function() {...}
+}
+console.log(DudeNameSpace.name);    // Jeffrey
+{% endhighlight %}
+
+注意我们是怎样将我们全局性的“足迹”减少为一个命名可笑的"DudeNameSpace"对象。
+
+###注释你的代码
+
+一开始看起来似乎没有必要，但请相信我，你将会想尽可能好地注释你的代码。当你几个月后再次回到项目，会发生什么呢？发现你根本没法轻松地记起当初对每一行代码的想法。或者，如果你的某个同事需要修改你的代码，那又会怎么样呢？始终，一直记着注释你代码的重要部分吧。
+
+{% highlight js %}
+// Cycle through array and echo out each name
+for(var i = 0, len = array.length; i < len; i++) {
+    console.log(array[i]);
+}
+{% endhighlight %}
+
+### 拥抱渐进增强
+
+始终考虑到如何处理JavaScript禁用的情况。也许你会想“大多数我网页的阅读器都是启用JavaScript的，因为我不担心这个问题。”然而，这会是一个巨大的错误。
+
+你曾花时间去看过关闭JavaScript后你的漂亮的滑动条是什么样么？（[下载](https://addons.mozilla.org/en-US/firefox/addon/web-developer/)Web开发者工具栏以方便干这事。）也许它会完全破坏你的站点。按照以往经验，设计你的站点时应假设将会禁用JavaScript。那么，一旦你这样做了，那么开始渐进地增强你的布局吧！
+
+###11.不要传递字符串给"SetInterval"或"SetTimeOut"

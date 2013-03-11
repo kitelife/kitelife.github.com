@@ -1,6 +1,6 @@
 ---
 layout: post
-title: JavaScript初学者应知的24条最佳实践
+title: 【译文】JavaScript初学者应知的24条最佳实践
 tags: [JavaScript, 翻译]
 ---
 
@@ -20,9 +20,9 @@ JavaScript使用两种相等性操作符：===|!==和==|!=。通常认为做比�
 
 然而，如果使用==和!=，当比较不同类型的操作数时，你就会碰到问题啦。在这种情况下，这组操作符会尝试对操作数的值做无用的强制转换。
 
-###2.Eval就是糟糕的代号
+###2.Eval就是糟糕的代名词
 
-对于那些不熟悉JavaScript的人来说，函数"evel"让我们能够JavaScript编译器。我们能够给"eval"传递一个字符串参数来得到该字符串执行的结果。
+对于那些不熟悉JavaScript的人来说，函数"evel"让我们能够访问JavaScript编译器。我们可以通过给"eval"传递一个字符串参数来得到该字符串执行的结果。
 
 这不仅会极大地降低你的脚本的性能，也会造成一个巨大的安全隐患，因为这赋予传递进来的纯文本太多的能力。要尽可能地避免eval函数的使用。
 
@@ -169,7 +169,7 @@ var DudeNameSpace = {
 console.log(DudeNameSpace.name);    // Jeffrey
 {% endhighlight %}
 
-注意我们是怎样将我们全局性的“足迹”减少为一个命名可笑的"DudeNameSpace"对象。
+注意我们是怎样将全局性的“足迹”减少为一个命名可笑的"DudeNameSpace"对象的。
 
 ###9.注释你的代码
 
@@ -184,9 +184,9 @@ for(var i = 0, len = array.length; i < len; i++) {
 
 ###10.拥抱渐进增强
 
-始终考虑到如何处理JavaScript禁用的情况。也许你会想“大多数我网页的阅读器都是启用JavaScript的，因为我不担心这个问题。”然而，这会是一个巨大的错误。
+始终考虑到如何处理JavaScript禁用的情况。也许你会想“大多数我网页的阅读器都是启用JavaScript的，因此我不担心这个问题。”然而，这会是一个巨大的错误。
 
-你曾花时间去看过关闭JavaScript后你的漂亮的滑动条是什么样么？（[下载](https://addons.mozilla.org/en-US/firefox/addon/web-developer/)Web开发者工具栏以方便干这事。）也许它会完全破坏你的站点。按照以往经验，设计你的站点时应假设将会禁用JavaScript。那么，一旦你这样做了，那么开始渐进地增强你的布局吧！
+你曾花时间去看过关闭JavaScript后你的漂亮的滑动条是什么样么？（[下载](https://addons.mozilla.org/en-US/firefox/addon/web-developer/)Web开发者工具栏以方便干这事。）也许它会完全破坏你的站点。按照以往经验，设计你的站点时应假设将会禁用JavaScript。那么，一旦你这样做了，那么开始渐进地增强你的网页布局吧！
 
 ###11.不要传递字符串给"SetInterval"或"SetTimeOut"
 
@@ -206,7 +206,7 @@ setInterval(someFunction, 3000);
 
 ###12.不要使用"With"语句
 
-乍一看，"With"语句看起来似乎是个聪明的想法。基本概念是它们能够为访问深度嵌套对象提供一种简写方式。例如...
+乍一看，"With"语句似乎是个聪明的想法。基本概念是它们能够为访问深度嵌套对象提供一种简写方式。例如...
 
 {% highlight js %}
 with (being.person.man.bodyparts) {
@@ -357,7 +357,7 @@ function TimeTracker() {
 
 ###20.阅读，阅读，再阅读
 
-我是一个Web开发博客的超级粉丝（比如这个博客！），但吃午餐或者睡前，博客确实不是书籍的替代品。始终在你的床前桌上放一本wen开发书籍。如下是一些我最喜欢的JavaScript书籍。
+我是一个Web开发博客的超级粉丝（比如这个博客！），但吃午餐或者睡前，博客确实不是书籍的替代品。始终在你的床前桌上放一本wen开发书籍吧。如下是一些我最喜欢的JavaScript书籍。
 
 - [面向对象的JavaScript](http://www.packtpub.com/object-oriented-javascript-applications-libraries/book)
 - [JavaScript：语言精粹](http://oreilly.com/catalog/9780596517748/)
@@ -383,7 +383,7 @@ function TimeTracker() {
 
 JavaScript代码库，如jQuery和Mootools，能够为你节省大量的编码时间---特别是使用AJAX操作。话虽如此，始终谨记代码库的执行速度始终是比不上原始JavaScript代码的（假设了代码的正确性）。
 
-jQuery的"each"方法用来做遍历非常赞，但始终一个原生"for"语句始终会快一些。
+jQuery的"each"方法用来做遍历非常赞，但使用原生"for"语句始终会快一些。
 
 ###23.Crockford的JSON.Parse
 

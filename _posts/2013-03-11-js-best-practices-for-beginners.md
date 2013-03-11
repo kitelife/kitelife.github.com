@@ -70,3 +70,62 @@ if(2 + 2 === 4) return 'nicely done';
 
 ###使用JS Lint
 
+[JSLint](http://www.jslint.com/)是Douglas Crockford编写的一个调试器。简单地将你的脚本拷贝进去，它就会快速地扫描你的代码中任何明显的问题和错误。
+
+>
+>"JSLint获取一份JavaScript源码，然后扫描代码。如果发现问题，就会返回一条信息描述这个问题以及这个问题在源码中的大致位置。问题虽然经常是语法错误，却不一定是。JSLint也会查看一些风格习惯以及结构问题。它并不证明你的代码是否正确，只是提供另外的一双眼睛来帮助发现问题。"---JSLint文档
+>
+
+在结束脚本代码的编写之前，对其执行一次JSLint，能够保证你不会犯一些愚蠢的错误。
+
+###5.将脚本置于页面的底部
+
+这条提示在本系列前面的文章中也推荐过。因为它在此处也非常合适（As it's highly appropriate though），所有我将那段信息直接粘贴在这里。
+
+<img src="/assets/pics/javascriptButton.png" alt="javascriptButton.png">
+
+记住---这条最佳实践的主要目标是尽可能快速地为用户加载页面。当加载一个脚本时，浏览器直到整个脚本文件全部加载完毕才能继续。因此，用户必须等上更长的时间才能注意到任何的进度。
+
+如果JS文件的目的仅仅是增加功能---例如，在点击某个按钮后---那么就将那些文件放在底部，body结束标签之前吧。这绝对是一个最佳实践。
+
+**更好的做法**
+
+{% highlight js %}
+<p>And now you know my favorite kinds of corn. </p>
+<script type="text/javascript" src="path/to/file.js"></script>
+<script type="text/javascript" src="path/to/anotherFile.js"></script>
+</body>
+</html>
+{% endhighlight %}
+
+###在For语句之外声明变量
+
+当执行一个冗长的"for"语句之时，仅仅让解释引擎做必须干的活吧。例如：
+
+**糟糕的做法**
+
+{% highlight js %}
+for(var i = 0; i < someArray.length; i++) {
+    var container = document.getElementById('container');
+    container.innerHtml += 'my number: ' + i;
+    console.log(i);
+}
+{% endhighlight %}
+
+注意上面代码片段中的每次迭代都需要检查数组的长度，并且每次都要遍历DOM树找到"container"元素---效率多低啊！
+
+**更好的做法**
+
+{% highlight js %}
+var container = document.getElementById('container');
+for(var i = 0, len = someArray.length; i < len; i++) {
+    container.innerHtml += 'my number: ' + i;
+    console.log(i);
+}
+{% endhighlight %}
+
+感谢有位朋友留下评论展示如何进一步优化上面的代码块。
+
+###7.构建字符串的最快方式
+
+

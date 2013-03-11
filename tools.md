@@ -26,6 +26,24 @@ title: 工具集
 
 ##Latex
 
+##开发工具
+
+- VIM（主力工具）
+
+- Eclipse（Java/Python）
+
+- PyCharm（Python）
+
+- Zend Studio（PHP）
+
+- CodeBlocks（C/C++）
+
+- Racket（Scheme）
+
+- TeXstudio（Latex）（算开发工具么？）
+
+- Git（源码控制）
+
 ##命令行工具与解决方案
 
 - 更新Python第三方软件包：`pip install -U [package_name]` 
@@ -88,7 +106,7 @@ title: 工具集
 
 - [酷毙的Linux单行命令](http://www.commandlinefu.com/commands/browse/sort-by-votes)
 
-##工具列表
+##日常使用工具
 
 桌面环境：KDE
 
@@ -109,8 +127,6 @@ Shell：Bash + [powerline-shell](https://github.com/milkbikis/powerline-shell)
 截屏：KSnapshot
 
 虚拟机：VirtualBox
-
-IDE：vim/PyCharm(Python)/Zend Studio(PHP)/CodeBlocks(C/C++)/Eclipse/TeXstudio
 
 屏幕录像：XVidCap
 

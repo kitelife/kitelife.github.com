@@ -80,7 +80,7 @@ if(2 + 2 === 4) return 'nicely done';
 
 ###5.将脚本置于页面的底部
 
-这条提示在本系列前面的文章中也推荐过。因为它在此处也非常合适（As it's highly appropriate though），所有我将那段信息直接粘贴在这里。
+这条技巧在本系列前面的文章中也推荐过。因为它在此处也非常合适（As it's highly appropriate though），所有我将那段信息直接粘贴在这里。
 
 <img src="/assets/pics/javascriptButton.png" alt="javascriptButton.png">
 
@@ -187,3 +187,228 @@ for(var i = 0, len = array.length; i < len; i++) {
 你曾花时间去看过关闭JavaScript后你的漂亮的滑动条是什么样么？（[下载](https://addons.mozilla.org/en-US/firefox/addon/web-developer/)Web开发者工具栏以方便干这事。）也许它会完全破坏你的站点。按照以往经验，设计你的站点时应假设将会禁用JavaScript。那么，一旦你这样做了，那么开始渐进地增强你的布局吧！
 
 ###11.不要传递字符串给"SetInterval"或"SetTimeOut"
+
+考虑一下如下代码：
+
+{% highlight js %}
+setInterval(
+"document.getElementById('container').innerHTML += 'my new number: ' + i", 3000
+);
+{% endhighlight %}
+
+这段代码不仅低效，而且其行为与"eval"函数相同。永远不要传给字符串给SetInterval和SetTimeOut。相反，应传递一个函数名。
+
+{% highlight js %}
+setInterval(someFunction, 3000);
+{% endhighlight %}
+
+###12.不要使用"With"语句
+
+乍一看，"With"语句看起来似乎是个聪明的想法。基本概念是它们能够为访问深度嵌套对象提供一种简写方式。例如...
+
+{% highlight js %}
+with (being.person.man.bodyparts) {
+    arms = true;
+    legs = true;
+}
+
+--取代如下写法--
+
+{% highlight js %}
+being.person.man.bodyparts.arms = true;
+being.person.man.bodyparts.legs = true;
+{% endhighlight %}
+
+很不幸，经过一些测试，会发现这种简写在设置新成员时表现非常糟糕。作为替代，你应该使用var。
+
+{% highlight js %}
+var o = being.person.man.bodyparts;
+o.arms = true;
+o.legs = true;
+{% endhighlight %}
+
+###使用{}而不是New Object()
+
+JavaScript中有多种创建对象的方式。也许更传统的方式是使用"new"构造器，像这样：
+
+{% highlight js %}
+var o = new Object();
+o.name = 'Jeffrey';
+o.lastname = 'Way';
+o.someFuncion = function() {
+    console.log(this.name);
+}
+{% endhighlight %}
+
+然而，这种方式因其行为并不是我们所想的那样而被认为是“糟糕的实践。相反，我推荐你使用更健壮的对象字面方法。
+
+**更好的写法**
+
+{% highlight js %}
+var o = {
+    name: 'Jeffrey',
+    lastName: 'Way',
+    someFunction: function() {
+        console.log(this.name);
+    }
+};
+{% endhighlight %}
+
+注意如果你只是想简单地创建个空对象，{}就派上用场了。
+
+{% highlight js %}
+var o = {};
+{% endhighlight %}
+
+>
+> "对象字面量使我们能够编写支持很多特性的代码，并对代码的实现者来说代码仍然相对直观。不需要直接调用构造器或维护传递给函数的参数的正确顺序，等等。" --- dyn-web.com
+>
+
+###14.使用[]而不是New Array()
+
+这同样适用于创建一个新数组。
+
+**过得去的写法**
+
+{% highlight js %}
+var a = new Array();
+a[0] = 'Joe';
+a[1] = 'Plumber';
+{% endhighlight %}
+
+**更好的写法**
+
+{% highlight js %}
+var a = ['Joe', 'Plumber'];
+{% endhighlight %}
+
+>
+>"JavaScript中一个常见的错误是需要数组时使用对象或需要对象时使用数组。规则很简单：当属性名是小的连续整数时，你应该使用数组。否则，使用对象"---Douglas Crockford
+>
+
+###15.一长串变量？省略"var"关键字，使用逗号替代
+
+{% highlight js %}
+var someItem = 'some string';
+var anotherItem = 'another string';
+var oneMoreItem = 'one more string';
+{% endhighlight %}
+
+**更好的写法**
+
+{% highlight js %}
+var someItem = 'some string',
+    anotherItem = 'another string',
+    oneMoreItem = 'one more string';
+{% endhighlight %}
+
+相当的不言自明。我不知道这里是否有任何真正的速度提升，但是它使你的代码更加简洁了。
+
+###始终，始终使用分号
+
+技术上来说，大多数浏览器都允许你的省略一些分号。
+
+{% highlight js %}
+var someItem = 'some string'
+function doSomething() {
+    return 'something'
+}
+{% endhighlight %}
+
+话虽如此，但这是一种非常糟糕的做法，可能导致更大的问题，问题查找起来也更困难。
+
+**更好的做法**
+
+{% highlight js %}
+var someItem = 'some string';
+function doSomething() {
+    return 'something';
+}
+{% endhighlight %}
+
+###18."For in"语句
+
+遍历对象内的成员时，你也会得到方法函数。为了解决这个问题，应始终将你的代码包装在一个if语句中来过滤信息。
+
+{% highlight js %}
+for(key in object) {
+    if(object.hasOwnProperty(key)) {
+        ... then do something...
+    }
+}
+{% endhighlight %}
+
+引自*JavaScript: 语言精粹， Douglas Crockford著*
+
+###19.使用Firebug的"Timer"特性来优化代码
+
+需要一种快速简单的方法来检测一个操作花费多长时间么？使用Firebug的"timer"特性记录结果。
+
+{% highlight js %}
+function TimeTracker() {
+    console.time("MyTimer");
+    for(x=5000; x > 0; x--){}
+    console.timeEnd("MyTimer");
+}
+{% endhighlight %}
+
+###20.阅读，阅读，再阅读
+
+我是一个Web开发博客的超级粉丝（比如这个博客！），但吃午餐或者睡前，博客确实不是书籍的替代品。始终在你的床前桌上放一本wen开发书籍。如下是一些我最喜欢的JavaScript书籍。
+
+- [面向对象的JavaScript](http://www.packtpub.com/object-oriented-javascript-applications-libraries/book)
+- [JavaScript：语言精粹](http://oreilly.com/catalog/9780596517748/)
+- [学习jQuery 1.3](http://www.packtpub.com/learning-jquery-1.3/book)
+- [学习JavaScript](http://oreilly.com/catalog/9780596527464/)
+
+多阅读几遍。我仍旧在读！
+
+###21.自执行函数(Self-Executing Functions)
+
+相比调用函数，当页面加载或调用父函数时，让函数自动执行会简单些。简单地将你的函数包装在圆括号内，并添加额外的一对圆括号，其本质上就调用了这个函数。
+
+{% highlight js %}
+(function doSomething() {
+    return {
+        name: 'jeff',
+        lastName: 'way'
+    };
+ })();
+{% endhighlight %}
+
+###原始(raw)JavaScript代码的执行速度始终快于使用代码库
+
+JavaScript代码库，如jQuery和Mootools，能够为你节省大量的编码时间---特别是使用AJAX操作。话虽如此，始终谨记代码库的执行速度始终是比不上原始JavaScript代码的（假设了代码的正确性）。
+
+jQuery的"each"方法用来做遍历非常赞，但始终一个原生"for"语句始终会快一些。
+
+###Crockford的JSON.Parse
+
+虽然JavaScript 2应该有一个内置的JSON解析器，但写本文之时，我们仍旧需要自己实现。Douglas Crockford，JSON的创造者，已经实现了一个解析器供你使用。可以从[这里](https://github.com/douglascrockford/JSON-js)下载。
+
+简单地导入该脚本，你就能获得一个新的JSON全局对象，用于解析你的.json文件。
+
+{% highlight js %}
+var response = JSON.parse(xhr.responseText);
+
+var container = document.getElementById('container');
+for(var i = 0, len = response.length; i < len; i++) {
+    container.innerHTML += '<li>' + response[i].name + ' : ' + response[i].email + '</li>';
+}
+{% endhighlight %}
+
+###24.删除"Language"
+
+几年前，在script标签内常见有"language"属性。
+
+{% highlight js %}
+<script type="text/javascript" language="javascript">
+...
+</script>
+{% endhighlight %}
+
+然而，这个属性很早就被弃用了，所以就不要再使用了。
+
+###就这些了，同志们
+
+现在你知道这JavaScript初学者应该知道的24条基本技巧。有机会也让我知道一下你的小贴士吧。感谢阅读。

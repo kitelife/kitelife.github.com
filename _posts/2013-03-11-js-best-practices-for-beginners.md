@@ -211,8 +211,9 @@ with (being.person.man.bodyparts) {
     arms = true;
     legs = true;
 }
+{% endhighlight %}
 
---取代如下写法--
+**取代如下写法**
 
 {% highlight js %}
 being.person.man.bodyparts.arms = true;

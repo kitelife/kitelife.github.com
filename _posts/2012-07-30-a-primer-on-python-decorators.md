@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 【译文】Python装饰器入门
+title: Python装饰器入门（译）
 tags: [python, 翻译]
 ---
 

@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 【译文】JavaScript：继承和原型链
+title: JavaScript：继承和原型链（译）
 tags: [JavaScript, 翻译]
 ---
 

@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 【译文】装饰器与函数式Python
+title: 装饰器与函数式Python（译）
 tags: [Python, 翻译]
 ---
 

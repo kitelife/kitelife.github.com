@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 【译文】Python对象创建过程
+title: Python对象创建过程（译）
 tags: [python, 翻译]
 ---
 

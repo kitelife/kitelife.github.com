@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 【译文】数据压缩理论简介
+title: 数据压缩理论简介（译）
 tags: [理论, 翻译]
 ---
 

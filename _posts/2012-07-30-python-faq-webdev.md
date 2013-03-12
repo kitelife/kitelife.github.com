@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 【译文】Python FAQ：Web开发
+title: Python FAQ：Web开发（译）
 tags: [python, 翻译]
 ---
 

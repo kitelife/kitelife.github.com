@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 【译文】一行Python代码定义树
+title: 一行Python代码定义树（译）
 tags: [Python, 翻译]
 ---
 

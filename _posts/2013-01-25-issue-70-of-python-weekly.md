@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 【译文】python周刊-第70期
+title: python周刊-第70期（译）
 tags: [python, python-weekly, 翻译]
 ---
 

@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 【译文】Python：字典剧本
+title: Python：字典剧本（译）
 tags: [Python, 翻译]
 ---
 

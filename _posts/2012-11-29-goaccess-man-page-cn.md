@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 【译文】GoAccess用户手册
+title: GoAccess用户手册（译）
 tags: [翻译, 工具, Web]
 ---
 

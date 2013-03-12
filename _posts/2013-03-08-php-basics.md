@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 【译文】《PHP之道》之PHP基础知识
+title: PHP之道---PHP基础知识（译）
 tags: [PHP, 翻译]
 ---
 

@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 【译文】JavaScript初学者应知的24条最佳实践
+title: JavaScript初学者应知的24条最佳实践（译）
 tags: [JavaScript, 翻译]
 ---
 

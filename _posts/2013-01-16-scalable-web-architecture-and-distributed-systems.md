@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 【译文】可扩展的Web架构与分布式系统
+title: 可扩展的Web架构与分布式系统（译）
 tags: [分布式系统, 翻译]
 ---
 

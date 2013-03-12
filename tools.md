@@ -38,7 +38,8 @@ title: 工具集
 - TeXstudio（Latex）（算开发工具么？）
 - Git（源码控制）
 - jshint（JavaScript代码检查命令行工具）
-- IPython
+- virtualenv（Python虚拟环境）
+- IPython（可在virtualenv虚拟环境中通过pip install ipython安装使用）
 
 ##命令行工具与解决方案
 

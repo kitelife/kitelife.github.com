@@ -38,6 +38,7 @@ title: 工具集
 - TeXstudio（Latex）（算开发工具么？）
 - Git（源码控制）
 - jshint（JavaScript代码检查命令行工具）
+- IPython
 
 ##命令行工具与解决方案
 

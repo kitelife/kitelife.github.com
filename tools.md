@@ -99,6 +99,8 @@ title: 工具集
 
 - Python命令行美化输出json数据：`python -mjson.tool json_filename`或者通过管道`some_cmd | python -mjson.tool`，也可以直接在命令行使用双引号包围一个json数据字符串来替代json_filename的位置。
 
+- 保存某个virtualenv中已安装的package列表，并在另一个virtualenv中原样恢复：1.`(some_env)$pip freeze > requirements.txt`; 2. `(another_env)$pip install -r requirements.txt`
+
 - [Linux性能分析工具](/assets/pics/linux-performance-analysis-tools.png)
 
 - [酷毙的Linux单行命令](http://www.commandlinefu.com/commands/browse/sort-by-votes)

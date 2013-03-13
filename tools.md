@@ -131,7 +131,7 @@ Shell：Bash + [powerline-shell](https://github.com/milkbikis/powerline-shell)
 
 音频播放器：深度音乐播放器/Audacious/[cplay](https://github.com/youngsterxyf/cplay)
 
-视频播放器：VLC/MPlayer/SMPlayer
+视频播放器：VLC/MPlayer/SMPlayer/深度影音
 
 翻译：Google Translate/有道词典chrome插件
 

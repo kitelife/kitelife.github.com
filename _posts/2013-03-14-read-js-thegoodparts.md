@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 笔记：JavaScript语言精粹
+title: 读书笔记：JavaScript语言精粹
 tags: [笔记, JavaScript]
 ---
 

@@ -43,3 +43,28 @@ JavaScript没有字符类型。要表示一个字符，只需创建仅包含一�
 
 ##第3章：对象
 
+JavaScript的简单数据类型包括数字、字符串、布尔值（true和false）、null值和undefined值。其他所有的值都是对象。
+
+数字、字符串和布尔值“貌似”对象，因为它们拥有方法，但它们是不可变的。JavaScript中的对象是可变的键控集合（keyed collections）。
+
+对象是属性的容器，其中每个属性都拥有名字和值。属性的名字可以是包括空字符串在内的任意字符串。属性值可以是除undefined值之外的任何值。
+
+---
+
+要检索对象里包含的值，可以采用在`[]`后缀中括住一个字符串表达式的方式。如果字符串表达式是一个字符串字面量，而且它是一个合法的JavaScript标识符且不是保留字，则也可以用`.`表示法代替。优秀考虑使用`.`表示法，因为它更紧凑且可读性更好。
+
+如果你尝试检索一个并不存在的成员属性的值，将返回undefined。
+
+`||`运算符可以用来填充默认值：
+
+{% highlight js %}
+var status = flight.status || "unknow";
+{% endhighlight %}
+
+尝试从undefined的成员属性中取值将会导致TypeError异常。可以通过`&&`运算符来避免错误。
+
+{% highlight js %}
+flight.equipment        // undefined
+flight.equipment.model      // throw "TypeError"
+flight.equipment && flight.equipment.model  // undefined
+{% endhighlight %}

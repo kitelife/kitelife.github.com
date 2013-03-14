@@ -68,3 +68,69 @@ flight.equipment        // undefined
 flight.equipment.model      // throw "TypeError"
 flight.equipment && flight.equipment.model  // undefined
 {% endhighlight %}
+
+---
+
+对象通过引用来传递。它们永远不会被拷贝：
+
+{% highlight js %}
+var x = stooge;
+x.nickname = 'Curly';
+var nick = stooge.nickname;
+// 因为x和stooge是指向同一个对象的引用，所以nick为'Curly'
+
+var a = {}, b = {}, c = {};
+// a、b和c每个都引用一个不同的空对象
+a = b = c = {};
+// a、b和c都引用同一个空对象
+{% endhighlight %}
+
+---
+
+每个对象都连接到一个原型对象，并且它可以从中继承属性。所有通过对象字面量创建的对象都连接到`Object.prototype`这个JavaScript中标准的对象。
+
+原型连接在更新时是不起作用的。当对某个对象做出改变时，不会触及该对象的原型。原型连接只有在检索值的时候才被用到。
+
+原型关系是一种动态的关系。如果我们添加一个新的属性到原型中，该属性会立即对所有基于该原型创建的对象可见。
+
+---
+
+使用`for in`枚举一个对象中的所有属性名时，属性名出现的顺序是不确定的。如果想要确保属性以特定的顺序出现，最好的办法就是完全避免使用`for in`语句，而是创建一个数组，在其中以正确的顺序包含属性名。通过使用`for`而不是`for in`，可以得到我们想要的属性。
+
+---
+
+delete运算符可以用来删除对象的属性。它将移除对象中确定包含的属性，但不会触及原型链中的任何对象。
+
+---
+
+最小化使用全局变量的一个方法是在你的应用中只创建唯一一个全局变量：
+
+{% highlight js %}
+var MYAPP = {};
+{% endhighlight %}
+
+该变量此时变成了你的应用的容器：
+
+{% highlight js %}
+MYAPP.stooge = {
+    "first-name": "Joe",
+    "last-name": "Howard"
+};
+
+MYAPP.flight = {
+    airline: "Oceanic",
+    number: 815,
+    departure: {
+        IATA: "SYD",
+        time: "2004-09-22 14:55",
+        city: "Sydney"
+    },
+    arrival: {
+        IATA: "LAX",
+        time: "2004-09-23 10:42",
+        city: "Los Angeles"
+    }
+};
+{% endhighlight %}
+
+##第4章：函数

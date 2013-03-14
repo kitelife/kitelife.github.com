@@ -43,6 +43,8 @@ title: 工具集
 
 ##命令行工具与解决方案
 
+- 显示进程树：`pstree`
+
 - 更新Python第三方软件包：`pip install -U [package_name]` 
 
 - 从命令行安装.deb文件：`sudo dpkg -i package.deb`

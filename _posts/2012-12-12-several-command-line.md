@@ -11,7 +11,7 @@ Debian系Linux下查找某个软件包(以indent为例)：
 
 APT包管理工具也提供了类似功能的命令选项：
 
-    apt-cache pkgname 'indent'
+    apt-cache pkgnames 'indent'
 
 只不过这个输出仅有包名没有简介信息。
 

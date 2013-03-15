@@ -123,7 +123,7 @@ Shell：Bash + [powerline-shell](https://github.com/milkbikis/powerline-shell)
 
 命令行Web浏览器：lynx
 
-终端：Terminator/Guake
+终端：Yakuake/Terminator
 
 截屏：KSnapshot
 

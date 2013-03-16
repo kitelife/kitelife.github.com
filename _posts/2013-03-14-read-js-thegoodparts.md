@@ -238,4 +238,54 @@ Function.method('curry', function () {
 
 ##第5章：继承
 
+当一个函数对象被创建时，Function构造器产生的函数对象会运行类似这样的一些代码：
+
+{% highlight js %}
+this.prototype = {constructor: this};
+{% endhighlight %}
+
+新函数对象被赋予一个prototype属性，其值包含一个constructor属性且属性值为该新函数对象。该prototype对象是存放继承特征的地方。因为JavaScript语言没有提供一种方法去确定哪个函数是打算用来作构造器的，所以每个函数都会得到一个prototype对象。constructor属性没什么用，重要的是prototype对象。
+
+---
+
+**函数化构造器实现私有保护**：
+
+{% highlight js %}
+var people = function (spec) {
+    var that = {
+        prefix: 'People: '
+    };
+    that.get_name = function () {
+        return this.prefix + spec.name;
+    };
+    that.says = function () {
+        return this.prefix + (spec.saying || '');
+    };
+    return that;
+};
+{% endhighlight %}
+
+
+##第6章：数组
+
+JavaScript中，每个数组都有一个length属性。如果你用大于或等于当前length的数字作为下标来存储一个元素，那么length值会被增大以容纳新元素，不会发生数组越界错误。
+
+length属性的值是这个数组的最大整数属性名加上1.它不一定等于数组里的属性的个数。
+
+你可以直接设置length的值。设置更大的length不会给数组分配更多的空间。而把length设小将导致所有下标大于等于新length的属性被删除。
+
+---
+
+由于JavaScript的数组其实就是对象，所以delete运算符可以用来从数组中移除元素。不幸的是，这样会在数组中留下一个空洞。这是因为排在被删除元素之后的元素保留着它们最初的属性。JavaScript的数组有一个splice方法，可以删除一些元素并将它们替换为其他的元素。
+
+{% highlight js %}
+numbers = ['zero', 'one', 'two', 'shi', 'go'];
+
+delete numbers[2];
+// 现在numbers为['zero', 'one', undefined, 'shi', 'go']
+
+numbers.splice(2, 1);
+// 现在numbers为['zero', 'one', 'shi', 'go']
+{% endhighlight %}
+
 

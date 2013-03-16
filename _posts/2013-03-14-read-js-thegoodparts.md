@@ -331,4 +331,86 @@ var is_array = function (value) {
 
 ---
 
+##第8章：方法
+
+###Array
+
+**array.concat(item...)**方法会产生一个新数组，它包含一份array的浅复制（shallow copy）并把一个或多个参数item附加在其后。如果参数item是一个数组，那么它的每个元素会被分别添加。
+
+{% highlight js %}
+var a = ['a', 'b', 'c'];
+var b = ['x', 'y', 'z'];
+var c = a.concat(b, true);
+// c为['a', 'b', 'c', 'x', 'y', 'z', true]
+{% endhighlight %}
+
+**array.join(separator)**方法把一个array构造成一个字符串。目前在大多数情况下，对字符串连接建议首选使用+运算符，因为相比join方法，+运算符的性能更高。
+
+**array.pop()**，其可以这样实现：
+
+{% highlight js %}
+Array.method('pop', function () {
+    return this.splice(this.length - 1, 1)[0];
+});
+{% endhighlight %}
+
+**array.push(item...)**与concat方法不同的是，该方法会修改array。可以这样实现：
+
+{% highlight js %}
+Array.method('push', function () {
+    this.splice.apply(
+        this,
+        [this.length, 0].
+            concat(Array.prototype.slice.apply(arguments)));
+    return this.length;
+});
+{% endhighlight %}
+
+**array.reverse()**方法反转array里的元素的顺序，并返回array本身：
+
+{% highlight js %}
+var a = ['a', 'b', 'c'];
+var b = a.reverse();
+// a和b都是['c', 'b', 'a']
+{% endhighlight %}
+
+**array.shift()**方法移除数组array中的第1个元素并返回该元素。如果数组array为空，则会返回undefined。shift操作通常要比pop慢得多，可以这样实现：
+
+{% highlight js %}
+Array.method('shift', function () {
+    return this.splice(0, 1)[0];
+});
+{% endhighlight %}
+
+**array.slice(start, end)**方法对array中的一段做浅复制。
+
+**array.sort(comparefn)**方法对array中的内容进行排序。默认比较函数把要排序的元素都视为字符串。可以使用自己的比较函数来替换默认的比较函数。你的比较函数应该接受两个参数，并且如果这两个参数相等则返回0，如果第1个参数应该排列在前面，则返回一个负数，如果第2个参数应该排列在前面，则返回一个正数。
+
+**array.splice(start, deleteCount, item...)**方法从array中移除一个或多个元素，并用新的item替换它们。其返回一个包含被移除元素的数组。
+
+**array.unshift(item...)**方法像push方法一样，用于把元素添加到数组中，但它是把item插入到array的开始部分而不是尾部，返回array的新的length。
+
+###Function
+
+**function.apply(thisArg, argArray)**方法调用function，传递一个会被绑定到this上的对象和一个可选的数组作为参数。
+
+###Number
+
+**number.toFixed(fractionDigits)**方法把number转换成一个十进制数形式的字符串。可选参数fractionDigits控制其小数点后的数字位数，必须在0～20之间，默认为0。**number.toPrecision(precision)**方法的功能与其几乎相同，除了precision的值为0~21之间。
+
+**number.toString(radix)**方法把number转换成为一个字符串。可选参数radix控制基数，默认为10。
+
+###String
+
+**string.charAt(pos)**方法返回在string中pos位置处的字符。
+
+**string.charCodeAt(pos)**方法同charAt一样，只不过返回的不是一个字符串，而是以整数形式表死的在string中pos位置处的字符的字符码位。
+
+**string.indexOf(searchString, position)**方法在string内查找另一个字符串searchString。如果找到，返回第一个匹配字符的位置，否则返回-1。可选参数position可设置从string的某个指定位置开始超找。
+
+**string.lastIndexOf(searchString, position)**方法和indexOf方法类似，只不过它是从该字符串的末尾开始查找而不是从开头。
+
+**string.search(regexp)**方法和indexOf方法类似，只是它接受一个正则表达式对象作为参数而不是一个字符串。
+
+##第9章：代码风格
 

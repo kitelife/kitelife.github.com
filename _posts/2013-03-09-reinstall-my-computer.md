@@ -47,7 +47,9 @@ tags: [笔记]
 中文显示不太正常，使用命令`apt-cache search wenquanyi`，找出所有文泉驿开源字体，安装即可。
 
 2.
-`pip install gevent`安装gevent，没法正常编译，只好使用`sudo apt-get install python-gevent`（2013-03-17补：先安装libevent-dev`sudo apt-get install libevent-dev`就可以正常编译了）
+`pip install gevent`安装gevent，没法正常编译，只好使用`sudo apt-get install python-gevent`
+
+（*2013-03-17补*：先`sudo apt-get install libevent-dev`安装libevent-dev就可以正常编译了）
 
 3.
 [powerline-shell](https://github.com/milkbikis/powerline-shell)中的特殊字体在终端中没法正常显示，按照文档说明使用工具[fontpatcher](https://github.com/Lokaltog/vim-powerline/tree/develop/fontpatcher)来生成适用于powerline-shell的字体。可fontpatcher依赖于fontforge，`pip install fontforge`却说找不到fontforge，好吧，还是`sudo apt-get install python-fontforge`安装。然后按照普通字体的安装方式安装即可。

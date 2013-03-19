@@ -17,6 +17,9 @@ title: 工具集
 - [pep8](https://github.com/vim-scripts/pep8)(检查Python源码是否符合PEP8风格)
 - [vim-gitgutter](https://github.com/airblade/vim-gitgutter)(A Vim plugin which shows a git diff in the 'gutter' (sign column). It shows whether each line has been added, modified, and where lines have been removed.)
 - [jshint.vim](https://github.com/walm/jshint.vim)（jshint的vim前端插件）
+- [vim-powerline](https://github.com/Lokaltog/vim-powerline)(实现更美观、功能更多的vim状态栏)
+- [molokai](https://github.com/tomasr/molokai)(Molokai Color Scheme for Vim)
+- [indentLine](https://github.com/Yggdroot/indentLine)(缩进线)
 
 ##Git
 ###书籍：

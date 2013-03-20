@@ -124,13 +124,13 @@ Shell：Bash + [powerline-shell](https://github.com/milkbikis/powerline-shell)
 
 翻墙：Goagent + Chrome插件SwitchySharp或Firefox插件AutoProxy
 
-命令行窗口复用：tmux
+命令行窗口复用：tmux + tmux-powerline
 
 图形化Web浏览器：Google Chrome/Firefox
 
 命令行Web浏览器：lynx
 
-终端：Yakuake/Terminator
+终端：Terminator
 
 截屏：KSnapshot
 

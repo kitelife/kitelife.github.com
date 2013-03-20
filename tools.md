@@ -7,6 +7,8 @@ title: 工具集
 
 配置文件：[https://github.com/youngsterxyf/mydotfiles](https://github.com/youngsterxyf/mydotfiles)
 
+[Vim的分屏功能](http://coolshell.cn/articles/1679.html)
+
 ###插件
 - [Vundle](https://github.com/gmarik/vundle)(插件管理)
 - [vim-javascript](https://github.com/vim-scripts/vim-javascript)(JavaScript语法高亮与自动缩进)

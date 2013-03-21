@@ -114,6 +114,8 @@ title: 工具集
 
 - [酷毙的Linux单行命令](http://www.commandlinefu.com/commands/browse/sort-by-votes)
 
+- [Gnome/KDE键盘快捷键](http://www.novell.com/coolsolutions/tip/2289.html)
+
 ##日常使用工具
 
 桌面环境：KDE

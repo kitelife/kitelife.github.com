@@ -45,8 +45,7 @@ tags: [JavaScript, 翻译]
 在写了上千页短小示例代码片段后，你会想看看两个非常流行而强大的JavaScript项目的源代码：
 
 1. [Underscore.js](http://underscorejs.org/docs/underscore.html)
-
-2. [http://backbonejs.org/docs/backbone.html](http://backbonejs.org/docs/backbone.html)
+2. [Backbone.js](http://backbonejs.org/docs/backbone.html)
 
 你会发现之前的一切都是有意义的，现在你能够顺畅地阅读和理解JavaScript代码。
 

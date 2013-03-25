@@ -60,7 +60,7 @@ tags: [JavaScript, 翻译]
 如果你仍然渴望学习更多关于JavaScript的东西，那么深入学习：
 
 - 通过[CoffeeScript小书 - Alex MacCaw著](http://shop.oreilly.com/product/0636920024309.do)学习[CoffeeScript](http://coffeescript.org/)
-- [沿着这条路线](http://javascriptissexy.com/learn-backbone-js-completely/)学习(http://backbonejs.org/)
+- [沿着这条路线](http://javascriptissexy.com/learn-backbone-js-completely/)学习[Backbone.js](http://backbonejs.org/)
 - [沿着这条路线](http://javascriptissexy.com/learn-node-js-completely-and-with-confidence/)学习[Node.js](http://nodejs.org/)
 
 ###然后放下书，去使用JavaScript吧！

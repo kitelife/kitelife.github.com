@@ -8,9 +8,9 @@ tags: [JavaScript, 翻译]
 
 译者：[youngsterxyf](https://github.com/youngsterxyf)
 
-自从我曾[几](http://sivers.org/os)[次](http://sivers.org/srs)[提到](http://sivers.org/prog)自己在刚过去的几个月中学习了JavaScript，很多人就发email给我询问我是如何学习以及推荐如何学习JavaScript的。因此以下就是我的经验和最佳建议。
+自从我曾[几](http://sivers.org/os)[次](http://sivers.org/srs)[提到](http://sivers.org/prog)自己在刚过去的几个月中学习了JavaScript，很多人就发email给我询问我是如何学习JavaScript的以及推荐如何学习。以下就是我的经验和最佳建议。
 
-注：我是真的想学习JavaScript---不是捷径，或快速技巧，或元工具（meta-tools）之类让我不必要学习JavaScript的东西。我想学习、掌握、阅读、理解以及记住JavaScript这门语言，从而在以后的日子里我能够理解所有其他以JavaScript编写的很酷的东西。
+注：我是想真正地学习JavaScript---不是捷径，或快速技巧，或元工具（meta-tools）之类让我不必要学习JavaScript的东西。我想学习、掌握、阅读、理解以及记住JavaScript这门语言，从而在以后的日子里能够理解所有其他以JavaScript编写的很酷的东西。
 
 首先---很多人可能会告诉你去阅读[Douglas Crockford的著作JavaScript语言精粹](http://shop.oreilly.com/product/9780596517748.do)。但当我开始阅读这本书时，才发现它是如此的紧凑简洁以致我根本不知道它在说啥！
 
@@ -20,13 +20,13 @@ tags: [JavaScript, 翻译]
 
 相反，从[Marijn Haverbeke的著作JavaScript编程精解](http://eloquentjavascript.net/)开始学习吧。
 
-这本书一开始非常简单易学，简直是太简单了，但这能鼓舞你，让你自信起来。你就能得意洋洋地说“这很简单嘛！”
+这本书一开始非常简单易学，简直是太简单了，这能鼓舞你，让你自信起来。你就能得意洋洋地说“这很简单嘛！”
 
 [阅读这里的在线版本](http://eloquentjavascript.net/contents.html)，因为你可以直接在浏览器中测试实验。
 
-然后，读完几个章节后，**转而阅读**[JavaScript高级程序设计，第三版---Nicholas Zakas著](http://www.wrox.com/WileyCDA/WroxTitle/Professional-JavaScript-for-Web-Developers-3rd-Edition.productCd-1118222199.html)。
+然后，在读完几个章节后，**转而阅读**[JavaScript高级程序设计，第三版---Nicholas Zakas著](http://www.wrox.com/WileyCDA/WroxTitle/Professional-JavaScript-for-Web-Developers-3rd-Edition.productCd-1118222199.html)。
 
-这是一本终极教程，花很多时间详细解释大量细节，覆盖几乎所有东西。你应每章花费几个小时来阅读，等你读完这本书时，你知道的也就和大多数自称JavaScript程序员一样多了。
+这是一本终极教程，花很多篇幅详细解释大量知识点，覆盖几乎所有东西。每个章节你都应花费几个小时来阅读，等你读完这本书时，你知道的也就和大多数自称JavaScript程序员的人一样多了。
 
 有趣的是，读完这本书后，我又回过头来阅读[JavaScript语言精粹](http://shop.oreilly.com/product/9780596517748.do)，现在我能理解书中讲述的东西了。但由于[JavaScript高级程序设计](http://www.wrox.com/WileyCDA/WroxTitle/Professional-JavaScript-for-Web-Developers-3rd-Edition.productCd-1118222199.html)一书的内容是如此全面，所以也就覆盖了所有的“精粹”了。
 
@@ -48,13 +48,13 @@ tags: [JavaScript, 翻译]
 
 2. [http://backbonejs.org/docs/backbone.html](http://backbonejs.org/docs/backbone.html)
 
-现在你会发现这一切都是有意义的。你能够顺畅地阅读和理解JavaScript代码。
+你会发现之前的一切都是有意义的，现在你能够顺畅地阅读和理解JavaScript代码。
 
 ###然后是jQuery，以及更多...
 
-[jQuery](http://jquery.com/)绝对是无处不在，你要想完整地学习JavaScript就必须学习它。
+[jQuery](http://jquery.com/)绝对是无处不在的，你要想完整地学习JavaScript就必须学习它。
 
-既然已学习了纯JavaScript冗长的处理问题的方式，你会很喜欢jQuery提供的快捷方式。
+学习了纯JavaScript冗长的处理问题的方式，你会很喜欢jQuery提供的快捷方式。
 
 我真的很喜欢[深入浅出jQuery](http://www.headfirstlabs.com/books/hfjquery/)一书，绝对是傻瓜式书籍。这本书非常精彩地引导你学习jQuery，边学边应用你学习过的东西。
 
@@ -72,4 +72,4 @@ tags: [JavaScript, 翻译]
 
 好了...上述就是我的一点经验，对于结果我相当满意。
 
-也请你再次分享其他的建议或经验吧。
+也请你在此分享其他的建议或经验吧。

@@ -48,6 +48,8 @@ title: 工具集
 
 ##命令行工具与解决方案
 
+- 禁用触摸板：`sudo rmmod psmouse`，开启触摸板：`sudo modprobe psmouse`
+
 - 将man手册转换为pdf格式打印出来阅读，如直接将man命令的手册页转换为pdf格式:`man -t man | ps2pdf - > man.pdf`
 
 - 显示进程树：`pstree`

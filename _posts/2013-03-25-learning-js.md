@@ -8,7 +8,7 @@ tags: [JavaScript, 翻译]
 
 译者：[youngsterxyf](https://github.com/youngsterxyf)
 
-自从我曾几次提到自己仅在过去的几个月中学习了JavaScript，很多人就发email给我询问我是如何学习以及推荐如何学习JavaScript的。因此以下就是我的经验和最佳建议。
+自从我曾[几](http://sivers.org/os)[次](http://sivers.org/srs)[提到](http://sivers.org/prog)自己在刚过去的几个月中学习了JavaScript，很多人就发email给我询问我是如何学习以及推荐如何学习JavaScript的。因此以下就是我的经验和最佳建议。
 
 注：我是真的想学习JavaScript---不是捷径，或快速技巧，或元工具（meta-tools）之类让我不必要学习JavaScript的东西。我想学习、掌握、阅读、理解以及记住JavaScript这门语言，从而在以后的日子里我能够理解所有其他以JavaScript编写的很酷的东西。
 

@@ -24,3 +24,5 @@ title: 技术阅读
 - [nikic](http://nikic.github.com/)
 
 - [EMC中国研究院官方轻博客](http://qing.weibo.com/emclabschina)
+
+- [Arabesque](http://blog.sanctum.geek.nz/)(Linux, Bash, VIM等)

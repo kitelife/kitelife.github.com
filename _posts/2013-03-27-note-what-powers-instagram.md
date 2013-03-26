@@ -6,9 +6,9 @@ tags: [笔记]
 
 原文：[What Powers Instagram: Hundreds of Instances, Dozens of Technologies](http://instagram-engineering.tumblr.com/post/13649370142/what-powers-instagram-hundreds-of-instances-dozens-of)
 
-该文从多个方面介绍Instagram整个系统栈（stack）的组成，罗列所使用的组件。
 
----
+（该文从多个方面介绍Instagram整个系统栈（stack）的组成，罗列所使用的组件。我觉得重要的不是用了哪些组建工具，而是在构建一个系统时，应注意哪些问题，从哪些层面对系统进行优化。）
+
 
 构建系统的核心原则：
 

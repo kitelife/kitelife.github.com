@@ -22,7 +22,7 @@ tags: [笔记]
 
 ### OS/虚拟主机
 
-在Amazon EC2上运行Ubuntu Linux 11.04。之前的Ubuntu版本在高流量的情况会产生各种不可预料的冻结事件（freezing episodes）.
+在Amazon EC2上运行Ubuntu Linux 11.04。之前的Ubuntu版本在高流量的情况会产生各种不可预料的冻结事件（freezing episodes）。
 
 
 ### 负载均衡
@@ -53,7 +53,7 @@ Django；多个应用服务器，由于无状态，所以容易横向扩展。
 
 图片直接存储在Amazon S3上。使用Amazon CloudFront作为CDN。
 
-广泛使用[Redis](http://redis.io/)，驱动主要的数据源(main feed)、活动数据源(activity feed)，会话系统（[Instagram的Django会话后端](https://gist.github.com/mikeyk/910392)）。也以主-副本设置运行Redis，副本机器不断地将数据库保存到磁盘，并使用EBS快照来备份这些DB转储的数据。因为Redis支持写副本，所以在多台Redis机器之间进行在线故障转移（online failover）非常容易。
+广泛使用[Redis](http://redis.io/)，驱动主要的数据源(main feed)、活动数据源(activity feed)、会话系统（[Instagram的Django会话后端](https://gist.github.com/mikeyk/910392)）。也以主-副本设置运行Redis，副本机器不断地将数据库保存到磁盘，并使用EBS快照来备份这些DB转储数据。因为Redis支持写副本，所以在多台Redis机器之间进行在线故障转移（online failover）非常容易。
 
 使用Memcached做缓存，通过pylibmc和libmemcached连接memcached。
 
@@ -67,7 +67,7 @@ Django；多个应用服务器，由于无状态，所以容易横向扩展。
 
 ### 监控
 
-使用[Munin](http://munin-monitoring.org/)为整个系统的各种指标绘制图表，如果某些指标超出了常规范围也会提醒管理员。基于[Python-Munin](http://samuelks.com/python-munin/)编写Munin插件为非系统级的指标绘制图表。
+使用[Munin](http://munin-monitoring.org/)为整个系统的各种指标绘制图表，如果某些指标超出了常规范围会提醒管理员。基于[Python-Munin](http://samuelks.com/python-munin/)编写Munin插件为非系统级的指标绘制图表。
 
 使用[Pingdom](http://pingdom.com/)对服务进行外部监控。
 

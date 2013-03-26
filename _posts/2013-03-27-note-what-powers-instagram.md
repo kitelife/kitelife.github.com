@@ -10,7 +10,7 @@ tags: [笔记]
 
 ---
 
-构建系统的核心原则：
+构建系统的核心原则:
 
 - 保持简单
 - 不重复造轮子
@@ -50,7 +50,7 @@ Django；多个应用服务器，由于无状态，所以容易横向扩展。
 
 图片直接存储在Amazon S3上。使用Amazon CloudFront作为CDN。
 
-广泛使用[Redis](http://redis.io/)，驱动主要的数据源(main feed)、活动数据源(activity feed)，会话系统（[https://gist.github.com/mikeyk/910392](Instagram的Django会话后端)）。也以主-副本设置运行Redis，副本机器不断地将数据库保存到磁盘，并使用EBS快照来备份这些DB转储的数据。因为Redis支持写副本，所以在多台Redis机器之间进行在线故障转移（online failover）非常容易。
+广泛使用[Redis](http://redis.io/)，驱动主要的数据源(main feed)、活动数据源(activity feed)，会话系统（[Instagram的Django会话后端](https://gist.github.com/mikeyk/910392)）。也以主-副本设置运行Redis，副本机器不断地将数据库保存到磁盘，并使用EBS快照来备份这些DB转储的数据。因为Redis支持写副本，所以在多台Redis机器之间进行在线故障转移（online failover）非常容易。
 
 使用Memcached做缓存，通过pylibmc和libmemcached连接memcached。
 

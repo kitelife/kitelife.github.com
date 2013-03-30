@@ -22,6 +22,7 @@ title: 工具集
 - [vim-powerline](https://github.com/Lokaltog/vim-powerline)(实现更美观、功能更多的vim状态栏)
 - [molokai](https://github.com/tomasr/molokai)(Molokai Color Scheme for Vim)
 - [indentLine](https://github.com/Yggdroot/indentLine)(缩进线)
+- [vim-css-color](https://github.com/skammer/vim-css-color)(css显示颜色值代表的颜色)
 
 ##Git
 ###书籍：
@@ -47,6 +48,8 @@ title: 工具集
 - IPython（可在virtualenv虚拟环境中通过pip install ipython安装使用）
 
 ##命令行工具与解决方案
+
+- [ack-grep](http://betterthangrep.com/) --- 比grep更好用的搜索工具，专为程序员优化
 
 - 禁用触摸板：`sudo rmmod psmouse`，开启触摸板：`sudo modprobe psmouse`
 

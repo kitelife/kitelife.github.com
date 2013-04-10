@@ -49,6 +49,8 @@ title: 工具集
 
 ##命令行工具与解决方案
 
+- 查看LINUX发行版的名称及其版本号的命令：1. `cat /etc/issue`；2. `lsb_release -a`；3. `cat /etc/redhat-release`(针对redhat，Fedora)
+
 - [ack-grep](http://betterthangrep.com/) --- 比grep更好用的搜索工具，专为程序员优化
 
 - 禁用触摸板：`sudo rmmod psmouse`，开启触摸板：`sudo modprobe psmouse`

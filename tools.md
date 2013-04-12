@@ -9,10 +9,10 @@ title: 工具集
 
 ### 快捷键
 
-- 跳到行尾：`shift + a`, 跳到行首：`shift + b`
-- 删除N行：`N + d`，复制N行：`N + yy`
-- 跳到最后一行：`G`，跳到第一行：`gg`
-- 剪切：`dd`，粘贴：`p`
+- 跳到行尾： `shift + a` , 跳到行首： `shift + b`
+- 删除N行： `N + d`，复制N行： `N + yy`
+- 跳到最后一行： `G`，跳到第一行： `gg`
+- 剪切： `dd`，粘贴： `p`
 
 ###插件
 - [Vundle](https://github.com/gmarik/vundle)(插件管理)

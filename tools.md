@@ -7,7 +7,12 @@ title: 工具集
 
 配置文件：[https://github.com/youngsterxyf/mydotfiles](https://github.com/youngsterxyf/mydotfiles)
 
-[Vim的分屏功能](http://coolshell.cn/articles/1679.html)
+### 快捷键
+
+- 跳到行尾：`shift + a`, 跳到行首：`shift + b`
+- 删除N行：`N + d`，复制N行：`N + yy`
+- 跳到最后一行：`G`，跳到第一行：`gg`
+- 剪切：`dd`，粘贴：`p`
 
 ###插件
 - [Vundle](https://github.com/gmarik/vundle)(插件管理)
@@ -23,6 +28,11 @@ title: 工具集
 - [molokai](https://github.com/tomasr/molokai)(Molokai Color Scheme for Vim)
 - [indentLine](https://github.com/Yggdroot/indentLine)(缩进线)
 - [vim-css-color](https://github.com/skammer/vim-css-color)(css显示颜色值代表的颜色)
+
+### 资料
+
+[Vim的分屏功能](http://coolshell.cn/articles/1679.html)
+
 
 ##Git
 ###书籍：

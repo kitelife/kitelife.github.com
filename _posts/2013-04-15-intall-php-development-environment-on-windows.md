@@ -44,7 +44,7 @@ tags: [笔记, PHP]
     nginx -s reload	 changing configuration, starting new worker processes with a new configuration, graceful shutdown of old worker processes
     nginx -s reopen	re-opening log files
 
-另外，Nginx的虚拟主机配置信息中，root指令指定的网站根目录路径应遵从Unix的格式，而不是Windows的格式，即使用**/**而不是**\**来分割目录层次。
+另外，Nginx的虚拟主机配置信息中，root指令指定的网站根目录路径应遵从Unix的格式，而不是Windows的格式，即使用**/**而不是**\\**来分割目录层次。
 
 Nginx与PHP的Windows版本可分别从：[Nginx for Windows](http://nginx.org/en/download.html)，[PHP for Windows](http://windows.php.net/download/)。无需安装，解压缩即可。PHP-CGI的可执行文件php-cgi.exe也在PHP的压缩包中。
 

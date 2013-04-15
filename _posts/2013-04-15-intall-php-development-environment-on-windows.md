@@ -44,9 +44,9 @@ tags: [笔记, PHP]
     nginx -s reload	 changing configuration, starting new worker processes with a new configuration, graceful shutdown of old worker processes
     nginx -s reopen	re-opening log files
 
-另外，Nginx的虚拟主机配置信息中，root指令指定的网站根目录路径应遵从Unix的格式，而不是Windows的格式，即使用`/`而不是`\\`来分割目录层次。
+另外，Nginx的虚拟主机配置信息中，root指令指定的网站根目录路径应遵从Unix的格式，而不是Windows的格式，即使用**/**而不是**\**来分割目录层次。
 
-Nginx与PHP的Windows可分别从：[Nginx for Windows](http://nginx.org/en/download.html)，[PHP for Windows](http://windows.php.net/download/)。无需安装，解压缩即可。PHP-CGI的可执行文件php-cgi.exe也在PHP的压缩包中。
+Nginx与PHP的Windows版本可分别从：[Nginx for Windows](http://nginx.org/en/download.html)，[PHP for Windows](http://windows.php.net/download/)。无需安装，解压缩即可。PHP-CGI的可执行文件php-cgi.exe也在PHP的压缩包中。
 
 ---
 
@@ -64,11 +64,11 @@ Memcached的默认端口为11211。
 
 关于Redis的配置见：[http://redis.io/topics/config](http://redis.io/topics/config)
 
-关于windows下redis和php的redis扩展的安装，可参考[http://blog.phpwind.me/?p=152](http://blog.phpwind.me/?p=152)
+关于windows下redis和php的redis扩展的安装，可进一步参考[http://blog.phpwind.me/?p=152](http://blog.phpwind.me/?p=152)
 
 ---
 
-关于PHP与MySQL之间的交互，类似于PHP与分布式内存对象系统之间的交互。只不过PHP的压缩包的ext目录下已经包含了`php_mysql.dll`和`php_mysqli.dll`扩展包，只需修改php.ini配置文件即可：删除`;extension=php_mysql.dll`和`;extension=php_mysqli.dll`两行行首的分号。
+PHP与MySQL之间的交互，类似于PHP与分布式内存对象系统之间的交互。只不过PHP的压缩包的ext目录下已经包含了`php_mysql.dll`和`php_mysqli.dll`扩展包，只需修改php.ini配置文件即可：删除`;extension=php_mysql.dll`和`;extension=php_mysqli.dll`两行行首的分号。
 
 MySQL的服务器端程序从MySQL官网下载即可，默认端口为3306。
 
@@ -76,9 +76,9 @@ MySQL的服务器端程序从MySQL官网下载即可，默认端口为3306。
 
 **安装phpMyAdmin**
 
-为了方便数据库管理，可以安装个phpMyAdmin。由于phpMyAdmin是通过Web页面对数据库进行查询操作的，所以需要在Nginx配置文件中为其添加一个虚拟主机配置。
+为了方便数据库管理，可以安装phpMyAdmin。phpMyAdmin是通过Web页面对数据库进行查询操作的，所以需要在Nginx配置文件中为其添加一个虚拟主机配置。
 
-并且由于要访问数据库，所以需要在phpMyAdmin配置文件中添加访问数据库的用户名和密码：将`libraries/config.default.php`文件中如下的几行：
+要访问数据库，所以需要在phpMyAdmin配置文件中添加访问数据库的用户名和密码：将`libraries/config.default.php`文件中如下的几行：
 
     $cfg['Servers'][$i]['controlhost'] = '';
     ...
@@ -114,7 +114,7 @@ MySQL的服务器端程序从MySQL官网下载即可，默认端口为3306。
         phpinfo();
     ?>
 
-通过浏览器访问该网页，若PHP环境配置成功，则会看到一个当前PHP环境的详细信息列表，从中可以看到当前所启动的PHP扩展，若从中未找到memcache、redis、mysql这几个扩展包信息，则说明未成功启用。
+通过浏览器访问该网页，若PHP环境配置成功，则会看到一个当前PHP环境的详细信息列表，从中可以看到当前所启动的PHP扩展，若未找到memcache、redis、mysql这几个扩展包信息，则说明未成功启用。
 
 通过浏览器访问phpMyAdmin，看是否能成功访问数据库。
 
@@ -122,4 +122,4 @@ MySQL的服务器端程序从MySQL官网下载即可，默认端口为3306。
 
 如果你测试某些以前别人写的PHP代码，发现结果与预期的不相符，则看看是不是那些代码中使用了PHP短标记`<?`和`?>`。PHP默认不启用短标记，所以你需要修改php.ini，删除`;short_open_tag = On`一行之前的分号。
 
-
+另外，注意Nginx虚拟主机所使用的端口不要和Windows中其他网络应用的端口冲突。

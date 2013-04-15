@@ -70,7 +70,7 @@ Memcached的默认端口为11211。
 
 PHP与MySQL之间的交互，类似于PHP与分布式内存对象系统之间的交互。只不过PHP的压缩包的ext目录下已经包含了`php_mysql.dll`和`php_mysqli.dll`扩展包，只需修改php.ini配置文件即可：删除`;extension=php_mysql.dll`和`;extension=php_mysqli.dll`两行行首的分号。
 
-MySQL的服务器端程序从MySQL官网下载即可，默认端口为3306。
+MySQL的服务器端程序从MySQL官网下载，默认端口为3306。
 
 ---
 

@@ -59,6 +59,8 @@ title: 工具集
 
 ##命令行工具与解决方案
 
+- Windows上查看端口占用情况：`netstat -ano`
+
 - 查看LINUX发行版的名称及其版本号的命令：1. `cat /etc/issue`；2. `lsb_release -a`；3. `cat /etc/redhat-release`(针对redhat，Fedora)
 
 - [ack-grep](http://betterthangrep.com/) --- 比grep更好用的搜索工具，专为程序员优化
@@ -123,7 +125,7 @@ title: 工具集
 
 - python内嵌的简单便捷HTTP Server：`python -m SimpleHTTPServer Port`
 
-- Python命令行美化输出json数据：`python -mjson.tool json_filename`或者通过管道`some_cmd | python -mjson.tool`，也可以直接在命令行使用双引号包围一个json数据字符串来替代json_filename的位置。
+- Python命令行美化输出json数据：`python -mjson.tool json_filename`或者通过管道`some_cmd | python -mjson.tool`，也可以直接在命令行使用双引号包围一个json数据字符串来替代json_filename的位置。而且，如果你安装了 Pygments 模块，可以高亮地打印JSON：`echo '{"json":"obj"}' | python -mjson.tool | pygmentize -l json`。
 
 - 保存某个virtualenv中已安装的package列表，并在另一个virtualenv中原样恢复：1.`(some_env)$pip freeze > requirements.txt`; 2. `(another_env)$pip install -r requirements.txt`
 

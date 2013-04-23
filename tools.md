@@ -26,6 +26,7 @@ title: 工具集
 - [jshint.vim](https://github.com/walm/jshint.vim)（jshint的vim前端插件）
 - [vim-powerline](https://github.com/Lokaltog/vim-powerline)(实现更美观、功能更多的vim状态栏)
 - [molokai](https://github.com/tomasr/molokai)(Molokai Color Scheme for Vim)
+- [vim-monokai-refined](https://github.com/jaromero/vim-monokai-refined)(Port of Monokai Refined for TextMate/Sublime Text)
 - [indentLine](https://github.com/Yggdroot/indentLine)(缩进线)
 - [vim-css-color](https://github.com/skammer/vim-css-color)(css显示颜色值代表的颜色)
 
@@ -47,8 +48,8 @@ title: 工具集
 
 - VIM（主力工具）
 - Eclipse（Java/Python）
-- PyCharm（Python）
-- Zend Studio（PHP）
+- JetBrains PyCharm（Python）
+- JetBrains PhpStorm<s>Zend Studio</s>（PHP）
 - CodeBlocks（C/C++）
 - Racket（Scheme）
 - TeXstudio（Latex）（算开发工具么？）
@@ -181,7 +182,7 @@ Email阅读：Thunderbird/Gmail
 
 即时通讯(GTalk/MSN)：Pidgin/KDE IM Contacts/WebQQ
 
-办公套件：LibreOffice
+办公套件：WPS office<s>LibreOffice</s>
 
 日程管理：Trello(Chrome插件+Andriod应用)
 

@@ -49,7 +49,7 @@ title: 工具集
 - VIM（主力工具）
 - Eclipse（Java/Python）
 - JetBrains PyCharm（Python）
-- JetBrains PhpStorm<s>Zend Studio</s>（PHP）
+- JetBrains PhpStorm <s>Zend Studio</s>（PHP）
 - CodeBlocks（C/C++）
 - Racket（Scheme）
 - TeXstudio（Latex）（算开发工具么？）
@@ -182,7 +182,7 @@ Email阅读：Thunderbird/Gmail
 
 即时通讯(GTalk/MSN)：Pidgin/KDE IM Contacts/WebQQ
 
-办公套件：WPS office<s>LibreOffice</s>
+办公套件：WPS office <s>LibreOffice</s>
 
 日程管理：Trello(Chrome插件+Andriod应用)
 

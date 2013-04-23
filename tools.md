@@ -23,7 +23,7 @@ title: 工具集
 - [jedi-vim](https://github.com/davidhalter/jedi-vim)(Python代码自动完成，对jedi自动完成库的vim绑定)
 - [pep8](https://github.com/vim-scripts/pep8)(检查Python源码是否符合PEP8风格)
 - [vim-gitgutter](https://github.com/airblade/vim-gitgutter)(A Vim plugin which shows a git diff in the 'gutter' (sign column). It shows whether each line has been added, modified, and where lines have been removed.)
-- [jshint.vim](https://github.com/walm/jshint.vim)（jshint的vim前端插件）
+- [jshint.vim](https://github.com/walm/jshint.vim)(jshint的vim前端插件)
 - [vim-powerline](https://github.com/Lokaltog/vim-powerline)(实现更美观、功能更多的vim状态栏)
 - [molokai](https://github.com/tomasr/molokai)(Molokai Color Scheme for Vim)
 - [vim-monokai-refined](https://github.com/jaromero/vim-monokai-refined)(Port of Monokai Refined for TextMate/Sublime Text)
@@ -53,7 +53,7 @@ title: 工具集
 - CodeBlocks（C/C++）
 - Racket（Scheme）
 - TeXstudio（Latex）（算开发工具么？）
-- Git（源码控制）
+- Git/SVN（源码控制）
 - jshint（JavaScript代码检查命令行工具）
 - virtualenv（Python虚拟环境）
 - IPython（可在virtualenv虚拟环境中通过pip install ipython安装使用）

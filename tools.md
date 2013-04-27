@@ -60,6 +60,10 @@ title: 工具集
 
 ##命令行工具与解决方案
 
+- 查看PHP会动态加载的扩展模块： `php -m`
+
+- 递归查找当前目录下所有名为test.txt的文件： `find ./ -name test.txt`
+
 - Windows上查看端口占用情况：`netstat -ano`
 
 - 查看LINUX发行版的名称及其版本号的命令：1. `cat /etc/issue`；2. `lsb_release -a`；3. `cat /etc/redhat-release`(针对redhat，Fedora)

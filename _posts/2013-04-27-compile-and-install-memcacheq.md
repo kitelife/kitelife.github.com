@@ -50,6 +50,7 @@ memcacheq默认打开的网络端口为22201，可通过命令`netstat -tlnp`来
 若想编写PHP程序来测试使用memcacheq，需要先安装配置PHP [memcache扩展模块](http://cn2.php.net/memcache)，可先通过`php -m | grep memcache`来查看是否已安装。测试程序如下：
 
 {% highlight php %}
+<?php
 $memcache_obj = memcache_connect('127.0.0.1', 22201);
 
 // push数据进入队列demoqueue1
@@ -61,6 +62,7 @@ $get_rs = memcache_get($memcache_obj, 'demoqueue1');
 var_dump($get_rs);
 
 memcache_close($memcache_obj);
+?>
 {% endhighlight %}
 
 ### 参考资料

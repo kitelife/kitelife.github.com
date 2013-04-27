@@ -30,7 +30,7 @@ MemcacheQ依赖于BerkeleyDB和libevent，所以需先编译安装这两者。
 然后执行 1) `./configure -prefix=/usr/local/memcacheq`（`-prefix`选项指定将memcacheq安装到/usr/local/memcacheq目录下），2) `make` , 3) `sudo make install` 。
 
 4.
-在Linux上，memcacheq启动时要想成功动态链接BerkeleyDB和libevent的库文件，得先手动配置动态链接库查找路径：1) 编辑文件`/etc/ld.so.conf`，在末尾添加两行：
+在Linux上，memcacheq启动时要想成功动态链接BerkeleyDB和libevent的库文件，得先手动配置动态链接库查找路径：编辑文件`/etc/ld.so.conf`，在末尾添加两行：
 
     /usr/local/lib
     /usr/local/BerkeleyDB.5.0/lib

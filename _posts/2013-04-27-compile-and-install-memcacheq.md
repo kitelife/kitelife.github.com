@@ -27,7 +27,7 @@ MemcacheQ依赖于BerkeleyDB和libevent，所以需先编译安装这两者。
 3.
 从[https://code.google.com/p/memcacheq/downloads/list](https://code.google.com/p/memcacheq/downloads/list)下载memcacheq，当前版本为0.2.0。由于memcacheq的configure文件第3571行：`bdbdir="/usr/local/BerkeleyDB.4.7"`，硬编码了依赖于BerkeleyDB 4.7版本，但在Oracle官网上已经不提供4.7版本的下载，所以需要将该处的版本4.7改为之前所编译的BerkeleyDB版本，如5.0。
 
-然后执行 1) `./configure -prefix=/usr/local/memcacheq`（`-prefix`选项指定将memcacheq安装到/usr/local/memcacheq目录下），2) `make` , 3) `sudo make install` 。
+然后执行 1) `./configure -prefix=/usr/local/memcacheq -enable-threads`（`-prefix`选项指定将memcacheq安装到/usr/local/memcacheq目录下），2) `make` , 3) `sudo make install` 。
 
 4.
 在Linux上，memcacheq启动时要想成功动态链接BerkeleyDB和libevent的库文件，得先手动配置动态链接库查找路径：编辑文件`/etc/ld.so.conf`，在末尾添加两行：

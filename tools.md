@@ -60,6 +60,10 @@ title: 工具集
 
 ##命令行工具与解决方案
 
+- 追踪命令执行过程中的系统调用和信号： `strace`
+
+- CPU/磁盘/网络等系统资源统计工具： `dstat`（很好很强大，可替代vmstat，iostat，ifstat）
+
 - 查看PHP会动态加载的扩展模块： `php -m`
 
 - 递归查找当前目录下所有名为test.txt的文件： `find ./ -name test.txt`

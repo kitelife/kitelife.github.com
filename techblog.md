@@ -3,6 +3,8 @@ layout: page
 title: 技术阅读
 ---
 
+- [麦子麦](http://www.wzxue.com/)(数据库)
+
 - [Hacker News](http://news.ycombinator.com/)
 
 - [Quora](http://www.quora.com/)

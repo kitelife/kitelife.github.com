@@ -31,7 +31,7 @@ JavaScript是许多Google开源项目使用的一种主要的客户端脚本语�
 
 - 使用`NAMES_LIKE_THIS`这样的规则来命名常量。
 - 使用`@const`来指明一个不变（不可覆盖）*指针*（变量或属性）。
-- 决不要使用关键字`const`，因此IE不支持。
+- 决不要使用关键字`const`，因为IE不支持。
 
 **分号**
 
@@ -76,8 +76,7 @@ var THINGS_TO_EAT = [apples, oysters, sprayOnCheese]  // No semicolon here.
 2. 你很可能会得到一个运行时的“no such property in
 undefined”错误，因为代码尝试调用`x[ffVersion][isIE]()`。（译注：该处是否应为`x[normalVersion,
     ffVersion][isIE]()`?）
-3.
-`die`会被调用，除非`resultOfOperation()`的返回值为`NaN`，并且`die()`的结果会赋值给`THINGS_TO_EAT`。
+3. `die`会被调用，除非`resultOfOperation()`的返回值为`NaN`，并且`die()`的结果会赋值给`THINGS_TO_EAT`。
 
 *为什么？*
 

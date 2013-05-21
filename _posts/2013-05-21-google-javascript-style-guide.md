@@ -79,7 +79,41 @@ undefined”错误，因为代码尝试调用`x[ffVersion][isIE]()`。（译注�
 
 *为什么？*
 
+JavaScript要求语句以分号结尾，除非它认为可以安全地推断出分号的存在。在上例代码中就有这样的三处，
+一个函数声明或对象或数组字面量被用在一个语句中。闭合括弧不足以指明语句的结束。
+如果下一个符号是一个中缀或括弧操作符，JavaScript就决不会结束一条语句。
 
+*释疑：分号与函数*
+
+函数表达式的末尾应包含分号，但函数声明的末尾不用。下例能很好地阐释其区别：
+
+{% highlight js %}
+var foo = function() {
+    return true;
+};  // 这里有分号
+
+function foo() {
+    return true;
+}   // 这里没有分号
+{% endhighlight %}
+
+**嵌套函数**
+
+鼓励使用
+
+嵌套函数会非常有用，例如，创建continuations，以及实现隐藏帮助函数。随意使用它们。
+
+**代码块中的函数声明**
+
+不鼓励使用
+
+不要这么干：
+
+{% highlight js %}
+if (x) {
+    function foo() {}
+}
+{% endhightlight %}
 
 ## 补充资料
 

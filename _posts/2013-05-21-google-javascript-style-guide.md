@@ -76,6 +76,7 @@ var THINGS_TO_EAT = [apples, oysters, sprayOnCheese]  // No semicolon here.
 2. 你很可能会得到一个运行时的“no such property in
 undefined”错误，因为代码尝试调用`x[ffVersion][isIE]()`。（译注：该处是否应为`x[normalVersion,
     ffVersion][isIE]()`?）
+
 3. `die`会被调用，除非`resultOfOperation()`的返回值为`NaN`，并且`die()`的结果会赋值给`THINGS_TO_EAT`。
 
 *为什么？*

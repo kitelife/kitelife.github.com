@@ -113,7 +113,7 @@ function foo() {
 if (x) {
     function foo() {}
 }
-{% endhightlight %}
+{% endhighlight %}
 
 ## 补充资料
 

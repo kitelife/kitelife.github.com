@@ -60,6 +60,8 @@ title: 工具集
 
 ##命令行工具与解决方案
 
+- 从命令行使用HTTP协议做测试的强大工具：cURL，参考 [9 uses for cURL worth knowing](https://httpkit.com/resources/HTTP-from-the-Command-Line/)
+
 - 追踪命令执行过程中的系统调用和信号： `strace`
 
 - CPU/磁盘/网络等系统资源统计工具： `dstat`（很好很强大，可替代vmstat，iostat，ifstat）
@@ -80,7 +82,7 @@ title: 工具集
 
 - 显示进程树：`pstree`
 
-- 更新Python第三方软件包：`pip install -U [package_name]` 
+- 更新Python第三方软件包：`pip install -U [package_name]`
 
 - 从命令行安装.deb文件：`sudo dpkg -i package.deb`
 

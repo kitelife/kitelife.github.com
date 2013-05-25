@@ -3,7 +3,13 @@ layout: page
 title: 工具集
 ---
 
-##VIM
+## Sublime Text
+
+### 参考资料：
+
+- [Setting up Sublime Text for Python development](http://dbader.org/blog/setting-up-sublime-text-for-python-development)
+
+## VIM
 
 配置文件：[https://github.com/youngsterxyf/mydotfiles](https://github.com/youngsterxyf/mydotfiles)
 

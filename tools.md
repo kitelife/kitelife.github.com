@@ -3,7 +3,14 @@ layout: page
 title: 工具集
 ---
 
-##VIM
+## Sublime Text
+
+### 参考资料：
+
+- [Setting up Sublime Text for Python development](http://dbader.org/blog/setting-up-sublime-text-for-python-development)
+- [Sublime Text 2 Documentation](http://www.sublimetext.com/docs/2/)
+
+## VIM
 
 配置文件：[https://github.com/youngsterxyf/mydotfiles](https://github.com/youngsterxyf/mydotfiles)
 
@@ -14,7 +21,7 @@ title: 工具集
 - 跳到最后一行： `G`，跳到第一行： `gg`
 - 剪切： `dd`，粘贴： `p`
 
-###插件
+### 插件
 - [Vundle](https://github.com/gmarik/vundle)(插件管理)
 - [vim-javascript](https://github.com/vim-scripts/vim-javascript)(JavaScript语法高亮与自动缩进)
 - [The-NERD-Tree](https://github.com/vim-scripts/The-NERD-tree)(文件系统树状浏览窗口)
@@ -35,18 +42,18 @@ title: 工具集
 [Vim的分屏功能](http://coolshell.cn/articles/1679.html)
 
 
-##Git
-###书籍：
+## Git
+### 书籍：
 * [Pro Git](http://git-scm.com/book/zh/)
 * Git Community Book
 * [Git Internals](https://peepcode.com/products/git-internals-pdf)
 * [Git Reference](http://git-scm.com/docs)
 
-##Latex
+## Latex
 
-##开发工具
+## 开发工具
 
-- VIM（主力工具）
+- VIM / Sublime Text
 - Eclipse（Java/Python）
 - JetBrains PyCharm（Python）
 - JetBrains PhpStorm <s>Zend Studio</s>（PHP）
@@ -58,7 +65,9 @@ title: 工具集
 - virtualenv（Python虚拟环境）
 - IPython（可在virtualenv虚拟环境中通过pip install ipython安装使用）
 
-##命令行工具与解决方案
+## 命令行工具与解决方案
+
+- 从命令行使用HTTP协议做测试的强大工具：cURL，参考 [9 uses for cURL worth knowing](https://httpkit.com/resources/HTTP-from-the-Command-Line/)
 
 - 追踪命令执行过程中的系统调用和信号： `strace`
 
@@ -80,7 +89,7 @@ title: 工具集
 
 - 显示进程树：`pstree`
 
-- 更新Python第三方软件包：`pip install -U [package_name]` 
+- 更新Python第三方软件包：`pip install -U [package_name]`
 
 - 从命令行安装.deb文件：`sudo dpkg -i package.deb`
 
@@ -144,7 +153,7 @@ title: 工具集
 
 - [Gnome/KDE键盘快捷键](http://www.novell.com/coolsolutions/tip/2289.html)
 
-##日常使用工具
+## 日常使用工具
 
 桌面环境：KDE
 

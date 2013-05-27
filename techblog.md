@@ -5,6 +5,8 @@ title: 技术阅读
 
 - [Nicholas C. Zakas](http://www.nczonline.net/)(JavaScript)
 
+- [miguelgrinberg.com](http://blog.miguelgrinberg.com/)(Python, Flask)
+
 - [Right Track Wrong Train](http://www.huangz.me/en/latest/index.html)
 
 - [麦子麦](http://www.wzxue.com/)(数据库)

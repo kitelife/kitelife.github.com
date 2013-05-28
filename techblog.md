@@ -3,6 +3,8 @@ layout: page
 title: 技术阅读
 ---
 
+- [残阳似血](http://qinxuye.me/)
+
 - [Nicholas C. Zakas](http://www.nczonline.net/)(JavaScript)
 
 - [miguelgrinberg.com](http://blog.miguelgrinberg.com/)(Python, Flask)

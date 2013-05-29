@@ -68,7 +68,7 @@ title: 工具集
 
 ## 命令行工具与解决方案
 
--（置顶）[命令行乐园](http://www.commandlinefu.com/commands/browse)
+- （置顶）[命令行乐园](http://www.commandlinefu.com/commands/browse)
 
 - 查看所有用户的crontab任务(root权限执行)： `for user in $(cut -f1 -d: /etc/passwd); do echo "### Crontabs for $user ####"; crontab -u $user -l; done`
 

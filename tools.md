@@ -68,6 +68,8 @@ title: 工具集
 
 ## 命令行工具与解决方案
 
+- 查看所有用户的crontab任务(root权限执行)： `for user in $(cut -f1 -d: /etc/passwd); do echo "### Crontabs for $user ####"; crontab -u $user -l; done`
+
 - 删除当前目录下大小为0的文件，且不进一步递归查找：`find -size 0 -prune -exec rm {} \;`
 
 - 从命令行使用HTTP协议做测试的强大工具：cURL，参考 [9 uses for cURL worth knowing](https://httpkit.com/resources/HTTP-from-the-Command-Line/)

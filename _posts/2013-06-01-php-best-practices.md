@@ -460,6 +460,80 @@ Memcached替代方案相关的信息。
 
 ## PHP与正则表达式
 
-### 使用[PCRE](http://php.net/manual/en/book.pcre.php)(preg_*)家族函数
+### 使用[PCRE](http://php.net/manual/en/book.pcre.php)(`preg_*`)家族函数
+
+PHP有两种使用不同的方式来使用正则表达式：PCRE（Perl兼容表示法，`preg_*`）函数
+和[POSIX](http://php.net/manual/en/book.regex.php)（POSIX扩展表示法，`ereg_*`）
+函数。
+
+每个函数家族各自使用一种风格稍微不同的正则表达式。幸运的是，POSIX家族函数从PHP
+5.3.0开始就被弃用了。因此，你绝不应该使用POSIX家族函数编写新的代码。始终使用
+PRCE家族函数，即`preg_*`函数。
+
+**进一步阅读**
+
+- [PHP手册：PCRE](http://php.net/manual/en/book.pcre.php)
+- [PHP正则表达式起步](http://www.noupe.com/php/php-regular-expressions.html)
+
+
+## 配置Web服务器提供PHP服务
+
+### 使用[PHP-FPM](http://php.net/manual/en/install.fpm.php)
+
+有多种方式来配置一个web服务器以提供PHP服务。传统（并且糟糕的）的方式是使用Apache的
+[mod_php](http://stackoverflow.com/questions/2712825/what-is-mod-php)。Mod_php将PHP
+绑定到Apache自身，但是Apache对于该模块功能的管理工作非常糟糕。一旦遇到较大的流量，
+就会遭受严重的内存问题。
+
+后来两个新的可选项很快流行起来：[mod_fastcgi](http://www.fastcgi.com/mod_fastcgi/docs/mod_fastcgi.html)
+和[mod_fcgid](http://httpd.apache.org/mod_fcgid/)。两者均保持一定数量的PHP执行进程，
+Apache将请求发送到这些端口来处理PHP的执行。由于这些库限制了存活的PHP进程的数量，
+从而大大减少了内存使用而没有影响性能。
+
+一些聪明的人创建一个fastcgi的实现，专门为真正与PHP工作良好而设计，他们称之为
+[PHP-FPM](http://php.net/manual/en/install.fpm.php)。PHP
+5.3.0之前，为安装它，你得跨越许多障碍，但幸运的是，PHP
+5.3.3的核心包含了PHP-FPM，因此在Ubuntu 12.04上安装它非常方便。
+
+如下示例是针对Apache 2.2.22的，但PHP-FPM也能用于其他web服务器如Nginx。
+
+**安装PHP-FPM和Apache**
+
+在Ubuntu 12.04上你可以使用如下命令安装PHP-FPM和Apache：
+
+    user@localhost: sudo apt-get install apache2-mpm-worker
+    libapache2-mod-fastcgi php5-fpm
+    user@localhost: sudo a2enmod actions alias fastcgi
+
+注意我们*必须*使用apache2-mpm-worker，而不是apache2-mpm-prefork或apache2-mpm-threaded。
+
+接下来配置Aapache虚拟主机将PHP请求路由到PHP-FPM进程。将如下配置语句放入Apache
+配置文件（在Ubuntu 12.04上默认配置文件是/etc/apache2/sites-available/default）。
+
+    <VirtualHost *:80>
+        AddHandler php5-fcgi .php
+        Action php5-fcgi /php5-fcgi
+        Alias /php5-fcgi /usr/lib/cgi-bin/php5-fcgi
+        FastCgiExternalServer /usr/lib/cgi-bin/php5-fcgi -host 127.0.0.1:9000 -idle-timeout 120 -pass-header Authorization
+    </VirtualHost>
+
+最后，重启Apache和FPM进程：
+
+    user@localhost: sudo service apache2 restart && sudo service php5-fpm
+    restart
+
+**进一步阅读**
+
+- [PHP手册：PHP-FPM](http://php.net/manual/en/install.fpm.php)
+- [PHP-FPM主页](http://php-fpm.org/)
+- [在Ubuntu服务器Maverick上安装Apache + mod_fastcgi + PHP-FPM](https://alexcabal.com/installing-apache-mod_fastcgi-php-fpm-on-ubuntu-server-maverick/)
+- [为什么mod_php的性能很糟糕](http://www.joomlaperformance.com/articles/webcasts/why_mod_php_is_bad_for_performance_52_58.html)
+
+
+## 发送邮件
+
+### 使用[PHPMailer](https://code.google.com/a/apache-extras.org/p/phpmailer/)
+
+*经PHPMailer 5.1测试*
 
 

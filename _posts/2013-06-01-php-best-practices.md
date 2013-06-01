@@ -91,7 +91,7 @@ PHP是Web世界里的百年老龟，它的壳上铭刻着一段丰富、复杂�
 {% highlight php %}
 <?php
 // Include the phpass library
-require_once('phpass-03/PasswordHash.php')l
+require_once('phpass-03/PasswordHash.php')
 
 // Initialize the hasher without portable hashes (this is more secure)
 $hasher = new PasswordHash(8, false);
@@ -234,7 +234,64 @@ Overfilow这个问题](http://stackoverflow.com/questions/3332074/what-are-the-d
 
 ## 自动加载类
 
-### 使用[spl_autoload_register()](http://php.net/manual/en/function.spl-autoload-register.php)
-来注册你的自动加载函数。
+### 使用[spl_autoload_register()](http://php.net/manual/en/function.spl-autoload-register.php)来注册你的自动加载函数。
+
+PHP提供了若干方式来自动加载包含还未加载的类的文件。老的方法是使用名为[__autoload()](http://php.net/manual/en/function.autoload.php)魔术全局函数。然而你一次仅能定义一个`__autoload()`函数，因此如果你的程序
+包含一个也使用了`__autoload()`函数的库，就会发生冲突。
+
+处理这个问题的正确方法是唯一地命名你的自动加载函数，然后使用`spl_autoload_register()`函数
+来注册它。该函数允许定义多个`__autoload()`这样的函数，因此你不必担心其他代码的`__autoload()`函数。
+
+**示例**
+
+{% highlight php %}
+<?php
+// First, define your auto-load function
+function MyAutoload($className){
+    include_once($className . '.php');
+}
+
+// Next, register it with PHP
+spl_autoload_register('MyAutoload');
+
+// Try it out!
+// Since we haven't included a file defining the MyClass object, our
+// auto-loader will kick in and include MyClass.php.
+// For this example, assume the MyClass class is defined in the MyClass.php
+// file.
+$var = new MyClass();
+?>
+{% endhighlight %}
+
+**进一步阅读**
+
+- [PHP手册：spl_autoload_register()](http://php.net/manual/en/function.spl-autoload-register.php)
+- [Stack Overflow: 高效的PHP自动加载和命名策略](http://stackoverflow.com/questions/791899/efficient-php-auto-loading-and-naming-strategies)
 
 
+## 从性能角度来看单引号和双引号
+
+### 其实并不重要。
+
+已有很多人花费很多笔墨来讨论是使用单引号（`'`）还是双引号（`"`）来定义字符串。
+单引号字符串不会被解析，因此放入字符串的任何东西都会以原样显示。双引号字符串会被解析，
+字符串中的任何PHP变量都会被求值。另外，转义字符如换行符`\n`和制表符`\t`在单引号字符串中
+不会被求值，但在双引号字符串中会被求值。
+
+由于双引号字符串在程序运行时要求值，从而理论上使用单引号字符串能提高性能，因为PHP
+不会对单引号字符串求值。这对于一定规模的应用来说也许确实如此，但对于现实中一般的应用来说，
+区别非常小以至于根本不用在意。因此对于普通应用，你选择哪种字符串并不重要。对于负载
+极其高的应用来说，是有点作用的。根据你的应用的需要来做选择，但无论你选择什么，请保持一致。
+
+**进一步阅读**
+
+- [PHP手册：字符串](http://php.net/manual/en/language.types.string.php)
+- [PHP基准](http://phpbench.com/)（向下滚动到引号类型(Quote Types)）
+- [Stack Overflow: PHP中单引号字符串相比双引号字符串有性能优势么？](http://stackoverflow.com/questions/13620/speed-difference-in-using-inline-strings-vs-concatenation-in-php5)
+
+
+## define() vs. const
+
+##使用[define()](http://www.php.net/manual/en/function.define.php)，除非考虑到可读性、类常量、或关注微优化
+
+习惯上，在PHP中是使用define()函数来定义常量。

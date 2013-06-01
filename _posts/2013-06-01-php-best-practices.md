@@ -86,6 +86,8 @@ PHP是Web世界里的百年老龟，它的壳上铭刻着一段丰富、复杂�
 对密码进行哈希最安全的方法是使用bcrypt算法。开源的phpass库以一个易于使用的类来提供
 该功能。
 
+**示例**
+
 {% highlight php %}
 <?php
 // Include the phpass library
@@ -124,4 +126,82 @@ $hasher->CheckPassword('my super cool password', $hashedPassword);  // true
 
 在PHP中，有很多方式来连接到一个MySQL数据库。PDO（PHP数据对象）是其中最新且最健壮的一种。PDO跨多种不同类型数据库有一个一致的接口，使用面向对象的方式，支持更多的新数据库支持的特性。
 
-你应该使用PDO的预处理语句函数来帮助防范SQL注入攻击。
+你应该使用PDO的预处理语句函数来帮助防范SQL注入攻击。使用函数[bindValue](http://php.net/manual/en/pdostatement.bindvalue.php)来确保你的SQL免于一级SQL注入攻击。（虽然并不是100%安全的，查看进一步阅读获取更多细节。）在以前，这必须使用一些“魔术引号(magic
+quotes)”函数的组合来实现。PDO使得那堆东西不再需要。
+
+**示例**
+
+{% highlight php %}
+<?php
+try{
+    // Create a new connection.
+    // You'll probably want to replace hostname with localhost in the first parameter.
+    // The PDO options we pass do the following:
+    // \PDO::ATTR_ERRMODE enables exceptions for errors.  This is optional but can be handy.
+    // \PDO::ATTR_PERSISTENT disables persistent connections, which can cause concurrency issues in certain cases.  See "Gotchas".
+    // \PDO::MYSQL_ATTR_INIT_COMMAND alerts the connection that we'll be passing UTF-8 data.
+    // This may not be required depending on your configuration, but it'll save you headaches down the road
+    // if you're trying to store Unicode strings in your database.  See "Gotchas".
+    $link = new \PDO(   'mysql:host=your-hostname;dbname=your-db', 
+                        'your-username', 
+                        'your-password', 
+                        array(
+                            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION, 
+                            \PDO::ATTR_PERSISTENT => false, 
+                            \PDO::MYSQL_ATTR_INIT_COMMAND => 'set names utf8mb4'
+                        )
+                    );
+ 
+    $handle = $link->prepare('select Username from Users where UserId = ? or Username = ? limit ?');
+ 
+    // PHP bug: if you don't specify PDO::PARAM_INT, PDO may enclose the argument in quotes.  This can mess up some MySQL queries that don't expect integers to be quoted.
+    // See: https://bugs.php.net/bug.php?id=44639
+    // If you're not sure whether the value you're passing is an integer, use the is_int() function.
+    $handle->bindValue(1, 100, PDO::PARAM_INT);
+    $handle->bindValue(2, 'Bilbo Baggins');
+    $handle->bindValue(3, 5, PDO::PARAM_INT);
+ 
+    $handle->execute();
+ 
+    // Using the fetchAll() method might be too resource-heavy if you're selecting a truly massive amount of rows.
+    // If that's the case, you can use the fetch() method and loop through each result row one by one.
+    // You can also return arrays and other things instead of objects.  See the PDO documentation for details.
+    $result = $handle->fetchAll(\PDO::FETCH_OBJ);
+ 
+    foreach($result as $row){
+        print($row->Username);
+    }
+}
+catch(\PDOException $ex){
+    print($ex->getMessage());
+}
+?>
+{% endhighlight %}
+
+**陷阱**
+
+- 当绑定整型变量时，如果不传递PDO::PARAM_INT参数有事可能会导致PDO对数据加引号。这会
+搞坏特定的MySQL查询。查看[该bug报告](https://bugs.php.net/bug.php?id=44639)。
+- 未使用 \`set names utf8mb4\`
+作为首个查询，可能会导致Unicode数据错误地存储进数据库，这依赖于你的配置。如果你
+绝对有把握你的Unicode编码数据不会出问题，那你可以不管这个。
+- 启用持久连接可能会导致怪异的并发相关的问题。这不是一个PHP的问题，而是一个应用层面
+的问题。只要你仔细考虑了后果，持久连接一般会是安全的。查看[Stack
+Overfilow这个问题](http://stackoverflow.com/questions/3332074/what-are-the-disadvantages-of-using-persistent-connection-in-pdo)。
+- 即使你使用了 \`set names utf8mb4\`
+，你也得确认实际的数据库表使用的是utf8mb4字符集！
+
+- 可以在单个execute()调用中执行多条SQL语句。只需使用分号分隔语句，但注意[这个bug](https://bugs.php.net/bug.php?id=61207)，在该文档所针对的PHP版本中还没修复。
+
+**进一步阅读**
+
+- [PHP手册：PDO](http://php.net/manual/en/book.pdo.php)
+- [为什么你应该使用PHP的PDO访问数据库](http://net.tutsplus.com/tutorials/php/why-you-should-be-using-phps-pdo-for-database-access/)
+- [Stack Overflow: PHP PDO vs 普通的mysql_connect](http://stackoverflow.com/questions/1402017/php-pdo-vs-normal-mysql-connect)
+- [Stack Overflow: PDO预处理语句足以防范SQL注入吗？](http://stackoverflow.com/questions/134099/are-pdo-prepared-statements-sufficient-to-prevent-sql-injection)
+- [Stack Overflow: 在MySQL中使用SET NAMES utf8？](http://stackoverflow.com/questions/2159434/set-names-utf8-in-mysql)
+
+
+## PHP标签
+
+### 使用 <?php ?>。

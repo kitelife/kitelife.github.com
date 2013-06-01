@@ -206,3 +206,35 @@ Overfilow这个问题](http://stackoverflow.com/questions/3332074/what-are-the-d
 ## PHP标签
 
 ### 使用 `<?php ?>` 。
+
+有几种不同的方式用来区分PHP程序块：`<?php ?>`, `<?= ?>`, `<? ?>`, 以及`<%
+%>`。对于打字来说，更短的标签更方便些，但唯一一种在所有PHP服务器上都一定能工作的标签
+是`<?php
+?>`。若你计划将你的PHP应用部署到一台上面的PHP配置你无法控制的服务器上，那么你应始终使用
+`<?php ?>`。
+
+若你仅仅是为自己编码，也能控制你将使用的PHP配置，你可能觉得短标签更方便些。但记住
+`<? ?>`可能会和XML声明冲突，并且`<? ?>`实际上是ASP的风格。
+
+无论你选择哪一种，确保一致。
+
+**陷阱**
+
+- 在一个纯PHP文件（例如，仅包含一个类定义的文件）中包含一个关闭`?>`标签时，确保其后
+不会跟着任何换行。当PHP解析器安全地吃进跟在关闭标签之后的单个换行符时，任何其他的换行
+都可能被输出到浏览器，如果之后要输出某些HTTP头，那么可能会造成混淆。
+- 编写Web应用时，确保在关闭`?>`标签与html的`<!doctype>`标签之间不会留下换行。正确的HTML
+文件中，`<!doctype>`标签必须是文件中的第一样东西---在其之前的任何空格或换行都会使其
+无效。
+
+**进一步阅读**
+
+- [Stack Overflow: 可以使用PHP短标签吗？](http://stackoverflow.com/questions/200640/are-php-short-tags-acceptable-to-use)
+
+
+## 自动加载类
+
+### 使用[spl_autoload_register()](http://php.net/manual/en/function.spl-autoload-register.php)
+来注册你的自动加载函数。
+
+

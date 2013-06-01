@@ -491,9 +491,8 @@ Apache将请求发送到这些端口来处理PHP的执行。由于这些库限�
 从而大大减少了内存使用而没有影响性能。
 
 一些聪明的人创建一个fastcgi的实现，专门为真正与PHP工作良好而设计，他们称之为
-[PHP-FPM](http://php.net/manual/en/install.fpm.php)。PHP
-5.3.0之前，为安装它，你得跨越许多障碍，但幸运的是，PHP
-5.3.3的核心包含了PHP-FPM，因此在Ubuntu 12.04上安装它非常方便。
+[PHP-FPM](http://php.net/manual/en/install.fpm.php)。PHP 5.3.0之前，为安装它，
+你得跨越许多障碍，但幸运的是，PHP 5.3.3的核心包含了PHP-FPM，因此在Ubuntu 12.04上安装它非常方便。
 
 如下示例是针对Apache 2.2.22的，但PHP-FPM也能用于其他web服务器如Nginx。
 

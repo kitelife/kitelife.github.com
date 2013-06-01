@@ -80,4 +80,48 @@ PHP是Web世界里的百年老龟，它的壳上铭刻着一段丰富、复杂�
 
 *经phpass 0.3测试*
 
+在存入数据库之前进行哈希保护用户密码的标准方式。许多常用的哈希算法如md5,甚至是sha1
+对于密码存储都是不安全的，因为[骇客能够使用那些算法轻而易举地破解密码](http://arstechnica.com/security/2013/05/how-crackers-make-minced-meat-out-of-your-passwords/)。
 
+对密码进行哈希最安全的方法是使用bcrypt算法。开源的phpass库以一个易于使用的类来提供
+该功能。
+
+{% highlight php %}
+<?php
+// Include the phpass library
+require_once('phpass-03/PasswordHash.php')l
+
+// Initialize the hasher without portable hashes (this is more secure)
+$hasher = new PasswordHash(8, false);
+
+// Hash the password. $hashedPassword will be a 60-character string.
+$hashedPassword = $hasher->HashPassword('my super cool password');
+
+// You can now safely store the contents of $hashedPassword in your database!
+
+// Check if a user has provided the correct password by comparing what they
+// typed with our hash
+$hasher->CheckPassword('the wrong password', $hashedPassword);  // false
+
+$hasher->CheckPassword('my super cool password', $hashedPassword);  // true
+?>
+{% endhighlight %}
+
+**陷阱**
+
+- 许多资源可能推荐你在哈希之前对你的密码“加盐”。想法很好，但phpass在HashPassword()函数中已经对你的密码“加盐”了，这意味着你不需要自己“加盐”。
+
+**进一步阅读**
+
+- [phpass](http://www.openwall.com/phpass/)
+- [为什么使用md5或sha哈希密码是不安全的](http://blogs.msdn.com/b/lixiong/archive/2011/12/25/md5-sha1-salt-and-bcrypt.aspx)
+- [怎样安全地存储密码](http://codahale.com/how-to-safely-store-a-password/)
+
+
+## 连接并查询MySQL数据库
+
+### 使用[PDO](http://php.net/manual/en/book.pdo.php)及其预处理语句功能。
+
+在PHP中，有很多方式来连接到一个MySQL数据库。PDO（PHP数据对象）是其中最新且最健壮的一种。PDO跨多种不同类型数据库有一个一致的接口，使用面向对象的方式，支持更多的新数据库支持的特性。
+
+你应该使用PDO的预处理语句函数来帮助防范SQL注入攻击。

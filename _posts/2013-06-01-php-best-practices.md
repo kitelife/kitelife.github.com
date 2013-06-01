@@ -154,7 +154,8 @@ try{
  
     $handle = $link->prepare('select Username from Users where UserId = ? or Username = ? limit ?');
  
-    // PHP bug: if you don't specify PDO::PARAM_INT, PDO may enclose the argument in quotes.  This can mess up some MySQL queries that don't expect integers to be quoted.
+    // PHP bug: if you don't specify PDO::PARAM_INT, PDO may enclose the argument in quotes.
+    // This can mess up some MySQL queries that don't expect integers to be quoted.
     // See: https://bugs.php.net/bug.php?id=44639
     // If you're not sure whether the value you're passing is an integer, use the is_int() function.
     $handle->bindValue(1, 100, PDO::PARAM_INT);
@@ -204,4 +205,4 @@ Overfilow这个问题](http://stackoverflow.com/questions/3332074/what-are-the-d
 
 ## PHP标签
 
-### 使用 <?php ?>。
+### 使用 `<?php ?>` 。

@@ -355,4 +355,72 @@ class OneRing{
 
 ### 使用[APC](http://php.net/manual/en/book.apc.php)
 
+在一个标准的PHP环境中，每次访问PHP脚本时，脚本都会被编译然后执行。一次又一次地花费
+时间编译相同的脚本对于大型站点会造成性能问题。
+
+解决方案是采用一个opcode缓存。opcode缓存是一个能够记下每个脚本经过编译的版本，这样
+服务器就不需要浪费时间一次又一次地编译了。通常这些opcode缓存系统也能智能地检测到
+一个脚本是否发生改变，因此当你升级PHP源码时，并不需要手动清空缓存。
+
+有几个PHP
+opcode缓存可用，其中值得关注的有[eaccelerator](http://sourceforge.net/projects/eaccelerator/)，
+[xcache](http://xcache.lighttpd.net/)，以及[APC](http://php.net/manual/en/book.apc.php)。
+APC是PHP项目官方支持的，最为活跃，也最容易安装。它也提供一个可选的类[memcached](http://memcached.org/)
+的持久化键-值对存储，因此你应使用它。
+
+**安装APC**
+
+在Ubuntu 12.04上你可以通过在终端中执行以下命令来安装APC：
+
+    user@localhost: sudo apt-get install php-apc
+
+除此之外，不需要进一步的配置。
+
+**将APC作为一个持久化键-值存储系统来使用**
+
+APC也提供了对于你的脚本透明的类似于memcached的功能。与使用memcached相比一个大的优势是
+APC是集成到PHP核心的，因此你不需要在服务器上维护另一个运行的部件，并且PHP开发者在APC
+上的工作很活跃。但从另一方面来说，APC并不是一个分布式缓存，如果你需要这个特性，你就
+必须使用memcached了。
+
+**示例**
+
+{% highlight php %}
+<?php
+// Store some values in the APC cache.  We can optionally pass a time-to-live, 
+// but in this example the values will live forever until they're garbage-collected by APC.
+apc_store('username-1532', 'Frodo Baggins');
+apc_store('username-958', 'Aragorn');
+apc_store('username-6389', 'Gandalf');
+ 
+// After storing these values, any PHP script can access them, no matter when it's run!
+$value = apc_fetch('username-958', $success);
+if($success === true)
+    print($value); // Aragorn
+ 
+$value = apc_fetch('username-1', $success); // $success will be set to boolean false, because this key doesn't exist.
+if($success !== true) // Note the !==, this checks for true boolean false, not "falsey" values like 0 or empty string.
+    print('Key not found');
+ 
+apc_delete('username-958'); // This key will no longer be available.
+?>
+{% endhighlight %}
+
+**陷阱**
+
+- 如果你使用的不是[PHP-FPM](https://phpbestpractices.org/#serving-php)（例如你在
+使用[mod_php](http://stackoverflow.com/questions/2712825/what-is-mod-php)
+或[mod_fastcgi](http://www.fastcgi.com/mod_fastcgi/docs/mod_fastcgi.html)），那么
+每个PHP进程都会有自己独有的APC实例，包括键-值存储。若你不注意，这可能会在你的应用
+代码中造成同步问题。
+
+**进一步阅读**
+
+- [PHP手册：APC](http://php.net/manual/en/book.apc.php)
+
+
+## PHP与Memcached
+
+### 若你需要一个分布式缓存，那就使用[Memcached](http://php.net/manual/en/book.memcached.php)客户端库。否则，使用APC。
+
 

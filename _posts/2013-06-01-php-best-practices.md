@@ -423,4 +423,43 @@ apc_delete('username-958'); // This key will no longer be available.
 
 ### 若你需要一个分布式缓存，那就使用[Memcached](http://php.net/manual/en/book.memcached.php)客户端库。否则，使用APC。
 
+缓存系统通常能够提升应用的性能。Memcached是一个受欢迎的选择，它能配合许多语言使用，
+包括PHP。
+
+然而，从一个PHP脚本中访问一个Memcached服务器，你有两个不同且命名很愚蠢的客户端库选择项：
+[Memcache](http://php.net/manual/en/book.memcache.php)和[Memcached](http://php.net/manual/en/book.memcached.php)。
+它们是两个名字几乎相同的不同库，两者都可用于访问一个Memcached实例。
+
+事实证明，Memcached库对于Memcached协议的实现最好，包含了一些Mmecache库没有的有用的特性，
+并且看起来Memcached库的开发也最为活跃。
+
+然而，如果不需要访问来自一组分布式服务器的一个Memcached实例，那就[使用APC](https://phpbestpractices.org/#opcode-cache)。
+APC得到PHP项目的支持，具备很多和Memcached相同的功能，并且能够用作opcode缓存，这能提高PHP脚本的性能。
+
+**安装Memcached客户端库**
+
+在安装Memcached服务器之后，需要安装Memcached客户端库。没有该库，PHP脚本就没法与
+Memcached服务器通信。
+
+在Ubuntu 12.04上，你可以使用如下命令来安装Memcached客户端库：
+
+    user@localhost: sudo apt-get install php5-memcached
+
+**使用APC作为替代**
+
+查看[opcode缓存一节](https://phpbestpractices.org/#opcode-cache)阅读更多与使用APC作为
+Memcached替代方案相关的信息。
+
+**进一步阅读**
+
+- [PHP手册：Memcached](http://php.net/manual/en/book.memcached.php)
+- [PHP手册：APC](http://php.net/manual/en/book.apc.php)
+- [Stack Overflow: PHP中使用Memcache vs. Memcached](http://stackoverflow.com/questions/1442411/using-memcache-vs-memcached-with-php)
+- [Stack Overflow: Memcached vs APC，我该选择哪一个？](http://stackoverflow.com/questions/815041/memcached-vs-apc-which-one-should-i-choose)
+
+
+## PHP与正则表达式
+
+### 使用[PCRE](http://php.net/manual/en/book.pcre.php)(preg_*)家族函数
+
 

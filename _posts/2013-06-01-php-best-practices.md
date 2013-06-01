@@ -294,4 +294,65 @@ $var = new MyClass();
 
 ### 使用[define()](http://www.php.net/manual/en/function.define.php)，除非考虑到可读性、类常量、或关注微优化
 
-习惯上，在PHP中是使用define()函数来定义常量。
+习惯上，在PHP中是使用define()函数来定义常量。但从某个时候开始，PHP中也能够使用[const](http://php.net/manual/en/language.oop5.constants.php)
+关键字来声明常量了。那么当定义常量时，该使用哪种方式呢？
+
+答案在于这两种方法之间的区别。
+
+1. define()在执行期定义常量，而const在编译期定义常量。这样const就有轻微的速度优势，
+但不值得考虑这个问题，除非你在构建大规模的软件。
+2. define()将常量放入全局作用域，虽然你可以在常量名中包含命名空间。这意味着你不能
+使用define()定义类常量。
+3. define()允许你在常量名和常量值中使用表达式，而const则都不允许。这使得define()
+更加灵活。
+4. define()可以在if()代码块中调用，但const不行。
+
+**示例**
+
+{% highlight php %}
+<?php
+// Let's see how the two methods treat namespaces
+namespace MiddleEarth\Creatures\Dwarves;
+const GIMLI_ID = 1;
+define('MiddleEarth\Creatures\Elves\LEGOLAS_ID', 2);
+
+echo(\MiddleEarth\Creatures\Dwarves\GIMLI_ID);  // 1
+echo(\MiddleEarth\Creatures\Elves\LEGOLAS_ID);  // 2; note that we used define()
+
+// Now let's declare some bit-shifted constants representing ways to enter Mordor.
+define('TRANSPORT_METHOD_SNEAKING', 1 << 0); // OK!
+const TRANSPORT_METHOD_WALKING = 1 << 1; //Compile error! const can't use expressions as values
+ 
+// Next, conditional constants.
+define('HOBBITS_FRODO_ID', 1);
+ 
+if($isGoingToMordor){
+    define('TRANSPORT_METHOD', TRANSPORT_METHOD_SNEAKING); // OK!
+    const PARTY_LEADER_ID = HOBBITS_FRODO_ID // Compile error: const can't be used in an if block
+}
+ 
+// Finally, class constants
+class OneRing{
+    const MELTING_POINT_DEGREES = 1000000; // OK!
+    define('SHOW_ELVISH_DEGREES', 200); // Compile error: can't use define() within a class
+}
+?>
+{% endhighlight %}
+
+因为define()更加灵活，你应该使用它以避免一些令人头疼的事情，除非你明确地需要类
+常量。使用const通常会产生更加可读的代码，但是以牺牲灵活性为代价的。
+
+无论你选择哪一种，请保持一致。
+
+**进一步阅读**
+
+- [Stack Overflow: define() vs. const](http://stackoverflow.com/questions/2447791/define-vs-const)
+- [PHP手册：常量](http://www.php.net/manual/en/language.constants.syntax.php)
+- [Stack Overflow: define() vs. 变量](http://stackoverflow.com/questions/1225082/define-vs-variable-in-php)
+
+
+## 缓存PHP opcode
+
+### 使用[APC](http://php.net/manual/en/book.apc.php)
+
+

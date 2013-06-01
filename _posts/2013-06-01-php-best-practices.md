@@ -236,7 +236,7 @@ Overfilow这个问题](http://stackoverflow.com/questions/3332074/what-are-the-d
 
 ### 使用[spl_autoload_register()](http://php.net/manual/en/function.spl-autoload-register.php)来注册你的自动加载函数。
 
-PHP提供了若干方式来自动加载包含还未加载的类的文件。老的方法是使用名为[__autoload()](http://php.net/manual/en/function.autoload.php)魔术全局函数。然而你一次仅能定义一个`__autoload()`函数，因此如果你的程序
+PHP提供了若干方式来自动加载包含还未加载的类的文件。老的方法是使用名为[`__autoload()`](http://php.net/manual/en/function.autoload.php)魔术全局函数。然而你一次仅能定义一个`__autoload()`函数，因此如果你的程序
 包含一个也使用了`__autoload()`函数的库，就会发生冲突。
 
 处理这个问题的正确方法是唯一地命名你的自动加载函数，然后使用`spl_autoload_register()`函数
@@ -292,6 +292,6 @@ $var = new MyClass();
 
 ## define() vs. const
 
-##使用[define()](http://www.php.net/manual/en/function.define.php)，除非考虑到可读性、类常量、或关注微优化
+### 使用[define()](http://www.php.net/manual/en/function.define.php)，除非考虑到可读性、类常量、或关注微优化
 
 习惯上，在PHP中是使用define()函数来定义常量。

@@ -612,3 +612,109 @@ filter_var('sauron@mordor', FILTER_VALIDATE_EMAIL);
 
 **对于简单的数据净化，使用[htmlentities()](http://php.net/manual/en/function.htmlentities.php)函数,
 复杂的数据净化则使用[HTML Purifier](http://htmlpurifier.org/)库**
+
+*经HTML Purifier 4.4.0测试*
+
+在任何wbe应用中展示用户输出时，首先对其进行“净化”去除任何潜在危险的HTML是非常必要的。
+一个恶意的用户可以制作某些HTML，若被你的web应用直接输出，对查看它的人来说会很危险。
+
+虽然可以尝试使用正则表达式来净化HTML，但不要这样做。HTML是一种复杂的语言，试图
+使用正则表达式来净化HTML几乎总是失败的。
+
+你可能会找到建议你使用[strip_tags()](http://php.net/manual/en/function.strip-tags.php)
+函数的观点。虽然strip_tags()从技术上来说是安全的，但如果输入的不合法的HTML（比如，
+没有结束标签），它就成了一个“愚蠢”的函数，可能会去除比你期望的更多的内容。由于非技术用户
+在通信中经常使用`<`和`>`字符，`strip_tags()`也就不是一个好的选择了。
+
+如果阅读了[验证邮件地址](https://phpbestpractices.org/#validating-emails)一节，
+你也许也会考虑使用[filter_var()](http://php.net/manual/en/function.filter-var.php)
+函数。然而[filter_var()函数在遇到断行时会出现问题](http://stackoverflow.com/questions/3150413/filter-sanitize-special-chars-problem-with-line-breaks)，
+并且需要不直观的配置以接近[htmlentities()](http://php.net/manual/en/function.htmlentities.php)函数的效果，
+因此也不是一个好的选择。
+
+**对于简单需求的净化**
+
+如果你的web应用仅需要完全地转义（因此可以无害地呈现，但不是完全去除）HTML，则使用
+PHP的内建[htmlentities()](http://php.net/manual/en/function.htmlentities.php)函数。
+这个函数要比HTML Purifier快得多，因此它不对HTML做任何验证---仅转义所有东西。
+
+htmlentities()不同于类似功能的函数[htmlspecialchars()](http://php.net/manual/en/function.htmlspecialchars.php)，
+它会编码所有适用的HTML实体，而不仅仅是一个小的子集。
+
+**示例**
+
+{% highlight php %}
+<?php
+// Oh no!  The user has submitted malicious HTML, and we have to display it in our web app!
+$evilHtml = '<div onclick="xss();">Mua-ha-ha!  Twiddling my evil mustache...</div>';
+ 
+// Use the ENT_QUOTES flag to make sure both single and double quotes are escaped.
+// Use the UTF-8 character encoding if you've stored the text as UTF-8 (as you should have).
+// See the UTF-8 section in this document for more details.
+$safeHtml = htmlentities($evilHtml, ENT_QUOTES, 'UTF-8');
+// $safeHtml is now fully escaped HTML.  You can output $safeHtml to your users without fear!
+?>
+{% endhighlight %}
+
+**对于复杂需求的净化**
+
+对于很多web应用来说，简单地转义HTML是不够的。你可能想完全去除任何HTML，或者允许
+一小部分子集的HTML存在。若是如此，则使用[HTML Purifier](http://htmlpurifier.org/)
+库。
+
+HTML Purifier是一个经过充分测试但效率比较低的库。这就是为什么如果你的需求并不复杂
+就应使用[htmlentities()](http://php.net/manual/en/function.htmlentities.php)，因为
+它的效率要快得多。
+
+HTML Purifier相比[strip_tags()](http://php.net/manual/en/function.strip-tags.php)
+是有优势的，因为它在净化HTML之前会对其校验。这意味着如果用户输入无效HTML，HTML 
+Purifier相比strip_tags()更能保留HTML的原意。HTML
+Purifier高度可定制，允许你为HTML的一个子集建立白名单来允许这个HTML子集的实体存在
+输出中。
+
+但其缺点就是相当的慢，它要求一些设置，在一个共享主机的环境里可能是不可行的。其文档
+通常也复杂而不易理解。以下示例是一个基本的使用配置。查看[文档](http://htmlpurifier.org/docs)
+阅读HTML Purifier提供的更多更高级的特性。
+
+**示例**
+
+{% highlight php %}
+<?php
+// Include the HTML Purifier library
+require_once('htmlpurifier-4.4.0/HTMLPurifier.auto.php');
+ 
+// Oh no!  The user has submitted malicious HTML, and we have to display it in our web app!
+$evilHtml = '<div onclick="xss();">Mua-ha-ha!  Twiddling my evil mustache...</div>';
+ 
+// Set up the HTML Purifier object with the default configuration.
+$purifier = new HTMLPurifier(HTMLPurifier_Config::createDefault());
+ 
+$safeHtml = $purifier->purify($evilHtml);
+// $safeHtml is now sanitized.  You can output $safeHtml to your users without fear!
+?>
+{% endhighlight %}
+
+**陷阱**
+
+- 以错误的字符编码使用htmlentities()会造成意想不到的输出。在调用该函数时始终确认
+指定了一种字符编码，并且该编码与将被净化的字符串的编码相匹配。更多细节请查看
+[UTF-8一节](https://phpbestpractices.org/#utf-8)。
+- 使用htmlentities()时，始终包含ENT_QUOTES和字符编码参数。默认情况下，htmlentities()
+不会对单引号编码。多愚蠢的默认做法！
+- HTML
+Purifier对于复杂的HTML效率极其的低。可以考虑设置一个缓存方案如APC来保存经过净化的结果
+以备后用。
+
+**进一步阅读**
+
+- [PHP HTML净化工具对比](http://htmlpurifier.org/comparison)
+- [Stack Overflow: 使用strip_tags()来防止XSS？](http://stackoverflow.com/questions/3605629/php-prevent-xss-with-strip-tags)
+- [Stack Overflow: PHP中净化用户输入的最佳方法是什么？](http://stackoverflow.com/questions/129677/whats-the-best-method-for-sanitizing-user-input-with-php)
+- [Stack Overflow: 断行时的FILTER_SANITIZE_SPECIAL_CHARS的问题](http://stackoverflow.com/questions/3150413/filter-sanitize-special-chars-problem-with-line-breaks)
+
+
+## PHP与UTF-8
+
+###  没有一行式解决方案。小心、注意细节，以及一致性。
+
+

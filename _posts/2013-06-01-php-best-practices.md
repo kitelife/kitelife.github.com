@@ -844,4 +844,126 @@ $result = $handle->fetchAll(\PDO::FETCH_OBJ);
 
 ### 使用[DateTime类](http://www.php.net/manual/en/class.datetime.php)。
 
+在PHP糟糕的老时光里，我们必须使用[date()](http://www.php.net/manual/en/function.date.php)，
+[gmdate()](http://www.php.net/manual/en/function.gmdate.php)，
+[date_timezone_set()](http://www.php.net/manual/en/function.date-timezone-set.php)，
+[strtotime()](http://www.php.net/manual/en/function.strtotime.php)等等令人迷惑的
+组合来处理日期和时间。悲哀的是现在你仍旧会找到很多在线教程在讲述这些不易使用的老式函数。
 
+幸运的是，我们正在讨论的PHP版本包含友好得多的[DateTime类](http://www.php.net/manual/en/class.datetime.php)。
+该类封装了老式日期函数所有功能，甚至更多，在一个易于使用的类中，并且使得时区转换更加容易。
+在PHP中始终使用DateTime类来创建，比较，改变以及展示日期。
+
+**示例**
+
+{% highlight php %}
+<?php
+// Construct a new UTC date.  Always specify UTC unless you really know what you're doing!
+$date = new DateTime('2011-05-04 05:00:00', new DateTimeZone('UTC'));
+ 
+// Add ten days to our initial date
+$date->add(new DateInterval('P10D'));
+ 
+echo($date->format('Y-m-d h:i:s')); // 2011-05-14 05:00:00
+ 
+// Sadly we don't have a Middle Earth timezone
+// Convert our UTC date to the PST (or PDT, depending) time zone
+$date->setTimezone(new DateTimeZone('America/Los_Angeles'));
+ 
+// Note that if you run this line yourself, it might differ by an hour depending on daylight savings
+echo($date->format('Y-m-d h:i:s')); // 2011-05-13 10:00:00
+ 
+$later = new DateTime('2012-05-20', new DateTimeZone('UTC'));
+ 
+// Compare two dates
+if($date < $later)
+    echo('Yup, you can compare dates using these easy operators!');
+ 
+// Find the difference between two dates
+$difference = $date->diff($later);
+ 
+echo('The 2nd date is ' . $difference['days'] . ' later than 1st date.');
+?>
+{% endhighlight %}
+
+**陷阱**
+
+- 如果你不指定一个时区，[DateTime::__construct()](http://www.php.net/manual/en/datetime.construct.php)
+就会将生成日期的时区设置为正在运行的计算机的时区。之后，这会导致大量令人头疼的事情。
+**在创建新日期时始终指定UTC时区，除非你确实清楚自己在做的事情。**
+- 如果你在DateTime::__construct()中使用Unix时间戳，那么时区将始终设置为UTC而不管
+第二个参数你指定了什么。
+- 向DateTime::__construct()传递零值日期（如：“0000-00-00”，常见MySQL生成该值作为
+DateTime类型数据列的默认值）会产生一个无意义的日期，而不是“0000-00-00”。
+- 在32位系统上使用[DateTime::getTimestamp()](http://www.php.net/manual/en/datetime.gettimestamp.php)
+不会产生代表2038年之后日期的时间戳。64位系统则没有问题。
+
+**进一步阅读**
+
+- [PHP手册：DateTime类](http://www.php.net/manual/en/book.datetime.php)
+- [Stack Overflow: 访问超出2038的日期](http://stackoverflow.com/questions/5319710/accessing-dates-in-php-beyond-2038)
+
+
+## 检测一个值是否为null或false
+
+### 使用[===](http://php.net/manual/en/language.operators.comparison.php)操作符来检测null和布尔false值。
+
+PHP宽松的类型系统提供了许多不同的方法来检测一个变量的值。然而这也造成了很多问题。
+使用`==`来检测一个值是否为null或false，如果该值实际上是一个空字符串或0，也会误报
+为false。[isset](http://php.net/manual/en/function.isset.php)是检测一个变量是否有值，
+而不是检测该值是否为null或false，因此在这里使用是不恰当的。
+
+[is_null()](http://php.net/manual/en/function.is-null.php)函数能准确地检测一个值
+是否为null，[is_bool](http://php.net/manual/en/function.is-bool.php)可以检测一个值
+是否是布尔值（比如false），但存在一个更好的选择：`===`操作符。`===`检测两个值是否同一，
+这不同于PHP宽松类型世界里的*相等*。它也比is_null()和is_bool()要快一些，并且有些人
+认为这比使用函数来做比较更干净些。
+
+**示例**
+
+{% highlight php %}
+<?php
+$x = 0;
+$y = null;
+ 
+// Is $x null?
+if($x == null)
+    print('Oops! $x is 0, not null!');
+ 
+// Is $y null?
+if(is_null($y))
+    print('Great, but could be faster.');
+ 
+if($y === null)
+    print('Perfect!');
+ 
+// Does the string abc contain the character a?
+if(strpos('abc', 'a'))
+    // GOTCHA!  strpos returns 0, indicating it wishes to return the position of the first character.
+    // But PHP interpretes 0 as false, so we never reach this print statement!
+    print('Found it!'); 
+ 
+//Solution: use !== (the opposite of ===) to see if strpos() returns 0, or boolean false.   
+if(strpos('abc', 'a') !== false)
+    print('Found it for real this time!');
+?>
+{% endhighlight %}
+
+**陷阱**
+
+- 测试一个返回0或布尔false的函数的返回值时，如strpos()，始终使用`===`和`!==`，否则
+你就会碰到问题。
+
+**进一步阅读**
+
+- [PHP手册：比较操作符](http://php.net/manual/en/language.operators.comparison.php)
+- [Stack Overflow: is_null() vs ===](http://stackoverflow.com/questions/8228837/is-nullx-vs-x-null-in-php)
+
+
+## 建议与指正
+
+感谢阅读！如果你有些地方还不太理解，很正常，PHP是复杂的，并且充斥着陷阱。因为我也
+只是一个人，所以本文档中难免存在错误。
+
+如果你想为本文档贡献建议或纠正错误之处，请使用[最后的修订与维护者](https://phpbestpractices.org/#maintainers)
+一节中的信息联系我。

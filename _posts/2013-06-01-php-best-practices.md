@@ -8,6 +8,19 @@ tags: [翻译, PHP]
 
 译者：[youngsterxyf](https://github.com/youngsterxyf)
 
+## 最后修订日期&维护者
+
+本文档的最后审阅于2013年3月8日。最后修改于2013年5月8日。
+
+由我，[Alex
+Cabal](https://alexcabal.com/)维护该文档。我编写PHP程序已有很长一段时间了，当前我
+经营着[Scribophile，由认真的作家组成的一个在线写作团体](http://www.scribophile.com/),
+[Writerfolio，为自由职业者提供的一个易用的写作工具集](http://writerfolio.com/)，以及
+[Standard Ebooks，一个图文并茂、无数字版权管理的公共领域电子书出版商](https://standardebooks.com)。
+有时我是个为吸引我的项目或客户而工作的自由职业者。
+
+如果你认为我在某些事情上能够帮到你，或者对本文档有点建议或纠正存在的错误，[请给我写封邮件](https://alexcabal.com/contact/)。
+
 ## 简介
 
 PHP是一门复杂的语言，经过多年折腾，使其不同版本之间高度不一致，有时还有些bug。
@@ -965,5 +978,5 @@ if(strpos('abc', 'a') !== false)
 感谢阅读！如果你有些地方还不太理解，很正常，PHP是复杂的，并且充斥着陷阱。因为我也
 只是一个人，所以本文档中难免存在错误。
 
-如果你想为本文档贡献建议或纠正错误之处，请使用[最后的修订与维护者](https://phpbestpractices.org/#maintainers)
+如果你想为本文档贡献建议或纠正错误之处，请使用[最后修订日期&维护者](https://phpbestpractices.org/#maintainers)
 一节中的信息联系我。

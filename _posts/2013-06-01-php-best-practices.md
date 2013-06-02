@@ -710,11 +710,138 @@ Purifier对于复杂的HTML效率极其的低。可以考虑设置一个缓存�
 - [PHP HTML净化工具对比](http://htmlpurifier.org/comparison)
 - [Stack Overflow: 使用strip_tags()来防止XSS？](http://stackoverflow.com/questions/3605629/php-prevent-xss-with-strip-tags)
 - [Stack Overflow: PHP中净化用户输入的最佳方法是什么？](http://stackoverflow.com/questions/129677/whats-the-best-method-for-sanitizing-user-input-with-php)
-- [Stack Overflow: 断行时的FILTER_SANITIZE_SPECIAL_CHARS的问题](http://stackoverflow.com/questions/3150413/filter-sanitize-special-chars-problem-with-line-breaks)
+- [Stack Overflow: 断行时的FILTER_SANITIZE_SPECIAL_CHARS问题](http://stackoverflow.com/questions/3150413/filter-sanitize-special-chars-problem-with-line-breaks)
 
 
 ## PHP与UTF-8
 
 ###  没有一行式解决方案。小心、注意细节，以及一致性。
+
+PHP中的UTF-8糟透了。原谅我的用词。
+
+目前PHP在低层次上还不支持Unicode。有几种方式可以确保UTF-8字符串能够被正确处理，
+但并不容易，需要深入到web应用的所有层面，从HTML，到SQL，到PHP。我们旨在提供一个简洁、
+实用的概述。
+
+**PHP层面的UTF-8**
+
+基本的[字符串操作](http://php.net/manual/en/language.operators.string.php)，如串接
+两个字符串、将字符串赋给变量，并不需要任何针对UTF-8的特殊东西。然而，多数
+[字符串函数](http://php.net/manual/en/ref.strings.php)，如[strpos()](http://php.net/manual/en/function.strpos.php)
+和[strlen](http://php.net/manual/en/function.strlen.php)，就需要特殊的考虑。这些
+函数都有一个对应的`mb_*`函数：例如，[mb_strpos()](http://php.net/manual/en/function.mb-strpos.php)
+和[mb_strlen()](http://php.net/manual/en/function.mb-strlen.php)。这些对应的函数
+统称为[多字节字符串函数](http://php.net/manual/en/ref.mbstring.php)。这些多字节字符串
+函数是专门为操作Unicode字符串而设计的。
+
+当你操作Unicode字符串时，必须使用`mb_*`函数。例如，如果你使用[substr()](http://php.net/manual/en/function.substr.php)
+操作一个UTF-8字符串，其结果就很可能包含一些乱码。正确的函数应该是对应的多字节函数，
+[mb_substr()](http://php.net/manual/en/function.mb-substr.php)。
+
+难的是始终记得使用`mb_*`函数。即使你仅一次忘了，你的Unicode字符串在接下来的处理中
+就可能产生乱码。
+
+并不是所有的字符串函数都有一个对应的`mb_*`。如果不存在你想要的那一个，那你就只能
+自认倒霉了。
+
+此外，在每个PHP脚本的顶部（或者在全局包含脚本的顶部）你都应使用
+[mb_internal_encoding](http://php.net/manual/en/function.mb-internal-encoding.php)
+函数，如果你的脚本会输出到浏览器，那么还得紧跟其后加个[mb_http_output()](http://php.net/manual/en/function.mb-http-output.php)
+函数。在每个脚本中显式地定义字符串的编码在以后能为你减少很多令人头疼的事情。
+
+最后，许多操作字符串的PHP函数都有一个可选参数让你指定字符编码。若有该选项， 你应
+始终显式地指明UTF-8编码。例如，[htmlentities()](http://php.net/manual/en/function.htmlentities.php)
+就有一个字符编码方式选项，在处理这样的字符串时应始终指定UTF-8。
+
+**MySQL层面的UTF-8**
+
+如果你的PHP脚本会访问MySQL，即使你遵从了前述的注意事项，你的字符串也有可能在数据库
+中存储为非UTF-8字符串。
+
+确保从PHP到MySQL的字符串为UTF-8编码的，确保你的数据库以及数据表均设置为utf8mb4字符集，
+并且在你的数据库中执行任何其他查询之前先执行MySQL查询\`set names
+utf8mb4\`。这是至关重要的。示例
+请查看[连接并查询MySQL数据库](https://phpbestpractices.org/#mysql)一节内容。
+
+注意你必须使用\`utf8mb4\`字符集来获得完整的UTF-8支持，而不是\`utf8\`字符集！原因
+请查看[进一步阅读](https://phpbestpractices.org/#utf8-further-reading)。
+
+**浏览器层面的UTF-8**
+
+使用[mb_http_output()](http://php.net/manual/en/function.mb-http-output.php)函数
+来确保你的PHP脚本输出UTF-8字符串到浏览器。并且在HTML页面的`<head>`标签块中包含
+[字符集`<meta>`标签块](http://htmlpurifier.org/docs/enduser-utf8.html)。
+
+**示例**
+
+{% highlight php %}
+<?php
+// Tell PHP that we're using UTF-8 strings until the end of the script
+mb_internal_encoding('UTF-8');
+ 
+// Tell PHP that we'll be outputting UTF-8 to the browser
+mb_http_output('UTF-8');
+ 
+// Our UTF-8 test string
+$string = 'Aš galiu valgyti stiklą ir jis manęs nežeidžia';
+ 
+// Transform the string in some way with a multibyte function
+$string = mb_substr($string, 0, 10);
+ 
+// Connect to a database to store the transformed string
+// See the PDO example in this document for more information
+// Note the `set names utf8mb4` commmand!
+$link = new \PDO(   'mysql:host=your-hostname;dbname=your-db',
+                    'your-username',
+                    'your-password',
+                    array(
+                        \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                        \PDO::ATTR_PERSISTENT => false,
+                        \PDO::MYSQL_ATTR_INIT_COMMAND => 'set names utf8mb4'
+                    )
+                );
+     
+// Store our transformed string as UTF-8 in our database
+// Assume our DB and tables are in the utf8mb4 character set and collation
+$handle = $link->prepare('insert into Sentences (Id, Body) values (?, ?)');
+$handle->bindValue(1, 1, PDO::PARAM_INT);
+$handle->bindValue(2, $string);
+$handle->execute();
+ 
+// Retrieve the string we just stored to prove it was stored correctly
+$handle = $link->prepare('select * from Sentences where Id = ?');
+$handle->bindValue(1, 1, PDO::PARAM_INT);
+$handle->execute();
+    
+// Store the result into an object that we'll output later in our HTML
+$result = $handle->fetchAll(\PDO::FETCH_OBJ);
+?><!doctype html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>UTF-8 test page</title>
+    </head>
+    <body>
+        <?php
+        foreach($result as $row){
+            print($row->Body);  // This should correctly output our transformed UTF-8 string to the browser
+        }
+        ?>
+    </body>
+</html>
+{% endhighlight %}
+
+**进一步阅读**
+
+- [PHP手册：多字节字符串函数](http://php.net/manual/en/ref.mbstring.php)
+- [PHP UTF-8备忘单](http://blog.loftdigital.com/blog/php-utf-8-cheatsheet)
+- [Stack Overflow: 什么因素致使PHP不兼容Unicode？](http://stackoverflow.com/questions/571694/what-factors-make-php-unicode-incompatible)
+- [Stack Overflow: PHP与MySQL之间国际化字符串的最佳实践](http://stackoverflow.com/questions/140728/best-practices-in-php-and-mysql-with-international-strings)
+- [怎样在MySQL数据库中完整支持Unicode](http://mathiasbynens.be/notes/mysql-utf8mb4)
+
+
+## 处理日期和时间
+
+### 使用[DateTime类](http://www.php.net/manual/en/class.datetime.php)。
 
 

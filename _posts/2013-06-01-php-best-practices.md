@@ -535,4 +535,80 @@ Apache将请求发送到这些端口来处理PHP的执行。由于这些库限�
 
 *经PHPMailer 5.1测试*
 
+PHP提供了一个[mail()](http://php.net/manual/en/function.mail.php)函数，看起来很简单易用。
+不幸的是，与PHP中的很多东西一样，它的简单性是个幻象，因其虚假的表面使用它会导致
+严重的安全问题。
 
+Email是一组网络协议，比PHP的历史还曲折。完全可以说发送邮件中的陷阱与PHP的mail()
+函数一样多，这个可能会令你有点“不寒而栗”吧。
+
+[PHPMailer](http://code.google.com/a/apache-extras.org/p/phpmailer/)是一个流行而
+成熟的开源库，为安全地发送邮件提供一个易用的接口。它关注可能陷阱，这样你可以专注
+于更重要的事情。
+
+**示例**
+
+{% highlight php %}
+<?php
+// Include the PHPMailer library
+require_once('phpmailer-5.1/class.phpmailer.php');
+ 
+// Passing 'true' enables exceptions.  This is optional and defaults to false.
+$mailer = new PHPMailer(true);
+ 
+// Send a mail from Bilbo Baggins to Gandalf the Grey
+ 
+// Set up to, from, and the message body.  The body doesn't have to be HTML;
+// check the PHPMailer documentation for details.
+$mailer->Sender = 'bbaggins@example.com';
+$mailer->AddReplyTo('bbaggins@example.com', 'Bilbo Baggins');
+$mailer->SetFrom('bbaggins@example.com', 'Bilbo Baggins');
+$mailer->AddAddress('gandalf@example.com');
+$mailer->Subject = 'The finest weed in the South Farthing';
+$mailer->MsgHTML('<p>You really must try it, Gandalf!</p><p>-Bilbo</p>');
+ 
+// Set up our connection information.
+$mailer->IsSMTP();
+$mailer->SMTPAuth = true;
+$mailer->SMTPSecure = 'ssl';
+$mailer->Port = 465;
+$mailer->Host = 'my smpt host';
+$mailer->Username = 'my smtp username';
+$mailer->Password = 'my smtp password';
+ 
+// All done!
+$mailer->Send();
+?>
+{% endhighlight %}
+
+
+## 验证邮件地址
+
+### 使用[filter_var()](http://php.net/manual/en/function.filter-var.php)函数
+
+Web应用可能需要做的一件常见任务是检测用户是否输入了一个有效的邮件地址。毫无疑问
+你可以在网上找到一些声称可以解决该问题的复杂的正则表达式，但是最简单的方法是使用
+PHP的内建`filter_val()`函数。
+
+**示例**
+
+{% highlight php %}
+<?php
+filter_var('sgamgee@example.com', FILTER_VALIDATE_EMAIL);
+//Returns "sgamgee@example.com". This is a valid email address.
+
+filter_var('sauron@mordor', FILTER_VALIDATE_EMAIL);
+// Returns boolean false! This is *not* a valid email address.
+?>
+{% endhighlight %}
+
+**进一步阅读**
+
+- [PHP手册：filter_var()](http://php.net/manual/en/function.filter-var.php)
+- [PHP手册：过滤器的类型](http://php.net/manual/en/filter.filters.php)
+
+
+## 净化HTML输入和输出
+
+**对于简单的数据净化，使用[htmlentities()](http://php.net/manual/en/function.htmlentities.php)函数,
+复杂的数据净化则使用[HTML Purifier](http://htmlpurifier.org/)库**

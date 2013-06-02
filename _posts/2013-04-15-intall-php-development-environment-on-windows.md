@@ -72,35 +72,6 @@ PHP与MySQL之间的交互，类似于PHP与分布式内存对象系统之间的
 
 MySQL的服务器端程序从MySQL官网下载，默认端口为3306。
 
----
-
-**安装phpMyAdmin**
-
-为了方便数据库管理，可以安装phpMyAdmin。phpMyAdmin是通过Web页面对数据库进行查询操作的，所以需要在Nginx配置文件中为其添加一个虚拟主机配置。
-
-要访问数据库，所以需要在phpMyAdmin配置文件中添加访问数据库的用户名和密码：将`libraries/config.default.php`文件中如下的几行：
-
-    $cfg['Servers'][$i]['controlhost'] = '';
-    ...
-    $cfg['Servers'][$i]['controluser'] = '';
-    ...
-    $cfg['Servers'][$i]['controlpass'] = '';
-    ...
-    $cfg['Servers'][$i]['auth_type'] = '';
-    ...
-    $cfg['Servers'][$i]['auth_swekey_config'] = '';
-
-修改为：
- 
-    $cfg['Servers'][$i]['controlhost'] = '127.0.0.1:3306';
-    ...
-    $cfg['Servers'][$i]['controluser'] = 'root';
-    ...
-    $cfg['Servers'][$i]['controlpass'] = 'password';    # 这里为你为root账户设置的密码
-    ...
-    $cfg['Servers'][$i]['auth_type'] = 'cookie';
-    ...
-    $cfg['Servers'][$i]['auth_swekey_config'] = '123abc';   # 这个是cookie需要的一个字符串，自己填写
 
 ---
 
@@ -115,8 +86,6 @@ MySQL的服务器端程序从MySQL官网下载，默认端口为3306。
     ?>
 
 通过浏览器访问该网页，若PHP环境配置成功，则会看到一个当前PHP环境的详细信息列表，从中可以看到当前所启动的PHP扩展，若未找到memcache、redis、mysql这几个扩展包信息，则说明未成功启用。
-
-通过浏览器访问phpMyAdmin，看是否能成功访问数据库。
 
 ---
 

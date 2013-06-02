@@ -12,8 +12,7 @@ tags: [翻译, PHP]
 
 本文档最后审阅于2013年3月8日。最后修改于2013年5月8日。
 
-由我，[Alex
-Cabal](https://alexcabal.com/)维护该文档。我编写PHP程序已有很长一段时间了，当前我
+由我，[Alex Cabal](https://alexcabal.com/)，维护该文档。我编写PHP程序已有很长一段时间了，当前我
 经营着[Scribophile，由认真的作家组成的一个在线写作团体](http://www.scribophile.com/),
 [Writerfolio，为自由职业者提供的一个易用的写作工具集](http://writerfolio.com/)，以及
 [Standard Ebooks，一个图文并茂、无数字版权管理的公共领域电子书出版商](https://standardebooks.com)。

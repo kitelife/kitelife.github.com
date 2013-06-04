@@ -3,6 +3,8 @@ layout: page
 title: 技术阅读
 ---
 
+- [Hackers Gonna Hack](http://www.jeffknupp.com/)(Python)
+
 - [残阳似血](http://qinxuye.me/)
 
 - [UC技术博客](http://tech.uc.cn/)

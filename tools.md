@@ -70,6 +70,10 @@ title: 工具集
 
 - （置顶）[命令行乐园](http://www.commandlinefu.com/commands/browse)
 
+- 使用一行python命令查看/解压缩/创建zip文件：1.查看 - `python -m zipfile -l
+test.zip`, 2.解压缩 - `python -m zipfile -e test.zip test`, 3.创建 - `python -m
+zipfile -c release.zip *.py`
+
 - 查看所有用户的crontab任务(root权限执行)： `for user in $(cut -f1 -d: /etc/passwd); do echo "### Crontabs for $user ####"; crontab -u $user -l; done`
 
 - 删除当前目录下大小为0的文件，且不进一步递归查找：`find -size 0 -prune -exec rm {} \;`

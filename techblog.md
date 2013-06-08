@@ -3,6 +3,8 @@ layout: page
 title: 技术阅读
 ---
 
+- [夏の航海士](http://www.soimort.org/)
+
 - [Hackers Gonna Hack](http://www.jeffknupp.com/)(Python)
 
 - [残阳似血](http://qinxuye.me/)

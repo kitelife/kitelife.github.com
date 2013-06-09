@@ -70,6 +70,8 @@ title: 工具集
 
 - （置顶）[命令行乐园](http://www.commandlinefu.com/commands/browse)
 
+- 查看防火墙设置（包含防火墙规则绑定的网卡）： `iptables -nvL`
+
 - 使用一行python命令查看/解压缩/创建zip文件：1.查看 - `python -m zipfile -l
 test.zip`, 2.解压缩 - `python -m zipfile -e test.zip test`, 3.创建 - `python -m
 zipfile -c release.zip *.py`

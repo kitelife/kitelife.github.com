@@ -39,7 +39,7 @@ tags: [Linux, PHP, MySQL, Nginx, 服务器, Python, Git]
 
 ------
 
-PHP源码编译模块不会产生php-fpm（PHP-FPM (FastCGI Process Manager) is an alternative PHP FastCGI implementation with some additional features useful for sites of any size, especially busier sites.），从`./configure --help`的输出中可以看到这样几行：
+PHP源码编译默认不会产生php-fpm（PHP-FPM (FastCGI Process Manager) is an alternative PHP FastCGI implementation with some additional features useful for sites of any size, especially busier sites.），从`./configure --help`的输出中可以看到这样几行：
 
     --enable-fpm              Enable building of the fpm SAPI executable
     --with-fpm-user=USER  Set the user for php-fpm to run as. (default: nobody)

@@ -10,3 +10,12 @@ tags: [Linux, PHP, MySQL, Nginx, 服务器, Python, Git]
 
 我选择源码编译的方式来安装所有涉及的软件。也许有人会说，为什么不在网络上查找RPM包然后安装呢？那么我想问一下RPM包本质上是个什么东西呢？RPM包（以及DEB包）其实就是将编译好的一些程序以一定的规则打包在一起，然后系统的包管理工具（yum、zypper）按照相同的规则将RPM包里文件复制到指定好的目录里。如果RPM包的依赖没有解决，是无法成功安装的。即使安装好了，若程序依赖的动态链接库等不存在或版本不匹配，也是无法正确运行的，比如libc库的版本过低，但明显你不能轻易替换libc库，因为系统中已安装的很多程序都依赖于libc库。那么相比源码编译方式，RPM包方式的问题更难解决。
 
+需要安装的软件有Nginx、PHP、MySQL、Memcached、Redis、Mongodb、Python2.7（系统上自带了2.4版本，版本过老）、Git、Gitlab、Ruby（Gitlab基于Ruby on Rails实现），运维工具tmux、htop，以及基础依赖库curl（libcurl）、cmake、libxml2、libxslt、openssl、pcre、readline、zlib、ic4c、libevent等。
+
+所有软件的编译安装流程都类似：
+
+1. `wget [下载链接]`   # 对于https协议的链接，也许需要添加 `--no-check-certificate` 来避免证书验证。
+2. `tar -xvf [软件源码压缩包(*.tar.gz/*.tar)] / unzip [软件源码压缩包(*.zip)]`
+3. `cd [源码目录] && ./configure [--prefix=...] [...]`  # openssl的是./config [...]
+4. `make && make install`
+

@@ -21,7 +21,7 @@ tags: [Linux, PHP, MySQL, Nginx, 服务器, Python, Git]
 
 其中最重要的步骤是`./configure`。在这一步中将指定软件的安装目录，以及其他参数（比如依赖的路径）。可以通过`./configure --help`来查看configure的选项列表，认真阅读一下，看看自己的编译是否需要带上某些选项。
 
-软件在编译过程中可能会自动查找借助某些工具，若找不到可能就会编译失败，其查找的规则一般就是环境变量PATH。所以若发现是因为找不到某些工具软件导致编译失败，那得确认一下系统是否安装该工具，若已安装，则配置一下PATH（export PATH=$PATH:/path/to/tool/或export PATH=/path/to/tool/:$PATH）。
+软件在编译过程中可能会自动查找借助某些工具，若找不到可能就会编译失败，其查找的规则一般就是环境变量PATH。所以若发现是因为找不到某些工具软件导致编译失败，那得确认一下系统是否安装该工具，若已安装，则配置一下PATH（`export PATH=$PATH:/path/to/tool/`或`export PATH=/path/to/tool/:$PATH`）。
 
 软件也可能依赖一些动态或静态链接库，其查找规则是`/etc/ld.so.conf`文件中指定的查找路径。编译过程中经常会因为未找到动态链接库而失败，如果该库已存在，可能需配置一下ld.so.conf，将依赖库的路径添加到ld.so.conf中，然后执行ldconfig。
 
@@ -47,7 +47,7 @@ tags: [Linux, PHP, MySQL, Nginx, 服务器, Python, Git]
 
 ------
 
-Gitlab是基于Ruby on Rails实现的类Github代码托管平台。其官方的安装教程见：[https://github.com/gitlabhq/gitlabhq/blob/5-0-stable/doc/install/installation.md](https://github.com/gitlabhq/gitlabhq/blob/5-0-stable/doc/install/installation.md)，不同Gitlab版本的安装过程有些不同，链接指向的是5-0-stable版本的安装教程。
+Gitlab是基于Ruby on Rails实现的类Github代码托管平台。其官方的安装教程见：[https://github.com/gitlabhq/gitlabhq/blob/5-0-stable/doc/install/installation.md](https://github.com/gitlabhq/gitlabhq/blob/5-0-stable/doc/install/installation.md)，不同Gitlab版本的安装过程有些不同，链接指向的是5-0-stable版本的安装教程。官方的安装教程是针对Ubuntu/Debian的，其他Linux发行版的安装过程会略有不同。
 
 *由于我对于Ruby以及Ruby on Rails并不了解，以下内容可能有些表述不正确的地方，请注意。*
 
@@ -80,6 +80,29 @@ Gem::Installer::ExtensionBuildError: ERROR: Failed to build gem native extension
     /usr/local/lib/mysql5
     ].map{|dir| "#{dir}/bin" }
 
-我bundle install的时候之所以失败，是因为我把mysql安装到了/usr/local/mysql56目录，所以gem找不到mysql的include目录。直接extconf.rb文件添加mysql安装路径是没用的，因为每次执行bundle install都会重新生成该文件，所以我执行`cp -r /usr/local/mysql56 /usr/local/mysql`来创建了mysql目录，应该也可以通过软链接来实现。
+我bundle install的时候之所以失败，是因为我把mysql安装到了/usr/local/mysql56目录，所以gem找不到mysql的include目录。直接在extconf.rb文件中添加mysql安装路径是没用的，因为每次执行bundle install都会重新生成该文件，所以我执行`cp -r /usr/local/mysql56 /usr/local/mysql`来创建了mysql目录，应该也可以通过软链接来实现。
 
 其他某些gem依赖可能也会有这样的问题，可以通过这样类似的方式解决。
+
+
+Ubuntu/Debian中安装nginx后，在nginx配置目录/etc/nginx中会自动生成sites-available、sites-enabled这两个目录，这两目录的关系是这样的：在sites-available目录中为每个可能需要nginx服务的应用编写一个虚拟主机配置文件（对于nginx配置即server模块），若某个应用现在需要nginx服务，则将它的配置文件从sites-available软链接到sites-enabled，而nginx的主配置文件nginx.conf的http模块的最后通过`include sites-enabled/*`将sites-enabled中所有的软链接配置文件包含进来。这种方式的好处在于模块化配置文件，非常灵活方便。但在SUSE中编译安装后，conf目录下并没有这两个目录，所以只能自己创建，并修改nginx.conf的http模块最后手动添加`include sites-enabled/*`一行即可。
+
+之后在试用Gitlab时，发现无法查看代码文件中的内容，通过浏览器的开发者工具看到是个500 Server Error响应。查看gitlab/log目录中的unicorn.stderr.log日志文件，有如下错误信息：
+
+    ActionView::Template::Error (Failed to get header.):
+    9:   .file_content.code
+    10:     - unless blob.empty?
+    11:       %div{class: user_color_scheme_class}
+    12:         = raw blob.colorize(formatter: :gitlab)
+    13:     - else
+    14:       %p.nothing_here_message Empty file
+    app/models/tree.rb:6:in `colorize'
+    app/views/tree/blob/_text.html.haml:12:in `_app_views_tree_blob__text_html_haml__128024721089489703_57418280'
+    app/views/tree/_blob.html.haml:9:in `_app_views_tree__blob_html_haml__1829533197002461340_55995660'
+    app/views/tree/_tree.html.haml:16:in `_app_views_tree__tree_html_haml___4517474428772753218_46927720'
+    app/views/tree/show.html.haml:4:in `_app_views_tree_show_html_haml__3020201194833589280_44750920'
+    app/controllers/tree_controller.rb:17:in `show'
+
+查看网络资料可以知道这是由于代码高亮渲染的时候出了问题。Gitlab使用pygments.rb来高亮代码。pygments.rb是**Ruby wrapper for the Python [pygments syntax highlighter](http://pygments.org/)**。那么，高亮渲染失败可能有三种可能：(1)未找到合适的Python版本，pygments.py依赖于Python 2.5+，(2)没有安装Python的pygments第三方库，(3)其他原因。很不幸，我遇到的是第三种可能。官方[Trouble-Shooting-Guide](https://github.com/gitlabhq/gitlab-public-wiki/wiki/Trouble-Shooting-Guide)对于该问题给出[解决方案](https://github.com/gitlabhq/gitlabhq/issues/2214#issuecomment-11137058)是针对第一种可能的。
+
+在pyments.rb gem目录`gitlab/vendor/bundle/ruby/1.9.1/gems/pygments.rb-0.4.2`的子目录`lib/pygments`中有(且仅有)一个可执行的python源码文件mentos.py，pygments.py应该就是通过该程序文件来调用Python的pygments库来高亮代码的，我尝试执行该文件，执行失败，原因是标准库json的某行代码中对象调用了encode('hex')方法失败，提示不存在hex编码。经分析查找原因，问题出在标准库模块[binascii](http://docs.python.org/2/library/binascii.html)(The binascii module contains a number of methods to convert between binary and various ASCII-encoded binary representations)未编译安装。该模块需要编辑Modules/Setup.dist文件启用。启用后（可能还有其他相关模块，我是把其他很多模块一起启用了）重新编译Python就可以了。

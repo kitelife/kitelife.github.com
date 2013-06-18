@@ -39,6 +39,19 @@ tags: [Linux, PHP, MySQL, Nginx, 服务器, Python, Git]
 
 ------
 
+PHP源码编译模块不会产生php-fpm（PHP-FPM (FastCGI Process Manager) is an alternative PHP FastCGI implementation with some additional features useful for sites of any size, especially busier sites.），从`./configure --help`的输出中可以看到这样几行：
+
+    --enable-fpm              Enable building of the fpm SAPI executable
+    --with-fpm-user=USER  Set the user for php-fpm to run as. (default: nobody)
+    --with-fpm-group=GRP  Set the group for php-fpm to run as. For a system user, this
+                  should usually be set to match the fpm username (default: nobody)
+
+这样只要在configure的时候提供这几个选项就可以启用php-fpm了。
+
+PHP configure的选项特别多。
+
+------
+
 关于Python源码编译，除了可能存在依赖问题外，默认的配置（Modules/Setup.dist）没有启用一些标准库模块，这些模块在实际中又非常基础常用。所以在configure之前需要编辑Modules/Setup.dist文件，启用某些必要的模块（只需去除某些行前`#`符号，稍微阅读一下该文件就知道了），但某些模块又有其他依赖，从而导致Python编译失败，这样的模块可以不启用，所以可能需要多次来回尝试。在make编译结束时的输出信息中会提示哪些必要的模块没有启用，以及哪些模块已启用但编译失败了。你可以忽略这些模块，但之后Python的使用可能会存在一些问题。
 
 ------

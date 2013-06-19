@@ -56,7 +56,7 @@ PHP configure的选项特别多。
 
 ------
 
-由于Git可以支持HTTP、GIT、HTTPS、SSH协议，会依赖libssl、libcrypto、libcurl等库，libssl、libcrypto这两个库都由openssl编译产生，libcurl由curl编译产生。如果未能成功编译ssl支持，也能通过编译，只是在之后的使用中遇到HTTPS协议可能会有问题。如果使用Git遇到HTTPS协议不能成功验证证书时，可以设置`git config --global http.sslVerify false`来避免证书验证。
+由于Git可以支持HTTP、GIT、HTTPS、SSH协议，会依赖libssl、libcrypto、libcurl、libmcrypt等库，libssl、libcrypto这两个库都由openssl编译产生，libcurl由curl编译产生。如果未能成功编译ssl支持，也能通过编译，只是在之后的使用中遇到HTTPS协议可能会有问题。如果使用Git遇到HTTPS协议不能成功验证证书时，可以设置`git config --global http.sslVerify false`来避免证书验证。
 
 ------
 

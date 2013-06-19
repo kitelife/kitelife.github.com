@@ -48,6 +48,12 @@ PHP源码编译默认不会产生php-fpm（PHP-FPM (FastCGI Process Manager) is 
 
 这样只要在configure的时候提供这几个选项就可以启用php-fpm了。
 
+为保证测试服务器上的PHP启用的扩展模块与生产服务器上的PHP一致，可通过phpinfo()函数来获知生产服务器上的PHP在configure编译的时候带了哪些选项。如图所示：
+
+<img src="/assets/pics/php-configure.jpg" alt="php-configure.jpg">
+
+但这样你得额外编译安装zlib、libmcrypt、libpng、freetype等库。
+
 PHP configure的选项特别多。
 
 ------

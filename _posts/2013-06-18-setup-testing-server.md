@@ -56,6 +56,24 @@ PHP源码编译默认不会产生php-fpm（PHP-FPM (FastCGI Process Manager) is 
 
 PHP configure的选项特别多。
 
+最后我的configure命令为：
+
+    ./configure --prefix=/usr/local/php --enable-fpm --with-mysql=/usr/local/mysql --with-mysqli=/usr/local/mysql/bin/mysql_config --with-gd --enable-sockets --enable-bcmath --enable-mbstring --enable-zip --with-zlib=/usr/local/zlib --with-mcrypt --with-freetype-dir=/usr --with-curl
+
+PHP安装完成后，可能还需编译安装一些扩展模块，比如：Redis、memcache、APC等。PHP扩展模块的编译安装流程大致如下：
+
+    1. /usr/local/php/bin/phpize
+    2. ./configure --with-php-config=/usr/local/php/bin/php-config [...]    # 可通过./configure --help查看该扩展configure可带的选项
+    3. make && make install
+
+如果扩展模块最后安装的路径并不是你期望的，则可以将所有编译好的扩展模块统一复制到同一个路径之下，然后修改php.ini（如果不存在，则可在/path/to/php/lib目录下新建一个）中extension_dir一项的值为扩展模块的统一路径，并为每个新增的扩展模块添加一行`extension=xxx.so`，如：
+
+    extension=redis.so
+    extension=memcache.so
+    extension=apc.so
+
+最后可通过phpinfo()函数来确认是否成功安装扩展。
+
 ------
 
 关于Python源码编译，除了可能存在依赖问题外，默认的配置（Modules/Setup.dist）没有启用一些标准库模块，这些模块在实际中又非常基础常用。所以在configure之前需要编辑Modules/Setup.dist文件，启用某些必要的模块（只需去除某些行前`#`符号，稍微阅读一下该文件就知道了），但某些模块又有其他依赖，从而导致Python编译失败，这样的模块可以不启用，所以可能需要多次来回尝试。在make编译结束时的输出信息中会提示哪些必要的模块没有启用，以及哪些模块已启用但编译失败了。你可以忽略这些模块，但之后Python的使用可能会存在一些问题。

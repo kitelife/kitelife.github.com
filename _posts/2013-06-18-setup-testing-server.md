@@ -58,7 +58,10 @@ PHP configure的选项特别多。
 
 最后我的configure命令为：
 
-    ./configure --prefix=/usr/local/php --enable-fpm --with-mysql=/usr/local/mysql --with-mysqli=/usr/local/mysql/bin/mysql_config --with-gd --enable-sockets --enable-bcmath --enable-mbstring --enable-zip --with-zlib=/usr/local/zlib --with-mcrypt --with-freetype-dir=/usr --with-curl
+    ./configure --prefix=/usr/local/php --enable-fpm --with-mysql=/usr/local/mysql \
+            --with-mysqli=/usr/local/mysql/bin/mysql_config --with-gd --enable-sockets \
+            --enable-bcmath --enable-mbstring --enable-zip --with-zlib=/usr/local/zlib \
+            --with-mcrypt --with-freetype-dir=/usr --with-curl
 
 PHP安装完成后，可能还需编译安装一些扩展模块，比如：Redis、memcache、APC等。PHP扩展模块的编译安装流程大致如下：
 

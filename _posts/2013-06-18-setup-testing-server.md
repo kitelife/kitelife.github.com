@@ -48,7 +48,34 @@ PHP源码编译默认不会产生php-fpm（PHP-FPM (FastCGI Process Manager) is 
 
 这样只要在configure的时候提供这几个选项就可以启用php-fpm了。
 
+为保证测试服务器上的PHP启用的扩展模块与生产服务器上的PHP一致，可通过phpinfo()函数来获知生产服务器上的PHP在configure编译的时候带了哪些选项。如图所示：
+
+<img src="/assets/pics/php-configure.jpg" alt="php-configure.jpg">
+
+但这样你得额外编译安装zlib、libmcrypt、libpng、freetype等库。
+
 PHP configure的选项特别多。
+
+最后我的configure命令为：
+
+    ./configure --prefix=/usr/local/php --enable-fpm --with-mysql=/usr/local/mysql \
+            --with-mysqli=/usr/local/mysql/bin/mysql_config --with-gd --enable-sockets \
+            --enable-bcmath --enable-mbstring --enable-zip --with-zlib=/usr/local/zlib \
+            --with-mcrypt --with-freetype-dir=/usr --with-curl
+
+PHP安装完成后，可能还需编译安装一些扩展模块，比如：Redis、memcache、APC等。PHP扩展模块的编译安装流程大致如下：
+
+    1. /usr/local/php/bin/phpize
+    2. ./configure --with-php-config=/usr/local/php/bin/php-config [...]    # 可通过./configure --help查看该扩展configure可带的选项
+    3. make && make install
+
+如果扩展模块最后安装的路径并不是你期望的，则可以将所有编译好的扩展模块统一复制到同一个路径之下，然后修改php.ini（如果不存在，则可在/path/to/php/lib目录下新建一个）中extension_dir一项的值为扩展模块的统一路径，并为每个新增的扩展模块添加一行`extension=xxx.so`，如：
+
+    extension=redis.so
+    extension=memcache.so
+    extension=apc.so
+
+最后可通过phpinfo()函数来确认是否成功安装扩展。
 
 ------
 
@@ -56,7 +83,7 @@ PHP configure的选项特别多。
 
 ------
 
-由于Git可以支持HTTP、GIT、HTTPS、SSH协议，会依赖libssl、libcrypto、libcurl等库，libssl、libcrypto这两个库都由openssl编译产生，libcurl由curl编译产生。如果未能成功编译ssl支持，也能通过编译，只是在之后的使用中遇到HTTPS协议可能会有问题。如果使用Git遇到HTTPS协议不能成功验证证书时，可以设置`git config --global http.sslVerify false`来避免证书验证。
+由于Git可以支持HTTP、GIT、HTTPS、SSH协议，会依赖libssl、libcrypto、libcurl、libmcrypt等库，libssl、libcrypto这两个库都由openssl编译产生，libcurl由curl编译产生。如果未能成功编译ssl支持，也能通过编译，只是在之后的使用中遇到HTTPS协议可能会有问题。如果使用Git遇到HTTPS协议不能成功验证证书时，可以设置`git config --global http.sslVerify false`来避免证书验证。
 
 ------
 

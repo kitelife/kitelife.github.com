@@ -65,7 +65,6 @@ title: 工具集
 - jshint（JavaScript代码检查命令行工具）
 - virtualenv（Python虚拟环境）
 - IPython（可在virtualenv虚拟环境中通过pip install ipython安装使用）
-- Wappalyzer（Chrome、Firefox插件，用于检测网站所使用的技术，非常赞）
 
 
 ## 命令行工具与解决方案

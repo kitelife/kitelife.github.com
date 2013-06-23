@@ -60,6 +60,7 @@ title: 工具集
 - JetBrains PhpStorm <s>Zend Studio</s>（PHP）
 - CodeBlocks（C/C++）
 - Racket（Scheme）
+- Wappalyzer（Chrome、Firefox插件，用于检测网站所使用的技术，非常赞）
 - TeXstudio（Latex）（算开发工具么？）
 - Git/SVN（源码控制）
 - jshint（JavaScript代码检查命令行工具）

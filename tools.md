@@ -66,7 +66,6 @@ title: 工具集
 - virtualenv（Python虚拟环境）
 - IPython（可在virtualenv虚拟环境中通过pip install ipython安装使用）
 
-
 ## 命令行工具与解决方案
 
 - （置顶）[命令行乐园](http://www.commandlinefu.com/commands/browse)

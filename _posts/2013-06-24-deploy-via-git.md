@@ -1,6 +1,6 @@
 ---
 layout: post
-title: FTP属于90年代，使用Git取代它来部署代码吧！（译）
+title: FTP是90年代的，使用Git取代它来部署代码吧！（译）
 tags: [Git, 翻译]
 ---
 
@@ -8,8 +8,8 @@ tags: [Git, 翻译]
 
 译者：[youngsterxyf](https://github.com/youngsterxyf)
 
-首先，在你的服务器上创建一个目录，并在其中初始化一个空的git仓库。我喜欢把`~/www/`作为网站根目录，
-因此我会这么做。
+首先，在你的服务器上创建一个目录，并在其中初始化一个空的git仓库。我喜欢使用`~/www/`目录来存放网站代码，
+因此我会这么做：
 
     mkdir ~/www/example.com && cd ~/www/example.com
     git init

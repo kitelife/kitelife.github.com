@@ -11,7 +11,7 @@ Google了一把，在[这里](http://stackoverflow.com/questions/5178416/pip-ins
 其实在编译失败的log里，已经有提示：
 
 >
-> ** make sure the development packages of libxml2 and libxslt are installed **
+>  make sure the development packages of libxml2 and libxslt are installed 
 >
 
 所以正确编译需先安装libxml2和libxslt这两个包。

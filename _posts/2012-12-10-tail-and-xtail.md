@@ -20,7 +20,7 @@ Web开发中很多时候需要边看web服务器的日志输出边调试代码�
 
 >xtail watches the growth of files. It's like running a tail -f on a bunch of files at once. My favorite usage is:
 >
->$ xtail /var/log/*
+>$ xtail /var/log/\*
 >
 >You can specify both filenames and directories on the command line. If you specify a directory, it watches all the files in that directory. It will notice when new files are created (and start watching them) or when old files are deleted (and stop watching them).
 

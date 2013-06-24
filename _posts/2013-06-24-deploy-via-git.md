@@ -1,6 +1,6 @@
 ---
 layout: post
-title: FTP属于90年代，使用Git取代它来部署代码吧（译）！
+title: FTP属于90年代，使用Git取代它来部署代码吧！（译）
 tags: [Git, 翻译]
 ---
 

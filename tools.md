@@ -67,6 +67,7 @@ title: 工具集
 - jshint（JavaScript代码检查命令行工具）
 - virtualenv（Python虚拟环境）
 - IPython（可在virtualenv虚拟环境中通过pip install ipython安装使用）
+- ack/codequery（代码搜索工具）
 
 ## 命令行工具与解决方案
 

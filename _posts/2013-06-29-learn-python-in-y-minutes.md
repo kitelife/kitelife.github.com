@@ -1,8 +1,12 @@
 ---
 layout: post
-title: Y分钟学会Python
+title: Y分钟学会Python（译）
 tags: [Python, 翻译]
 ---
+
+原文：[Learn Python in Y Minutes](http://learnxinyminutes.com/docs/python/)
+
+译者：[youngsterxyf](https://github.com/youngsterxyf)
 
 Python由Guido Van Rossum发明于90年代初期，是目前最流行的编程语言之一，因其语法的清晰简洁我爱上了Python，其代码基本上可以
 说是可执行的伪代码。

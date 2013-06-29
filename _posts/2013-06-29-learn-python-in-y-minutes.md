@@ -378,7 +378,7 @@ class Human(object):
     def get_species(cls):
         return cls.species
 
-    # 静态方法的调用不需要不需要一个类或实例的引用
+    # 静态方法的调用不需要一个类或实例的引用
     @staticmethod
     def grunt():
         return "*grunt*"
@@ -403,4 +403,4 @@ Human.grunt()   #=> "*grunt*"
 {% endhighlight %}
 
 ### 进一步阅读
-想要学习更多？试试[笨方法学习Python](http://learnpythonthehardway.org/book/)
+想要学习更多？试试[笨方法学习Python](http://learnpythonthehardway.org/book/)。

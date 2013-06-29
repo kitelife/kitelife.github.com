@@ -11,7 +11,7 @@ tags: [Python, 翻译]
 Python由Guido Van Rossum发明于90年代初期，是目前最流行的编程语言之一，因其语法的清晰简洁我爱上了Python，其代码基本上可以
 说是可执行的伪代码。
 
-非常欢迎反馈！你可以通过推特[@louiedinh](https://twitter.com/louiedinh)或louiedinh[at][谷歌email服务]联系我。
+非常欢迎反馈！你可以通过推特[@louiedinh](https://twitter.com/louiedinh)或louiedinh AT gmail联系我。
 
 备注：本文是专门针对Python 2.7的，但应该是适用于Python 2.x的。很快我也会为Python 3写这样的一篇文章！
 
@@ -239,5 +239,168 @@ set([1, 2, 3, 4]) - set([2, 3, 5]) #=> set([1, 4])
 some_var = 5
 
 # 以下是一个if语句。缩进在Python是有重要意义的。
+# 打印 "some_var is smaller than 10"
+if some_var > 10:
+    print "some_var is totally bigger than 10."
+elif some_var < 10:
+    print "some_var is smaller than 10."
+else:
+    print "some_var is indeed 10."
 
+
+"""
+For循环在列表上迭代
+输出：
+    dog is a mammal
+    cat is a mammal
+    mouse is a mammal
+"""
+for animal in ["dog", "cat", "mouse"]:
+    # 可以使用%来插补格式化字符串
+    print "%s is a mammal" % animal
+
+"""
+while循环直到未满足某个条件。
+输出：
+    0
+    1
+    2
+    3
+"""
+x = 0
+while x < 4:
+    print x
+    x += 1    # x = x + 1的一种简写
+
+# 使用try/except块来处理异常
+
+# 对Python 2.6及以上版本有效
+try:
+    # 使用raise来抛出一个错误
+    raise IndexError("This is an index error")
+except IndexError as e:
+    pass    # pass就是什么都不干。通常这里用来做一些恢复工作
+
+# 对于Python 2.7及以下版本有效
+try:
+    raise IndexError("This is an index error")
+except IndexError, e:   # 没有"as"，以逗号替代
+    pass
+
+
+####################################################
+## 4. 函数
+####################################################
+
+# 使用def来创建新函数
+def add(x, y):
+    print "x is %s and y is %s" % (x, y)
+    return x + y    # 以一个return语句来返回值
+
+# 以参数调用函数
+add(5, 6) #=> 11 并输出 "x is 5 and y is 6"
+# 另一种调用函数的方式是关键字参数
+add(x=5, y=6)   # 关键字参数可以任意顺序输入
+
+# 可定义接受可变数量的位置参数的函数
+def varargs(*args):
+    return args
+
+varargs(1, 2, 3) #=> (1, 2, 3)
+
+
+# 也可以定义接受可变数量关键字参数的函数
+def keyword_args(**kwargs):
+    return kwargs
+
+# 调用一下该函数看看会发生什么
+keyword_args(big="foot", loch="ness") #=> {"big": "foo", "loch": "ness"}
+
+# 也可以一次性接受两种参数
+def all_the_args(*args, **kwargs):
+    print args
+    print kwargs
+"""
+all_the_args(1, 2, a=3, b=4)输出：
+    [1, 2]
+    {"a": 3, "b": 4}
+"""
+
+# 在调用一个函数时也可以使用*和**
+args = (1, 2, 3, 4)
+kwargs = {"a": 3, "b": 4}
+foo(*args)  #等价于foo(1, 2, 3, 4)
+foo(**kwargs)   # 等价于foo(a=3, b=4)
+foo(*args, **kwargs)    # 等价于foo(1, 2, 3, 4, a=3, b=4)
+
+# Python的函数是一等函数
+def create_adder(x):
+    def adder(y):
+        return x + y
+    return adder
+
+add_10 = create_adder(10)
+add_10(3) #=> 13
+
+# 也有匿名函数
+(lamda x: x > 2)(3) #=> True
+
+# 有一些内置的高阶函数
+map(add_10, [1, 2, 3]) #=> [11, 12, 13]
+filter(lamda x: x > 5, [3, 4, 5, 6, 7]) #=>[6, 7]
+
+# 可以使用列表推导来实现映射和过滤
+[add_10(i) for i in [1, 2, 3]] #=> [11, 13, 13]
+[x for x in [3, 4, 5, 6,7 ] if x > 5] #=> [6, 7]
+
+####################################################
+## 5. 类
+####################################################
+
+# 创建一个子类继承自object来得到一个类
+class Human(object):
+
+    # 类属性。在该类的所有示例之间共享
+    species = "H. sapiens"
+
+    # 基本初始化构造方法
+    def __init__(self, name):
+        # 将参数赋值给实例的name属性
+        self.name = name
+
+    # 实例方法。所有示例方法都以self为第一个参数
+    def say(self, msg):
+        return "%s: %s" % (self.name, msg)
+
+    # 类方法由所有实例共享
+    # 以调用类为第一个参数进行调用
+    @classmethod
+    def get_species(cls):
+        return cls.species
+
+    # 静态方法的调用不需要不需要一个类或实例的引用
+    @staticmethod
+    def grunt():
+        return "*grunt*"
+
+# 实例化一个类
+i = Human(name="Ian")
+print i.say("hi")       # 输出"Ian: hi"
+
+j = Human("Joel")
+print j.say("hello")        # 输出"Joel: hello"
+
+# 调用类方法
+i.get_species() #=> "H. sapiens"
+
+# 修改共享属性
+Human.species = "H. neanderthalensis"
+i.get_species() #=> "H. neanderthalensis"
+j.get_species() #=> "H. neanderthalensis"
+
+# 调用静态方法
+Human.grunt()   #=> "*grunt*"
 {% endhighlight %}
+
+### 进一步阅读
+想要学习更多？试试[笨方法学习Python](http://learnpythonthehardway.org/book/)

@@ -135,6 +135,109 @@ try:
 except IndexError:
     print "Raises an IndexError"
 
+# 可以通过分片(slice)语法来查看列表中某个区间的数据
+# 以数学角度来说，这是一个闭合/开放区间
+li[1:3] #=> [2, 4]
+# 省略结束位置
+li[2:] #=> [4, 3]
+# 省略开始位置
+li[:3] #=> [1, 2, 4]
 
+# 使用del从列表中删除任意元素
+del li[2] #li现在为[1, 2, 3]
+
+# 列表可以相加
+li + other_li #=> [1, 3, 3, 4, 5, 6] - 注意：li和other_li并未改变
+
+# 以extend来连结列表
+li.extend(other_li) # 现在li为[1, 2, 3, 4, 5, 6]
+
+# 以in来检测列表中是否存在某元素
+1 in li #=> True
+
+# 以len函数来检测列表长度
+len(li) #=> 6
+
+# 元组类似列表，但不可变
+tup  = (1, 2, 3)
+tup[0] #=> 1
+try:
+    tup[0] = 3 # 抛出一个TypeError异常
+except TypeError:
+    print "Tuples cannot be mutated."
+
+# 可以在元组上使用和列表一样的操作
+len(tup) #=> 3
+tup + (4, 5, 6) #=> (1, 2, 3, 4, 5, 6)
+tup[:2] #=> (1, 2)
+2 in tup #=> True
+
+# 可以将元组解包到变量
+a, b, c = (1, 2, 3) # 现在a等于1，b等于2，c等于3
+# 如果你省略括号，默认也会创建元组
+d, e, f = 4, 5, 6
+# 看看两个变量互换值有多简单
+e, d = d, e     #现在d为5，e为4
+
+
+# 字典存储映射关系
+empty_dict = {}
+# 这是一个预先填充的字典
+filled_dict = {"one": 1, "two": 2, "three": 3}
+
+# 以[]语法查找值
+filled_dict['one'] #=> 1
+
+# 以列表形式获取所有的键
+filled_dict.keys() #=> ["three", "two", "one"]
+# 注意 - 字典键的顺序是不确定的
+# 你的结果也许和上面的输出结果并不一致
+
+# 以in来检测字典中是否存在某个键
+"one" in filled_dict #=> True
+1 in filled_dict #=> False
+
+# 试图使用某个不存在的键会抛出一个KeyError异常
+filled_dict['four'] #=> 抛出KeyError异常
+
+# 使用get方法来避免KeyError
+filled_dict.get("one") #=> 1
+filled_dict.get("four") #=> None
+
+# get方法支持一个默认参数，不存在某个键时返回该默认参数值
+filled_dict.get("one", 4) #=> 1
+filled_dict.get("four", 4) #=> 4
+
+# setdefault方法是一种添加新的键-值对到字典的安全方式
+filled_dict.setdefault("five", 5) #filled_dict["five"]设置为5
+filled_dict.setdefault("five", 6) #filled_dict["five"]仍为5
+
+
+# 集合
+empty_set = set()
+# 以几个值初始化一个集合
+filled_set = set([1, 2, 2, 3, 4]) # filled_set现为set([1, 2, 3, 4, 5])
+
+# 以&执行集合交运算
+other_set = set([3, 4, 5, 6])
+filled_set & other_set #=> set([3, 4, 5])
+# 以|执行集合并运算
+filled_set | other_set #=> set([1, 2, 3, 4, 5, 6])
+# 以-执行集合差运算
+set([1, 2, 3, 4]) - set([2, 3, 5]) #=> set([1, 4])
+
+# 以in来检测集合中是否存在某个值
+2 in filled_set #=> True
+10 in filled_set #=> False
+
+
+####################################################
+## 3. 控制流程
+####################################################
+
+# 创建个变量
+some_var = 5
+
+# 以下是一个if语句。缩进在Python是有重要意义的。
 
 {% endhighlight %}

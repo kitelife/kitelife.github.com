@@ -42,6 +42,7 @@ title: 工具集
 
 [Vim的分屏功能](http://coolshell.cn/articles/1679.html)
 
+[100 Vim commands every programmer should know](http://www.catswhocode.com/blog/100-vim-commands-every-programmer-should-know)
 
 ## Git
 

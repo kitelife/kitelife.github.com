@@ -74,6 +74,8 @@ title: 工具集
 
 - （置顶）[命令行乐园](http://www.commandlinefu.com/commands/browse)
 
+- 修改文件编码： `iconv -f encoding -t encoding inputfile`
+
 - 查看防火墙设置（包含防火墙规则绑定的网卡）： `iptables -nvL`
 
 - 使用一行python命令查看/解压缩/创建zip文件：1.查看 - `python -m zipfile -l
@@ -174,9 +176,9 @@ zipfile -c release.zip *.py`
 
 桌面环境：KDE
 
-Shell：Bash + [powerline-shell](https://github.com/milkbikis/powerline-shell)
+Shell：zsh + [oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh) <s>Bash + [powerline-shell](https://github.com/milkbikis/powerline-shell)</s>
 
-输入法：Fcitx + Google拼音
+输入法：Fcitx + Google拼音，ibus拼音
 
 翻墙：Goagent + Chrome插件SwitchySharp或Firefox插件AutoProxy
 
@@ -194,7 +196,7 @@ Shell：Bash + [powerline-shell](https://github.com/milkbikis/powerline-shell)
 
 屏幕录像：XVidCap
 
-音频播放器：深度音乐播放器/Audacious/[cplay](https://github.com/youngsterxyf/cplay)
+音频播放器：Songbird/深度音乐播放器/Audacious/[cplay](https://github.com/youngsterxyf/cplay)
 
 视频播放器：VLC/MPlayer/SMPlayer/深度影音
 

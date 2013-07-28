@@ -74,6 +74,8 @@ title: 工具集
 
 - （置顶）[命令行乐园](http://www.commandlinefu.com/commands/browse)
 
+- 系统监控工具：``Glances``，可以监控本机也可以通过客户端服务器模式监控其他机器；Glances提供了基于XML/RPC的API便于其他程序调用，可编程；Glances可以将数据输出保存到csv或html格式的文件方便其他程序处理（报告或绘制图形）。Glances是用Python开发的，使用psutil库来采集系统数据，在用户的终端上实时动态的显示重要的系统数据和变化。显示的数据包括：CPU、内存、磁盘、网络等使用情况，内核、运行队列、负载、I/O 状态、消耗资源最多的进程等等。
+
 - 修改文件编码： `iconv -f encoding -t encoding inputfile`
 
 - 查看防火墙设置（包含防火墙规则绑定的网卡）： `iptables -nvL`

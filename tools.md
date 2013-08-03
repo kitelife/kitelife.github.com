@@ -40,6 +40,8 @@ title: 工具集
 
 ### 资料
 
+[VIM标签页（tab）](http://www.pythonclub.org/linux/vim/tabs)
+
 [Vim的分屏功能](http://coolshell.cn/articles/1679.html)
 
 [100 Vim commands every programmer should know](http://www.catswhocode.com/blog/100-vim-commands-every-programmer-should-know)

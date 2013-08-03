@@ -21,6 +21,7 @@ title: 工具集
 - 删除N行： `N + d`，复制N行： `N + yy`
 - 跳到最后一行： `G`，跳到第一行： `gg`
 - 剪切： `dd`，粘贴： `p`
+- vim + ctags: `Ctrl + ]`自动跳转至定义, `Ctrl + t`返回上一次查看位置
 
 ### 插件
 - [Vundle](https://github.com/gmarik/vundle)(插件管理)

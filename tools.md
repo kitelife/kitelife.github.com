@@ -38,6 +38,7 @@ title: 工具集
 - [vim-monokai-refined](https://github.com/jaromero/vim-monokai-refined)(Port of Monokai Refined for TextMate/Sublime Text)
 - [indentLine](https://github.com/Yggdroot/indentLine)(缩进线)
 - [vim-css-color](https://github.com/skammer/vim-css-color)(css显示颜色值代表的颜色)
+- [vim-golang](https://github.com/jnwhiteh/vim-golang)(go代码高亮、自动缩进等)
 
 ### 资料
 

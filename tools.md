@@ -42,6 +42,8 @@ title: 工具集
 
 ### 资料
 
+[Learn Vimscript the Hard Way](http://learnvimscriptthehardway.stevelosh.com/)
+
 [VIM标签页（tab）](http://www.pythonclub.org/linux/vim/tabs)
 
 [Vim的分屏功能](http://coolshell.cn/articles/1679.html)

@@ -10,6 +10,7 @@ title: 工具集
 - [Setting up Sublime Text for Python development](http://dbader.org/blog/setting-up-sublime-text-for-python-development)
 - [Sublime Text 2 Documentation](http://www.sublimetext.com/docs/2/)
 - [SublimeREPL](http://sublimerepl.readthedocs.org/en/latest/), [Github - SublimeREPL](https://github.com/wuub/SublimeREPL)
+- [colorsublime](http://colorsublime.com/)
 
 ## VIM
 

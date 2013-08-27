@@ -42,6 +42,8 @@ title: 工具集
 
 ### 资料
 
+[spf13-vim - The Ultimate Vim Distribution](http://vim.spf13.com/)
+
 [Learn Vimscript the Hard Way](http://learnvimscriptthehardway.stevelosh.com/)
 
 [VIM标签页（tab）](http://www.pythonclub.org/linux/vim/tabs)

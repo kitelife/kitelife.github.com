@@ -43,6 +43,8 @@ title: 工具集
 
 ### 资料
 
+[超级牛逼的VIM配置](https://github.com/joedicastro/dotfiles/tree/master/vim)
+
 [spf13-vim - The Ultimate Vim Distribution](http://vim.spf13.com/)
 
 [Learn Vimscript the Hard Way](http://learnvimscriptthehardway.stevelosh.com/)

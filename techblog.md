@@ -3,6 +3,8 @@ layout: page
 title: 技术阅读
 ---
 
+- [LaTeX工作室](http://www.latexstudio.net/)
+
 - [乱象, 印迹](http://www.luanxiang.org/blog/)
 
 - [夏の航海士](http://www.soimort.org/)
@@ -11,8 +13,6 @@ title: 技术阅读
 
 - [残阳似血](http://qinxuye.me/)
 
-- [UC技术博客](http://tech.uc.cn/)
-
 - [Nicholas C. Zakas](http://www.nczonline.net/)(JavaScript)
 
 - [miguelgrinberg.com](http://blog.miguelgrinberg.com/)(Python, Flask)
@@ -20,8 +20,6 @@ title: 技术阅读
 - [Right Track Wrong Train](http://www.huangz.me/en/latest/index.html)
 
 - [麦子麦](http://www.wzxue.com/)(数据库)
-
-- [Hacker News](http://news.ycombinator.com/)
 
 - [Quora](http://www.quora.com/)
 
@@ -42,5 +40,3 @@ title: 技术阅读
 - [nikic](http://nikic.github.com/)
 
 - [EMC中国研究院官方轻博客](http://qing.weibo.com/emclabschina)
-
-- [Arabesque](http://blog.sanctum.geek.nz/)(Linux, Bash, VIM等)

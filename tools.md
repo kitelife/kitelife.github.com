@@ -78,6 +78,13 @@ title: 工具集
 - [如何准备演讲（beamer版）](http://www.bjt.name/2013/01/beamer-presentation/)
 - [Beamer演示学习笔记](http://zoho.is-programmer.com/user_files/zoho/File/beamerlog-1112.pdf)
 - [A Beamer Quickstart](http://www.math.umbc.edu/~rouben/beamer/)
+- 
+
+### 绘图语言与绘图工具
+
+- GnuPlot
+- Asymptote
+- MetaPost
 
 ## 开发工具
 

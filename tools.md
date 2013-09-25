@@ -65,6 +65,14 @@ title: 工具集
 
 ## Latex
 
+### Beamer
+
+- [Beamer theme gallery](http://deic.uab.es/~iblanes/beamer_gallery/) 
+- [beamer-theme-matrix](http://www.hartwork.org/beamer-theme-matrix/)
+- [如何准备演讲（beamer版）](http://www.bjt.name/2013/01/beamer-presentation/)
+- [Beamer演示学习笔记](http://zoho.is-programmer.com/user_files/zoho/File/beamerlog-1112.pdf)
+- [A Beamer Quickstart](http://www.math.umbc.edu/~rouben/beamer/)
+
 ## 开发工具
 
 - VIM / Sublime Text

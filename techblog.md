@@ -3,6 +3,8 @@ layout: page
 title: 技术阅读
 ---
 
+- [Free Mind](http://pluskid.org/index.html)
+
 - [LaTeX工作室](http://www.latexstudio.net/)
 
 - [乱象, 印迹](http://www.luanxiang.org/blog/)

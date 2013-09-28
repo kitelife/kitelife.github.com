@@ -67,4 +67,246 @@ Git有一种特殊的引用，称为*符号引用*。它并不直接指向一个
 
 # 示例
 
+我们来演练一个简单的示例，创建一个Git代码仓库，提交一些文件，看看幕后`.git`目录中都发生了些什么。
 
+## 初始化新的代码仓库
+
+{% highlight shell%}
+$ git init canai
+{% endhighlight %}
+
+![初始化代码仓库后](https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-internals/init.png)
+
+发生了什么呢？
+
+- 创建了空目录`.git/objects/`和`.git/refs/`。
+- 还没有索引（Index）文件。
+- 创建了符号索引文件`HEAD`。
+
+{% highlight shell %}
+$ cat .git/HEAD
+ref: refs/heads/master
+{% endhighlight %}
+
+## 添加新文件
+
+{% highlight shell %}
+$ echo "A roti canai project." >> README
+$ git add README
+{% endhighlight %}
+
+![添加新文件后](https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-internals/new-file.png)
+
+发生了什么呢？
+
+- 创建了索引（Index）文件。它有一个SHA1哈希值指向一个blob实体。
+
+{% highlight shell %}
+$ git ls-files --stage
+100644 5f89c6f016cad2d419e865df380595e39b1256db 0 README
+{% endhighlight %}
+
+- 创建了一个blob实体。README文件的内容存储在该blob中。
+
+{% highlight shell %}
+# .git/objects/5f/89c6f016cad2d419e865df380595e39b1256db
+$ git cat-file blob 5f89c6
+A roti canai project.
+{% endhighlight %}
+
+## 首次提交
+
+{% highlight shell %}
+$ git commit -m'first commit'
+[master (root-commit) d9976cf] first commit
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+ create mode 100644 README
+{% endhighlight %}
+
+![首次提交后](https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-internals/first-commit.png)
+
+发生了什么呢？
+
+- 创建了分支‘master’引用，指向‘master’分支中最新的commit实体。
+
+{% highlight shell %}
+$ cat .git/refs/heads/master 
+d9976cfe0430557885d162927dd70186d0f521e8
+{% endhighlight %}
+
+- 创建了第一个commit实体，指向根tree实体。
+
+{% highlight shell %}
+# .git/objects/d9/976cfe0430557885d162927dd70186d0f521e8
+$ git cat-file commit d9976cf
+tree 0ff699bbafc5d17d0637bf058c924ab405b5dcfe
+author Huiming Teo <huiming@favoritemedium.com> 1306739524 +0800
+committer Huiming Teo <huiming@favoritemedium.com> 1306739524 +0800
+
+first commit
+{% endhighlight %}
+
+- 创建了tree实体。该tree代表目录“canai”。
+
+{% highlight shell %}
+# .git/objects/0f/f699bbafc5d17d0637bf058c924ab405b5dcfe
+$ git ls-tree 0ff699
+100644 blob 5f89c6f016cad2d419e865df380595e39b1256db  README
+{% endhighlight %}
+
+## 添加一个修改过的文件
+
+{% highlight shell %}
+$ echo "Welcome everyone." >> README
+$ git add README
+{% endhighlight %}
+
+![添加一个修改过的文件后](https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-internals/modified-file.png)
+
+发生了什么呢？
+
+-更新了索引（Index）文件。注意到了吗？它记录了一个新blob。
+
+{% highlight shell %}
+$ git ls-files --stage
+100644 1192db4c15e019da7fc053225d09dea14bc3ac07 0 README
+{% endhighlight %}
+
+- 创建了一个新的blob实体。README的整个内容被存入一个新的blob。
+
+{% highlight shell %}
+# .git/objects/11/92db4c15e019da7fc053225d09dea14bc3ac07
+$ git cat-file blob 1192db
+A roti canai project.
+Welcome everyone.
+{% endhighlight %}
+
+## 向子目录中添加文件
+
+{% highlight shell %}
+$ mkdir doc
+$ echo "[[TBD]] manual toc" >> doc/manual.txt
+$ git add doc
+{% endhighlight %}
+
+![向子目录添加文件后](https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-internals/subdir.png)
+
+发生了什么呢？
+
+- 更新了索引（Index）文件。
+
+{% highlight shell %}
+$ git ls-files --stage
+100644 1192db4c15e019da7fc053225d09dea14bc3ac07 0 README
+100644 ea283e4fb22719fad512405d41dffa050cd16f9a 0 doc/manual.txt
+{% endhighlight %}
+
+- 创建了一个新的blob实体。
+
+{% highlight shell %}
+# .git/objects/ea/283e4fb22719fad512405d41dffa050cd16f9a
+$ git cat-file blob ea283
+[[TBD]] manual toc
+{% endhighlight %}
+
+## 第二次提交
+
+{% highlight shell %}
+$ git commit -m'second commit'
+[master 556eaf3] second commit
+ 2 files changed, 2 insertions(+), 0 deletions(-)
+ create mode 100644 doc/manual.txt
+{% endhighlight %}
+
+![第二次提交后](https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-internals/second-commit.png)
+
+发生了什么呢？
+
+- 更新了分支“master”引用，指向该分支中最新的commit实体。
+
+{% highlight shell %}
+$ cat .git/refs/heads/master 
+556eaf374886d4c07a1906b9fdcaba195292b96
+{% endhighlight %}
+
+- 创建了第二个commit实体。注意它的“parent”是指向首个commit实体。这样形成了一个提交图谱。
+
+{% highlight shell %}
+$ git cat-file commit 556e
+tree 7729a8b15b747bce541a9752a8f10d57daf221b6
+parent d9976cfe0430557885d162927dd70186d0f521e8
+author Huiming Teo <huiming@favoritemedium.com> 1306743598 +0800
+committer Huiming Teo <huiming@favoritemedium.com> 1306743598 +0800
+
+second commit
+{% endhighlight %}
+
+- 创建了一个新的根tree实体。
+
+{% highlight shell %}
+$ git ls-tree 7729
+100644 blob 1192db4c15e019da7fc053225d09dea14bc3ac07  README
+040000 tree 6ff17d485bf857514f299f0bde0e2a5c932bd055  doc
+{% endhighlight %}
+
+- 创建了一个新的子目录tree实体。
+
+{% highlight shell %}
+$ git ls-tree 6ff1
+100644 blob ea283e4fb22719fad512405d41dffa050cd16f9a  manual.txt
+{% endhighlight %}
+
+## 添加一个注释标签（annotated tag）
+
+{% highlight shell %}
+$ git tag -a -m'this is annotated tag' v0.1 d9976
+{% endhighlight %}
+
+![添加一个注释标签后](https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-internals/annotated-tag.png)
+
+发生了什么呢？
+
+- 创建了一个标签引用，指向一个tag实体。
+
+{% highlight shell %}
+$ cat .git/refs/tags/v0.1 
+c758f4820f02acf20bb3f6d7f6098f25ee6ed730
+{% endhighlight %}
+
+- 创建了一个tag实体。
+
+{% highlight shell %}
+$ git cat-file tag c758
+object d9976cfe0430557885d162927dd70186d0f521e8
+type commit
+tag v0.1
+tagger Huiming Teo <huiming@favoritemedium.com> 1306744918 +0800
+
+this is annotated tag
+{% endhighlight %}
+
+## 添加一个新的（轻量的）标签
+
+{% highlight shell %}
+$ git tag root-commit d9976
+{% endhighlight %}
+
+![](https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-internals/new-tag.png)
+
+发生了什么呢？
+
+- 创建了一个标签引用，指向一个commit实体。
+
+{% highlight shell %}
+$ cat .git/refs/tags/root-commit 
+d9976cfe0430557885d162927dd70186d0f521e8
+{% endhighlight %}
+
+# 补充阅读
+
+- [Git社区书](http://book.git-scm.com/index.html)“第7章：内部构造探究”
+- [Pro Git](http://progit.org/book/ch9-0.html)“第9章：Git内部构造”。
+
+# 接下来做什么呢？
+
+寻找适合分布式团队、长期项目的一个最小化git工作流。

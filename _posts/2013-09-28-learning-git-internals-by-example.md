@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 以示例学Git内部构造（译）
+title: 通过示例学习Git内部构造（译）
 tags: [Git, 翻译]
 ---
 

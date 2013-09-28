@@ -127,7 +127,7 @@ Git有一种特殊的引用，称为*符号引用*。它并不直接指向一个
         d9976cfe0430557885d162927dd70186d0f521e8
 
 
-- 创建了第一个commit实体，指向根tree实体。
+- 创建了第一个commit实体，指向代码仓库根目录tree实体。
 
         # .git/objects/d9/976cfe0430557885d162927dd70186d0f521e8
         $ git cat-file commit d9976cf
@@ -223,7 +223,7 @@ Git有一种特殊的引用，称为*符号引用*。它并不直接指向一个
         second commit
 
 
-- 创建了一个新的根tree实体。
+- 创建了一个新的代码仓库根目录tree实体。
 
         $ git ls-tree 7729
         100644 blob 1192db4c15e019da7fc053225d09dea14bc3ac07  README

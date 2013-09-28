@@ -8,11 +8,11 @@ tags: [Git, 翻译]
 
 译者：[youngsterxyf](https://github.com/youngsterxyf)
 
+------
+
 状态：草稿
 
 计划修订本文，未来可能会简化一些...
-
-------
 
 ## 动机
 

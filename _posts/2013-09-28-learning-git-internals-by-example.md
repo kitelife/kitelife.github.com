@@ -14,7 +14,7 @@ tags: [Git, 翻译]
 
 ------
 
-# 动机
+## 动机
 
 从Subversion和Mercurial切换到Git之后的几个月，我始终觉得Git在本质上是不同于Subversion和Mercurial的，但没法确切地说出区别。
 我经常在Github上看到tree、parent等术语，也搞不清楚它们确切的含义。
@@ -24,7 +24,7 @@ tags: [Git, 翻译]
 我会尝试概述，并阐述一路走来学到的关于Git的关键信息...但这仅是有助于我回答Git与其他源码控制工具区别的Git内部构造基本知识。
 
 
-# 实体、引用、索引（Objects，References，The Index）
+## 实体、引用、索引（Objects，References，The Index）
 
 要理解Git内部构造的核心，我们应理解三个东西： **实体**、**引用**、 **索引**。
 
@@ -32,7 +32,7 @@ tags: [Git, 翻译]
 
 ![Big Picture](https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-internals/big-picture.png)
 
-## 实体
+### 实体
 
 你提交到一个Git代码仓库中的所有文件，包括每个提交的说明信息（the commit info）都在目录 `.git/objects/`中存储为**实体**。
 
@@ -47,17 +47,17 @@ tags: [Git, 翻译]
 
 下文的示例会阐明这些实体是如何相互关联的。
 
-## 引用
+### 引用
 
 Git中，一个*分支（branch）*、*远程分支（remote branch）*或一个*标签（tag）*（也称为轻量标签）仅是**指向一个实体的一个指针**，这里的实体通常是一个commit实体。
 
 这些引用以文本文件的形式存储在目录`.git/refs/`中。
 
-### 符号引用（Symbolic References）
+#### 符号引用（Symbolic References）
 
 Git有一种特殊的引用，称为*符号引用*。它并不直接指向一个实体，而是**指向另一个引用**。举例来说，`.git/HEAD`就是一个符号引用。它指向你正在工作的当前分支。
 
-## 索引
+### 索引
 
 索引是一个暂存区，以二进制文件的形式存储为文件`.git/index`。
 
@@ -65,11 +65,11 @@ Git有一种特殊的引用，称为*符号引用*。它并不直接指向一个
 
 ------
 
-# 示例
+## 示例
 
 我们来演练一个简单的示例，创建一个Git代码仓库，提交一些文件，看看幕后`.git`目录中都发生了些什么。
 
-## 初始化新的代码仓库
+### 初始化新的代码仓库
 
 {% highlight shell%}
 $ git init canai
@@ -88,7 +88,7 @@ $ cat .git/HEAD
 ref: refs/heads/master
 {% endhighlight %}
 
-## 添加新文件
+### 添加新文件
 
 {% highlight shell %}
 $ echo "A roti canai project." >> README
@@ -114,7 +114,7 @@ $ git cat-file blob 5f89c6
 A roti canai project.
 {% endhighlight %}
 
-## 首次提交
+### 首次提交
 
 {% highlight shell %}
 $ git commit -m'first commit'
@@ -154,7 +154,7 @@ $ git ls-tree 0ff699
 100644 blob 5f89c6f016cad2d419e865df380595e39b1256db  README
 {% endhighlight %}
 
-## 添加一个修改过的文件
+### 添加一个修改过的文件
 
 {% highlight shell %}
 $ echo "Welcome everyone." >> README
@@ -181,7 +181,7 @@ A roti canai project.
 Welcome everyone.
 {% endhighlight %}
 
-## 向子目录中添加文件
+### 向子目录中添加文件
 
 {% highlight shell %}
 $ mkdir doc
@@ -209,7 +209,7 @@ $ git cat-file blob ea283
 [[TBD]] manual toc
 {% endhighlight %}
 
-## 第二次提交
+### 第二次提交
 
 {% highlight shell %}
 $ git commit -m'second commit'
@@ -256,7 +256,7 @@ $ git ls-tree 6ff1
 100644 blob ea283e4fb22719fad512405d41dffa050cd16f9a  manual.txt
 {% endhighlight %}
 
-## 添加一个注释标签（annotated tag）
+### 添加一个注释标签（annotated tag）
 
 {% highlight shell %}
 $ git tag -a -m'this is annotated tag' v0.1 d9976
@@ -285,13 +285,13 @@ tagger Huiming Teo <huiming@favoritemedium.com> 1306744918 +0800
 this is annotated tag
 {% endhighlight %}
 
-## 添加一个新的（轻量的）标签
+### 添加一个新的（轻量的）标签
 
 {% highlight shell %}
 $ git tag root-commit d9976
 {% endhighlight %}
 
-![](https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-internals/new-tag.png)
+![添加一个新的轻量标签后](https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-internals/new-tag.png)
 
 发生了什么呢？
 
@@ -302,11 +302,11 @@ $ cat .git/refs/tags/root-commit
 d9976cfe0430557885d162927dd70186d0f521e8
 {% endhighlight %}
 
-# 补充阅读
+## 补充阅读
 
 - [Git社区书](http://book.git-scm.com/index.html)“第7章：内部构造探究”
 - [Pro Git](http://progit.org/book/ch9-0.html)“第9章：Git内部构造”。
 
-# 接下来做什么呢？
+## 接下来做什么呢？
 
 寻找适合分布式团队、长期项目的一个最小化git工作流。

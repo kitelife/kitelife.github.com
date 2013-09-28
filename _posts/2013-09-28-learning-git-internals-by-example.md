@@ -109,7 +109,7 @@ $ git ls-files --stage
 - 创建了一个blob实体。README文件的内容存储在该blob中。
 
 {% highlight shell %}
-# .git/objects/5f/89c6f016cad2d419e865df380595e39b1256db
+\# .git/objects/5f/89c6f016cad2d419e865df380595e39b1256db
 $ git cat-file blob 5f89c6
 A roti canai project.
 {% endhighlight %}
@@ -137,7 +137,7 @@ d9976cfe0430557885d162927dd70186d0f521e8
 - 创建了第一个commit实体，指向根tree实体。
 
 {% highlight shell %}
-# .git/objects/d9/976cfe0430557885d162927dd70186d0f521e8
+\# .git/objects/d9/976cfe0430557885d162927dd70186d0f521e8
 $ git cat-file commit d9976cf
 tree 0ff699bbafc5d17d0637bf058c924ab405b5dcfe
 author Huiming Teo <huiming@favoritemedium.com> 1306739524 +0800
@@ -149,7 +149,7 @@ first commit
 - 创建了tree实体。该tree代表目录“canai”。
 
 {% highlight shell %}
-# .git/objects/0f/f699bbafc5d17d0637bf058c924ab405b5dcfe
+\# .git/objects/0f/f699bbafc5d17d0637bf058c924ab405b5dcfe
 $ git ls-tree 0ff699
 100644 blob 5f89c6f016cad2d419e865df380595e39b1256db  README
 {% endhighlight %}
@@ -175,7 +175,7 @@ $ git ls-files --stage
 - 创建了一个新的blob实体。README的整个内容被存入一个新的blob。
 
 {% highlight shell %}
-# .git/objects/11/92db4c15e019da7fc053225d09dea14bc3ac07
+\# .git/objects/11/92db4c15e019da7fc053225d09dea14bc3ac07
 $ git cat-file blob 1192db
 A roti canai project.
 Welcome everyone.
@@ -204,7 +204,7 @@ $ git ls-files --stage
 - 创建了一个新的blob实体。
 
 {% highlight shell %}
-# .git/objects/ea/283e4fb22719fad512405d41dffa050cd16f9a
+\# .git/objects/ea/283e4fb22719fad512405d41dffa050cd16f9a
 $ git cat-file blob ea283
 [[TBD]] manual toc
 {% endhighlight %}

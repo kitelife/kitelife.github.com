@@ -1,15 +1,12 @@
 ---
 layout: post
-title: 以示例学Git内核
+title: 以示例学Git内部构造
 tags: [Git, 翻译]
 ---
 
 原文：[Learning Git Internals by Example](http://teohm.github.io/blog/2011/05/30/learning-git-internals-by-example/)
 
 译者：[youngsterxyf](https://github.com/youngsterxyf)
-
-
-------
 
 状态：草稿
 
@@ -20,11 +17,11 @@ tags: [Git, 翻译]
 # 动机
 
 从Subversion和Mercurial切换到Git之后的几个月，我始终觉得Git在本质上是不同于Subversion和Mercurial的，但没法确切地说出区别。
-我经常在Github上看到tree、parent等术语，我也搞不清楚它们确切的含义。
+我经常在Github上看到tree、parent等术语，也搞不清楚它们确切的含义。
 
 因此我决定花些时间学学Git。
 
-我会尝试概述，并阐述一路走来学到的关于Git的关键信息...但这仅是有助于我回答Git与其他源码控制工具区别的Git内核基本知识。
+我会尝试概述，并阐述一路走来学到的关于Git的关键信息...但这仅是有助于我回答Git与其他源码控制工具区别的Git内部构造基本知识。
 
 
 # 实体、引用、索引（Objects，References，The Index）

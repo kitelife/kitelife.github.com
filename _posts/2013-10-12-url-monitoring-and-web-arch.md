@@ -105,6 +105,7 @@ tag: [监控, 架构, Web, 工作笔记]
 ![add_load_balance_level](https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/add_load_balance_level.png)
 
 [高清无码大图](https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/add_load_balance_level.png)
+
 此外，我想只能加强服务器硬件或者将系统拆分成多个小系统了吧。
 
 

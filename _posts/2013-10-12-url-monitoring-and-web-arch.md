@@ -100,7 +100,11 @@ tag: [监控, 架构, Web, 工作笔记]
 
 ### 性能瓶颈
 
-该问题一般不存在吧。如果真的存在，我想只能加强服务器硬件或者将系统拆分成多个小系统了吧？
+如果真的成了性能瓶颈，可以对前端转发机Nginx的功能进行拆分，即尽可能简化前端转发机Nginx的配置，如每个虚拟主机配置为仅转发请求。在前端转发机与后端服务器之间增加一层负载均衡服务器，负载均衡、访问控制、rewrite等功能放在该层完成。演变后的系统结构图如下所示：
+
+![add_load_balance_level](https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/add_load_balance_level.png)
+
+此外，我想只能加强服务器硬件或者将系统拆分成多个小系统了吧。
 
 
 ------

@@ -77,7 +77,7 @@ tag: [监控, 架构, Web, 工作笔记]
 
 假设所有前端转发机共享域名x.xxx.com，在记录有该域名信息的DNS服务器上对应该域名就有多个ip。该系统对外提供www.example.com、www.a.example.com、www.b.example.com等站点的服务。用户在访问这几个站点时，域名www.example.com、www.a.example.com、www.b.example.com的DNS解析过程是先将这些域名都CNAME为x.xxx.com，然后查找到x.xxx.com对应的ip返回给用户端。记录x.xxx.com的授权DNS服务器在接收到域名x.xxx.com的DNS请求后，通过与该DNS服务器关联的GSLB控制设备根据请求来自的运营商（以及地理信息等其他信息）得到访问最快的前端转发机ip返回给用户端。
 
-各个前端转发服务器的Nginx虚拟主机配置的server_name参数和HTTP请求的头部HOST字段来区分对不同站点的请求。
+各个前端转发服务器通过Nginx虚拟主机配置的server_name参数和HTTP请求的头部HOST字段来区分对不同站点的请求。
 
 上述环节中，记录x.xxx.com的授权服务器如果放在某个运营商网络里，对于其他运营商网络里的用户，DNS解析过程就会比较慢，从而大大影响了访问速度。一个有效的解决方案是：该DNS服务器同时接入多个运营商网络。
 

@@ -10,22 +10,16 @@ tag: [监控, 架构, Web, 工作笔记]
 
 - 用户通过Web界面配置URL监控项，配置过程为：
 
-  - 输入要监控的URL，如http://www.sample.com/test.php ，前端JS解析出域名部分www.sample.com，向后端发送AJAX请求，得到该域名相关的upstream；
-  
-  - 用户选择正确的那个upstream（Nginx可以将对不同URL的请求转发到不同的upstream后端机器）
-  
-  - 然后填写监控告警信息接收人等其他配置信息，提交即可。
+  1. 输入要监控的URL，如http://www.sample.com/test.php ，前端JS解析出域名部分www.sample.com，向后端发送AJAX请求，得到该域名相关的upstream；
+  2. 用户选择正确的那个upstream（Nginx可以将对不同URL的请求转发到不同的upstream后端机器）
+  3. 然后填写监控告警信息接收人等其他配置信息，提交即可。
 
 - 另一个cron脚本定时地:
 
   1. 从数据库中读取URL监控项数据；
-  
   2. 根据监控项中的upstream名，从数据库中读取属于该upstream的ip列表；
-  
   3. 逐个使用ip列表中的ip替换URL的域名部分，将域名部分作为HTTP请求头的HOST字段的值；
-  
   4. 使用libcurl库或curl命令发出请求（如使用curl命令：`curl -H "www.sample.com" http://192.168.1.1/test.php`）；
-  
   5. 如果响应码非200或非3xx等，则发送告警信息。
 
 这种方式的好处是**不仅能够检测URL指代的web页面或服务是否正常，还能检测提供该web页面或服务的每台服务器是否服务正常**。

@@ -1,8 +1,11 @@
----
+﻿---
 layout: page
 title: 链接
 permalink: /links/
 ---
+
+<div class="github-card" data-user="youngsterxyf"></div>
+<script src="assets/github-cards/widget.js"></script>
 
 - [豆瓣](http://www.douban.com/people/youngster21/) - 阅读，音乐
 

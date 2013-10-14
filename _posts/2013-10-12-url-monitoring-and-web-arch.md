@@ -77,7 +77,7 @@ tag: [监控, 架构, Web, 工作笔记]
 
 假设所有前端转发机共享域名x.xxx.com，在记录有该域名信息的DNS服务器上对应该域名就有多个ip。该系统对外提供www.example.com、www.a.example.com、www.b.example.com等站点的服务。用户在访问这几个站点时，域名www.example.com、www.a.example.com、www.b.example.com的DNS解析过程是先将这些域名都CNAME为x.xxx.com，然后查找到x.xxx.com对应的ip返回给用户端。记录x.xxx.com的授权DNS服务器在接收到域名x.xxx.com的DNS请求后，通过与该DNS服务器关联的GSLB控制设备根据请求来自的运营商（以及地理信息等其他信息）得到访问最快的前端转发机ip返回给用户端。
 
-各个前端转发服务器的Nginx虚拟主机配置的server_name参数和HTTP请求的头部HOST字段来区分对不同站点的请求。
+各个前端转发服务器通过Nginx虚拟主机配置的server_name参数和HTTP请求的头部HOST字段来区分对不同站点的请求。
 
 上述环节中，记录x.xxx.com的授权服务器如果放在某个运营商网络里，对于其他运营商网络里的用户，DNS解析过程就会比较慢，从而大大影响了访问速度。一个有效的解决方案是：该DNS服务器同时接入多个运营商网络。
 
@@ -100,7 +100,13 @@ tag: [监控, 架构, Web, 工作笔记]
 
 ### 性能瓶颈
 
-该问题一般不存在吧。如果真的存在，我想只能加强服务器硬件或者将系统拆分成多个小系统了吧？
+如果真的成了性能瓶颈，可以对前端转发机Nginx的功能进行拆分，即尽可能简化前端转发机Nginx的配置，如每个虚拟主机配置为仅转发请求。在前端转发机与后端服务器之间增加一层负载均衡服务器，负载均衡、访问控制、rewrite等功能放在该层完成。演变后的系统结构图如下所示：
+
+![add_load_balance_level](https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/add_load_balance_level.png)
+
+[高清无码大图](https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/add_load_balance_level.png)
+
+此外，我想只能加强服务器硬件或者将系统拆分成多个小系统了吧。
 
 
 ------

@@ -92,7 +92,6 @@ tags: [Linux, 命令行]
 
         PID=/usr/local/haproxy/haproxy.pid
         SBIN=/usr/local/haproxy/sbin/haproxy
-        CONSDIR=/usr/local/haproxyconsole/bin
         CONF=/usr/local/haproxy/conf/haproxy.conf
         logfile=/root/app.log
 
@@ -110,9 +109,6 @@ tags: [Linux, 命令行]
             $SBIN -f $CONF
             echo "Start haproxy Process pid:`cat $PID`"
             echo "Start haproxy At `date`">>$logfile
-            echo "Start haproxy console Process pid:`cat $PID`"
-            echo "Start haproxy console At `date`">>$logfile
-            cd $CONSDIR && ./haproxyconsole &
         }
 
         stop () {

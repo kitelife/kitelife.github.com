@@ -155,9 +155,11 @@ tags: [Linux, 命令行]
 
         chkconfig --add haproxy.sh
 
+
 - 关闭开机启动：
 
         chkconfig haproxy.sh off
+
 
 - 开启开机启动：
 

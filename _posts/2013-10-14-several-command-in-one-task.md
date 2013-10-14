@@ -147,16 +147,10 @@ tags: [Linux, 命令行]
 
 - 复制haproxy.sh到/etc/init.d/目录下
 
-- 将haproxy加入开机启动，即设置在开机时自动执行haproxy.sh脚本：
+- 将haproxy加入开机启动，即设置在开机时自动执行haproxy.sh脚本：`chkconfig --add haproxy.sh`
 
-        chkconfig --add haproxy.sh
+- 关闭开机启动：`chkconfig haproxy.sh off`
 
+- 开启开机启动：`chkconfig haproxy.sh on`
 
-- 关闭开机启动：
-
-        chkconfig haproxy.sh off
-
-
-- 开启开机启动：
-
-        chkconfig haproxy.sh on
+参考：http://blog.csdn.net/jiedushi/article/details/6767445

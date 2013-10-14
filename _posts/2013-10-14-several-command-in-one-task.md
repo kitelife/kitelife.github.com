@@ -4,7 +4,7 @@ title: 一项工作中涉及的几个命令
 tags: [Linux, 命令行]
 ---
 
-今天写了点shell脚本，在一些Linux服务器上进行了一些操作，涉及如下命令：
+今天写了点shell脚本，在一些CentOS服务器上进行了一些操作，涉及如下命令：
 
 ### 统计特定进程个数
 
@@ -78,3 +78,87 @@ tags: [Linux, 命令行]
     clock -w
 
 参考：http://www.blogjava.net/itvincent/archive/2007/08/03/134242.html
+
+### 开机自启动程序设置
+
+- 如为haproxy编写开机自启动shell脚本-haproxy.sh，内容如下所示：
+
+        #!/bin/bash
+        #
+        # chkconfig: 2345 25 9
+        # description: haproxy is a level 4 LB
+
+        . /etc/rc.d/init.d/functions
+
+        PID=/usr/local/haproxy/haproxy.pid
+        SBIN=/usr/local/haproxy/sbin/haproxy
+        CONSDIR=/usr/local/haproxyconsole/bin
+        CONF=/usr/local/haproxy/conf/haproxy.conf
+        logfile=/root/app.log
+
+        restart () {
+            $SBIN -f $CONF -st `cat $PID`
+            echo "Restart haproxy At `date`">>$logfile
+        }
+
+        start () {
+            #if [ -f $PID ]; then
+            #        echo "started already"
+            #        exit 0;
+            #fi
+            $SBIN -c -f $CONF
+            $SBIN -f $CONF
+            echo "Start haproxy Process pid:`cat $PID`"
+            echo "Start haproxy At `date`">>$logfile
+            echo "Start haproxy console Process pid:`cat $PID`"
+            echo "Start haproxy console At `date`">>$logfile
+            cd $CONSDIR && ./haproxyconsole &
+        }
+
+        stop () {
+                echo "Kill haproxy Process pid:`cat $PID`"
+                kill -SIGINT `cat $PID`
+                echo "Stop haproxy At `date`">>$logfile
+        }
+        
+        pid () {
+                ps -ef|grep master|grep "$SBIN"
+                echo "haproxy Pid Is:`cat $PID`"
+        }
+        
+        case $1 in 
+        reload|restart)
+                pid
+                restart
+                pid
+                ;;
+        start)
+                start
+                ;;
+        stop)
+                stop
+                ;;
+        check|-t)
+                $SBIN -c -f $CONF
+                ;;
+        pid|p|-p)
+                pid
+                ;;
+        *)
+                echo "Please Use ( restart|start|stop|check|pid ) as argument"
+                ;;
+        esac
+
+- 复制haproxy.sh到/etc/init.d/目录下
+
+- 将haproxy加入开机启动，即设置在开机时自动执行haproxy.sh脚本：
+
+        chkconfig --add haproxy.sh
+
+- 关闭开机启动：
+
+        chkconfig haproxy.sh off
+
+- 开启开机启动：
+
+        chkconfig haproxy.sh on

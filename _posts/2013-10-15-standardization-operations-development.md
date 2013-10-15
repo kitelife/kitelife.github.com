@@ -78,7 +78,9 @@ ssh远程连接到生产服务器（Linux），vim打开一个新文件，复制
 
 当涉及多人协作时，为了减少手动合并代码的工作量以及尽可能避免污染Git远程服务器版本信息，Git工作流就要复杂一些。
 
-我们的Git工作流为：
+我们的Git工作流如图所示：
+
+![our-git-workflow](https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-workflow.png)
 
 
 ### 生产服务器上的代码迁入版本控制

@@ -82,6 +82,12 @@ ssh远程连接到生产服务器（Linux），vim打开一个新文件，复制
 
 ![our-git-workflow](https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-workflow.png)
 
+Git远程服务器端和办公机端版本库都保持两个共享分支：master和develop。master分支是稳定分支，其最新代码与生产服务器上的代码一致。develop是测试分支。
+
+开发人员开发新功能或fix bug时，先在本地机器从master分支创建一个非共享分支xxx，在xxx分支中编写代码；需要在测试服务器测试代码时，将xxx分支合并入develop分支，将develop分支push到远程服务器；
+经测试后，确定需要上线生产服务器，则将xxx分支合并入master分支，并push远程服务器，生产服务器从master分支pull代码进行部署。
+
+这种工作流能避免“先提交的代码后上线”而导致的版本回滚问题。
 
 ### 生产服务器上的代码迁入版本控制
 

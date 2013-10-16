@@ -222,7 +222,8 @@ js代码的分析是以Google JavaScript Style Guide为标准，借助Google的c
 2.
 php代码的分析是以Zend  Coding Standards（http://framework.zend.com/wiki/display/ZFDEV2/Coding+Standards） 为标准，借助phpcs进行分析
 
-3.python代码的分析是以PEP 8为标准，借助flake8进行分析
+3.
+python代码的分析是以PEP 8为标准，借助flake8进行分析
 
 主代码见：[codelintset.go](https://gist.github.com/youngsterxyf/7002350)。
 

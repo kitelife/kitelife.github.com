@@ -202,9 +202,36 @@ file_put_contents('/tmp/cron_test_ip.txt', print_r($ip, true));
 
 为了推行规范，需要和组内运营开发同事说明**规范的必要性**、**如何执行规范（如Git的使用、Git工作流）**、**哪些东西可以从代码文档中查询**等，所以简单了做了个分享，ppt见：[规范化运营开发](https://github.com/youngsterxyf/youngsterxyf.github.com/blob/master/assets/files/s-o-p.pdf)。
 
-
 ### 如何推行“定期code review”
 
+You know, i am a newcomer，在工作中很难让同事们定期花点时间坐下来review代码，so，我只好实现一个自动化工具---一个cron脚本，每周执行一次，获取一周以来的commit，为其中每个committer随机分配另一个committer一周以来的所有commit作为review任务，将任务中的commit在gitlab上的超链接发送到各自的邮箱。
 
+代码见：[pack_git_commit.py](https://gist.github.com/youngsterxyf/7002279)
+
+代码中导入的TofApi是我对公司提供的统一消息发送接口的Python封装。
 
 ### 如何推行“编码规范”
+
+与“如何推行‘定期code review’”一样，我也是编写了一个自动化小工具来帮助推行编码规范---一个cron脚本，先定制git log命令参数，脚本中调用该git log命令，解析出需要的数据，对不同类型的代码文件使用不同的静态分析程序来分析每行代码不符合编码风格之处，然后将结果提交到gitlab的一个特定代码库中，并将结果的超链接发送到每个代码文件相关人员（对该文件做过增删的人）的邮箱，以提供编码风格改进参考。
+
+该工具目前支持js、php、python文件代码的分析：
+ 
+1.
+js代码的分析是以Google JavaScript Style Guide为标准，借助Google的closure_linter工具进行分析（我对该工具的代码进行了hack，以支持过滤正则表达式文件名表示的文件）
+
+2.
+php代码的分析是以Zend  Coding Standards（http://framework.zend.com/wiki/display/ZFDEV2/Coding+Standards） 为标准，借助phpcs进行分析
+
+3.python代码的分析是以PEP 8为标准，借助flake8进行分析
+
+主代码见：[codelintset.go](https://gist.github.com/youngsterxyf/7002350)。
+
+由于最近对golang比较感兴趣，所以主程序使用golang实现。
+
+代码中涉及的send_mail.py也是使用上面提到的TofApi的一个邮件发送脚本，template.tmpl是一个golang模板，用于生成静态分析结果，包括源码、分析结果、相关人员三个部分。
+
+**注意**：
+
+这个程序还有点问题 --- git在每个commit中会记录两个时间：author date（文件增删改的时间）和committer date（commit的时间），但很有可能某个变更在commit到本地版本库后，过了很长时间才push到远程服务器。
+该程序是在gitlab服务器上每天执行一次，其中git log的参数`--since`是对committer date起作用。即使一天之内有新commit push到gitlab服务器，该程序执行定制的git log命令，结果也很可能为空，因为是commit一天之后才push的。
+查了一下gitlab的API，好像也没找到commit push的时间的API，估计得自己去分析gitlab的数据库，然后读取commit push的时间。

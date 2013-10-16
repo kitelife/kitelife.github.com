@@ -198,9 +198,10 @@ file_put_contents('/tmp/cron_test_ip.txt', print_r($ip, true));
 
 （2）尽可能避免直接调用操作系统提供的shell命令来完成任务。一方面某些特殊符号对于shell来说是有特殊意义的，如果参数中带有这些特殊符号就需要特别注意；另一方面对于代码的可移植性来说，直接调用shell命令是很大的问题。一般来说，编程语言都有一些库来支持对文件系统等对象的操作，应尽可能使用这些库来完成任务。
 
+
 ### 规范宣导
 
-为了推行规范，需要和组内运营开发同事说明**规范的必要性**、**如何执行规范（如Git的使用、Git工作流）**、**哪些东西可以从代码文档中查询**等，所以简单了做了个分享，ppt见：[规范化运营开发](https://github.com/youngsterxyf/youngsterxyf.github.com/blob/master/assets/files/s-o-p.pdf)。
+为了推行规范，需要和组内运营开发同事说明**规范的必要性**、**如何执行规范（如Git的使用、Git工作流）**、**哪些东西可以从代码文档中查询**等，所以简单了做了个分享，ppt见：[规范化运营开发](https://raw.github.com/youngsterxyf/youngsterxyf.github.com/blob/master/assets/files/s-o-p.pdf)。
 
 ### 如何推行“定期code review”
 

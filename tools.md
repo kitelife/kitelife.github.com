@@ -11,6 +11,7 @@ title: 工具集
 - [Sublime Text 2 Documentation](http://www.sublimetext.com/docs/2/)
 - [SublimeREPL](http://sublimerepl.readthedocs.org/en/latest/), [Github - SublimeREPL](https://github.com/wuub/SublimeREPL)
 - [colorsublime](http://colorsublime.com/)
+- [Package Control](https://sublime.wbond.net/)
 
 ## VIM
 

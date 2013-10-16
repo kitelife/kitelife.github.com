@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 运营开发规范化的几项工作
+title: 运营开发规范化
 tags: [服务器, Linux, Git, Golang, Python]
 ---
 

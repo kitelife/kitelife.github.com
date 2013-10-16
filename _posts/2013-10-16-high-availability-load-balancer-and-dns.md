@@ -49,13 +49,14 @@ qq.com.权威服务器向Local DNS返回www.qq.com.解析记录；
 Local DNS向用户返回www.qq.com解析记录。
 
 
-Local DNS一般由网络运营商（如电信、网通等）提供。有时会在用户端（这是一个相对的概念）
-与local DNS之间添加一个缓存DNS，利用DNS服务器软件的缓存功能以及缓存DNS与用户端的近距离特点来加速域名解析。
+Local DNS一般由网络运营商（如电信、网通等）提供。
+
+缓存DNS处于用户端（这是一个相对的概念）与local DNS之间，利用DNS服务器软件的缓存功能以及缓存DNS与用户端的近距离特点来加速域名解析。
 
 也可以在缓存DNS上按需求进行域名劫持。运营商为了牟利，也会在local DNS上进行域名劫持，这对于各大互联网公司对外提供的服务来说是个很大的问题。
 
 ------
 
-在完成该工作后，我编写了一份安装配置文档，方便其他人参考。文档见：
+在完成该工作后，我编写了一份安装配置文档，方便其他同事参考。文档见：
 [HAProxy+HAProxyConsole+Keepalived+BIND安装配置文档.pdf](https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/files/high-availability-load-balancer-and-dns.pdf)。
 

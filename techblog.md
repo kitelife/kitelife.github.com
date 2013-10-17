@@ -3,6 +3,8 @@ layout: page
 title: 技术阅读
 ---
 
+- [余果](http://yuguo.us/)
+
 - [Free Mind](http://pluskid.org/index.html)
 
 - [LaTeX工作室](http://www.latexstudio.net/)

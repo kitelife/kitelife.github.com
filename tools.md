@@ -11,6 +11,7 @@ title: 工具集
 - [Sublime Text 2 Documentation](http://www.sublimetext.com/docs/2/)
 - [SublimeREPL](http://sublimerepl.readthedocs.org/en/latest/), [Github - SublimeREPL](https://github.com/wuub/SublimeREPL)
 - [colorsublime](http://colorsublime.com/)
+- [Package Control](https://sublime.wbond.net/)
 
 ## VIM
 
@@ -19,10 +20,18 @@ title: 工具集
 ### 快捷键
 
 - 跳到行尾： `shift + a` , 跳到行首： `shift + b`
+
 - 删除N行： `N + d`，复制N行： `N + yy`
+
 - 跳到最后一行： `G`，跳到第一行： `gg`
+
 - 剪切： `dd`，粘贴： `p`
-- vim + ctags: `Ctrl + ]`自动跳转至定义, `Ctrl + t`返回上一次查看位置
+
++ vim + ctags:
+  - `Ctrl + ]`自动跳转至定义;
+  - `Ctrl + t`返回上一次查看位置。
+
+- 块操作: 1. `^` → 到行头；2. `<C-v>` → 开始块操作；3. `<C-d>` → 向下移动 (你也可以使用hjkl来移动光标，或是使用%，或是别的)；4. `I-- [ESC]` → I是插入，插入“--”，按ESC键来为每一行生效。
 
 ### 插件
 - [Vundle](https://github.com/gmarik/vundle)(插件管理)
@@ -258,6 +267,8 @@ Email阅读：Thunderbird/Gmail
 办公套件：WPS office <s>LibreOffice</s>
 
 日程管理：Trello(Chrome插件+Andriod应用)
+
+思维导图：XMind
 
 数据备份同步：Dropbox(+Andriod应用)(注：[linux下安装使用Dropbox](https://www.dropbox.com/install#linux-install-content))
 

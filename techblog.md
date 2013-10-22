@@ -3,6 +3,8 @@ layout: page
 title: 技术阅读
 ---
 
+- [酷壳](http://coolshell.cn/)
+
 - [火丁笔记](http://huoding.com/)
 
 - [余果](http://yuguo.us/)

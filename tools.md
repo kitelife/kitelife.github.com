@@ -268,6 +268,8 @@ Email阅读：Thunderbird/Gmail
 
 日程管理：Trello(Chrome插件+Andriod应用)
 
+思维导图：XMind
+
 数据备份同步：Dropbox(+Andriod应用)(注：[linux下安装使用Dropbox](https://www.dropbox.com/install#linux-install-content))
 
 文档记录与在线编辑：Evernote(+chrome插件Web Clipper+Andriod应用)/Google Drive/Readability(仅可记录阅读，Chrome插件+Andriod应用)

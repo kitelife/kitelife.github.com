@@ -237,3 +237,8 @@ python代码的分析是以PEP 8为标准，借助flake8进行分析
 这个程序还有点问题 --- git在每个commit中会记录两个时间：author date（文件增删改的时间）和committer date（commit的时间），但很有可能某个变更在commit到本地版本库后，过了很长时间才push到远程服务器。
 该程序是在gitlab服务器上每天执行一次，其中git log的参数`--since`是对committer date起作用。即使一天之内有新commit push到gitlab服务器，该程序执行定制的git log命令，结果也很可能为空，因为是commit一天之后才push的。
 查了一下gitlab的API，好像也没找到commit push的时间的API，估计得自己去分析gitlab的数据库，然后读取commit push的时间。
+
+**2013-10-22 更新**
+
+*codelintset.go*已更新为[第二版](https://gist.github.com/youngsterxyf/7093991)，通过读取gitlab数据库中的相关数据来解决上述问题，并将原来需要配置的常量全部放到json文件，程序运行时会解析该json文件。这样，修改配置不需要重新编译源码。
+

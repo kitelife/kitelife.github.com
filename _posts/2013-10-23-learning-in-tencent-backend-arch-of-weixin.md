@@ -82,12 +82,15 @@ tags: [腾讯、微信、架构]
 **基于用户态线程（协程）的RPC**
 
 - 单机可以支撑数万甚至十万的用户态线程，仅受CPU和内存约束
+
 - 提高并发性和性能
 
 **用户态线程RPC的实现**
 
 - 基于makecontext/getcontext/swapcontext
-- Hook Network：read/write/epoll
+
+- Hook Network: read/write/epoll
+
 - 用户态线程调度
 
 ### 就近访问

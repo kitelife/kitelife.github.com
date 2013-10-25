@@ -3,6 +3,8 @@ layout: page
 title: 技术阅读
 ---
 
+- [BYVoid](https://www.byvoid.com/)
+
 - [酷壳](http://coolshell.cn/)
 
 - [火丁笔记](http://huoding.com/)

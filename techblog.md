@@ -3,6 +3,8 @@ layout: page
 title: 技术阅读
 ---
 
+- [explainshell](http://www.explainshell.com/)
+
 - [BYVoid](https://www.byvoid.com/)
 
 - [酷壳](http://coolshell.cn/)

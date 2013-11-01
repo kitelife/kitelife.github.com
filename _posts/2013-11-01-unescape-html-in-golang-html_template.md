@@ -4,7 +4,7 @@ title: Golang中如何让html/template不转义html标签
 tags: [Golang, template, html]
 ---
 
-近期在使用Golang的[net/http](http://golang.org/pkg/net/http/)和[html/template](http://golang.org/pkg/html/template/)来开发一个简单的HAProxy负载均衡任务管理系统（见[搭建高可用负载均衡组件及缓存DNS](http://youngsterxyf.github.io/2013/10/16/high-availability-load-balancer-and-dns/)一文说明）。
+近期在使用Golang的[net/http](http://golang.org/pkg/net/http/)和[html/template](http://golang.org/pkg/html/template/)开发一个简单的HAProxy负载均衡任务管理系统（见[搭建高可用负载均衡组件及缓存DNS](http://youngsterxyf.github.io/2013/10/16/high-availability-load-balancer-and-dns/)一文说明）。
 
 [htmp/template](http://golang.org/pkg/html/template/)在渲染页面模板的时候默认会转义字符串中的html标签，但有时我们并不想转义html标签，以下图所示为例：
 

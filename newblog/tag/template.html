@@ -1,134 +1,180 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-        <meta charset="utf-8" />
-        <title>黑*白 - template</title>
-        <link rel="stylesheet" href="http://youngsterxyf.github.io/newblog/theme/css/main.css" />
 
-        <!--[if IE]>
-            <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-        <![endif]-->
+        <title>黑*白 - template</title>
+        <meta charset="utf-8" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="http://youngsterxyf.github.io/newblog/theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="http://youngsterxyf.github.io/newblog/theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="http://youngsterxyf.github.io/newblog/theme/pygment.css" />
+
+        <script src="http://youngsterxyf.github.io/newblog/theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+
+
+
+
+
 </head>
 
 <body id="index" class="home">
-        <header id="banner" class="body">
-                <h1><a href="http://youngsterxyf.github.io/newblog/">黑*白 </a></h1>
-                <nav><ul>
-                    <li><a href="http://youngsterxyf.github.io/newblog/category/golang.html">Golang</a></li>
-                    <li><a href="http://youngsterxyf.github.io/newblog/category/misc.html">misc</a></li>
-                    <li><a href="http://youngsterxyf.github.io/newblog/category/python.html">Python</a></li>
-                </ul></nav>
-        </header><!-- /#banner -->
 
-            <aside id="featured" class="body">
-                <article>
-                    <h1 class="entry-title"><a href="http://youngsterxyf.github.io/newblog/golangzhong-ru-he-rang-htmltemplatebu-zhuan-yi-htmlbiao-qian.html">Golang中如何让html/template不转义html标签</a></h1>
-<footer class="post-info">
-        <abbr class="published" title="2013-11-01T16:25:00">
-                周五 01 十一月 2013
-        </abbr>
 
-        <address class="vcard author">
-                By <a class="url fn" href="http://youngsterxyf.github.io/newblog/author/youngsterxyf.html">youngsterxyf</a>
-        </address>
-<p>In <a href="http://youngsterxyf.github.io/newblog/category/golang.html">Golang</a>. </p>
-<p>tags: <a href="http://youngsterxyf.github.io/newblog/tag/golang.html">Golang</a><a href="http://youngsterxyf.github.io/newblog/tag/template.html">template</a><a href="http://youngsterxyf.github.io/newblog/tag/html.html">html</a></p>
-</footer><!-- /.post-info --><p>近期在使用Golang的<a href="http://golang.org/pkg/net/http/">net/http</a>和<a href="http://golang.org/pkg/html/template/">html/template</a>开发一个简单的HAProxy负载均衡任务管理系统（见<a href="http://youngsterxyf.github.io/2013/10/16/high-availability-load-balancer-and-dns/">搭建高可用负载均衡组件及缓存DNS</a>一文说明）。</p>
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="http://youngsterxyf.github.io/newblog">黑*白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+             
+              <ul class="columns">
+                <li><a href="http://youngsterxyf.github.io/newblog">Home</a></li>
+
+
+              </ul>
+            </div>
+
+<section id="content">
+
+
+
+   <div class="row">
+
+
+        <div class="eleven columns">
+		         <ol id="post-list">
+				        <li><article class="hentry">
+				                <header> <h2 class="entry-title"><a href="http://youngsterxyf.github.io/newblog/golangzhong-ru-he-rang-htmltemplatebu-zhuan-yi-htmlbiao-qian.html" rel="bookmark" title="Permalink to Golang中如何让html/template不转义html标签">Golang中如何让html/template不转义html标签</a></h2> </header>
+				                <footer class="post-info">
+				                    <abbr class="published" title="2013-11-01T16:25:00"> 周五 01 十一月 2013 </abbr>
+<address class="vcard author">By <a class="url fn" href="http://youngsterxyf.github.io/newblog/author/youngsterxyf.html">youngsterxyf</a></address>				                </footer><!-- /.post-info -->
+				                <div class="entry-content"> <p>近期在使用Golang的<a href="http://golang.org/pkg/net/http/">net/http</a>和<a href="http://golang.org/pkg/html/template/">html/template</a>开发一个简单的HAProxy负载均衡任务管理系统（见<a href="http://youngsterxyf.github.io/2013/10/16/high-availability-load-balancer-and-dns/">搭建高可用负载均衡组件及缓存DNS</a>一文说明）。</p>
 <p><a href="http://golang.org/pkg/html/template/">htmp/template</a>在渲染页面模板的时候默认会转义字符串中的html标签，但有时我们并不想转义html标签，以下图所示为例：</p>
 <p><img alt="add_haproxy_balance_task" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/haproxy_task_add.jpg" /></p>
 <p><img alt="list_haproxy_balance_task" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/haproxy_task_list.jpg" /></p>
 <p>图1中“ip:port列表(一行一个)”和“说明”两个输入框的内容行与行是以<code>\n</code>分隔的；图2中，这两部分内容分别在表格的“后端机器列表”和“说明”两列中展示，但行与行其实是以<code>&lt;br /&gt;</code>分隔的；那么在将数据存入数据库之前或从数据库中取出数据后，会将字符串中的<code>\n</code>替换为<code>&lt;br /&gt;</code>。如果将替换后的数据以字符串类型传入模板，<code>&lt;br /&gt;</code>标签渲染后的效果就是<code>&lt;br /&gt;</code>文本而不是换行。</p>
 <p>有两种方式避免<code>html/template</code>转义html标签：</p>
 <p>1.
-把字符串类型数据转换成<code>template.HTML</code>类型再传入模板进行渲染：</p>
-<div class="highlight"><pre><span class="n">lti</span> <span class="o">:=</span> <span class="n">listenTaskInfo</span><span class="p">{</span>
-    <span class="nl">Seq:</span>      <span class="n">seq</span><span class="p">,</span>
-    <span class="nl">Id:</span>       <span class="n">row</span><span class="p">.</span><span class="n">Id</span><span class="p">,</span>
-    <span class="nl">Servers:</span>  <span class="n">template</span><span class="p">.</span><span class="n">HTML</span><span class="p">(</span><span class="n">strings</span><span class="p">.</span><span class="n">Join</span><span class="p">(</span><span class="n">strings</span><span class="p">.</span><span class="n">Split</span><span class="p">(</span><span class="n">row</span><span class="p">.</span><span class="n">Servers</span><span class="p">,</span> <span class="s">&quot;-&quot;</span><span class="p">),</span> <span class="s">&quot;&lt;br /&gt;&quot;</span><span class="p">)),</span>
-    <span class="nl">Vip:</span>      <span class="n">appConf</span><span class="p">.</span><span class="n">Vip</span><span class="p">,</span>
-    <span class="nl">Vport:</span>    <span class="n">row</span><span class="p">.</span><span class="n">VPort</span><span class="p">,</span>
-    <span class="nl">Comment:</span>  <span class="n">template</span><span class="p">.</span><span class="n">HTML</span><span class="p">(</span><span class="n">strings</span><span class="p">.</span><span class="n">Join</span><span class="p">(</span><span class="n">strings</span><span class="p">.</span><span class="n">Split</span><span class="p">(</span><span class="n">row</span><span class="p">.</span><span class="n">Comment</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">),</span> <span class="s">&quot;&lt;br /&gt;&quot;</span><span class="p">)),</span>
-    <span class="nl">LogOrNot:</span> <span class="n">row</span><span class="p">.</span><span class="n">LogOrNot</span><span class="p">,</span>
-    <span class="nl">DateTime:</span> <span class="n">row</span><span class="p">.</span><span class="n">DateTime</span><span class="p">,</span>
-<span class="p">}</span>
-</pre></div>
+把字符串类型数据转换成<code>template ...</code></p> </div><!-- /.entry-content -->
+
+								<div class="medium primary btn"><a href="http://youngsterxyf.github.io/newblog/golangzhong-ru-he-rang-htmltemplatebu-zhuan-yi-htmlbiao-qian.html" rel="bookmark" title="Permalink to Golang中如何让html/template不转义html标签">Read more <i class="icon-arrow-right"></i></a></div>
 
 
-<p>2.
-<code>html/template</code>允许根据需要为模板变量添加一个处理函数，在模板解析的时候该函数就能对模板变量做进一步的处理，如：</p>
-<div class="highlight"><pre><span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">&quot;/search?q=\{{. | urlquery}}&quot;</span><span class="nt">&gt;</span>\{{. | html}}<span class="nt">&lt;/a&gt;</span>
-</pre></div>
+
+								<div class="row tag-row">
+										<span>Tagged as : </span>
+											<a class="danger label" href="http://youngsterxyf.github.io/newblog/tag/golang.html">Golang</a>
+											<a class="danger label" href="http://youngsterxyf.github.io/newblog/tag/template.html">template</a>
+											<a class="danger label" href="http://youngsterxyf.github.io/newblog/tag/html.html">html</a>
+								</div>
 
 
-<p><code>html/template</code>貌似并没有内置这样的函数让其不转义html标签，但提供了接口让我们按需自定义这类函数。那么我们可以自定义一个函数-在模板解析的时候将模板变量转换成<code>template.HTML</code>类型，如（该例子来自<a href="http://coderdave.com/view/how-to-unescape-text-in-a-golang-html-template">How To Unescape Text In A Golang Html Template</a>）：</p>
-<div class="highlight"><pre><span class="n">func</span> <span class="nf">unescaped</span> <span class="p">(</span><span class="n">x</span> <span class="n">string</span><span class="p">)</span> <span class="n">interface</span><span class="p">{}</span> <span class="p">{</span> <span class="k">return</span> <span class="n">template</span><span class="p">.</span><span class="n">HTML</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="p">}</span>
 
-<span class="n">func</span> <span class="n">renderTemplate</span><span class="p">(</span><span class="n">w</span> <span class="n">http</span><span class="p">.</span><span class="n">ResponseWriter</span><span class="p">,</span> <span class="n">tmpl</span> <span class="n">string</span><span class="p">,</span> <span class="n">view</span> <span class="o">*</span><span class="n">Page</span><span class="p">)</span> <span class="p">{</span>
-    <span class="n">t</span> <span class="o">:=</span> <span class="n">template</span><span class="p">.</span><span class="n">New</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)</span>  
-    <span class="n">t</span> <span class="o">=</span> <span class="n">t</span><span class="p">.</span><span class="n">Funcs</span><span class="p">(</span><span class="n">template</span><span class="p">.</span><span class="n">FuncMap</span><span class="p">{</span><span class="s">&quot;unescaped&quot;</span><span class="o">:</span> <span class="n">unescaped</span><span class="p">})</span>
-    <span class="n">t</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">t</span><span class="p">.</span><span class="n">ParseFiles</span><span class="p">(</span><span class="s">&quot;view.html&quot;</span><span class="p">,</span> <span class="s">&quot;edit.html&quot;</span><span class="p">)</span>
-    <span class="n">err</span> <span class="o">=</span> <span class="n">t</span><span class="p">.</span><span class="n">ExecuteTemplate</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">tmpl</span> <span class="o">+</span> <span class="s">&quot;.html&quot;</span><span class="p">,</span> <span class="n">view</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="n">nil</span> <span class="p">{</span>
-        <span class="n">http</span><span class="p">.</span><span class="n">Error</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">err</span><span class="p">.</span><span class="n">Error</span><span class="p">(),</span> <span class="n">http</span><span class="p">.</span><span class="n">StatusInternalServerError</span><span class="p">)</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
+				        </article></li>
+				</ol><!-- /#posts-list -->
 
+        </div><!-- /.eleven.columns -->
+        
+<div class="three columns">
 
-<p>这段代码使得模板解析的时候可以使用unescaped函数将模板变量x转换成<code>template.HTML</code>类型，关键是如下两句：</p>
-<div class="highlight"><pre><span class="c1">// 定义函数unescaped</span>
-<span class="n">func</span> <span class="n">unescaped</span> <span class="p">(</span><span class="n">x</span> <span class="k">string</span><span class="p">)</span> <span class="k">interface</span><span class="p">{}</span> <span class="p">{</span> <span class="k">return</span> <span class="n">template</span><span class="p">.</span><span class="no">HTML</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="p">}</span>
-<span class="c1">// 在模板对象t中注册unescaped</span>
-<span class="n">t</span> <span class="o">=</span> <span class="n">t</span><span class="p">.</span><span class="n">Funcs</span><span class="p">(</span><span class="n">template</span><span class="p">.</span><span class="n">FuncMap</span><span class="p">{</span><span class="s">&quot;unescaped&quot;</span><span class="o">:</span> <span class="n">unescaped</span><span class="p">})</span>
-</pre></div>
+<h4>Pages</h4>
 
+ <ul>
+  </ul>
 
-<p>这样，在模板中就可以使用unescaped函数了，如：</p>
-<div class="highlight"><pre><span class="p">{{</span><span class="n">printf</span> <span class="s">&quot;%s&quot;</span> <span class="p">.</span><span class="n">Body</span> <span class="o">|</span> <span class="n">unescaped</span><span class="p">}}</span> <span class="c1">//[]byte</span>
-<span class="p">{{.</span><span class="n">Body</span> <span class="o">|</span> <span class="n">unescaped</span><span class="p">}}</span> <span class="c1">//string</span>
-</pre></div>
-
-
-<p>实现不转义HTML标签，本质上，这两种方法是一样的，只不过一种是在字符串传入模板之前将其转换成<code>template.HTML</code>类型，另一种是在字符串传入模板之后解析之时转换。</p>
-<p>除了<code>template.HTML</code>类型，<code>text/template</code>还定义了<code>template.JS</code>、<code>template.CSS</code>等数据类型。</p>
-<h3>参考</h3>
+<h4>Categories</h4>
 <ul>
-<li><a href="http://golang.org/pkg/html/template/">html/template</a></li>
-<li><a href="http://coderdave.com/view/how-to-unescape-text-in-a-golang-html-template">How To Unescape Text In A Golang Html Template</a></li>
-</ul>                </article>
+		<li><a href="http://youngsterxyf.github.io/newblog/category/golang.html">Golang</a></li>
+		<li><a href="http://youngsterxyf.github.io/newblog/category/misc.html">misc</a></li>
+		<li><a href="http://youngsterxyf.github.io/newblog/category/python.html">Python</a></li>
+</ul>
+
+
+<h4>Tags</h4>
+	<ul>
+	    <li class="tag-4"><a href="http://youngsterxyf.github.io/newblog/tag/easy_install.html">easy_install</a></li>
+	    <li class="tag-4"><a href="http://youngsterxyf.github.io/newblog/tag/html.html">html</a></li>
+	    <li class="tag-4"><a href="http://youngsterxyf.github.io/newblog/tag/golang.html">Golang</a></li>
+	    <li class="tag-4"><a href="http://youngsterxyf.github.io/newblog/tag/python.html">Python</a></li>
+	    <li class="tag-4"><a href="http://youngsterxyf.github.io/newblog/tag/pip.html">pip</a></li>
+	    <li class="tag-4"><a href="http://youngsterxyf.github.io/newblog/tag/pelican.html">pelican</a></li>
+	    <li class="tag-4"><a href="http://youngsterxyf.github.io/newblog/tag/hello.html">hello</a></li>
+	    <li class="tag-4"><a href="http://youngsterxyf.github.io/newblog/tag/pypi.html">PyPi</a></li>
+	    <li class="tag-4"><a href="http://youngsterxyf.github.io/newblog/tag/template.html">template</a></li>
+</ul>
+
+
+<nav class="widget">
+  <h4>Social</h4>
+  <ul>
+    <li><a href="#">You can add links in your config file</a></li>
+    <li><a href="#">Another social link</a></li>
+  </ul>
+</nav>
+
+</div> </div><!-- /.row -->
+
 <p class="paginator">
     Page 1 / 1
 </p>
-            </aside><!-- /#featured -->
-            </ol><!-- /#posts-list -->
-            </section><!-- /#content -->
-        <section id="extras" class="body">
-                <div class="blogroll">
-                        <h2>blogroll</h2>
-                        <ul>
-                            <li><a href="http://getpelican.com/">Pelican</a></li>
-                            <li><a href="http://python.org/">Python.org</a></li>
-                            <li><a href="http://jinja.pocoo.org/">Jinja2</a></li>
-                            <li><a href="#">You can modify those links in your config file</a></li>
-                        </ul>
-                </div><!-- /.blogroll -->
-                <div class="social">
-                        <h2>social</h2>
-                        <ul>
+</section><!-- /#content -->
 
-                            <li><a href="#">You can add links in your config file</a></li>
-                            <li><a href="#">Another social link</a></li>
-                        </ul>
-                </div><!-- /.social -->
-        </section><!-- /#extras -->
+       </div><!-- /.row -->
+    </div><!-- /.container -->
 
-        <footer id="contentinfo" class="body">
-                <address id="about" class="vcard body">
-                Proudly powered by <a href="http://getpelican.com/">Pelican</a>, which takes great advantage of <a href="http://python.org">Python</a>.
-                </address><!-- /#about -->
 
-                <p>The theme is by <a href="http://coding.smashingmagazine.com/2009/08/04/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
-        </footer><!-- /#contentinfo -->
+       <div class="container.nopad bg">
+
+    
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="http://youngsterxyf.github.io/newblog/theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="http://youngsterxyf.github.io/newblog/theme/js/libs/gumby.min.js"></script>
+  <script src="http://youngsterxyf.github.io/newblog/theme/js/plugins.js"></script>
 
 </body>
 </html>

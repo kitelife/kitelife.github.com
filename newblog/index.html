@@ -159,6 +159,258 @@
 
 
 				        </article></li>
+				        <li><article class="hentry">
+				                <header> <h2 class="entry-title"><a href="./2013/10/16/high-availability-load-balancer-and-dns/" rel="bookmark" title="Permalink to 搭建高可用负载均衡组件及缓存DNS">搭建高可用负载均衡组件及缓存DNS</a></h2> </header>
+				                <footer class="post-info">
+				                    <abbr class="published" title="2013-10-16T00:00:00"> 2013-10-16 周三 </abbr>
+<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>				                </footer><!-- /.post-info -->
+				                <div class="entry-content"> <p>该项工作，如题所示，主要分为两部分：高可用负载均衡组件、缓存DNS。</p>
+<h3>高可用负载均衡组件</h3>
+<p>需求：优化业务系统架构中某些关键环节，针对TCP层数据流量进行负载均衡，并保证服务的高可用。</p>
+<p>技术选型：HAProxy + Keepalived，这对组合比较常见成熟。</p>
+<p>另外，由于HAProxy的负载均衡任务可能比较多，靠人工修改配置来增删改任务不方便可靠，所以实现了一个简单的HAProxy管理系统，
+以后经实际使用验证和完善会开放源码。</p>
+<p><img alt="high availability load balancer" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/high-availability-load-balancer.png" /></p>
+<h3>缓存DNS</h3>
+<p>先以www.qq.com为例，解释一下域名解析过程：</p>
+<p><img alt="resolve qq.com" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/resolve-qq-com.jpg" /></p>
+<p>1.
+用户向Local DNS发起www.qq.com.查询请求；</p>
+<p>2.
+Local DNS向根服务器发起com.查询请求；</p>
+<p>3.
+根服务器向Local DNS返回com.解析记录；</p>
+<p>4.
+Local DNS向com.权威服务器发起qq.com.查询请求；</p>
+<p>5.
+com.权威服务器向Local DNS返回qq.com.解析记录 ...</p> </div><!-- /.entry-content -->
+
+								<div class="medium primary btn"><a href="./2013/10/16/high-availability-load-balancer-and-dns/" rel="bookmark" title="Permalink to 搭建高可用负载均衡组件及缓存DNS">Read more <i class="icon-arrow-right"></i></a></div>
+
+
+
+								<div class="row tag-row">
+										<span>Tagged as : </span>
+											<a class="danger label" href="./tag/gao-ke-yong.html">高可用</a>
+											<a class="danger label" href="./tag/fu-zai-jun-heng.html">负载均衡</a>
+											<a class="danger label" href="./tag/haproxy.html">HAProxy</a>
+											<a class="danger label" href="./tag/keepalived.html">Keepalived</a>
+											<a class="danger label" href="./tag/haproxyconsole.html">HAProxyConsole</a>
+											<a class="danger label" href="./tag/dns.html">DNS</a>
+											<a class="danger label" href="./tag/bind.html">BIND</a>
+								</div>
+
+
+
+				        </article></li>
+				        <li><article class="hentry">
+				                <header> <h2 class="entry-title"><a href="./2013/10/15/standardization-operation-development/" rel="bookmark" title="Permalink to 运营开发规范化">运营开发规范化</a></h2> </header>
+				                <footer class="post-info">
+				                    <abbr class="published" title="2013-10-15T00:00:00"> 2013-10-15 周二 </abbr>
+<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>				                </footer><!-- /.post-info -->
+				                <div class="entry-content"> <p>今年3月底毕业，入职腾讯做运营开发，至今6个月有余。入职之时组内仅有1个运营开发的同事，到目前已扩充到5人，加3个实习生。</p>
+<p>入职之时的运营开发过程是这样的：</p>
+<ol>
+<li>在办公机器（Windows）上编写代码，功能测试通过后，</li>
+<li>ssh远程连接到生产服务器（Linux），vim打开一个新文件，复制办公机器上的代码，粘贴到vim中，保存，</li>
+<li>打开浏览器测试上线的功能/效果是否正确，若不正确，</li>
+<li>直接在生产服务器上编辑代码文件，直到达到需要的功能效果，</li>
+<li>再从生产服务器上将修改后的代码复制粘贴到办公机器（也许不会有这一步，之后所有的修改都直接在生产服务器上操作）。</li>
+</ol>
+<p>这个过程存在如下问题：</p>
+<ol>
+<li>代码没有版本控制</li>
+<li>没有与生产服务器一致的测试环境</li>
+<li>代码部署过程繁琐</li>
+<li>办公开发机器上代码很可能比生产服务器上代码还旧</li>
+<li>上面4点都会导致混乱</li>
+</ol>
+<p>除此之外，当团队从1人扩充到多人后，不可避免地会遇到协作的问题，解决代码开发协作问题一般涉及如下几方面：</p>
+<ol>
+<li>使用代码版本控制</li>
+<li>规定版本控制的工作流</li>
+<li>编码规范</li>
+<li>项目/代码文档</li>
+<li>定期code review</li>
+</ol>
+<p>为了解决上述问题，我陆续地做了如下工作：</p>
+<h3>搭建Gitlab服务器、测试服务器</h3>
+<p>个人认为开发工作规范化的第一点就是版本控制，基于版本控制可以完成很多自动化的任务。</p>
+<p>平时个人的代码、文档都通过Git版本控制存放在Github上 ...</p> </div><!-- /.entry-content -->
+
+								<div class="medium primary btn"><a href="./2013/10/15/standardization-operation-development/" rel="bookmark" title="Permalink to 运营开发规范化">Read more <i class="icon-arrow-right"></i></a></div>
+
+
+
+								<div class="row tag-row">
+										<span>Tagged as : </span>
+											<a class="danger label" href="./tag/fu-wu-qi.html">服务器</a>
+											<a class="danger label" href="./tag/linux.html">Linux</a>
+											<a class="danger label" href="./tag/git.html">Git</a>
+											<a class="danger label" href="./tag/golang.html">Golang</a>
+											<a class="danger label" href="./tag/python.html">Python</a>
+								</div>
+
+
+
+				        </article></li>
+				        <li><article class="hentry">
+				                <header> <h2 class="entry-title"><a href="./2013/10/14/several-command-in-one-task/" rel="bookmark" title="Permalink to 一项工作中涉及的几个命令">一项工作中涉及的几个命令</a></h2> </header>
+				                <footer class="post-info">
+				                    <abbr class="published" title="2013-10-14T00:00:00"> 2013-10-14 周一 </abbr>
+<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>				                </footer><!-- /.post-info -->
+				                <div class="entry-content"> <p>今天写了点shell脚本，在一些CentOS服务器上进行了一些操作，涉及如下命令：</p>
+<h3>统计特定进程个数</h3>
+<p>如统计haproxy进程的个数</p>
+<div class="highlight"><pre>ps -e | grep haproxy | wc -l
+</pre></div>
+
+
+<h3>获取特定进程的pid</h3>
+<p>如获取haproxy进程的pid</p>
+<div class="highlight"><pre>ps -e | grep haproxy | awk <span class="s1">&#39;{print $1}&#39;</span>
+</pre></div>
+
+
+<h3>一对多添加ssh信任关系</h3>
+<p>如192.168.2.1用户usernameA到192.168.2.x用户usernameB的信任关系</p>
+<ol>
+<li>
+<p>在192.168.2.1创建自己的公钥私钥：</p>
+<div class="highlight"><pre>ssh-keygen -t rsa   <span class="c"># 提示输入时，全部留空回车。</span>
+</pre></div>
+
+
+</li>
+<li>
+<p>拷贝192.168.2.1的公钥到192.168.2.x机器上：</p>
+<div class="highlight"><pre>ssh-copy-id <span class="s2">&quot;-p 22 usernameB@192.168 ...</span></pre></div></li></ol> </div><!-- /.entry-content -->
+
+								<div class="medium primary btn"><a href="./2013/10/14/several-command-in-one-task/" rel="bookmark" title="Permalink to 一项工作中涉及的几个命令">Read more <i class="icon-arrow-right"></i></a></div>
+
+
+
+								<div class="row tag-row">
+										<span>Tagged as : </span>
+											<a class="danger label" href="./tag/linux.html">Linux</a>
+											<a class="danger label" href="./tag/ming-ling-xing.html">命令行</a>
+								</div>
+
+
+
+				        </article></li>
+				        <li><article class="hentry">
+				                <header> <h2 class="entry-title"><a href="./2013/10/12/url-monitoring-and-web-arch/" rel="bookmark" title="Permalink to 从URL监控问题谈网站Web架构">从URL监控问题谈网站Web架构</a></h2> </header>
+				                <footer class="post-info">
+				                    <abbr class="published" title="2013-10-12T00:00:00"> 2013-10-12 周六 </abbr>
+<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>				                </footer><!-- /.post-info -->
+				                <div class="entry-content"> <p>之前工作中实现了一个对站点进行URL监控的功能。原理是：</p>
+<ul>
+<li>
+<p>cron脚本定时从一台Nginx服务器上获得Nginx配置文件（包括upstream配置），在解析配置得到：<code>域名-&gt;upstream名</code>（可能有多个）、<code>upstream名-&gt;属于该upstream的服务器ip列表</code>，存入数据库；</p>
+</li>
+<li>
+<p>用户通过Web界面配置URL监控项，配置过程为：</p>
+</li>
+<li>
+<p>输入要监控的URL，如http://www.sample.com/test.php ，前端JS解析出域名部分www.sample.com，向后端发送AJAX请求，得到该域名相关的upstream；</p>
+</li>
+<li>用户选择正确的那个upstream（Nginx可以将对不同URL的请求转发到不同的upstream后端机器）；</li>
+<li>
+<p>然后填写监控告警信息接收人等其他配置信息，提交即可。</p>
+</li>
+<li>
+<p>另一个cron脚本定时地:</p>
+</li>
+<li>
+<p>从数据库中读取URL监控项数据；</p>
+</li>
+<li>根据监控项中的upstream名，从数据库中读取属于该upstream的ip列表；</li>
+<li>逐个使用ip列表中的ip替换URL的域名部分，将域名部分作为HTTP请求头的HOST字段的值；</li>
+<li>使用libcurl库或curl命令发出请求（如使用curl命令：<code>curl -H "www.sample.com" http://192.168.1.1/test.php</code>）；</li>
+<li>如果响应码非200或非3xx等 ...</li></ul> </div><!-- /.entry-content -->
+
+								<div class="medium primary btn"><a href="./2013/10/12/url-monitoring-and-web-arch/" rel="bookmark" title="Permalink to 从URL监控问题谈网站Web架构">Read more <i class="icon-arrow-right"></i></a></div>
+
+
+
+								<div class="row tag-row">
+								</div>
+
+
+
+				        </article></li>
+				        <li><article class="hentry">
+				                <header> <h2 class="entry-title"><a href="./2013/09/28/learning-git-internal-by-example/" rel="bookmark" title="Permalink to 通过示例学习Git内部构造（译）">通过示例学习Git内部构造（译）</a></h2> </header>
+				                <footer class="post-info">
+				                    <abbr class="published" title="2013-09-28T00:00:00"> 2013-09-28 周六 </abbr>
+<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>				                </footer><!-- /.post-info -->
+				                <div class="entry-content"> <p>原文：<a href="http://teohm.github.io/blog/2011/05/30/learning-git-internals-by-example/">Learning Git Internals by Example</a></p>
+<p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
+<hr />
+<p>状态：草稿</p>
+<p>计划修订本文，未来可能会简化一些...</p>
+<h2>动机</h2>
+<p>从Subversion和Mercurial切换到Git之后的几个月，我始终觉得Git在本质上是不同于Subversion和Mercurial的，但没法确切地说出区别。
+我经常在Github上看到tree、parent等术语，也搞不清楚它们确切的含义。</p>
+<p>因此我决定花些时间学学Git。</p>
+<p>我会尝试概述，并阐述一路走来学到的关于Git的关键信息...但这仅是有助于我回答Git与其他源码控制工具区别的Git内部构造基本知识。</p>
+<h2>实体、引用、索引（Objects，References，The Index）</h2>
+<p>要理解Git内部构造的核心，我们应理解三个东西： <strong>实体</strong>、<strong>引用</strong>、 <strong>索引</strong>。</p>
+<p>我发现这个模型非常优雅。用一个小小的图表就能完全展现，也易于理解记忆。</p>
+<p><img alt="Big Picture" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-internals/big-picture.png" /></p>
+<h3>实体</h3>
+<p>你提交到一个Git代码仓库中的所有文件，包括每个提交的说明信息（the commit info）都在目录 <code>.git/objects/</code>中存储为<strong>实体</strong>。</p>
+<p>一个实体以一个40字符长度的字符串 ...</p> </div><!-- /.entry-content -->
+
+								<div class="medium primary btn"><a href="./2013/09/28/learning-git-internal-by-example/" rel="bookmark" title="Permalink to 通过示例学习Git内部构造（译）">Read more <i class="icon-arrow-right"></i></a></div>
+
+
+
+								<div class="row tag-row">
+										<span>Tagged as : </span>
+											<a class="danger label" href="./tag/git.html">Git</a>
+											<a class="danger label" href="./tag/fan-yi.html">翻译</a>
+								</div>
+
+
+
+				        </article></li>
+				        <li><article class="hentry">
+				                <header> <h2 class="entry-title"><a href="./2013/08/22/heart-of-time/" rel="bookmark" title="Permalink to 时间的心">时间的心</a></h2> </header>
+				                <footer class="post-info">
+				                    <abbr class="published" title="2013-08-22T00:00:00"> 2013-08-22 周四 </abbr>
+<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>				                </footer><!-- /.post-info -->
+				                <div class="entry-content"> <p>近期工作生活的一点心得：</p>
+<h3>珍惜自己的时间</h3>
+<p>乐于助人是好事，但，是需要耗费时间的，那么在助人之前就得确认帮助别人所做的事情有多大意义，是否对得起所耗费的时间精力。每个人的时间都很珍贵，应尽可能用来做有价值的事情，不要把自己的时间看得过于廉价。</p>
+<p>所以之后有人请我帮忙时，我会先问两个问题：</p>
+<ol>
+<li>
+<p>遇到什么问题？</p>
+</li>
+<li>
+<p>为什么要解决这个问题？</p>
+</li>
+</ol>
+<p>通过这两个问题来判断是否值得帮忙。</p>
+<h3>平常心</h3>
+<p>一心追求技术，对技术好坏有自己的“正义感”，是好事。但，不能苛求别人，更不能不停评价吐槽，否则于己于人都无益处。对别人、别人的技术水平宽容一点，把苛求留给自己，不断提高自己，努力把事情做得更好，其他的则应保持平常心。</p>
+<p><em>至于本文的题目，则纯属扯淡，故作矫情，从两个部分的标题中取出最后一词组合而成。</em></p> </div><!-- /.entry-content -->
+
+								<div class="medium primary btn"><a href="./2013/08/22/heart-of-time/" rel="bookmark" title="Permalink to 时间的心">Read more <i class="icon-arrow-right"></i></a></div>
+
+
+
+								<div class="row tag-row">
+										<span>Tagged as : </span>
+											<a class="danger label" href="./tag/zong-jie.html">总结</a>
+											<a class="danger label" href="./tag/zi-sheng.html">自省</a>
+								</div>
+
+
+
+				        </article></li>
 				</ol><!-- /#posts-list -->
 
         </div><!-- /.eleven.columns -->
@@ -180,14 +432,29 @@
 
 <h4>标签</h4>
 	<ul>
-	    <li class="tag-4"><a href="./tag/teng-xun.html">腾讯</a></li>
-	    <li class="tag-4"><a href="./tag/pip.html">pip</a></li>
-	    <li class="tag-4"><a href="./tag/jia-gou.html">架构</a></li>
-	    <li class="tag-4"><a href="./tag/python.html">Python</a></li>
-	    <li class="tag-4"><a href="./tag/wei-xin.html">微信</a></li>
-	    <li class="tag-4"><a href="./tag/easy_install.html">easy_install</a></li>
-	    <li class="tag-4"><a href="./tag/pypi.html">PyPI</a></li>
+	    <li class="tag-4"><a href="./tag/dns.html">DNS</a></li>
+	    <li class="tag-1"><a href="./tag/linux.html">Linux</a></li>
+	    <li class="tag-4"><a href="./tag/golang.html">Golang</a></li>
+	    <li class="tag-4"><a href="./tag/fu-zai-jun-heng.html">负载均衡</a></li>
+	    <li class="tag-4"><a href="./tag/haproxy.html">HAProxy</a></li>
 	    <li class="tag-4"><a href="./tag/ssl.html">ssl</a></li>
+	    <li class="tag-4"><a href="./tag/teng-xun.html">腾讯</a></li>
+	    <li class="tag-4"><a href="./tag/zi-sheng.html">自省</a></li>
+	    <li class="tag-4"><a href="./tag/gao-ke-yong.html">高可用</a></li>
+	    <li class="tag-4"><a href="./tag/fan-yi.html">翻译</a></li>
+	    <li class="tag-4"><a href="./tag/haproxyconsole.html">HAProxyConsole</a></li>
+	    <li class="tag-1"><a href="./tag/python.html">Python</a></li>
+	    <li class="tag-4"><a href="./tag/pypi.html">PyPI</a></li>
+	    <li class="tag-4"><a href="./tag/bind.html">BIND</a></li>
+	    <li class="tag-4"><a href="./tag/pip.html">pip</a></li>
+	    <li class="tag-1"><a href="./tag/git.html">Git</a></li>
+	    <li class="tag-4"><a href="./tag/wei-xin.html">微信</a></li>
+	    <li class="tag-4"><a href="./tag/fu-wu-qi.html">服务器</a></li>
+	    <li class="tag-4"><a href="./tag/ming-ling-xing.html">命令行</a></li>
+	    <li class="tag-4"><a href="./tag/zong-jie.html">总结</a></li>
+	    <li class="tag-4"><a href="./tag/keepalived.html">Keepalived</a></li>
+	    <li class="tag-4"><a href="./tag/jia-gou.html">架构</a></li>
+	    <li class="tag-4"><a href="./tag/easy_install.html">easy_install</a></li>
 </ul>
 
 

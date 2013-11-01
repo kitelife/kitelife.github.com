@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>通过示例学习Git内部构造（译）</title>
+        <meta charset="utf-8" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+
+
+
+
+
+</head>
+
+<body id="index" class="home">
+
+
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="../../../..">黑 * 白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+             
+              <ul class="columns">
+                <li><a href="../../../..">主 页</a></li>
+
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+
+   <div class="row">
+        <div class="eleven columns">
+
+
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2013/09/28/learning-git-internal-by-example/" rel="bookmark"
+                   title="Permalink to 通过示例学习Git内部构造（译）">通过示例学习Git内部构造（译）</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2013-09-28T00:00:00">
+                2013-09-28 周六
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>原文：<a href="http://teohm.github.io/blog/2011/05/30/learning-git-internals-by-example/">Learning Git Internals by Example</a></p>
+<p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
+<hr />
+<p>状态：草稿</p>
+<p>计划修订本文，未来可能会简化一些...</p>
+<h2>动机</h2>
+<p>从Subversion和Mercurial切换到Git之后的几个月，我始终觉得Git在本质上是不同于Subversion和Mercurial的，但没法确切地说出区别。
+我经常在Github上看到tree、parent等术语，也搞不清楚它们确切的含义。</p>
+<p>因此我决定花些时间学学Git。</p>
+<p>我会尝试概述，并阐述一路走来学到的关于Git的关键信息...但这仅是有助于我回答Git与其他源码控制工具区别的Git内部构造基本知识。</p>
+<h2>实体、引用、索引（Objects，References，The Index）</h2>
+<p>要理解Git内部构造的核心，我们应理解三个东西： <strong>实体</strong>、<strong>引用</strong>、 <strong>索引</strong>。</p>
+<p>我发现这个模型非常优雅。用一个小小的图表就能完全展现，也易于理解记忆。</p>
+<p><img alt="Big Picture" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-internals/big-picture.png" /></p>
+<h3>实体</h3>
+<p>你提交到一个Git代码仓库中的所有文件，包括每个提交的说明信息（the commit info）都在目录 <code>.git/objects/</code>中存储为<strong>实体</strong>。</p>
+<p>一个实体以一个40字符长度的字符串（该实体内容的SHA1哈希值）来标识。</p>
+<p>实体有<strong>4类</strong>:</p>
+<ol>
+<li><em>blob</em> - 存储文件内容。</li>
+<li><em>tree</em> - 存储目录结构和文件名。</li>
+<li><em>commit</em> - 存储提交的说明，组成Git的提交图谱。</li>
+<li><em>tag</em> - 存储带注释的标签（tag）。</li>
+</ol>
+<p>下文的示例会阐明这些实体是如何相互关联的。</p>
+<h3>引用</h3>
+<p>Git中，一个<em>分支（branch）</em>、<em>远程分支（remote branch）</em>或一个<em>标签（tag）</em>（也称为轻量标签）仅是<strong>指向一个实体的一个指针</strong>，这里的实体通常是一个commit实体。</p>
+<p>这些引用以文本文件的形式存储在目录<code>.git/refs/</code>中。</p>
+<h4>符号引用（Symbolic References）</h4>
+<p>Git有一种特殊的引用，称为<em>符号引用</em>。它并不直接指向一个实体，而是<strong>指向另一个引用</strong>。举例来说，<code>.git/HEAD</code>就是一个符号引用。它指向你正在工作的当前分支。</p>
+<h3>索引</h3>
+<p>索引是一个暂存区，以二进制文件的形式存储为文件<code>.git/index</code>。</p>
+<p>当<code>git add</code>一个文件，Git将该文件的信息添加到索引中。当<code>git commit</code>，Git仅提交索引文件中列出的文件。</p>
+<hr />
+<h2>示例</h2>
+<p>我们来演练一个简单的示例，创建一个Git代码仓库，提交一些文件，看看幕后<code>.git</code>目录中都发生了些什么。</p>
+<h3>初始化新的代码仓库</h3>
+<div class="highlight"><pre>$ git init canai
+</pre></div>
+
+
+<p><img alt="初始化代码仓库后" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-internals/init.png" /></p>
+<p>发生了什么呢？</p>
+<ul>
+<li>创建了空目录<code>.git/objects/</code>和<code>.git/refs/</code>。</li>
+<li>还没有索引（Index）文件。</li>
+<li>
+<p>创建了符号索引文件<code>HEAD</code>。</p>
+<div class="highlight"><pre>$ cat .git/HEAD
+ref: refs/heads/master
+</pre></div>
+
+
+</li>
+</ul>
+<h3>添加新文件</h3>
+<div class="highlight"><pre>$ echo &quot;A roti canai project.&quot; &gt;&gt; README
+$ git add README
+</pre></div>
+
+
+<p><img alt="添加新文件后" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-internals/new-file.png" /></p>
+<p>发生了什么呢？</p>
+<ul>
+<li>
+<p>创建了索引（Index）文件。它有一个SHA1哈希值指向一个blob实体。</p>
+<div class="highlight"><pre>$ git ls-files --stage
+100644 5f89c6f016cad2d419e865df380595e39b1256db 0 README
+</pre></div>
+
+
+</li>
+<li>
+<p>创建了一个blob实体。README文件的内容存储在该blob中。</p>
+<div class="highlight"><pre># .git/objects/5f/89c6f016cad2d419e865df380595e39b1256db
+$ git cat-file blob 5f89c6
+A roti canai project.
+</pre></div>
+
+
+</li>
+</ul>
+<h3>首次提交</h3>
+<div class="highlight"><pre>$ git commit -m&#39;first commit&#39;
+[master (root-commit) d9976cf] first commit
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+ create mode 100644 README
+</pre></div>
+
+
+<p><img alt="首次提交后" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-internals/first-commit.png" /></p>
+<p>发生了什么呢？</p>
+<ul>
+<li>
+<p>创建了分支‘master’引用，指向‘master’分支中最新的commit实体。</p>
+<div class="highlight"><pre>$ cat .git/refs/heads/master 
+d9976cfe0430557885d162927dd70186d0f521e8
+</pre></div>
+
+
+</li>
+<li>
+<p>创建了第一个commit实体，指向代码仓库根目录tree实体。</p>
+<div class="highlight"><pre># .git/objects/d9/976cfe0430557885d162927dd70186d0f521e8
+$ git cat-file commit d9976cf
+tree 0ff699bbafc5d17d0637bf058c924ab405b5dcfe
+author Huiming Teo &lt;huiming@favoritemedium.com&gt; 1306739524 +0800
+committer Huiming Teo &lt;huiming@favoritemedium.com&gt; 1306739524 +0800
+
+first commit
+</pre></div>
+
+
+</li>
+<li>
+<p>创建了tree实体。该tree代表目录“canai”。</p>
+<div class="highlight"><pre># .git/objects/0f/f699bbafc5d17d0637bf058c924ab405b5dcfe
+$ git ls-tree 0ff699
+100644 blob 5f89c6f016cad2d419e865df380595e39b1256db  README
+</pre></div>
+
+
+</li>
+</ul>
+<h3>添加一个修改过的文件</h3>
+<div class="highlight"><pre>$ echo &quot;Welcome everyone.&quot; &gt;&gt; README
+$ git add README
+</pre></div>
+
+
+<p><img alt="添加一个修改过的文件后" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-internals/modified-file.png" /></p>
+<p>发生了什么呢？</p>
+<ul>
+<li>
+<p>更新了索引（Index）文件。注意到了吗？它记录了一个新blob。</p>
+<div class="highlight"><pre>$ git ls-files --stage
+100644 1192db4c15e019da7fc053225d09dea14bc3ac07 0 README
+</pre></div>
+
+
+</li>
+<li>
+<p>创建了一个新的blob实体。README的整个内容被存入一个新的blob。</p>
+<div class="highlight"><pre># .git/objects/11/92db4c15e019da7fc053225d09dea14bc3ac07
+$ git cat-file blob 1192db
+A roti canai project.
+Welcome everyone.
+</pre></div>
+
+
+</li>
+</ul>
+<h3>向子目录中添加文件</h3>
+<div class="highlight"><pre>$ mkdir doc
+$ echo &quot;[[TBD]] manual toc&quot; &gt;&gt; doc/manual.txt
+$ git add doc
+</pre></div>
+
+
+<p><img alt="向子目录添加文件后" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-internals/subdir.png" /></p>
+<p>发生了什么呢？</p>
+<ul>
+<li>
+<p>更新了索引（Index）文件。</p>
+<div class="highlight"><pre>$ git ls-files --stage
+100644 1192db4c15e019da7fc053225d09dea14bc3ac07 0 README
+100644 ea283e4fb22719fad512405d41dffa050cd16f9a 0 doc/manual.txt
+</pre></div>
+
+
+</li>
+<li>
+<p>创建了一个新的blob实体。</p>
+<div class="highlight"><pre># .git/objects/ea/283e4fb22719fad512405d41dffa050cd16f9a
+$ git cat-file blob ea283
+[[TBD]] manual toc
+</pre></div>
+
+
+</li>
+</ul>
+<h3>第二次提交</h3>
+<div class="highlight"><pre>$ git commit -m&#39;second commit&#39;
+[master 556eaf3] second commit
+ 2 files changed, 2 insertions(+), 0 deletions(-)
+ create mode 100644 doc/manual.txt
+</pre></div>
+
+
+<p><img alt="第二次提交后" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-internals/second-commit.png" /></p>
+<p>发生了什么呢？</p>
+<ul>
+<li>
+<p>更新了分支“master”引用，指向该分支中最新的commit实体。</p>
+<div class="highlight"><pre>$ cat .git/refs/heads/master 
+556eaf374886d4c07a1906b9fdcaba195292b96
+</pre></div>
+
+
+</li>
+<li>
+<p>创建了第二个commit实体。注意它的“parent”是指向首个commit实体。这样形成了一个提交图谱。</p>
+<div class="highlight"><pre>$ git cat-file commit 556e
+tree 7729a8b15b747bce541a9752a8f10d57daf221b6
+parent d9976cfe0430557885d162927dd70186d0f521e8
+author Huiming Teo &lt;huiming@favoritemedium.com&gt; 1306743598 +0800
+committer Huiming Teo &lt;huiming@favoritemedium.com&gt; 1306743598 +0800
+
+second commit
+</pre></div>
+
+
+</li>
+<li>
+<p>创建了一个新的代码仓库根目录tree实体。</p>
+<div class="highlight"><pre>$ git ls-tree 7729
+100644 blob 1192db4c15e019da7fc053225d09dea14bc3ac07  README
+040000 tree 6ff17d485bf857514f299f0bde0e2a5c932bd055  doc
+</pre></div>
+
+
+</li>
+<li>
+<p>创建了一个新的子目录tree实体。</p>
+<div class="highlight"><pre>$ git ls-tree 6ff1
+100644 blob ea283e4fb22719fad512405d41dffa050cd16f9a  manual.txt
+</pre></div>
+
+
+</li>
+</ul>
+<h3>添加一个注释标签（annotated tag）</h3>
+<div class="highlight"><pre>$ git tag -a -m&#39;this is annotated tag&#39; v0.1 d9976
+</pre></div>
+
+
+<p><img alt="添加一个注释标签后" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-internals/annotated-tag.png" /></p>
+<p>发生了什么呢？</p>
+<ul>
+<li>
+<p>创建了一个标签引用，指向一个tag实体。</p>
+<div class="highlight"><pre>$ cat .git/refs/tags/v0.1 
+c758f4820f02acf20bb3f6d7f6098f25ee6ed730
+</pre></div>
+
+
+</li>
+<li>
+<p>创建了一个tag实体。</p>
+<div class="highlight"><pre>$ git cat-file tag c758
+object d9976cfe0430557885d162927dd70186d0f521e8
+type commit
+tag v0.1
+tagger Huiming Teo &lt;huiming@favoritemedium.com&gt; 1306744918 +0800
+
+this is annotated tag
+</pre></div>
+
+
+</li>
+</ul>
+<h3>添加一个新的（轻量的）标签</h3>
+<div class="highlight"><pre>$ git tag root-commit d9976
+</pre></div>
+
+
+<p><img alt="添加一个新的轻量标签后" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-internals/new-tag.png" /></p>
+<p>发生了什么呢？</p>
+<ul>
+<li>
+<p>创建了一个标签引用，指向一个commit实体。</p>
+<div class="highlight"><pre>$ cat .git/refs/tags/root-commit 
+d9976cfe0430557885d162927dd70186d0f521e8
+</pre></div>
+
+
+</li>
+</ul>
+<h2>补充阅读</h2>
+<ul>
+<li><a href="http://book.git-scm.com/index.html">Git社区书</a>“第7章：内部构造探究”</li>
+<li><a href="http://progit.org/book/ch9-0.html">Pro Git</a>“第9章：Git内部构造”。</li>
+</ul>
+<h2>接下来做什么呢？</h2>
+<p>寻找适合分布式团队、长期项目的一个最小化git工作流。</p>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2013/09/28/learning-git-internal-by-example/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+
+
+        </div><!-- /.eleven.columns -->
+        
+<div class="three columns">
+
+<!--
+<h4>Pages</h4>
+
+ <ul>
+  </ul>
+-->
+
+<h4>分类</h4>
+<ul>
+		<li><a href="../../../../category/qi-ta.html">其他</a></li>
+</ul>
+
+
+<h4>标签</h4>
+	<ul>
+	    <li class="tag-4"><a href="../../../../tag/dns.html">DNS</a></li>
+	    <li class="tag-1"><a href="../../../../tag/linux.html">Linux</a></li>
+	    <li class="tag-4"><a href="../../../../tag/golang.html">Golang</a></li>
+	    <li class="tag-4"><a href="../../../../tag/fu-zai-jun-heng.html">负载均衡</a></li>
+	    <li class="tag-4"><a href="../../../../tag/haproxy.html">HAProxy</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ssl.html">ssl</a></li>
+	    <li class="tag-4"><a href="../../../../tag/teng-xun.html">腾讯</a></li>
+	    <li class="tag-4"><a href="../../../../tag/zi-sheng.html">自省</a></li>
+	    <li class="tag-4"><a href="../../../../tag/gao-ke-yong.html">高可用</a></li>
+	    <li class="tag-4"><a href="../../../../tag/fan-yi.html">翻译</a></li>
+	    <li class="tag-4"><a href="../../../../tag/haproxyconsole.html">HAProxyConsole</a></li>
+	    <li class="tag-1"><a href="../../../../tag/python.html">Python</a></li>
+	    <li class="tag-4"><a href="../../../../tag/pypi.html">PyPI</a></li>
+	    <li class="tag-4"><a href="../../../../tag/bind.html">BIND</a></li>
+	    <li class="tag-4"><a href="../../../../tag/pip.html">pip</a></li>
+	    <li class="tag-1"><a href="../../../../tag/git.html">Git</a></li>
+	    <li class="tag-4"><a href="../../../../tag/wei-xin.html">微信</a></li>
+	    <li class="tag-4"><a href="../../../../tag/fu-wu-qi.html">服务器</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ming-ling-xing.html">命令行</a></li>
+	    <li class="tag-4"><a href="../../../../tag/zong-jie.html">总结</a></li>
+	    <li class="tag-4"><a href="../../../../tag/keepalived.html">Keepalived</a></li>
+	    <li class="tag-4"><a href="../../../../tag/jia-gou.html">架构</a></li>
+	    <li class="tag-4"><a href="../../../../tag/easy_install.html">easy_install</a></li>
+</ul>
+
+
+<nav class="widget">
+  <h4>链接</h4>
+  <ul>
+    <li><a href="http://getpelican.com/">Pelican</a></li>
+    <li><a href="http://www.explainshell.com/">explainshell</a></li>
+  </ul>
+</nav>
+
+</div> </div><!-- /.row -->
+
+
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+    
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+
+</body>
+</html>

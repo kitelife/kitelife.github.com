@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 
-        <title>黑 * 白 - Python</title>
+        <title>黑 * 白 - Git</title>
         <meta charset="utf-8" />
 
 
@@ -53,47 +53,6 @@
         <div class="eleven columns">
 		         <ol id="post-list">
 				        <li><article class="hentry">
-				                <header> <h2 class="entry-title"><a href="../2013/11/01/change-pypi-mirror/" rel="bookmark" title="Permalink to 修改PyPI源">修改PyPI源</a></h2> </header>
-				                <footer class="post-info">
-				                    <abbr class="published" title="2013-11-01T00:00:00"> 2013-11-01 周五 </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>				                </footer><!-- /.post-info -->
-				                <div class="entry-content"> <p>使用easy_install或pip安装Python第三方库，默认的源地址是：https://pypi.python.org/simple/ 。使用该源有两个问题:</p>
-<p>1.
-国内访问速度较慢</p>
-<p>2.
-由于该源使用https协议，若机器上没有安装openssl或ssl配置不对，将导致easy_install或pip访问该源失败</p>
-<p>若想解决这两个问题，可以使用国内的PyPI镜像源。</p>
-<p>从 <a href="http://www.pypi-mirrors.org/">http://www.pypi-mirrors.org/</a> 可以看到国内的PyPI镜像源主要有三个:</p>
-<ul>
-<li>e.pypi.python.org</li>
-<li>pypi.douban.com</li>
-<li>pypi.hustunique.com</li>
-</ul>
-<hr />
-<p>修改easy_install和pip使用的源有两种方式（以Linux上从镜像源e.pypi.python.org下载安装requests为例）：</p>
-<p><strong>命令方式：针对一次使用，临时修改</strong></p>
-<ul>
-<li>
-<p>easy_install</p>
-<div class="highlight"><pre><span class="n">easy_install</span> <span class="o">-</span><span class="n">i</span> <span class="n">http</span><span class="o">:</span><span class="c1">//e.pypi.python.org/simple requests ...</span></pre></div></li></ul> </div><!-- /.entry-content -->
-
-								<div class="medium primary btn"><a href="../2013/11/01/change-pypi-mirror/" rel="bookmark" title="Permalink to 修改PyPI源">Read more <i class="icon-arrow-right"></i></a></div>
-
-
-
-								<div class="row tag-row">
-										<span>Tagged as : </span>
-											<a class="danger label" href="../tag/python.html">Python</a>
-											<a class="danger label" href="../tag/pypi.html">PyPI</a>
-											<a class="danger label" href="../tag/pip.html">pip</a>
-											<a class="danger label" href="../tag/easy_install.html">easy_install</a>
-											<a class="danger label" href="../tag/ssl.html">ssl</a>
-								</div>
-
-
-
-				        </article></li>
-				        <li><article class="hentry">
 				                <header> <h2 class="entry-title"><a href="../2013/10/15/standardization-operation-development/" rel="bookmark" title="Permalink to 运营开发规范化">运营开发规范化</a></h2> </header>
 				                <footer class="post-info">
 				                    <abbr class="published" title="2013-10-15T00:00:00"> 2013-10-15 周二 </abbr>
@@ -139,6 +98,42 @@
 											<a class="danger label" href="../tag/git.html">Git</a>
 											<a class="danger label" href="../tag/golang.html">Golang</a>
 											<a class="danger label" href="../tag/python.html">Python</a>
+								</div>
+
+
+
+				        </article></li>
+				        <li><article class="hentry">
+				                <header> <h2 class="entry-title"><a href="../2013/09/28/learning-git-internal-by-example/" rel="bookmark" title="Permalink to 通过示例学习Git内部构造（译）">通过示例学习Git内部构造（译）</a></h2> </header>
+				                <footer class="post-info">
+				                    <abbr class="published" title="2013-09-28T00:00:00"> 2013-09-28 周六 </abbr>
+<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>				                </footer><!-- /.post-info -->
+				                <div class="entry-content"> <p>原文：<a href="http://teohm.github.io/blog/2011/05/30/learning-git-internals-by-example/">Learning Git Internals by Example</a></p>
+<p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
+<hr />
+<p>状态：草稿</p>
+<p>计划修订本文，未来可能会简化一些...</p>
+<h2>动机</h2>
+<p>从Subversion和Mercurial切换到Git之后的几个月，我始终觉得Git在本质上是不同于Subversion和Mercurial的，但没法确切地说出区别。
+我经常在Github上看到tree、parent等术语，也搞不清楚它们确切的含义。</p>
+<p>因此我决定花些时间学学Git。</p>
+<p>我会尝试概述，并阐述一路走来学到的关于Git的关键信息...但这仅是有助于我回答Git与其他源码控制工具区别的Git内部构造基本知识。</p>
+<h2>实体、引用、索引（Objects，References，The Index）</h2>
+<p>要理解Git内部构造的核心，我们应理解三个东西： <strong>实体</strong>、<strong>引用</strong>、 <strong>索引</strong>。</p>
+<p>我发现这个模型非常优雅。用一个小小的图表就能完全展现，也易于理解记忆。</p>
+<p><img alt="Big Picture" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/pics/git-internals/big-picture.png" /></p>
+<h3>实体</h3>
+<p>你提交到一个Git代码仓库中的所有文件，包括每个提交的说明信息（the commit info）都在目录 <code>.git/objects/</code>中存储为<strong>实体</strong>。</p>
+<p>一个实体以一个40字符长度的字符串 ...</p> </div><!-- /.entry-content -->
+
+								<div class="medium primary btn"><a href="../2013/09/28/learning-git-internal-by-example/" rel="bookmark" title="Permalink to 通过示例学习Git内部构造（译）">Read more <i class="icon-arrow-right"></i></a></div>
+
+
+
+								<div class="row tag-row">
+										<span>Tagged as : </span>
+											<a class="danger label" href="../tag/git.html">Git</a>
+											<a class="danger label" href="../tag/fan-yi.html">翻译</a>
 								</div>
 
 

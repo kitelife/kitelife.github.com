@@ -17,7 +17,7 @@ tags: [Golang, template, html]
 有两种方式避免`html/template`转义html标签：
 
 1.
-以字符串类型数据转换成`template.HTML`类型再传入模板进行渲染：
+把字符串类型数据转换成`template.HTML`类型再传入模板进行渲染：
 
     lti := listenTaskInfo{
 	    Seq:      seq,

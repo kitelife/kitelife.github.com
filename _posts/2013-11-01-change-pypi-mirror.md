@@ -6,9 +6,11 @@ tags: [Python, PyPI, pip, easy_install, ssl]
 
 使用easy_install或pip安装Python第三方库，默认的源地址是：https://pypi.python.org/simple/ 。使用该源有两个问题:
 
-1.国内访问速度较慢
+1.
+国内访问速度较慢
 
-2.由于该源使用https协议，若机器上没有安装openssl或ssl配置不对，将导致easy_install或pip访问该源失败
+2.
+由于该源使用https协议，若机器上没有安装openssl或ssl配置不对，将导致easy_install或pip访问该源失败
 
 若想解决这两个问题，可以使用国内的PyPI镜像源。
 
@@ -24,11 +26,11 @@ tags: [Python, PyPI, pip, easy_install, ssl]
 
 **命令方式：针对一次使用，临时修改**
 
-easy_install
+- easy_install
 
     easy_install -i http://e.pypi.python.org/simple requests
 
-pip
+- pip
 
     pip install requests -i http://e.pypi.python.org/simple
 
@@ -36,12 +38,12 @@ pip
 
 **修改（若没有，则创建）easy_install/pip的配置文件** 
 
-easy_install：在`~/.pydistutils.cfg`配置文件中写入如下内容：
+- easy_install：在`~/.pydistutils.cfg`配置文件中写入如下内容：
 
     [easy_install]
     index_url = http://e.pypi.python.org/simple
 
-pip：在`~/.pip/pip.conf`配置文件中写入：
+- pip：在`~/.pip/pip.conf`配置文件中写入：
 
     [global]
     index-url = http://e.pypi.python.org/simple

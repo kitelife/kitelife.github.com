@@ -19,48 +19,58 @@ tags: [Golang, template, html]
 1.
 把字符串类型数据转换成`template.HTML`类型再传入模板进行渲染：
 
-    lti := listenTaskInfo{
-	    Seq:      seq,
-	    Id:       row.Id,
-	    Servers:  template.HTML(strings.Join(strings.Split(row.Servers, "-"), "<br />")),
-	    Vip:      appConf.Vip,
-	    Vport:    row.VPort,
-	    Comment:  template.HTML(strings.Join(strings.Split(row.Comment, "\n"), "<br />")),
-	    LogOrNot: row.LogOrNot,
-	    DateTime: row.DateTime,
-	}
-    
+```go
+lti := listenTaskInfo{
+	Seq:      seq,
+	Id:       row.Id,
+	Servers:  template.HTML(strings.Join(strings.Split(row.Servers, "-"), "<br />")),
+	Vip:      appConf.Vip,
+	Vport:    row.VPort,
+	Comment:  template.HTML(strings.Join(strings.Split(row.Comment, "\n"), "<br />")),
+	LogOrNot: row.LogOrNot,
+	DateTime: row.DateTime,
+}
+```
+
 2.
 `html/template`允许根据需要为模板变量添加一个处理函数，在模板解析的时候该函数就能对模板变量做进一步的处理，如：
 
-    <a href="/search?q=\{{. | urlquery}\}">\{{. | html}\}</a>
+```
+<a href="/search?q={{. | urlquery}}">{{. | html}}</a>
+```
 
 `html/template`貌似并没有内置这样的函数让其不转义html标签，但提供了接口让我们按需自定义这类函数。那么我们可以自定义一个函数-在模板解析的时候将模板变量转换成`template.HTML`类型，如（该例子来自[How To Unescape Text In A Golang Html Template](http://coderdave.com/view/how-to-unescape-text-in-a-golang-html-template)）：
 
-    func unescaped (x string) interface{} { return template.HTML(x) }
+```go
+func unescaped (x string) interface{} { return template.HTML(x) }
  
-    func renderTemplate(w http.ResponseWriter, tmpl string, view *Page) {
-        t := template.New("")  
-	    t = t.Funcs(template.FuncMap{"unescaped": unescaped})
-	    t, err := t.ParseFiles("view.html", "edit.html")
-	    err = t.ExecuteTemplate(w, tmpl + ".html", view)
-	    if err != nil {
-	        http.Error(w, err.Error(), http.StatusInternalServerError)
-	    }
-    }
+func renderTemplate(w http.ResponseWriter, tmpl string, view *Page) {
+    t := template.New("")  
+	t = t.Funcs(template.FuncMap{"unescaped": unescaped})
+	t, err := t.ParseFiles("view.html", "edit.html")
+	err = t.ExecuteTemplate(w, tmpl + ".html", view)
+	if err != nil {
+	    http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+```
 
 这段代码使得模板解析的时候可以使用unescaped函数将模板变量x转换成`template.HTML`类型，关键是如下两句：
 
-    // 定义函数unescaped
-    func unescaped (x string) interface{} { return template.HTML(x) }
-    // 在模板对象t中注册unescaped
-    t = t.Funcs(template.FuncMap{"unescaped": unescaped})
+```go
+// 定义函数unescaped
+func unescaped (x string) interface{} { return template.HTML(x) }
+// 在模板对象t中注册unescaped
+t = t.Funcs(template.FuncMap{"unescaped": unescaped})
+```
 
 这样，在模板中就可以使用unescaped函数了，如：
 
-    \{{printf "%s" .Body | unescaped}\} //[]byte
-    \{{.Body | unescaped}\} //string
-    
+```go
+{{printf "%s" .Body | unescaped}} //[]byte
+{{.Body | unescaped}} //string
+```
+
 实现不转义HTML标签，本质上，这两种方法是一样的，只不过一种是在字符串传入模板之前将其转换成`template.HTML`类型，另一种是在字符串传入模板之后解析之时转换。
 
 除了`template.HTML`类型，`text/template`还定义了`template.JS`、`template.CSS`等数据类型。

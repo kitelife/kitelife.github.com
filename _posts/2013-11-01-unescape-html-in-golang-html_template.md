@@ -31,7 +31,7 @@ tags: [Golang, template, html]
 	}
     
 2.
-`html/template`允许根据需要为模板变量`{{xxx}}`添加一个处理函数，在模板解析的时候该函数就能对模板变量做进一步的处理，如：
+`html/template`允许根据需要为模板变量添加一个处理函数，在模板解析的时候该函数就能对模板变量做进一步的处理，如：
 
     <a href="/search?q={{. | urlquery}}">{{. | html}}</a>
 

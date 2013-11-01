@@ -3,6 +3,10 @@ layout: page
 title: 技术阅读
 ---
 
+- [explainshell](http://www.explainshell.com/)
+
+- [BYVoid](https://www.byvoid.com/)
+
 - [酷壳](http://coolshell.cn/)
 
 - [火丁笔记](http://huoding.com/)
@@ -23,7 +27,7 @@ title: 技术阅读
 
 - [Quora](http://www.quora.com/)
 
-- [Research at Google](http://research.google.com/)
+- [NoOps](http://noops.me/)(运维)
 
 - [Jia Xiao](http://xiao-jia.com/)
 

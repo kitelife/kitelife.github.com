@@ -268,7 +268,7 @@ Email阅读：Thunderbird/Gmail
 
 日程管理：Trello(Chrome插件+Andriod应用)
 
-思维导图：XMind
+思维导图：XMind / www.mindmeister.com / www.wisemapping.com
 
 数据备份同步：Dropbox(+Andriod应用)(注：[linux下安装使用Dropbox](https://www.dropbox.com/install#linux-install-content))
 

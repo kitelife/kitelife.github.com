@@ -4,7 +4,7 @@ title: Golang中如何让html/template不转义html标签
 tags: [Golang, template, html]
 ---
 
-近期在使用Golang的[net/http](http://golang.org/pkg/net/http/)和[html/template](http://golang.org/pkg/html/template/)来开发一个简单的HAProxy负载均衡任务管理系统（见[搭建高可用负载均衡组件及缓存DNS](http://youngsterxyf.github.io/2013/10/16/high-availability-load-balancer-and-dns/)一文说明）。
+近期在使用Golang的[net/http](http://golang.org/pkg/net/http/)和[html/template](http://golang.org/pkg/html/template/)开发一个简单的HAProxy负载均衡任务管理系统（见[搭建高可用负载均衡组件及缓存DNS](http://youngsterxyf.github.io/2013/10/16/high-availability-load-balancer-and-dns/)一文说明）。
 
 [htmp/template](http://golang.org/pkg/html/template/)在渲染页面模板的时候默认会转义字符串中的html标签，但有时我们并不想转义html标签，以下图所示为例：
 
@@ -17,7 +17,7 @@ tags: [Golang, template, html]
 有两种方式避免`html/template`转义html标签：
 
 1.
-以字符串类型数据转换成`template.HTML`类型再传入模板进行渲染：
+把字符串类型数据转换成`template.HTML`类型再传入模板进行渲染：
 
     lti := listenTaskInfo{
 	    Seq:      seq,
@@ -31,9 +31,9 @@ tags: [Golang, template, html]
 	}
     
 2.
-`html/template`允许根据需要为模板变量`{{xxx}}`添加一个处理函数，在模板解析的时候该函数就能对模板变量做进一步的处理，如：
+`html/template`允许根据需要为模板变量添加一个处理函数，在模板解析的时候该函数就能对模板变量做进一步的处理，如：
 
-    <a href="/search?q={{. | urlquery}}">{{. | html}}</a>
+    <a href="/search?q=\{{. | urlquery}}">\{{. | html}}</a>
 
 `html/template`貌似并没有内置这样的函数让其不转义html标签，但提供了接口让我们按需自定义这类函数。那么我们可以自定义一个函数-在模板解析的时候将模板变量转换成`template.HTML`类型，如（该例子来自[How To Unescape Text In A Golang Html Template](http://coderdave.com/view/how-to-unescape-text-in-a-golang-html-template)）：
 
@@ -61,6 +61,9 @@ tags: [Golang, template, html]
     {{printf "%s" .Body | unescaped}} //[]byte
     {{.Body | unescaped}} //string
     
+实现不转义HTML标签，本质上，这两种方法是一样的，只不过一种是在字符串传入模板之前将其转换成`template.HTML`类型，另一种是在字符串传入模板之后解析之时转换。
+
+除了`template.HTML`类型，`text/template`还定义了`template.JS`、`template.CSS`等数据类型。
 
 ### 参考
 

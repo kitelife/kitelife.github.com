@@ -148,9 +148,7 @@ Git远程服务器端和办公机端版本库都保持两个共享分支：maste
 1.
 **代码上线之前，务必先删除调试语句**，比如``common.php``中的：
 
-```
-file_put_contents('/tmp/cron_test_ip.txt', print_r($ip, true));
-```
+    file_put_contents('/tmp/cron_test_ip.txt', print_r($ip, true));
 
 调试语句对于正式上线的代码来说是多余的，会影响应用的性能，也可能带来安全问题。
 

@@ -28,13 +28,8 @@ tags: [理论, 翻译]
 
 算法读取样本编码后的版本将能够完美地重现原来的数据："A" 5次，"B"
 2次，等等。这个简单算法的使用非常广泛，被称为行程长度编码（RLE）：写下字符的每次行程有多长。以古老的PCX图像格式为例来说明一种广泛使用的标准RLE。
-<center>
-<img src="/assets/pics/compression-stripes.png"
-alt="compression-stripes.png">
-</center>
-<center>图1：条纹（<a
-href="http://www.thisisnotparis.com/">Gottschal</a>/<a
-href="http://www.gluecksbazillus.de/">Schuster</a>）</center>
+<center><img src="/assets/pics/compression-stripes.png" alt="compression-stripes.png"></center>
+<center>图1：条纹（<a href="http://www.thisisnotparis.com/">Gottschal</a>/<a href="http://www.gluecksbazillus.de/">Schuster</a>）</center>
 
 图1中有很多单色的实心方块。这张图片宽500个像素，高190个像素；作为一张原始位图，使用一个字节来表示一个像素，那么这张图片就产生95kB的数据。PCX算法计算图片中每行像素的行程长度，为相同颜色的连续像素保存行程长度：以这种方式，图片的大小减到了52kB。
 

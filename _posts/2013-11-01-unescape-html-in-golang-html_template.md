@@ -61,7 +61,9 @@ tags: [Golang, template, html]
     {{printf "%s" .Body | unescaped}} //[]byte
     {{.Body | unescaped}} //string
     
-本质上，这两种方法是一样的，只不过一种是在字符串传入模板之前将其转换成`template.HTML`类型，另一种是在字符串传入模板之后解析之时转换。
+实现不转义HTML标签，本质上，这两种方法是一样的，只不过一种是在字符串传入模板之前将其转换成`template.HTML`类型，另一种是在字符串传入模板之后解析之时转换。
+
+除了`template.HTML`类型，`text/template`还定义了`template.JS`、`template.CSS`等数据类型。
 
 ### 参考
 

@@ -22,7 +22,7 @@ tags: [Python, PyPI, pip, easy_install, ssl]
 
 修改easy_install和pip使用的源有两种方式（以Linux上从镜像源e.pypi.python.org下载安装requests为例）：
 
-### 命令方式：针对一次使用，临时修改
+**命令方式：针对一次使用，临时修改**
 
 easy_install
 
@@ -34,7 +34,7 @@ pip
 
 注：*1. 源路径要包含/simple部分；2. 使用pip时-i参数应放在install xxx的后面*
 
-### 修改（若没有，则创建）easy_install/pip的配置文件 
+**修改（若没有，则创建）easy_install/pip的配置文件** 
 
 easy_install：在`~/.pydistutils.cfg`配置文件中写入如下内容：
 

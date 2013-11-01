@@ -7,11 +7,12 @@ tags: [Python, PyPI, pip, easy_install, ssl]
 使用easy_install或pip安装Python第三方库，默认的源地址是：https://pypi.python.org/simple/ 。使用该源有两个问题:
 
 1. 国内访问速度较慢
+
 2. 由于该源使用https协议，若机器上没有安装openssl或ssl配置不对，将导致easy_install或pip访问该源失败
 
 若想解决这两个问题，可以使用国内的PyPI镜像源。
 
-从 http://www.pypi-mirrors.org/ 可以看到国内的PyPI镜像源主要有三个:
+从 [http://www.pypi-mirrors.org/](http://www.pypi-mirrors.org/) 可以看到国内的PyPI镜像源主要有三个:
 
 - e.pypi.python.org
 - pypi.douban.com

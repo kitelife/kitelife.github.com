@@ -28,11 +28,11 @@ tags: [Python, PyPI, pip, easy_install, ssl]
 
 - easy_install
 
-    easy_install -i http://e.pypi.python.org/simple requests
+        easy_install -i http://e.pypi.python.org/simple requests
 
 - pip
 
-    pip install requests -i http://e.pypi.python.org/simple
+        pip install requests -i http://e.pypi.python.org/simple
 
 注：*1. 源路径要包含/simple部分；2. 使用pip时-i参数应放在install xxx的后面*
 
@@ -40,13 +40,13 @@ tags: [Python, PyPI, pip, easy_install, ssl]
 
 - easy_install：在`~/.pydistutils.cfg`配置文件中写入如下内容：
 
-    [easy_install]
-    index_url = http://e.pypi.python.org/simple
+        [easy_install]
+        index_url = http://e.pypi.python.org/simple
 
 - pip：在`~/.pip/pip.conf`配置文件中写入：
 
-    [global]
-    index-url = http://e.pypi.python.org/simple
+        [global]
+        index-url = http://e.pypi.python.org/simple
 
 ------
 

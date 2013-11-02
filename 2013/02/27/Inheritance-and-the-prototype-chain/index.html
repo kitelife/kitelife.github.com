@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>JavaScript：继承和原型链（译）</title>
+        <meta charset="utf-8" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+
+
+
+
+
+</head>
+
+<body id="index" class="home">
+
+
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="../../../..">黑 * 白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+             
+              <ul class="columns">
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="../../../../pages/aboutme.html">关于我</a></li>
+                <li><a href="../../../../pages/tools.html">工具集</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+
+   <div class="row">
+        <div class="eleven columns">
+
+
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2013/02/27/Inheritance-and-the-prototype-chain/" rel="bookmark"
+                   title="Permalink to JavaScript：继承和原型链（译）">JavaScript：继承和原型链（译）</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2013-02-27T00:00:00">
+                2013-02-27 周三
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>原文：<a href="https://developer.mozilla.org/en-US/docs/JavaScript/Guide/Inheritance_and_the_prototype_chain">Inheritance and the prototype chain</a></p>
+<p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
+<p>对于具备基于类的编程语言（如Java或C++）经验的程序员来说，JavaScript有点混乱，因为它是一种动态语言，并且不提供<code>class</code>的实现（虽然关键字<code>class</code>是保留的，不可用作变量名）。</p>
+<p>说到继承，JavaScript只有一种结构：对象。每个对象都有一个内部链接指向另一个对象，这个对象称为<strong>原型</strong> (prototype)。那个原型对象也有自己的原型，如此直到某个对象以<code>null</code>作为其原型。<code>null</code>，根据定义，没有原型，作为这种<strong>原型链</strong>的最后一环而存在。</p>
+<h2>以原型链实现继承</h2>
+<h3>继承属性</h3>
+<p>JavaScript对象可看作是动态地装载属性（这里指<strong>自有属性</strong>）的"包包"，并且每个对象都有一个链指向一个原型对象。如下即为当尝试访问一个属性时发生的事情：</p>
+<div class="highlight"><pre><span class="c1">// 假设有个对象o，其原型链如下所示：</span>
+<span class="c1">// {a: 1, b: 2} ---&gt; {b: 3, c: 4} ---&gt; null</span>
+<span class="c1">// &#39;a&#39;和&#39;b&#39;是o的自有属性。</span>
+
+<span class="c1">// 本例中，someObject.[[Prototype]]指定someObject的原型。</span>
+<span class="c1">// 这完全是一种标记符号（基于ECMAScript标准中所使用的），不可用于脚本中。</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">a</span><span class="p">);</span>   <span class="c1">// 1</span>
+<span class="c1">// o有一个自有属性&#39;a&#39;吗？是的，其值为1</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">b</span><span class="p">);</span>   <span class="c1">// 2</span>
+<span class="c1">// o有自有属性&#39;b&#39;吗？是的，其值为2</span>
+<span class="c1">// o的原型也有一个属性&#39;b&#39;，但是这里不会被访问。这被称为“属性隐藏”（property shadowing）</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">c</span><span class="p">);</span>   <span class="c1">// 4</span>
+<span class="c1">// o有自有属性&#39;c&#39;吗？没有，检查它的原型</span>
+<span class="c1">// o.[[Prototype]]有自有属性&#39;c&#39;吗？是的，其值为4。</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">d</span><span class="p">);</span>   <span class="c1">// undefined</span>
+<span class="c1">// o有自有属性&#39;d&#39;吗？没有，检查其原型</span>
+<span class="c1">// o.[[Prototype]]有自有属性&#39;d&#39;吗？没有，检查其原型</span>
+<span class="c1">// o.[[Prototype]].[[Prototype]]为null，停止搜索，没有找到属性，返回undefined。</span>
+</pre></div>
+
+
+<p>将一个属性分配给一个对象会创建一个自有属性。对于获取和设置属性的行为规则，唯一的例外是当一个继承而来的属性带有一个<a href="https://developer.mozilla.org/en/docs/JavaScript/Guide/Working_with_Objects?redirectlocale=en-US&amp;redirectslug=Core_JavaScript_1.5_Guide%2FWorking_with_Objects#Defining_getters_and_setters">属性值获取器或设置器</a>。</p>
+<h3>继承"方法"</h3>
+<p>JavaScript没有以基于类的编程语言定义方法的形式出现的"方法"。JavaScript中，任何函数都可以作为一个属性被添加到一个对象。一个继承而来的函数，操作起来与任何其他属性相同，包括如上所示的属性隐藏（在这里，称为<em>方法覆盖</em>）。</p>
+<p>当执行一个继承而来的函数时，<a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Operators/this">this</a>的值指向继承对象，而不是原型对象，该函数是原型对象的自有属性。</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">o</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">a</span><span class="o">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="nx">m</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">b</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">m</span><span class="p">());</span> <span class="c1">// 3</span>
+<span class="c1">// 这里当调用o.m时，&#39;this&#39;引用o</span>
+
+<span class="kd">var</span> <span class="nx">p</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="nx">o</span><span class="p">);</span>
+<span class="c1">// p是一个继承自o的对象</span>
+
+<span class="nx">p</span><span class="p">.</span><span class="nx">a</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>   <span class="c1">// 为p创建一个自有属性&#39;a&#39;</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">m</span><span class="p">());</span> <span class="c1">// 13</span>
+<span class="c1">// 这里调用p.m时，&#39;this&#39;引用p</span>
+<span class="c1">// 因此，当p继承了o的函数m，&#39;this.a&#39;意味着p.a，p的自有属性&#39;a&#39;</span>
+</pre></div>
+
+
+<h2>创建对象的不同方式，以及由此产生的原型链</h2>
+<h3>以语法结构创建对象</h3>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">o</span> <span class="o">=</span> <span class="p">{</span><span class="nx">a</span><span class="o">:</span> <span class="mi">1</span><span class="p">};</span>
+
+<span class="c1">// 新创建的对象o有Object.prototype作为其[[Prototype]]</span>
+<span class="c1">// o没有名为&#39;hasOwnProperty&#39;的自有属性</span>
+<span class="c1">// hasOwnProperty是Object.prototype的自有属性。因此o从Object.prototype继承了hasOwnProperty</span>
+<span class="c1">// Object.prototype以null为其prototype。</span>
+<span class="c1">// o ---&gt; Object.prototype ---&gt; null</span>
+
+<span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;yo&quot;</span><span class="p">,</span> <span class="s2">&quot;whadup&quot;</span><span class="p">,</span> <span class="s2">&quot;?&quot;</span><span class="p">];</span>
+
+<span class="c1">// 数组继承自Array.prototype（它具有indexOf, forEach等方法）。</span>
+<span class="c1">// 该原型链如下所示：</span>
+<span class="c1">// a ---&gt; Array.prototype ---&gt; Object.prototype ---&gt; null</span>
+
+<span class="kd">function</span> <span class="nx">f</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">// 函数继承自Function.prototype（它具有call，bind等方法）：</span>
+<span class="c1">// f ---&gt; Function.prototype ---&gt; Object.prototype ---&gt; null</span>
+</pre></div>
+
+
+<h3>使用构造器</h3>
+<p>JavaScript中，"构造器""就"是一个恰好以<a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Operators/new">new操作符</a>调用的函数。</p>
+<div class="highlight"><pre><span class="kd">function</span> <span class="nx">Graph</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">vertexes</span> <span class="o">=</span> <span class="p">[];</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">edges</span> <span class="o">=</span> <span class="p">[];</span>
+<span class="p">}</span>
+
+<span class="nx">Graph</span><span class="p">.</span><span class="nx">prototype</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">addVertex</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">v</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">vertexes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">v</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="kd">var</span> <span class="nx">g</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Graph</span><span class="p">();</span>
+<span class="c1">// g是一个带有自有属性&#39;vertexes&#39;和&#39;edges&#39;的对象。</span>
+<span class="c1">// 执行new Graph()后，g.[[Prototype]]是Graph.prototype的值。</span>
+</pre></div>
+
+
+<h3>使用Object.create</h3>
+<p>ECMAScript
+5引入了一个新方法：<a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Object/create">Object.create</a>。调用这个方法会创建一个新对象。这个对象的原型是该函数的第一个参数：</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="p">{</span><span class="nx">a</span><span class="o">:</span> <span class="mi">1</span><span class="p">};</span>
+<span class="c1">// a ---&gt; Object.prototype ---&gt; null</span>
+
+<span class="kd">var</span> <span class="nx">b</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="nx">a</span><span class="p">);</span>
+<span class="c1">// b ---&gt; a ---&gt; Object.prototype ---&gt; null</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">b</span><span class="p">.</span><span class="nx">a</span><span class="p">);</span>   <span class="c1">// 1 (继承而来)</span>
+
+<span class="kd">var</span> <span class="nx">c</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="nx">b</span><span class="p">);</span>
+<span class="c1">// c ---&gt; b ---&gt; a ---&gt; Object.prototype ---&gt; null</span>
+
+<span class="kd">var</span> <span class="nx">d</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="kc">null</span><span class="p">);</span>
+<span class="c1">// d ---&gt; null</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">d</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">);</span>  <span class="c1">// undefined，因为d并不继承自Object.prototype</span>
+</pre></div>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2013/02/27/Inheritance-and-the-prototype-chain/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+
+
+        </div><!-- /.eleven.columns -->
+        
+<div class="three columns">
+
+<!--
+<h4>Pages</h4>
+
+ <ul>
+      <li><a href="../../../../pages/aboutme.html">关于我</a></li>
+      <li><a href="../../../../pages/tools.html">工具集</a></li>
+  </ul>
+-->
+
+<h4>分类</h4>
+<ul>
+		<li><a href="../../../../category/qi-ta.html">其他</a></li>
+</ul>
+
+
+<h4>标签</h4>
+	<ul>
+	    <li class="tag-4"><a href="../../../../tag/pypi.html">PyPI</a></li>
+	    <li class="tag-3"><a href="../../../../tag/shi-ge.html">诗歌</a></li>
+	    <li class="tag-1"><a href="../../../../tag/python.html">Python</a></li>
+	    <li class="tag-2"><a href="../../../../tag/bi-ji.html">笔记</a></li>
+	    <li class="tag-4"><a href="../../../../tag/shu-ju-ku.html">数据库</a></li>
+	    <li class="tag-4"><a href="../../../../tag/yue-du.html">阅读</a></li>
+	    <li class="tag-4"><a href="../../../../tag/teng-xun.html">腾讯</a></li>
+	    <li class="tag-2"><a href="../../../../tag/bi-shi.html">笔试</a></li>
+	    <li class="tag-3"><a href="../../../../tag/mian-shi.html">面试</a></li>
+	    <li class="tag-2"><a href="../../../../tag/ji-zhu.html">技术</a></li>
+	    <li class="tag-2"><a href="../../../../tag/php.html">PHP</a></li>
+	    <li class="tag-4"><a href="../../../../tag/haproxy.html">HAProxy</a></li>
+	    <li class="tag-4"><a href="../../../../tag/diao-shi.html">调试</a></li>
+	    <li class="tag-2"><a href="../../../../tag/ming-ling-xing.html">命令行</a></li>
+	    <li class="tag-4"><a href="../../../../tag/wen-zi.html">文字</a></li>
+	    <li class="tag-2"><a href="../../../../tag/shell.html">Shell</a></li>
+	    <li class="tag-2"><a href="../../../../tag/javascript.html">JavaScript</a></li>
+	    <li class="tag-4"><a href="../../../../tag/haproxyconsole.html">HAProxyConsole</a></li>
+	    <li class="tag-2"><a href="../../../../tag/gong-ju.html">工具</a></li>
+	    <li class="tag-4"><a href="../../../../tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
+	    <li class="tag-4"><a href="../../../../tag/bind.html">BIND</a></li>
+	    <li class="tag-4"><a href="../../../../tag/fu-zai-jun-heng.html">负载均衡</a></li>
+	    <li class="tag-4"><a href="../../../../tag/keepalived.html">Keepalived</a></li>
+	    <li class="tag-4"><a href="../../../../tag/vmware.html">VMware</a></li>
+	    <li class="tag-4"><a href="../../../../tag/gao-ke-yong.html">高可用</a></li>
+	    <li class="tag-3"><a href="../../../../tag/suan-fa.html">算法</a></li>
+	    <li class="tag-1"><a href="../../../../tag/fan-yi.html">翻译</a></li>
+	    <li class="tag-4"><a href="../../../../tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
+	    <li class="tag-2"><a href="../../../../tag/git.html">Git</a></li>
+	    <li class="tag-4"><a href="../../../../tag/sheng-huo.html">生活</a></li>
+	    <li class="tag-1"><a href="../../../../tag/linux.html">Linux</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ban-ben-kong-zhi.html">版本控制</a></li>
+	    <li class="tag-3"><a href="../../../../tag/nginx.html">Nginx</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ying-yu.html">英语</a></li>
+	    <li class="tag-4"><a href="../../../../tag/golang.html">Golang</a></li>
+	    <li class="tag-4"><a href="../../../../tag/bing-xing.html">并行</a></li>
+	    <li class="tag-4"><a href="../../../../tag/jekyll.html">jekyll</a></li>
+	    <li class="tag-4"><a href="../../../../tag/python-weekly.html">python-weekly</a></li>
+	    <li class="tag-4"><a href="../../../../tag/jia-gou.html">架构</a></li>
+	    <li class="tag-4"><a href="../../../../tag/easy_install.html">easy_install</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ssl.html">ssl</a></li>
+	    <li class="tag-4"><a href="../../../../tag/zi-sheng.html">自省</a></li>
+	    <li class="tag-3"><a href="../../../../tag/xue-xi-fang-fa.html">学习方法</a></li>
+	    <li class="tag-2"><a href="../../../../tag/zong-jie.html">总结</a></li>
+	    <li class="tag-4"><a href="../../../../tag/zi-ti.html">字体</a></li>
+	    <li class="tag-4"><a href="../../../../tag/cc.html">C/C++</a></li>
+	    <li class="tag-3"><a href="../../../../tag/mysql.html">MySQL</a></li>
+	    <li class="tag-2"><a href="../../../../tag/gong-zuo.html">工作</a></li>
+	    <li class="tag-4"><a href="../../../../tag/wei-xin.html">微信</a></li>
+	    <li class="tag-4"><a href="../../../../tag/gan-wu.html">感悟</a></li>
+	    <li class="tag-4"><a href="../../../../tag/pip.html">pip</a></li>
+	    <li class="tag-2"><a href="../../../../tag/fu-wu-qi.html">服务器</a></li>
+	    <li class="tag-4"><a href="../../../../tag/github.html">github</a></li>
+	    <li class="tag-4"><a href="../../../../tag/dns.html">DNS</a></li>
+	    <li class="tag-4"><a href="../../../../tag/li-lun.html">理论</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ming-ling.html">命令</a></li>
+</ul>
+
+
+<nav class="widget">
+  <h4>链接</h4>
+  <ul>
+    <li><a href="http://getpelican.com/">Pelican</a></li>
+    <li><a href="http://www.explainshell.com/">explainshell</a></li>
+    <li><a href="https://www.byvoid.com/">BYVoid</a></li>
+    <li><a href="http://coolshell.cn/">酷壳</a></li>
+    <li><a href="http://huoding.com/">火丁笔记</a></li>
+    <li><a href="http://yuguo.us/">余果</a></li>
+    <li><a href="http://www.latexstudio.net/">LaTeX工作室</a></li>
+    <li><a href="http://www.luanxiang.org/blog/">乱象, 印迹</a></li>
+    <li><a href="http://www.soimort.org/">夏の航海士</a></li>
+    <li><a href="http://qinxuye.me/">残阳似血</a></li>
+    <li><a href="http://www.huangz.me/en/latest/index.html">Right Track Wrong Train</a></li>
+    <li><a href="http://www.wzxue.com/">麦子麦</a></li>
+    <li><a href="http://www.quora.com/">Quora</a></li>
+    <li><a href="http://noops.me/">NoOps</a></li>
+    <li><a href="http://xiao-jia.com/">Jia Xiao</a></li>
+    <li><a href="http://dirlt.com/">章炎的主页</a></li>
+    <li><a href="http://highscalability.com/">High Scalability</a></li>
+    <li><a href="http://hackermonthly.com/">Hacker Monthly</a></li>
+    <li><a href="http://www.itkoala.com/)(海量运维、运营规划">itkoala</a></li>
+  </ul>
+</nav>
+
+</div> </div><!-- /.row -->
+
+
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+    
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+
+</body>
+</html>

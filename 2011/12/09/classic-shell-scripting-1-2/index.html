@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>《Classic Shell Scripting》第一、二章阅读笔记</title>
+        <meta charset="utf-8" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+
+
+
+
+
+</head>
+
+<body id="index" class="home">
+
+
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="../../../..">黑 * 白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+             
+              <ul class="columns">
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="../../../../pages/aboutme.html">关于我</a></li>
+                <li><a href="../../../../pages/tools.html">工具集</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+
+   <div class="row">
+        <div class="eleven columns">
+
+
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2011/12/09/classic-shell-scripting-1-2/" rel="bookmark"
+                   title="Permalink to 《Classic Shell Scripting》第一、二章阅读笔记">《Classic Shell Scripting》第一、二章阅读笔记</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2011-12-09T00:00:00">
+                2011-12-09 周五
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <h4>第一章：背景知识</h4>
+<p>软件工具的原则</p>
+<div class="highlight"><pre>一次做好一件事
+
+处理文本行，不要处理二进制数据
+
+使用正则表达式：正则表达式(regular expression)是很强的文本处理机制。了解它的运作模式并加以使用，可适度简化编写命令脚本的工作。
+
+默认使用标准输入/输出：在未明确指定文件名的情况下，程序默认会从它的标准输入读取数据，将数据写到它的标准输出，至于错误信息则会传送到标准错误输出。以这样的方式来编写程序，可以轻松地让它们称为数据过滤器(filter)。
+
+避免喋喋不休
+
+输出格式必须与可接受的输入格式一致：专业的工具程序认为遵循某种格式的输入数据，例如标题行之后接着数据行，或在行上使用某种字段分隔符等，所产生的输出也应遵循与输入一致的规则。这么做的好处是，容易将一个程序的执行结果交给另一个程序处理。
+
+让工具去做困难的部分：虽然UNIX程序并非完全符合你的需求，但是现有的工具或许已经可以为你完成90%的工作。接下来，若有需要，你可以编写一个功能特定的小型程序来完成剩下的工作。
+
+构建特定工具前，先想想：你所要做的事情，是否有其他人也需要做？这个特殊的工作是否有可能是某个一般问题的一个特例？如果是的话，请针对一般问题来编写程序。
+</pre></div>
+
+
+<h4>第二章：入门</h4>
+<ul>
+<li>Shell脚本最常用于系统管理工作，或是用于结合现有的程序以完成小型的，特定的工作。一旦你找出完成工作的方法，可以把用到的命令串在一起，放进一个独立的程序或脚本里，此后只要直接执行该程序便能完成工作。</li>
+<li>使用脚本编程语言的好处是，它们多半运行在比编译型语言还高的层级，能够轻易处理文件与目录之类的对象。缺点是：它们的效率通常不如编译型语言。</li>
+<li>
+<p>Shell的基本元素：</p>
+<ul>
+<li>命令与参数</li>
+<li>变量</li>
+<li>简单的echo输出</li>
+<li>华丽的printf输出</li>
+<li>基本的I/O重定向<ul>
+<li>重定向与管道</li>
+<li>特殊文件:/dev/null与/dev/tty</li>
+</ul>
+</li>
+<li>基本命令查找</li>
+</ul>
+</li>
+<li>
+<p>命令行中，分号(;)可用来分隔同一行里的多条命令。Shell会依次执行这些命令。</p>
+</li>
+<li>Shell识别三种命令：内建命令，Shell函数以及外部命令：<ol>
+<li>内建命令就是由Shell本身所执行的命令。有些命令是由于其必要性才内建的，例如cd用来改变目录，read会将来自用户(或文件)的输入数据传给Shell变量。另一种内建命令的存在则是为了效率，其中最典型的就是test命令，编写脚本时会经常用到它。另外还有I/O命令，例如echo与printf。</li>
+<li>Shell函数是功能健全的一系列程序代码，以Shell语言写成，它们可以像命令那样引用。 ？？？</li>
+<li>外部命令就是由Shell的副本(新的进程)所执行的命令，基本的过程如下：<ol>
+<li>建立一个新的进程。此进程即为Shell的一个副本。</li>
+<li>在新的进程里，在PATH变量内所列出的目录中，寻找特定的命令。</li>
+<li>在新的进程里，以所找到的新程序取代执行中的Shell程序并执行。</li>
+<li>程序完成后，最初的Shell会接着从终端读取下一条命令，或执行脚本里的下一条命令。</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>Shell变量名称的开头是一个字母或下划线符号，后面可以接着任意长度的字母，数字或下划线符号。</li>
+<li>重定向与管道:<ul>
+<li>以&lt;改变标准输入</li>
+<li>以&gt;改变标准输出，&gt;重定向符(redirector)在目的文件不存在时，会新建一个。然而，如果目的文件存在，它就会直接覆盖掉，原本的数据都会丢失</li>
+<li>以&gt;&gt;改变标准输出附加到文件,如同&gt;，如果目的文件不存在，&gt;&gt;重定向符便会新建一个。然而，如果目的文件存在，它不会直接覆盖掉文件，而是将程序产生的数据附加到文件结尾处。</li>
+<li>以|建立管道，管道可以使得执行速度比使用临时文件快上十倍。</li>
+</ul>
+</li>
+<li>tr命令</li>
+<li>构造管道时，应该试着让每个阶段的数据量变得更少。换句话说，如果你有两个要完成的步骤与先后次序无关，你可以把会让数据量变少的那一个步骤放在管道的前面。这么做可以提升脚本的整体性能，因为UNIX只需要在两个程序间移动少的数据量，每个程序要做的事情也比较少，例如：使用sort排序之前，先以grep找出相关的行，这样可以让sort少做些事。</li>
+<li>特殊文件/dev/null与/dev/tty</li>
+<li>简单的执行跟踪:<ul>
+<li>两种方法：<ol>
+<li>使用"sh -x scriptname"来执行脚本scriptname；</li>
+<li>在脚本中需要跟踪的命令片段前加一句set -x打开执行跟踪的功能，然后在这个命令片段后再用set +x命令关闭它。</li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2011/12/09/classic-shell-scripting-1-2/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+
+
+        </div><!-- /.eleven.columns -->
+        
+<div class="three columns">
+
+<!--
+<h4>Pages</h4>
+
+ <ul>
+      <li><a href="../../../../pages/aboutme.html">关于我</a></li>
+      <li><a href="../../../../pages/tools.html">工具集</a></li>
+  </ul>
+-->
+
+<h4>分类</h4>
+<ul>
+		<li><a href="../../../../category/qi-ta.html">其他</a></li>
+</ul>
+
+
+<h4>标签</h4>
+	<ul>
+	    <li class="tag-4"><a href="../../../../tag/pypi.html">PyPI</a></li>
+	    <li class="tag-3"><a href="../../../../tag/shi-ge.html">诗歌</a></li>
+	    <li class="tag-1"><a href="../../../../tag/python.html">Python</a></li>
+	    <li class="tag-2"><a href="../../../../tag/bi-ji.html">笔记</a></li>
+	    <li class="tag-4"><a href="../../../../tag/shu-ju-ku.html">数据库</a></li>
+	    <li class="tag-4"><a href="../../../../tag/yue-du.html">阅读</a></li>
+	    <li class="tag-4"><a href="../../../../tag/teng-xun.html">腾讯</a></li>
+	    <li class="tag-2"><a href="../../../../tag/bi-shi.html">笔试</a></li>
+	    <li class="tag-3"><a href="../../../../tag/mian-shi.html">面试</a></li>
+	    <li class="tag-2"><a href="../../../../tag/ji-zhu.html">技术</a></li>
+	    <li class="tag-2"><a href="../../../../tag/php.html">PHP</a></li>
+	    <li class="tag-4"><a href="../../../../tag/haproxy.html">HAProxy</a></li>
+	    <li class="tag-4"><a href="../../../../tag/diao-shi.html">调试</a></li>
+	    <li class="tag-2"><a href="../../../../tag/ming-ling-xing.html">命令行</a></li>
+	    <li class="tag-4"><a href="../../../../tag/wen-zi.html">文字</a></li>
+	    <li class="tag-2"><a href="../../../../tag/shell.html">Shell</a></li>
+	    <li class="tag-2"><a href="../../../../tag/javascript.html">JavaScript</a></li>
+	    <li class="tag-4"><a href="../../../../tag/haproxyconsole.html">HAProxyConsole</a></li>
+	    <li class="tag-2"><a href="../../../../tag/gong-ju.html">工具</a></li>
+	    <li class="tag-4"><a href="../../../../tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
+	    <li class="tag-4"><a href="../../../../tag/bind.html">BIND</a></li>
+	    <li class="tag-4"><a href="../../../../tag/fu-zai-jun-heng.html">负载均衡</a></li>
+	    <li class="tag-4"><a href="../../../../tag/keepalived.html">Keepalived</a></li>
+	    <li class="tag-4"><a href="../../../../tag/vmware.html">VMware</a></li>
+	    <li class="tag-4"><a href="../../../../tag/gao-ke-yong.html">高可用</a></li>
+	    <li class="tag-3"><a href="../../../../tag/suan-fa.html">算法</a></li>
+	    <li class="tag-1"><a href="../../../../tag/fan-yi.html">翻译</a></li>
+	    <li class="tag-4"><a href="../../../../tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
+	    <li class="tag-2"><a href="../../../../tag/git.html">Git</a></li>
+	    <li class="tag-4"><a href="../../../../tag/sheng-huo.html">生活</a></li>
+	    <li class="tag-1"><a href="../../../../tag/linux.html">Linux</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ban-ben-kong-zhi.html">版本控制</a></li>
+	    <li class="tag-3"><a href="../../../../tag/nginx.html">Nginx</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ying-yu.html">英语</a></li>
+	    <li class="tag-4"><a href="../../../../tag/golang.html">Golang</a></li>
+	    <li class="tag-4"><a href="../../../../tag/bing-xing.html">并行</a></li>
+	    <li class="tag-4"><a href="../../../../tag/jekyll.html">jekyll</a></li>
+	    <li class="tag-4"><a href="../../../../tag/python-weekly.html">python-weekly</a></li>
+	    <li class="tag-4"><a href="../../../../tag/jia-gou.html">架构</a></li>
+	    <li class="tag-4"><a href="../../../../tag/easy_install.html">easy_install</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ssl.html">ssl</a></li>
+	    <li class="tag-4"><a href="../../../../tag/zi-sheng.html">自省</a></li>
+	    <li class="tag-3"><a href="../../../../tag/xue-xi-fang-fa.html">学习方法</a></li>
+	    <li class="tag-2"><a href="../../../../tag/zong-jie.html">总结</a></li>
+	    <li class="tag-4"><a href="../../../../tag/zi-ti.html">字体</a></li>
+	    <li class="tag-4"><a href="../../../../tag/cc.html">C/C++</a></li>
+	    <li class="tag-3"><a href="../../../../tag/mysql.html">MySQL</a></li>
+	    <li class="tag-2"><a href="../../../../tag/gong-zuo.html">工作</a></li>
+	    <li class="tag-4"><a href="../../../../tag/wei-xin.html">微信</a></li>
+	    <li class="tag-4"><a href="../../../../tag/gan-wu.html">感悟</a></li>
+	    <li class="tag-4"><a href="../../../../tag/pip.html">pip</a></li>
+	    <li class="tag-2"><a href="../../../../tag/fu-wu-qi.html">服务器</a></li>
+	    <li class="tag-4"><a href="../../../../tag/github.html">github</a></li>
+	    <li class="tag-4"><a href="../../../../tag/dns.html">DNS</a></li>
+	    <li class="tag-4"><a href="../../../../tag/li-lun.html">理论</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ming-ling.html">命令</a></li>
+</ul>
+
+
+<nav class="widget">
+  <h4>链接</h4>
+  <ul>
+    <li><a href="http://getpelican.com/">Pelican</a></li>
+    <li><a href="http://www.explainshell.com/">explainshell</a></li>
+    <li><a href="https://www.byvoid.com/">BYVoid</a></li>
+    <li><a href="http://coolshell.cn/">酷壳</a></li>
+    <li><a href="http://huoding.com/">火丁笔记</a></li>
+    <li><a href="http://yuguo.us/">余果</a></li>
+    <li><a href="http://www.latexstudio.net/">LaTeX工作室</a></li>
+    <li><a href="http://www.luanxiang.org/blog/">乱象, 印迹</a></li>
+    <li><a href="http://www.soimort.org/">夏の航海士</a></li>
+    <li><a href="http://qinxuye.me/">残阳似血</a></li>
+    <li><a href="http://www.huangz.me/en/latest/index.html">Right Track Wrong Train</a></li>
+    <li><a href="http://www.wzxue.com/">麦子麦</a></li>
+    <li><a href="http://www.quora.com/">Quora</a></li>
+    <li><a href="http://noops.me/">NoOps</a></li>
+    <li><a href="http://xiao-jia.com/">Jia Xiao</a></li>
+    <li><a href="http://dirlt.com/">章炎的主页</a></li>
+    <li><a href="http://highscalability.com/">High Scalability</a></li>
+    <li><a href="http://hackermonthly.com/">Hacker Monthly</a></li>
+    <li><a href="http://www.itkoala.com/)(海量运维、运营规划">itkoala</a></li>
+  </ul>
+</nav>
+
+</div> </div><!-- /.row -->
+
+
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+    
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+
+</body>
+</html>

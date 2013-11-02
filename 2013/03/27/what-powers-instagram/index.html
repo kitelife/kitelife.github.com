@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>读文笔记：What Powers Instagram</title>
+        <meta charset="utf-8" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+
+
+
+
+
+</head>
+
+<body id="index" class="home">
+
+
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="../../../..">黑 * 白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+             
+              <ul class="columns">
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="../../../../pages/aboutme.html">关于我</a></li>
+                <li><a href="../../../../pages/tools.html">工具集</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+
+   <div class="row">
+        <div class="eleven columns">
+
+
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2013/03/27/what-powers-instagram/" rel="bookmark"
+                   title="Permalink to 读文笔记：What Powers Instagram">读文笔记：What Powers Instagram</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2013-03-27T00:00:00">
+                2013-03-27 周三
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>原文：<a href="http://instagram-engineering.tumblr.com/post/13649370142/what-powers-instagram-hundreds-of-instances-dozens-of">What Powers Instagram: Hundreds of Instances, Dozens of Technologies</a></p>
+<p><em>该文从多个方面介绍Instagram整个系统栈(stack)的组成，罗列所使用的组件。我觉得重要的不是用了哪些组件和工具，而是在构建一个系统时，应注意哪些问题，从哪些层面对系统进行优化。</em></p>
+<p>构建系统的核心原则：</p>
+<ul>
+<li>保持简单</li>
+<li>不重复造轮子</li>
+<li>尽可能使用经实践验证可靠的技术</li>
+</ul>
+<h3>OS/虚拟主机</h3>
+<p>在Amazon EC2上运行Ubuntu Linux 11.04。之前的Ubuntu版本在高流量的情况会产生各种不可预料的冻结事件（freezing episodes）。</p>
+<h3>负载均衡</h3>
+<p>对Instagram的每个请求都会经过负载均衡机器。以前使用两台<strong>Nginx</strong>机器，并在两者之间使用DNS轮循（Round-Robin）。
+这种方法的缺点是当有机器退出使用时DNS需要花些时间来更新。后来使用Amazon的Elastic负载均衡器，并在ELB层面终止SSL（注：不太懂这个），
+从而降低nginx的CPU负载。</p>
+<h3>应用服务器</h3>
+<p>Django；多个应用服务器，由于无状态，所以容易横向扩展。</p>
+<ul>
+<li>使用<a href="http://gunicorn.org/">Gunicorn</a>作为WSGI服务器。曾使用mod_wsgi和Apache，但Gunicorn更容易配置，CPU负载更小。</li>
+<li>使用<a href="http://fabric.readthedocs.org/en/1.3.3/index.html">Fabric</a>来一次性在多个虚拟主机实例上运行命令（比如部署代码）。</li>
+</ul>
+<h3>数据存储</h3>
+<p>大多数数据（用户信息、图片元数据、标签等）都存在PostgreSQL中。将数据切分到多个主机实例上（分区集群shard cluster）。</p>
+<p>使用<a href="http://hoytech.com/vmtouch/">vmtouch</a>来诊断与控制文件系统缓存（即哪些数据在内存中）。</p>
+<p>所有PostgreSQL实例都使用流式复制以主-副本配置方式运行，并使用EBS快照频繁备份系统。</p>
+<p>使用<a href="http://pgfoundry.org/projects/pgbouncer/">Pgbouncer</a>作为PostgreSQL的连接池。</p>
+<p>图片直接存储在Amazon S3上。使用Amazon CloudFront作为CDN。</p>
+<p>广泛使用<a href="http://redis.io/">Redis</a>，驱动主要的数据源(main feed)、活动数据源(activity feed)、会话系统（<a href="https://gist.github.com/mikeyk/910392">Instagram的Django会话后端</a>）。也以主-副本设置运行Redis，副本机器不断地将数据库保存到磁盘，并使用EBS快照来备份这些DB转储数据。因为Redis支持写副本，所以在多台Redis机器之间进行在线故障转移（online failover）非常容易。</p>
+<p>使用Memcached做缓存，通过pylibmc和libmemcached连接memcached。</p>
+<h3>任务队列与推送通知</h3>
+<ul>
+<li>任务队列系统：<a href="http://gearman.org/">Gearman</a></li>
+<li>推送通知：<a href="https://github.com/samuraisam/pyapns">pyapns</a>，性价比高</li>
+</ul>
+<h3>监控</h3>
+<ul>
+<li>使用<a href="http://munin-monitoring.org/">Munin</a>为整个系统的各种指标绘制图表，如果某些指标超出了常规范围会提醒管理员。基于<a href="http://samuelks.com/python-munin/">Python-Munin</a>编写Munin插件为非系统级的指标绘制图表。</li>
+<li>使用<a href="http://pingdom.com/">Pingdom</a>对服务进行外部监控。</li>
+<li>使用<a href="http://pagerduty.com/">PagerDuty</a>来处理通知和事件。</li>
+<li>使用<a href="https://pypi.python.org/pypi/django-sentry">Sentry</a>来记录Python错误报告，这样任何时候都可以登录系统（实时地）看到系统中正在发生什么错误。</li>
+</ul>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2013/03/27/what-powers-instagram/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+
+
+        </div><!-- /.eleven.columns -->
+        
+<div class="three columns">
+
+<!--
+<h4>Pages</h4>
+
+ <ul>
+      <li><a href="../../../../pages/aboutme.html">关于我</a></li>
+      <li><a href="../../../../pages/tools.html">工具集</a></li>
+  </ul>
+-->
+
+<h4>分类</h4>
+<ul>
+		<li><a href="../../../../category/qi-ta.html">其他</a></li>
+</ul>
+
+
+<h4>标签</h4>
+	<ul>
+	    <li class="tag-4"><a href="../../../../tag/pypi.html">PyPI</a></li>
+	    <li class="tag-3"><a href="../../../../tag/shi-ge.html">诗歌</a></li>
+	    <li class="tag-1"><a href="../../../../tag/python.html">Python</a></li>
+	    <li class="tag-2"><a href="../../../../tag/bi-ji.html">笔记</a></li>
+	    <li class="tag-4"><a href="../../../../tag/shu-ju-ku.html">数据库</a></li>
+	    <li class="tag-4"><a href="../../../../tag/yue-du.html">阅读</a></li>
+	    <li class="tag-4"><a href="../../../../tag/teng-xun.html">腾讯</a></li>
+	    <li class="tag-2"><a href="../../../../tag/bi-shi.html">笔试</a></li>
+	    <li class="tag-3"><a href="../../../../tag/mian-shi.html">面试</a></li>
+	    <li class="tag-2"><a href="../../../../tag/ji-zhu.html">技术</a></li>
+	    <li class="tag-2"><a href="../../../../tag/php.html">PHP</a></li>
+	    <li class="tag-4"><a href="../../../../tag/haproxy.html">HAProxy</a></li>
+	    <li class="tag-4"><a href="../../../../tag/diao-shi.html">调试</a></li>
+	    <li class="tag-2"><a href="../../../../tag/ming-ling-xing.html">命令行</a></li>
+	    <li class="tag-4"><a href="../../../../tag/wen-zi.html">文字</a></li>
+	    <li class="tag-2"><a href="../../../../tag/shell.html">Shell</a></li>
+	    <li class="tag-2"><a href="../../../../tag/javascript.html">JavaScript</a></li>
+	    <li class="tag-4"><a href="../../../../tag/haproxyconsole.html">HAProxyConsole</a></li>
+	    <li class="tag-2"><a href="../../../../tag/gong-ju.html">工具</a></li>
+	    <li class="tag-4"><a href="../../../../tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
+	    <li class="tag-4"><a href="../../../../tag/bind.html">BIND</a></li>
+	    <li class="tag-4"><a href="../../../../tag/fu-zai-jun-heng.html">负载均衡</a></li>
+	    <li class="tag-4"><a href="../../../../tag/keepalived.html">Keepalived</a></li>
+	    <li class="tag-4"><a href="../../../../tag/vmware.html">VMware</a></li>
+	    <li class="tag-4"><a href="../../../../tag/gao-ke-yong.html">高可用</a></li>
+	    <li class="tag-3"><a href="../../../../tag/suan-fa.html">算法</a></li>
+	    <li class="tag-1"><a href="../../../../tag/fan-yi.html">翻译</a></li>
+	    <li class="tag-4"><a href="../../../../tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
+	    <li class="tag-2"><a href="../../../../tag/git.html">Git</a></li>
+	    <li class="tag-4"><a href="../../../../tag/sheng-huo.html">生活</a></li>
+	    <li class="tag-1"><a href="../../../../tag/linux.html">Linux</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ban-ben-kong-zhi.html">版本控制</a></li>
+	    <li class="tag-3"><a href="../../../../tag/nginx.html">Nginx</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ying-yu.html">英语</a></li>
+	    <li class="tag-4"><a href="../../../../tag/golang.html">Golang</a></li>
+	    <li class="tag-4"><a href="../../../../tag/bing-xing.html">并行</a></li>
+	    <li class="tag-4"><a href="../../../../tag/jekyll.html">jekyll</a></li>
+	    <li class="tag-4"><a href="../../../../tag/python-weekly.html">python-weekly</a></li>
+	    <li class="tag-4"><a href="../../../../tag/jia-gou.html">架构</a></li>
+	    <li class="tag-4"><a href="../../../../tag/easy_install.html">easy_install</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ssl.html">ssl</a></li>
+	    <li class="tag-4"><a href="../../../../tag/zi-sheng.html">自省</a></li>
+	    <li class="tag-3"><a href="../../../../tag/xue-xi-fang-fa.html">学习方法</a></li>
+	    <li class="tag-2"><a href="../../../../tag/zong-jie.html">总结</a></li>
+	    <li class="tag-4"><a href="../../../../tag/zi-ti.html">字体</a></li>
+	    <li class="tag-4"><a href="../../../../tag/cc.html">C/C++</a></li>
+	    <li class="tag-3"><a href="../../../../tag/mysql.html">MySQL</a></li>
+	    <li class="tag-2"><a href="../../../../tag/gong-zuo.html">工作</a></li>
+	    <li class="tag-4"><a href="../../../../tag/wei-xin.html">微信</a></li>
+	    <li class="tag-4"><a href="../../../../tag/gan-wu.html">感悟</a></li>
+	    <li class="tag-4"><a href="../../../../tag/pip.html">pip</a></li>
+	    <li class="tag-2"><a href="../../../../tag/fu-wu-qi.html">服务器</a></li>
+	    <li class="tag-4"><a href="../../../../tag/github.html">github</a></li>
+	    <li class="tag-4"><a href="../../../../tag/dns.html">DNS</a></li>
+	    <li class="tag-4"><a href="../../../../tag/li-lun.html">理论</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ming-ling.html">命令</a></li>
+</ul>
+
+
+<nav class="widget">
+  <h4>链接</h4>
+  <ul>
+    <li><a href="http://getpelican.com/">Pelican</a></li>
+    <li><a href="http://www.explainshell.com/">explainshell</a></li>
+    <li><a href="https://www.byvoid.com/">BYVoid</a></li>
+    <li><a href="http://coolshell.cn/">酷壳</a></li>
+    <li><a href="http://huoding.com/">火丁笔记</a></li>
+    <li><a href="http://yuguo.us/">余果</a></li>
+    <li><a href="http://www.latexstudio.net/">LaTeX工作室</a></li>
+    <li><a href="http://www.luanxiang.org/blog/">乱象, 印迹</a></li>
+    <li><a href="http://www.soimort.org/">夏の航海士</a></li>
+    <li><a href="http://qinxuye.me/">残阳似血</a></li>
+    <li><a href="http://www.huangz.me/en/latest/index.html">Right Track Wrong Train</a></li>
+    <li><a href="http://www.wzxue.com/">麦子麦</a></li>
+    <li><a href="http://www.quora.com/">Quora</a></li>
+    <li><a href="http://noops.me/">NoOps</a></li>
+    <li><a href="http://xiao-jia.com/">Jia Xiao</a></li>
+    <li><a href="http://dirlt.com/">章炎的主页</a></li>
+    <li><a href="http://highscalability.com/">High Scalability</a></li>
+    <li><a href="http://hackermonthly.com/">Hacker Monthly</a></li>
+    <li><a href="http://www.itkoala.com/)(海量运维、运营规划">itkoala</a></li>
+  </ul>
+</nav>
+
+</div> </div><!-- /.row -->
+
+
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+    
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+
+</body>
+</html>

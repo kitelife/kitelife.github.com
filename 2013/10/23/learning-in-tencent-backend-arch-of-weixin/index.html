@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>学在腾讯：简而美的微信后台架构</title>
+        <meta charset="utf-8" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+
+
+
+
+
+</head>
+
+<body id="index" class="home">
+
+
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="../../../..">黑 * 白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+             
+              <ul class="columns">
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="../../../../pages/aboutme.html">关于我</a></li>
+                <li><a href="../../../../pages/tools.html">工具集</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+
+   <div class="row">
+        <div class="eleven columns">
+
+
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2013/10/23/learning-in-tencent-backend-arch-of-weixin/" rel="bookmark"
+                   title="Permalink to 学在腾讯：简而美的微信后台架构">学在腾讯：简而美的微信后台架构</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2013-10-23T00:00:00">
+                2013-10-23 周三
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>注：<em>公司分享讲座的一点笔记，不保证准确性。</em></p>
+<h2>问题</h2>
+<h3>极致的业务特性</h3>
+<ul>
+<li>流畅的消息收发</li>
+<li>及时的通知</li>
+<li>省电</li>
+<li>省流量</li>
+<li>瘦客户端</li>
+</ul>
+<h3>困难的后台-终端同步</h3>
+<ul>
+<li>同步多样数据：账户信息、通讯录、消息、朋友圈等</li>
+<li>及时通知与同步</li>
+<li>移动网络下的可靠同步</li>
+<li>省流量与电量</li>
+</ul>
+<h2>方案</h2>
+<h3>极简的同步协议</h3>
+<ul>
+<li>后台与终端只需要沟通一个数字，后台即可知道终端缺失的所有数据。</li>
+<li>变更序列号/版本号：<ul>
+<li>后台对用户数据的每项变更，都赋予一个单调递增的序列号，即用户的每项数据都有一个全局递增序列号。</li>
+<li>后台每次给终端发送数据都会带上所发送的所有数据的最大序列号。</li>
+<li>终端每次请求数据时都会带上已经接受到的最大序列号。</li>
+</ul>
+</li>
+</ul>
+<h3>高效的通知机制</h3>
+<ul>
+<li>ios Apple Push Network Service</li>
+<li>Android等-长连接</li>
+<li>GPRS/EDGE信令风暴优化</li>
+<li>自适应心跳间隔调节</li>
+</ul>
+<h3>三层后台架构</h3>
+<p><img alt="Arch of weixin backend" src="/assets/uploads/pics/arch-of-weixin-backend.png" /></p>
+<h3>统一的RPC框架</h3>
+<ul>
+<li>根据ProtocolBuffer定义生成服务器框架和客户端<ul>
+<li>服务器：开发人员填充接口实现</li>
+<li>客户端： 应用方本地调用客户端提供的接口函数</li>
+</ul>
+</li>
+<li>屏蔽网络细节<ul>
+<li>支持基于TCP/UDP的网络调用</li>
+<li>支持长短连接</li>
+</ul>
+</li>
+<li>丰富的功能<ul>
+<li>基于sharding的SET分布</li>
+<li>基于一致性哈希的无状态存储</li>
+<li>服务透明重定向</li>
+<li>丰富的自动化监控：(1)QPS；(2)响应时间；(3)排队时间；(4)各个接口的调用频率与返回状态码分布；(5)各个服务之间的调用拓扑</li>
+</ul>
+</li>
+</ul>
+<h3>高并发的协程RPC</h3>
+<p>服务器同步的调用模型相较异步模型更容易学习、使用和调错。但一台服务器支撑的进程数和线程数是非常有限的。</p>
+<p><strong>基于用户态线程（协程）的RPC</strong></p>
+<ul>
+<li>单机可以支撑数万甚至十万的用户态线程，仅受CPU和内存约束</li>
+<li>提高并发性和性能</li>
+</ul>
+<p><strong>用户态线程RPC的实现</strong></p>
+<ul>
+<li>基于makecontext/getcontext/swapcontext</li>
+<li>Hook Network: read/write/epoll</li>
+<li>用户态线程调度</li>
+</ul>
+<h3>就近访问</h3>
+<ul>
+<li>就近访问IDC</li>
+<li>就近网络接入：覆盖各大运营商</li>
+<li>CDN：上传下载图片<ul>
+<li>腾讯自建CDN</li>
+<li>AKAMAI</li>
+</ul>
+</li>
+</ul>
+<h3>多IDC分布提升用户体验</h3>
+<ul>
+<li>国内复杂的网络环境</li>
+<li>超过1亿的海外用户<ul>
+<li>分布在全球</li>
+<li>更为多样化的网络环境</li>
+</ul>
+</li>
+<li>每个IDC都提供完整的功能和所需访问的所有数据</li>
+<li>每个IDC有共同的数据和独立数据<ul>
+<li>账户信息全球一致</li>
+<li>用户数据各自独立：(1)一个用户只属于某个IDC；(2)用户属性、关系链、消息；(3)按需共享的SNS数据-照片、评论、红心，减少网络同步带宽消耗</li>
+</ul>
+</li>
+</ul>
+<h3>IDC分布数据的高可靠最终一致性保证</h3>
+<ul>
+<li>账户数据和SNS数据主备访问模型<ul>
+<li>用户所在的IDC是主IDC</li>
+<li>其他IDC相对这个用户所在IDC都是备IDC</li>
+<li>更新由主扩散到备</li>
+</ul>
+</li>
+<li>弱实时性跨IDC更新采用基于Zookeeper仲裁的主备任务队列<ul>
+<li>收拢跨IDC访问接口</li>
+<li>重做保证跨IDC更新的可靠性</li>
+<li>数据序列号在重做时保证达到最终一致性</li>
+</ul>
+</li>
+<li>关系链跨IDC更新<ul>
+<li>隐私控制要求实时性</li>
+<li>直接跨IDC网络调用</li>
+<li>后台批处理重试失败请求</li>
+</ul>
+</li>
+</ul>
+<h3>容错和容灾机制</h3>
+<ul>
+<li>单IDC<ul>
+<li>用户按SET分布，各个SET之间独立</li>
+<li>...</li>
+</ul>
+</li>
+<li>高可用的异地容灾<ul>
+<li>每个服务的主IDC都有一个灾备IDC</li>
+<li>挑战：终端在主备IDC切换时的无缝连接；主备间的数据一致性。</li>
+</ul>
+</li>
+</ul>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2013/10/23/learning-in-tencent-backend-arch-of-weixin/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+
+
+        </div><!-- /.eleven.columns -->
+        
+<div class="three columns">
+
+<!--
+<h4>Pages</h4>
+
+ <ul>
+      <li><a href="../../../../pages/aboutme.html">关于我</a></li>
+      <li><a href="../../../../pages/tools.html">工具集</a></li>
+  </ul>
+-->
+
+<h4>分类</h4>
+<ul>
+		<li><a href="../../../../category/qi-ta.html">其他</a></li>
+</ul>
+
+
+<h4>标签</h4>
+	<ul>
+	    <li class="tag-4"><a href="../../../../tag/pypi.html">PyPI</a></li>
+	    <li class="tag-3"><a href="../../../../tag/shi-ge.html">诗歌</a></li>
+	    <li class="tag-1"><a href="../../../../tag/python.html">Python</a></li>
+	    <li class="tag-2"><a href="../../../../tag/bi-ji.html">笔记</a></li>
+	    <li class="tag-4"><a href="../../../../tag/shu-ju-ku.html">数据库</a></li>
+	    <li class="tag-4"><a href="../../../../tag/yue-du.html">阅读</a></li>
+	    <li class="tag-4"><a href="../../../../tag/teng-xun.html">腾讯</a></li>
+	    <li class="tag-2"><a href="../../../../tag/bi-shi.html">笔试</a></li>
+	    <li class="tag-3"><a href="../../../../tag/mian-shi.html">面试</a></li>
+	    <li class="tag-2"><a href="../../../../tag/ji-zhu.html">技术</a></li>
+	    <li class="tag-2"><a href="../../../../tag/php.html">PHP</a></li>
+	    <li class="tag-4"><a href="../../../../tag/haproxy.html">HAProxy</a></li>
+	    <li class="tag-4"><a href="../../../../tag/diao-shi.html">调试</a></li>
+	    <li class="tag-2"><a href="../../../../tag/ming-ling-xing.html">命令行</a></li>
+	    <li class="tag-4"><a href="../../../../tag/wen-zi.html">文字</a></li>
+	    <li class="tag-2"><a href="../../../../tag/shell.html">Shell</a></li>
+	    <li class="tag-2"><a href="../../../../tag/javascript.html">JavaScript</a></li>
+	    <li class="tag-4"><a href="../../../../tag/haproxyconsole.html">HAProxyConsole</a></li>
+	    <li class="tag-2"><a href="../../../../tag/gong-ju.html">工具</a></li>
+	    <li class="tag-4"><a href="../../../../tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
+	    <li class="tag-4"><a href="../../../../tag/bind.html">BIND</a></li>
+	    <li class="tag-4"><a href="../../../../tag/fu-zai-jun-heng.html">负载均衡</a></li>
+	    <li class="tag-4"><a href="../../../../tag/keepalived.html">Keepalived</a></li>
+	    <li class="tag-4"><a href="../../../../tag/vmware.html">VMware</a></li>
+	    <li class="tag-4"><a href="../../../../tag/gao-ke-yong.html">高可用</a></li>
+	    <li class="tag-3"><a href="../../../../tag/suan-fa.html">算法</a></li>
+	    <li class="tag-1"><a href="../../../../tag/fan-yi.html">翻译</a></li>
+	    <li class="tag-4"><a href="../../../../tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
+	    <li class="tag-2"><a href="../../../../tag/git.html">Git</a></li>
+	    <li class="tag-4"><a href="../../../../tag/sheng-huo.html">生活</a></li>
+	    <li class="tag-1"><a href="../../../../tag/linux.html">Linux</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ban-ben-kong-zhi.html">版本控制</a></li>
+	    <li class="tag-3"><a href="../../../../tag/nginx.html">Nginx</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ying-yu.html">英语</a></li>
+	    <li class="tag-4"><a href="../../../../tag/golang.html">Golang</a></li>
+	    <li class="tag-4"><a href="../../../../tag/bing-xing.html">并行</a></li>
+	    <li class="tag-4"><a href="../../../../tag/jekyll.html">jekyll</a></li>
+	    <li class="tag-4"><a href="../../../../tag/python-weekly.html">python-weekly</a></li>
+	    <li class="tag-4"><a href="../../../../tag/jia-gou.html">架构</a></li>
+	    <li class="tag-4"><a href="../../../../tag/easy_install.html">easy_install</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ssl.html">ssl</a></li>
+	    <li class="tag-4"><a href="../../../../tag/zi-sheng.html">自省</a></li>
+	    <li class="tag-3"><a href="../../../../tag/xue-xi-fang-fa.html">学习方法</a></li>
+	    <li class="tag-2"><a href="../../../../tag/zong-jie.html">总结</a></li>
+	    <li class="tag-4"><a href="../../../../tag/zi-ti.html">字体</a></li>
+	    <li class="tag-4"><a href="../../../../tag/cc.html">C/C++</a></li>
+	    <li class="tag-3"><a href="../../../../tag/mysql.html">MySQL</a></li>
+	    <li class="tag-2"><a href="../../../../tag/gong-zuo.html">工作</a></li>
+	    <li class="tag-4"><a href="../../../../tag/wei-xin.html">微信</a></li>
+	    <li class="tag-4"><a href="../../../../tag/gan-wu.html">感悟</a></li>
+	    <li class="tag-4"><a href="../../../../tag/pip.html">pip</a></li>
+	    <li class="tag-2"><a href="../../../../tag/fu-wu-qi.html">服务器</a></li>
+	    <li class="tag-4"><a href="../../../../tag/github.html">github</a></li>
+	    <li class="tag-4"><a href="../../../../tag/dns.html">DNS</a></li>
+	    <li class="tag-4"><a href="../../../../tag/li-lun.html">理论</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ming-ling.html">命令</a></li>
+</ul>
+
+
+<nav class="widget">
+  <h4>链接</h4>
+  <ul>
+    <li><a href="http://getpelican.com/">Pelican</a></li>
+    <li><a href="http://www.explainshell.com/">explainshell</a></li>
+    <li><a href="https://www.byvoid.com/">BYVoid</a></li>
+    <li><a href="http://coolshell.cn/">酷壳</a></li>
+    <li><a href="http://huoding.com/">火丁笔记</a></li>
+    <li><a href="http://yuguo.us/">余果</a></li>
+    <li><a href="http://www.latexstudio.net/">LaTeX工作室</a></li>
+    <li><a href="http://www.luanxiang.org/blog/">乱象, 印迹</a></li>
+    <li><a href="http://www.soimort.org/">夏の航海士</a></li>
+    <li><a href="http://qinxuye.me/">残阳似血</a></li>
+    <li><a href="http://www.huangz.me/en/latest/index.html">Right Track Wrong Train</a></li>
+    <li><a href="http://www.wzxue.com/">麦子麦</a></li>
+    <li><a href="http://www.quora.com/">Quora</a></li>
+    <li><a href="http://noops.me/">NoOps</a></li>
+    <li><a href="http://xiao-jia.com/">Jia Xiao</a></li>
+    <li><a href="http://dirlt.com/">章炎的主页</a></li>
+    <li><a href="http://highscalability.com/">High Scalability</a></li>
+    <li><a href="http://hackermonthly.com/">Hacker Monthly</a></li>
+    <li><a href="http://www.itkoala.com/)(海量运维、运营规划">itkoala</a></li>
+  </ul>
+</nav>
+
+</div> </div><!-- /.row -->
+
+
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+    
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>装饰器与函数式Python（译）</title>
+        <meta charset="utf-8" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+
+
+
+
+
+</head>
+
+<body id="index" class="home">
+
+
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="../../../..">黑 * 白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+             
+              <ul class="columns">
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="../../../../pages/aboutme.html">关于我</a></li>
+                <li><a href="../../../../pages/tools.html">工具集</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+
+   <div class="row">
+        <div class="eleven columns">
+
+
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2013/01/04/Decorators-and-Functional-Python/" rel="bookmark"
+                   title="Permalink to 装饰器与函数式Python（译）">装饰器与函数式Python（译）</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2013-01-04T00:00:00">
+                2013-01-04 周五
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>原文：<a href="http://www.brianholdefehr.com/decorators-and-functional-python">Decorators and Functional Python</a></p>
+<p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
+<p>装饰器是Python的一大特色。除了在语言中的原本用处，还帮助我们以一种有趣的方式（函数式）进行思考。</p>
+<p>我打算自底向上解释装饰器如何工作。首先解释几个话题以帮助理解装饰器。然后，深入一点探索几个简单的装饰器以及它们如何工作。最后，讨论一些更高级的使用装饰器的方式，比如：传递可选参数给装饰器或者串接几个装饰器。</p>
+<p>首先以我能想到的最简单的方式来定义Python函数是什么。基于该定义，我们可以类似的简单方式来定义装饰器。</p>
+<blockquote>
+<p>函数是一个完成特定任务的可复用代码块。</p>
+</blockquote>
+<p>好的，那么装饰器又是什么呢？</p>
+<blockquote>
+<p>装饰器是一个修改其他函数的函数。</p>
+</blockquote>
+<p>现在在装饰器的定义上进行详述，先解释一些先决条件。</p>
+<h2>函数是一等对象</h2>
+<p>Python中，所有东西都是对象。这意味着可以通过名字引用函数，以及像其他对象那样传递。例如：</p>
+<div class="highlight"><pre><span class="k">def</span> <span class="nf">traveling_function</span><span class="p">():</span>
+    <span class="k">print</span> <span class="s">&quot;Here I am!&quot;</span>
+
+<span class="n">function_dict</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&quot;func&quot;</span><span class="p">:</span> <span class="n">traveling_function</span>
+<span class="p">}</span>
+
+<span class="n">trav_func</span> <span class="o">=</span> <span class="n">function_dict</span><span class="p">[</span><span class="s">&#39;func&#39;</span><span class="p">]</span>
+<span class="n">trav_func</span><span class="p">()</span>
+<span class="c"># &gt;&gt; Here I am!</span>
+</pre></div>
+
+
+<p><code>traveling_function</code> 被赋值给 <code>function_dict</code> 字典中键 <code>func</code> 的值，仍旧可以正常调用。</p>
+<h2>一等函数允许高阶函数</h2>
+<p>我们可以像其他对象那样传递函数。可以将函数作为值传递给字典，放在列表中，或者作为对象的属性进行赋值。那为什么不能作为参数传给另一个函数呢？当然可以！如果一个函数接受另一个函数作为其参数或者返回另一个函数，则称之为高阶函数。</p>
+<div class="highlight"><pre><span class="k">def</span> <span class="nf">self_absorbed_function</span><span class="p">():</span>
+    <span class="k">return</span> <span class="s">&quot;I&#39;m an amazing function!&quot;</span>
+
+<span class="k">def</span> <span class="nf">printer</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="k">print</span> <span class="s">&quot;The function passed to me says: &quot;</span> <span class="o">+</span> <span class="n">func</span><span class="p">()</span>
+
+<span class="c"># Call `printer` and give it `self_absorbed_function` as an argument</span>
+<span class="n">printer</span><span class="p">(</span><span class="n">self_absorbed_function</span><span class="p">)</span>
+<span class="c"># &gt;&gt;&gt; The function passed to me says: I&#39;m an amazing function!</span>
+</pre></div>
+
+
+<p>现在你也看到函数可以作为参数传给另一个函数，而且传给函数的函数还可以调用。这允许我们创建一些有意思的函数，例如装饰器。</p>
+<h2>装饰器基础</h2>
+<p>本质上，装饰器就是一个以另一个函数为参数的函数。大多数情况下，它们会返回所包装函数的一个修改版本。来看个我们能想到的最简单的装饰器---同一性（identity）装饰器，或许对我们理解装饰器的工作原理有所帮助。</p>
+<div class="highlight"><pre><span class="k">def</span> <span class="nf">identity_decorator</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">():</span>
+        <span class="n">func</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">wrapper</span>
+
+<span class="k">def</span> <span class="nf">a_function</span><span class="p">():</span>
+    <span class="k">print</span> <span class="s">&quot;I&#39;m a normal function.&quot;</span>
+
+<span class="c"># `decorated_function` 是 `identity_function` 返回的函数，也就是嵌套函数 `wrapper`</span>
+<span class="n">decorated_function</span> <span class="o">=</span> <span class="n">identity_function</span><span class="p">(</span><span class="n">a_function</span><span class="p">)</span>
+
+<span class="c"># 如下调用 `identity_function` 返回的函数</span>
+<span class="n">decorated_function</span><span class="p">()</span>
+<span class="c"># &gt;&gt;&gt; I&#39;m a normal function</span>
+</pre></div>
+
+
+<p>这里， <code>identity_decorator</code>
+根本没有修改它包装的函数，只是简单地返回一个函数（wrapper），这个函数在被调用之时，会去调用原来作为 <code>identity_decorator</code> 参数的函数。这是个没有用处的装饰器！</p>
+<p>关于 <code>identity_decorator</code> 的有趣之处是 <code>wrapper</code> 能够访问变量 <code>func</code> ，即使
+<code>func</code> 并非是它的参数。这归因于闭包。</p>
+<h2>闭包</h2>
+<blockquote>
+<p>闭包是一个花哨的术语，意为声明一个函数时，该函数会维持一个指向声明所处词法环境的引用。</p>
+</blockquote>
+<p>上例中定义的函数 <code>wrapper</code> 能够在其局部作用域（local scope）中访问
+<code>func</code>。这意味着在 <code>wrapper</code> （返回并赋值给变量 <code>decorated_function</code> ）的整个生命周期内，它都可以访问 <code>func</code> 变量。一旦 <code>identity_decorator</code>返回，那么访问 <code>func</code> 的唯一方式就是通过 <code>decorated_function</code> 。 <code>func</code> 只作为一个变量存在于 <code>decorated_function</code> 作用域环境的内部。</p>
+<h2>一个简单的装饰器</h2>
+<p>现在我们来创建一个确实有点用的装饰器。这个装饰器所做的就是记录它所修改的函数被调用了多少次。</p>
+<div class="highlight"><pre><span class="k">def</span> <span class="nf">logging_decorator</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">():</span>
+        <span class="n">wrapper</span><span class="o">.</span><span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">print</span> <span class="s">&quot;The function I modify has been called {0} time(s)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">wrapper</span><span class="o">.</span><span class="n">count</span><span class="p">)</span>
+        <span class="n">func</span><span class="p">()</span>
+    <span class="n">wrapper</span><span class="o">.</span><span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">wrapper</span>
+
+<span class="k">def</span> <span class="nf">a_function</span><span class="p">():</span>
+    <span class="k">print</span> <span class="s">&quot;I&#39;m a normal function.&quot;</span>
+
+<span class="n">modified_function</span> <span class="o">=</span> <span class="n">logging_decorator</span><span class="p">(</span><span class="n">a_function</span><span class="p">)</span>
+
+<span class="n">modified_function</span><span class="p">()</span>
+<span class="c"># &gt;&gt;&gt; The function I modify has been called 1 time(s).</span>
+<span class="c"># &gt;&gt;&gt; I&#39;m a normal function.</span>
+
+<span class="n">modified_function</span><span class="p">()</span>
+<span class="c"># &gt;&gt;&gt; The function I modify has been called 2 time(s).</span>
+<span class="c"># &gt;&gt;&gt; I&#39;m a normal function.</span>
+</pre></div>
+
+
+<p>我们说装饰器会修改函数，这样来想对理解也是有帮助的。但如例子所见，
+<code>logging_decorator</code> 返回的是一个类似于 <code>a_function</code>
+的新函数，只是多了一个日志特性。</p>
+<p>上例中， <code>logging_decorator</code> 不仅接受一个函数作为参数，并且返回一个函数，
+<code>wrapper</code> 。每次 <code>logging_decorator</code> 返回的函数得到调用，它就对 <code>wrapper.count</code> 的值加1，打印出来，然后调用 <code>logging_decorator</code> 包装的函数。</p>
+<p>你也许正疑惑为什么我们的计数器是 <code>wrapper</code> 的一个属性而不是一个普通的变量。难道 <code>wrapper</code> 的闭包环境不是让我们访问在其局部作用域中声明的任意变量么？是的，但有个问题。Python中，闭包允许对其函数作用域链中任一变量的进行任意读操作，但只允许对可变对象（列表、字典、等等）进行写操作。整数在Python中是非可变对象，因此我们不能修改 <code>wrapper</code> 内部整型变量的值。相反，我们将计数器作为 <code>wrapper</code> 的一个属性---一个可变对象，因此可以随我们自己增大它的值。</p>
+<h2>装饰器语法</h2>
+<p>在前一个例子中，我们看到可以将一个函数作为参数传给装饰器，从而使用装饰器函数对该函数进行包装。然而，Python还有一个语法模式使得这一切更加直观，更容易阅读，一旦你熟悉了装饰器。</p>
+<div class="highlight"><pre><span class="c"># In the previous example, we used our decorator function by passing the</span>
+<span class="c"># function we wanted to modify to it, and assigning the result to a variable</span>
+<span class="k">def</span> <span class="nf">some_function</span><span class="p">():</span>
+    <span class="k">print</span> <span class="s">&quot;I&#39;m happiest when decorated.&quot;</span>
+
+<span class="c"># Here we will make the assigned variable the same name as the wrapped function</span>
+<span class="n">some_function</span> <span class="o">=</span> <span class="n">logging_decorator</span><span class="p">(</span><span class="n">some_function</span><span class="p">)</span>
+</pre></div>
+
+
+<hr />
+<div class="highlight"><pre><span class="c"># We can achieve the exact same thing with this syntax:</span>
+
+<span class="nd">@logging_decorator</span>
+<span class="k">def</span> <span class="nf">some_function</span><span class="p">():</span>
+    <span class="k">print</span> <span class="s">&quot;I&#39;m happiest when decorated&quot;</span>
+</pre></div>
+
+
+<p>使用装饰器语法，鸟瞰其中发生的事情：</p>
+<ol>
+<li>解释器到达被装饰的函数，编译 <code>some_function</code>，并将其命名为 'some_function'。</li>
+<li>然后将该函数传递给装饰行中指定的装饰器函数（ <code>logging_function</code> ）。</li>
+<li>装饰器函数（通常是用来包装原函数的另一个函数）的返回值取代原来的函数（<code>some_function</code> ），绑定到变量名 <code>some_function</code> 。</li>
+</ol>
+<p>将这些步骤记住，让我们来更清晰地解释 <code>identity_decorator</code> 。</p>
+<div class="highlight"><pre><span class="k">def</span> <span class="nf">identity_decorator</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="c"># Everything here happens when the decorator LOADS and is passed</span>
+    <span class="c"># the function as decribed in step 2 above</span>
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">():</span>
+        <span class="c"># Things here happen each time the final wrapped function gets CALLED</span>
+        <span class="n">func</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">wrapper</span>
+</pre></div>
+
+
+<p>希望那些注释有助于理解。每次调用被包装的函数，仅执行装饰器返回的函数中的指令。返回函数之外的指令仅执行一次---上述步骤2中描述的：装饰器首次接收到传递给它的待包装函数之时。</p>
+<p>在观察更多的有意思的装饰器之前，我想再解释一样东西。</p>
+<h2>*args与**kwargs</h2>
+<p>以前你也许有时会把这两者相混淆了。让我们一次性地讨论它们。</p>
+<ul>
+<li>通过在形参列表中使用 <code>*args</code> 语法，python函数能够接收可变数量的位置参数(positional arguments)。 <code>*args</code> 会将所有没有关键字的参数放入一个参数元组中，在函数里可以访问元组中的参数。相反，将 <code>*args</code> 用于函数调用时的实参列表之时，它会将参数元组展开成一系列的位置参数。</li>
+</ul>
+<hr />
+<div class="highlight"><pre><span class="k">def</span> <span class="nf">function_with_many_arguments</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">print</span> <span class="n">args</span>
+
+<span class="c"># `args` within the function will be a tuple of any arguments we pass</span>
+<span class="c"># which can be used within the function like any other tuple</span>
+<span class="n">function_with_many_arguments</span><span class="p">(</span><span class="s">&#39;hello&#39;</span><span class="p">,</span> <span class="mi">123</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+<span class="c"># &gt;&gt;&gt; (&#39;hello&#39;, 123, True)</span>
+</pre></div>
+
+
+<hr />
+<div class="highlight"><pre><span class="k">def</span> <span class="nf">function_with_3_parameters</span><span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="n">boolean</span><span class="p">,</span> <span class="n">string</span><span class="p">):</span>
+    <span class="k">print</span> <span class="s">&quot;num is &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">num</span><span class="p">)</span>
+    <span class="k">print</span> <span class="s">&quot;boolean is &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">boolean</span><span class="p">)</span>
+    <span class="k">print</span> <span class="s">&quot;string is &quot;</span> <span class="o">+</span> <span class="n">string</span>
+
+<span class="n">arg_list</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="s">&#39;decorators&#39;</span><span class="p">]</span>
+
+<span class="c"># arg_list will be expanded into 3 positional arguments by the `*` symbol</span>
+<span class="n">function_with_3_parameters</span><span class="p">(</span><span class="o">*</span><span class="n">arg_list</span><span class="p">)</span>
+<span class="c"># &gt;&gt;&gt; num is 1</span>
+<span class="c"># &gt;&gt;&gt; boolean is False</span>
+<span class="c"># &gt;&gt;&gt; string is decorators</span>
+</pre></div>
+
+
+<p>重述一遍：在形参列表中， <code>*args</code>会将一系列的参数压缩进一个名为'args'的元组，而在实参列表中， <code>*args</code> 会将一个可迭代的参数数据结构展开为一系列的位置实参应用于函数。</p>
+<p>如你所见在实参展开的例子中， <code>*</code> 符号可与'args'之外的名字一起使用。当压缩/展开一般的参数列表，使用 <code>*args</code> 的形式仅仅是一种惯例。</p>
+<ul>
+<li><code>**kwargs</code> 与 <code>*args</code> 的行为类似，但用于关键字参数而非位置参数。如果在函数的形参列表中使用 <code>**kwargs</code> ，它会收集函数收到的所有额外关键字参数，放入一个字典中。如果用于函数的实参列表，它会将一个字典展开为一系列的关键字参数。</li>
+</ul>
+<hr />
+<div class="highlight"><pre><span class="k">def</span> <span class="nf">funtion_with_many_keyword_args</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">print</span> <span class="n">kwargs</span>
+
+<span class="n">function_with_many_keyword_args</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="s">&#39;apples&#39;</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="s">&#39;bananas&#39;</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s">&#39;cantalopes&#39;</span><span class="p">)</span>
+<span class="c"># &gt;&gt; {&#39;a&#39;:&#39;apples&#39;, &#39;b&#39;:&#39;bananas&#39;, &#39;c&#39;:&#39;cantalopes&#39;}</span>
+</pre></div>
+
+
+<hr />
+<div class="highlight"><pre><span class="k">def</span> <span class="nf">multiply_name</span><span class="p">(</span><span class="n">count</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span>
+    <span class="k">print</span> <span class="n">name</span> <span class="o">*</span> <span class="n">count</span>
+
+<span class="n">arg_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;count&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;Brian&#39;</span><span class="p">}</span>
+
+<span class="n">multiply_name</span><span class="p">(</span><span class="o">**</span><span class="n">arg_dict</span><span class="p">)</span>
+<span class="c"># &gt;&gt; BrianBrianBrian</span>
+</pre></div>
+
+
+<p>既然你理解了 <code>*args</code> 与 <code>**kwargs</code> 的工作原理，那么我们就继续研究一个你会发现很有用的装饰器。</p>
+<h2>缓存制表（Memoization）</h2>
+<p>缓存制表是避免潜在的昂贵的重复计算的一种方法，通过缓存函数每次执行的结果来实现。这样，下一次函数以相同的参数执行，就可以从缓存中获取返回结果，不需要再次计算结果。</p>
+<div class="highlight"><pre><span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
+
+<span class="k">def</span> <span class="nf">memoize</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="n">cache</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">args</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cache</span><span class="p">:</span>
+            <span class="n">cache</span><span class="p">[</span><span class="n">args</span><span class="p">]</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cache</span><span class="p">[</span><span class="n">args</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">wrapper</span>
+
+<span class="nd">@memoize</span>
+<span class="k">def</span> <span class="nf">an_expensive_function</span><span class="p">(</span><span class="n">arg1</span><span class="p">,</span> <span class="n">arg2</span><span class="p">,</span> <span class="n">arg3</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+
+
+<p>你可能注意到了示例代码中一个奇怪的 <code>@wraps</code> 装饰器。在完整地讨论 <code>memoize</code>
+之前我将简要地解释这个装饰器。</p>
+<ul>
+<li>使用装饰器的一个副作用是被包装的函数失去了本来有的 <code>__name__</code> ， <code>__doc__</code> ， 以及 <code>__module__</code> 属性。 <code>wraps</code> 函数是一个包装另一个装饰器返回的函数的装饰器，将那三个属性的值恢复为函数未装饰之时的值。例如： 如果不使用 <code>wraps</code> 装饰器， <code>an_expensive_function</code> 的名字（通过 <code>an_expensive_function.__name__</code> 可以看到）将是 'wrapper' 。</li>
+</ul>
+<p>我认为 <code>memoize</code> 是一个很好的装饰器用例。它服务于一个很多函数都需要的目的，通过将它创建为一个通用装饰器，我们可以将它的功能应用于任一能够从其中获益的函数。这就避免了在多种不同的场合重复实现这个功能。因为不需要重复自己，所以我们的代码更容易维护，并且更容易阅读和理解。只要读一个单词你就能立刻理解函数使用了缓存制表。</p>
+<p>需要提醒的是：缓存制表仅适用于纯函数。也就是说给定一个特定的参数设置，函数确定总会产生相同的结果。如果函数依赖于不作为参数传递的全局变量、I/O、或者其它任意可能影响返回值的东西，缓存制表会产生令人迷惑的结果！并且，一个纯函数不会有任何副作用。因此，如果你的函数会增大一个计数器，或者调用另一个对象的方法，或者其它任意不在函数的返回结果中表示的东西，当结果是从缓存中返回时，副作用操作并不会得到执行。</p>
+<h2>类的装饰器</h2>
+<p>最初，我们说装饰器是一个修改另一个函数的函数，但其实它们可以用于修改类或者方法。对类进行装饰并不常见，但某些情况下作为元类(metaclass)的一个替代，类的装饰器是一个有用的工具。</p>
+<div class="highlight"><pre><span class="n">foo</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;important&#39;</span><span class="p">,</span> <span class="s">&#39;foo&#39;</span><span class="p">,</span> <span class="s">&#39;stuff&#39;</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">add_foo</span><span class="p">(</span><span class="n">klass</span><span class="p">):</span>
+    <span class="n">klass</span><span class="o">.</span><span class="n">foo</span> <span class="o">=</span> <span class="n">foo</span>
+    <span class="k">return</span> <span class="n">klass</span>
+
+
+<span class="nd">@add_foo</span>
+<span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="n">brian</span> <span class="o">=</span> <span class="n">Person</span><span class="p">()</span>
+
+<span class="k">print</span> <span class="n">brian</span><span class="o">.</span><span class="n">foo</span>
+<span class="c"># &gt;&gt; [&#39;important&#39;, &#39;foo&#39;, &#39;stuff&#39;]</span>
+</pre></div>
+
+
+<p>现在，类 <code>Person</code> 的任一对象都有一个超级重要的 <code>foo</code>
+属性！注意，因为我们装饰的是一个类，所以装饰器返回的不是一个函数，而是一个类。更新一下装饰器的定义：</p>
+<blockquote>
+<p>装饰器是一个修改函数、或方法、或类的函数。</p>
+</blockquote>
+<h2>装饰器类</h2>
+<p>事实证明我早先对你隐瞒了一些其它事情。不仅装饰器可以装饰一个类，并且装饰器也可以是一个类！对于装饰器的唯一要求就是它的返回值必须可调用(callable)。这意味着装饰器必须实现 <code>__call__</code> 魔术方法，当你调用一个对象时，会隐式调用这个方法。函数当然是隐式设置这个方法的。我们重新将 <code>identity_decorator</code> 创建为一个类来看看它是如何工作的。</p>
+<div class="highlight"><pre><span class="k">class</span> <span class="nc">IdentityDecorator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">()</span>
+
+
+<span class="nd">@IdentityDecorator</span>
+<span class="k">def</span> <span class="nf">a_function</span><span class="p">():</span>
+    <span class="k">print</span> <span class="s">&quot;I&#39;m a normal function.&quot;</span>
+
+<span class="n">a_function</span><span class="p">()</span>
+<span class="c"># &gt;&gt; I&#39;m a normal function.</span>
+</pre></div>
+
+
+<p>如下是上例中发生的事情：</p>
+<ul>
+<li>
+<p>当 <code>IdentityDecorator</code> 装饰 <code>a_function</code> 时，它的行为就和装饰器函数一样。这个代码片段等价于上例中的装饰器语法： <code>a_function = IdentityDecorator(a_function)</code> 。调用（实例化）该装饰器类时，需将其装饰的函数作为一个实参传递给它。</p>
+</li>
+<li>
+<p>实例化 <code>IdentityDecorator</code> 之时，会以被装饰的函数作为实参调用初始化函数 <code>__init__</code> 。本例中，初始化函数所做的事情就是将被装饰函数赋值给一个属性，这样之后就可以通过其它方法进行调用。</p>
+</li>
+<li>
+<p>最后，调用 <code>a_function</code> （实际上是返回的包装了 <code>a_function</code> 的 <code>IdentityDecorator</code> 对象）之时，会调用对象的 <code>__call__</code> 方法。这仅是一个同一性装饰器，所以方法只是简单地调用了该类所装饰的函数。</p>
+</li>
+</ul>
+<p>再次更新一下我们对装饰器的定义！</p>
+<blockquote>
+<p>装饰器是一个修改函数、方法或者类的可调用对象。</p>
+</blockquote>
+<h2>带参数的装饰器</h2>
+<p>有时，需要根据不同的情况改变装饰器的行为。你可以通过传参来做到这一点。</p>
+<div class="highlight"><pre><span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
+
+<span class="k">def</span> <span class="nf">argumentative_decorator</span><span class="p">(</span><span class="n">gift</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">func_wrapper</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+        <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">returned_wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">arg</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+             <span class="k">print</span> <span class="s">&quot;I don&#39;t like this &quot;</span> <span class="o">+</span> <span class="n">gift</span> <span class="o">+</span> <span class="s">&quot;you gave me!&quot;</span>
+             <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">gift</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">returned_wrapper</span>
+    <span class="k">return</span> <span class="n">func_wrapper</span>
+
+<span class="nd">@argumentative_decorator</span><span class="p">(</span><span class="s">&quot;sweater&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">grateful_function</span><span class="p">(</span><span class="n">gift</span><span class="p">):</span>
+    <span class="k">print</span> <span class="s">&quot;I love the &quot;</span> <span class="o">+</span> <span class="n">gift</span> <span class="o">+</span> <span class="s">&quot;!Thank you!&quot;</span>
+
+<span class="n">grateful_function</span><span class="p">()</span>
+<span class="c"># &gt;&gt; I don&#39;t like this sweater you gave me!</span>
+<span class="c"># &gt;&gt; I love the sweater! Thank you!</span>
+</pre></div>
+
+
+<p>我们来看看如果不使用装饰器语法这个装饰器函数是如何工作的：</p>
+<div class="highlight"><pre><span class="c"># If we tried to invoke without an argument:</span>
+<span class="n">grateful_function</span> <span class="o">=</span> <span class="n">argumentative_function</span><span class="p">(</span><span class="n">grateful_function</span><span class="p">)</span>
+
+<span class="c"># But when given an argument, the pattern changes to:</span>
+<span class="n">grateful_function</span> <span class="o">=</span> <span class="n">argumentative_decorator</span><span class="p">(</span><span class="s">&quot;sweater&quot;</span><span class="p">)(</span><span class="n">grateful_function</span><span class="p">)</span>
+</pre></div>
+
+
+<p>需要注意的地方是：当给定参数，首先仅以那些参数调用装饰器---被包装的函数并不在参数中。装饰器调用返回后，装饰器要包装的函数被传递给装饰器初始调用返回的函数（本例中，为 <code>argumentative_decorator("sweater")</code> 的返回值）。</p>
+<p>逐步地：</p>
+<ol>
+<li>解释器到达被装饰函数之处，编译 <code>grateful_function</code> ，并将其绑定到名字'grateful_function'。</li>
+<li>传递参数"sweater"调用 <code>argumentative_decorator</code> ，返回 <code>func_wrapper</code> 。</li>
+<li>以 <code>grateful_function</code> 为参调用 <code>func_wrapper</code> ，返回 <code>returned_wrapper</code> 。</li>
+<li>最后， <code>returned_wrapper</code> 取代原来的函数 <code>grateful_function</code> ，并绑定到名字'grateful_function' 。</li>
+</ol>
+<p>我想这一过程相比没有装饰器参数理解起来更难一点，但是如果你花些时间将其理解通透，我希望是有意义的。</p>
+<h2>带可选参数的装饰器</h2>
+<p>有多种方式让装饰器接受可选参数。根据你是想使用位置参数、关键字参数还是两者皆是，需要使用稍微不同的模式。如下我将展示一种接受一个可选关键字参数的方式：</p>
+<div class="highlight"><pre><span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
+
+<span class="n">GLOBAL_NAME</span> <span class="o">=</span> <span class="s">&quot;Brian&quot;</span>
+
+<span class="k">def</span> <span class="nf">print_name</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">GLOBAL_NAME</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">actual_decorator</span><span class="p">(</span><span class="n">function</span><span class="p">):</span>
+        <span class="nd">@wraps</span><span class="p">(</span><span class="n">function</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">returned_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">print</span> <span class="s">&quot;My name is &quot;</span> <span class="o">+</span> <span class="n">name</span>
+            <span class="k">return</span> <span class="n">function</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">returned_func</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">function</span><span class="p">:</span>    <span class="c"># User passed in a name argument</span>
+        <span class="k">def</span> <span class="nf">waiting_for_func</span><span class="p">(</span><span class="n">function</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">actual_decorator</span><span class="p">(</span><span class="n">function</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">waiting_for_func</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">actual_decorator</span><span class="p">(</span><span class="n">function</span><span class="p">)</span>
+
+<span class="nd">@print_name</span>
+<span class="k">def</span> <span class="nf">a_function</span><span class="p">():</span>
+    <span class="k">print</span> <span class="s">&quot;I like the name!&quot;</span>
+
+<span class="nd">@print_name</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;Matt&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">another_function</span><span class="p">():</span>
+    <span class="k">print</span> <span class="s">&quot;Hey, that&#39;s new!&quot;</span>
+
+<span class="n">a_function</span><span class="p">()</span>
+<span class="c"># &gt;&gt; My name is Brian</span>
+<span class="c"># &gt;&gt; I like that name!</span>
+
+<span class="n">another_function</span><span class="p">()</span>
+<span class="c"># &gt;&gt; My name is Matt</span>
+<span class="c"># &gt;&gt; Hey, that&#39;s new!</span>
+</pre></div>
+
+
+<p>如果我们传递关键字参数 <code>name</code> 给 <code>print_name</code>
+，那么它的行为就与前一个例子中的 <code>argumentative_decorator</code> 相似。即，首先以
+<code>name</code> 为参调用 <code>print_name</code> 。然后，将待包装的函数传递给首次调用返回的函数。</p>
+<p>如果我们没有提供 <code>name</code> 实参， <code>print_name</code> 的行为就与前面我们看到的不带参数的装饰器一样。装饰器仅以待包装的函数作为唯一的参数进行调用。</p>
+<p><code>print_name</code>
+支持两种可能性。它会检查是否收到作为参数的被包装函数。如果没有，则返回函数
+<code>waiting_for_func</code>
+，该函数可以被包装函数作为参数进行调用。如果收到被包装函数作为参数，则跳过中间步骤，直接调用 <code>actual_decorator</code> 。</p>
+<h2>串接装饰器</h2>
+<p>现在来探索一下今天要讲的最后一个装饰器的特性：串接。你可以在任意给定的函数之上堆叠使用多个装饰器， 这种构建函数的方式与使用多重继承构建类相类似。不过最好不要疯狂使用这种特性。</p>
+<div class="highlight"><pre><span class="nd">@print_name</span><span class="p">(</span><span class="s">&#39;Sam&#39;</span><span class="p">)</span>
+<span class="nd">@logging_decorator</span>
+<span class="k">def</span> <span class="nf">some_function</span><span class="p">():</span>
+    <span class="k">print</span> <span class="s">&quot;I&#39;m the wrapped function!&quot;</span>
+
+<span class="n">some_function</span><span class="p">()</span>
+<span class="c"># &gt;&gt; My name is Sam</span>
+<span class="c"># &gt;&gt; The function I modify has been called 1 time(s).</span>
+<span class="c"># &gt;&gt; I&#39;m the wrapped function!</span>
+</pre></div>
+
+
+<p>当你串接使用装饰器时，它们堆叠的顺序是自底向上的。将被包装的函数 <code>some_function</code> 经编译后传递给它之上的第一个装饰器（ <code>logging_decorator</code> ）。然后第一个装饰器的返回值被传递给第二个装饰器。依此逐个应用链上每个装饰器。</p>
+<p>因为我们使用的两个装饰器都是 <code>print</code>
+一个值，然后执行传递给它们的函数，这意味着当调用被包装函数时，链中的最后一个装饰器 <code>print_name</code> 打印输出中的第一行。</p>
+<h2>总结</h2>
+<p>我认为装饰器最大的好处之一在于让你能够从更高的抽象层次进行思考。假如你开始阅读一个函数定义，看到有一个 <code>memoize</code> 装饰器，你立刻就能明白你正在看的是一个使用缓存制表的函数。如果缓存制表的代码包含在函数体内，就会需要额外的脑力进行解析，并且会有引入误解的可能。使用装饰器也允许代码复用，从而节省时间、简化调试，并且使得重构更加容易。</p>
+<p>玩玩装饰器也是一种很好的学习函数式概念（如高阶函数与闭包）的方式。</p>
+<p>我希望本文阅读起来很愉快，并且内容翔实。</p>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2013/01/04/Decorators-and-Functional-Python/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+
+
+        </div><!-- /.eleven.columns -->
+        
+<div class="three columns">
+
+<!--
+<h4>Pages</h4>
+
+ <ul>
+      <li><a href="../../../../pages/aboutme.html">关于我</a></li>
+      <li><a href="../../../../pages/tools.html">工具集</a></li>
+  </ul>
+-->
+
+<h4>分类</h4>
+<ul>
+		<li><a href="../../../../category/qi-ta.html">其他</a></li>
+</ul>
+
+
+<h4>标签</h4>
+	<ul>
+	    <li class="tag-4"><a href="../../../../tag/pypi.html">PyPI</a></li>
+	    <li class="tag-3"><a href="../../../../tag/shi-ge.html">诗歌</a></li>
+	    <li class="tag-1"><a href="../../../../tag/python.html">Python</a></li>
+	    <li class="tag-2"><a href="../../../../tag/bi-ji.html">笔记</a></li>
+	    <li class="tag-4"><a href="../../../../tag/shu-ju-ku.html">数据库</a></li>
+	    <li class="tag-4"><a href="../../../../tag/yue-du.html">阅读</a></li>
+	    <li class="tag-4"><a href="../../../../tag/teng-xun.html">腾讯</a></li>
+	    <li class="tag-2"><a href="../../../../tag/bi-shi.html">笔试</a></li>
+	    <li class="tag-3"><a href="../../../../tag/mian-shi.html">面试</a></li>
+	    <li class="tag-2"><a href="../../../../tag/ji-zhu.html">技术</a></li>
+	    <li class="tag-2"><a href="../../../../tag/php.html">PHP</a></li>
+	    <li class="tag-4"><a href="../../../../tag/haproxy.html">HAProxy</a></li>
+	    <li class="tag-4"><a href="../../../../tag/diao-shi.html">调试</a></li>
+	    <li class="tag-2"><a href="../../../../tag/ming-ling-xing.html">命令行</a></li>
+	    <li class="tag-4"><a href="../../../../tag/wen-zi.html">文字</a></li>
+	    <li class="tag-2"><a href="../../../../tag/shell.html">Shell</a></li>
+	    <li class="tag-2"><a href="../../../../tag/javascript.html">JavaScript</a></li>
+	    <li class="tag-4"><a href="../../../../tag/haproxyconsole.html">HAProxyConsole</a></li>
+	    <li class="tag-2"><a href="../../../../tag/gong-ju.html">工具</a></li>
+	    <li class="tag-4"><a href="../../../../tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
+	    <li class="tag-4"><a href="../../../../tag/bind.html">BIND</a></li>
+	    <li class="tag-4"><a href="../../../../tag/fu-zai-jun-heng.html">负载均衡</a></li>
+	    <li class="tag-4"><a href="../../../../tag/keepalived.html">Keepalived</a></li>
+	    <li class="tag-4"><a href="../../../../tag/vmware.html">VMware</a></li>
+	    <li class="tag-4"><a href="../../../../tag/gao-ke-yong.html">高可用</a></li>
+	    <li class="tag-3"><a href="../../../../tag/suan-fa.html">算法</a></li>
+	    <li class="tag-1"><a href="../../../../tag/fan-yi.html">翻译</a></li>
+	    <li class="tag-4"><a href="../../../../tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
+	    <li class="tag-2"><a href="../../../../tag/git.html">Git</a></li>
+	    <li class="tag-4"><a href="../../../../tag/sheng-huo.html">生活</a></li>
+	    <li class="tag-1"><a href="../../../../tag/linux.html">Linux</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ban-ben-kong-zhi.html">版本控制</a></li>
+	    <li class="tag-3"><a href="../../../../tag/nginx.html">Nginx</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ying-yu.html">英语</a></li>
+	    <li class="tag-4"><a href="../../../../tag/golang.html">Golang</a></li>
+	    <li class="tag-4"><a href="../../../../tag/bing-xing.html">并行</a></li>
+	    <li class="tag-4"><a href="../../../../tag/jekyll.html">jekyll</a></li>
+	    <li class="tag-4"><a href="../../../../tag/python-weekly.html">python-weekly</a></li>
+	    <li class="tag-4"><a href="../../../../tag/jia-gou.html">架构</a></li>
+	    <li class="tag-4"><a href="../../../../tag/easy_install.html">easy_install</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ssl.html">ssl</a></li>
+	    <li class="tag-4"><a href="../../../../tag/zi-sheng.html">自省</a></li>
+	    <li class="tag-3"><a href="../../../../tag/xue-xi-fang-fa.html">学习方法</a></li>
+	    <li class="tag-2"><a href="../../../../tag/zong-jie.html">总结</a></li>
+	    <li class="tag-4"><a href="../../../../tag/zi-ti.html">字体</a></li>
+	    <li class="tag-4"><a href="../../../../tag/cc.html">C/C++</a></li>
+	    <li class="tag-3"><a href="../../../../tag/mysql.html">MySQL</a></li>
+	    <li class="tag-2"><a href="../../../../tag/gong-zuo.html">工作</a></li>
+	    <li class="tag-4"><a href="../../../../tag/wei-xin.html">微信</a></li>
+	    <li class="tag-4"><a href="../../../../tag/gan-wu.html">感悟</a></li>
+	    <li class="tag-4"><a href="../../../../tag/pip.html">pip</a></li>
+	    <li class="tag-2"><a href="../../../../tag/fu-wu-qi.html">服务器</a></li>
+	    <li class="tag-4"><a href="../../../../tag/github.html">github</a></li>
+	    <li class="tag-4"><a href="../../../../tag/dns.html">DNS</a></li>
+	    <li class="tag-4"><a href="../../../../tag/li-lun.html">理论</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ming-ling.html">命令</a></li>
+</ul>
+
+
+<nav class="widget">
+  <h4>链接</h4>
+  <ul>
+    <li><a href="http://getpelican.com/">Pelican</a></li>
+    <li><a href="http://www.explainshell.com/">explainshell</a></li>
+    <li><a href="https://www.byvoid.com/">BYVoid</a></li>
+    <li><a href="http://coolshell.cn/">酷壳</a></li>
+    <li><a href="http://huoding.com/">火丁笔记</a></li>
+    <li><a href="http://yuguo.us/">余果</a></li>
+    <li><a href="http://www.latexstudio.net/">LaTeX工作室</a></li>
+    <li><a href="http://www.luanxiang.org/blog/">乱象, 印迹</a></li>
+    <li><a href="http://www.soimort.org/">夏の航海士</a></li>
+    <li><a href="http://qinxuye.me/">残阳似血</a></li>
+    <li><a href="http://www.huangz.me/en/latest/index.html">Right Track Wrong Train</a></li>
+    <li><a href="http://www.wzxue.com/">麦子麦</a></li>
+    <li><a href="http://www.quora.com/">Quora</a></li>
+    <li><a href="http://noops.me/">NoOps</a></li>
+    <li><a href="http://xiao-jia.com/">Jia Xiao</a></li>
+    <li><a href="http://dirlt.com/">章炎的主页</a></li>
+    <li><a href="http://highscalability.com/">High Scalability</a></li>
+    <li><a href="http://hackermonthly.com/">Hacker Monthly</a></li>
+    <li><a href="http://www.itkoala.com/)(海量运维、运营规划">itkoala</a></li>
+  </ul>
+</nav>
+
+</div> </div><!-- /.row -->
+
+
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+    
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+
+</body>
+</html>

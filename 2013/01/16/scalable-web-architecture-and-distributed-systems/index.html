@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>可扩展的Web架构与分布式系统（译）</title>
+        <meta charset="utf-8" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+
+
+
+
+
+</head>
+
+<body id="index" class="home">
+
+
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="../../../..">黑 * 白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+             
+              <ul class="columns">
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="../../../../pages/aboutme.html">关于我</a></li>
+                <li><a href="../../../../pages/tools.html">工具集</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+
+   <div class="row">
+        <div class="eleven columns">
+
+
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2013/01/16/scalable-web-architecture-and-distributed-systems/" rel="bookmark"
+                   title="Permalink to 可扩展的Web架构与分布式系统（译）">可扩展的Web架构与分布式系统（译）</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2013-01-16T00:00:00">
+                2013-01-16 周三
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>原文：<a href="http://www.aosabook.org/en/distsys.html">Scalable Web Architecture and Distributed Systems</a></p>
+<p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
+<p>开源软件已成为一些最大型网站的基础组件。并且随着那些网站的发展，围绕它们的架构出现了一些最佳实践与指导性原则。本章尝试阐述设计大型网站需要考虑的一些关键问题，以及一些实现这些目标的组件。</p>
+<p>本章主要侧重于Web系统，虽然其中一些内容也适用于其它分布式系统。</p>
+<h2>Web分布式系统设计原则</h2>
+<p>构建和运维一个可扩展Web站点或者应用到底意味着什么？说到底这种系统只不过是通过互联网将用户与远程资源相连接---使其可扩展的是分布于多个服务器的资源，或者对这些资源的访问。</p>
+<p>类似于生活中的大多数东西，从长远来说，构建一个web服务之前花些时间提前规划是很有帮助的。理解大型网站背后一些需要考虑的因素与权衡取舍，在创建小一些的web站点时能让你作出更明智的决策。以下是影响大规模web系统设计的一些核心原则：</p>
+<ul>
+<li>
+<p><strong>可用性：</strong>
+一个网站的正常运行时间对于许多公司的声誉与运作都是至关重要的。对于一些更大的在线零售站点，几分钟的不可用都会造成数千或数百万美元的营收损失，因此系统设计得能够持续服务，并且能迅速从故障中恢复是技术和业务的最基本要求。分布式系统中的高可用性需要仔细考虑关键部件的冗余，从部分系统故障中迅速恢复，以及问题发生时优雅降级。</p>
+</li>
+<li>
+<p><strong>性能：</strong>
+对于多数站点而言，网站的性能已成为一个重要的考虑因素。网站的速度影响着使用和用户满意度，以及搜索引擎排名，与营收和是否能留住用户直接相关。因此，创建一个针对快速响应与低延迟进行优化的系统非常重要。</p>
+</li>
+<li>
+<p><strong>可靠性：</strong>
+系统必须是可靠的，这样相同数据请求才会始终返回相同的数据。数据变换或更新之后，同样的请求则应该返回新的数据。用户应该知道一点：如果东西写入了系统，或者得到存储，那么它会持久化并且肯定保持不变以便将来进行检索。</p>
+</li>
+<li>
+<p><strong>可扩展性：</strong>
+对于任何大型分布式系统而言，大小(size)只是需要考虑的规模(scale)问题的一个方面。同样重要的是努力去提高处理更大负载的能力，这通常被称为系统的可扩展性。可扩展性以系统的许多不同参数为参考：能够处理多少额外流量？增加存储容量有多容易？能够处理多少更多的事务？</p>
+</li>
+<li>
+<p><strong>可管理性：</strong>
+系统设计得易于运维是另一个重要的考虑因素。系统的可管理性等价于运维（维护和更新）的可扩展性。对于可管理性需要考虑的是：问题发生时易于诊断与理解，便于更新或修改，系统运维起来如何简单（例如：常规运维是否不会引发失败或异常？）</p>
+</li>
+<li>
+<p><strong>成本：</strong>
+成本是一个重要因素。很明显这包括硬件和软件成本，但也要考虑系统部署和维护这一方面。系统构建所花费的开发者时间，系统运行所需要的运维工作量，以及培训工作都应该考虑进去。成本是拥有系统的总成本。</p>
+</li>
+</ul>
+<p>这些原则中的每一个都为设计分布式web架构提供了决策依据。然而，它们之间也会相互不一致，这样实现一个目标的代价是牺牲另一个目标。一个基本的例子：简单地通过增加更多的服务器（可扩展性）来解决容量问题是以可管理性（你需要运维额外的一台服务器）和成本（服务器的价钱）为代价的。</p>
+<p>设计任何一种web应用，考虑这些核心原则都是非常重要的，即使明知某个设计也许会牺牲其中的一个或多个原则。</p>
+<h2>1.2. 基础概念</h2>
+<p>说到系统架构，需要考虑几个事情：什么是合适的部件，这些部件如何组合在一起，以及什么是正确的权衡取舍。在需要之前扩大投资通常不是一种明智的商业主张;然而，在设计上的一些远见在将来能够节省大量的时间和资源。</p>
+<p>本节主要阐述对于几乎所有大型web应用来说都是非常重要的一些核心因素：<em>服务</em>，<em>冗余</em>， <em>分区</em>， 以及<em>故障处理</em>。这些因素中的每一个都涉及选择与折中，特别是在上一节所描述的那些原则的上下文中。为了详细地解释这些东西，最好是从一个例子开始。</p>
+<h3><strong>例子：图片托管应用</strong></h3>
+<p>可能在以前的某个时候，你在网上张贴过图片。对于托管和提供大量图片的大网站来说，构建一个性价比高、高可用、以及低延迟（快速检索）的架构是存在诸多挑战的。</p>
+<p>想象存在这样一个系统，用户可以上传图片到中央服务器，也可以通过web链接或者API请求图片，就像Flickr或Picasa一样。为了简单起见，我们假设这个应用有两个关键部分：上传（写）图片到服务器和查询图片。当然我们希望图片上传很高效，同时我们非常关注当有人请求一张图片时（例如，网页或者其他应用请求图片），系统能够快速地交付。这非常类似于web服务器或内容分发网络（CDN）边缘服务器（CDN将这种服务器用于在多个地方存储内容，这样内容就在地理/物理距离上更接近用户，从而更加快速）提供的功能。</p>
+<p>系统的另一些重要方面有：</p>
+<ul>
+<li>
+<p>对于将要存储的图片数量没有限制，因此需要考虑存储的可扩展性。</p>
+</li>
+<li>
+<p>图片下载/请求的延迟要低。</p>
+</li>
+<li>
+<p>如果用户上传了某张图片，那么这张图片就得一直存在（图片数据的可靠性）。</p>
+</li>
+<li>
+<p>系统应该易于维护（可管理性）。</p>
+</li>
+<li>
+<p>由于图片托管的利润空间不大，所以系统应有较高的性价比。</p>
+</li>
+</ul>
+<p>图1.1是系统的一张功能简化图。</p>
+<p><img src ="/assets/uploads/pics/imageHosting1.jpg" alt="imageHosting1.jpg">
+<center>图1.1：图片托管应用的简化架构图</center></p>
+<p>在这个图片托管例子中，系统必须明显地快速，数据存储可靠，并且所有这些属性高度可扩展。构建该应用的一个小型版本轻而易举，也很容易搭载在单个服务器上；然而，那样本章就没多大意思了。假设我们想构建一个能够发展得和Flickr一样庞大的应用。</p>
+<h3><strong>服务</strong></h3>
+<p>考虑可扩展的系统设计时，对功能进行解耦，然后将系统的每一部分看作能够自己提供服务，并具备明确定义的接口。实践中，人们评价以这种方式设计的系统具备面向服务器的架构（SOA）。对这类系统来说，每个服务都有自己截然不同的功能上下文，并通过一个抽象接口与该上下文之外的一切（通常是另一个服务公开的API）进行交互。</p>
+<p>将系统解构为一组相互补充的服务也就将不同组件的操作进行解耦。这种抽象有助于在服务、底层环境以及服务的消费者之间建立清晰的关系。这样明确的划分有助于隔离问题，也允许每个组件独立于其他组件进行扩展。这类面向服务的系统设计非常类似于程序设计的面向对象设计。</p>
+<p>在我们的例子中，所有上传和检索图片的请求都是在同一个服务器上处理的；然而，将这两个功能分割成两个独立的服务在系统需要扩展时非常有意义。</p>
+<p>现在假设该服务被大量使用；这种情况下很容易看到写操作对读取图片所花时间的影响有多大（因为这两个功能将竞争共享资源）。依赖于这种架构，这个影响会很大。即使上传和下载速度相同（多数IP网络不是这样的，而是以下载速度：上传速度为3：1的比例进行设计），文件读取操作通常是从缓存中读，而写操作最终是要写道磁盘（在最终一致的情况下，也许还要多次写）。即使所有东西都在内存中或者都从磁盘上读取（如SSD），数据库写操作几乎总是比读操作慢。（Pole Position，一个数据库基准测试的开源工具，<a href="http://polepos.org/">http://polepos.org/</a>，测试结果见<a href="http://polepos.sourceforge.net/results/PolePositionClientServer.pdf">http://polepos.sourceforge.net/results/PolePositionClientServer.pdf</a>）。</p>
+<p>该设计的另一个潜在问题是像Apache或lighttpd这样的web服务器通常有可以维持的并发连接数量的上限（默认值为500左右，但可以更高）。在高流量下，写操作会迅速消耗完允许的并发连接数。由于读操作可以是异步的，或借助于其他性能优化方法，如gzip压缩或分块传输编码，web服务器可以在读操作之间更快速地切换服务，以及在客户端之间快速切换从而能够在每秒内服务于比连接最大值（使用Apache，将最大连接数设置为500，每秒服务数千个读操作请求并不罕见）更多的请求。另一方面，写操作倾向于在图片上传期间维持一个打开的连接，在多数家庭网络中，上传一个1MB的文件需要花费多于1秒的时间，这样web服务器仅可以处理500个这样的并发写操作。
+<img src ="/assets/uploads/pics/imageHosting2.png" alt="imageHosting2.png">
+<center>图1.2：切分读写操作</center></p>
+<p>为这类瓶颈做规划是将图片的读写操作切分成独立服务的一个很好的案例。如图1.2所示。这就允许我们单独地对两者中任意一个做扩展（因为通常读操作总是比写操作多），也有助于厘清每个点上正在发生的事情。最后，这也分离了未来的忧患，从而更易于排解故障和对读操作较慢这类问题进行扩展。</p>
+<p>这种方法的优势在于我们能够将问题独立于其他问题地进行解决---我们无需担心相同上下文中新图片的写操作和检索。这两个服务仍然基于全局图片语料，但可以通过与服务相适应的方法（例如：排队请求，或缓存常用图片---更多相关内容见下文）随意地优化它们的性能。从维护与成本的角度来看，每个服务都可以按需独立地扩展，这一点非常重要，因为如果服务是掺杂混合的，在上述场景中，一个服务会无意地影响另一个服务的性能。</p>
+<p>当然，若你有两个不同的端点，那么上述例子能够工作得很好（事实上这非常类似于多个云存储提供商的实现和内容分发网络）。虽然有很多方法可以解决这类瓶颈，但每个都有不同的权衡折中。</p>
+<p>例如，Flickr通过将用户分散到不同的数据库分片上来解决这个读/写问题，这样每个数据库分片仅能够处理一定数量的用户，并且随着用户的增加，可以添加更多的数据库分片到服务器集群中（见关于Flickr扩展工作的演示文稿：<a href="http://mysqldba.blogspot.com/2008/04/mysql-uc-2007-presentation-file.html">http://mysqldba.blogspot.com/2008/04/mysql-uc-2007-presentation-file.html</a>（墙外））。在第一个例子中，基于实际使用请求，扩展硬件更容易，Flickr则是随着用户群的变化进行扩展（但要求假设在用户之间的使用情况均衡，从而可以添加额外的容量）。对于前者，如果一个服务存在故障或问题，就会削弱整个系统的功能（例如，没人可以写文件），但若Flickr的一个数据库分片存在故障则仅影响使用该分片的用户。第一个例子中，对整个数据集执行操作更方便---例如，更新写操作服务以包含新的元数据或在所有图片元数据上搜索---对于Flickr的架构，需要更新或搜索每个数据库分片（或者需要创建一个搜索服务来整理元数据---事实上它们也这么做了）。</p>
+<p>对于这些系统的讨论并没有正确的答案，但回归到本章开头叙述的原则，确定系统的需求（频繁读或写或两者皆如此，并发级别，查询整个数据集，范围，排序，等等。），基准测试不同的方案选择，理解系统如何会失效，以及准备一个可靠的计划以应对故障的发生是很有用的。</p>
+<h3><strong>冗余</strong></h3>
+<p>为了优雅地处理故障，web架构必须具备冗余的服务和数据。例如，若某文件仅有一个拷贝存储在单个服务器上，那么失去该服务器即意味着失去了该文件。丢失数据很少是件好事，处理该问题的常见方法是创建多个或者说冗余的数据拷贝。</p>
+<p>同样的原则也可应用于服务。如果应用程序的功能有个核心组件，那么确保同时运行多个拷贝或版本能够使系统免于单点故障。</p>
+<p>在系统中创建冗余能够消除可能发生故障的单点，为了灾难恢复提供备份或备用的功能。例如，如果生产中运行着两个相同服务的实例，当其中一个发生故障或功能退化时，系统能够失效<em>失效转移</em>到健全副本。失效备援可以自动发生或者手动介入。</p>
+<p>服务冗余的另一关键部分是创建一个<em>无共享(shared-nothing)的架构</em>。使用这种架构，每个节点的运维工作都能独立于其它节点，也没有中心“大脑”来管理状态或协调节点的行为。这有助于提高可扩展性，因为不需要特殊的条件或了解就能添加新的节点。然而，最重要的是这种系统不会有单点故障，因此对于故障更有弹性。</p>
+<p>例如，在我们的图片服务器应用中，所有的图片都在另一处（理想情况是在不同的地理位置，从而能够应对地震或数据中心发生火灾一类的灾难）的硬件上存放着冗余的拷贝，提供图片访问的服务也是冗余的，均潜在地服务于请求（见图1.3.）（负载均衡器是使其成为可能的一种绝佳方法，将在下文详述）。
+<img src ="/assets/uploads/pics/imageHosting3.png" alt="imageHosting3.png">
+<center>图1.3：具备冗余的图片托管应用</center></p>
+<h3><strong>分区</strong></h3>
+<p>可能会存在非常大的数据集无法存放在单个服务器上。也可能某个操作需要非常多的计算资源，导致性能降低，需要增强计算能力。对于任一情形，你都有两种选择：纵向或横向扩展。</p>
+<p>纵向扩展即对单个服务器添加更多的资源。因此对于一个非常庞大的数据集来说，这意味着增加更多（或更大的）硬盘，从而单个服务器能够容纳下整个数据集。对于计算操作而言，这意味着将计算迁移到具备更快速的CPU或更大的内存空间的更大的服务器上。任一情况，都是使得单个服务器的资源能够自己解决对于更多资源的需求问题，实现纵向扩展。</p>
+<p>另一方面，横向扩展则是添加更多的节点。针对大数据集的情况，这就是使用第二个服务器来存储数据集的一部分，对于计算资源而言，这意味着将操作或负载分割到额外的节点。为了充分利用横向扩展，应将其作为系统架构的一种本质的设计原则，否则为实现横向扩展而修改系统或分割上下文会相当麻烦。</p>
+<p>说到横向扩展，一种更常见的技术是对服务进行分区，或分块。分区可以是分布式的，这样逻辑功能集之间是相互独立的；可以通过地理边界，或其他标准（如非付费用户 VS. 付费用户）来实现。这些方案的优势是可以提供更强的服务或数据存储能力。</p>
+<p>在我们的图片服务器例子中，</p>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2013/01/16/scalable-web-architecture-and-distributed-systems/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+
+
+        </div><!-- /.eleven.columns -->
+        
+<div class="three columns">
+
+<!--
+<h4>Pages</h4>
+
+ <ul>
+      <li><a href="../../../../pages/aboutme.html">关于我</a></li>
+      <li><a href="../../../../pages/tools.html">工具集</a></li>
+  </ul>
+-->
+
+<h4>分类</h4>
+<ul>
+		<li><a href="../../../../category/qi-ta.html">其他</a></li>
+</ul>
+
+
+<h4>标签</h4>
+	<ul>
+	    <li class="tag-4"><a href="../../../../tag/pypi.html">PyPI</a></li>
+	    <li class="tag-3"><a href="../../../../tag/shi-ge.html">诗歌</a></li>
+	    <li class="tag-1"><a href="../../../../tag/python.html">Python</a></li>
+	    <li class="tag-2"><a href="../../../../tag/bi-ji.html">笔记</a></li>
+	    <li class="tag-4"><a href="../../../../tag/shu-ju-ku.html">数据库</a></li>
+	    <li class="tag-4"><a href="../../../../tag/yue-du.html">阅读</a></li>
+	    <li class="tag-4"><a href="../../../../tag/teng-xun.html">腾讯</a></li>
+	    <li class="tag-2"><a href="../../../../tag/bi-shi.html">笔试</a></li>
+	    <li class="tag-3"><a href="../../../../tag/mian-shi.html">面试</a></li>
+	    <li class="tag-2"><a href="../../../../tag/ji-zhu.html">技术</a></li>
+	    <li class="tag-2"><a href="../../../../tag/php.html">PHP</a></li>
+	    <li class="tag-4"><a href="../../../../tag/haproxy.html">HAProxy</a></li>
+	    <li class="tag-4"><a href="../../../../tag/diao-shi.html">调试</a></li>
+	    <li class="tag-2"><a href="../../../../tag/ming-ling-xing.html">命令行</a></li>
+	    <li class="tag-4"><a href="../../../../tag/wen-zi.html">文字</a></li>
+	    <li class="tag-2"><a href="../../../../tag/shell.html">Shell</a></li>
+	    <li class="tag-2"><a href="../../../../tag/javascript.html">JavaScript</a></li>
+	    <li class="tag-4"><a href="../../../../tag/haproxyconsole.html">HAProxyConsole</a></li>
+	    <li class="tag-2"><a href="../../../../tag/gong-ju.html">工具</a></li>
+	    <li class="tag-4"><a href="../../../../tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
+	    <li class="tag-4"><a href="../../../../tag/bind.html">BIND</a></li>
+	    <li class="tag-4"><a href="../../../../tag/fu-zai-jun-heng.html">负载均衡</a></li>
+	    <li class="tag-4"><a href="../../../../tag/keepalived.html">Keepalived</a></li>
+	    <li class="tag-4"><a href="../../../../tag/vmware.html">VMware</a></li>
+	    <li class="tag-4"><a href="../../../../tag/gao-ke-yong.html">高可用</a></li>
+	    <li class="tag-3"><a href="../../../../tag/suan-fa.html">算法</a></li>
+	    <li class="tag-1"><a href="../../../../tag/fan-yi.html">翻译</a></li>
+	    <li class="tag-4"><a href="../../../../tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
+	    <li class="tag-2"><a href="../../../../tag/git.html">Git</a></li>
+	    <li class="tag-4"><a href="../../../../tag/sheng-huo.html">生活</a></li>
+	    <li class="tag-1"><a href="../../../../tag/linux.html">Linux</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ban-ben-kong-zhi.html">版本控制</a></li>
+	    <li class="tag-3"><a href="../../../../tag/nginx.html">Nginx</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ying-yu.html">英语</a></li>
+	    <li class="tag-4"><a href="../../../../tag/golang.html">Golang</a></li>
+	    <li class="tag-4"><a href="../../../../tag/bing-xing.html">并行</a></li>
+	    <li class="tag-4"><a href="../../../../tag/jekyll.html">jekyll</a></li>
+	    <li class="tag-4"><a href="../../../../tag/python-weekly.html">python-weekly</a></li>
+	    <li class="tag-4"><a href="../../../../tag/jia-gou.html">架构</a></li>
+	    <li class="tag-4"><a href="../../../../tag/easy_install.html">easy_install</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ssl.html">ssl</a></li>
+	    <li class="tag-4"><a href="../../../../tag/zi-sheng.html">自省</a></li>
+	    <li class="tag-3"><a href="../../../../tag/xue-xi-fang-fa.html">学习方法</a></li>
+	    <li class="tag-2"><a href="../../../../tag/zong-jie.html">总结</a></li>
+	    <li class="tag-4"><a href="../../../../tag/zi-ti.html">字体</a></li>
+	    <li class="tag-4"><a href="../../../../tag/cc.html">C/C++</a></li>
+	    <li class="tag-3"><a href="../../../../tag/mysql.html">MySQL</a></li>
+	    <li class="tag-2"><a href="../../../../tag/gong-zuo.html">工作</a></li>
+	    <li class="tag-4"><a href="../../../../tag/wei-xin.html">微信</a></li>
+	    <li class="tag-4"><a href="../../../../tag/gan-wu.html">感悟</a></li>
+	    <li class="tag-4"><a href="../../../../tag/pip.html">pip</a></li>
+	    <li class="tag-2"><a href="../../../../tag/fu-wu-qi.html">服务器</a></li>
+	    <li class="tag-4"><a href="../../../../tag/github.html">github</a></li>
+	    <li class="tag-4"><a href="../../../../tag/dns.html">DNS</a></li>
+	    <li class="tag-4"><a href="../../../../tag/li-lun.html">理论</a></li>
+	    <li class="tag-4"><a href="../../../../tag/ming-ling.html">命令</a></li>
+</ul>
+
+
+<nav class="widget">
+  <h4>链接</h4>
+  <ul>
+    <li><a href="http://getpelican.com/">Pelican</a></li>
+    <li><a href="http://www.explainshell.com/">explainshell</a></li>
+    <li><a href="https://www.byvoid.com/">BYVoid</a></li>
+    <li><a href="http://coolshell.cn/">酷壳</a></li>
+    <li><a href="http://huoding.com/">火丁笔记</a></li>
+    <li><a href="http://yuguo.us/">余果</a></li>
+    <li><a href="http://www.latexstudio.net/">LaTeX工作室</a></li>
+    <li><a href="http://www.luanxiang.org/blog/">乱象, 印迹</a></li>
+    <li><a href="http://www.soimort.org/">夏の航海士</a></li>
+    <li><a href="http://qinxuye.me/">残阳似血</a></li>
+    <li><a href="http://www.huangz.me/en/latest/index.html">Right Track Wrong Train</a></li>
+    <li><a href="http://www.wzxue.com/">麦子麦</a></li>
+    <li><a href="http://www.quora.com/">Quora</a></li>
+    <li><a href="http://noops.me/">NoOps</a></li>
+    <li><a href="http://xiao-jia.com/">Jia Xiao</a></li>
+    <li><a href="http://dirlt.com/">章炎的主页</a></li>
+    <li><a href="http://highscalability.com/">High Scalability</a></li>
+    <li><a href="http://hackermonthly.com/">Hacker Monthly</a></li>
+    <li><a href="http://www.itkoala.com/)(海量运维、运营规划">itkoala</a></li>
+  </ul>
+</nav>
+
+</div> </div><!-- /.row -->
+
+
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+    
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+
+</body>
+</html>

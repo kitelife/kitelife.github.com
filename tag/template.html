@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 
-        <title>黑 * 白 - Keepalived</title>
+        <title>黑 * 白 - template</title>
         <meta charset="utf-8" />
 
 
@@ -63,44 +63,27 @@
         <div class="eleven columns">
 		         <ol id="post-list">
 				        <li><article class="hentry">
-				                <header> <h2 class="entry-title"><a href="http://youngsterxyf.github.io/2013/10/16/high-availability-load-balancer-and-dns/" rel="bookmark" title="Permalink to 搭建高可用负载均衡组件及缓存DNS">搭建高可用负载均衡组件及缓存DNS</a></h2> </header>
+				                <header> <h2 class="entry-title"><a href="http://youngsterxyf.github.io/2013/11/01/unescape-html-in-golang-html_template/" rel="bookmark" title="Permalink to Golang中如何让html/template不转义html标签">Golang中如何让html/template不转义html标签</a></h2> </header>
 				                <footer class="post-info">
-				                    <abbr class="published" title="2013-10-16T00:00:00"> 2013-10-16 周三 </abbr>
+				                    <abbr class="published" title="2013-11-01T00:00:00"> 2013-11-01 周五 </abbr>
 <address class="vcard author">By <a class="url fn" href="http://youngsterxyf.github.io/author/youngsterxyf.html">youngsterxyf</a></address>				                </footer><!-- /.post-info -->
-				                <div class="entry-content"> <p>该项工作，如题所示，主要分为两部分：高可用负载均衡组件、缓存DNS。</p>
-<h3>高可用负载均衡组件</h3>
-<p>需求：优化业务系统架构中某些关键环节，针对TCP层数据流量进行负载均衡，并保证服务的高可用。</p>
-<p>技术选型：HAProxy + Keepalived，这对组合比较常见成熟。</p>
-<p>另外，由于HAProxy的负载均衡任务可能比较多，靠人工修改配置来增删改任务不方便可靠，所以实现了一个简单的HAProxy管理系统，
-以后经实际使用验证和完善会开放源码。</p>
-<p><img alt="high availability load balancer" src="/assets/uploads/pics/high-availability-load-balancer.png" /></p>
-<h3>缓存DNS</h3>
-<p>先以www.qq.com为例，解释一下域名解析过程：</p>
-<p><img alt="resolve qq.com" src="/assets/uploads/pics/resolve-qq-com.jpg" /></p>
+				                <div class="entry-content"> <p>近期在使用Golang的<a href="http://golang.org/pkg/net/http/">net/http</a>和<a href="http://golang.org/pkg/html/template/">html/template</a>开发一个简单的HAProxy负载均衡任务管理系统（见<a href="http://youngsterxyf.github.io/2013/10/16/high-availability-load-balancer-and-dns/">搭建高可用负载均衡组件及缓存DNS</a>一文说明）。</p>
+<p><a href="http://golang.org/pkg/html/template/">htmp/template</a>在渲染页面模板的时候默认会转义字符串中的html标签，但有时我们并不想转义html标签，以下图所示为例：</p>
+<p><img alt="add_haproxy_balance_task" src="/assets/uploads/pics/haproxy_task_add.jpg" /></p>
+<p><img alt="list_haproxy_balance_task" src="/assets/uploads/pics/haproxy_task_list.jpg" /></p>
+<p>图1中“ip:port列表(一行一个)”和“说明”两个输入框的内容行与行是以<code>\n</code>分隔的；图2中，这两部分内容分别在表格的“后端机器列表”和“说明”两列中展示，但行与行其实是以<code>&lt;br /&gt;</code>分隔的；那么在将数据存入数据库之前或从数据库中取出数据后，会将字符串中的<code>\n</code>替换为<code>&lt;br /&gt;</code>。如果将替换后的数据以字符串类型传入模板，<code>&lt;br /&gt;</code>标签渲染后的效果就是<code>&lt;br /&gt;</code>文本而不是换行。</p>
+<p>有两种方式避免<code>html/template</code>转义html标签：</p>
 <p>1.
-用户向Local DNS发起www.qq.com.查询请求；</p>
-<p>2.
-Local DNS向根服务器发起com.查询请求；</p>
-<p>3.
-根服务器向Local DNS返回com.解析记录；</p>
-<p>4.
-Local DNS向com.权威服务器发起qq.com.查询请求；</p>
-<p>5.
-com.权威服务器向Local DNS返回qq.com.解析记录 ...</p> </div><!-- /.entry-content -->
+把字符串类型数据转换成<code>template ...</code></p> </div><!-- /.entry-content -->
 
-								<div class="medium primary btn"><a href="http://youngsterxyf.github.io/2013/10/16/high-availability-load-balancer-and-dns/" rel="bookmark" title="Permalink to 搭建高可用负载均衡组件及缓存DNS">Read more <i class="icon-arrow-right"></i></a></div>
+								<div class="medium primary btn"><a href="http://youngsterxyf.github.io/2013/11/01/unescape-html-in-golang-html_template/" rel="bookmark" title="Permalink to Golang中如何让html/template不转义html标签">Read more <i class="icon-arrow-right"></i></a></div>
 
 
 
 								<div class="row tag-row">
 										<span>Tagged as : </span>
-											<a class="danger label" href="http://youngsterxyf.github.io/tag/gao-ke-yong.html">高可用</a>
-											<a class="danger label" href="http://youngsterxyf.github.io/tag/fu-zai-jun-heng.html">负载均衡</a>
-											<a class="danger label" href="http://youngsterxyf.github.io/tag/haproxy.html">HAProxy</a>
-											<a class="danger label" href="http://youngsterxyf.github.io/tag/keepalived.html">Keepalived</a>
-											<a class="danger label" href="http://youngsterxyf.github.io/tag/haproxyconsole.html">HAProxyConsole</a>
-											<a class="danger label" href="http://youngsterxyf.github.io/tag/dns.html">DNS</a>
-											<a class="danger label" href="http://youngsterxyf.github.io/tag/bind.html">BIND</a>
+											<a class="danger label" href="http://youngsterxyf.github.io/tag/golang.html">Golang</a>
+											<a class="danger label" href="http://youngsterxyf.github.io/tag/template.html">template</a>
 								</div>
 
 

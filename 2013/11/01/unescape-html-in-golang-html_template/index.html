@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 
-        <title>github pages构建失败问题解决</title>
+        <title>Golang中如何让html/template不转义html标签</title>
         <meta charset="utf-8" />
 
 
@@ -61,63 +61,88 @@
 
             <header>
               <h2 class="entry-title">
-                <a href="http://youngsterxyf.github.io/2013/01/08/fix-github-pages-builds-failed/" rel="bookmark"
-                   title="Permalink to github pages构建失败问题解决">github pages构建失败问题解决</a></h2>
+                <a href="http://youngsterxyf.github.io/2013/11/01/unescape-html-in-golang-html_template/" rel="bookmark"
+                   title="Permalink to Golang中如何让html/template不转义html标签">Golang中如何让html/template不转义html标签</a></h2>
            
             </header>
             <footer class="post-info">
-              <abbr class="published" title="2013-01-08T00:00:00">
-                2013-01-08 周二
+              <abbr class="published" title="2013-11-01T00:00:00">
+                2013-11-01 周五
               </abbr>
               <address class="vcard author">
                 By <a class="url fn" href="http://youngsterxyf.github.io/author/youngsterxyf.html">youngsterxyf</a>
               </address>
             </footer><!-- /.post-info -->
             <div class="entry-content">
-              <p>今天为本博客提交更新后，github
-pages自动构建始终不成功。原以为是新提交中引入了错误，于是按照<a href="/2013/01/08/git-cancel-commits/">Git操作：强制删除提交到远程版本库的数据与版本记录</a>的方法取消了所有的更新，但依旧没用。</p>
-<p>由于构建的结果邮件中只有这样一段话：</p>
-<blockquote>
-<p>The page build failed with the following error: page build failed</p>
-</blockquote>
-<p>关于构建失败的原因一丁点都没有告诉我们，所以根本没法调试嘛。</p>
-<p>在阅读github的官方帮助文档<a href="https://help.github.com/articles/pages-don-t-build-unable-to-run-jekyll">Pages don't build: "Unable to run Jekyll"</a>后，决定按照其中Syntax errors部分的内容做如下尝试：</p>
-<p>首先，按照<a href="https://github.com/mojombo/jekyll/wiki/install">jekyll的官方安装文档</a>安装jekyll：</p>
-<div class="highlight"><pre>sudo gem install jekyll
+              <p>近期在使用Golang的<a href="http://golang.org/pkg/net/http/">net/http</a>和<a href="http://golang.org/pkg/html/template/">html/template</a>开发一个简单的HAProxy负载均衡任务管理系统（见<a href="http://youngsterxyf.github.io/2013/10/16/high-availability-load-balancer-and-dns/">搭建高可用负载均衡组件及缓存DNS</a>一文说明）。</p>
+<p><a href="http://golang.org/pkg/html/template/">htmp/template</a>在渲染页面模板的时候默认会转义字符串中的html标签，但有时我们并不想转义html标签，以下图所示为例：</p>
+<p><img alt="add_haproxy_balance_task" src="/assets/uploads/pics/haproxy_task_add.jpg" /></p>
+<p><img alt="list_haproxy_balance_task" src="/assets/uploads/pics/haproxy_task_list.jpg" /></p>
+<p>图1中“ip:port列表(一行一个)”和“说明”两个输入框的内容行与行是以<code>\n</code>分隔的；图2中，这两部分内容分别在表格的“后端机器列表”和“说明”两列中展示，但行与行其实是以<code>&lt;br /&gt;</code>分隔的；那么在将数据存入数据库之前或从数据库中取出数据后，会将字符串中的<code>\n</code>替换为<code>&lt;br /&gt;</code>。如果将替换后的数据以字符串类型传入模板，<code>&lt;br /&gt;</code>标签渲染后的效果就是<code>&lt;br /&gt;</code>文本而不是换行。</p>
+<p>有两种方式避免<code>html/template</code>转义html标签：</p>
+<p>1.
+把字符串类型数据转换成<code>template.HTML</code>类型再传入模板进行渲染：</p>
+<div class="highlight"><pre><span class="nx">lti</span> <span class="o">:=</span> <span class="nx">listenTaskInfo</span><span class="p">{</span>
+    <span class="nx">Seq</span><span class="p">:</span>      <span class="nx">seq</span><span class="p">,</span>
+    <span class="nx">Id</span><span class="p">:</span>       <span class="nx">row</span><span class="p">.</span><span class="nx">Id</span><span class="p">,</span>
+    <span class="nx">Servers</span><span class="p">:</span>  <span class="nx">template</span><span class="p">.</span><span class="nx">HTML</span><span class="p">(</span><span class="nx">strings</span><span class="p">.</span><span class="nx">Join</span><span class="p">(</span><span class="nx">strings</span><span class="p">.</span><span class="nx">Split</span><span class="p">(</span><span class="nx">row</span><span class="p">.</span><span class="nx">Servers</span><span class="p">,</span> <span class="s">&quot;-&quot;</span><span class="p">),</span> <span class="s">&quot;&lt;br /&gt;&quot;</span><span class="p">)),</span>
+    <span class="nx">Vip</span><span class="p">:</span>      <span class="nx">appConf</span><span class="p">.</span><span class="nx">Vip</span><span class="p">,</span>
+    <span class="nx">Vport</span><span class="p">:</span>    <span class="nx">row</span><span class="p">.</span><span class="nx">VPort</span><span class="p">,</span>
+    <span class="nx">Comment</span><span class="p">:</span>  <span class="nx">template</span><span class="p">.</span><span class="nx">HTML</span><span class="p">(</span><span class="nx">strings</span><span class="p">.</span><span class="nx">Join</span><span class="p">(</span><span class="nx">strings</span><span class="p">.</span><span class="nx">Split</span><span class="p">(</span><span class="nx">row</span><span class="p">.</span><span class="nx">Comment</span><span class="p">,</span> <span class="s">&quot;\n&quot;</span><span class="p">),</span> <span class="s">&quot;&lt;br /&gt;&quot;</span><span class="p">)),</span>
+    <span class="nx">LogOrNot</span><span class="p">:</span> <span class="nx">row</span><span class="p">.</span><span class="nx">LogOrNot</span><span class="p">,</span>
+    <span class="nx">DateTime</span><span class="p">:</span> <span class="nx">row</span><span class="p">.</span><span class="nx">DateTime</span><span class="p">,</span>
+<span class="p">}</span>
 </pre></div>
 
 
-<p>然后，在博客的根目录下，执行：</p>
-<div class="highlight"><pre>jekyll --safe
+<p>2.
+<code>html/template</code>允许根据需要为模板变量添加一个处理函数，在模板解析的时候该函数就能对模板变量做进一步的处理，如：</p>
+<div class="highlight"><pre>&lt;a href=&quot;/search?q={{. | urlquery}}&quot;&gt;{{. | html}}&lt;/a&gt;
 </pre></div>
 
 
-<p>命令会输出详细的信息，如果构建失败，则在输出的信息中查找错误原因，比如本博客构建失败的原因出在文章的头部添加了如下类似的标记：</p>
-<div class="highlight"><pre>category:
-    - Algorithms
+<p><code>html/template</code>貌似并没有内置这样的函数让其不转义html标签，但提供了接口让我们按需自定义这类函数。那么我们可以自定义一个函数-在模板解析的时候将模板变量转换成<code>template.HTML</code>类型，如（该例子来自<a href="http://coderdave.com/view/how-to-unescape-text-in-a-golang-html-template">How To Unescape Text In A Golang Html Template</a>）：</p>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">unescaped</span> <span class="p">(</span><span class="nx">x</span> <span class="kt">string</span><span class="p">)</span> <span class="kd">interface</span><span class="p">{}</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">template</span><span class="p">.</span><span class="nx">HTML</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span> <span class="p">}</span>
+
+<span class="kd">func</span> <span class="nx">renderTemplate</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">tmpl</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">view</span> <span class="o">*</span><span class="nx">Page</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">t</span> <span class="o">:=</span> <span class="nx">template</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)</span>  
+    <span class="nx">t</span> <span class="p">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">Funcs</span><span class="p">(</span><span class="nx">template</span><span class="p">.</span><span class="nx">FuncMap</span><span class="p">{</span><span class="s">&quot;unescaped&quot;</span><span class="p">:</span> <span class="nx">unescaped</span><span class="p">})</span>
+    <span class="nx">t</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">ParseFiles</span><span class="p">(</span><span class="s">&quot;view.html&quot;</span><span class="p">,</span> <span class="s">&quot;edit.html&quot;</span><span class="p">)</span>
+    <span class="nx">err</span> <span class="p">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">ExecuteTemplate</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="nx">tmpl</span> <span class="o">+</span> <span class="s">&quot;.html&quot;</span><span class="p">,</span> <span class="nx">view</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+        <span class="nx">http</span><span class="p">.</span><span class="nx">Error</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">(),</span> <span class="nx">http</span><span class="p">.</span><span class="nx">StatusInternalServerError</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 </pre></div>
 
 
-<p>导致之后一行的tags标记数据在构建时出错。我直接将每次执行构建 <code>jekyll --safe</code>
-提示的错误信息中相关的category标记直接删除(也许其后加个空行就可以了，没尝试过)，然后重新执行构建，依次循环，直到构建成功。然后将数据提交到远程版本库。</p>
-<p>由于jekyll本地构建时输出的信息也比较隐晦，很难一下子找到问题所在。比如提示
-<code>Algorithms</code> 元素构建出错，</p>
-<div class="highlight"><pre>Not creating a link for ref_id = &quot;0&quot;.Liquid Exception: undefined method `gsub&#39; for [&quot;Algorithms&quot;]:Array in post
+<p>这段代码使得模板解析的时候可以使用unescaped函数将模板变量x转换成<code>template.HTML</code>类型，关键是如下两句：</p>
+<div class="highlight"><pre><span class="c1">// 定义函数unescaped</span>
+<span class="kd">func</span> <span class="nx">unescaped</span> <span class="p">(</span><span class="nx">x</span> <span class="kt">string</span><span class="p">)</span> <span class="kd">interface</span><span class="p">{}</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">template</span><span class="p">.</span><span class="nx">HTML</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span> <span class="p">}</span>
+<span class="c1">// 在模板对象t中注册unescaped</span>
+<span class="nx">t</span> <span class="p">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">Funcs</span><span class="p">(</span><span class="nx">template</span><span class="p">.</span><span class="nx">FuncMap</span><span class="p">{</span><span class="s">&quot;unescaped&quot;</span><span class="p">:</span> <span class="nx">unescaped</span><span class="p">})</span>
 </pre></div>
 
 
-<p>但没说是哪篇文章的哪一行，没办法只好使用grep查找：</p>
-<div class="highlight"><pre>grep Algorithms _posts/*
+<p>这样，在模板中就可以使用unescaped函数了，如：</p>
+<div class="highlight"><pre><span class="p">{{</span><span class="nx">printf</span> <span class="s">&quot;%s&quot;</span> <span class="p">.</span><span class="nx">Body</span> <span class="p">|</span> <span class="nx">unescaped</span><span class="p">}}</span> <span class="c1">//[]byte</span>
+<span class="p">{{.</span><span class="nx">Body</span> <span class="p">|</span> <span class="nx">unescaped</span><span class="p">}}</span> <span class="c1">//string</span>
 </pre></div>
 
 
-<p>找出所有存在Algorithms单词的文章，然后逐个文章打开查看。</p>
+<p>实现不转义HTML标签，本质上，这两种方法是一样的，只不过一种是在字符串传入模板之前将其转换成<code>template.HTML</code>类型，另一种是在字符串传入模板之后解析之时转换。</p>
+<p>除了<code>template.HTML</code>类型，<code>text/template</code>还定义了<code>template.JS</code>、<code>template.CSS</code>等数据类型。</p>
+<h3>参考</h3>
+<ul>
+<li><a href="http://golang.org/pkg/html/template/">html/template</a></li>
+<li><a href="http://coderdave.com/view/how-to-unescape-text-in-a-golang-html-template">How To Unescape Text In A Golang Html Template</a></li>
+</ul>
             </div><!-- /.entry-content -->
             <div class="comments">
               <h3>Comments</h3>
               <div id="disqus_thread"></div>
               <script type="text/javascript">
-                var disqus_identifier = "2013/01/08/fix-github-pages-builds-failed/";
+                var disqus_identifier = "2013/11/01/unescape-html-in-golang-html_template/";
                 (function() {
                 var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
                 dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';

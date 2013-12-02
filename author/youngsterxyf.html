@@ -63,6 +63,42 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="../2013/11/29/inner_warehouse_monitor_system/" rel="bookmark" title="Permalink to 仓库作业机器监控系统设计与实现">仓库作业机器监控系统设计与实现</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2013-11-29T00:00:00"> 2013-11-29 周五 </abbr>
+<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <p>近期在参与一个仓库作业机器监控项目。该项目的需求背景是：公司的电商业务在全国各地有多处或大或小的仓库，仓库的作业人员（没有IT技术背景）经常反馈/投诉作业机器断网、断电、连不了服务等问题。实际情况经常与反馈的不一致，但运维侧并没有数据可以证明，所以才有了这个项目的需求。</p>
+<p>为了避免大量监控数据上报影响到生产系统的网络服务，系统采用如下结构：</p>
+<p><img alt="inner_warehouse_monitor" src="/assets/uploads/pics/inner_warehouse_monitor.png" /></p>
+<ol>
+<li>实现一个agent用于在仓库作业PC或作业PDA上获取机器的监控数据；</li>
+<li>在仓库本地服务器上实现一个数据收集处理服务，提供API给agent上传监控数据；数据收集处理服务会将接收到的数据持久化到数据库，提供给仓库本地服务器上的webApp进行数据展示等；</li>
+<li>中心服务器可以调用各个仓库本地服务器上的webApp提供的数据查询接口（数据用于定位、发现问题）；定期按需对各个仓库本地服务器上的数据进行归档。</li>
+</ol>
+<p>这样，主要的工作都集中在<strong>作业机器上的agent</strong>和<strong>数据收集处理服务、webApp</strong>。这其中最关键的又是<strong>数据收集处理服务</strong>。考虑到需要多地部署运维仓库本地服务器，而且某些大仓库作业机器的数目目前已多达800-1000，我们做了如下技术选型：</p>
+<ol>
+<li>Golang实现agent、数据收集处理服务、webApp；</li>
+<li>以SQLite作为数据库来存储agent上报的所有数据；</li>
+<li>以<a href="http://bitly.github.io/nsq/">NSQ</a>作为异步消息队列中间件；</li>
+</ol>
+<p>选用Golang的理由是：可以静态编译，部署简单，只需将变异好的可执行二进制程序丢到服务器上跑起来就可以了。
+选用SQLite的理由是：不必像MySQL那样安装server程序，无需额外部署维护。当然SQLite的文件锁会大大影响数据库读写性能，我们通过尽可能拆分数据库 ...</p> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2013/11/29/inner_warehouse_monitor_system/" rel="bookmark" title="Permalink to 仓库作业机器监控系统设计与实现">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="../tag/ji-zhu.html">技术</a>
+                    <a class="danger label" href="../tag/zong-jie.html">总结</a>
+                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
+                    <a class="danger label" href="../tag/golang.html">Golang</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="../2013/11/07/read-just_for_fun/" rel="bookmark" title="Permalink to 读书笔记：Just For Fun - The Story of an Accidental Revolutionary">读书笔记：Just For Fun - The Story of an Accidental Revolutionary</a>
                     </h2>
                 </header>
@@ -352,46 +388,6 @@ com.权威服务器向Local DNS返回qq.com.解析记录 ...</p> </div><!-- /.en
                 </div>
             </article>
             </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="../2013/10/12/url-monitoring-and-web-arch/" rel="bookmark" title="Permalink to 从URL监控问题谈网站Web架构">从URL监控问题谈网站Web架构</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2013-10-12T00:00:00"> 2013-10-12 周六 </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>之前工作中实现了一个对站点进行URL监控的功能。原理是：</p>
-<ul>
-<li>
-<p>cron脚本定时从一台Nginx服务器上获得Nginx配置文件（包括upstream配置），在解析配置得到：<code>域名-&gt;upstream名</code>（可能有多个）、<code>upstream名-&gt;属于该upstream的服务器ip列表</code>，存入数据库；</p>
-</li>
-<li>
-<p>用户通过Web界面配置URL监控项，配置过程为：</p>
-</li>
-<li>
-<p>输入要监控的URL，如http://www.sample.com/test.php ，前端JS解析出域名部分www.sample.com，向后端发送AJAX请求，得到该域名相关的upstream；</p>
-</li>
-<li>用户选择正确的那个upstream（Nginx可以将对不同URL的请求转发到不同的upstream后端机器）；</li>
-<li>
-<p>然后填写监控告警信息接收人等其他配置信息，提交即可。</p>
-</li>
-<li>
-<p>另一个cron脚本定时地:</p>
-</li>
-<li>
-<p>从数据库中读取URL监控项数据；</p>
-</li>
-<li>根据监控项中的upstream名，从数据库中读取属于该upstream的ip列表；</li>
-<li>逐个使用ip列表中的ip替换URL的域名部分，将域名部分作为HTTP请求头的HOST字段的值；</li>
-<li>使用libcurl库或curl命令发出请求（如使用curl命令：<code>curl -H "www.sample.com" http://192.168.1.1/test.php</code>）；</li>
-<li>如果响应码非200或非3xx等 ...</li></ul> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2013/10/12/url-monitoring-and-web-arch/" rel="bookmark" title="Permalink to 从URL监控问题谈网站Web架构">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                </div>
-            </article>
-            </li>
         </ol><!-- /#posts-list -->
     </div><!-- /.eleven.columns -->
 <div class="three columns">
@@ -416,63 +412,63 @@ com.权威服务器向Local DNS返回qq.com.解析记录 ...</p> </div><!-- /.en
 
 <h4>标签</h4>
 	<ul>
-	    <li class="tag-4"><a href="../tag/diao-shi.html">调试</a></li>
-	    <li class="tag-4"><a href="../tag/pip.html">pip</a></li>
-	    <li class="tag-1"><a href="../tag/python.html">Python</a></li>
-	    <li class="tag-4"><a href="../tag/shu-ju-ku.html">数据库</a></li>
-	    <li class="tag-3"><a href="../tag/suan-fa.html">算法</a></li>
-	    <li class="tag-4"><a href="../tag/pypi.html">PyPI</a></li>
-	    <li class="tag-4"><a href="../tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
-	    <li class="tag-3"><a href="../tag/mysql.html">MySQL</a></li>
-	    <li class="tag-4"><a href="../tag/jekyll.html">jekyll</a></li>
-	    <li class="tag-4"><a href="../tag/fu-zai-jun-heng.html">负载均衡</a></li>
-	    <li class="tag-4"><a href="../tag/ming-ling.html">命令</a></li>
-	    <li class="tag-2"><a href="../tag/bi-shi.html">笔试</a></li>
-	    <li class="tag-4"><a href="../tag/gan-wu.html">感悟</a></li>
-	    <li class="tag-4"><a href="../tag/haproxyconsole.html">HAProxyConsole</a></li>
-	    <li class="tag-4"><a href="../tag/gao-ke-yong.html">高可用</a></li>
-	    <li class="tag-4"><a href="../tag/bind.html">BIND</a></li>
-	    <li class="tag-4"><a href="../tag/vmware.html">VMware</a></li>
-	    <li class="tag-1"><a href="../tag/fan-yi.html">翻译</a></li>
-	    <li class="tag-2"><a href="../tag/fu-wu-qi.html">服务器</a></li>
-	    <li class="tag-4"><a href="../tag/li-lun.html">理论</a></li>
-	    <li class="tag-2"><a href="../tag/zong-jie.html">总结</a></li>
+	    <li class="tag-3"><a href="../tag/mian-shi.html">面试</a></li>
+	    <li class="tag-2"><a href="../tag/gong-zuo.html">工作</a></li>
 	    <li class="tag-1"><a href="../tag/bi-ji.html">笔记</a></li>
-	    <li class="tag-2"><a href="../tag/ji-zhu.html">技术</a></li>
-	    <li class="tag-4"><a href="../tag/easy_install.html">easy_install</a></li>
+	    <li class="tag-3"><a href="../tag/suan-fa.html">算法</a></li>
 	    <li class="tag-2"><a href="../tag/ming-ling-xing.html">命令行</a></li>
-	    <li class="tag-4"><a href="../tag/keepalived.html">Keepalived</a></li>
-	    <li class="tag-4"><a href="../tag/haproxy.html">HAProxy</a></li>
-	    <li class="tag-4"><a href="../tag/zi-sheng.html">自省</a></li>
-	    <li class="tag-3"><a href="../tag/golang.html">Golang</a></li>
-	    <li class="tag-4"><a href="../tag/ssl.html">ssl</a></li>
-	    <li class="tag-3"><a href="../tag/yue-du.html">阅读</a></li>
+	    <li class="tag-2"><a href="../tag/javascript.html">JavaScript</a></li>
+	    <li class="tag-4"><a href="../tag/github.html">github</a></li>
+	    <li class="tag-4"><a href="../tag/bing-xing.html">并行</a></li>
+	    <li class="tag-4"><a href="../tag/bind.html">BIND</a></li>
 	    <li class="tag-4"><a href="../tag/template.html">template</a></li>
 	    <li class="tag-3"><a href="../tag/shi-ge.html">诗歌</a></li>
-	    <li class="tag-4"><a href="../tag/teng-xun.html">腾讯</a></li>
-	    <li class="tag-3"><a href="../tag/nginx.html">Nginx</a></li>
-	    <li class="tag-4"><a href="../tag/github.html">github</a></li>
-	    <li class="tag-2"><a href="../tag/javascript.html">JavaScript</a></li>
-	    <li class="tag-2"><a href="../tag/shell.html">Shell</a></li>
-	    <li class="tag-4"><a href="../tag/dns.html">DNS</a></li>
-	    <li class="tag-4"><a href="../tag/wen-zi.html">文字</a></li>
-	    <li class="tag-4"><a href="../tag/sheng-huo.html">生活</a></li>
+	    <li class="tag-4"><a href="../tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
+	    <li class="tag-2"><a href="../tag/ji-zhu.html">技术</a></li>
+	    <li class="tag-4"><a href="../tag/vmware.html">VMware</a></li>
+	    <li class="tag-4"><a href="../tag/diao-shi.html">调试</a></li>
 	    <li class="tag-4"><a href="../tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
-	    <li class="tag-3"><a href="../tag/mian-shi.html">面试</a></li>
-	    <li class="tag-2"><a href="../tag/gong-ju.html">工具</a></li>
-	    <li class="tag-4"><a href="../tag/cc.html">C/C++</a></li>
+	    <li class="tag-4"><a href="../tag/fu-zai-jun-heng.html">负载均衡</a></li>
+	    <li class="tag-2"><a href="../tag/shell.html">Shell</a></li>
+	    <li class="tag-4"><a href="../tag/shu-ju-ku.html">数据库</a></li>
+	    <li class="tag-4"><a href="../tag/easy_install.html">easy_install</a></li>
+	    <li class="tag-4"><a href="../tag/keepalived.html">Keepalived</a></li>
+	    <li class="tag-4"><a href="../tag/gao-ke-yong.html">高可用</a></li>
 	    <li class="tag-4"><a href="../tag/ying-yu.html">英语</a></li>
-	    <li class="tag-4"><a href="../tag/zi-ti.html">字体</a></li>
-	    <li class="tag-4"><a href="../tag/bing-xing.html">并行</a></li>
-	    <li class="tag-3"><a href="../tag/xue-xi-fang-fa.html">学习方法</a></li>
-	    <li class="tag-2"><a href="../tag/gong-zuo.html">工作</a></li>
+	    <li class="tag-4"><a href="../tag/dns.html">DNS</a></li>
+	    <li class="tag-4"><a href="../tag/pip.html">pip</a></li>
+	    <li class="tag-4"><a href="../tag/sheng-huo.html">生活</a></li>
+	    <li class="tag-2"><a href="../tag/zong-jie.html">总结</a></li>
+	    <li class="tag-1"><a href="../tag/python.html">Python</a></li>
 	    <li class="tag-2"><a href="../tag/git.html">Git</a></li>
-	    <li class="tag-4"><a href="../tag/ban-ben-kong-zhi.html">版本控制</a></li>
-	    <li class="tag-4"><a href="../tag/python-weekly.html">python-weekly</a></li>
-	    <li class="tag-4"><a href="../tag/jia-gou.html">架构</a></li>
-	    <li class="tag-2"><a href="../tag/php.html">PHP</a></li>
-	    <li class="tag-4"><a href="../tag/wei-xin.html">微信</a></li>
+	    <li class="tag-4"><a href="../tag/jekyll.html">jekyll</a></li>
+	    <li class="tag-3"><a href="../tag/mysql.html">MySQL</a></li>
+	    <li class="tag-2"><a href="../tag/gong-ju.html">工具</a></li>
 	    <li class="tag-1"><a href="../tag/linux.html">Linux</a></li>
+	    <li class="tag-4"><a href="../tag/wen-zi.html">文字</a></li>
+	    <li class="tag-4"><a href="../tag/cc.html">C/C++</a></li>
+	    <li class="tag-4"><a href="../tag/li-lun.html">理论</a></li>
+	    <li class="tag-4"><a href="../tag/python-weekly.html">python-weekly</a></li>
+	    <li class="tag-3"><a href="../tag/nginx.html">Nginx</a></li>
+	    <li class="tag-4"><a href="../tag/zi-sheng.html">自省</a></li>
+	    <li class="tag-4"><a href="../tag/gan-wu.html">感悟</a></li>
+	    <li class="tag-4"><a href="../tag/pypi.html">PyPI</a></li>
+	    <li class="tag-4"><a href="../tag/teng-xun.html">腾讯</a></li>
+	    <li class="tag-2"><a href="../tag/fu-wu-qi.html">服务器</a></li>
+	    <li class="tag-4"><a href="../tag/zi-ti.html">字体</a></li>
+	    <li class="tag-4"><a href="../tag/ssl.html">ssl</a></li>
+	    <li class="tag-3"><a href="../tag/xue-xi-fang-fa.html">学习方法</a></li>
+	    <li class="tag-2"><a href="../tag/bi-shi.html">笔试</a></li>
+	    <li class="tag-4"><a href="../tag/ming-ling.html">命令</a></li>
+	    <li class="tag-2"><a href="../tag/php.html">PHP</a></li>
+	    <li class="tag-1"><a href="../tag/fan-yi.html">翻译</a></li>
+	    <li class="tag-4"><a href="../tag/ban-ben-kong-zhi.html">版本控制</a></li>
+	    <li class="tag-4"><a href="../tag/wei-xin.html">微信</a></li>
+	    <li class="tag-2"><a href="../tag/golang.html">Golang</a></li>
+	    <li class="tag-3"><a href="../tag/yue-du.html">阅读</a></li>
+	    <li class="tag-4"><a href="../tag/haproxyconsole.html">HAProxyConsole</a></li>
+	    <li class="tag-4"><a href="../tag/jia-gou.html">架构</a></li>
+	    <li class="tag-4"><a href="../tag/haproxy.html">HAProxy</a></li>
 </ul>
 
 <!--

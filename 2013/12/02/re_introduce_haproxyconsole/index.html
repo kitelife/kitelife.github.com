@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>HAProxyConsole简介</title>
+        <meta charset="utf-8" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+              <script>
+                (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+                })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+                ga('create', 'UA-43488080-1', '黑白');
+                ga('send', 'pageview');
+
+              </script>
+
+              <script type="text/javascript" src="http://tajs.qq.com/stats?sId=27164999" charset="UTF-8"></script>
+ 
+</head>
+
+<body id="index" class="home">
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="../../../..">黑 * 白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+             
+              <ul class="columns">
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="/archives.html">归档</a></li>
+                <li><a href="/tags.html">标签</a></li>
+                <li><a href="/pages/tools.html">工具集</a></li>
+                <li><a href="/pages/links.html">链接</a></li>
+                <li><a href="/pages/aboutme.html">关于我</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+   <div class="row">
+        <div class="columns">
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2013/12/02/re_introduce_haproxyconsole/" rel="bookmark" title="Permalink to HAProxyConsole简介">HAProxyConsole简介</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2013-12-02T00:00:00">
+                2013-12-02 周一
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>之前在<a href="http://youngsterxyf.github.io/2013/11/01/unescape-html-in-golang-html_template/">Golang中如何让html/template不转义html标签</a>、<a href="http://youngsterxyf.github.io/2013/10/16/high-availability-load-balancer-and-dns/">搭建高可用负载均衡组件及缓存DNS</a>两篇文章中都提到为了方便使用HAProxy，我实现了一个简单的HAProxy负载均衡任务管理系统。前些天我把<a href="http://youngsterxyf.github.io/haproxyconsole/">代码放在Github上</a>，算是开源吧。</p>
+<p>同事使用该管理系统，遇到问题时，由于不清楚其实现，也就无法分析问题出在哪，同时也会有些恐慌，生怕搞挂了HAProxy，毕竟上面承载了一些关键的业务，所以我绘制一张图用于说明HAProxyConsole的应用场景和工作原理。</p>
+<p><img alt="HAProxyConsole-arch" src="/assets/uploads/pics/HAProxyConsole-arch.png" /></p>
+<p>图中蓝色标识的部分都属于HAProxyConsole。</p>
+<ul>
+<li>用户通过Web页面增/删/改/查负载均衡任务，但这4个操作直接修改的都仅是数据库（DB.json或MySQL数据库）。另外，HAProxyConsole的Web页面中还嵌入了主从HAProxy自带的数据统计页面。</li>
+<li>只有当用户点击按钮“应用到主HAProxy”或“应用到从HAProxy”后，HAProxyConsole才会根据DB.json或MySQL中存储的数据和配置文件haproxy_conf_comm.json生成最新的HAProxy配置文件，然后拷贝一份为主HAProxy的配置文件或远程拷贝一份为从HAProxy的配置文件，最后重启HAProxy进程（/path/to/haproxy/sbin/haproxy -f /path/to/haproxy/conf/haproxy.conf -st <code>cat /path/to/haproxy/haproxy.pid</code>），使最新的配置生效。重启的过程中HAProxy会先检测最新配置文件的正确性，如果不正确，则不会重启。</li>
+</ul>
+<p>HAProxyConsole在各种操作（如远程拷贝最新配置文件到从HAProxy服务器）中所需的配置信息均在主配置文件<code>conf/app_conf.ini</code>中设定。</p>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2013/12/02/re_introduce_haproxyconsole/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+        </div><!-- /.twelve.columns -->
+ </div><!-- /.row -->
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+    
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+
+</body>
+</html>

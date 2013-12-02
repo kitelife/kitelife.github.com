@@ -97,7 +97,7 @@
 <hr />
 <p>系统的工作流程如下所述：</p>
 <ol>
-<li>工作机器上的agent启动后会先向NSQ的register topic发送一个注册消息，NSQ Client将该注册消息存储在register数据表中，一个MAC地址一个记录；</li>
+<li>作业机器上的agent启动后会先向NSQ的register topic发送一个注册消息，NSQ Client根据该注册消息在register数据表中将该作业机器的状态改为“正常运行中”；</li>
 <li>然后，agent定期上报监控数据到NSQ，NSQ Client中各种数据的处理流程将数据持久化到SQLite数据库文件；</li>
 <li>用户访问/中心服务器调用API时，webApp读取SQLite数据库；</li>
 <li>有一个Goroutine针对注册过的作业机器定期检测3分钟以内是否收到过其上报的心跳数据，若未收到，则将机器状态从“正常运行中”改成“运行异常”，若收到，则将“运行异常”改为“正常运行中”；</li>

@@ -72,6 +72,7 @@
             </footer><!-- /.post-info -->
             <div class="entry-content">
               <p>近期在参与一个仓库作业机器监控项目。该项目的需求背景是：公司的电商业务在全国各地有多处或大或小的仓库，仓库的作业人员（没有IT技术背景）经常反馈/投诉作业机器断网、断电、连不了服务等问题。实际情况经常与反馈的不一致，但运维侧并没有数据可以证明，所以才有了这个项目的需求。</p>
+<p>该项目第一期的目标仅是<em>收集、展示作业机器某些监控指标数据，以便在快速定位解决问题，或至少有数据可查</em>。</p>
 <p>为了避免大量监控数据上报影响到生产系统的网络服务，系统采用如下结构：</p>
 <p><img alt="inner_warehouse_monitor" src="/assets/uploads/pics/inner_warehouse_monitor.png" /></p>
 <ol>
@@ -85,15 +86,24 @@
 <li>以SQLite作为数据库来存储agent上报的所有数据；</li>
 <li>以<a href="http://bitly.github.io/nsq/">NSQ</a>作为异步消息队列中间件；</li>
 </ol>
-<p>选用Golang的理由是：可以静态编译，部署简单，只需将变异好的可执行二进制程序丢到服务器上跑起来就可以了。
-选用SQLite的理由是：不必像MySQL那样安装server程序，无需额外部署维护。当然SQLite的文件锁会大大影响数据库读写性能，我们通过尽可能拆分数据库，将不同的指标数据存储在不同的SQLite DB文件中，甚至将每台作业机器每个指标的每天的数据分别存储在不同的DB文件中，来尽可能减小文件锁的性能影响，目前看来效果还不错。
-选择NSQ的理由是：Golang实现、分布式、伸缩性好、性能高、支持HTTP/TCP协议、自带web管理界面等。</p>
+<p>选用Golang的理由是：可以静态编译，部署简单，只需将变异好的可执行二进制程序丢到服务器上跑起来就可以了。</p>
+<p>选用SQLite的理由是：不必像MySQL那样安装server程序，无需额外部署维护。当然SQLite的文件锁会大大影响数据库读写性能，我们通过尽可能拆分数据库，将不同的指标数据存储在不同的SQLite DB文件中，甚至将每台作业机器每个指标的每天的数据分别存储在不同的DB文件中，来尽可能减小文件锁的性能影响，目前看来效果还不错。</p>
+<p>选择NSQ的理由是：Golang实现、分布式、伸缩性好、性能高、支持HTTP/TCP协议、自带web管理界面等。</p>
 <p>详细的系统结构图如下所示：</p>
 <p><img alt="inner_warehouse_monitor-arch" src="/assets/uploads/pics/inner_warehouse_monitor-arch.png" /></p>
 <p>NSQ支持多topic（不同topic的数据不同），topic又可以有多个channel（同一个topic的所有channel中的数据相同，以多播的方式实现，每个channel在client中有一个对应的处理流程来处理channel中的数据）。我们将作业机器不同的监控指标数据作为不同topic传入NSQ，多数指标数据只需持久化到数据库以备后用，所以这些topic仅需一个channel。</p>
 <p>webApp基于Beego框架实现，避免重复造轮子、工作量小。webApp中的数据展示采用HighCharts、Raphael实现，兼容性好。</p>
 <p>对于机器指标数据，其实不应该使用关系型数据库来存储，因为这种数据的特点是：写入之后只读不改、时间序列的、几乎没有关系型的读取操作、连续批量数据读取，所以开源监控系统如Cacti、Ganglia等均使用RRDtool来读写指标数据。所以如上所述，我们将指标数据的存储尽可能地拆分成多个文件以提高读写性能而不会造成其他问题。</p>
-<p>目前，系统工作良好。之后会对系统做压测，如果出现瓶颈，多半还是在数据存储上，这样的话我们可能会尝试RRDtool或<a href="http://influxdb.org/">InfluxDB</a>。</p>
+<hr />
+<p>系统的工作流程如下所述：</p>
+<ol>
+<li>工作机器上的agent启动后会先向NSQ的register topic发送一个注册消息，NSQ Client将该注册消息存储在register数据表中，一个MAC地址一个记录；</li>
+<li>然后，agent定期上报监控数据到NSQ，NSQ Client中各种数据的处理流程将数据持久化到SQLite数据库文件；</li>
+<li>用户访问/中心服务器调用API时，webApp读取SQLite数据库；</li>
+<li>有一个Goroutine针对注册过的作业机器定期检测3分钟以内是否收到过其上报的心跳数据，若未收到，则将机器状态从“正常运行中”改成“运行异常”，若收到，则将“运行异常”改为“正常运行中”；</li>
+<li>作业机器在正常关机时会向NSQ的register topic发送一个正常关机的消息，Client读取到该消息后，会将该机器在register数据表中的状态改为“已正常关机”。</li>
+</ol>
+<p>目前，系统工作良好。之后会对系统做压测，如果出现瓶颈，估计可能还是数据存储，这样的话我们可能会尝试RRDtool或<a href="http://influxdb.org/">InfluxDB</a>。</p>
             </div><!-- /.entry-content -->
             <div class="comments">
               <h3>Comments</h3>

@@ -79,7 +79,7 @@
 <li>用户通过Web页面增/删/改/查负载均衡任务，但这4个操作直接修改的都仅是数据库（DB.json或MySQL数据库）。另外，HAProxyConsole的Web页面中还嵌入了主从HAProxy自带的数据统计页面。</li>
 <li>只有当用户点击按钮“应用到主HAProxy”或“应用到从HAProxy”后，HAProxyConsole才会根据DB.json或MySQL中存储的数据和配置文件haproxy_conf_comm.json生成最新的HAProxy配置文件，然后拷贝一份为主HAProxy的配置文件或远程拷贝一份为从HAProxy的配置文件，最后重启HAProxy进程（/path/to/haproxy/sbin/haproxy -f /path/to/haproxy/conf/haproxy.conf -st `cat /path/to/haproxy/haproxy.pid`），使最新的配置生效。重启的过程中HAProxy会先检测最新配置文件的正确性，如果不正确，则不会重启。</li>
 </ul>
-<p>HAProxyConsole在各种操作（如远程拷贝最新配置文件到从HAProxy服务器）中所需的配置信息均在主配置文件<code>conf/app_conf.ini</code>中设定。</p>
+<p>在部署HAProxyConsole，应按实际情况修改配置文件<code>app_conf.ini</code>中的参数值。另外，由于HAProxyConsole在为HAProxy应用最新配置时，是直接覆盖HAProxy原来的配置文件，所以<code>haproxy_conf_comm.json</code>中指定的HAProxy数据统计页面所使用的端口应与你原来为HAProxy指定的数据统计页面的端口一致。</p>
             </div><!-- /.entry-content -->
             <div class="comments">
               <h3>Comments</h3>

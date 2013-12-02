@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>某运营平台架构调整</title>
+        <meta charset="utf-8" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+              <script>
+                (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+                })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+                ga('create', 'UA-43488080-1', '黑白');
+                ga('send', 'pageview');
+
+              </script>
+
+              <script type="text/javascript" src="http://tajs.qq.com/stats?sId=27164999" charset="UTF-8"></script>
+ 
+</head>
+
+<body id="index" class="home">
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="../../../..">黑 * 白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+             
+              <ul class="columns">
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="/archives.html">归档</a></li>
+                <li><a href="/tags.html">标签</a></li>
+                <li><a href="/pages/tools.html">工具集</a></li>
+                <li><a href="/pages/links.html">链接</a></li>
+                <li><a href="/pages/aboutme.html">关于我</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+   <div class="row">
+        <div class="columns">
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2013/12/02/operation_platform_arch_change/" rel="bookmark" title="Permalink to 某运营平台架构调整">某运营平台架构调整</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2013-12-02T00:00:00">
+                2013-12-02 周一
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>之前在<a href="http://youngsterxyf.github.io/2013/10/15/standardization-operation-development/">运营开发规范化</a>一文中提过工作中涉及一个<strong>运营平台</strong>。曾有段时间我一直吐槽该平台的代码实现有多烂，各种功能的逻辑有多“野蛮”，应尽快改造，但领导无动于衷，因为还能正常运行，没出问题，领导是不关心实现的。</p>
+<p>最近该平台终于频繁出问题了。原因是上线了一个新功能---生产系统的模块之间每发生一次模块调用，就会调用该运营平台的API上报一次数据，该API的逻辑是将上报的数据存入Redis中。API由PHP实现，服务器以Nginx + PHP-FPM的方式处理API调用请求。当生产系统的业务量增大，模块直接的调用次数频率增大直接导致API调用的频率增大，
+加上该平台所在服务器各种cron任务等的影响，导致在某些时候，PHP-FPM子进程数量飙升，跑满CPU，并且PHP-FPM子进程的数目持续不降（原因不明）。这样导致一方面用户无法访问该平台---服务器响应502（Nginx接受请求，但PHP-FPM无法处理该请求），另一方面更多的数据上报API调用无法完成，造成大量数据丢失和误告警。
+用户怨声载道，领导也很头疼，要求尽快搞定该问题，但迟迟没人挑起这个活（因为领导没有指明让谁来处理嘛）。</p>
+<p>为了开个头，上上个周末的一天我绘制了两张对比图（如下所示），尝试给出建议方案。</p>
+<p><img alt="operation_platform_old_arch" src="/assets/uploads/pics/operation_platform_old_arch.png" /></p>
+<p><img alt="operation_platform_new_arch" src="/assets/uploads/pics/operation_platform_new_arch.png" /></p>
+<p>这种方案的时间成本较低，无需改动对外API，也无需大量修改代码。</p>
+<p>最后敲定的方案思路上与我的方案一致，但很多人不愿使用主从MySQL、主从Redis，觉得维护起来麻烦，决定使用公司的云DB来替代MySQL，Redis还是照原来那样没有规划地使用着，虽然我不太喜欢这种存储方案，但也没多说什么。</p>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2013/12/02/operation_platform_arch_change/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+        </div><!-- /.twelve.columns -->
+ </div><!-- /.row -->
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+    
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+
+</body>
+</html>

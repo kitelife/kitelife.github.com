@@ -29,9 +29,9 @@
         HAS_SOURCE:  true
       };
     </script>
-      <script type="text/javascript" src="../../_static/jquery.js"></script>
-      <script type="text/javascript" src="../../_static/underscore.js"></script>
-      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../static/jquery.js"></script>
+      <script type="text/javascript" src="../../static/underscore.js"></script>
+      <script type="text/javascript" src="../../static/doctools.js"></script>
       <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
     
@@ -40,8 +40,8 @@
 
   
   
-    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-    <script type="text/javascript" src="_static/js/theme.js"></script>
+    <link rel="stylesheet" href="../../static/css/theme.css" type="text/css" />
+    <script type="text/javascript" src="static/js/theme.js"></script>
   
 
   
@@ -318,7 +318,7 @@
 <p><a class="reference external" href="http://marklodato.github.io/visual-git-guide/index-en.html">英文原文</a></p>
 <div class="section" id="id2">
 <h2>基本用法<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
-<img src="../../_images/basic-usage.svg" /><ul class="simple">
+<img src="../../images/basic-usage.svg" /><ul class="simple">
 <li>git add files 把当前文件放入暂存区域。</li>
 <li>git commit 给暂存区域生成快照并提交。</li>
 <li>git reset &#8211; files 用来撤销最后一次git add files，你也可以用git reset 撤销所有暂存区域文件。</li>
@@ -328,24 +328,24 @@
 <div class="section" id="id3">
 <h2>约定<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
 <p>后文中以下面的形式使用图片。</p>
-<img src="../../_images/conventions.svg" /><p>绿色的5位字符表示提交的ID，分别指向父节点。分支用橘色显示，分别指向特定的提交。当前分支由附在其上的HEAD标识。
+<img src="../../images/conventions.svg" /><p>绿色的5位字符表示提交的ID，分别指向父节点。分支用橘色显示，分别指向特定的提交。当前分支由附在其上的HEAD标识。
 这张图片里显示最后5次提交，ed489是最新提交。 master分支指向此次提交，另一个maint分支指向祖父提交节点。</p>
 </div>
 <div class="section" id="id4">
 <h2>命令详解<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="diff">
 <h3>Diff<a class="headerlink" href="#diff" title="Permalink to this headline">¶</a></h3>
-<img src="../../_images/diff.svg" /></div>
+<img src="../../images/diff.svg" /></div>
 <div class="section" id="commit">
 <h3>Commit<a class="headerlink" href="#commit" title="Permalink to this headline">¶</a></h3>
 <p>如果想更改一次提交，使用 git commit &#8211;amend。git会使用与当前提交相同的父节点进行一次新提交，旧的提交会被取消。</p>
-<img src="../../_images/commit-amend.svg" /></div>
+<img src="../../images/commit-amend.svg" /></div>
 <div class="section" id="checkout">
 <h3>Checkout<a class="headerlink" href="#checkout" title="Permalink to this headline">¶</a></h3>
 <p>checkout命令用于从历史提交（或暂存区域）中拷贝文件到工作目录，也可用于切换分支。</p>
 <p>当给定某个文件名时，git会从指定的提交中拷贝文件到暂存区域和工作目录。比如，git checkout HEAD~ foo.c会将提交节点HEAD~
 （即当前提交节点的父节点）中的foo.c复制到工作目录并且加到暂存区域中（？）。（如果命令中没有指定提交节点，则会从暂存区域中拷贝内容。）</p>
-<img src="../../_images/checkout-files.svg" /><p>当不指定文件名，而是给出一个（本地）分支时，那么HEAD标识会移动到那个分支（也就是说，我们“切换”到那个分支了），
+<img src="../../images/checkout-files.svg" /><p>当不指定文件名，而是给出一个（本地）分支时，那么HEAD标识会移动到那个分支（也就是说，我们“切换”到那个分支了），
 然后暂存区域和工作目录中的内容会和HEAD对应的提交节点一致。新提交节点中的所有文件都会被复制（到暂存区域和工作目录中）；
 只存在于老的提交节点（ed489）中的文件会被删除；不属于上述两者的文件会被忽略，不受影响。</p>
 <p>如果既没有指定文件名，也没有指定分支名，而是一个标签、远程分支、SHA-1值或者是像master~3类似的东西，就得到一个匿名分支（被分离的HEAD标识），
@@ -355,16 +355,16 @@
 <h3>Reset<a class="headerlink" href="#reset" title="Permalink to this headline">¶</a></h3>
 <p>reset命令把当前分支指向另一个位置，并且有选择地变动工作目录和索引。也用来从历史仓库中复制文件到索引，而不动工作目录。</p>
 <p>如果不给选项，那么当前分支指向到那个提交。如果用&#8211;hard选项，那么工作目录页更新，如果用&#8211;soft选项，那么都不变。</p>
-<img src="../../_images/reset-commit.svg" /><p>If a commit is not given, it defaults to HEAD. In this case, the branch is not moved, but the stage (and optionally the working directory, if &#8211;hard is given) are reset to the contents of the last commit.</p>
-<img src="../../_images/reset.svg" /><p>如果给了文件名(或者 -p选项), 那么工作效果和带文件名的checkout差不多，除了索引被更新。</p>
+<img src="../../images/reset-commit.svg" /><p>If a commit is not given, it defaults to HEAD. In this case, the branch is not moved, but the stage (and optionally the working directory, if &#8211;hard is given) are reset to the contents of the last commit.</p>
+<img src="../../images/reset.svg" /><p>如果给了文件名(或者 -p选项), 那么工作效果和带文件名的checkout差不多，除了索引被更新。</p>
 </div>
 <div class="section" id="rebase">
 <h3>Rebase<a class="headerlink" href="#rebase" title="Permalink to this headline">¶</a></h3>
 <p>衍合是合并命令的另一种选择。合并把两个分支合并进行一次提交，提交历史并不是线性的。衍合是将当前分支的历史在另一个分支上重演，提交历史是线性的。</p>
-<img src="../../_images/rebase.svg" /><p>The above command takes all the commits that exist in topic but not in master (namely 169a6 and 2c33a), replays them onto master, and then moves the branch head to the new tip.
+<img src="../../images/rebase.svg" /><p>The above command takes all the commits that exist in topic but not in master (namely 169a6 and 2c33a), replays them onto master, and then moves the branch head to the new tip.
 Note that the old commits will be garbage collected if they are no longer referenced.</p>
 <p>To limit how far back to go, use the &#8211;onto option. The following command replays onto master the most recent commits on the current branch since 169a6 (exclusive), namely 2c33a.</p>
-<img src="../../_images/rebase-onto.svg" /></div>
+<img src="../../images/rebase-onto.svg" /></div>
 </div>
 </div>
 

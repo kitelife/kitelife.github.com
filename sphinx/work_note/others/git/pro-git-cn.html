@@ -29,9 +29,9 @@
         HAS_SOURCE:  true
       };
     </script>
-      <script type="text/javascript" src="../../_static/jquery.js"></script>
-      <script type="text/javascript" src="../../_static/underscore.js"></script>
-      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../static/jquery.js"></script>
+      <script type="text/javascript" src="../../static/underscore.js"></script>
+      <script type="text/javascript" src="../../static/doctools.js"></script>
       <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
     
@@ -40,8 +40,8 @@
 
   
   
-    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-    <script type="text/javascript" src="_static/js/theme.js"></script>
+    <link rel="stylesheet" href="../../static/css/theme.css" type="text/css" />
+    <script type="text/javascript" src="static/js/theme.js"></script>
   
 
   
@@ -327,11 +327,11 @@
 <p>Git和其他版本控制系统的主要差别在于，Git只关心文件数据的整体是否发生变化，而大多数其他系统
 则只关心文件内容的具体差异。这类系统（CVS，Subversion，Perforce，Bazaar等）每次记录有哪些文件
 作个更新，以及都更新了哪些行的什么内容。如下图所示：</p>
-<img alt="../../_images/save_diff.png" src="../../_images/save_diff.png" />
+<img alt="../../images/save_diff.png" src="../../images/save_diff.png" />
 <p>Git并不保存这些前后变化的差异数据。实际上，Git更像是把变化的文件作快照后，记录在一个微型的文件系统中。
 每次提交更新时，它会纵览一遍所有文件的指纹信息并对文件作一快照，然后保存一个指向这一次快照的索引。
 为提高性能，若文件没有变化，Git不会再次保存，而只对上次保存的快照作一链接。Git的工作方式如下图所示：</p>
-<img alt="../../_images/git_snapshot_way.png" src="../../_images/git_snapshot_way.png" />
+<img alt="../../images/git_snapshot_way.png" src="../../images/git_snapshot_way.png" />
 <p><strong>近乎所有操作都是本地执行</strong></p>
 <p><strong>时刻保持数据完整性</strong></p>
 <p>在保存到Git之前，所有数据都要进行内容的校验和（checksum）计算，并将结果作为数据的唯一标识和索引。换句话说，
@@ -599,31 +599,31 @@ $ git commit -m 'initial commit of my project'</pre>
 的内容了。</p>
 <p>现在，Git仓库中有五个对象：三个表示文件快照内容的blob对象；一个记录着目录树内容及其中各个文件对应blob对象索引的tree对象；
 以及一个包含指向tree对象（根目录）的索引和其他提交信息元数据的commit对象。</p>
-<img alt="../../_images/commit-ds.png" src="../../_images/commit-ds.png" />
+<img alt="../../images/commit-ds.png" src="../../images/commit-ds.png" />
 <p>作些修改后再次提交，那么这次的提交对象会包含一个指向上次提交对象的指针。两次提交后，
 仓库历史会变成如下图所示的样子：</p>
-<img alt="../../_images/commit-links.png" src="../../_images/commit-links.png" />
+<img alt="../../images/commit-links.png" src="../../images/commit-links.png" />
 <p>Git 中的分支，其实本质上仅仅是个指向 commit 对象的可变指针。Git 会使用 master
 作为分支的默认名字。在若干次提交后，你其实已经有了一个指向最后一次提交对象的
 master 分支，它在每次提交的时候都会自动向前移动。</p>
-<img alt="../../_images/master-pointer.png" src="../../_images/master-pointer.png" />
+<img alt="../../images/master-pointer.png" src="../../images/master-pointer.png" />
 <p>那么，Git 又是如何创建一个新的分支的呢？答案很简单，创建一个新的分支指针。
 比如新建一个 testing 分支，可以使用 <tt class="docutils literal"><span class="pre">git</span> <span class="pre">branch</span></tt> 命令：</p>
 <div class="highlight-python"><pre>$ git branch testing</pre>
 </div>
 <p>这会在当前commit对象上新建一个分支指针。</p>
-<img alt="../../_images/branch-pointer.png" src="../../_images/branch-pointer.png" />
+<img alt="../../images/branch-pointer.png" src="../../images/branch-pointer.png" />
 <p>那么，Git是如何知道你当前在哪个分支上工作的呢？其实答案很简单，它保存着一个名为
 HEAD的特别指针。请注意它和你熟知的许多其他版本控制系统（比如Subversion）里的HEAD
 概念大不相同。在Git中，它是一个指向你正在工作中的本地分支的指针（将HEAD想象为当前
 分支的别名）。运行 <tt class="docutils literal"><span class="pre">git</span> <span class="pre">branch</span></tt> 命令仅仅是建立了一个新的分支，但不会自动切换到
 这个分支中去。</p>
-<img alt="../../_images/HEAD-point-current.png" src="../../_images/HEAD-point-current.png" />
+<img alt="../../images/HEAD-point-current.png" src="../../images/HEAD-point-current.png" />
 <p>要切换到其他分支，可以执行 <tt class="docutils literal"><span class="pre">git</span> <span class="pre">checkout</span></tt> 命令。如切换到新建的testing分支：</p>
 <div class="highlight-python"><pre>$ git checkout testing</pre>
 </div>
 <p>这样HEAD就指向了testing分支。</p>
-<img alt="../../_images/HEAD-point-testing.png" src="../../_images/HEAD-point-testing.png" />
+<img alt="../../images/HEAD-point-testing.png" src="../../images/HEAD-point-testing.png" />
 <p>由于Git中的分支实际上仅是一个包含所指对象校验和（40个字符长度SHA-1字串）的文件，
 所以创建和销毁一个分支就变得非常廉价。说白了，新建一个分支就是向一个文件写入41个
 字节（外加一个换行符）。</p>
@@ -662,7 +662,7 @@ $ git commit -a -m 'fixed the broken email address'
 [hotfix]: created 3a0874c: "fixed the broken email address"
 1 files changed, 0 insertions(+), 1 deletions(-)</pre>
 </div>
-<img alt="../../_images/hotfix-branch.png" src="../../_images/hotfix-branch.png" />
+<img alt="../../images/hotfix-branch.png" src="../../images/hotfix-branch.png" />
 <p>有必要作些测试，确保修补是成功的，然后回到 <tt class="docutils literal"><span class="pre">master</span></tt> 分支并把它合并进来，然后
 发布到生产服务器。用 <tt class="docutils literal"><span class="pre">git</span> <span class="pre">merge</span></tt> 命令来进行合并：</p>
 <div class="highlight-python"><pre>$ git checkout master
@@ -677,7 +677,7 @@ Fast forward
 如果顺着一个分支走下去可以到达另一个分支的话，那么 Git 在合并两者时，只会简单地
 把指针右移，因为这种单线的历史分支不存在任何需要解决的分歧，所以这种合并过程可以
 称为快进（Fast forward）。</p>
-<img alt="../../_images/master-hotfix-same.png" src="../../_images/master-hotfix-same.png" />
+<img alt="../../images/master-hotfix-same.png" src="../../images/master-hotfix-same.png" />
 <p>在那个超级重要的修补发布以后，你想要回到被打扰之前的工作。由于当前hotfix分支和
 master都指向相同的提交对象，所以hotfix已经完成了历史使命，可以删掉了。
 使用 <tt class="docutils literal"><span class="pre">git</span> <span class="pre">branch</span></tt> 的 <tt class="docutils literal"><span class="pre">-d</span></tt> 选项执行删除操作：</p>
@@ -702,11 +702,11 @@ Merge made by recursive.
 分支的直接祖先，Git不得不进行一些额外处理。就此例而言，Git会用两个分支的末端（C4
 和C5）以及它们的共同祖先（C2）进行一次简单的三方合并计算。下图用红框标出了Git
 用于合并的三个提交对象：</p>
-<img alt="../../_images/merge-three-part.png" src="../../_images/merge-three-part.png" />
+<img alt="../../images/merge-three-part.png" src="../../images/merge-three-part.png" />
 <p>这次，Git没有简单地把分支指针右移，而是对三方合并后的结果重新做一个新的快照，
 并自动创建一个指向它的提交对象（C6）（见图 3-17）。这个提交对象比较特殊，它有
 两个祖先（C4 和 C5）。</p>
-<img alt="../../_images/after-merge-three-part.png" src="../../_images/after-merge-three-part.png" />
+<img alt="../../images/after-merge-three-part.png" src="../../images/after-merge-three-part.png" />
 <p><strong>遇到冲突时的分支合并</strong></p>
 <p>如果在不同的分支中都修改了同一个文件的同一部分，Git就无法干净地把两者合到一起
 （译注：逻辑上说，这种问题只能由人来裁决）。如果你在解决问题 <tt class="docutils literal"><span class="pre">#53</span></tt> 的过程中
@@ -754,16 +754,16 @@ Automatic merge failed; fix conflicts and then commit the result.</pre>
 建立一个指向它的 <tt class="docutils literal"><span class="pre">master</span></tt> 分支的指针，在本地命名为 <tt class="docutils literal"><span class="pre">origin/master</span></tt> ，但你无法
 在本地更改其数据。接着，Git建立一个属于你自己的本地 <tt class="docutils literal"><span class="pre">master</span></tt> 分支，始于
 <tt class="docutils literal"><span class="pre">origin</span></tt> 上 <tt class="docutils literal"><span class="pre">master</span></tt> 分支相同的位置，你可以就此开始工作：</p>
-<img alt="../../_images/clone-details.png" src="../../_images/clone-details.png" />
+<img alt="../../images/clone-details.png" src="../../images/clone-details.png" />
 <p>如果你在本地 <tt class="docutils literal"><span class="pre">master</span></tt> 分支做了些改动，与此同时，其他人向 <tt class="docutils literal"><span class="pre">git.ourcompany.com</span></tt>
 推送了他们的更新，那么服务器上的 <tt class="docutils literal"><span class="pre">master</span></tt> 分支就会向前推进，而于此同时，你在
 本地的提交历史正朝向不同方向发展。不过只要你不和服务器通讯，你的 <tt class="docutils literal"><span class="pre">origin/master</span></tt>
 指针仍然保持原位不会移动：</p>
-<img alt="../../_images/different-move.png" src="../../_images/different-move.png" />
+<img alt="../../images/different-move.png" src="../../images/different-move.png" />
 <p>可以运行 <tt class="docutils literal"><span class="pre">git</span> <span class="pre">fetch</span> <span class="pre">origin</span></tt> 来同步远程服务器上的数据到本地。该命令首先找到
 <tt class="docutils literal"><span class="pre">origin</span></tt> 是哪个服务器（本例为 <tt class="docutils literal"><span class="pre">git.ourcompany.com</span></tt> ），从上面获取你尚未拥有
 的数据，更新你本地的数据库，然后把 <tt class="docutils literal"><span class="pre">origin/master</span></tt> 的指针移到它最新的位置上：</p>
-<img alt="../../_images/git-fetch.png" src="../../_images/git-fetch.png" />
+<img alt="../../images/git-fetch.png" src="../../images/git-fetch.png" />
 <p><strong>推送本地分支</strong></p>
 <p>要想和其他人分享某个本地分支，你需要把它推送到一个你拥有写权限的远程仓库。
 你创建的本地分支不会因为你的写入操作而被自动同步到你引入的远程服务器上，

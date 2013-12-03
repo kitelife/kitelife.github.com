@@ -1,0 +1,502 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>HAProxy &mdash; xiayf的学习笔记</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:'../',
+        VERSION:'1.0',
+        COLLAPSE_INDEX:false,
+        FILE_SUFFIX:'.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+    <link rel="top" title="xiayf的学习笔记" href="../index.html"/>
+        <link rel="next" title="Keepalived" href="keepalived.html"/>
+        <link rel="prev" title="Varnish Cache" href="varnish.html"/> 
+
+  <script src="//cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="../index.html" class="icon icon-home"> 学习笔记</a>
+        <form class="wy-form" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search docs" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix">
+        
+        
+            <ul>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/read_high_scalability.html">High Scalability 读文笔记</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/read_high_scalability.html#tumblr">Tumblr架构设计</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/Quora_technology_examined.html">读文笔记：Quora’s Technology Examined</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/Quora_technology_examined.html#the-search-box">The Search-Box</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/Quora_technology_examined.html#webnode2-and-livenode">Webnode2 And LiveNode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/Quora_technology_examined.html#amazon-web-services">Amazon Web Services</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/Quora_technology_examined.html#haproxy-load-balancing">HAProxy Load-Balancing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/Quora_technology_examined.html#nginx">Nginx</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/Quora_technology_examined.html#pylons-and-paste">Pylons And Paste</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/Quora_technology_examined.html#python">Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/Quora_technology_examined.html#thrift">Thrift</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/Quora_technology_examined.html#tornado">Tornado</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/Quora_technology_examined.html#long-polling-comet">Long Polling (Comet)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/Quora_technology_examined.html#mysql">MySQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/Quora_technology_examined.html#memcached">Memcached</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/Quora_technology_examined.html#git">Git</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/Quora_technology_examined.html#javascript-placement">JavaScript Placement</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/Quora_technology_examined.html#charlie-cheever-follows-14-rules-for-faster-loading-web-sites">Charlie Cheever Follows &#8220;14 Rules for Faster-Loading Web Sites&#8221;</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/reference.html">参考资料</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/reference.html#pinterest">Pinterest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/reference.html#google">Google</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/reference.html#id2">大众点评网</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/reference.html#id4">阿里巴巴</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/reference.html#digg">Digg</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/reference.html#heroku">Heroku</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/reference.html#youtube">YouTube</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/reference.html#flickr">Flickr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/reference.html#wikipedia">Wikipedia</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/reference.html#id10">腾讯</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/reference.html#id11">豆瓣</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/reference.html#facebook">Facebook</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/reference.html#amazon">Amazon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/reference.html#yahoo">Yahoo!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/reference.html#github">Github</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/reference.html#disqus">Disqus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/reference.html#twitter">Twitter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/reference.html#tumblr">Tumblr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/reference.html#stackoverflow">StackOverflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/reference.html#instagram">Instagram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/reference.html#youporn">YouPorn</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/reference.html#reddit">Reddit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/reference.html#id22">其他</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">入门</a></li>
+<li class="toctree-l1"><a class="reference internal" href="os.html">Linux操作系统</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="os.html#id1">实践篇</a></li>
+<li class="toctree-l2"><a class="reference internal" href="os.html#id2">工具篇</a></li>
+<li class="toctree-l2"><a class="reference internal" href="os.html#id5">原理篇</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nginx.html">Nginx</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nginx.html#id1">《Nginx开发从入门到精通》读书笔记</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nginx.html#id2">模块学习</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nginx.html#id3">实现</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nginx.html#id4">资源</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="db.html">数据库</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="db/memcached.html">Memcached</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db/redis.html">Redis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db/mysql.html">MySQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db/postgresql.html">PostgreSQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db/mongo.html">mongoDB</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="lvs.html">LVS - Linux Virtual Server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="varnish.html">Varnish Cache</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">HAProxy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">HAProxy源码编译安装</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#haproxysyslog-ng">HAProxy的syslog-ng日志配置</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#haproxyrsyslogd">HAProxy的rsyslogd日志配置</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">HAProxy命令</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#haproxy-haproxy">HAProxy配置文件示例（来自 HAProxy的安装和部署 ）</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">参考材料</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="keepalived.html">Keepalived</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="keepalived.html#tlinuxkeepalived">tlinux上源码编译安装Keepalived</a></li>
+<li class="toctree-l2"><a class="reference internal" href="keepalived.html#vrrp">VRRP协议</a></li>
+<li class="toctree-l2"><a class="reference internal" href="keepalived.html#id1">Keepalived原理</a></li>
+<li class="toctree-l2"><a class="reference internal" href="keepalived.html#id2">参考资料</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="puppet.html">Puppet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fabric.html">Fabric</a></li>
+<li class="toctree-l1"><a class="reference internal" href="supervisor.html">Supervisor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gunicorn.html">Gunicorn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="openvpn.html">OpenVPN</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="openvpn.html#vpn">如何让客户端流量全部走VPN？</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="docker.html">Docker/LXC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dns.html">DNS/BIND</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dns.html#bind9-9-3">编译安装BIND9.9.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dns.html#bind-dns">配置BIND（缓存DNS）</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="zookeeper.html">Zookeeper</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/php.html">PHP</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development/php/basic.html">基础知识</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/php/manual.html">《PHP手册》阅读笔记</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/php/manual.html#id9">常用函数</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/php/zf.html">Zend Framwork</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/php/laravel.html">Laravel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/php/builtin_functions.html">内置函数</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/php/php-internal.html">深入理解PHP内核</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../development/python.html">Python</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development/python/basic.html">基础知识</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/python/best-practices.html">最佳实践</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/python/libs.html">第三方库集锦</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/python/django.html">Django</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/python/django.html#id1">参考资料</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/python/Celery.html">Celery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/python/gunicorn.html">Gunicorn</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/python/eventlet.html">Eventlet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/python/paramiko.html">Paramiko</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/python/sentry.html">sentry</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../development/js.html">JavaScript</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development/js/basic.html">JavaScript基础</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/js/jquery.html">jQuery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/js/prototype.html">Prototype</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/js/modernizr.html">Modernizr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/js/mootools.html">Mootools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/js/underscorejs.html">Underscore.js</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/js/d3js.html">D3.js</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/js/emberjs.html">Ember.js</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/js/nodejs.html">Node.js</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../development/css.html">CSS</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development/css/basic.html">基础知识</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/css/bootstrap.html">Bootstrap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/css/semantic-ui.html">Semantic UI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/css/css-mastery.html">读书笔记：精通CSS-高级Web标准解决方案</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/css.html#id1">推荐阅读</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../development/shell.html">Shell编程</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/go.html">Go语言</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development/go.html#id1">语言基础</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/go.html#web">Web开发</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/go.html#id5">标准库</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/go.html#id6">第三方库</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/go.html#id7">Web框架</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/go.html#id8">推荐阅读</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../development/web.html">Web开发问题记录</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development/web.html#id1">工具</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/web.html#id3">浏览器兼容问题</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/web.html#id4">最佳实践</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/web.html#id5">推荐阅读</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../development/make.html">CMake/Make</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../base/os.html">操作系统</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../base/os.html#id2">参考资料</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../base/compiler.html">编译原理</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../base/compiler.html#id2">参考资料</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../base/algorithm.html">算法与数据结构</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../base/network.html">网络</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../base/network/sdn.html">软件定义网络（SDN）</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../base/network/rsync.html">Rsync</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../base/network.html#id2">推荐阅读</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../base/security.html">Web安全</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../others/quotes.html">启示语录</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../others/data-visual.html">数据可视化</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../others/data-visual.html#polymaps">Polymaps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../others/data-visual.html#highcharts-js">Highcharts JS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../others/data-visual.html#peity">Peity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../others/data-visual.html#kartograph">Kartograph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../others/data-visual.html#d3-js">D3.js</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../others/data-visual.html#raphael">Raphael</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../others/data-visual.html#nvd3">NVD3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../others/data-visual.html#flot">Flot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../others/data-visual.html#javascript-infovis-toolkit">JavaScript InfoVis Toolkit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../others/data-visual.html#id2">参考资料</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../others/git.html">Git学习笔记</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../others/git/git-simple-guide.html">Git-简易指南</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../others/git/visual-git-guide.html">图解Git</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../others/git/pro-git-cn.html">Pro Git</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../others/message_queue.html">消息队列</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../others/message_queue.html#id2">推荐阅读</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../others/other.html">碎碎念</a></li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top">
+        <i data-toggle="wy-nav-top" class="icon icon-reorder"></i>
+        <a href="/">学习笔记</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <ul class="wy-breadcrumbs">
+  <li><a href="../index.html">Docs</a> &raquo;</li>
+  <li><a href="">HAProxy</a></li>
+  
+</ul>
+<hr/>
+
+          
+  <div class="section" id="haproxy">
+<h1>HAProxy<a class="headerlink" href="#haproxy" title="Permalink to this headline">¶</a></h1>
+<p>官网：<a class="reference external" href="http://haproxy.1wt.eu">http://haproxy.1wt.eu</a></p>
+<p><a class="reference external" href="haproxy/haproxy-configuration-manual.html">HAProxy文档精简翻译版</a></p>
+<div class="section" id="id2">
+<h2>HAProxy源码编译安装<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>HAProxy的源码没有提供configure文件，而是直接 <tt class="docutils literal"><span class="pre">make</span></tt> 然后 <tt class="docutils literal"><span class="pre">make</span> <span class="pre">install</span></tt> 。但 <tt class="docutils literal"><span class="pre">make</span></tt> 有一些参数，具体信息阅读 <tt class="docutils literal"><span class="pre">Makefile</span></tt> 文件。</p>
+<p><tt class="docutils literal"><span class="pre">make</span></tt> 有一个必须提供值的参数 <tt class="docutils literal"><span class="pre">TARGET</span></tt> ，该参数用于指定内核版本；</p>
+<p>如果要指定HAProxy的安装目录，则可以通过修改Makefile文件中 <tt class="docutils literal"><span class="pre">PREFIX</span></tt> 参数的值来设置。</p>
+<p><tt class="docutils literal"><span class="pre">make</span> <span class="pre">TARGET=linux26</span></tt></p>
+</div>
+<div class="section" id="haproxysyslog-ng">
+<h2>HAProxy的syslog-ng日志配置<a class="headerlink" href="#haproxysyslog-ng" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="http://haproxy.1wt.eu/download/contrib/">http://haproxy.1wt.eu/download/contrib/</a> 中有两个文件 <strong>syslog-ng.conf</strong> 和 <strong>haproxy.logrotate</strong></p>
+<ul class="simple">
+<li>将syslog-ng.conf文件内容添加到/etc/syslog-ng/syslog-ng.conf中</li>
+<li>在/etc/logrotate.d目录下新建文件haproxy，将haproxy.logrotate文件内容写入其中。</li>
+</ul>
+</div>
+<div class="section" id="haproxyrsyslogd">
+<h2>HAProxy的rsyslogd日志配置<a class="headerlink" href="#haproxyrsyslogd" title="Permalink to this headline">¶</a></h2>
+<p>在 <tt class="docutils literal"><span class="pre">/etc/rsyslog.conf</span></tt> 中取消如下两行的注释：</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#$ModLoad imudp.so</span>
+<span class="c">#$UDPServerRun 514</span>
+</pre></div>
+</div>
+<p>并添加一行：</p>
+<div class="highlight-python"><pre>local3.*                                /var/log/haproxy.log</pre>
+</div>
+<p>那么在haproxy配置文件的global段中需配置：</p>
+<div class="highlight-python"><pre>log 127.0.0.1 local3</pre>
+</div>
+<p>然后将前一节中提及的haproxy.logrotate一样保存到/etc/logrotate.d目录中，只是需要根据日志文件名称将其中第一行的 <tt class="docutils literal"><span class="pre">/var/log/haproxy</span></tt> 修改为 <tt class="docutils literal"><span class="pre">/var/log/haproxy.log</span></tt> 。</p>
+</div>
+<div class="section" id="id3">
+<h2>HAProxy命令<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<p>重启：</p>
+<div class="highlight-python"><pre>/usr/local/haproxy/sbin/haproxy -f /usr/local/haproxy/conf/haproxy.cfg -st `cat /var/run/haproxy.pid`</pre>
+</div>
+<p>检查配置文件有效性：</p>
+<div class="highlight-python"><pre>/usr/local/haproxy/sbin/haproxy -f /usr/local/haproxy/conf/haproxy.cfg -c</pre>
+</div>
+</div>
+<div class="section" id="haproxy-haproxy">
+<h2>HAProxy配置文件示例（来自 <a class="reference external" href="http://lam.iteye.com/blog/990796">HAProxy的安装和部署</a> ）<a class="headerlink" href="#haproxy-haproxy" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><pre>#########################################################################
+# HAProxy 配置文件
+#########################################################################
+
+global
+    # 使用系统的syslog记录日志（通过udp，默认端口号为514）
+    log 127.0.0.1 local0 # info [err warning info debug]
+    chroot /home/user/haproxy
+
+    #限制单个进程的最大连接数
+    maxconn 65535
+
+    # 让进程在后台运行，即作为守护进程运行，正式运行的时候开启，此处先禁止，等同于在命令行添加参数 -D
+    # daemon
+    # 指定作为守护进程运行的时候，要创建多少个进程，默认只创建一个，需要daemon开启模式
+    # nbproc 1
+
+    # 设置debug模式运行，与daemon模式只能互斥，等同于在命令行添加参数 -d
+    # debug
+    pidfile /home/user/haproxy/logs/haproxy.pid    # not work
+
+defaults
+    # 在连接失败或断开的情况下，允许当前会话被重新分发
+    option redispatch
+    # 设置在一个服务器上链接失败后的重连次数
+    retries 2
+    # 设置服务器分配算法
+    balance roundrobin
+
+    # 不记录空连接
+    option dontlognull
+
+    # 设置等待连接到服务器成功的最大时间
+    timeout connect 5000ms
+    # 设置客户端的最大超时时间
+    timeout client 1800000ms
+    # 设置服务器端的最大超时时间
+    timeout server 1800000ms
+
+    # Enable the sending of TCP keepalive packets on both sides, clients and servers
+    # NOTE: 在服务器CPU强劲的情况下，最好不要开启保活，这样可减少资源消耗
+    #option tcpka
+
+##############################统计页面配置##################################
+
+listen admin_stat
+    # 监听端口
+    bind *:8011
+    # http的7层模式
+    mode http
+    option httplog
+    log global
+    # 统计页面自动刷新时间
+    stats refresh 30s
+    # 统计页面URL
+    stats uri /admin?stats
+    # 统计页面密码框上提示文本
+    stats realm Haproxy\ Statistics
+    # 统计页面用户名和密码设置
+    stats auth admin:admin
+    # 隐藏统计页面上HAProxy的版本信息
+    stats hide-version
+
+###########################TCP连接的监听配置################################
+
+listen  tcp-in
+    bind *:2211
+    mode tcp
+    # 日志记录选项
+    option tcplog
+    log global
+
+    # 后台服务器
+    # weight  -- 调节服务器的负重
+    # check -- 允许对该服务器进行健康检查
+    # inter  -- 设置连续的两次健康检查之间的时间，单位为毫秒(ms)，默认值 2000(ms)
+    # rise  -- 指定多少次连续成功的健康检查后，即可认定该服务器处于可操作状态，默认值 2
+    # fall  -- 指定多少次不成功的健康检查后，认为服务器为当掉状态，默认值 3
+    # maxconn  -- 指定可被发送到该服务器的最大并发连接数
+    server localhost 0.0.0.0:2233 weight 3 check inter 2000 rise 2 fall 3
+    server 192.168.1.100 192.168.1.100:2233 weight 3 check inter 2000 rise 2 fall 3
+    server 192.168.1.101 192.168.1.101:2233 weight 3 check inter 2000 rise 2 fall 3
+
+#########################HTTP连接的监听配置################################
+
+listen  http-in
+    bind *:2212
+    mode http
+    option httplog
+    log global
+
+    # 设置健康检查模式
+    #option httpchk OPTIONS * HTTP/1.1\r\nHost:\ www
+    #option smtpchk
+
+    # 后台服务器
+    server localhost 0.0.0.0:2234 weight 3 check inter 2000 rise 2 fall 3
+    server 192.168.1.100 192.168.1.100:2234 weight 3 check inter 2000 rise 2 fall 3
+    server 192.168.1.101 192.168.1.101:2234 weight 3 check inter 2000 rise 2 fall 3</pre>
+</div>
+</div>
+<div class="section" id="id5">
+<h2>参考材料<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference external" href="http://blog.liuts.com/post/223/">基于Keepalived+Haproxy搭建四层负载均衡器</a></li>
+<li><a class="reference external" href="http://lam.iteye.com/blog/990796">HAProxy的安装和部署</a></li>
+<li><a class="reference external" href="http://haproxy.1wt.eu/download/1.2/doc/architecture.txt">HAProxy架构</a></li>
+<li><a class="reference external" href="http://www.exceliance.fr/sites/default/files/biblio/art-2006-making_applications_scalable_with_lb.pdf">Making Applications Scalable with Load Balancing</a></li>
+</ul>
+</div>
+</div>
+
+
+          <footer>
+  
+    <div class="rst-footer-buttons">
+      
+        <a href="keepalived.html" class="btn btn-neutral float-right" title="Keepalived"/>Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="varnish.html" class="btn btn-neutral" title="Varnish Cache"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <p>
+      &copy; Copyright 2013, youngsterxyf.
+  </p>
+
+  <a href="https://www.github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="http://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+</body>
+</html>

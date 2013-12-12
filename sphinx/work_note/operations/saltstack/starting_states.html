@@ -189,6 +189,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../zabbix.html">Zabbix</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../buildbot.html">Buildbot</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../coreos.html">coreOS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ntp.html">NTP</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../development/php.html">PHP</a><ul>
@@ -336,7 +337,7 @@
           
   <div class="section" id="how-do-i-use-salt-states">
 <h1>How Do I Use Salt States?<a class="headerlink" href="#how-do-i-use-salt-states" title="Permalink to this headline">¶</a></h1>
-<p>The core of the Salt State system is the SLS, or <strong>S</strong> a <strong>l</strong> t <strong>S</strong> tate file. The SLS is a representation of the state in which a system should be in, and is set up to contain this data in a simple format. This is often called
+<p>The core of the Salt State system is the SLS, or <strong>S</strong>a<strong>L</strong>t<strong>S</strong> tate file. The SLS is a representation of the state in which a system should be in, and is set up to contain this data in a simple format. This is often called
 configuration management.</p>
 <div class="section" id="the-top-file">
 <h2>The Top File<a class="headerlink" href="#the-top-file" title="Permalink to this headline">¶</a></h2>
@@ -448,6 +449,90 @@ prod:
 the regular expression <tt class="docutils literal"><span class="pre">^(memcache|web).(qa|prod).loc$</span></tt> will get the nagios.mon.web and apache.server states. All Ubuntu minions will receive the repos.ubuntu state, while all RHEL and CentOS minions will receive
 the repos.epel state. The minions <tt class="docutils literal"><span class="pre">foo</span></tt>, <tt class="docutils literal"><span class="pre">bar</span></tt>, and <tt class="docutils literal"><span class="pre">baz</span></tt> will receive the database state. Any minion with a pillar named <tt class="docutils literal"><span class="pre">somekey</span></tt>, having a value of <tt class="docutils literal"><span class="pre">abc</span></tt> will receive the xyz state. Finally, minions
 with ids matching the nag1* glob or with a grain named <tt class="docutils literal"><span class="pre">role</span></tt> equal to <tt class="docutils literal"><span class="pre">monitoring</span></tt> will receive the nagios.server state.</p>
+</div>
+<div class="section" id="how-top-files-are-compiled">
+<h3>How Top Files Are Compiled<a class="headerlink" href="#how-top-files-are-compiled" title="Permalink to this headline">¶</a></h3>
+<p>As mentioned earlier, the top files in the different environments are compiled into a single set of data. The way in which this is done follows a few rules, which are important
+to understand when arranging top files in different environments.</p>
+<ol class="arabic simple">
+<li>The <tt class="docutils literal"><span class="pre">base</span></tt> environment&#8217;s top file is processed first. Any environment which is defined in the <tt class="docutils literal"><span class="pre">base</span></tt> top.sls as well as another environment&#8217;s top file, will use the instance of the environment configured in <tt class="docutils literal"><span class="pre">base</span></tt>
+and ignore all other instances. In other words, the <tt class="docutils literal"><span class="pre">base</span></tt> top file is authoritative when defining environments. Therefore, in the example below, the <tt class="docutils literal"><span class="pre">dev</span></tt> section in <tt class="docutils literal"><span class="pre">/srv/salt/dev/top.sls</span></tt> would be completely ignored.</li>
+</ol>
+<p><tt class="docutils literal"><span class="pre">/srv/salt/base/top.sls:</span></tt></p>
+<div class="highlight-python"><pre>base:
+    '*':
+        - common
+dev:
+    'webserver*dev*':
+        - webserver
+    'db*dev*':
+        - db</pre>
+</div>
+<p><tt class="docutils literal"><span class="pre">/srv/salt/dev/top.sls:</span></tt></p>
+<div class="highlight-python"><pre>dev:
+    '10.10.100.0/24':
+        - match: ipcidr
+        - deployments.dev.site1
+    '10.10.101.0/24':
+        - match: ipcidr
+        - deployments.dev.site2</pre>
+</div>
+<p>..note:</p>
+<div class="highlight-python"><pre>The rules below assume that the environments being discussed were not defined in the base ``top`` file.</pre>
+</div>
+<ol class="arabic simple" start="2">
+<li>If, for some reason, the <tt class="docutils literal"><span class="pre">base</span></tt> environment is not configured in the <tt class="docutils literal"><span class="pre">base</span></tt> environment&#8217;s top file, then the other environments will be checked in alphabetical order. The first top file found to contain a section for
+the <tt class="docutils literal"><span class="pre">base</span></tt> environment wins, and the other top files&#8217; <tt class="docutils literal"><span class="pre">base</span></tt> sections are ignored. So, provided there is no <tt class="docutils literal"><span class="pre">base</span></tt> section in the <tt class="docutils literal"><span class="pre">base</span></tt> top file, with the below two top files the <tt class="docutils literal"><span class="pre">dev</span></tt> environment would win out,
+and the <tt class="docutils literal"><span class="pre">common.centos</span></tt> SLS would not be applied to CentOS hosts.</li>
+</ol>
+<p><tt class="docutils literal"><span class="pre">/srv/salt/dev/top.sls:</span></tt></p>
+<div class="highlight-python"><pre>base:
+    'os:Ubuntu':
+        - common.ubuntu
+dev:
+    'webserver*dev*':
+        - webserver
+    'db*dev*':
+        - db</pre>
+</div>
+<p><tt class="docutils literal"><span class="pre">/srv/salt/qa/top.sls:</span></tt></p>
+<div class="highlight-python"><pre>base:
+    'os:Ubuntu':
+        - common.ubuntu
+    'os:CentOS':
+        - common.centos
+qa:
+    'webserver*qa*':
+        - webserver
+    'db*qa*':
+        - db</pre>
+</div>
+<ol class="arabic simple" start="3">
+<li>For environments other than <tt class="docutils literal"><span class="pre">base</span></tt>, the top file in a given environment will be checked for a section matching the environment&#8217;s name. If one is found, then it is used. Otherwise, the remaining (non-<tt class="docutils literal"><span class="pre">base</span></tt>) environments
+will be checked in alphabetical order. In the below example, the <tt class="docutils literal"><span class="pre">qa</span></tt> section in <tt class="docutils literal"><span class="pre">/srv/salt/dev/top.sls</span></tt> will be ignored, but if <tt class="docutils literal"><span class="pre">/srv/salt/qa/top.sls</span></tt> were cleared or removed, then the states configured for the <tt class="docutils literal"><span class="pre">qa</span></tt>
+environment in <tt class="docutils literal"><span class="pre">/srv/salt/dev/top.sls</span></tt> will be applied.</li>
+</ol>
+<p><tt class="docutils literal"><span class="pre">/srv/salt/dev/top.sls:</span></tt></p>
+<div class="highlight-python"><pre>dev:
+    'webserver*dev*':
+        - webserver
+    'db*dev*':
+        - db
+qa:
+    '10.10.200.0/24':
+        - match: ipcidr
+        - deployments.qa.site1
+    '10.10.201.0/24':
+        - match: ipcidr
+        - deployments.qa.site2</pre>
+</div>
+<p><tt class="docutils literal"><span class="pre">/srv/salt/qa/top.sls:</span></tt></p>
+<div class="highlight-python"><pre>qa:
+    'webserver*qa*':
+        - webserver
+    'db*qa*':
+        - db</pre>
+</div>
 </div>
 </div>
 </div>

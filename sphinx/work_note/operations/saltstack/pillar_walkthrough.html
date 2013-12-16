@@ -47,8 +47,8 @@
   
     <link rel="top" title="xiayf的学习笔记" href="../../index.html"/>
         <link rel="up" title="SaltStack" href="../saltstack.html"/>
-        <link rel="next" title="Ganglia" href="../ganglia.html"/>
-        <link rel="prev" title="SaltStack" href="../saltstack.html"/> 
+        <link rel="next" title="Getting Deeper Into States" href="getting_deeper_into_states.html"/>
+        <link rel="prev" title="How Do I Use Salt States?" href="starting_states.html"/> 
 
   <script src="//cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
 
@@ -189,6 +189,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../zabbix.html">Zabbix</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../buildbot.html">Buildbot</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../coreos.html">coreOS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ntp.html">NTP</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../development/php.html">PHP</a><ul>
@@ -212,6 +213,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../../development/python/eventlet.html">Eventlet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../development/python/paramiko.html">Paramiko</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../development/python/sentry.html">sentry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../development/python/virtualenv.html">virtualenv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../development/python/scipy.html">SciPy</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../development/js.html">JavaScript</a><ul>
@@ -336,6 +339,117 @@
           
   <div class="section" id="pillar-walkthrough">
 <h1>Pillar Walkthrough<a class="headerlink" href="#pillar-walkthrough" title="Permalink to this headline">¶</a></h1>
+<p>The pillar interface inside of Salt is one of the most important components of a Salt deployment.Pillar is the interface <strong>used to generate arbitrary data for specific minions</strong>. The data generated in pillar is
+made available to almost every component of Salt and is used for a number of purposes:</p>
+<ul class="simple">
+<li><strong>Highly Sensitive Data</strong> : Information transferred via pillar is guaranteed to only be presented to the minions that are targeted, this makes pillar the engine to use in Salt for managing security information,
+such as cryptographic keys and passwords.</li>
+<li><strong>Minion Configuration</strong> : Minion modules such as the execution modules, states, and returners can often be configured via data stored in pillar.</li>
+<li><strong>Variable</strong> : Variables which need to be assigned to specific minions or groups of minions can be defined in pillar and then accessed inside sls formulas and template files.</li>
+<li><strong>Arbitrary Data</strong> : Pillar can contain any basic data structure, so a list of values, or a key/value store can be defined making it easy to iterate over a group of values in sls formulas.</li>
+</ul>
+<div class="section" id="setting-up-pillar">
+<h2>Setting Up Pillar<a class="headerlink" href="#setting-up-pillar" title="Permalink to this headline">¶</a></h2>
+<p>The pillar is already running in Salt by default. The data in the minion&#8217;s pillars can be seen via the following command:</p>
+<div class="highlight-python"><pre>salt '*' pillar.items</pre>
+</div>
+<p>By default the contents of the master configuration file are loaded into pillar for all minions, this is to enable the master configuration file to be used for global configuration of minions.</p>
+<p>The pillar is built in a similar fashion as the state tree, it is comprised of sls files and has a top file, just like the state tree. The pillar is stored in a different location on
+the Salt master than the state tree. The default location for the pillar is in /srv/pillar.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The pillar location can be configured via the <em>pillar_roots</em> option inside the master configuration file.</p>
+</div>
+<p>To start setting up the pillar, the /srv/pillar directory needs to be present:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mkdir</span> <span class="o">/</span><span class="n">srv</span><span class="o">/</span><span class="n">pillar</span>
+</pre></div>
+</div>
+<p>Now a simple top file, following the same format as the top file used for states needs to be created:</p>
+<p><tt class="docutils literal"><span class="pre">/srv/pillar/top.sls</span></tt>:</p>
+<div class="highlight-python"><pre>base:
+    '*':
+        - data</pre>
+</div>
+<p>This top file associates the data.sls file to all minions. Now the <tt class="docutils literal"><span class="pre">/srv/pillar/data.sls</span></tt> file needs to be populated:</p>
+<p><tt class="docutils literal"><span class="pre">/srv/pillar/data.sls</span></tt>:</p>
+<div class="highlight-python"><pre>info: some data</pre>
+</div>
+<p>Now that the file has been saved the minions&#8217; pillars will be updated:</p>
+<div class="highlight-python"><pre>salt '*' pillar.items</pre>
+</div>
+<p>The key <tt class="docutils literal"><span class="pre">info</span></tt> should now appear in the returned pillar data.</p>
+<div class="section" id="more-complex-data">
+<h3>More Complex Data<a class="headerlink" href="#more-complex-data" title="Permalink to this headline">¶</a></h3>
+<p>Pillar files are sls files, just like states, but unlike states they do not need to define <strong>formulas</strong>, the data can be arbitrary, this example for instance sets up user data with a UID:</p>
+<p><tt class="docutils literal"><span class="pre">/srv/pillar/users/init.sls</span></tt>:</p>
+<div class="highlight-python"><pre>users:
+    thatch: 1000
+    shouse: 1001
+    utahdave: 1002
+    redbeard: 1003</pre>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The same directory lookups that exist in states exist in pillar, so the file <tt class="docutils literal"><span class="pre">users/init.sls</span></tt> can be referenced with <tt class="docutils literal"><span class="pre">users</span></tt> in the top file.</p>
+</div>
+<p>The top file will need to be updated to include this sls file:</p>
+<p><tt class="docutils literal"><span class="pre">/srv/pillar/top.sls</span></tt>:</p>
+<div class="highlight-python"><pre>base:
+    '*':
+        - data
+        - users</pre>
+</div>
+<p>Now the data will be available to the minions. To use the pillar data in a state just access the pillar via Jinja:</p>
+<p><tt class="docutils literal"><span class="pre">/srv/salt/users/init.sls</span></tt>:</p>
+<div class="highlight-python"><pre>{% for user, uid in pillar.get('users', {}).items() %}
+{{user}}:
+    user.present:
+        - uid: {{uid}}
+{% endfor %}</pre>
+</div>
+<p>This approach allows for users to be safely defined in a pillar and then the user data is applied in an sls file.</p>
+</div>
+</div>
+<div class="section" id="paramaterizing-states-with-pillar">
+<h2>Paramaterizing States With Pillar<a class="headerlink" href="#paramaterizing-states-with-pillar" title="Permalink to this headline">¶</a></h2>
+<p>One of the most powerful abstractions in pillar is the ability to parameterize states. Instead of defining macros or functions within the state context the entire state tree can be freely parameterized relative to the minion&#8217;s pillar.</p>
+<p>This approach allows for Salt to be very flexible while staying very straightforward. It also means that simple sls formulas used in the state tree can be directly parameterized without needing to refactor the state tree.</p>
+<p>A simple example is to set up a mapping of package names in pillar for separate Linux distributions:</p>
+<p><tt class="docutils literal"><span class="pre">/srv/pillar/pkg/init.sls</span></tt>:</p>
+<div class="highlight-python"><pre>pkgs:
+    {% if grains['os_family'] == 'Redhat' %}
+    apache: httpd
+    vim: vim-enhanced
+    {% elif grains['os_family'] == 'Debian' %}
+    apache: apache2
+    vim: vim
+    {% elif grains['os'] == 'Arch' %}
+    apache: apache
+    vim: vim
+    {% endif %}</pre>
+</div>
+<p>The new <tt class="docutils literal"><span class="pre">pkg</span></tt> sls needs to be added to the top file:</p>
+<p><tt class="docutils literal"><span class="pre">/srv/pillar/top.sls</span></tt>:</p>
+<div class="highlight-python"><pre>base:
+    '*':
+        - data
+        - users
+        - pkg</pre>
+</div>
+<p>Now the minions will auto map values based on respective operating systems inside of the pillar, so sls files can be safely parameterized:</p>
+<p><tt class="docutils literal"><span class="pre">/srv/salt/apache/init.sls</span></tt>:</p>
+<div class="highlight-python"><pre>apache:
+    pkg.installed:
+        - name: {{ pillar['pkgs']['apache'] }}</pre>
+</div>
+<p>Or, if no pillar is available a default can be set as well:</p>
+<p><tt class="docutils literal"><span class="pre">/srv/salt/apache/init.sls</span></tt>:</p>
+<div class="highlight-python"><pre>apache:
+    pkg.installed:
+        - name: {{ salt['pillar.get']('pkgs:apache', 'httpd')}}</pre>
+</div>
+<p>In the above example, if the pillar value <tt class="docutils literal"><span class="pre">pillar['pkgs']['apache']</span></tt> is not set in the minion&#8217;s pillar, then the default of <tt class="docutils literal"><span class="pre">httpd</span></tt> will be used.</p>
+</div>
 </div>
 
 
@@ -343,10 +457,10 @@
   
     <div class="rst-footer-buttons">
       
-        <a href="../ganglia.html" class="btn btn-neutral float-right" title="Ganglia"/>Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="getting_deeper_into_states.html" class="btn btn-neutral float-right" title="Getting Deeper Into States"/>Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../saltstack.html" class="btn btn-neutral" title="SaltStack"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="starting_states.html" class="btn btn-neutral" title="How Do I Use Salt States?"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   

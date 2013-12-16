@@ -213,6 +213,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../../development/python/eventlet.html">Eventlet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../development/python/paramiko.html">Paramiko</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../development/python/sentry.html">sentry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../development/python/virtualenv.html">virtualenv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../development/python/scipy.html">SciPy</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../development/js.html">JavaScript</a><ul>
@@ -477,8 +479,9 @@ dev:
         - match: ipcidr
         - deployments.dev.site2</pre>
 </div>
-<p>..note:</p>
-<div class="highlight-python"><pre>The rules below assume that the environments being discussed were not defined in the base ``top`` file.</pre>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The rules below assume that the environments being discussed were not defined in the base <tt class="docutils literal"><span class="pre">top</span></tt> file.</p>
 </div>
 <ol class="arabic simple" start="2">
 <li>If, for some reason, the <tt class="docutils literal"><span class="pre">base</span></tt> environment is not configured in the <tt class="docutils literal"><span class="pre">base</span></tt> environment&#8217;s top file, then the other environments will be checked in alphabetical order. The first top file found to contain a section for
@@ -533,6 +536,64 @@ qa:
     'db*qa*':
         - db</pre>
 </div>
+</div>
+</div>
+<div class="section" id="default-data-yaml">
+<h2>Default Data - YAML<a class="headerlink" href="#default-data-yaml" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><pre>apache:
+    pkg:
+        - installed
+    service:
+        - running
+        - require:
+            - pkg: apache</pre>
+</div>
+</div>
+<div class="section" id="adding-configs-and-users">
+<h2>Adding Configs and Users<a class="headerlink" href="#adding-configs-and-users" title="Permalink to this headline">¶</a></h2>
+<p>When setting up a service like an Apache web server, many more components may need to be added. The Apache configuration file will most likely be managed, and a user and group may need to be set up.</p>
+<div class="highlight-python"><pre>apache:
+  pkg:
+    - installed
+  service:
+    - running
+    - watch:
+      - pkg: apache
+      - file: /etc/httpd/conf/httpd.conf
+      - user: apache
+  user.present:
+    - uid: 87
+    - gid: 87
+    - home: /var/www/html
+    - shell: /bin/nologin
+    - require:
+      - group: apache
+  group.present:
+    - gid: 87
+    - require:
+      - pkg: apache
+
+/etc/httpd/conf/httpd.conf:
+  file.managed:
+    - source: salt://apache/httpd.conf
+    - user: root
+    - group: root
+    - mode: 644</pre>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">require</span></tt> statement under service was changed to watch, and is now watching 3 states instead of just one. The watch statement does the same thing as require, making sure that the other states run
+before running the state with a watch, but it adds an extra component. The <tt class="docutils literal"><span class="pre">watch</span></tt> statement will run the state&#8217;s watcher function for any changes to the watched states. So if the package was updated,
+the config file changed, or the user uid modified, then the service state&#8217;s watcher will be run. The service state&#8217;s watcher just restarts the service, so in this case, a change in the config file
+will also trigger a restart of the respective service.</p>
+<div class="section" id="moving-beyond-a-single-sls">
+<h3>Moving Beyond a Single SLS<a class="headerlink" href="#moving-beyond-a-single-sls" title="Permalink to this headline">¶</a></h3>
+<p>When setting up Salt States in a scalable manner, more than one SLS will need to be used.</p>
+</div>
+<div class="section" id="understanding-the-render-system">
+<h3>Understanding the Render System<a class="headerlink" href="#understanding-the-render-system" title="Permalink to this headline">¶</a></h3>
+<p>Since SLS data is simply that (data), it does not need to be represented with YAML. Salt defaults to YAML because it is very straightforward and easy to learn and use. But the SLS files can be rendered
+from almost any imaginable medium, so long as a renderer module is provided.</p>
+<p>The default rendering system is the <tt class="docutils literal"><span class="pre">yaml_jinja</span></tt> renderer. The <tt class="docutils literal"><span class="pre">yaml_jinja</span></tt> renderer will first pass the template through the <a class="reference external" href="http://jinja.pocoo.org/">Jinja2</a> templating system, and then through the YAML parser.
+The benefit here is that full programming constructs are available when creating SLS files.</p>
 </div>
 </div>
 </div>

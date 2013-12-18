@@ -1,30 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom"><title>黑 * 白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/all.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2013-12-03T00:00:00+08:00</updated><entry><title>IE下JavaScript Date对象的不同之处</title><link href="http://youngsterxyf.github.io/2013/12/03/date_difference_in_ie/" rel="alternate"></link><updated>2013-12-03T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2013-12-03:2013/12/03/date_difference_in_ie/</id><summary type="html">&lt;p&gt;之前在&lt;a href="http://youngsterxyf.github.io/2013/11/29/inner_warehouse_monitor_system/"&gt;仓库作业机器监控系统&lt;/a&gt;项目中使用&lt;a href="http://www.highcharts.com/demo/line-time-series"&gt;HighCharts的时间序列数据图&lt;/a&gt;来绘制机器CPU使用率、内存使用量、网络流量趋势变化图等，这些图在IE下却没有正常显示，IE也没有报错，按理说HighCharts的IE兼容性是较好的，不会出现这种问题，
 最后查明原因---确实不是HighCharts的问题，而是由于IE下JavaScript的Date对象缺少一种构造函数导致的。&lt;/p&gt;
-&lt;p&gt;IE中JavaScript的Date对象不支持&lt;strong&gt;时间字符串&lt;/strong&gt;作为参数的构造函数，仅有如下&lt;a href="http://msdn.microsoft.com/zh-cn/library/ie/cd9w2te4.aspx"&gt;三种构造函数&lt;/a&gt;：&lt;/p&gt;
+&lt;p&gt;IE中JavaScript的Date对象有如下&lt;a href="http://msdn.microsoft.com/zh-cn/library/ie/cd9w2te4.aspx"&gt;三种构造函数&lt;/a&gt;：&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;dateObj = new Date()
 dateObj = new Date(dateVal)
 dateObj = new Date(year, month, date[, hours[, minutes[, seconds[,ms]]]])
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;hr /&gt;
-&lt;p&gt;&lt;strong&gt;更新&lt;/strong&gt;：&lt;/p&gt;
-&lt;p&gt;&lt;em&gt;注：感谢@yiyun指出，IE中的Date构造方法只是不支持"2013-12-03"这种时间字符串&lt;/em&gt;。&lt;a href="http://msdn.microsoft.com/zh-cn/library/ie/cd9w2te4.aspx"&gt;文档&lt;/a&gt;也有说明，是我阅读不仔细：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;dateVal
-    必需。 如果是数值，dateVal 表示指定日期与 1970 年 1 月 1 日午夜之间相差的协调世界时的毫秒数。   
-    如果是字符串，则根据日期和时间字符串 (JavaScript) 中的规则分析 dateVal。 dateVal 参数也可以是从一些 ActiveX 对象返回的 VT_DATE 值。
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;其中日期和时间字符串的规则见：&lt;a href="http://msdn.microsoft.com/zh-cn/library/ie/ff743760.aspx"&gt;http://msdn.microsoft.com/zh-cn/library/ie/ff743760.aspx&lt;/a&gt;。&lt;/p&gt;
-&lt;hr /&gt;
 &lt;p&gt;其他浏览器中除了这三种之外，&lt;a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date"&gt;还有一种&lt;/a&gt;:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nx"&gt;dateObj&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nb"&gt;Date&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;dateString&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;如果在IE下使用了这种构造函数，IE不会提示错误，但在调用dateObj的getMonth、getDate等等方法时返回的是&lt;strong&gt;NaN&lt;/strong&gt;，从而导致了其他问题。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;&lt;strong&gt;更新&lt;/strong&gt;：&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;注：感谢@yiyun指出，IE中的Date构造函数只是不支持"xxxx-xx-xx"这种格式的时间字符串&lt;/em&gt;。&lt;a href="http://msdn.microsoft.com/zh-cn/library/ie/cd9w2te4.aspx"&gt;文档&lt;/a&gt;也有说明，是我阅读不仔细：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;dateVal
+    必需。如果是数值，dateVal表示指定日期与1970年1月1日午夜之间相差的协调世界时的毫秒数。   
+    如果是字符串，则根据日期和时间字符串(JavaScript)中的规则分析dateVal。dateVal参数也可以是从一些ActiveX对象返回的 VT_DATE值。
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中日期和时间字符串的规则见：&lt;a href="http://msdn.microsoft.com/zh-cn/library/ie/ff743760.aspx"&gt;http://msdn.microsoft.com/zh-cn/library/ie/ff743760.aspx&lt;/a&gt;。&lt;/p&gt;
 &lt;hr /&gt;
 &lt;p&gt;在我的案例中，是需要将时间字符串“xxxx-xx-xx”（如“2013-12-03”）转换成一个Date对象，为了兼容IE，我如下实现：&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="nx"&gt;newIEDate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;dateStr&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;

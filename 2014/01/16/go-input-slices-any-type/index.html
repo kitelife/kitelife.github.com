@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>Go - 以任意类型的slices作为输入参数</title>
+        <meta charset="utf-8" />
+        <link href="http://youngsterxyf.github.io/feeds/all.xml" type="application/atom+xml" rel="alternate" title="黑 * 白 Full Atom Feed" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+              <script>
+                (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+                })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+                ga('create', 'UA-43488080-1', '黑白');
+                ga('send', 'pageview');
+
+              </script>
+
+              <script type="text/javascript" src="http://tajs.qq.com/stats?sId=27164999" charset="UTF-8"></script>
+ 
+</head>
+
+<body id="index" class="home">
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="../../../..">黑 * 白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+             
+              <ul class="columns">
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="/archives.html">归档</a></li>
+                <li><a href="/tags.html">标签</a></li>
+                <li><a href="/pages/tools.html">工具集</a></li>
+                <li><a href="/pages/links.html">链接</a></li>
+                <li><a href="/pages/aboutme.html">关于我</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+   <div class="row">
+        <div class="columns">
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2014/01/16/go-input-slices-any-type/" rel="bookmark" title="Permalink to Go - 以任意类型的slices作为输入参数">Go - 以任意类型的slices作为输入参数</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2014-01-16T00:00:00">
+                2014-01-16 Thu
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>原文：<a href="https://ahmetalpbalkan.com/blog/golang-take-slices-of-any-type-as-input-parameter/">Go – taking slices of any type as input parameters</a></p>
+<p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
+<p>最近参与的一个业务项目，<a href="https://github.com/ahmetalpbalkan/go-linq">go-linq</a>，让我了解到Go语言的类型系统并不是为任何类面向
+对象编程而设计的。没有泛型，没有类型继承，也没有提供任何对这些特性有用的东西。</p>
+<p>但是，提供了一个名为<code>interface{}</code>的类型，你可以向其赋予几乎任意类型的值，不会抛出编译错误，就像.NET的<code>Object</code>或Java的<code>Object</code>：</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">o</span> <span class="kd">interface</span><span class="p">{}</span>
+<span class="nx">o</span> <span class="o">:=</span> <span class="mf">3.14</span>
+<span class="nx">o</span> <span class="o">:=</span> <span class="nx">Student</span><span class="p">{</span><span class="nx">Name</span><span class="p">:</span> <span class="s">&quot;Ahmet&quot;</span><span class="p">}</span>
+</pre></div>
+
+
+<p>我们假设你需要一个可以接收任意类型slices的函数，如果考虑如下这样实现：</p>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">Method</span><span class="p">(</span><span class="nx">in</span> <span class="p">[]</span><span class="kd">interface</span><span class="p">{}){</span><span class="o">...</span><span class="p">}</span>
+<span class="o">...</span>
+<span class="nx">slice</span> <span class="o">:=</span> <span class="p">[]</span><span class="kt">int</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">}</span>
+<span class="nx">Method</span><span class="p">(</span><span class="nx">slice</span><span class="p">)</span>   <span class="c1">// 抛出错误</span>
+</pre></div>
+
+
+<p>这样的代码会抛出编译错误，因为<code>[]int</code>不是<code>[]interface{}</code>。那么该如何解决这个问题呢？你可以要求<code>Method</code>的使用者先把slices
+转换为<code>[]interface{}</code>类型。也就是说他们必须借助于如下类似函数将他们的<code>[]AnyType</code>类型参数转换为<code>[]interface{}</code>类型：</p>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">conv</span><span class="p">(</span><span class="nx">in</span> <span class="p">[]</span><span class="nx">AnyType</span><span class="p">)</span> <span class="p">(</span><span class="nx">out</span> <span class="p">[]</span><span class="kd">interface</span><span class="p">{})</span> <span class="p">{</span>
+    <span class="nx">out</span> <span class="p">=</span> <span class="nb">make</span><span class="p">([]</span><span class="kd">interface</span><span class="p">{},</span> <span class="nb">len</span><span class="p">(</span><span class="nx">in</span><span class="p">))</span>
+    <span class="k">for</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">v</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">in</span> <span class="p">{</span>
+        <span class="nx">out</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="p">=</span> <span class="nx">v</span>
+    <span class="p">}</span>
+    <span class="k">return</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>但这种实现的扩展性并不好。如果<code>Method</code>的使用者（可以是一个常用函数如<code>Map</code>、<code>Filter</code>等）想向<code>Method</code>传递N种不同类型的参数，
+那么他们就必须编写N个<code>conv</code>函数。</p>
+<p>对此，我们该怎么办呢？使用<strong>reflection</strong>（反射）呀！实现一个函数以<code>interface{}</code>（可以赋任意类型的值）为输入参数类型，在函数内部
+将这个输入参数转换为一个slice，然后用于我们<code>Method</code>函数。如下所示：</p>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">takeSliceArg</span><span class="p">(</span><span class="nx">arg</span> <span class="kd">interface</span><span class="p">{})</span> <span class="p">(</span><span class="nx">out</span> <span class="p">[]</span><span class="kd">interface</span><span class="p">{},</span> <span class="nx">ok</span> <span class="kt">bool</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">slice</span><span class="p">,</span> <span class="nx">success</span> <span class="o">:=</span> <span class="nx">takeArg</span><span class="p">(</span><span class="nx">arg</span><span class="p">,</span> <span class="nx">reflect</span><span class="p">.</span><span class="nx">Slice</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">!</span><span class="nx">success</span> <span class="p">{</span>
+        <span class="nx">ok</span> <span class="p">=</span> <span class="kc">false</span>
+        <span class="k">return</span>
+    <span class="p">}</span>
+    <span class="nx">c</span> <span class="o">:=</span> <span class="nx">slice</span><span class="p">.</span><span class="nx">Len</span><span class="p">()</span>
+    <span class="nx">out</span> <span class="p">=</span> <span class="nb">make</span><span class="p">([]</span><span class="kd">interface</span><span class="p">{},</span> <span class="nx">c</span><span class="p">)</span>
+    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="nx">c</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+        <span class="nx">out</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="p">=</span> <span class="nx">slice</span><span class="p">.</span><span class="nx">Index</span><span class="p">(</span><span class="nx">i</span><span class="p">).</span><span class="nx">Interface</span><span class="p">()</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nx">out</span><span class="p">,</span> <span class="kc">true</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="nx">takeArg</span><span class="p">(</span><span class="nx">arg</span> <span class="kd">interface</span><span class="p">{},</span> <span class="nx">kind</span> <span class="nx">reflect</span><span class="p">.</span><span class="nx">Kind</span><span class="p">)</span> <span class="p">(</span><span class="nx">val</span> <span class="nx">reflect</span><span class="p">.</span><span class="nx">Value</span><span class="p">,</span> <span class="nx">ok</span> <span class="kt">bool</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">val</span> <span class="p">=</span> <span class="nx">reflect</span><span class="p">.</span><span class="nx">ValueOf</span><span class="p">(</span><span class="nx">arg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">val</span><span class="p">.</span><span class="nx">Kind</span><span class="p">()</span> <span class="o">==</span> <span class="nx">kind</span> <span class="p">{</span>
+        <span class="nx">ok</span> <span class="p">=</span> <span class="kc">true</span>
+    <span class="p">}</span>
+    <span class="k">return</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>函数<code>takeArg()</code>尝试将传入的参数值转换为指定的<a href="http://golang.org/pkg/reflect/#Kind">reflect.Kind</a>类型，然后函数<code>takeSliceArg()</code>
+尝试将传递给它的值（经<code>takeArg()</code>转换后）转换为一个<code>interface{}</code>的slice。虽然，这样会因为反射而影响到一点性能，但影响并不大。</p>
+<p>就是这样了。这种方案启发于Tobia Confronto的<a href="https://github.com/tobia/fn">fn项目</a>，并<a href="https://github.com/ahmetalpbalkan/go-linq/commit/fa1548dc4ad8126e62c1848df6e6d961753d976e#diff-3">应用到了go-linq</a>。</p>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2014/01/16/go-input-slices-any-type/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+        </div><!-- /.twelve.columns -->
+ </div><!-- /.row -->
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+    
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+
+</body>
+</html>

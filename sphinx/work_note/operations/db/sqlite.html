@@ -8,7 +8,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Redis &mdash; xiayf的学习笔记</title>
+  <title>SQLite &mdash; xiayf的学习笔记</title>
   
 
   
@@ -47,8 +47,8 @@
   
     <link rel="top" title="xiayf的学习笔记" href="../../index.html"/>
         <link rel="up" title="数据库" href="../db.html"/>
-        <link rel="next" title="MySQL" href="mysql.html"/>
-        <link rel="prev" title="Memcached" href="memcached.html"/> 
+        <link rel="next" title="LVS - Linux Virtual Server" href="../lvs.html"/>
+        <link rel="prev" title="MySQL" href="mysql.html"/> 
 
   <script src="//cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
 
@@ -140,9 +140,9 @@
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="../db.html">数据库</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="memcached.html">Memcached</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Redis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="redis.html">Redis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mysql.html">MySQL</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sqlite.html">SQLite</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">SQLite</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../lvs.html">LVS - Linux Virtual Server</a></li>
@@ -351,244 +351,148 @@
         <div class="rst-content">
           <ul class="wy-breadcrumbs">
   <li><a href="../../index.html">Docs</a> &raquo;</li>
-  <li><a href="">Redis</a></li>
+  <li><a href="">SQLite</a></li>
   
 </ul>
 <hr/>
 
           
-  <div class="section" id="redis">
-<h1>Redis<a class="headerlink" href="#redis" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="self-contained-documents-of-redis-conf">
-<h2>self-contained documents of redis.conf<a class="headerlink" href="#self-contained-documents-of-redis-conf" title="Permalink to this headline">¶</a></h2>
-<p>By default Redis asynchronously dumps the dataset on disk. Tnis mode is good enough in many application, but an issue with the Redis process or a power outage may result into a few minutes of writes lost (depending on th configured save points).</p>
-<p>The Append Only File is an alternative persistence mode that provides much better durability. For instance using the default data fsync policy Redis can lose just one second of writes in a dramatic event like a server power outage, or a single write if something wrong with the Redis process itself happens, but the operating system is still running correctly.</p>
-<p>AOF and RDB persistence can be enabled at the same time without problems. If the AOF is enabled on startup Redis will load the AOF, that is the file with the better durability guarantees.</p>
-<p>The fsync() call tells the Operating System to actually write data on disk instead to wait for more data in the output buffer. Some OS will really flush data on disk, some other OS will just try to do it ASAP.</p>
-</div>
+  <div class="section" id="sqlite">
+<h1>SQLite<a class="headerlink" href="#sqlite" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="id1">
-<h2>官网资料学习<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<p><strong>Introduction to Redis</strong></p>
-<p>Redis is an advanced <strong>key-value store</strong> , and is often referred to as a data structure server since keys can contain strings, hashes, lists, sets and sorted sets.</p>
-<p>You can run atomic operations on these types, like appending to a string; incrementing the value in a hash; pushing to a list; computing set intersection, union and difference; or getting the member with highest ranking in a sorted set.</p>
-<p>In order to achieve its outstanding performance, Redis works with an in-memory dataset. Depending on your use case, you can persist it either by dumping the dataset to disk every once in a while, or by appending each command to a log.</p>
-<p>Redis also supports trivial-to-setup master-slave replication, with very fast non-blocking first synchronization, auto-reconnection on net split and so forth.</p>
-<p>Other features include Transactions, Pub/Sub, Lua scripting, Keys with a limited time-to-live, and configuration settings to make Redis behave like a cache.</p>
-<hr class="docutils" />
-<p><strong>Data types</strong></p>
-<p><em>Strings</em></p>
-<p>Strings are the most basic kind of Redis value. Redis Strings are binary safe, this means that a Redis string can contain any kind of data, for instance a JPEG image or a serialized Ruby object.</p>
-<p>A String value can be at <strong>max 512 Megabytes</strong> in length.</p>
-<div class="admonition-see-also admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last"><a class="reference external" href="http://redis.io/commands/#string">all the available string commands</a></p>
-</div>
-<p><em>Lists</em></p>
-<p>Redis Lists are simply lists of strings, sorted by insertion order. It is possible to add elements to a Redis List pushing new elements on the head (on the left) or on the tail (on the right) of the list.</p>
-<p>The LPUSH command inserts a new element on the head, while RPUSH inserts a new element on the tail. A new list is created when one of this operations is performed against an empty key. Similarly the key is removed from the key space if a list operation will empty the list.</p>
-<p>The max length of a list is 232 - 1 elements (4294967295, more than 4 billion of elements per list).</p>
-<p>The main features of Redis Lists from the point of view of time complexity are the support for constant time insertion and deletion of elements near the head and tail, even with many millions of inserted items. Accessing elements is very fast near the extremes of the list but is slow if you try accessing the middle of a very big list, as it is an O(N) operation.</p>
-<div class="admonition-see-also admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last"><a class="reference external" href="http://redis.io/commands#list">all the available commands operating on lists</a></p>
-</div>
-<p><em>Sets</em></p>
-<p>Redis Sets are an unordered collection of Strings. It is possible to add, remove, and test for existence of members in O(1) (constant time regardless of the number of elements contained inside the Set).</p>
-<div class="admonition-see-also admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last"><a class="reference external" href="http://redis.io/commands#set">The full list of Set commands</a></p>
-</div>
-<p><em>Hashes</em></p>
-<p>Redis Hashes are maps between string fields and string values, so they are the perfect data type to represent objects.</p>
-<div class="admonition-see-also admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last"><a class="reference external" href="http://redis.io/commands#hash">The full list of Hash commands</a></p>
-</div>
-<p><em>Sorted sets</em></p>
-<p>Redis Sorted Sets are, similarly to Redis Sets, non repeating collections of Strings. The difference is that every member of a Sorted Set is associated with score, that is used in order to take the sorted set ordered, from the smallest to the greatest score. While members are unique, scores may be repeated.</p>
-<p>With sorted sets you can add, remove, or update elements in a very fast way (in a time proportional to the logarithm of the number of elements). Since elements are taken in order and not ordered afterwards, you can also get ranges by score or by rank (position) in a very fast way. Accessing the middle of a sorted set is also very fast, so you can use Sorted Sets as a smart list of non repeating elements where you can quickly access everything you need: elements in order, fast existence test, fast access to elements in the middle!</p>
-<div class="admonition-see-also admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last"><a class="reference external" href="http://redis.io/commands#sorted_set">The full list of Sorted Set commands</a></p>
-</div>
-<hr class="docutils" />
-<p><strong>Redis Persistence</strong></p>
-<p>Redis provides a different range of persistence options:</p>
-<ul class="simple">
-<li>The RDB persistence performs point-in-time snapshots of your dataset at specified intervals.</li>
-<li>The AOF persistence logs every write operation recevied by the server, that will be played again at server startup, reconstructing the original dataset. Commands are logged using the same format as the Redis protocol itself, in an append-only fashion. Redis is able to rewrite the log on background when it gets too big.</li>
-<li>If you wish, you can disable persistence at all, if you want your data to just exist as long as the server is running.</li>
-<li>It is possible to combine both AOF and RDB in the same instance.</li>
-</ul>
-<p>The most important thing to understand is the different trade-offs between the RDB and AOF persistence.</p>
-<p><em>RDB advantages</em></p>
-<ul class="simple">
-<li>RDB is a very compact single-file point-in-time representation of your Redis data. RDB files are perfect for backups.</li>
-<li>RDB is very good for disaster recovery, being a single compact file can be transfered to far data centers.</li>
-<li>RDB maximizes Redis performances since the only work the Redis parent process needs to do in order to persist is forking a child that will do all the rest. The parent instance will never perform disk I/O or alike.</li>
-<li>RDB allows faster restarts with big datasets compared to AOF.</li>
-</ul>
-<p><em>RDB disadvantages</em></p>
-<ul class="simple">
-<li>RDB is NOT good if you need to minimize the chance of data loss in case Redis stops working (for example after a power outage). You can configure different save points where an RDB is produced (for instance after at least five minutes and 100 writes against the data set, but you can have multiple save points).</li>
-<li>RDB needs to fork() often in order to persist on disk using a child process. Fork() can be time consuming if the dataset is big, and may result in Redis to stop serving clients for some millisecond or even for one second if the dataset is very big and the CPU performance not great. AOF also needs to fork() but you can tune how often you want to rewrite your logs without any trade-off on durability.</li>
-</ul>
-<p><em>AOF adavantages</em></p>
-<ul class="simple">
-<li>Using AOF Redis is much more durable: you can have different fsync policies: no fsync at all, fsync every second, fsync at every query.</li>
-<li>The AOF log is an append only log, so there are no seeks, nor corruption problems if there is a power outage. Even if the log ends with an half-written command for some reason (disk full or other reasons) the redis-check-aof tool is able to fix it easily.</li>
-<li>Redis is able to automatically rewrite the AOF in background when it gets too big. The rewrite is completely safe as while Redis continues appending to the old file, a completely new one is produced with the minimal set of operations needed to create the current data set, and once this second file is ready Redis switches the two and starts appending to the new one.</li>
-<li>AOF contains a log of all the operations one after the other in an easy to understand and parse format. You can even easily export an AOF file. For instance even if you flushed everything for an error using a FLUSHALL command, if no rewrite of the log was performed in the meantime you can still save your data set just stopping the server, removing the latest command, and restarting Redis again.</li>
-</ul>
-<p><em>AOF disadvantages</em></p>
-<ul class="simple">
-<li>AOF files are usually bigger than the equivalent RDB files for the same dataset.</li>
-<li>AOF can be slower then RDB depending on the exact fsync policy.</li>
-</ul>
-<hr class="docutils" />
-<p><em>Snapshotting</em></p>
-<p>By default Redis saves snapshots of the dataset on disk, in a binary file called dump.rdb. You can configure Redis to have it save the dataset every N seconds if there are at least M changes in the dataset, or you can manually call the SAVE or BGSAVE commands.</p>
-<p><em>How it works</em></p>
-<p>Whenever Redis needs to dump the dataset to disk, this is what happens:</p>
-<ul class="simple">
-<li>Redis forks. We now have a child and a parent process.</li>
-<li>The child starts to write the dataset to a temporary RDB file.</li>
-<li>When the child is done writing the new RDB file, it replaces the old one.</li>
-</ul>
-<hr class="docutils" />
-<p><em>Append-only file</em></p>
-<p>The append-only file is an alternative, fully-durable strategy for Redis.</p>
-<p>You can turn on the AOF in your configuration file::</p>
-<div class="highlight-python"><pre>appendonly yes</pre>
-</div>
-<p>From now on, every time Redis receives a command that changes the dataset (e.g. SET) it will append it to the AOF. When you restart Redis it will re-play the AOF to rebuild the state.</p>
-<hr class="docutils" />
-<p><em>Log rewriting</em></p>
-<p>As you can guess, the AOF gets bigger and bigger as write operations are performed. For example, if you are incrementing a counter 100 times, you&#8217;ll end up with a single key in your dataset containing the final value, but 100 entries in your AOF. 99 of those entries are not needed to rebuild the current state.</p>
-<p>So Redis supports an interesting feature: it is able to rebuild the AOF in the background without interrupting service to clients. Whenever you issue a BGREWRITEAOF Redis will write the shortest sequence of commands needed to rebuild the current dataset in memory.</p>
-<hr class="docutils" />
-<div class="admonition-see-also admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last"><a class="reference external" href="http://redis.io/topics/persistence">Redis Persistence</a></p>
-</div>
-<p><strong>Replication</strong></p>
-<p><em>How Redis replication works</em></p>
-<p>If you set up a slave, upon connection it sends a SYNC command. And it doesn&#8217;t matter if it&#8217;s the first time it has connected or if it&#8217;s a reconnection.</p>
-<p>The master then starts background saving, and collects all new commands received that will modify the dataset. When the background saving is complete, the master transfers the database file to the slave, which saves it on disk, and then loads it into memory. The master will then send to the slave all accumulated commands, and all new commands received from clients that will modify the dataset. This is done as a stream of commands and is in the same format of the Redis protocol itself.</p>
-<p><em>Configuration</em></p>
-<p>To configure replication is trivial: just add the following line to the slave configuration file::</p>
-<div class="highlight-python"><pre>slaveof 192.168.1.1 6379</pre>
-</div>
-<div class="admonition-see-also admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last"><a class="reference external" href="http://redis.io/topics/replication">Repication</a></p>
-</div>
-<p><strong>Transactions</strong></p>
-<p><em>MULTI</em> , <em>EXEC</em> , <em>DISCARD</em> and <em>WATCH</em> are the foundation of transactions in Redis. They allow the execution of a group of commands in a single step, with two important guarantees:</p>
-<ul class="simple">
-<li>All the commands in a transaction are serialized and executed sequentially. It can never happen that a request issued by another client is served in the middle of the execution of a Redis transaction. This guarantees that the commands are executed as a single isolated operation.</li>
-<li>Either all of the commands or none are processed, so a Redis transaction is also atomic. The EXEC command triggers the execution of all the commands in the transaction, so if a client loses the connection to the server in the context of a transaction before calling the MULTI command none of the operations are performed, instead if the EXEC command is called, all the operations are performed.However if the Redis server crashes or is killed by the system administrator in some hard way it is possible that only a partial number of operations are registered. Redis will detect this condition at restart, and will exit with an error. Using the redis-check-aof tool it is possible to fix the append only file that will remove the partial transaction so that the server can start again.</li>
-</ul>
-<div class="admonition-see-also admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last"><a class="reference external" href="http://redis.io/topics/transactions">Transactions</a></p>
-</div>
-<p><strong>Pub/Sub</strong></p>
-<p>SUBSCRIBE, UNSUBSCRIBE and PUBLISH implement the Publish/Subscribe messaging paradigm where (citing Wikipedia) senders (publishers) are not programmed to send their messages to specific receivers (subscribers).</p>
-<p><strong>Redis Administration</strong></p>
-<p><em>Redis setup hints</em></p>
-<ul class="simple">
-<li>suggest deploying Redis using the Linux operating system.</li>
-<li>Make sure to set the Linux kernel overcommit memory setting to 1. Add vm.overcommit_memory = 1 to /etc/sysctl.conf and then reboot or run the command sysctl vm.overcommit_memory=1 for this to take effect immediately.</li>
-<li>Make sure to setup some swap in your system (we suggest as much as swap as memory). If Linux does not have swap and your Redis instance accidentally consumes too much memory, either Redis will crash for out of memory or the Linux kernel OOM killer will kill the Redis process.</li>
-<li>Even if you have persistence disabled, Redis will need to perform RDB saves if you use replication.</li>
-<li>Use daemonize no when run under daemontools.</li>
-</ul>
-<p><strong>Redis configuration</strong></p>
-<p>Redis is able to start without a configuration file using a built-in default configuration, however this setup is only recommanded for testing and development purposes.</p>
-<p>The proper way to configure Redis is by providing a Redis configuration file, usually called redis.conf.</p>
-<p><em>Changing Redis configuration while the server is running</em></p>
-<p>It is possible to reconfigure Redis on the fly without stopping and restarting the service, or querying the current configuration programmatically using the special commands CONFIG SET and CONFIG GET</p>
-<p>Not all the configuration directives are supported in this way, but most are supported as expected. Please refer to the CONFIG SET and CONFIG GET pages for more information.</p>
-<p>Note that modifying the configuration on the fly has no effects on the redis.conf file so at the next restart of Redis the old configuration will be used instead.</p>
-<p>Make sure to also modify the redis.conf file accordingly to the configuration you set using CONFIG SET. There are plans to provide a CONFIG REWRITE command that will be able to run the redis.conf file rewriting the configuration accordingly to the current server configuration, without modifying the comments and the structure of the current file.</p>
-</div>
+<h2>《SQLite权威指南》阅读笔记<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<img alt="https://raw.github.com/youngsterxyf/work_note/master/operations/pics/sqlite-1.png" src="https://raw.github.com/youngsterxyf/work_note/master/operations/pics/sqlite-1.png" />
 <div class="section" id="id2">
-<h2>《Redis设计与实现》读书笔记<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
-<p>Redis中的每个数据库，都由一个redis.h/redisDb结构表示:</p>
-<div class="highlight-python"><pre>typedef struct redisDb {
-    // 保存着数据库以整数表示的号码
-    int id;
-
-    // 保存着数据库中的所有键值对数据
-    // 这个属性页被称为键空间（key space）
-    dict *dict;
-
-    // 保存着键的过期时间
-    dict *expires;
-
-    // 实现列表阻塞原语，如 BLPOP
-    // 在列表类型一章有详细的讨论
-    dict *blocking_keys;
-    dict *ready_keys;
-
-    // 用于实现 WATCH 命令
-    // 在事务章节有详细的讨论
-    dict *watched_keys;
-} redisDb;</pre>
-</div>
-<p><strong>数据库的切换</strong></p>
-<p>redisDb结构的id域保存着数据库的号码，但它并不是SELECT命令所使用的数据库编号，
-而是给Redis内部程序使用的。</p>
-<p>当 Redis 服务器初始化时， 它会创建出 redis.h/REDIS_DEFAULT_DBNUM 个数据库，
-并将所有数据库保存到 redis.h/redisServer.db 数组中， 每个数据库的 id 为从0
-到REDIS_DEFAULT_DBNUM - 1的值。</p>
-<p>当执行 SELECT number 命令时，程序直接使用 redisServer.db[number] 来切换数据库。</p>
-<p><strong>数据库键空间</strong></p>
-<p>因为Redis是一个键值对数据库（key-value pairs database），所以它的数据库本身也是一个字典（俗称 key space）：</p>
-<ul class="simple">
-<li>字典的键是一个字符串对象。</li>
-<li>字典的值则可以是包括字符串、列表、哈希表、集合或有序集在内的任意一种Redis类型对象。</li>
-</ul>
-<p>在 redisDb 结构的 dict 属性中，保存着数据库的所有键值对数据。</p>
-<p><strong>键空间的操作</strong></p>
-<p><em>取值</em></p>
-<p>在数据库中取值实际上就是在字典空间中取值， 再加上一些额外的类型检查：</p>
-<ul class="simple">
-<li>键不存在，返回空回复；</li>
-<li>键存在，且类型正确，按照通讯协议返回值对象；</li>
-<li>键存在，但类型不正确，返回类型错误。</li>
-</ul>
-<p><strong>键的过期时间</strong></p>
-<p>通过 EXPIRE 、 PEXPIRE 、 EXPIREAT 和 PEXPIREAT 四个命令， 客户端可以给某个存在的键设置过期时间，
-当键的过期时间到达时，键就不再可用。</p>
-<p>命令 TTL 和 PTTL 则用于返回给定键距离过期还有多长时间。</p>
-<p><strong>过期时间的保存</strong></p>
-<p>在数据库中， 所有键的过期时间都被保存在 redisDb 结构的 expires 字典里。</p>
-<p>expires 字典的键是一个指向 dict 字典（键空间）里某个键的指针， 而字典的值则是键所指向的数据库键的到期时间，
-这个值以 long long 类型表示。</p>
-<p><strong>设置生存时间</strong></p>
-<p>Redis 有四个命令可以设置键的生存时间（可以存活多久）和过期时间（什么时候到期）：</p>
-<ul class="simple">
-<li>EXPIRE 以秒为单位设置键的生存时间；</li>
-<li>PEXPIRE 以毫秒为单位设置键的生存时间；</li>
-<li>EXPIREAT 以秒为单位，设置键的过期 UNIX 时间戳；</li>
-<li>PEXPIREAT 以毫秒为单位，设置键的过期 UNIX 时间戳。</li>
-</ul>
-<p>虽然有那么多种不同单位和不同形式的设置方式， 但是 expires 字典的值只保存“以毫秒为单位的过期 UNIX 时间戳”，
-这就是说，通过进行转换， 所有命令的效果最后都和 PEXPIREAT 命令的效果一样。</p>
+<h3>体系结构<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>SQLite拥有一个简洁的、模块化的体系结构，并引进了一些独特的方法进行关系型数据库管理。
+它由可以划分为3个子系统的8个独立模块进行。如下图所示，这些模块将查询过程划分为几
+个独立的任务，在体系结构栈的顶部编译查询语句，在中部执行，在底部处理存储并与操作
+系统交互。</p>
+<img alt="https://raw.github.com/youngsterxyf/work_note/master/operations/pics/sqlite-2.png" src="https://raw.github.com/youngsterxyf/work_note/master/operations/pics/sqlite-2.png" />
+<p><strong>接口</strong></p>
+<p>接口处于栈的顶端，由SQLite C
+API组成。程序、脚本语言还有与SQLite交互的库文件最终都是通过它与SQLite交互的。</p>
+<p><strong>编译器</strong></p>
+<p>编译过程从词法分析器（Tokenizer）和语法分析器（Parser）开始。它们协同处理文本形式
+的结构化查询语言（SQL），分析其语法有效性，然后转化为底层能更方便地处理的层次化
+数据结构。SQL语句先被分解成一个个词法记号，经过评估后以语法树形式重组，然后语法分析器
+将该树下传给代码生成器。</p>
+<p>代码生成器将语法树翻译成一种SQLite专用的汇编代码，这些汇编代码由一些最终由虚拟机执行
+的指令组成。代码生成器的唯一工作是将语法树转换为完全由这种汇编语言编写的微程序并交给虚拟机处理。</p>
+<p><strong>虚拟机</strong></p>
+<p>体系结构栈的中心部分是虚拟机，也叫虚拟数据库引擎（Virtual Database Engine，VDBE）。</p>
 </div>
 <div class="section" id="id3">
-<h2>资源<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<h3>SQLite的特性<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<p>SQLite的冲突解决功能内建在许多SQL操作中，可以用来执行称为“惰性更新”的操作。假设有
+一个记录需要插入，但是您不确定数据库中是否已经存在一个了。可以不用先写SELECT语句去
+查询，如果存在，就将您的INSERT语句重新改写成UPDATE语句，冲突解决可以帮助您。“试图
+插入该记录，如果发现相同主键的记录，就更新该记录”。现在就可以将必须写三个不同的SQL
+语句（例如，SELECT、INSERT，以及可能的UPDATE）转换成一个INSERT ON
+REPLACE(...)语句。</p>
+<p>SQLite可以将外部数据库“附着”到当前连接中。假如你当前连接到一个数据库foo.db，同时
+需要另外一个数据库bar.db工作。不用打开一个单独的连接，然后在它们之间来回切换，可以
+简单地将感兴趣的数据库用下面的一个SQL语句附着到当前连接：</p>
+<div class="highlight-python"><pre>ATTACH database bar.db as bar;</pre>
+</div>
+<p>bar.db中所有的表现在读可以访问了，就好像它们存在于foo.db中一样，完成时也可以剥离。
+这使得在数据库之间的各种操作如同复制表一样容易。</p>
+</div>
+<div class="section" id="id4">
+<h3>性能和限制<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<p>在对单表进行查询时，平均而言，SQLite与其他数据库一样快（至少不慢于）。简单的SELECT、
+INSERT和UPDATE语句是相当快速的&#8212;几乎与内存（如果是内存数据库）或者磁盘同速。SQLite
+通常要快于其他数据库，因为它在处理一个事务开始，或者一个查询计划的产生方面开销较小，
+并且没有调用服务器的网络或认证以及权限协商的开销。它的简单性使它更快。</p>
+<p>但是随着查询变大变复杂，查询时间使得网络调用或者事务处理开销相形见绌，SQLite将会与
+其他数据库一样，这时一些大型的设计复杂的数据库开始发挥作用。虽然SQLite也能处理复杂的
+查询，但是它没有精密的优化器或者查询计划器。SQLite知道如何使用索引，但是它没有保存
+详细的表统计信息。</p>
+<p>假如你在大型数据集合上运行复杂的查询，SQLite与那些有复杂设计的查询计划器的数据库
+运行一样快的机会是非常小的。</p>
+<p>一些情况下，SQLite可能不如大型数据库快，但大多数的这些情况是可预期的。SQLite是为
+中小规模的应用程序设计的一个嵌入式的数据库，这些限制是设计目的可预见到的。许多新
+用于错误地认为使用SQLite可以代替大型关系型数据库。事实是有时可以这样做，有时不行，
+这完全取决于您准备用SQLite来做什么。</p>
+<p>一般情况下，SQLite的局限性主要有以下两方面：</p>
 <ul class="simple">
-<li><a class="reference external" href="http://www.redisbook.com/en/latest/index.html">Redis设计与实现</a></li>
-<li><a class="reference external" href="https://redis.readthedocs.org/en/latest/index.html">Redis命令参考</a></li>
-<li><a class="reference external" href="http://zhupan.iteye.com/blog/1576108">Redis 常见的性能问题和解决方法</a></li>
-<li><a class="reference external" href="http://timyang.net/data/redis-misunderstanding/">Redis几个认识误区</a></li>
-<li><a class="reference external" href="http://www.programmer.com.cn/14577/">Redis经验谈</a></li>
-<li><a class="reference external" href="http://snmaynard.com/2013/01/14/redis-masterclass-part-one-configuring-redis/">Redis Masterclass - Part 1, Configuration</a></li>
-<li><a class="reference external" href="http://snmaynard.com/2013/01/22/redis-masterclass-part-two-monitoring-redis/">Redis Masterclass - Part 2, Monitoring</a> , <a class="reference external" href="http://blog.nosqlfan.com/html/4166.html">译文</a></li>
+<li>并发：
+SQLite的锁机制是粗粒度的，它允许多个读，但是一次只允许一个写。写锁会在写期间排他
+地锁定数据库。通常情况下，SQLite中的锁只保持几毫秒。但是按照一般经验，如果你的应用
+程序有很高的写并发（许多连接竞争向同一数据库写），并且是时间关键型，你可能需要其他
+数据库。</li>
+<li>网络：
+虽然SQLite数据库可以通过网络文件系统共享，但是与这种文件系统相关的潜在延时会导致
+性能受损。更糟的是，网络文件系统实现中的一些缺陷也使得打开和修改远程文件&#8212;SQLite
+或其他&#8212;很容易出错。</li>
 </ul>
+<p>尽管SQLite的实现已经相当好了，但仍有部分特性未能实现，这些特性有：</p>
+<ul class="simple">
+<li>完整的触发器支持。</li>
+<li>完整的修改表结构支持。
+目前只支持RENAME TABLE和ADD COLUMN类型的ALTER TABLE命令。其他类型的ALTER TABLE
+操作，例如DROP COLUMN、ALTER COLUMN以及ADD CONSTRAINT还未实现。</li>
+<li>右外连接与全外连接。</li>
+<li>可更新的视图。</li>
+<li>窗口功能。</li>
+<li>授权和撤销。</li>
+</ul>
+<p>根据不同的使用方式，SQLite有以下几种形式的二进制程序包可供选择：</p>
+<ul class="simple">
+<li>sqlite3命令行程序（CLP）：
+该版本的SQLite命令行程序通过静态链接将数据库引擎编译
+在内，是自我包含的独立的程序。它提供了一种便捷的通过命令行与SQLite数据库一起工作
+的方式。</li>
+<li>SQLite共享库（DLL或者“so”）：
+共享库就是将SQLite数据库引擎打包进共享库（so），或者Windows动态链接库（DLL）。</li>
+<li>SQLite Analyzer：
+分析工具可以用来检查给定SQLite数据库文件的特性和统计信息，例如，文件中的物理数据
+分布和布局、相对碎片、内部数据大小和空闲空间以及其他内容。</li>
+<li>Tcl扩展：
+二进制版本在SQLite
+core中包含了Tcl语言扩展，这样你就可以从Tcl程序连接到SQLite。</li>
+</ul>
+<p><strong>SQLite命令行程序的使用</strong></p>
+<img alt="https://raw.github.com/youngsterxyf/work_note/master/operations/pics/sqlite-3.png" src="https://raw.github.com/youngsterxyf/work_note/master/operations/pics/sqlite-3.png" />
+<img alt="https://raw.github.com/youngsterxyf/work_note/master/operations/pics/sqlite-4.png" src="https://raw.github.com/youngsterxyf/work_note/master/operations/pics/sqlite-4.png" />
+<p><strong>导出数据</strong></p>
+<p>使用 <tt class="docutils literal"><span class="pre">.dump</span></tt> 命令可以将数据库对象导出成SQL格式。不带任何参数时， <tt class="docutils literal"><span class="pre">.dump</span></tt>
+将整个数据库导出为数据库定义语句（DDL）和数据操作语句（DML）（这些命令会被写入文本或在标准输出上显示），
+适合重新创建数据库对象和其中的数据。如果提供了参数，Shell将参数解析为表名或视图，导出任何匹配给定参数
+的表或视图，那些不匹配的将被忽略。在Shell模式中，默认情况下， <tt class="docutils literal"><span class="pre">.dump</span></tt>
+命令的输出定向到屏幕。如果你要将输出重定向到文件，请使用 <tt class="docutils literal"><span class="pre">.dump</span> <span class="pre">[filename]</span></tt>
+命令，此命令将所有的输出重定向到指定的文件中。若要恢复输出到屏幕，只需执行
+<tt class="docutils literal"><span class="pre">.output</span> <span class="pre">stdout</span></tt> 。因此，要将当前数据库导出到文件file.sql，可以输入如下命令：</p>
+<div class="highlight-python"><pre>sqlite&gt; .output file.sql
+sqlite&gt; .dump
+sqlite&gt; .output stdout</pre>
+</div>
+<p><strong>导入数据</strong></p>
+<p>有两种方法可以导入数据，用哪种方法取决于要导入的文件格式。如果文件由SQL语句构成，可以使用
+<tt class="docutils literal"><span class="pre">.read</span></tt>
+命令导入（执行）文件中包含的命令。如果文件包含由逗号或其他分隔符分隔的值（comma-separated
+values, CSV）组成，可使用 <tt class="docutils literal"><span class="pre">.import</span> <span class="pre">[file]</span> <span class="pre">[table]</span></tt>
+命令，此命令将解析指定的文件并尝试将数据插入到指定的表中。</p>
+<p><tt class="docutils literal"><span class="pre">.read</span></tt> 命令用来导入 <tt class="docutils literal"><span class="pre">.dump</span></tt>
+命令创建的文件。如果使用前面作为备份文件所导出的file.sql，需要先移除已经存在的数据库对象（test表和schema视图），
+然后导入：</p>
+<div class="highlight-python"><pre>sqlite&gt; drop table test;
+sqlite&gt; drop view schema;
+sqlite&gt; .read file.sql</pre>
+</div>
+<img alt="https://raw.github.com/youngsterxyf/work_note/master/operations/pics/sqlite-5.png" src="https://raw.github.com/youngsterxyf/work_note/master/operations/pics/sqlite-5.png" />
+<img alt="https://raw.github.com/youngsterxyf/work_note/master/operations/pics/sqlite-6.png" src="https://raw.github.com/youngsterxyf/work_note/master/operations/pics/sqlite-6.png" />
+<img alt="https://raw.github.com/youngsterxyf/work_note/master/operations/pics/sqlite-7.png" src="https://raw.github.com/youngsterxyf/work_note/master/operations/pics/sqlite-7.png" />
+<img alt="https://raw.github.com/youngsterxyf/work_note/master/operations/pics/sqlite-8.png" src="https://raw.github.com/youngsterxyf/work_note/master/operations/pics/sqlite-8.png" />
+<p><strong>获取数据库文件的信息</strong></p>
+<p>获取逻辑数据库的信息（例如，表名、DDL语句等）的主要方法是使用sqlite_master视图，该
+视图提供有关给定数据库包含的所有对象的详细信息。</p>
+<p>如果希望了解物理数据库结构的信息，可以使用一种称为SQLite
+Analyzer的工具，可以从SQLite网站下载该工具的二进制包。SQLite
+Analyzer提供有关SQLite数据库磁盘结构的详细技术信息，这些信息包括数据库、表和索引分类的单个对象，
+以及聚合的统计信息。它提供从数据库属性如页面大小、表的总数、索引、文件大小和页面平均密度（利用率）
+到单个数据库对象的详细说明等信息。</p>
+</div>
 </div>
 </div>
 
@@ -597,10 +501,10 @@
   
     <div class="rst-footer-buttons">
       
-        <a href="mysql.html" class="btn btn-neutral float-right" title="MySQL"/>Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../lvs.html" class="btn btn-neutral float-right" title="LVS - Linux Virtual Server"/>Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="memcached.html" class="btn btn-neutral" title="Memcached"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="mysql.html" class="btn btn-neutral" title="MySQL"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   

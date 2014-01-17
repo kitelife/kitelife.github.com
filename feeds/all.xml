@@ -1,5 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>黑 * 白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/all.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2014-01-16T00:00:00+08:00</updated><entry><title>Go - 以任意类型的slices作为输入参数（译）</title><link href="http://youngsterxyf.github.io/2014/01/16/go-input-slices-any-type/" rel="alternate"></link><updated>2014-01-16T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-01-16:2014/01/16/go-input-slices-any-type/</id><summary type="html">&lt;p&gt;原文：&lt;a href="https://ahmetalpbalkan.com/blog/golang-take-slices-of-any-type-as-input-parameter/"&gt;Go – taking slices of any type as input parameters&lt;/a&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>黑 * 白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/all.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2014-01-17T00:00:00+08:00</updated><entry><title>为何Goroutine的栈空间可以无限大？</title><link href="http://youngsterxyf.github.io/2014/01/17/goroutine-stack-infinite/" rel="alternate"></link><updated>2014-01-17T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-01-17:2014/01/17/goroutine-stack-infinite/</id><summary type="html">&lt;p&gt;原文：&lt;a href="http://dave.cheney.net/2013/06/02/why-is-a-goroutines-stack-infinite"&gt;Why is a Goroutine's stack infinite?&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;译者：&lt;a href="https://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Go编程新手可能会偶然发现&lt;a href="http://golang.org/"&gt;Go语言&lt;/a&gt;-与一个Goroutine可用栈空间大小相关-古怪的特性。这通常是由于程序员
+无意间构造了一个无限递归函数调用而产生的。为了阐明这个特性，以如下代码（有点刻意设计的）为例。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kn"&gt;package&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;
+
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;fmt&amp;quot;&lt;/span&gt;
+
+&lt;span class="kd"&gt;type&lt;/span&gt; &lt;span class="nx"&gt;S&lt;/span&gt; &lt;span class="kd"&gt;struct&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;a&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;b&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="c1"&gt;// String implements the fmt.Stringer interface&lt;/span&gt;
+&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;s&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nx"&gt;S&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="nx"&gt;String&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="kt"&gt;string&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Sprintf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;%s&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;s&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;     &lt;span class="c1"&gt;// Sprintf will call s.String()&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;s&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="nx"&gt;S&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;a&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;b&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;s&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;如果你运行这个程序（我不建议你这样做），你会发现你的机器开始频繁地swap（译注：不了解swap的，可以简单理解为“内存与硬盘之间数据的导出导入”），
+并且可能不再响应操作事件，除非你在一切无法挽回之前及时地按下^C。我知道所有人都会先在Go官网的playground中尝试运行这个程序，
+&lt;a href="http://dave.cheney.net/2013/06/02/why-is-a-goroutines-stack-infinite"&gt;所以我已经为你准备好了&lt;/a&gt;。&lt;/p&gt;
+&lt;p&gt;大多数程序员应该都遇到过无限递归导致的问题，但这都只是对于他们的程序来说是致命的，对于他们的机器通常来说并不是。那么，为何Go程序会不同呢？&lt;/p&gt;
+&lt;p&gt;Goroutine的主要特征之一是其开销---在内存占用初始化方面，创建一个Goroutine的开销非常小（相比于一个传统POSIX线程的1-8M字节），并且
+Goroutine的栈空间是按需扩大和缩小的。这就允许一个Goroutine以单个4096字节的栈空间开始，然后按需扩容缩容，也不用担心栈空间耗尽的风险。&lt;/p&gt;
+&lt;p&gt;为了实现这一特性，链接器（5l，6l，8l）在每个函数的开头都插入一小段前导代码&lt;sup&gt;1&lt;/sup&gt;，这段代码会检测该函数需要的栈空间大小是否小于当前可用的栈空间。
+若大于，则调用&lt;code&gt;runtime.morestack&lt;/code&gt;分配一个新的栈页（stack page）&lt;sup&gt;2&lt;/sup&gt;，拷贝函数调用方传递来的参数，然后将控制权返回给原来要调用的函数，
+这样这个函数就可以安全运行了。当这个函数退出时，再撤销操作，将函数返回值拷贝回函数调用方的栈帧（stack frame），不再需要的栈空间也被释放。&lt;/p&gt;
+&lt;p&gt;通过这个过程，栈空间就好像无限大一样，若假设不会持续地跨越两个栈的大小边界-通常称为&lt;em&gt;栈切分（stack splitting）&lt;/em&gt;（译注：不太理解这句话，应该是指：&lt;strong&gt;程序执行
+到函数调用方，正好将近耗尽预分配的栈空间，而函数调用方中又不断地调用其他函数，这样每次函数调用就需要分配新的栈空间，函数调用结束后又需要
+释放新分配的栈空间，所以开销积累起来就比较大&lt;/strong&gt;），这种栈空间分配方式的开销也会很小。&lt;/p&gt;
+&lt;p&gt;然而，直到现在我都还未披露一个细节---粗心地使用递归函数导致内存耗尽的话，当需要新的栈页时，就会&lt;em&gt;从堆上分配&lt;/em&gt;（译注：这句话可能有点问题。应该是Goroutine耗尽操作系统为Go程序分配的栈大小的话，
+就从堆上分配）。&lt;/p&gt;
+&lt;p&gt;由于无限递归函数持续地调用自己，新的栈页最后就需要从堆上分配。堆的大小很快就会超过机器的可用物理内存空间，到那时，swapping会很快导致你的机器不可用。&lt;/p&gt;
+&lt;p&gt;Go程序可用的堆大小依赖于很多东西，包括机器的CPU架构和操作系统，但这通常是一个超出机器物理内存的值，因此机器很可能在程序耗尽它的堆空间之前就会频繁地swap。&lt;/p&gt;
+&lt;p&gt;对于Go 1.1，曾有强烈要求增大32位、64位平台上堆的最大值，但这在某种程度上恶化了这一问题，比如，你的机器不太可能有128GB&lt;sup&gt;3&lt;/sup&gt;的物理内存。&lt;/p&gt;
+&lt;p&gt;最后提一下，关于这个问题有几个未解决的issue（&lt;a href="https://code.google.com/p/go/issues/detail?id=4692"&gt;链接&lt;/a&gt;，&lt;a href="https://code.google.com/p/go/issues/detail?id=2556"&gt;链接&lt;/a&gt;）,
+目前还没找到一个解决方案能够不影响按常规编写的程序的性能。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;&lt;strong&gt;注释&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;也适用于方法（method），虽然方法是作为第一个参数为方法接受者（the method receiver）的函数来实现的，但在讨论Go语言中分段的（segmented）栈如何工作之时，并没有实际的区别。&lt;/li&gt;
+&lt;li&gt;使用单词page并不意味着仅按固定的4096字节来分配，如果需要，runtime.morestack会分配一个更大的，倍数于一个页大小的空间。&lt;/li&gt;
+&lt;li&gt;由于Go 1.1发布周期中一个后来的改变，64位的Windows平台仅允许32Gb大小的堆。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;hr /&gt;
+&lt;p&gt;&lt;strong&gt;译者补充相关文章&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="http://blog.nella.org/a-trip-down-the-split-rabbithole/"&gt;A trip down the (split) rabbithole&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://runtime.diandian.com/post/2011-12-24/11488238"&gt;go语言中split stack(上)&lt;/a&gt;，&lt;a href="http://runtime.diandian.com/post/2011-12-26/10119542"&gt;go语言中split stack(下)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://mikespook.com/2011/03/go%E5%9C%A8stack%E4%B8%8A%E5%B9%B2%E4%BA%86%E7%A5%9E%E9%A9%AC%EF%BC%9F/"&gt;go在stack上干了神马？&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</summary><category term="Golang"></category><category term="翻译"></category></entry><entry><title>Go - 以任意类型的slices作为输入参数（译）</title><link href="http://youngsterxyf.github.io/2014/01/16/go-input-slices-any-type/" rel="alternate"></link><updated>2014-01-16T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-01-16:2014/01/16/go-input-slices-any-type/</id><summary type="html">&lt;p&gt;原文：&lt;a href="https://ahmetalpbalkan.com/blog/golang-take-slices-of-any-type-as-input-parameter/"&gt;Go – taking slices of any type as input parameters&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;译者：&lt;a href="https://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;最近参与的一个业余项目，&lt;a href="https://github.com/ahmetalpbalkan/go-linq"&gt;go-linq&lt;/a&gt;，让我了解到Go语言的类型系统并不是为任何类面向
 对象编程而设计的。没有泛型，没有类型继承，也没有提供任何对这些特性有用的东西。&lt;/p&gt;

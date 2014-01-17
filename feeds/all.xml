@@ -1,5 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>黑 * 白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/all.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2014-01-17T00:00:00+08:00</updated><entry><title>为何Goroutine的栈空间可以无限大？（译）</title><link href="http://youngsterxyf.github.io/2014/01/17/goroutine-stack-infinite/" rel="alternate"></link><updated>2014-01-17T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-01-17:2014/01/17/goroutine-stack-infinite/</id><summary type="html">&lt;p&gt;原文：&lt;a href="http://dave.cheney.net/2013/06/02/why-is-a-goroutines-stack-infinite"&gt;Why is a Goroutine's stack infinite?&lt;/a&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>黑 * 白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/all.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2014-01-17T00:00:00+08:00</updated><entry><title>基于Golang的Http处理接口实现请求处理中间件（译）</title><link href="http://youngsterxyf.github.io/2014/01/17/golang-http-handlers-as-middleware/" rel="alternate"></link><updated>2014-01-17T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-01-17:2014/01/17/golang-http-handlers-as-middleware/</id><summary type="html">&lt;p&gt;原文：&lt;a href="http://capotej.com/blog/2013/10/07/golang-http-handlers-as-middleware/"&gt;Golang Http Handlers as Middleware&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;译者：&lt;a href="https://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;大多数现代Web组件栈允许通过栈式/组件式中间件“过滤”请求，这样就能干净地从web应用中分离出横切关注点（译注：面向方面程序设计中的概念？）。
+本周我尝试在Go语言的&lt;code&gt;http.FileServer&lt;/code&gt;中植入钩子，发现实现起来十分简便，让我非常惊讶。&lt;/p&gt;
+&lt;p&gt;让我们从一个基本的文件服务器开始说起：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ListenAndServe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;:8080&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;FileServer&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Dir&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;/tmp&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;这段程序会在端口8080上开启一个本地文件服务器。那么我们该如何在这其中植入钩子从而能够在文件请求处理之前执行一些代码？来看一下&lt;code&gt;http.ListenAndServe&lt;/code&gt;的方法签名：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;ListenAndServe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;addr&lt;/span&gt; &lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;handler&lt;/span&gt; &lt;span class="nx"&gt;Handler&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="kt"&gt;error&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;看起来&lt;code&gt;http.FileServer&lt;/code&gt;返回了一个&lt;code&gt;Handler&lt;/code&gt;---给定一个根目录就能知道如何处理文件请求。那我们来看看&lt;code&gt;Handler&lt;/code&gt;接口：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;type&lt;/span&gt; &lt;span class="nx"&gt;Handler&lt;/span&gt; &lt;span class="kd"&gt;interface&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;ServeHTTP&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;ResponseWriter&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nx"&gt;Request&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;根据Go语言的接口原理，任何对象只要实现了&lt;code&gt;ServeHTTP&lt;/code&gt;就是一个&lt;code&gt;Handler&lt;/code&gt;。那么似乎我们需要做的事情就是构造一个自己的&lt;code&gt;Handler&lt;/code&gt;---封装&lt;code&gt;http.FileServer&lt;/code&gt;的处理流程。
+Go语言的net/http标准库模块内置了一个帮助函数&lt;code&gt;http.HandlerFunc&lt;/code&gt;，用于将普通函数转变为请求处理函数（handler）：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;type&lt;/span&gt; &lt;span class="nx"&gt;HandlerFunc&lt;/span&gt; &lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;ResponseWriter&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nx"&gt;Request&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;那么我们这样封装&lt;code&gt;http.FileServer&lt;/code&gt;就可以了：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;OurLoggingHandler&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;h&lt;/span&gt; &lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Handler&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Handler&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;HandlerFunc&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;w&lt;/span&gt; &lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ResponseWriter&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;r&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Request&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nx"&gt;r&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;URL&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="nx"&gt;h&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ServeHTTP&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;w&lt;/span&gt; &lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="nx"&gt;r&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="p"&gt;})&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;fileHandler&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;FileServer&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Dir&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;/tmp&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    &lt;span class="nx"&gt;wrappedHandler&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nx"&gt;OurLoggingHandler&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;fileHandler&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ListenAndServe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;:8080&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;wrappedHandler&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Go语言的net/http标准库模块有很多内置的&lt;a href="http://golang.org/pkg/net/http/#Handler"&gt;处理函数&lt;/a&gt;，如&lt;a href="http://golang.org/pkg/net/http/#TimeoutHandler"&gt;TimeoutHandler&lt;/a&gt;和&lt;a href="http://golang.org/pkg/net/http/#RedirectHandler"&gt;RedirectHandler&lt;/a&gt;，
+可以相同的方式混合匹配使用。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;&lt;strong&gt;译者推荐阅读&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="http://www.cnblogs.com/yjf512/archive/2012/08/22/2650873.html"&gt;Golang Http Server源码阅读&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</summary><category term="Golang"></category><category term="翻译"></category><category term="中间件"></category></entry><entry><title>为何Goroutine的栈空间可以无限大？（译）</title><link href="http://youngsterxyf.github.io/2014/01/17/goroutine-stack-infinite/" rel="alternate"></link><updated>2014-01-17T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-01-17:2014/01/17/goroutine-stack-infinite/</id><summary type="html">&lt;p&gt;原文：&lt;a href="http://dave.cheney.net/2013/06/02/why-is-a-goroutines-stack-infinite"&gt;Why is a Goroutine's stack infinite?&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;译者：&lt;a href="https://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Go编程新手可能会偶然发现&lt;a href="http://golang.org/"&gt;Go语言&lt;/a&gt;---与一个Goroutine可用栈空间大小相关---的一个古怪特性。这通常是由于程序员
 无意间构造了一个无限递归函数调用而产生的。为了阐明这个特性，以如下代码（有点刻意设计的）为例。&lt;/p&gt;

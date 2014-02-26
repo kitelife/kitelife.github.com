@@ -1,5 +1,294 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>黑 * 白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/all.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2013-12-03T00:00:00+08:00</updated><entry><title>IE下JavaScript Date对象的不同之处</title><link href="http://youngsterxyf.github.io/2013/12/03/date_difference_in_ie/" rel="alternate"></link><updated>2013-12-03T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2013-12-03:2013/12/03/date_difference_in_ie/</id><summary type="html">&lt;p&gt;之前在&lt;a href="http://youngsterxyf.github.io/2013/11/29/inner_warehouse_monitor_system/"&gt;仓库作业机器监控系统&lt;/a&gt;项目中使用&lt;a href="http://www.highcharts.com/demo/line-time-series"&gt;HighCharts的时间序列数据图&lt;/a&gt;来绘制机器CPU使用率、内存使用量、网络流量趋势变化图等，这些图在IE下却没有正常显示，IE也没有报错，按理说HighCharts的IE兼容性是较好的，不会出现这种问题，
+<feed xmlns="http://www.w3.org/2005/Atom"><title>黑 * 白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/all.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2014-01-17T00:00:00+08:00</updated><entry><title>如何实现Golang的http请求处理中间件（译）</title><link href="http://youngsterxyf.github.io/2014/01/17/golang-http-handlers-as-middleware/" rel="alternate"></link><updated>2014-01-17T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-01-17:2014/01/17/golang-http-handlers-as-middleware/</id><summary type="html">&lt;p&gt;原文：&lt;a href="http://capotej.com/blog/2013/10/07/golang-http-handlers-as-middleware/"&gt;Golang Http Handlers as Middleware&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;译者：&lt;a href="https://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;大多数现代Web组件栈允许通过栈式/组件式中间件“过滤”请求，这样就能干净地从web应用中分离出横切关注点（译注：面向方面程序设计中的概念？）。
+本周我尝试在Go语言的&lt;code&gt;http.FileServer&lt;/code&gt;中植入钩子，发现实现起来十分简便，让我非常惊讶。&lt;/p&gt;
+&lt;p&gt;让我们从一个基本的文件服务器开始说起：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ListenAndServe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;:8080&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;FileServer&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Dir&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;/tmp&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;这段程序会在端口8080上开启一个本地文件服务器。那么我们该如何在这其中植入钩子从而能够在文件请求处理之前执行一些代码？来看一下&lt;code&gt;http.ListenAndServe&lt;/code&gt;的方法签名：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;ListenAndServe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;addr&lt;/span&gt; &lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;handler&lt;/span&gt; &lt;span class="nx"&gt;Handler&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="kt"&gt;error&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;看起来&lt;code&gt;http.FileServer&lt;/code&gt;返回了一个&lt;code&gt;Handler&lt;/code&gt;---给定一个根目录就能知道如何处理文件请求。那我们来看看&lt;code&gt;Handler&lt;/code&gt;接口：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;type&lt;/span&gt; &lt;span class="nx"&gt;Handler&lt;/span&gt; &lt;span class="kd"&gt;interface&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;ServeHTTP&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;ResponseWriter&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nx"&gt;Request&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;根据Go语言的接口原理，任何对象只要实现了&lt;code&gt;ServeHTTP&lt;/code&gt;就是一个&lt;code&gt;Handler&lt;/code&gt;。那么似乎我们需要做的事情就是构造一个自己的&lt;code&gt;Handler&lt;/code&gt;---封装&lt;code&gt;http.FileServer&lt;/code&gt;的处理流程。
+Go语言的net/http标准库模块内置了一个帮助函数&lt;code&gt;http.HandlerFunc&lt;/code&gt;，用于将普通函数转变为请求处理函数（handler）：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;type&lt;/span&gt; &lt;span class="nx"&gt;HandlerFunc&lt;/span&gt; &lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;ResponseWriter&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nx"&gt;Request&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;那么我们这样封装&lt;code&gt;http.FileServer&lt;/code&gt;就可以了：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;OurLoggingHandler&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;h&lt;/span&gt; &lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Handler&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Handler&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;HandlerFunc&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;w&lt;/span&gt; &lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ResponseWriter&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;r&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Request&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nx"&gt;r&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;URL&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="nx"&gt;h&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ServeHTTP&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;w&lt;/span&gt; &lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="nx"&gt;r&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="p"&gt;})&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;fileHandler&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;FileServer&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Dir&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;/tmp&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    &lt;span class="nx"&gt;wrappedHandler&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nx"&gt;OurLoggingHandler&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;fileHandler&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ListenAndServe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;:8080&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;wrappedHandler&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Go语言的net/http标准库模块有很多内置的&lt;a href="http://golang.org/pkg/net/http/#Handler"&gt;处理函数&lt;/a&gt;，如&lt;a href="http://golang.org/pkg/net/http/#TimeoutHandler"&gt;TimeoutHandler&lt;/a&gt;和&lt;a href="http://golang.org/pkg/net/http/#RedirectHandler"&gt;RedirectHandler&lt;/a&gt;，
+可以相同的方式混合匹配使用。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;&lt;strong&gt;译者推荐阅读&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="http://www.cnblogs.com/yjf512/archive/2012/08/22/2650873.html"&gt;Golang Http Server源码阅读&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</summary><category term="Golang"></category><category term="翻译"></category><category term="中间件"></category></entry><entry><title>为何Goroutine的栈空间可以无限大？（译）</title><link href="http://youngsterxyf.github.io/2014/01/17/goroutine-stack-infinite/" rel="alternate"></link><updated>2014-01-17T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-01-17:2014/01/17/goroutine-stack-infinite/</id><summary type="html">&lt;p&gt;原文：&lt;a href="http://dave.cheney.net/2013/06/02/why-is-a-goroutines-stack-infinite"&gt;Why is a Goroutine's stack infinite?&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;译者：&lt;a href="https://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Go编程新手可能会偶然发现&lt;a href="http://golang.org/"&gt;Go语言&lt;/a&gt;---与一个Goroutine可用栈空间大小相关---的一个古怪特性。这通常是由于程序员
+无意间构造了一个无限递归函数调用而产生的。为了阐明这个特性，以如下代码（有点刻意设计的）为例。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kn"&gt;package&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;
+
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;fmt&amp;quot;&lt;/span&gt;
+
+&lt;span class="kd"&gt;type&lt;/span&gt; &lt;span class="nx"&gt;S&lt;/span&gt; &lt;span class="kd"&gt;struct&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;a&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;b&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="c1"&gt;// String implements the fmt.Stringer interface&lt;/span&gt;
+&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;s&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nx"&gt;S&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="nx"&gt;String&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="kt"&gt;string&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Sprintf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;%s&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;s&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;     &lt;span class="c1"&gt;// Sprintf will call s.String()&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;s&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="nx"&gt;S&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;a&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;b&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;s&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;如果你运行这个程序（我不建议你这样做），你会发现你的机器开始频繁地swap（译注：不了解swap的，可以简单理解为“内存与硬盘之间数据的导出导入”），
+并且可能不再响应操作事件，除非你在一切无法挽回之前及时地按下^C。我知道所有人都会先在Go官网的playground中尝试运行这个程序，
+&lt;a href="http://dave.cheney.net/2013/06/02/why-is-a-goroutines-stack-infinite"&gt;所以我已经为你准备好了&lt;/a&gt;。&lt;/p&gt;
+&lt;p&gt;大多数程序员应该都遇到过无限递归导致的问题，但这都只是对于他们的程序来说是致命的，对于他们的机器通常来说并不是。那么，为何Go程序会不同呢？&lt;/p&gt;
+&lt;p&gt;Goroutine的主要特征之一是其开销---在内存占用初始化方面，创建一个Goroutine的开销非常小（相比于一个传统POSIX线程的1-8M字节），并且
+Goroutine的栈空间是按需扩大和缩小的。这就允许一个Goroutine以单个4096字节的栈空间开始，然后按需扩容缩容，也不用担心栈空间耗尽的风险。&lt;/p&gt;
+&lt;p&gt;为了实现这一特性，链接器（5l，6l，8l）在每个函数的开头都插入一小段前导代码$ ^1 $，这段代码会检测该函数需要的栈空间大小是否小于当前可用的栈空间。
+若大于，则调用&lt;code&gt;runtime.morestack&lt;/code&gt;分配一个新的栈页（stack page）$ ^2 $，拷贝函数调用方传递来的参数，然后将控制权返回给原来要调用的函数，
+这样这个函数就可以安全运行了。当这个函数退出时，再撤销操作，将函数返回值拷贝回函数调用方的栈帧（stack frame），不再需要的栈空间也被释放。&lt;/p&gt;
+&lt;p&gt;通过这个过程，栈空间就好像无限大一样，若假设不会持续地跨越两个栈的大小边界-通常称为&lt;em&gt;栈切分（stack splitting）&lt;/em&gt;（译注：不太理解这句话，应该是指：&lt;strong&gt;程序执行
+到函数调用方，正好将近耗尽预分配的栈空间，而函数调用方中又不断地调用其他函数，这样每次函数调用就需要分配新的栈空间，函数调用结束后又需要
+释放新分配的栈空间，所以开销积累起来就比较大&lt;/strong&gt;），这种栈空间分配方式的开销也会很小。&lt;/p&gt;
+&lt;p&gt;然而，直到现在我都还未披露一个细节---粗心地使用递归函数导致内存耗尽的话，当需要新的栈页时，就会&lt;em&gt;从堆上分配&lt;/em&gt;（译注：这句话可能有点问题。应该是Goroutine耗尽操作系统为Go程序分配的栈大小的话，
+就从堆上分配）。&lt;/p&gt;
+&lt;p&gt;由于无限递归函数持续地调用自己，新的栈页最后就需要从堆上分配。堆的大小很快就会超过机器的可用物理内存空间，到那时，swapping会很快导致你的机器不可用。&lt;/p&gt;
+&lt;p&gt;Go程序可用的堆大小依赖于很多东西，包括机器的CPU架构和操作系统，但这通常是一个超出机器物理内存的值，因此机器很可能在程序耗尽它的堆空间之前就会频繁地swap。&lt;/p&gt;
+&lt;p&gt;对于Go 1.1，曾有强烈要求增大32位、64位平台上堆的最大值，但这在某种程度上恶化了这一问题，比如，你的机器不太可能有128GB$ ^3 $的物理内存。&lt;/p&gt;
+&lt;p&gt;最后提一下，关于这个问题有几个未解决的issue（&lt;a href="https://code.google.com/p/go/issues/detail?id=4692"&gt;链接&lt;/a&gt;，&lt;a href="https://code.google.com/p/go/issues/detail?id=2556"&gt;链接&lt;/a&gt;）,
+目前还没找到一个解决方案能够不影响按常规编写的程序的性能。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;&lt;strong&gt;注释&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;也适用于方法（method），虽然方法是作为第一个参数为方法接受者（the method receiver）的函数来实现的，但在讨论Go语言中分段的（segmented）栈如何工作之时，并没有实际的区别。&lt;/li&gt;
+&lt;li&gt;使用单词page并不意味着仅按固定的4096字节来分配，如果需要，runtime.morestack会分配一个更大的，倍数于一个页大小的空间。&lt;/li&gt;
+&lt;li&gt;由于Go 1.1发布周期中一个后来的改变，64位的Windows平台仅允许32Gb大小的堆。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;hr /&gt;
+&lt;p&gt;&lt;strong&gt;译者补充相关文章&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="http://blog.nella.org/a-trip-down-the-split-rabbithole/"&gt;A trip down the (split) rabbithole&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://runtime.diandian.com/post/2011-12-24/11488238"&gt;go语言中split stack(上)&lt;/a&gt;，&lt;a href="http://runtime.diandian.com/post/2011-12-26/10119542"&gt;go语言中split stack(下)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://mikespook.com/2011/03/go%E5%9C%A8stack%E4%B8%8A%E5%B9%B2%E4%BA%86%E7%A5%9E%E9%A9%AC%EF%BC%9F/"&gt;go在stack上干了神马？&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</summary><category term="Golang"></category><category term="翻译"></category></entry><entry><title>Go - 以任意类型的slices作为输入参数（译）</title><link href="http://youngsterxyf.github.io/2014/01/16/go-input-slices-any-type/" rel="alternate"></link><updated>2014-01-16T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-01-16:2014/01/16/go-input-slices-any-type/</id><summary type="html">&lt;p&gt;原文：&lt;a href="https://ahmetalpbalkan.com/blog/golang-take-slices-of-any-type-as-input-parameter/"&gt;Go – taking slices of any type as input parameters&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;译者：&lt;a href="https://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近参与的一个业余项目，&lt;a href="https://github.com/ahmetalpbalkan/go-linq"&gt;go-linq&lt;/a&gt;，让我了解到Go语言的类型系统并不是为任何类面向
+对象编程而设计的。没有泛型，没有类型继承，也没有提供任何对这些特性有用的东西。&lt;/p&gt;
+&lt;p&gt;但是，提供了一个名为&lt;code&gt;interface{}&lt;/code&gt;的类型，你可以向其赋予几乎任意类型的值，不会抛出编译错误，就像.NET的&lt;code&gt;Object&lt;/code&gt;或Java的&lt;code&gt;Object&lt;/code&gt;：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;o&lt;/span&gt; &lt;span class="kd"&gt;interface&lt;/span&gt;&lt;span class="p"&gt;{}&lt;/span&gt;
+&lt;span class="nx"&gt;o&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="mf"&gt;3.14&lt;/span&gt;
+&lt;span class="nx"&gt;o&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nx"&gt;Student&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;Name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;Ahmet&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;我们假设你需要一个可以接收任意类型slices的函数，如果考虑如下这样实现：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;Method&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;in&lt;/span&gt; &lt;span class="p"&gt;[]&lt;/span&gt;&lt;span class="kd"&gt;interface&lt;/span&gt;&lt;span class="p"&gt;{}){&lt;/span&gt;&lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="nx"&gt;slice&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="p"&gt;[]&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="nx"&gt;Method&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;slice&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;   &lt;span class="c1"&gt;// 抛出错误&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;这样的代码会抛出编译错误，因为&lt;code&gt;[]int&lt;/code&gt;不是&lt;code&gt;[]interface{}&lt;/code&gt;。那么该如何解决这个问题呢？你可以要求&lt;code&gt;Method&lt;/code&gt;的使用者先把slices
+转换为&lt;code&gt;[]interface{}&lt;/code&gt;类型。也就是说他们必须借助于如下类似函数将他们的&lt;code&gt;[]AnyType&lt;/code&gt;类型参数转换为&lt;code&gt;[]interface{}&lt;/code&gt;类型：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;conv&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;in&lt;/span&gt; &lt;span class="p"&gt;[]&lt;/span&gt;&lt;span class="nx"&gt;AnyType&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;out&lt;/span&gt; &lt;span class="p"&gt;[]&lt;/span&gt;&lt;span class="kd"&gt;interface&lt;/span&gt;&lt;span class="p"&gt;{})&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;out&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;make&lt;/span&gt;&lt;span class="p"&gt;([]&lt;/span&gt;&lt;span class="kd"&gt;interface&lt;/span&gt;&lt;span class="p"&gt;{},&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;in&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;v&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="k"&gt;range&lt;/span&gt; &lt;span class="nx"&gt;in&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nx"&gt;out&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;v&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;但这种实现的扩展性并不好。如果&lt;code&gt;Method&lt;/code&gt;的使用者（可以是一个常用函数如&lt;code&gt;Map&lt;/code&gt;、&lt;code&gt;Filter&lt;/code&gt;等）想向&lt;code&gt;Method&lt;/code&gt;传递N种不同类型的参数，
+那么他们就必须编写N个&lt;code&gt;conv&lt;/code&gt;函数。&lt;/p&gt;
+&lt;p&gt;对此，我们该怎么办呢？使用&lt;strong&gt;reflection&lt;/strong&gt;（反射）呀！实现一个函数以&lt;code&gt;interface{}&lt;/code&gt;（可以赋任意类型的值）为输入参数类型，在函数内部
+将这个输入参数转换为一个slice，然后用于我们&lt;code&gt;Method&lt;/code&gt;函数。如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;takeSliceArg&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;arg&lt;/span&gt; &lt;span class="kd"&gt;interface&lt;/span&gt;&lt;span class="p"&gt;{})&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;out&lt;/span&gt; &lt;span class="p"&gt;[]&lt;/span&gt;&lt;span class="kd"&gt;interface&lt;/span&gt;&lt;span class="p"&gt;{},&lt;/span&gt; &lt;span class="nx"&gt;ok&lt;/span&gt; &lt;span class="kt"&gt;bool&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;slice&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;success&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nx"&gt;takeArg&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;arg&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;reflect&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Slice&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;!&lt;/span&gt;&lt;span class="nx"&gt;success&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nx"&gt;ok&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="nx"&gt;c&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nx"&gt;slice&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Len&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="nx"&gt;out&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;make&lt;/span&gt;&lt;span class="p"&gt;([]&lt;/span&gt;&lt;span class="kd"&gt;interface&lt;/span&gt;&lt;span class="p"&gt;{},&lt;/span&gt; &lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="p"&gt;&amp;lt;&lt;/span&gt; &lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nx"&gt;out&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;slice&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Index&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;Interface&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;out&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;takeArg&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;arg&lt;/span&gt; &lt;span class="kd"&gt;interface&lt;/span&gt;&lt;span class="p"&gt;{},&lt;/span&gt; &lt;span class="nx"&gt;kind&lt;/span&gt; &lt;span class="nx"&gt;reflect&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Kind&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;val&lt;/span&gt; &lt;span class="nx"&gt;reflect&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Value&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;ok&lt;/span&gt; &lt;span class="kt"&gt;bool&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;val&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;reflect&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ValueOf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;arg&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="nx"&gt;val&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Kind&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="nx"&gt;kind&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nx"&gt;ok&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;函数&lt;code&gt;takeArg()&lt;/code&gt;尝试将传入的参数值转换为指定的&lt;a href="http://golang.org/pkg/reflect/#Kind"&gt;reflect.Kind&lt;/a&gt;类型，然后函数&lt;code&gt;takeSliceArg()&lt;/code&gt;
+尝试将传递给它的值（经&lt;code&gt;takeArg()&lt;/code&gt;转换后）转换为一个&lt;code&gt;interface{}&lt;/code&gt;的slice。虽然，这样会因为反射而影响到一点性能，但影响并不大。&lt;/p&gt;
+&lt;p&gt;就是这样了。这种方案启发于Tobia Confronto的&lt;a href="https://github.com/tobia/fn"&gt;fn项目&lt;/a&gt;，并&lt;a href="https://github.com/ahmetalpbalkan/go-linq/commit/fa1548dc4ad8126e62c1848df6e6d961753d976e#diff-3"&gt;应用到go-linq中&lt;/a&gt;。&lt;/p&gt;</summary><category term="Golang"></category><category term="翻译"></category></entry><entry><title>回顾2013，展望2014</title><link href="http://youngsterxyf.github.io/2014/01/06/review13-lookin14/" rel="alternate"></link><updated>2014-01-06T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-01-06:2014/01/06/review13-lookin14/</id><summary type="html">&lt;p&gt;2013已经过去了。&lt;/p&gt;
+&lt;p&gt;时间消逝得太快，以至于很多事情在记忆上相互重叠，无法明确区分事情发生的时间点。那么该如何回顾这过去的一年？&lt;/p&gt;
+&lt;h2&gt;工作&lt;/h2&gt;
+&lt;p&gt;2013，参加工作的第一年，我几乎全身心地扑在工作上，自认为做了一些事情，也有很多收获，愉快而充实。技术工作于我而言，更多的
+是一种兴趣、乐趣。&lt;/p&gt;
+&lt;p&gt;非常感谢领导、导师以及伙伴。领导、导师给了我很大的空间，导师始终耐心地给于业务和技术的指导，和伙伴的合作非常愉快。&lt;/p&gt;
+&lt;p&gt;这一年，如果说我有了些许成长进步，很大程度上归功于他们。&lt;/p&gt;
+&lt;p&gt;这些话说得也许有些像获奖感言，却是发自我的真心。&lt;/p&gt;
+&lt;h2&gt;生活&lt;/h2&gt;
+&lt;p&gt;2013，我和老婆，订婚、领证，终于结束了长达5年的异地恋，从此以后会有个人始终和我“相依为命”，面对或许琐碎的每一天，在城市飘荡的
+日子也不会再孤单，我很安心，很踏实。&lt;/p&gt;
+&lt;p&gt;现在，我没车、没房，每个月的工资也不算高，但我始终在努力，除了为自己，还因为有个人值得你去努力把生活过得更好。&lt;/p&gt;
+&lt;p&gt;为了记录我们以前和以后人生中的重要时刻，我特意创建了一个&lt;a href="http://youngsterxyf.github.io/love"&gt;大事年表网页&lt;/a&gt;。&lt;/p&gt;
+&lt;h2&gt;读书&lt;/h2&gt;
+&lt;p&gt;2013，我读过的书非常少，如果非得为此找个理由，我想应该是：很大部分精力都放在了工作和技术上。&lt;/p&gt;
+&lt;p&gt;我非常庆幸自己高中、大学、读研的时候阅读了大量的杂书，虽然在一定程度上影响了我的学业，但我更加看重我如今的心态、思想，气质。&lt;/p&gt;
+&lt;p&gt;这里简单罗列一下2013年读过的书：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;明朝那些事儿（1-7全）（强烈推荐）&lt;/li&gt;
+&lt;li&gt;读者（梁文道著）&lt;/li&gt;
+&lt;li&gt;Go Web编程&lt;/li&gt;
+&lt;li&gt;Learning Raphael - JS Vector Graphic（对Web数据可视化感兴趣的话，非常推荐）-&amp;gt; &lt;a href="https://github.com/youngsterxyf/Coder-s-code/blob/master/JavaScript/learning_raphael_js_vector_graphic.js"&gt;阅读摘录&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Just For Fun - The Story of an Accidental Revolutionary （Linus Torvalds自传，推荐）-&amp;gt; &lt;a href="http://youngsterxyf.github.io/2013/11/07/read-just_for_fun/"&gt;读书笔记&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Beginning jQuery [读书笔记）-&amp;gt; &lt;a href="https://github.com/youngsterxyf/Coder-s-code/blob/master/JavaScript/beginning-jquery.js"&gt;阅读摘录&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Learning from jQuery（推荐给jQuery学习者）-&amp;gt; &lt;a href="https://github.com/youngsterxyf/Coder-s-code/blob/master/JavaScript/learning-from-jQuery.js"&gt;阅读摘录&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;JavaScript语言精粹 -&amp;gt; &lt;a href="http://youngsterxyf.github.io/2013/03/14/read-js-thegoodparts/"&gt;阅读摘录&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://git-scm.com/book/zh"&gt;Pro Git&lt;/a&gt; （未读完）&lt;/li&gt;
+&lt;li&gt;精通CSS-高级Web标准解决方案 （未读完）&lt;/li&gt;
+&lt;li&gt;UNIX环境高级编程 （未读完）&lt;/li&gt;
+&lt;li&gt;当我谈跑步时，我谈些什么（村上春树著，未读完）&lt;/li&gt;
+&lt;li&gt;研究之美 （是13年读的么？）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;书单中几乎都是技术书，而技术书又是因工作需要而阅读的，所以好几本都未读完。&lt;/p&gt;
+&lt;p&gt;仍然希望2014年多花些时间阅读，增强“内功”，目前列入计划的书籍有：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;历史研究（汤因比著）&lt;/li&gt;
+&lt;li&gt;UNIX环境高级编程&lt;/li&gt;
+&lt;li&gt;TCP/IP详解 卷1&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;求精而不求多，努力达成目标。&lt;/p&gt;
+&lt;h2&gt;博客&lt;/h2&gt;
+&lt;p&gt;坚持写博客，也是13年的一大收获，一共写了&lt;a href="http://youngsterxyf.github.io/archives.html"&gt;45篇文章&lt;/a&gt;，主要分为技术译文和工作技术总结两部分。&lt;/p&gt;
+&lt;p&gt;深感写博客对于技术、知识积累是非常有帮助的，现在我就经常翻阅以前写的文章。&lt;/p&gt;
+&lt;p&gt;勤写博客、总结工作心得，对于工作的帮助也很大，不说别的，就说：有时也许领导突然让你就近期的工作写个总结，如果你已经写了博客，那就可以直接拿过来改改就可以O了，哈哈。&lt;/p&gt;
+&lt;h2&gt;其他&lt;/h2&gt;
+&lt;p&gt;13年，我并没有怎么运动锻炼。&lt;a href="http://youngsterxyf.github.io/2013/01/18/review12-lookinto13/"&gt;回顾2012，展望2013&lt;/a&gt;中的“信誓旦旦”让如今的我感到很羞愧。但，住处离公司近，这一优点让我养成了
+走路上下班的习惯，从4月份入职到现在，9个月，除了一次睡过头了打车到公司，每天上下班走路各半个小时左右，对于我的身体健康不能说没有积极的影响。&lt;/p&gt;
+&lt;h2&gt;未来一年&lt;/h2&gt;
+&lt;p&gt;2014年，相比2013年，也许并不会有太多的区别，但我仍非常期望自己---2013年做得好的继续保持，没有达到自己期望的地方则加油努力！&lt;/p&gt;
+&lt;p&gt;“活着是一种修行！”&lt;/p&gt;</summary><category term="总结"></category></entry><entry><title>微博"收藏/赞/转发"技术资料汇总</title><link href="http://youngsterxyf.github.io/2013/12/28/weibo_tech_resources_summary/" rel="alternate"></link><updated>2013-12-28T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2013-12-28:2013/12/28/weibo_tech_resources_summary/</id><summary type="html">&lt;p&gt;使用新浪微博，我很少发状态，主要是跟踪技术圈的一些动态，技术牛人们都在搞些什么东东，因而收藏和转发了一些优秀的技术资源，
+但有些资源当时并没有来得及阅读消化，也没必要马上就阅读学习的，所以这里整理汇总一下，以免湮没在浩瀚的网络信息海洋中。&lt;/p&gt;
+&lt;h3&gt;书籍&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;HTTP权威指南 &amp;lt;- &lt;a href="http://weibo.com/fenng"&gt;@Fenng&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://nlp.stanford.edu/IR-book/"&gt;Introduction to Information Retrieval&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/lirenchen"&gt;@陈利人&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://www.codingnow.com/temp/readinglua.pdf"&gt;Lua 源码欣赏&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/deepcold"&gt;@简悦云风&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://aosabook.org/en/index.html"&gt;The Architecture of Open Source Applications&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/u/2169336083"&gt;@CloudFoundry &lt;/a&gt; (已陆续读了部分章节，赞！图灵社区有章节翻译)&lt;/li&gt;
+&lt;li&gt;程序设计实践 &amp;lt;- &lt;a href="http://weibo.com/wintercn"&gt;@寒冬winter&lt;/a&gt; &lt;em&gt;推荐语：薄薄200页，就能让一个掌握一门编程语言基础的人成为一个合格的程序员，其中“算法和数据结构”一章不到30页，我认为细细读过足以应付大多数面试和工作需要。&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;七周七语言 &amp;lt;- &lt;a href="http://weibo.com/tchuba"&gt;@淘宝褚霸&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;C语言接口与实现 &amp;lt;- &lt;a href="http://weibo.com/huangz1990"&gt;@huangz1990&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;The Linux Programming Interface &amp;lt;- &lt;a href="http://weibo.com/533452688"&gt;@ASTA谢&lt;/a&gt; &lt;em&gt;推荐语：既《Unix网络编程》一二册、《Unix环境高级编程》这三本书之后的最全面最好的一本介绍linux方面的书籍，非常推荐大家读一读&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;代码阅读方法与实践 &amp;lt;- &lt;a href="http://weibo.com/tchuba"&gt;@淘宝褚霸&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/"&gt;JavaScript 设计模式&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/oschina2010"&gt;@开源中国&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://learnvimscriptthehardway.stevelosh.com/"&gt;Learn Vimscript the Hard Way&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/developerworks"&gt;@developerWorks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;C++ 的设计与演化 &amp;lt;- &lt;a href="http://weibo.com/marchliu"&gt;@刘鑫Mars&lt;/a&gt; &lt;em&gt;推荐语：无论你对CPP是爱还是恨，只要对它有强烈的感情，就值得读一读&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;项目&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="http://nmon.sourceforge.net/pmwiki.php"&gt;nmon for Linux&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/tchuba"&gt;@淘宝褚霸&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://bitbucket.org/kardianos/rsync"&gt;rsync(Go语言实现)&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/533452688"&gt;@ASTA谢&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://plan9.bell-labs.com/plan9/"&gt;plan9&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/codebox"&gt;@CodeBox-腾讯&lt;/a&gt; &lt;em&gt;推荐语：推荐有技术品味的同学都看看plan9的源码，真正世界级大师的作品。plan9的部分代码后来直接用来实现go语言了。&lt;/em&gt; (前年关注过这个项目，哈哈，我的Github头像就是用的plan9的图标)&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/square/maximum-awesome"&gt;maximum-awesome&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/developerworks"&gt;@developerWorks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://influxdb.org/"&gt;InFluxDB&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/soddyque"&gt;@有点儿欢乐&lt;/a&gt;(目前，我们使用InfluxDB来实现一种时间序列数据后备存储方案。官方的文档还不太完善，也还没生产应用案例)&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://bitly.github.io/nsq/"&gt;NSQ&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/u/1855563263"&gt;@夏永锋_SJTU&lt;/a&gt; (哈哈，我自己。目前我们使用NSQ来接收服务器上报的各项性能数据)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;文章&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="http://voorloopnul.com/blog/a-python-proxy-in-less-than-100-lines-of-code/"&gt;A python proxy in less than 100 lines of code&lt;/a&gt; &amp;lt;- &lt;a href="http://e.weibo.com/u/2093492691?ref=http%3A%2F%2Fweibo.com%2Ffav%3Fpage%3D5"&gt;@程序员的那些事&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://pymotw.com/2/"&gt;Python Module of the Week&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/royshan"&gt;@骆逸&lt;/a&gt; (我翻译过其中&lt;a href="http://youngsterxyf.github.io/2013/03/30/argparse/"&gt;argparse&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://igoro.com/archive/what-really-happens-when-you-navigate-to-a-url/"&gt;What really happens when you navigate to a URL&lt;/a&gt;，&lt;a href="http://www.cnblogs.com/wenanry/archive/2010/02/25/1673368.html"&gt;译文&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/lirenchen"&gt;@陈利人&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://rxin.github.io/db-readings/"&gt;Readings in Databases&lt;/a&gt; &amp;lt;- &lt;a href="http://e.weibo.com/u/2093492691"&gt;@程序员的那些事&lt;/a&gt; (数据库相关论文列表，赞！)&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://www.html5rocks.com/en/tutorials/internals/howbrowserswork/"&gt;How Browsers Work: Behind the scenes of modern web browsers&lt;/a&gt;，&lt;a href="http://www.html5rocks.com/zh/tutorials/internals/howbrowserswork/"&gt;译文&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/ftqq"&gt;@方糖气球&lt;/a&gt; (大致读过一遍)&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://www.allthingsdistributed.com/2012/12/paper-readings-2012.html"&gt;The Back-to-Basics Readings of 2012&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/u/1765260200"&gt;@jametong&lt;/a&gt; (2014年，我打算跟踪阅读这一系列)&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://coderwall.com/p/rklk_a"&gt;Go: Share Memory By Communicating&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/533452688"&gt;@ASTA谢&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://www.valleytalk.org/2011/06/18/%E5%AF%B9%E5%A4%A7%E9%80%81%E7%B3%BB%E7%BB%9F%E8%BD%AF%E4%BB%B6%E6%9E%B6%E6%9E%84%E5%B8%88%E7%9A%84%E4%B8%83%E4%B8%AA%E6%9C%9F%E6%9C%9B/"&gt;对大宋下一代系统软件架构师的七个期望&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/baoyungang"&gt;@包云岗&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.usenix.org/system/files/conference/nsdi13/nsdi13-final170_update.pdf"&gt;Scaling Memcache at Facebook&lt;/a&gt;，&lt;a href="http://www.oschina.net/translate/scaling-memcache-facebook"&gt;译文&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/emclabschina"&gt;@EMC中国研究院&lt;/a&gt;, &lt;a href="http://weibo.com/developerworks"&gt;@developerWorks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://www.bigendian123.com/go/2013/11/29/golang-schedule/"&gt;goroutine与调度器&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/marckywu"&gt;@高端小混混&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://blog.golang.org/go-slices-usage-and-internals"&gt;Go Slices: usage and internals&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/533452688"&gt;@ASTA谢&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://journal.stuffwithstuff.com/2013/12/08/babys-first-garbage-collector/"&gt;Baby's First Garbage Collector&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/forhapy"&gt;@傅海平ICT&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying"&gt;The Log: What every software engineer should know about real-time data's unifying abstraction&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/u/2216172320"&gt;@何_登成&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://tiewei.github.io/cloud/Docker-Getting-Start/"&gt;Docker介绍: 相关技术&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/ferest"&gt;@fe-rest&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://blog.csdn.net/yzsind/article/details/6059209"&gt;面向程序员的数据库访问性能优化法则&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/u/2216172320"&gt;@何_登成&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://bash.cumulonim.biz/BashPitfalls.html"&gt;Bash Pitfalls&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/huoding"&gt;@火丁笔记&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://www.rational.so/blog/2013/11/09/sosp-2013-analysis/"&gt;SOSP 2013 Analysis&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/u/1657470871"&gt;@王威廉&lt;/a&gt; (挺有意思的一篇学术八卦文)&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://rogueleaderr.com/post/65157477648/the-idiomatic-guide-to-deploying-django-in-production"&gt;The Idiomatic Guide to Deploying Django in Production&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/developerworks"&gt;@developerWorks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://zh.learnlayout.com/"&gt;学习CSS布局&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/royshan"&gt;@骆逸&lt;/a&gt; (读过，不错)&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://blog.manong.io/technologies-we-use/"&gt;《码农周刊》用到的一些技术&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/developerworks"&gt;@developerWorks&lt;/a&gt; (不错，赞！)&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://chenzhenianqing.cn/articles/943.html"&gt;Redis主从同步源码浅析-Master端&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/chenzhenianqing"&gt;@趁着年轻-海文&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://blog.disqus.com/post/62187806135/scaling-django-to-8-billion-page-views"&gt;Scaling Django to 8 Billion Page Views&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/developerworks"&gt;@developerWorks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://devo.ps/blog/2013/09/11/zookeeper-vs-doozer-vs-etcd.html"&gt;ZooKeeper vs. Doozer vs. Etcd&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/533452688"&gt;@ASTA谢&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://blog.engineyard.com/2012/linux-scalability"&gt;Linux TCP/IP Tuning for Scalability&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/u/1765260200"&gt;@jametong&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://blog.gopheracademy.com/day-22-a-journey-into-nsq"&gt;A Journey Into NSQ&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/533452688"&gt;@ASTA谢&lt;/a&gt; (我们已经在项目中使用NSQ了，哈哈)&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://highscalability.com/blog/2013/8/26/reddit-lessons-learned-from-mistakes-made-scaling-to-1-billi.html"&gt;Reddit: Lessons Learned From Mistakes Made Scaling To 1 Billion Pageviews A Month&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/developerworks"&gt;@developerWorks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://medium.com/i-m-h-o/231d7499a75"&gt;Programmer’s dilemma&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/developerworks"&gt;@developerWorks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://www.soimort.org/posts/160/"&gt;程序语言简史&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/deepcold"&gt;@简悦云风&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://queue.acm.org/detail.cfm?id=1854041"&gt;Thinking Clearly about Performance&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/u/1765260200"&gt;@jametong&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://highscalability.com/blog/2013/4/15/scaling-pinterest-from-0-to-10s-of-billions-of-page-views-a.html"&gt;Scaling Pinterest - From 0 To 10s Of Billions Of Page Views A Month In Two Years&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/developerworks"&gt;@developerWorks&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;图片/Slide/其他&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="http://photo.weibo.com/2636918231/wbphotos/large/mid/3527795659267872/pid/9d2c2dd7gw1e082ueq8qpj"&gt;图解llinux启动流程图&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/cnhackers"&gt;@中国黑客联盟V&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://speakerdeck.com/chriscoyier/lets-do-a-bunch-of-simple-stuff-to-make-websites-faster"&gt;Let's Do A Bunch of Simple Stuff to Make Websites Faster&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/u/1855563263"&gt;@夏永锋_SJTU&lt;/a&gt; (哈哈，我自己)&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://rivierarb.fr/presentations/messaging-systems/#1"&gt;Messaging Systems - How to make the right choice?&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/u/1765260200"&gt;@jametong&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://hewgill.com/~greg/stackoverflow/ebooks/"&gt;Stack Overflow 上的顶级问答电子书汇总&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/idreamland"&gt;@池建强&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://denvergophers.com/2013-09/tips-and-tricks.slide#1"&gt;Tips and Tricks with Go&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/533452688"&gt;@ASTA谢&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://www.igvita.com/slides/2013/fluent-perfcourse.pdf"&gt;Building Faster Websites&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/developerworks"&gt;@developerWorks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/springside/springside4/wiki/Redis"&gt;Redis Wiki&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/huangz1990"&gt;@huangz1990&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://docs.google.com/presentation/d/11VTTGHVNmiiw6GY0WBdX9laBUtLOhmrdgltuth3_pug/edit#slide=id.p"&gt;Golang Server Design Pattern&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/533452688"&gt;@ASTA谢&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://v.163.com/movie/2013/5/N/R/M8TBJIK7D_M8TBLIINR.html"&gt;乔布斯：遗失的访谈(1995)&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/wensong8"&gt;@淘宝正明&lt;/a&gt; (推荐，非常赞！)&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://vdisk.weibo.com/s/s55H8"&gt;分布式基础理论系列论文翻译集&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/phylipsbmy"&gt;@我在地上数星星&lt;/a&gt; (赞！要花点时间认真读一下)&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://research.microsoft.com/en-us/um/people/gray/papers/ieee_HA_Swieorick.pdf"&gt;High Available computer systems&lt;/a&gt;, &lt;a href="http://research.microsoft.com/en-us/um/people/gray/papers/TandemTR85.7_WhyDoComputersStop.pdf"&gt;Why do Computers stop&lt;/a&gt;, &lt;a href="http://roc.cs.berkeley.edu/papers/usits03.pdf"&gt;Why do Internet Services Fail&lt;/a&gt; &amp;lt;- &lt;a href="http://weibo.com/u/1765260200"&gt;@jametong&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</summary><category term="微博"></category><category term="技术"></category></entry><entry><title>IE下JavaScript Date对象的不同之处</title><link href="http://youngsterxyf.github.io/2013/12/03/date_difference_in_ie/" rel="alternate"></link><updated>2013-12-03T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2013-12-03:2013/12/03/date_difference_in_ie/</id><summary type="html">&lt;p&gt;之前在&lt;a href="http://youngsterxyf.github.io/2013/11/29/inner_warehouse_monitor_system/"&gt;仓库作业机器监控系统&lt;/a&gt;项目中使用&lt;a href="http://www.highcharts.com/demo/line-time-series"&gt;HighCharts的时间序列数据图&lt;/a&gt;来绘制机器CPU使用率、内存使用量、网络流量趋势变化图等，这些图在IE下却没有正常显示，IE也没有报错，按理说HighCharts的IE兼容性是较好的，不会出现这种问题，
 最后查明原因---确实不是HighCharts的问题，而是由于IE下JavaScript的Date对象缺少一种构造函数导致的。&lt;/p&gt;
 &lt;p&gt;IE中JavaScript的Date对象有如下&lt;a href="http://msdn.microsoft.com/zh-cn/library/ie/cd9w2te4.aspx"&gt;三种构造函数&lt;/a&gt;：&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;dateObj = new Date()
@@ -46,15 +335,14 @@ dateObj = new Date(year, month, date[, hours[, minutes[, seconds[,ms]]]])
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="http://msdn.microsoft.com/zh-cn/library/ie/cd9w2te4.aspx"&gt;MSDN - Date 对象 (JavaScript)&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date"&gt;MDN - Date&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;</summary><category term="JavaScript"></category><category term="笔记"></category></entry><entry><title>某运营平台架构调整</title><link href="http://youngsterxyf.github.io/2013/12/02/operation_platform_arch_change/" rel="alternate"></link><updated>2013-12-02T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2013-12-02:2013/12/02/operation_platform_arch_change/</id><summary type="html">&lt;p&gt;之前在&lt;a href="http://youngsterxyf.github.io/2013/10/15/standardization-operation-development/"&gt;运营开发规范化&lt;/a&gt;一文中提过工作中涉及一个&lt;strong&gt;运营平台&lt;/strong&gt;。曾有段时间我一直吐槽该平台的代码实现有多烂，各种功能的逻辑有多“野蛮”，应尽快改造，但领导无动于衷，因为还能正常运行，没出问题，领导是不关心实现的。&lt;/p&gt;
+&lt;/ul&gt;</summary><category term="JavaScript"></category><category term="笔记"></category></entry><entry><title>某运营平台架构调整</title><link href="http://youngsterxyf.github.io/2013/12/02/operation_platform_arch_change/" rel="alternate"></link><updated>2013-12-02T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2013-12-02:2013/12/02/operation_platform_arch_change/</id><summary type="html">&lt;p&gt;之前在&lt;a href="http://youngsterxyf.github.io/2013/10/15/standardization-operation-development/"&gt;运营开发规范化&lt;/a&gt;一文中提过工作中涉及一个&lt;strong&gt;运营平台&lt;/strong&gt;。曾有段时间我一直吐槽该平台的代码实现有多烂，各种功能的逻辑有多“野蛮”，应尽快改造，但也许“worse is better”，我的吐槽只能仅仅是吐槽而已了。&lt;/p&gt;
 &lt;p&gt;最近该平台终于频繁出问题了。原因是上线了一个新功能---生产系统的模块之间每发生一次模块调用，就会调用该运营平台的API上报一次数据，该API的逻辑是将上报的数据存入Redis中。API由PHP实现，服务器以Nginx + PHP-FPM的方式处理API调用请求。当生产系统的业务量增大，模块直接的调用次数频率增大直接导致API调用的频率增大，
 加上该平台所在服务器各种cron任务等的影响，导致在某些时候，PHP-FPM子进程数量飙升，跑满CPU，并且PHP-FPM子进程的数目持续不降（原因不明）。这样导致一方面用户无法访问该平台---服务器响应502（Nginx接受请求，但PHP-FPM无法处理该请求），另一方面更多的数据上报API调用无法完成，造成大量数据丢失和误告警。
-用户怨声载道，领导也很头疼，要求尽快搞定该问题，但迟迟没人挑起这个活（因为领导没有指明让谁来处理嘛）。&lt;/p&gt;
+用户怨声载道，领导也很头疼，要求尽快搞定该问题，但迟迟没人挑起这个活。&lt;/p&gt;
 &lt;p&gt;为了开个头，上上个周末的一天我绘制了两张对比图（如下所示），尝试给出建议方案。&lt;/p&gt;
 &lt;p&gt;&lt;img alt="operation_platform_old_arch" src="/assets/uploads/pics/operation_platform_old_arch.png" /&gt;&lt;/p&gt;
 &lt;p&gt;&lt;img alt="operation_platform_new_arch" src="/assets/uploads/pics/operation_platform_new_arch.png" /&gt;&lt;/p&gt;
-&lt;p&gt;这种方案的时间成本较低，无需改动对外API，也无需大量修改代码。&lt;/p&gt;
-&lt;p&gt;最后敲定的方案思路上与我的方案一致，但很多人不愿使用主从MySQL、主从Redis，觉得维护起来麻烦，决定使用公司的云DB来替代MySQL，Redis还是照原来那样没有规划地使用着，虽然我不太喜欢这种存储方案，但也没多说什么。&lt;/p&gt;</summary><category term="架构"></category><category term="笔记"></category></entry><entry><title>HAProxyConsole简介</title><link href="http://youngsterxyf.github.io/2013/12/02/re_introduce_haproxyconsole/" rel="alternate"></link><updated>2013-12-02T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2013-12-02:2013/12/02/re_introduce_haproxyconsole/</id><summary type="html">&lt;p&gt;之前在&lt;a href="http://youngsterxyf.github.io/2013/11/01/unescape-html-in-golang-html_template/"&gt;Golang中如何让html/template不转义html标签&lt;/a&gt;、&lt;a href="http://youngsterxyf.github.io/2013/10/16/high-availability-load-balancer-and-dns/"&gt;搭建高可用负载均衡组件及缓存DNS&lt;/a&gt;两篇文章中都提到为了方便使用HAProxy，我实现了一个简单的HAProxy负载均衡任务管理系统。前些天我把&lt;a href="http://youngsterxyf.github.io/haproxyconsole/"&gt;代码放在Github上&lt;/a&gt;，算是开源吧。&lt;/p&gt;
+&lt;p&gt;这种方案的时间成本较低，无需改动对外API，也无需大量修改代码。&lt;/p&gt;</summary><category term="架构"></category><category term="笔记"></category></entry><entry><title>HAProxyConsole简介</title><link href="http://youngsterxyf.github.io/2013/12/02/re_introduce_haproxyconsole/" rel="alternate"></link><updated>2013-12-02T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2013-12-02:2013/12/02/re_introduce_haproxyconsole/</id><summary type="html">&lt;p&gt;之前在&lt;a href="http://youngsterxyf.github.io/2013/11/01/unescape-html-in-golang-html_template/"&gt;Golang中如何让html/template不转义html标签&lt;/a&gt;、&lt;a href="http://youngsterxyf.github.io/2013/10/16/high-availability-load-balancer-and-dns/"&gt;搭建高可用负载均衡组件及缓存DNS&lt;/a&gt;两篇文章中都提到为了方便使用HAProxy，我实现了一个简单的HAProxy负载均衡任务管理系统。前些天我把&lt;a href="http://youngsterxyf.github.io/haproxyconsole/"&gt;代码放在Github上&lt;/a&gt;，算是开源吧。&lt;/p&gt;
 &lt;p&gt;同事使用该管理系统，遇到问题时，由于不清楚其实现，也就无法分析问题出在哪，同时也会有些恐慌，生怕搞挂了HAProxy，毕竟上面承载了一些关键的业务，所以我绘制一张图用于说明HAProxyConsole的应用场景和工作原理。&lt;/p&gt;
 &lt;p&gt;&lt;img alt="HAProxyConsole-arch" src="/assets/uploads/pics/HAProxyConsole-arch.png" /&gt;&lt;/p&gt;
 &lt;p&gt;图中蓝色标识的部分都属于HAProxyConsole。&lt;/p&gt;

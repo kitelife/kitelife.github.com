@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 
-        <title>黑 * 白 - 负载均衡</title>
+        <title>黑 * 白 - Windows</title>
         <meta charset="utf-8" />
         <link href="http://youngsterxyf.github.io/feeds/all.xml" type="application/atom+xml" rel="alternate" title="黑 * 白 Full Atom Feed" />
 
@@ -63,70 +63,30 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
-                        <a href="../2013/12/02/re_introduce_haproxyconsole/" rel="bookmark" title="Permalink to HAProxyConsole简介">HAProxyConsole简介</a>
+                        <a href="../2014/03/05/counting-lines-in-cmd/" rel="bookmark" title="Permalink to Windows命令提示符中统计行数（译）">Windows命令提示符中统计行数（译）</a>
                     </h2>
                 </header>
                 <footer class="post-info">
-                    <abbr class="published" title="2013-12-02T00:00:00"> 2013-12-02 周一 </abbr>
+                    <abbr class="published" title="2014-03-05T00:00:00"> 2014-03-05 周三 </abbr>
 <address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>之前在<a href="http://youngsterxyf.github.io/2013/11/01/unescape-html-in-golang-html_template/">Golang中如何让html/template不转义html标签</a>、<a href="http://youngsterxyf.github.io/2013/10/16/high-availability-load-balancer-and-dns/">搭建高可用负载均衡组件及缓存DNS</a>两篇文章中都提到为了方便使用HAProxy，我实现了一个简单的HAProxy负载均衡任务管理系统。前些天我把<a href="http://youngsterxyf.github.io/haproxyconsole/">代码放在Github上</a>，算是开源吧。</p>
-<p>同事使用该管理系统，遇到问题时，由于不清楚其实现，也就无法分析问题出在哪，同时也会有些恐慌，生怕搞挂了HAProxy，毕竟上面承载了一些关键的业务，所以我绘制一张图用于说明HAProxyConsole的应用场景和工作原理。</p>
-<p><img alt="HAProxyConsole-arch" src="/assets/uploads/pics/HAProxyConsole-arch.png" /></p>
-<p>图中蓝色标识的部分都属于HAProxyConsole。</p>
-<ul>
-<li>用户通过Web页面增/删/改/查负载均衡任务，但这4个操作直接修改的都仅是数据库（DB.json或MySQL数据库）。另外，HAProxyConsole的Web页面中还嵌入了主从HAProxy自带的数据统计页面。</li>
-<li>只有当用户点击按钮“应用到主HAProxy”或“应用到从HAProxy”后，HAProxyConsole才会根据DB.json或MySQL中存储的数据和配置文件haproxy_conf_comm.json生成最新的HAProxy配置文件，然后拷贝一份为主HAProxy的配置文件或远程拷贝一份为从HAProxy的配置文件，最后重启HAProxy进程（/path/to/haproxy/sbin/haproxy -f /path/to/haproxy/conf/haproxy.conf -st ...</li></ul> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2013/12/02/re_introduce_haproxyconsole/" rel="bookmark" title="Permalink to HAProxyConsole简介">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="entry-content"> <p>原文：<a href="http://rickardnobel.se/counting-lines-in-windows-command-prompt/">Counting lines in Windows command prompt</a></p>
+<p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
+<p><strong>使用内置工具FIND统计cmd.exe输出的行数非常方便！</strong></p>
+<p>在命令行环境中工作时，能够统计不同工具的输出结果的行数有时会非常有用。许多Unix/Linux操作系统都包含带有许多功能选项的<strong>wc</strong>
+工具，Windows则没有内置一样的替代品，但是Windows命令提示符(cmd.exe)原生支持了部分相同功能。</p>
+<p>本文将讲述在cmd.exe中我们可以如何使用<strong>FIND</strong>工具来统计行数。工具find，有些类似于Unix上的grep，自MS-DOS以来就一直存在，
+使用简单。</p>
+<p>假设我们有一台Windows服务器，想看看当前有多少个活跃的TCP会话。这可以使用netstat命令，并且通过管道连接FIND来查找已建立的会话。</p>
+<p><strong>netstat -ano | find /i "estab"</strong></p>
+<p><img alt="established-TCP-2.png" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/established-TCP-2.png" /></p>
+<p>这行命令的输出可能会有几百行以至于占满整个命令提示符窗口，而我们可能仅仅关心会话的数目。通过在这行命令之后增加一个<strong>/c</strong>开关选项，
+我们就能得到打开的TCP会话的数目。</p>
+<p>我们仍然使用上一个命令的过滤规则（通过查找字符串“estab”来找到包含ESTABLISHED状态的行）但带有 ...</p> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2014/03/05/counting-lines-in-cmd/" rel="bookmark" title="Permalink to Windows命令提示符中统计行数（译）">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/haproxy.html">HAProxy</a>
-                    <a class="danger label" href="../tag/keepalived.html">Keepalived</a>
-                    <a class="danger label" href="../tag/fu-zai-jun-heng.html">负载均衡</a>
-                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
-                    <a class="danger label" href="../tag/zong-jie.html">总结</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="../2013/10/16/high-availability-load-balancer-and-dns/" rel="bookmark" title="Permalink to 搭建高可用负载均衡组件及缓存DNS">搭建高可用负载均衡组件及缓存DNS</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2013-10-16T00:00:00"> 2013-10-16 周三 </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>该项工作，如题所示，主要分为两部分：高可用负载均衡组件、缓存DNS。</p>
-<h3>高可用负载均衡组件</h3>
-<p>需求：优化业务系统架构中某些关键环节，针对TCP层数据流量进行负载均衡，并保证服务的高可用。</p>
-<p>技术选型：HAProxy + Keepalived，这对组合比较常见成熟。</p>
-<p>另外，由于HAProxy的负载均衡任务可能比较多，靠人工修改配置来增删改任务不方便可靠，所以实现了一个简单的HAProxy管理系统，
-以后经实际使用验证和完善会开放源码。</p>
-<p><img alt="high availability load balancer" src="/assets/uploads/pics/high-availability-load-balancer.png" /></p>
-<h3>缓存DNS</h3>
-<p>先以www.qq.com为例，解释一下域名解析过程：</p>
-<p><img alt="resolve qq.com" src="/assets/uploads/pics/resolve-qq-com.jpg" /></p>
-<p>1.
-用户向Local DNS发起www.qq.com.查询请求；</p>
-<p>2.
-Local DNS向根服务器发起com.查询请求；</p>
-<p>3.
-根服务器向Local DNS返回com.解析记录；</p>
-<p>4.
-Local DNS向com.权威服务器发起qq.com.查询请求；</p>
-<p>5.
-com.权威服务器向Local DNS返回qq.com.解析记录 ...</p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2013/10/16/high-availability-load-balancer-and-dns/" rel="bookmark" title="Permalink to 搭建高可用负载均衡组件及缓存DNS">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/gao-ke-yong.html">高可用</a>
-                    <a class="danger label" href="../tag/fu-zai-jun-heng.html">负载均衡</a>
-                    <a class="danger label" href="../tag/haproxy.html">HAProxy</a>
-                    <a class="danger label" href="../tag/keepalived.html">Keepalived</a>
-                    <a class="danger label" href="../tag/haproxyconsole.html">HAProxyConsole</a>
-                    <a class="danger label" href="../tag/dns.html">DNS</a>
-                    <a class="danger label" href="../tag/bind.html">BIND</a>
+                    <a class="danger label" href="../tag/windows.html">Windows</a>
+                    <a class="danger label" href="../tag/fan-yi.html">翻译</a>
                 </div>
             </article>
             </li>

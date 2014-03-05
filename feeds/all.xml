@@ -1,5 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>黑 * 白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/all.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2014-02-25T00:00:00+08:00</updated><entry><title>读书笔记：Web容量规划的艺术</title><link href="http://youngsterxyf.github.io/2014/02/25/read-the-art-of-capacity-planning/" rel="alternate"></link><updated>2014-02-25T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-02-25:2014/02/25/read-the-art-of-capacity-planning/</id><summary type="html">&lt;h3&gt;第1章 容量规划的目标、问题和过程&lt;/h3&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>黑 * 白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/all.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2014-03-05T00:00:00+08:00</updated><entry><title>Windows命令提示符中统计行数（译）</title><link href="http://youngsterxyf.github.io/2014/03/05/counting-lines-in-cmd/" rel="alternate"></link><updated>2014-03-05T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-03-05:2014/03/05/counting-lines-in-cmd/</id><summary type="html">&lt;p&gt;原文：&lt;a href="http://rickardnobel.se/counting-lines-in-windows-command-prompt/"&gt;Counting lines in Windows command prompt&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;译者：&lt;a href="https://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;使用内置工具FIND统计cmd.exe输出的行数非常方便！&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;在命令行环境中工作时，能够统计不同工具的输出结果的行数有时会非常有用。许多Unix/Linux操作系统都包含带有许多功能选项的&lt;strong&gt;wc&lt;/strong&gt;
+工具，Windows则没有内置一样的替代品，但是Windows命令提示符(cmd.exe)原生支持了部分相同功能。&lt;/p&gt;
+&lt;p&gt;本文将讲述在cmd.exe中我们可以如何使用&lt;strong&gt;FIND&lt;/strong&gt;工具来统计行数。工具find，有些类似于Unix上的grep，自MS-DOS以来就一直存在，
+使用简单。&lt;/p&gt;
+&lt;p&gt;假设我们有一台Windows服务器，想看看当前有多少个活跃的TCP会话。这可以使用netstat命令，并且通过管道连接FIND来查找已建立的会话。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;netstat -ano | find /i "estab"&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="established-TCP-2.png" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/established-TCP-2.png" /&gt;&lt;/p&gt;
+&lt;p&gt;这行命令的输出可能会有几百行以至于占满整个命令提示符窗口，而我们可能仅仅关心会话的数目。通过在这行命令之后增加一个&lt;strong&gt;/c&lt;/strong&gt;开关选项，
+我们就能得到打开的TCP会话的数目。&lt;/p&gt;
+&lt;p&gt;我们仍然使用上一个命令的过滤规则（通过查找字符串“estab”来找到包含ESTABLISHED状态的行）但带有/c，这样就会仅显现匹配行的数目。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="established-TCP.png" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/established-TCP.png" /&gt;&lt;/p&gt;
+&lt;p&gt;如下另一个示例则是查看本地缓存的DNS记录的数目。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="displaydns.png" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/displaydns.png" /&gt;&lt;/p&gt;
+&lt;p&gt;选项/c也可以用于统计一个命令输出的所有行。例如，我们想知道目录服务(Active Directory)中分组的数目。通过一个管道连接到&lt;strong&gt;FIND /v "" /c&lt;/strong&gt;，
+我们能统计所有不匹配(&lt;strong&gt;/v&lt;/strong&gt;)空字符串（""）的行（即非空白行）。如果你使用过Unix工具wc，这就相当于&lt;strong&gt;wc -l&lt;/strong&gt;。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="find-group-2.png" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/find-group-2.png" /&gt;&lt;/p&gt;
+&lt;p&gt;另一个示例是：事件查看器命令行工具&lt;strong&gt;wevtutil&lt;/strong&gt;会输出大量日志数据行。如果仅仅想知道现代Windows系统中不同日志的数目，我们可以将几百个日志文件的文件名
+通过管道传输给&lt;code&gt;FIND /v "" /c&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="wevutil.png" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/wevutil.png" /&gt;&lt;/p&gt;
+&lt;p&gt;最后一个示例是：假设有一个日志文件或者类似文件，总共有上千行内容。我们想快速知道包含特定短语的数据行的数目。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;TYPE C:\Windows\Schedlgu.txt | FIND /i "task failure" /c&lt;/strong&gt;&lt;/p&gt;
+&lt;hr /&gt;
+&lt;h3&gt;相关阅读&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="http://technet.microsoft.com/en-us/library/cc725655.aspx"&gt;Technet - Find&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://www.robvanderwoude.com/type.php"&gt;The TYPE command&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://technet.microsoft.com/en-us/library/cc732507.aspx"&gt;Technet - Type&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://technet.microsoft.com/en-us/library/cc732848.aspx"&gt;Technet - Wevtutil&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://technet.microsoft.com/en-us/library/cc732952.aspx"&gt;Technet - Dsquery&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</summary><category term="Windows"></category><category term="翻译"></category></entry><entry><title>读书笔记：Web容量规划的艺术</title><link href="http://youngsterxyf.github.io/2014/02/25/read-the-art-of-capacity-planning/" rel="alternate"></link><updated>2014-02-25T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-02-25:2014/02/25/read-the-art-of-capacity-planning/</id><summary type="html">&lt;h3&gt;第1章 容量规划的目标、问题和过程&lt;/h3&gt;
 &lt;p&gt;了解你的基础设施中每一部分何时会失败（最好不发生）对容量规划至关重要。&lt;/p&gt;
 &lt;p&gt;假设你有一台数据库服务器用于响应从前端Web服务器提交过来的查询。容量规划意味着你应该知道下述问题的答案。&lt;/p&gt;
 &lt;ul&gt;

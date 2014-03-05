@@ -63,6 +63,32 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="./2013/12/02/operation_platform_arch_change/" rel="bookmark" title="Permalink to 某运营平台架构调整">某运营平台架构调整</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2013-12-02T00:00:00"> 2013-12-02 周一 </abbr>
+<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <p>之前在<a href="http://youngsterxyf.github.io/2013/10/15/standardization-operation-development/">运营开发规范化</a>一文中提过工作中涉及一个<strong>运营平台</strong>。曾有段时间我一直吐槽该平台的代码实现有多烂，各种功能的逻辑有多“野蛮”，应尽快改造，但也许“worse is better”，我的吐槽只能仅仅是吐槽而已了。</p>
+<p>最近该平台终于频繁出问题了。原因是上线了一个新功能---生产系统的模块之间每发生一次模块调用，就会调用该运营平台的API上报一次数据，该API的逻辑是将上报的数据存入Redis中。API由PHP实现，服务器以Nginx + PHP-FPM的方式处理API调用请求。当生产系统的业务量增大，模块直接的调用次数频率增大直接导致API调用的频率增大，
+加上该平台所在服务器各种cron任务等的影响，导致在某些时候，PHP-FPM子进程数量飙升，跑满CPU，并且PHP-FPM子进程的数目持续不降（原因不明）。这样导致一方面用户无法访问该平台---服务器响应502（Nginx接受请求，但PHP-FPM无法处理该请求），另一方面更多的数据上报API调用无法完成，造成大量数据丢失和误告警。
+用户怨声载道，领导也很头疼，要求尽快搞定该问题，但迟迟没人挑起这个活。</p>
+<p>为了开个头，上上个周末的一天我绘制了两张对比图（如下所示），尝试给出建议方案。</p>
+<p><img alt="operation_platform_old_arch" src="/assets/uploads/pics/operation_platform_old_arch.png" /></p>
+<p><img alt="operation_platform_new_arch" src="/assets/uploads/pics/operation_platform_new_arch.png" /></p>
+<p>这种方案的时间成本较低，无需改动对外API，也无需大量修改代码。</p> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="./2013/12/02/operation_platform_arch_change/" rel="bookmark" title="Permalink to 某运营平台架构调整">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="./tag/jia-gou.html">架构</a>
+                    <a class="danger label" href="./tag/bi-ji.html">笔记</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="./2013/12/02/re_introduce_haproxyconsole/" rel="bookmark" title="Permalink to HAProxyConsole简介">HAProxyConsole简介</a>
                     </h2>
                 </header>
@@ -322,56 +348,6 @@ com.权威服务器向Local DNS返回qq.com.解析记录 ...</p> </div><!-- /.en
                 </div>
             </article>
             </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="./2013/10/15/standardization-operation-development/" rel="bookmark" title="Permalink to 运营开发规范化">运营开发规范化</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2013-10-15T00:00:00"> 2013-10-15 周二 </abbr>
-<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>今年3月底毕业，入职腾讯做运营开发，至今6个月有余。入职之时组内仅有1个运营开发的同事，到目前已扩充到5人，加3个实习生。</p>
-<p>入职之时的运营开发过程是这样的：</p>
-<ol>
-<li>在办公机器（Windows）上编写代码，功能测试通过后，</li>
-<li>ssh远程连接到生产服务器（Linux），vim打开一个新文件，复制办公机器上的代码，粘贴到vim中，保存，</li>
-<li>打开浏览器测试上线的功能/效果是否正确，若不正确，</li>
-<li>直接在生产服务器上编辑代码文件，直到达到需要的功能效果，</li>
-<li>再从生产服务器上将修改后的代码复制粘贴到办公机器（也许不会有这一步，之后所有的修改都直接在生产服务器上操作）。</li>
-</ol>
-<p>这个过程存在如下问题：</p>
-<ol>
-<li>代码没有版本控制</li>
-<li>没有与生产服务器一致的测试环境</li>
-<li>代码部署过程繁琐</li>
-<li>办公开发机器上代码很可能比生产服务器上代码还旧</li>
-<li>上面4点都会导致混乱</li>
-</ol>
-<p>除此之外，当团队从1人扩充到多人后，不可避免地会遇到协作的问题，解决代码开发协作问题一般涉及如下几方面：</p>
-<ol>
-<li>使用代码版本控制</li>
-<li>规定版本控制的工作流</li>
-<li>编码规范</li>
-<li>项目/代码文档</li>
-<li>定期code review</li>
-</ol>
-<p>为了解决上述问题，我陆续地做了如下工作：</p>
-<h3>搭建Gitlab服务器、测试服务器</h3>
-<p>个人认为开发工作规范化的第一点就是版本控制，基于版本控制可以完成很多自动化的任务。</p>
-<p>平时个人的代码、文档都通过Git版本控制存放在Github上 ...</p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="./2013/10/15/standardization-operation-development/" rel="bookmark" title="Permalink to 运营开发规范化">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="./tag/fu-wu-qi.html">服务器</a>
-                    <a class="danger label" href="./tag/linux.html">Linux</a>
-                    <a class="danger label" href="./tag/git.html">Git</a>
-                    <a class="danger label" href="./tag/golang.html">Golang</a>
-                    <a class="danger label" href="./tag/python.html">Python</a>
-                </div>
-            </article>
-            </li>
         </ol><!-- /#posts-list -->
     </div><!-- /.eleven.columns -->
 <div class="three columns">
@@ -396,66 +372,67 @@ com.权威服务器向Local DNS返回qq.com.解析记录 ...</p> </div><!-- /.en
 
 <h4>标签</h4>
 	<ul>
-	    <li class="tag-3"><a href="./tag/haproxy.html">HAProxy</a></li>
-	    <li class="tag-4"><a href="./tag/github.html">github</a></li>
-	    <li class="tag-4"><a href="./tag/wei-xin.html">微信</a></li>
-	    <li class="tag-2"><a href="./tag/bi-shi.html">笔试</a></li>
-	    <li class="tag-4"><a href="./tag/template.html">template</a></li>
-	    <li class="tag-4"><a href="./tag/teng-xun.html">腾讯</a></li>
-	    <li class="tag-4"><a href="./tag/gan-wu.html">感悟</a></li>
-	    <li class="tag-1"><a href="./tag/python.html">Python</a></li>
-	    <li class="tag-4"><a href="./tag/ssl.html">ssl</a></li>
-	    <li class="tag-2"><a href="./tag/ming-ling-xing.html">命令行</a></li>
+	    <li class="tag-2"><a href="./tag/zong-jie.html">总结</a></li>
 	    <li class="tag-2"><a href="./tag/fu-wu-qi.html">服务器</a></li>
+	    <li class="tag-4"><a href="./tag/zi-ti.html">字体</a></li>
+	    <li class="tag-4"><a href="./tag/shu-ju-ku.html">数据库</a></li>
+	    <li class="tag-4"><a href="./tag/rong-liang-gui-hua.html">容量规划</a></li>
+	    <li class="tag-2"><a href="./tag/php.html">PHP</a></li>
+	    <li class="tag-4"><a href="./tag/diao-shi.html">调试</a></li>
+	    <li class="tag-4"><a href="./tag/ming-ling.html">命令</a></li>
+	    <li class="tag-4"><a href="./tag/ying-yu.html">英语</a></li>
+	    <li class="tag-4"><a href="./tag/github.html">github</a></li>
+	    <li class="tag-3"><a href="./tag/haproxy.html">HAProxy</a></li>
+	    <li class="tag-3"><a href="./tag/mian-shi.html">面试</a></li>
 	    <li class="tag-4"><a href="./tag/zhong-jian-jian.html">中间件</a></li>
+	    <li class="tag-4"><a href="./tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
+	    <li class="tag-4"><a href="./tag/teng-xun.html">腾讯</a></li>
 	    <li class="tag-3"><a href="./tag/shi-ge.html">诗歌</a></li>
-	    <li class="tag-4"><a href="./tag/ban-ben-kong-zhi.html">版本控制</a></li>
-	    <li class="tag-3"><a href="./tag/nginx.html">Nginx</a></li>
-	    <li class="tag-1"><a href="./tag/bi-ji.html">笔记</a></li>
-	    <li class="tag-4"><a href="./tag/gao-ke-yong.html">高可用</a></li>
-	    <li class="tag-4"><a href="./tag/bing-xing.html">并行</a></li>
 	    <li class="tag-4"><a href="./tag/li-lun.html">理论</a></li>
+	    <li class="tag-4"><a href="./tag/sheng-huo.html">生活</a></li>
+	    <li class="tag-2"><a href="./tag/bi-shi.html">笔试</a></li>
+	    <li class="tag-4"><a href="./tag/wei-xin.html">微信</a></li>
+	    <li class="tag-3"><a href="./tag/suan-fa.html">算法</a></li>
+	    <li class="tag-3"><a href="./tag/mysql.html">MySQL</a></li>
+	    <li class="tag-2"><a href="./tag/shell.html">Shell</a></li>
+	    <li class="tag-2"><a href="./tag/gong-zuo.html">工作</a></li>
+	    <li class="tag-4"><a href="./tag/pip.html">pip</a></li>
+	    <li class="tag-4"><a href="./tag/wen-zi.html">文字</a></li>
+	    <li class="tag-1"><a href="./tag/linux.html">Linux</a></li>
+	    <li class="tag-3"><a href="./tag/xue-xi-fang-fa.html">学习方法</a></li>
+	    <li class="tag-3"><a href="./tag/jia-gou.html">架构</a></li>
+	    <li class="tag-4"><a href="./tag/ban-ben-kong-zhi.html">版本控制</a></li>
+	    <li class="tag-2"><a href="./tag/gong-ju.html">工具</a></li>
+	    <li class="tag-3"><a href="./tag/yue-du.html">阅读</a></li>
+	    <li class="tag-2"><a href="./tag/ming-ling-xing.html">命令行</a></li>
+	    <li class="tag-4"><a href="./tag/template.html">template</a></li>
+	    <li class="tag-4"><a href="./tag/cc.html">C/C++</a></li>
+	    <li class="tag-4"><a href="./tag/vmware.html">VMware</a></li>
+	    <li class="tag-4"><a href="./tag/pypi.html">PyPI</a></li>
+	    <li class="tag-1"><a href="./tag/python.html">Python</a></li>
+	    <li class="tag-4"><a href="./tag/gao-ke-yong.html">高可用</a></li>
+	    <li class="tag-4"><a href="./tag/zi-sheng.html">自省</a></li>
+	    <li class="tag-4"><a href="./tag/dns.html">DNS</a></li>
+	    <li class="tag-4"><a href="./tag/bind.html">BIND</a></li>
+	    <li class="tag-4"><a href="./tag/wei-bo.html">微博</a></li>
+	    <li class="tag-3"><a href="./tag/fu-zai-jun-heng.html">负载均衡</a></li>
+	    <li class="tag-2"><a href="./tag/ji-zhu.html">技术</a></li>
+	    <li class="tag-2"><a href="./tag/golang.html">Golang</a></li>
+	    <li class="tag-4"><a href="./tag/jekyll.html">jekyll</a></li>
+	    <li class="tag-1"><a href="./tag/fan-yi.html">翻译</a></li>
+	    <li class="tag-1"><a href="./tag/bi-ji.html">笔记</a></li>
+	    <li class="tag-4"><a href="./tag/ssl.html">ssl</a></li>
+	    <li class="tag-4"><a href="./tag/easy_install.html">easy_install</a></li>
+	    <li class="tag-3"><a href="./tag/nginx.html">Nginx</a></li>
 	    <li class="tag-3"><a href="./tag/keepalived.html">Keepalived</a></li>
 	    <li class="tag-2"><a href="./tag/git.html">Git</a></li>
-	    <li class="tag-4"><a href="./tag/zi-ti.html">字体</a></li>
-	    <li class="tag-3"><a href="./tag/yue-du.html">阅读</a></li>
-	    <li class="tag-4"><a href="./tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
-	    <li class="tag-3"><a href="./tag/xue-xi-fang-fa.html">学习方法</a></li>
-	    <li class="tag-4"><a href="./tag/pypi.html">PyPI</a></li>
-	    <li class="tag-3"><a href="./tag/jia-gou.html">架构</a></li>
 	    <li class="tag-4"><a href="./tag/haproxyconsole.html">HAProxyConsole</a></li>
-	    <li class="tag-2"><a href="./tag/gong-ju.html">工具</a></li>
-	    <li class="tag-3"><a href="./tag/suan-fa.html">算法</a></li>
-	    <li class="tag-2"><a href="./tag/golang.html">Golang</a></li>
-	    <li class="tag-4"><a href="./tag/diao-shi.html">调试</a></li>
-	    <li class="tag-4"><a href="./tag/shu-ju-ku.html">数据库</a></li>
-	    <li class="tag-4"><a href="./tag/wei-bo.html">微博</a></li>
-	    <li class="tag-1"><a href="./tag/linux.html">Linux</a></li>
-	    <li class="tag-4"><a href="./tag/easy_install.html">easy_install</a></li>
-	    <li class="tag-4"><a href="./tag/wen-zi.html">文字</a></li>
-	    <li class="tag-3"><a href="./tag/mysql.html">MySQL</a></li>
-	    <li class="tag-4"><a href="./tag/python-weekly.html">python-weekly</a></li>
-	    <li class="tag-4"><a href="./tag/rong-liang-gui-hua.html">容量规划</a></li>
-	    <li class="tag-4"><a href="./tag/jekyll.html">jekyll</a></li>
+	    <li class="tag-4"><a href="./tag/windows.html">Windows</a></li>
 	    <li class="tag-2"><a href="./tag/javascript.html">JavaScript</a></li>
-	    <li class="tag-4"><a href="./tag/cc.html">C/C++</a></li>
-	    <li class="tag-4"><a href="./tag/zi-sheng.html">自省</a></li>
-	    <li class="tag-4"><a href="./tag/ming-ling.html">命令</a></li>
-	    <li class="tag-4"><a href="./tag/bind.html">BIND</a></li>
-	    <li class="tag-2"><a href="./tag/gong-zuo.html">工作</a></li>
-	    <li class="tag-4"><a href="./tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
-	    <li class="tag-3"><a href="./tag/fu-zai-jun-heng.html">负载均衡</a></li>
-	    <li class="tag-4"><a href="./tag/ying-yu.html">英语</a></li>
-	    <li class="tag-3"><a href="./tag/mian-shi.html">面试</a></li>
-	    <li class="tag-4"><a href="./tag/dns.html">DNS</a></li>
-	    <li class="tag-2"><a href="./tag/shell.html">Shell</a></li>
-	    <li class="tag-4"><a href="./tag/sheng-huo.html">生活</a></li>
-	    <li class="tag-2"><a href="./tag/php.html">PHP</a></li>
-	    <li class="tag-2"><a href="./tag/ji-zhu.html">技术</a></li>
-	    <li class="tag-4"><a href="./tag/vmware.html">VMware</a></li>
-	    <li class="tag-4"><a href="./tag/pip.html">pip</a></li>
-	    <li class="tag-2"><a href="./tag/zong-jie.html">总结</a></li>
-	    <li class="tag-1"><a href="./tag/fan-yi.html">翻译</a></li>
+	    <li class="tag-4"><a href="./tag/python-weekly.html">python-weekly</a></li>
+	    <li class="tag-4"><a href="./tag/bing-xing.html">并行</a></li>
+	    <li class="tag-4"><a href="./tag/gan-wu.html">感悟</a></li>
+	    <li class="tag-4"><a href="./tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
 </ul>
 
 <!--
@@ -463,7 +440,7 @@ com.权威服务器向Local DNS返回qq.com.解析记录 ...</p> </div><!-- /.en
 </div> </div><!-- /.row -->
 <p class="paginator">
             <a href="./index.html"><i class="icon-arrow-left"></i></a>
-    Page 2 / 10
+    Page 2 / 11
         <a href="./index3.html"><i class="icon-arrow-right"></i></a>
 </p>
 </section><!-- /#content -->

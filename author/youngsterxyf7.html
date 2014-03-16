@@ -64,11 +64,100 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="../2013/01/04/Decorators-and-Functional-Python/" rel="bookmark" title="Permalink to 装饰器与函数式Python（译）">装饰器与函数式Python（译）</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2013-01-04T00:00:00"> 2013-01-04 周五 </abbr>
+<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <p>原文：<a href="http://www.brianholdefehr.com/decorators-and-functional-python">Decorators and Functional Python</a></p>
+<p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
+<p>装饰器是Python的一大特色。除了在语言中的原本用处，还帮助我们以一种有趣的方式（函数式）进行思考。</p>
+<p>我打算自底向上解释装饰器如何工作。首先解释几个话题以帮助理解装饰器。然后，深入一点探索几个简单的装饰器以及它们如何工作。最后，讨论一些更高级的使用装饰器的方式，比如：传递可选参数给装饰器或者串接几个装饰器。</p>
+<p>首先以我能想到的最简单的方式来定义Python函数是什么。基于该定义，我们可以类似的简单方式来定义装饰器。</p>
+<blockquote>
+<p>函数是一个完成特定任务的可复用代码块。</p>
+</blockquote>
+<p>好的，那么装饰器又是什么呢？</p>
+<blockquote>
+<p>装饰器是一个修改其他函数的函数。</p>
+</blockquote>
+<p>现在在装饰器的定义上进行详述，先解释一些先决条件。</p>
+<h2>函数是一等对象</h2>
+<p>Python中，所有东西都是对象。这意味着可以通过名字引用函数，以及像其他对象那样传递。例如：</p>
+<div class="highlight"><pre><span class="k">def</span> <span class="nf">traveling_function</span><span class="p">():</span>
+    <span class="k">print</span> <span class="s">&quot;Here I am!&quot;</span>
+
+<span class="n">function_dict</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&quot;func&quot;</span><span class="p">:</span> <span class="n">traveling_function</span>
+<span class="p">}</span>
+
+<span class="n">trav_func</span> <span class="o">=</span> <span class="n">function_dict</span><span class="p">[</span><span class="s">&#39;func&#39;</span><span class="p">]</span>
+<span class="n">trav_func</span><span class="p">()</span>
+<span class="c"># &gt;&gt; Here I ...</span></pre></div> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2013/01/04/Decorators-and-Functional-Python/" rel="bookmark" title="Permalink to 装饰器与函数式Python（译）">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="../tag/python.html">Python</a>
+                    <a class="danger label" href="../tag/fan-yi.html">翻译</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
+                        <a href="../2013/01/04/Python-The-Dictionary-Playbook-cn/" rel="bookmark" title="Permalink to Python：字典剧本（译）">Python：字典剧本（译）</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2013-01-04T00:00:00"> 2013-01-04 周五 </abbr>
+<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <p>原文： <a href="http://blog.amir.rachum.com/post/39501813266/python-the-dictionary-playbook">Python: The Dictionary Playbook</a></p>
+<p>译者： <a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
+<p>我经常碰到关于Python中字典的各种样板代码，因此我决定在此展示一些，并分享完成相同操作的更加简洁的方式。</p>
+<p>上演： <strong>字典剧本</strong></p>
+<p><img alt="playbook" src="/assets/uploads/pics/The_playbook.png" /></p>
+<p>1.
+“你在吗？”</p>
+<p>这个相当简单，但不可错过 - 找出某个键(key)是否存在于字典中。</p>
+<p><em>蹩脚的版本</em></p>
+<div class="highlight"><pre><span class="n">dct</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+</pre></div>
+
+
+<p><em>Pythonic的方式</em></p>
+<div class="highlight"><pre><span class="n">key</span> <span class="ow">in</span> <span class="n">dct</span>
+</pre></div>
+
+
+<p>2.
+“尤达测试”(译注：尤达的意思见<a href="http://en.wikipedia.org/wiki/Yoda">yoda</a>)</p>
+<p>对于那些掌握了“你在吗”剧本的程序员来说，这通常是另一个简单但是令人讨厌的事情。它不仅仅可用于字典数据类型，但非常普通。</p>
+<p><em>干这事，你必须不能这样</em></p>
+<div class="highlight"><pre><span class="ow">not</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dct</span>
+</pre></div>
+
+
+<p><em>英语，你会说吗？</em></p>
+<div class="highlight"><pre><span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dct ...</span></pre></div> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2013/01/04/Python-The-Dictionary-Playbook-cn/" rel="bookmark" title="Permalink to Python：字典剧本（译）">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="../tag/python.html">Python</a>
+                    <a class="danger label" href="../tag/fan-yi.html">翻译</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="../2013/01/04/one-line-tree-in-Python/" rel="bookmark" title="Permalink to 一行Python代码定义树（译）">一行Python代码定义树（译）</a>
                     </h2>
                 </header>
                 <footer class="post-info">
-                    <abbr class="published" title="2013-01-04T00:00:00"> 2013-01-04 Fri </abbr>
+                    <abbr class="published" title="2013-01-04T00:00:00"> 2013-01-04 周五 </abbr>
 <address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
                 <div class="entry-content"> <p>原文：<a href="https://gist.github.com/2012250">One-line Tree in Python</a></p>
 <p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
@@ -107,7 +196,7 @@
                     </h2>
                 </header>
                 <footer class="post-info">
-                    <abbr class="published" title="2012-12-12T00:00:00"> 2012-12-12 Wed </abbr>
+                    <abbr class="published" title="2012-12-12T00:00:00"> 2012-12-12 周三 </abbr>
 <address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
                 <div class="entry-content"> <p>1.
 Debian系Linux下查找某个软件包(以indent为例)：</p>
@@ -149,7 +238,7 @@ Debian系Linux下查找某个软件包(以indent为例)：</p>
                     </h2>
                 </header>
                 <footer class="post-info">
-                    <abbr class="published" title="2012-12-11T00:00:00"> 2012-12-11 Tue </abbr>
+                    <abbr class="published" title="2012-12-11T00:00:00"> 2012-12-11 周二 </abbr>
 <address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
                 <div class="entry-content"> <h2>MySQL逻辑架构</h2>
 <p><img alt="mysql-arch" src="http://t-1.tuzhan.com/f2a68c9daf81/p-1/l/2012/12/11/19/8fd27c1742644acd88197408bddc726c.jpg" /></p>
@@ -178,7 +267,7 @@ MySQL会解析查询，并创建一个内部数据结构(解析树)，然后对�
                     </h2>
                 </header>
                 <footer class="post-info">
-                    <abbr class="published" title="2012-12-10T00:00:00"> 2012-12-10 Mon </abbr>
+                    <abbr class="published" title="2012-12-10T00:00:00"> 2012-12-10 周一 </abbr>
 <address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
                 <div class="entry-content"> <p>Web开发中很多时候需要边看web服务器的日志输出边调试代码。一般的做法使用tail命令输出日志文件的末尾几行日志信息。</p>
 <div class="highlight"><pre>tail -10 /var/log/nginx/access.log  <span class="c"># 输出末尾10行</span>
@@ -212,7 +301,7 @@ MySQL会解析查询，并创建一个内部数据结构(解析树)，然后对�
                     </h2>
                 </header>
                 <footer class="post-info">
-                    <abbr class="published" title="2012-12-06T00:00:00"> 2012-12-06 Thu </abbr>
+                    <abbr class="published" title="2012-12-06T00:00:00"> 2012-12-06 周四 </abbr>
 <address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
                 <div class="entry-content"> <p><strong>一面</strong>中主要有三道题：</p>
 <p>1.
@@ -250,7 +339,7 @@ MySQL会解析查询，并创建一个内部数据结构(解析树)，然后对�
                     </h2>
                 </header>
                 <footer class="post-info">
-                    <abbr class="published" title="2012-12-06T00:00:00"> 2012-12-06 Thu </abbr>
+                    <abbr class="published" title="2012-12-06T00:00:00"> 2012-12-06 周四 </abbr>
 <address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
                 <div class="entry-content"> <p>Linux命令行里如何获取所有的进程号(pid)？</p>
 <p>1.
@@ -288,90 +377,6 @@ MySQL会解析查询，并创建一个内部数据结构(解析树)，然后对�
                 </div>
             </article>
             </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="../2012/12/05/sonicWALL-exam/" rel="bookmark" title="Permalink to 2012校招-sonicWALL的两道编程笔试题">2012校招-sonicWALL的两道编程笔试题</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2012-12-05T00:00:00"> 2012-12-05 Wed </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <h2>求二叉树中两个结点的最近公共祖先</h2>
-<p>比如：对于树</p>
-<blockquote>
-<div class="highlight"><pre>         <span class="n">A</span>
-       <span class="o">/</span>
-      <span class="n">B</span>
-    <span class="o">/</span>   \
-   <span class="n">C</span>     <span class="n">D</span>
- <span class="o">/</span>   \
-<span class="n">E</span>     <span class="n">F</span>
-</pre></div>
-
-
-</blockquote>
-<p>结点D，F的最近公共祖先为B</p>
-<p>实现：<a href="https://github.com/youngsterxyf/Data-Structures-and-Algorithms/blob/master/nearest_common_ancestor.c">见源码</a></p>
-<h2>求二进制整数部分bits求反后的值</h2>
-<p>比如：对于整数0b1001101，将第2(begin)到第5(end)位(从右往左计数)上的bit求反，得到0b1110001。</p>
-<div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
-
-<span class="kt">int</span> <span class="nf">reverse_somebits</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">begin</span><span class="p">,</span> <span class="kt">int</span> <span class="n">end</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="k">return</span> <span class="n">a</span><span class="o">^</span><span class="p">((</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="n">end</span><span class="p">)</span><span class="o">|</span><span class="p">((</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="n">end</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">^</span><span class="p">((</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="n">begin</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
-<span class="p">}</span>
-
-<span class="kt">void</span> <span class="nf">ten_to_two</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="k">if ...</span></pre></div> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2012/12/05/sonicWALL-exam/" rel="bookmark" title="Permalink to 2012校招-sonicWALL的两道编程笔试题">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/bi-shi.html">笔试</a>
-                    <a class="danger label" href="../tag/suan-fa.html">算法</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="../2012/11/29/centos+rsync+inotify-tools-realtime-backup/" rel="bookmark" title="Permalink to CentOS + rsync + inotify-tools实时备份配置">CentOS + rsync + inotify-tools实时备份配置</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2012-11-29T00:00:00"> 2012-11-29 Thu </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>现实中，服务器可能会因为各种原因而crash掉，从而造成数据丢失或者服务的暂时不可用。为了提高服务的可用性以及数据的安全性，就需要对数据进行备份，以便数据恢复或者服务的动态切换(将访问请求动态重定向到备份服务器)。</p>
-<p>常见的备份方法是定时的rsync任务或者远程拷贝。但这种方式，如果定时的间隔较大，那么服务器宕掉后，还是会丢失部分数据，动态切换的服务也不是宕机前的最新状态。为了支持实时数据同步，Linux 2.6.13 内核中新引入文件系统变化通知机制inotify，一旦对文件系统有改动，就会触发相关事件任务。通过结合rsync，inotify能够很好地完成实时同步任务。</p>
-<p>主服务器：1.1.1.1
-备份服务器：0.0.0.0</p>
-<p><strong>配置步骤</strong>：</p>
-<p>1.
-主服务器，备份服务器上安装rsync:</p>
-<div class="highlight"><pre>sudo yum install rsync
-</pre></div>
-
-
-<p>2.
-主服务器上安装inotify-tools:</p>
-<div class="highlight"><pre>sudo yum install inotify-tools
-</pre></div>
-
-
-<p>3.
-备份服务器上添加配置文件/etc ...</p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2012/11/29/centos+rsync+inotify-tools-realtime-backup/" rel="bookmark" title="Permalink to CentOS + rsync + inotify-tools实时备份配置">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/fu-wu-qi.html">服务器</a>
-                    <a class="danger label" href="../tag/gong-ju.html">工具</a>
-                    <a class="danger label" href="../tag/linux.html">Linux</a>
-                </div>
-            </article>
-            </li>
         </ol><!-- /#posts-list -->
     </div><!-- /.eleven.columns -->
 <div class="three columns">
@@ -396,65 +401,67 @@ MySQL会解析查询，并创建一个内部数据结构(解析树)，然后对�
 
 <h4>标签</h4>
 	<ul>
-	    <li class="tag-2"><a href="../tag/bi-shi.html">笔试</a></li>
-	    <li class="tag-4"><a href="../tag/gan-wu.html">感悟</a></li>
-	    <li class="tag-4"><a href="../tag/pip.html">pip</a></li>
-	    <li class="tag-4"><a href="../tag/gao-ke-yong.html">高可用</a></li>
-	    <li class="tag-3"><a href="../tag/mian-shi.html">面试</a></li>
-	    <li class="tag-4"><a href="../tag/cc.html">C/C++</a></li>
-	    <li class="tag-2"><a href="../tag/gong-ju.html">工具</a></li>
-	    <li class="tag-4"><a href="../tag/zi-ti.html">字体</a></li>
-	    <li class="tag-4"><a href="../tag/ying-yu.html">英语</a></li>
-	    <li class="tag-2"><a href="../tag/shell.html">Shell</a></li>
-	    <li class="tag-3"><a href="../tag/xue-xi-fang-fa.html">学习方法</a></li>
-	    <li class="tag-4"><a href="../tag/wei-bo.html">微博</a></li>
-	    <li class="tag-1"><a href="../tag/bi-ji.html">笔记</a></li>
-	    <li class="tag-4"><a href="../tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
-	    <li class="tag-4"><a href="../tag/wei-xin.html">微信</a></li>
-	    <li class="tag-3"><a href="../tag/nginx.html">Nginx</a></li>
-	    <li class="tag-4"><a href="../tag/bind.html">BIND</a></li>
-	    <li class="tag-4"><a href="../tag/ban-ben-kong-zhi.html">版本控制</a></li>
-	    <li class="tag-4"><a href="../tag/vmware.html">VMware</a></li>
-	    <li class="tag-4"><a href="../tag/ssl.html">ssl</a></li>
 	    <li class="tag-2"><a href="../tag/zong-jie.html">总结</a></li>
-	    <li class="tag-2"><a href="../tag/ming-ling-xing.html">命令行</a></li>
-	    <li class="tag-3"><a href="../tag/fu-zai-jun-heng.html">负载均衡</a></li>
-	    <li class="tag-4"><a href="../tag/pypi.html">PyPI</a></li>
-	    <li class="tag-3"><a href="../tag/keepalived.html">Keepalived</a></li>
-	    <li class="tag-4"><a href="../tag/teng-xun.html">腾讯</a></li>
-	    <li class="tag-4"><a href="../tag/sheng-huo.html">生活</a></li>
-	    <li class="tag-4"><a href="../tag/haproxyconsole.html">HAProxyConsole</a></li>
-	    <li class="tag-2"><a href="../tag/git.html">Git</a></li>
-	    <li class="tag-4"><a href="../tag/easy_install.html">easy_install</a></li>
 	    <li class="tag-2"><a href="../tag/fu-wu-qi.html">服务器</a></li>
-	    <li class="tag-4"><a href="../tag/python-weekly.html">python-weekly</a></li>
-	    <li class="tag-2"><a href="../tag/javascript.html">JavaScript</a></li>
-	    <li class="tag-4"><a href="../tag/jekyll.html">jekyll</a></li>
+	    <li class="tag-4"><a href="../tag/zi-ti.html">字体</a></li>
 	    <li class="tag-4"><a href="../tag/shu-ju-ku.html">数据库</a></li>
-	    <li class="tag-4"><a href="../tag/wen-zi.html">文字</a></li>
-	    <li class="tag-3"><a href="../tag/shi-ge.html">诗歌</a></li>
-	    <li class="tag-1"><a href="../tag/fan-yi.html">翻译</a></li>
-	    <li class="tag-2"><a href="../tag/gong-zuo.html">工作</a></li>
-	    <li class="tag-2"><a href="../tag/golang.html">Golang</a></li>
-	    <li class="tag-3"><a href="../tag/jia-gou.html">架构</a></li>
-	    <li class="tag-4"><a href="../tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
-	    <li class="tag-4"><a href="../tag/zhong-jian-jian.html">中间件</a></li>
-	    <li class="tag-4"><a href="../tag/diao-shi.html">调试</a></li>
-	    <li class="tag-3"><a href="../tag/yue-du.html">阅读</a></li>
-	    <li class="tag-4"><a href="../tag/li-lun.html">理论</a></li>
-	    <li class="tag-1"><a href="../tag/python.html">Python</a></li>
-	    <li class="tag-4"><a href="../tag/zi-sheng.html">自省</a></li>
-	    <li class="tag-4"><a href="../tag/template.html">template</a></li>
-	    <li class="tag-3"><a href="../tag/haproxy.html">HAProxy</a></li>
-	    <li class="tag-4"><a href="../tag/bing-xing.html">并行</a></li>
-	    <li class="tag-4"><a href="../tag/github.html">github</a></li>
-	    <li class="tag-1"><a href="../tag/linux.html">Linux</a></li>
-	    <li class="tag-2"><a href="../tag/ji-zhu.html">技术</a></li>
-	    <li class="tag-4"><a href="../tag/dns.html">DNS</a></li>
-	    <li class="tag-3"><a href="../tag/mysql.html">MySQL</a></li>
-	    <li class="tag-4"><a href="../tag/ming-ling.html">命令</a></li>
+	    <li class="tag-4"><a href="../tag/rong-liang-gui-hua.html">容量规划</a></li>
 	    <li class="tag-2"><a href="../tag/php.html">PHP</a></li>
+	    <li class="tag-4"><a href="../tag/diao-shi.html">调试</a></li>
+	    <li class="tag-4"><a href="../tag/ming-ling.html">命令</a></li>
+	    <li class="tag-4"><a href="../tag/ying-yu.html">英语</a></li>
+	    <li class="tag-4"><a href="../tag/github.html">github</a></li>
+	    <li class="tag-3"><a href="../tag/haproxy.html">HAProxy</a></li>
+	    <li class="tag-3"><a href="../tag/mian-shi.html">面试</a></li>
+	    <li class="tag-4"><a href="../tag/zhong-jian-jian.html">中间件</a></li>
+	    <li class="tag-4"><a href="../tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
+	    <li class="tag-4"><a href="../tag/teng-xun.html">腾讯</a></li>
+	    <li class="tag-3"><a href="../tag/shi-ge.html">诗歌</a></li>
+	    <li class="tag-4"><a href="../tag/li-lun.html">理论</a></li>
+	    <li class="tag-4"><a href="../tag/sheng-huo.html">生活</a></li>
+	    <li class="tag-2"><a href="../tag/bi-shi.html">笔试</a></li>
+	    <li class="tag-4"><a href="../tag/wei-xin.html">微信</a></li>
 	    <li class="tag-3"><a href="../tag/suan-fa.html">算法</a></li>
+	    <li class="tag-3"><a href="../tag/mysql.html">MySQL</a></li>
+	    <li class="tag-2"><a href="../tag/shell.html">Shell</a></li>
+	    <li class="tag-2"><a href="../tag/gong-zuo.html">工作</a></li>
+	    <li class="tag-4"><a href="../tag/pip.html">pip</a></li>
+	    <li class="tag-4"><a href="../tag/wen-zi.html">文字</a></li>
+	    <li class="tag-1"><a href="../tag/linux.html">Linux</a></li>
+	    <li class="tag-3"><a href="../tag/xue-xi-fang-fa.html">学习方法</a></li>
+	    <li class="tag-3"><a href="../tag/jia-gou.html">架构</a></li>
+	    <li class="tag-4"><a href="../tag/ban-ben-kong-zhi.html">版本控制</a></li>
+	    <li class="tag-2"><a href="../tag/gong-ju.html">工具</a></li>
+	    <li class="tag-3"><a href="../tag/yue-du.html">阅读</a></li>
+	    <li class="tag-2"><a href="../tag/ming-ling-xing.html">命令行</a></li>
+	    <li class="tag-4"><a href="../tag/template.html">template</a></li>
+	    <li class="tag-4"><a href="../tag/cc.html">C/C++</a></li>
+	    <li class="tag-4"><a href="../tag/vmware.html">VMware</a></li>
+	    <li class="tag-4"><a href="../tag/pypi.html">PyPI</a></li>
+	    <li class="tag-1"><a href="../tag/python.html">Python</a></li>
+	    <li class="tag-4"><a href="../tag/gao-ke-yong.html">高可用</a></li>
+	    <li class="tag-4"><a href="../tag/zi-sheng.html">自省</a></li>
+	    <li class="tag-4"><a href="../tag/dns.html">DNS</a></li>
+	    <li class="tag-4"><a href="../tag/bind.html">BIND</a></li>
+	    <li class="tag-4"><a href="../tag/wei-bo.html">微博</a></li>
+	    <li class="tag-3"><a href="../tag/fu-zai-jun-heng.html">负载均衡</a></li>
+	    <li class="tag-2"><a href="../tag/ji-zhu.html">技术</a></li>
+	    <li class="tag-2"><a href="../tag/golang.html">Golang</a></li>
+	    <li class="tag-4"><a href="../tag/jekyll.html">jekyll</a></li>
+	    <li class="tag-1"><a href="../tag/fan-yi.html">翻译</a></li>
+	    <li class="tag-1"><a href="../tag/bi-ji.html">笔记</a></li>
+	    <li class="tag-4"><a href="../tag/ssl.html">ssl</a></li>
+	    <li class="tag-4"><a href="../tag/easy_install.html">easy_install</a></li>
+	    <li class="tag-3"><a href="../tag/nginx.html">Nginx</a></li>
+	    <li class="tag-3"><a href="../tag/keepalived.html">Keepalived</a></li>
+	    <li class="tag-2"><a href="../tag/git.html">Git</a></li>
+	    <li class="tag-4"><a href="../tag/haproxyconsole.html">HAProxyConsole</a></li>
+	    <li class="tag-4"><a href="../tag/windows.html">Windows</a></li>
+	    <li class="tag-2"><a href="../tag/javascript.html">JavaScript</a></li>
+	    <li class="tag-4"><a href="../tag/python-weekly.html">python-weekly</a></li>
+	    <li class="tag-4"><a href="../tag/bing-xing.html">并行</a></li>
+	    <li class="tag-4"><a href="../tag/gan-wu.html">感悟</a></li>
+	    <li class="tag-4"><a href="../tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
 </ul>
 
 <!--
@@ -462,7 +469,7 @@ MySQL会解析查询，并创建一个内部数据结构(解析树)，然后对�
 </div> </div><!-- /.row -->
 <p class="paginator">
             <a href="../author/youngsterxyf6.html"><i class="icon-arrow-left"></i></a>
-    Page 7 / 10
+    Page 7 / 11
         <a href="../author/youngsterxyf8.html"><i class="icon-arrow-right"></i></a>
 </p>
 </section><!-- /#content -->

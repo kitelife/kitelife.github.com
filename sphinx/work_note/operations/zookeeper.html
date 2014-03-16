@@ -175,7 +175,10 @@
 <li class="toctree-l2"><a class="reference internal" href="dns.html#bind-dns">配置BIND（缓存DNS）</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Zookeeper</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Zookeeper</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#zookeeper-overview">Zookeeper Overview</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="saltstack.html">SaltStack</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="saltstack.html#saltstack-walkthrough">SaltStack Walkthrough</a></li>
 <li class="toctree-l2"><a class="reference internal" href="saltstack.html#id2">相关链接</a></li>
@@ -191,7 +194,10 @@
 <li class="toctree-l2"><a class="reference internal" href="ntp.html#id4">Linux的网络校时</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="influxdb.html">InfluxDB</a></li>
+<li class="toctree-l1"><a class="reference internal" href="influxdb.html">InfluxDB</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="influxdb.html#id1">参考资料</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="heka.html">heka</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="heka.html#id1">Heka文档阅读笔记</a></li>
 </ul>
@@ -221,6 +227,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../development/python/sentry.html">sentry</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../development/python/virtualenv.html">virtualenv</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../development/python/scipy.html">SciPy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/python/sqlalchemy.html">SQLAlchemy</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../development/js.html">JavaScript</a><ul>
@@ -248,6 +255,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../development/shell.html">Shell编程</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development/go.html">Go语言</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../development/golang/go-web-programming.html">《Go Web编程》读书笔记</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/golang/go-learning-note.html">Go学习笔记</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../development/go.html#id1">语言基础</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../development/go.html#web">Web开发</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../development/go.html#id5">标准库</a></li>
@@ -257,10 +265,11 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../development/web.html">Web开发问题记录</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../development/web.html#id1">工具</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../development/web.html#id3">浏览器兼容问题</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../development/web.html#id4">最佳实践</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../development/web.html#id5">推荐阅读</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/web.html#id1">响应式设计</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/web.html#id6">工具</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/web.html#id9">浏览器兼容问题</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/web.html#id10">最佳实践</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/web.html#id11">推荐阅读</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../development/make.html">CMake/Make</a></li>
@@ -362,11 +371,68 @@
           
   <div class="section" id="zookeeper">
 <h1>Zookeeper<a class="headerlink" href="#zookeeper" title="Permalink to this headline">¶</a></h1>
+<p>ZooKeeper is a high-performance coordination service for distributed applications. It exposes common services - such as naming, configuration management, synchronization, and group services - in a simple interface so you don&#8217;t have to write them from scratch. You can use it off-the-shelf to implement consensus, group management, leader election, and presence protocols. And you can build on it for your own, specific needs.</p>
+<hr class="docutils" />
+<div class="section" id="zookeeper-overview">
+<h2>Zookeeper Overview<a class="headerlink" href="#zookeeper-overview" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="zookeeper-a-distributed-coordination-service-for-distributed-applications">
+<h3>Zookeeper: A Distributed Coordination Service for Distributed Applications<a class="headerlink" href="#zookeeper-a-distributed-coordination-service-for-distributed-applications" title="Permalink to this headline">¶</a></h3>
+<p>Zookeeper exposes a simple set of primitives that distributed applications can build upon to implement higher level services for synchronization, configuration maintenance, and groups and naming. It is designed to be easy to program to, and uses a data model styled after the familiar directory tree structure of file systems. It runs in Java and has bindings for both Java and C.</p>
+<p>Coordination services are notoriously hard to get right. They are especially prone to errors such as race conditions and deadlock. The motivation behind ZooKeeper is to relieve distributed applications the responsibility of implementing coordination services from scratch.</p>
+<p><strong>Design Goals</strong></p>
+<ul>
+<li><p class="first"><em>Zookeeper is simple.</em> ZooKeeper allows distributed processes to coordinate with each other through a shared hierarchal namespace which is organized similarly to a standard file system. The name space consists of data registers - called znodes, in ZooKeeper parlance - and these are similar to files and directories. Unlike a typical file system, which is designed for storage, ZooKeeper data is kept in-memory, which means ZooKeeper can achieve high throughput and low latency numbers. The ZooKeeper implementation puts a premium on high performance, highly available, strictly ordered access. The performance aspects of ZooKeeper means it can be used in large, distributed systems. The reliability aspects keep it from being a single point of failure. The strict ordering means that sophisticated synchronization primitives can be implemented at the client.</p>
+</li>
+<li><p class="first"><em>Zookeeper is replicated.</em></p>
+<img alt="http://zookeeper.apache.org/doc/trunk/images/zkservice.jpg" src="http://zookeeper.apache.org/doc/trunk/images/zkservice.jpg" />
+<p>The servers that make up the ZooKeeper service must all know about each other. They maintain an in-memory image of state, along with a transaction logs and snapshots in a persistent store. As long as a majority of the servers are available, the ZooKeeper service will be available.</p>
+<p>Clients connect to a single ZooKeeper server. The client maintains a TCP connection through which it sends requests, gets responses, gets watch events, and sends heart beats. If the TCP connection to the server breaks, the client will connect to a different server.</p>
+</li>
+<li><p class="first"><em>Zookeeper is ordered.</em> ZooKeeper stamps each update with a number that reflects the order of all ZooKeeper transactions. Subsequent operations can use the order to implement higher-level abstractions, such as synchronization primitives.</p>
+</li>
+<li><p class="first"><em>Zookeeper is fast.</em> It is especially fast in &#8220;read-dominant&#8221; workloads. ZooKeeper applications run on thousands of machines, and it performs best where reads are more common than writes, at ratios of around 10:1.</p>
+</li>
+</ul>
+<p><strong>Data model and the hierarchical namespace</strong></p>
+<p>The name space provided by ZooKeeper is much like that of a standard file system. A name is a sequence of path elements separated by a slash (/). Every node in ZooKeeper&#8217;s name space is identified by a path.</p>
+<img alt="http://zookeeper.apache.org/doc/trunk/images/zknamespace.jpg" src="http://zookeeper.apache.org/doc/trunk/images/zknamespace.jpg" />
+<p><strong>Guarantees</strong></p>
+<p>Zookeeper is very fast and very simple. Since its goal, though, is to be a basis for the construction of more complicated services, such as synchronization, it provides a set of guarantees. These are:</p>
+<ul class="simple">
+<li>Sequential Consistency - Updates from a client will be applied in the order that they were sent.</li>
+<li>Atomicity - Updates either succeed or fail. No partial results.</li>
+<li>Single System Image - A client will see the same view of the service regardless of the server that it connects to.</li>
+<li>Reliability - Once an update has been applied, it will persist from that time forward until a client overwrites the update.</li>
+<li>Timeliness - The clients view of the system is guaranteed to be up-to-date within a certain time bound.</li>
+</ul>
+<p><strong>Simple API</strong></p>
+<p>One of the design goals of ZooKeeper is provide a very simple programming interface. As a result, it supports only these operations:</p>
+<ul class="simple">
+<li>create: creates a node at a location in the tree</li>
+<li>delete: deletes a node</li>
+<li>exists: tests if a node exists at a location</li>
+<li>get data: reads the data from a node</li>
+<li>set data: writes data to a node</li>
+<li>get children: retrieves a list of children of a node</li>
+<li>sync: waits for data to be propagated</li>
+</ul>
+<p><strong>Implementation</strong></p>
+<img alt="http://zookeeper.apache.org/doc/trunk/images/zkcomponents.jpg" src="http://zookeeper.apache.org/doc/trunk/images/zkcomponents.jpg" />
+<p>The image above shows the high-level components of the ZooKeeper service. With the exception of(除了...之外) the request processor, each of the servers that make up the ZooKeeper service replicates its own copy of each of components.</p>
+<p>The replicated database is an in-memory database containing the entire data tree. Updates are logged to disk for recoverability, and writes are serialized to disk before they are applied to the in-memory database.</p>
+<p>Every ZooKeeper server services clients. Clients connect to exactly one server to submit irequests. Read requests are serviced from the local replica of each server database. Requests that change the state of the service, write requests, are processed by an agreement protocol.</p>
+<p>As part of the agreement protocol all write requests from clients are forwarded to a single server, called the leader. The rest of the ZooKeeper servers, called followers, receive message proposals from the leader and agree upon message delivery. The messaging layer takes care of replacing leaders on failures and syncing followers with leaders.</p>
+<p>ZooKeeper uses a custom atomic messaging protocol. Since the messaging layer is atomic, ZooKeeper can guarantee that the local replicas never diverge. When the leader receives a write request, it calculates what the state of the system is when the write is to be applied and transforms this into a transaction that captures this new state.</p>
+<hr class="docutils" />
 <ul class="simple">
 <li><a class="reference external" href="http://www.searchtb.com/2011/01/zookeeper-research.html">Zookeeper研究和应用</a></li>
 <li><a class="reference external" href="http://stblog.baidu-tech.com/?p=1164">Zookeeper工作原理</a></li>
 <li><a class="reference external" href="http://blog.cloudera.com/blog/2009/05/building-a-distributed-concurrent-queue-with-apache-zookeeper/">Building a distributed concurrent queue with Apache ZooKeeper</a></li>
+<li><a class="reference external" href="http://jm-blog.aliapp.com/?p=1232">ZooKeeper典型应用场景一览</a></li>
+<li><a class="reference external" href="http://jm-blog.aliapp.com/?p=2318">ZooKeeper管理员指南——部署与管理ZooKeeper</a></li>
 </ul>
+</div>
+</div>
 </div>
 
 

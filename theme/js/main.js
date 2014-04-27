@@ -2,7 +2,7 @@ $(function() {
     var entryContentWidth = $('.row').width();
     $('.entry-content img').each(function(){
         if($(this).width() > entryContentWidth) {
-            $(this).width('65%');
+            $(this).width('100%');
         }
     });
 });

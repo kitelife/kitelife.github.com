@@ -1,3 +1,8 @@
 $(function() {
-    $('.entry-content img').wrap('<div class="show-img"></div>');
+    var entryContentWidth = $('.entry-content').width();
+    $('.entry-content img').each(function(){
+        if($(this).width() > entryContentWidth) {
+            $(this).width('60%');
+        }
+    });
 });

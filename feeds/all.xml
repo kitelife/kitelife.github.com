@@ -1,5 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>黑 * 白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/all.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2014-03-05T00:00:00+08:00</updated><entry><title>Windows命令提示符中统计行数（译）</title><link href="http://youngsterxyf.github.io/2014/03/05/counting-lines-in-cmd/" rel="alternate"></link><updated>2014-03-05T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-03-05:2014/03/05/counting-lines-in-cmd/</id><summary type="html">&lt;p&gt;原文：&lt;a href="http://rickardnobel.se/counting-lines-in-windows-command-prompt/"&gt;Counting lines in Windows command prompt&lt;/a&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>黑 * 白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/all.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2014-04-28T00:00:00+08:00</updated><entry><title>Firefox中“max-width:100%”不兼容问题</title><link href="http://youngsterxyf.github.io/2014/04/28/max-width-in-firefox/" rel="alternate"></link><updated>2014-04-28T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-04-28:2014/04/28/max-width-in-firefox/</id><summary type="html">&lt;p&gt;这个博客是基于“&lt;a href="http://docs.getpelican.com/en/3.3.0/"&gt;Pelican&lt;/a&gt; + &lt;a href="http://wowubuntu.com/markdown/"&gt;Markdown&lt;/a&gt; +
+&lt;a href="https://github.com/youngsterxyf/my-pelican-themes/tree/master/my-gum"&gt;定制的my-gum主题&lt;/a&gt;”的。定制的主题将博文正文页面的
+右边栏去掉，这导致在Firefox等浏览器中，正文中大的图片会突破正文块的宽度，高度也得不到限制，显示效果非常差。&lt;/p&gt;
+&lt;p&gt;其原因是：Markdown的&lt;a href="http://wowubuntu.com/markdown/#img"&gt;图片区块元素&lt;/a&gt;&lt;code&gt;![Alt
+text](/path/to/img.jpg)&lt;/code&gt;渲染成HTML元素的结果为 -&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nt"&gt;&amp;lt;p&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;img&lt;/span&gt; &lt;span class="na"&gt;src=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;/path/to/img.jpg&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;alt=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Alt text&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&amp;lt;/img&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;/p&amp;gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;code&gt;&amp;lt;p&amp;gt;&lt;/code&gt;元素内的元素是行内(inline)元素。主题my-gum使用的CSS框架&lt;a href="http://gumbyframework.com/"&gt;gumby&lt;/a&gt;对img元素是使用&lt;code&gt;max-width:
+100%&lt;/code&gt;将图片的最大宽度限制为父元素的宽度。但&lt;a href="https://developer.mozilla.org/en-US/docs/Web/CSS/max-width"&gt;在Firefox中max-width对于行内元素并不会生效(all elements but non-replaced 
+inline elements, table rows, and row
+groups)&lt;/a&gt;，所以造成了显示问题。&lt;/p&gt;
+&lt;p&gt;网络上有人说可以用&lt;code&gt;width: 100%&lt;/code&gt;替代之，但&lt;code&gt;width: 100%&lt;/code&gt;和&lt;code&gt;max-width: 100%&lt;/code&gt;的区别是：&lt;code&gt;width: 100%&lt;/code&gt;是将所有指定元素的宽度
+拉伸或收缩到和父元素的宽度一致，而&lt;code&gt;max-width:
+100%&lt;/code&gt;则是如果指定元素的宽度不超过父元素的宽度，则大小不变，如果超过了父元素的宽度，则将宽度收缩为父元素的宽度。如果使用&lt;code&gt;width:
+100%&lt;/code&gt;，那么我博文中的图片，即使再小，都会被拉伸为正文的宽度，自然是不会好看的。&lt;/p&gt;
+&lt;p&gt;我的想法是：既然使用CSS不能解决这个问题，那就尝试使用Javascript。当图片加载完毕后，将图片宽度与正文宽度做比较，如果
+图片宽度大于正文宽度，则为该图片设置&lt;code&gt;width: 100%&lt;/code&gt;。唯一不完美的地方是某些大图片加载完毕之前的宽度很大，比较难看。&lt;/p&gt;
+&lt;p&gt;代码如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;entryContentWidth&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;.row&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;width&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+
+    &lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;.entry-content img&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;on&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;load&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(){&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;width&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nx"&gt;entryContentWidth&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;width&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;100%&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+        &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="p"&gt;});&lt;/span&gt;
+&lt;span class="p"&gt;});&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h3&gt;参考资料&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="http://stackoverflow.com/questions/14550356/image-mysteriously-ignoring-max-width-in-firefox-ie"&gt;Image mysteriously ignoring max-width in Firefox &amp;amp; IE&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://stackoverflow.com/questions/2789727/is-p-a-block-level-or-inline-level-element"&gt;is &lt;p&gt; a block-level or inline-level element?&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://developer.mozilla.org/en-US/docs/Web/CSS/max-width"&gt;MDN - max-width&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://api.jquery.com/load-event/"&gt;JQuery - load event&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</summary><category term="CSS"></category><category term="浏览器兼容"></category><category term="JavaScript"></category></entry><entry><title>Windows命令提示符中统计行数（译）</title><link href="http://youngsterxyf.github.io/2014/03/05/counting-lines-in-cmd/" rel="alternate"></link><updated>2014-03-05T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-03-05:2014/03/05/counting-lines-in-cmd/</id><summary type="html">&lt;p&gt;原文：&lt;a href="http://rickardnobel.se/counting-lines-in-windows-command-prompt/"&gt;Counting lines in Windows command prompt&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;译者：&lt;a href="https://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;使用内置工具FIND统计cmd.exe输出的行数非常方便！&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;在命令行环境中工作时，能够统计不同工具的输出结果的行数有时会非常有用。许多Unix/Linux操作系统都包含带有许多功能选项的&lt;strong&gt;wc&lt;/strong&gt;

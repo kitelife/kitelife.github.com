@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>高流量站点NGINX与PHP-fpm配置优化（译）</title>
+        <meta charset="utf-8" />
+        <link href="http://youngsterxyf.github.io/feeds/all.xml" type="application/atom+xml" rel="alternate" title="黑 * 白 Full Atom Feed" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+              <script>
+                (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+                })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+                ga('create', 'UA-43488080-1', '黑白');
+                ga('send', 'pageview');
+
+              </script>
+
+              <script type="text/javascript" src="http://tajs.qq.com/stats?sId=27164999" charset="UTF-8"></script>
+ 
+</head>
+
+<body id="index" class="home">
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="../../../..">黑 * 白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+             
+              <ul class="columns">
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="/archives.html">归档</a></li>
+                <li><a href="/tags.html">标签</a></li>
+                <li><a href="/pages/tools.html">工具集</a></li>
+                <li><a href="/pages/links.html">链接</a></li>
+                <li><a href="/pages/aboutme.html">关于我</a></li>
+                <li><a href="/feeds/all.xml">RSS</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+   <div class="row">
+        <div class="columns">
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2014/05/03/optimizing-nginx-and-php-fpm-for-high-traffic-sites/" rel="bookmark" title="Permalink to 高流量站点NGINX与PHP-fpm配置优化（译）">高流量站点NGINX与PHP-fpm配置优化（译）</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2014-05-03T00:00:00">
+                2014-05-03 Sat
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>原文：<a href="http://www.softwareprojects.com/resources/programming/t-optimizing-nginx-and-php-fpm-for-high-traffic-sites-2081.html">Optimizing NGINX and PHP-fpm for high traffic sites</a></p>
+<p>译者：<a href="https://github.com/youngsterxyf/">youngsterxyf</a></p>
+<p>使用Nginx搭配PHP已有7年的这份经历让我们学会如何为高流量站点优化NGINX和PHP-fpm配置。</p>
+<p>以下正是这方面的一些提示和建议：</p>
+<h4>1. 将TCP切换为UNIX域套接字</h4>
+<p>UNIX域套接字相比TCP套接字在loopback接口上能提供更好的性能（更少的数据拷贝和上下文切换）。</p>
+<p>但有一点需要牢记：仅运行在同一台服务器上的程序可以访问UNIX域套接字（显然没有网络支持）。</p>
+<div class="highlight"><pre>upstream backend
+{
+    # UNIX domain sockets
+    server unix:/var/run/fastcgi.sock;
+
+    # TCP sockets
+    # server 127.0.0.1:8080;
+}
+</pre></div>
+
+
+<h4>2. 调整工作进程数</h4>
+<p>现代计算机硬件是多处理器的，NGINX可以利用多物理或虚拟处理器。</p>
+<p>多数情况下，你的Web服务器都不会配置为处理多种任务（比如作为Web服务器提供服务的同时也是一个打印服务器），你可以配置NGINX使用所有可用的处理器，NGINX工作进程并不是多线程的。</p>
+<p>运行以下命令可以获知你的机器有多少个处理器：</p>
+<p>Linux上 -</p>
+<div class="highlight"><pre>cat /proc/cpuinfo | grep processor
+</pre></div>
+
+
+<p>FreeBSD上 -</p>
+<div class="highlight"><pre>sysctl dev .cpu | grep location
+</pre></div>
+
+
+<p>将nginx.conf文件中work_processes的值设置为机器的处理器核数。</p>
+<p>同时，增大worker_connections（每个处理器核心可以处理多少个连接）的值，以及将"multi_accept"设置为ON，如果你使用的是Linux，则也使用"epoll"：</p>
+<div class="highlight"><pre># We have 16 cores
+worker_processes 16;
+
+# connections per worker
+events
+{
+    worker_connections 4096;
+    multi_accept on;
+}
+</pre></div>
+
+
+<h4>3. 设置upstream负载均衡</h4>
+<p>以我们的经验来看，同一台机器上多个upstream后端相比单个upstream后端能够带来更高的吞吐量。</p>
+<p>例如，如果你想支持最大1000个PHP-fpm子进程（children），可以将该数字平均分配到两个upstream后端，各自处理500个PHP-fpm子进程：</p>
+<div class="highlight"><pre>upstream backend {
+    server unix:/var/run/php5-fpm.sock1 weight=100 max_fails=5 fail_timeout=5;
+    server unix:/var/run/php5-fpm.sock2 weight=100 max_fails=5 fail_timeout=5;
+}
+</pre></div>
+
+
+<p>以下是两个来自php-fpm.conf的进程池：</p>
+<div class="highlight"><pre>&lt;section name=&quot;pool&quot;&gt;
+
+    &lt;value name=&quot;name&quot;&gt;www1&lt;/value&gt;
+    &lt;value name=&quot;listen_address&quot;&gt;/var/run/php5-fpm.sock1&lt;/value&gt;
+
+    &lt;value name=&quot;listen_options&quot;&gt;
+        &lt;value name=&quot;backlog&quot;&gt;-1&lt;/value&gt;
+        &lt;value name=&quot;owner&quot;&gt;&lt;/value&gt;
+        &lt;value name=&quot;group&quot;&gt;&lt;/value&gt;
+        &lt;value name=&quot;mode&quot;&gt;0666&lt;/value&gt;
+    &lt;/value&gt;
+
+    &lt;value name=&quot;user&quot;&gt;www&lt;/value&gt;
+    &lt;value name=&quot;group&quot;&gt;www&lt;/value&gt;
+
+    &lt;value name=&quot;pm&quot;&gt;
+        &lt;value name=&quot;style&quot;&gt;static&lt;/value&gt;
+        &lt;value name=&quot;max_children&quot;&gt;500&lt;/value&gt;
+    &lt;/value&gt;
+
+    &lt;value name=&quot;rlimit_files&quot;&gt;50000&lt;/value&gt;
+    &lt;value name=&quot;rlimit_core&quot;&gt;0&lt;/value&gt;
+    &lt;value name=&quot;request_slowlog_timeout&quot;&gt;20s&lt;/value&gt;
+    &lt;value name=&quot;slowlog&quot;&gt;/var/log/php-slow.log&lt;/value&gt;
+    &lt;value name=&quot;chroot&quot;&gt;&lt;/value&gt;
+    &lt;value name=&quot;chdir&quot;&gt;&lt;/value&gt;
+    &lt;value name=&quot;catch_workers_output&quot;&gt;no&lt;/value&gt;
+    &lt;value name=&quot;max_requests&quot;&gt;5000&lt;/value&gt;
+    &lt;value name=&quot;allowed_clients&quot;&gt;127.0.0.1&lt;/value&gt;
+
+    &lt;value name=&quot;environment&quot;&gt;
+        &lt;value name=&quot;HOSTNAME&quot;&gt;$HOSTNAME&lt;/value&gt;
+        &lt;value name=&quot;PATH&quot;&gt;/usr/local/bin:/usr/bin:/bin&lt;/value&gt;
+        &lt;value name=&quot;TMP&quot;&gt;/usr/tmp&lt;/value&gt;
+        &lt;value name=&quot;TMPDIR&quot;&gt;/usr/tmp&lt;/value&gt;
+        &lt;value name=&quot;TEMP&quot;&gt;/usr/tmp&lt;/value&gt;
+        &lt;value name=&quot;OSTYPE&quot;&gt;$OSTYPE&lt;/value&gt;
+        &lt;value name=&quot;MACHTYPE&quot;&gt;$MACHTYPE&lt;/value&gt;
+        &lt;value name=&quot;MALLOC_CHECK_&quot;&gt;2&lt;/value&gt;
+    &lt;/value&gt;
+
+&lt;/section&gt;
+
+&lt;section name=&quot;pool&quot;&gt;
+
+    &lt;value name=&quot;name&quot;&gt;www2&lt;/value&gt;
+    &lt;value name=&quot;listen_address&quot;&gt;/var/run/php5-fpm.sock2&lt;/value&gt;
+
+    &lt;value name=&quot;listen_options&quot;&gt;
+        &lt;value name=&quot;backlog&quot;&gt;-1&lt;/value&gt;
+        &lt;value name=&quot;owner&quot;&gt;&lt;/value&gt;
+        &lt;value name=&quot;group&quot;&gt;&lt;/value&gt;
+        &lt;value name=&quot;mode&quot;&gt;0666&lt;/value&gt;
+    &lt;/value&gt;
+
+    &lt;value name=&quot;user&quot;&gt;www&lt;/value&gt;
+    &lt;value name=&quot;group&quot;&gt;www&lt;/value&gt;
+
+    &lt;value name=&quot;pm&quot;&gt;
+        &lt;value name=&quot;style&quot;&gt;static&lt;/value&gt;
+        &lt;value name=&quot;max_children&quot;&gt;500&lt;/value&gt;
+    &lt;/value&gt;
+
+    &lt;value name=&quot;rlimit_files&quot;&gt;50000&lt;/value&gt;
+    &lt;value name=&quot;rlimit_core&quot;&gt;0&lt;/value&gt;
+    &lt;value name=&quot;request_slowlog_timeout&quot;&gt;20s&lt;/value&gt;
+    &lt;value name=&quot;slowlog&quot;&gt;/var/log/php-slow.log&lt;/value&gt;
+    &lt;value name=&quot;chroot&quot;&gt;&lt;/value&gt;
+    &lt;value name=&quot;chdir&quot;&gt;&lt;/value&gt;
+    &lt;value name=&quot;catch_workers_output&quot;&gt;no&lt;/value&gt;
+    &lt;value name=&quot;max_requests&quot;&gt;5000&lt;/value&gt;
+    &lt;value name=&quot;allowed_clients&quot;&gt;127.0.0.1&lt;/value&gt;
+
+    &lt;value name=&quot;environment&quot;&gt;
+        &lt;value name=&quot;HOSTNAME&quot;&gt;$HOSTNAME&lt;/value&gt;
+        &lt;value name=&quot;PATH&quot;&gt;/usr/local/bin:/usr/bin:/bin&lt;/value&gt;
+        &lt;value name=&quot;TMP&quot;&gt;/usr/tmp&lt;/value&gt;
+        &lt;value name=&quot;TMPDIR&quot;&gt;/usr/tmp&lt;/value&gt;
+        &lt;value name=&quot;TEMP&quot;&gt;/usr/tmp&lt;/value&gt;
+        &lt;value name=&quot;OSTYPE&quot;&gt;$OSTYPE&lt;/value&gt;
+        &lt;value name=&quot;MACHTYPE&quot;&gt;$MACHTYPE&lt;/value&gt;
+        &lt;value name=&quot;MALLOC_CHECK_&quot;&gt;2&lt;/value&gt;
+    &lt;/value&gt;
+
+&lt;/section&gt;
+</pre></div>
+
+
+<h4>4. 禁用访问日志文件</h4>
+<p>这一点影响较大，因为高流量站点上的日志文件涉及大量必须在所有线程之间同步的IO操作。</p>
+<div class="highlight"><pre>access_log off;
+log_not_found off;
+error_log /var/log/nginx-error.log warn;
+</pre></div>
+
+
+<p>若你不能关闭访问日志文件，至少应该使用缓冲：</p>
+<div class="highlight"><pre>access_log /var/log/nginx/access.log main buffer=16k;
+</pre></div>
+
+
+<h4>5. 启用GZip</h4>
+<div class="highlight"><pre>gzip on;
+gzip_disable &quot;msie6&quot;;
+gzip_vary on;
+gzip_proxied any;
+gzip_comp_level 6;
+gzip_min_length 1100;
+gzip_buffers 16 8k;
+gzip_http_version 1.1;
+gzip_types text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript;
+</pre></div>
+
+
+<h4>6. 缓存被频繁访问的文件相关的信息</h4>
+<div class="highlight"><pre>open_file_cache max=200000 inactive=20s;
+open_file_cache_valid 30s;
+open_file_cache_min_uses 2;
+open_file_cache_errors on;
+</pre></div>
+
+
+<h4>7. 调整客户端超时时间</h4>
+<div class="highlight"><pre>client_max_body_size 500M;
+client_body_buffer_size 1m;
+client_body_timeout 15;
+client_header_timeout 15;
+keepalive_timeout 2 2;
+send_timeout 15;
+sendfile on;
+tcp_nopush on;
+tcp_nodelay on;
+</pre></div>
+
+
+<h4>8. 调整输出缓冲区大小</h4>
+<div class="highlight"><pre>fastcgi_buffers 256 16k;
+fastcgi_buffer_size 128k;
+fastcgi_connect_timeout 3s;
+fastcgi_send_timeout 120s;
+fastcgi_read_timeout 120s;
+reset_timedout_connection on;
+server_names_hash_bucket_size 100;
+</pre></div>
+
+
+<h4>9. /etc/sysctl.conf调优</h4>
+<div class="highlight"><pre># Recycle Zombie connections
+net.inet.tcp.fast_finwait2_recycle=1
+net.inet.tcp.maxtcptw=200000
+
+# Increase number of files
+kern.maxfiles=65535
+kern.maxfilesperproc=16384
+
+# Increase page share factor per process
+vm.pmap.pv_entry_max=54272521
+vm.pmap.shpgperproc=20000
+
+# Increase number of connections
+vfs.vmiodirenable=1
+kern.ipc.somaxconn=3240000
+net.inet.tcp.rfc1323=1
+net.inet.tcp.delayed_ack=0
+net.inet.tcp.restrict_rst=1
+kern.ipc.maxsockbuf=2097152
+kern.ipc.shmmax=268435456
+
+# Host cache
+net.inet.tcp.hostcache.hashsize=4096
+net.inet.tcp.hostcache.cachelimit=131072
+net.inet.tcp.hostcache.bucketlimit=120
+
+# Increase number of ports
+net.inet.ip.portrange.first=2000
+net.inet.ip.portrange.last=100000
+net.inet.ip.portrange.hifirst=2000
+net.inet.ip.portrange.hilast=100000
+kern.ipc.semvmx=131068
+
+# Disable Ping-flood attacks
+net.inet.tcp.msl=2000
+net.inet.icmp.bmcastecho=1
+net.inet.icmp.icmplim=1
+net.inet.tcp.blackhole=2
+net.inet.udp.blackhole=1
+</pre></div>
+
+
+<h4>10. 监控</h4>
+<p>持续监控打开连接的数目，空闲内存以及等待状态线程的数目。</p>
+<p>设置警报在超出阈值时通知你。你可以自己构建这些警报，或者使用类似<a href="http://serverdensity.io">ServerDensity</a>的东西。</p>
+<p>确认安装了NGINX的<a href="http://wiki.nginx.org/HttpStubStatusModule">stub_status</a>模块。该模块默认并不会编译进NGINX，所以可能你需要重新编译NGINX -</p>
+<div class="highlight"><pre>./configure --with-http_ssl_module --with-http_stub_status_module --without-mail_pop3_module
+--without-mail_imap_module --without-mail_smtp_module
+make install BATCH=yes
+</pre></div>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2014/05/03/optimizing-nginx-and-php-fpm-for-high-traffic-sites/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+        </div><!-- /.twelve.columns -->
+ </div><!-- /.row -->
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+    
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+  <script src="../../../../theme/js/main.js"></script>
+</body>
+</html>

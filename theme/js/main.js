@@ -9,7 +9,7 @@ $(function() {
 
     var appendCoderwallBadge = function(){
         var coderwallJSONurl ="http://www.coderwall.com/youngsterxyf.json?callback=?"
-          , size = 32
+          , size = 40
           ;
 
         $.getJSON(coderwallJSONurl, function(data) {

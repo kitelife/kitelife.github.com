@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>微信服务号开发笔记</title>
+        <meta charset="utf-8" />
+        <link href="http://youngsterxyf.github.io/feeds/all.xml" type="application/atom+xml" rel="alternate" title="黑 * 白 Full Atom Feed" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+              <script>
+                (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+                })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+                ga('create', 'UA-43488080-1', '黑白');
+                ga('send', 'pageview');
+
+              </script>
+
+              <script type="text/javascript" src="http://tajs.qq.com/stats?sId=27164999" charset="UTF-8"></script>
+ 
+</head>
+
+<body id="index" class="home">
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="../../../..">黑 * 白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+             
+              <ul class="columns">
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="/archives.html">归档</a></li>
+                <li><a href="/tags.html">标签</a></li>
+                <li><a href="/pages/tools.html">工具集</a></li>
+                <li><a href="/pages/links.html">链接</a></li>
+                <li><a href="/pages/aboutme.html">关于我</a></li>
+                <li><a href="/feeds/all.xml">RSS</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+   <div class="row">
+        <div class="columns">
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2014/06/14/wechat-service-account-development/" rel="bookmark" title="Permalink to 微信服务号开发笔记">微信服务号开发笔记</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2014-06-14T00:00:00">
+                2014-06-14 Sat
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <h3>原理</h3>
+<p>微信服务号的原理比较简单。从请求响应角度来看，逻辑是：</p>
+<p><strong>用户微信客户端 &lt;---&gt; 微信服务器 &lt;---&gt; 微信服务号后台程序 &lt;---&gt; 数据库或Web Service</strong></p>
+<p>也就是，用户的各种请求先经过微信的服务器，微信服务器将请求转发给微信服务号后台程序。</p>
+<p>既然是微信服务器把用户请求数据转发给我们开发的微信服务号后台程序，那么在注册服务号的时候就需要提供一个URL。另外为了安全
+考虑，还需要提供一个token，用来校验请求是否来自微信服务器。校验的方法见<a href="http://mp.weixin.qq.com/wiki/index.php?title=%E9%AA%8C%E8%AF%81%E6%B6%88%E6%81%AF%E7%9C%9F%E5%AE%9E%E6%80%A7">微信开发者文档</a>。校验又分两种：</p>
+<blockquote>
+<p>在开发者首次提交验证申请时，微信服务器将发送GET请求到填写的URL上，并且带上四个参数（signature、timestamp、nonce、echostr），开发者通过对签名（即signature）的效验，来判断此条消息的真实性。</p>
+<p>此后，每次开发者接收用户消息的时候，微信也都会带上前面三个参数（signature、timestamp、nonce）访问开发者设置的URL，开发者依然通过对签名的效验判断此条消息的真实性。效验方式与首次提交验证申请一致。</p>
+</blockquote>
+<p>微信服务器转发到微信服务号后台程序的消息以及服务号后台程序返回给微信服务器的响应，都是XML格式，消息中都会指明发送者和接收者。
+请求消息中的发送者为微信用户的openid，接收者为服务号开发者微信号，响应消息则相反。</p>
+<p>消息中还有一个关键字段MsgType指明消息类型。微信将请求消息分为：普通消息、事件推送、语音识别结果三大类，其中，</p>
+<ul>
+<li>普通消息分6种：文本、图片、语音、视频、地理位置、链接。</li>
+<li>事件推送分4种：关注/取消关注事件、扫描带参数二维码事件、上报地理位置事件、自定义菜单事件(点击菜单拉取消息时的事件推送、点击菜单跳转链接时的事件推送)</li>
+</ul>
+<p>响应消息也分6种：文本、图片、语音、视频、音乐、图文。</p>
+<p>工作中为产品开发的微信服务号，目前对于普通消息，服务号后台程序自动响应一段文本消息；对于事件推送中的关注事件，则是响应一段欢迎、
+功能简介的文本消息。</p>
+<p>另外我们使用了自定义菜单事件，要想使用该事件，先要为你的微信服务号提供自定义菜单。自定义菜单是通过微信提供的API向其推送的。</p>
+<p>在通过API向微信服务器推送自定义菜单时，微信服务器需要确认是否为可信任请求，确认方法是基于请求参数access_token。
+access_token需要通过API向微信服务器获取。在服务号注册成功后，微信会为服务号分配一个AppId和AppSecret，获取access_token时
+需要带上这两个参数，用于微信服务器确认是否为已注册服务号的请求。access_token相关文档见<a href="http://mp.weixin.qq.com/wiki/index.php?title=%E8%8E%B7%E5%8F%96access_token">这里</a>。</p>
+<p>当成功获取access_token后就可以通过API创建、删除、查询服务号的自定义菜单了。</p>
+<p>自定义菜单相关文档见<a href="http://mp.weixin.qq.com/wiki/index.php?title=%E8%87%AA%E5%AE%9A%E4%B9%89%E8%8F%9C%E5%8D%95%E5%88%9B%E5%BB%BA%E6%8E%A5%E5%8F%A3">这里</a>。</p>
+<p>以下Python代码是对自定义菜单API的简单封装：</p>
+<script src="https://gist.github.com/youngsterxyf/be823dc38a1c578875b7.js"></script>
+
+<h3>开发</h3>
+<p>对于微信服务号后台程序，当然可以基于微信提供的URL API，从头开始实现。但可用非官方微信公众号SDK也不少。比如我使用的PHP
+SDK是<a href="https://github.com/netputer/wechat-php-sdk">这个</a>。</p>
+<p>其他语言的SDK也可以找找看。</p>
+<h3>注意</h3>
+<ul>
+<li>
+<p>我在申请微信服务号之后，就直接使用该服务号进行开发测试，但在开发测试过程中，已经有一些产品的用户关注了该服务号，那么这个过程中用户的体验会很差。正确的过程应该是<strong>先申请测试帐号进行开发测试，等开发测试完成后，再上线服务号</strong>。</p>
+</li>
+<li>
+<p>自定义菜单在变更之后并不是实时更新的，官方文档的说明是：<em>创建自定义菜单后，由于微信客户端缓存，需要24小时微信客户端才会展现出来。建议测试时可以尝试取消关注公众账号后再次关注，则可以看到创建后的效果</em>。</p>
+</li>
+</ul>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2014/06/14/wechat-service-account-development/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+        </div><!-- /.twelve.columns -->
+ </div><!-- /.row -->
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+    
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+  <script src="../../../../theme/js/main.js"></script>
+</body>
+</html>

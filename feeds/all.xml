@@ -3,7 +3,7 @@
 &lt;p&gt;微信服务号的原理比较简单。从请求响应角度来看，逻辑是：&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;用户微信客户端 &amp;lt;---&amp;gt; 微信服务器 &amp;lt;---&amp;gt; 微信服务号后台程序 &amp;lt;---&amp;gt; 数据库或Web Service&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;也就是，用户的各种请求先经过微信的服务器，微信服务器将请求转发给微信服务号后台程序。&lt;/p&gt;
-&lt;p&gt;既然是微信服务器把用户请求数据转发给我们开发的微信服务号后台程序，那么在注册服务号的时候就需要提供一个URL。另外为了安全
+&lt;p&gt;既然是微信服务器把用户请求数据转发给我们开发的微信服务号后台程序，那么在启用服务号的开发模式时就需要提供一个URL。另外为了安全
 考虑，还需要提供一个token，用来校验请求是否来自微信服务器。校验的方法见&lt;a href="http://mp.weixin.qq.com/wiki/index.php?title=%E9%AA%8C%E8%AF%81%E6%B6%88%E6%81%AF%E7%9C%9F%E5%AE%9E%E6%80%A7"&gt;微信开发者文档&lt;/a&gt;。校验又分两种：&lt;/p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;在开发者首次提交验证申请时，微信服务器将发送GET请求到填写的URL上，并且带上四个参数（signature、timestamp、nonce、echostr），开发者通过对签名（即signature）的效验，来判断此条消息的真实性。&lt;/p&gt;
@@ -21,7 +21,7 @@
 功能简介的文本消息。&lt;/p&gt;
 &lt;p&gt;另外我们使用了自定义菜单事件，要想使用该事件，先要为你的微信服务号提供自定义菜单。自定义菜单是通过微信提供的API向其推送的。&lt;/p&gt;
 &lt;p&gt;在通过API向微信服务器推送自定义菜单时，微信服务器需要确认是否为可信任请求，确认方法是基于请求参数access_token。
-access_token需要通过API向微信服务器获取。在服务号注册成功后，微信会为服务号分配一个AppId和AppSecret，获取access_token时
+access_token需要通过API向微信服务器获取。成功启用服务号的开发模式后，微信会为服务号分配一个AppId和AppSecret，获取access_token时
 需要带上这两个参数，用于微信服务器确认是否为已注册服务号的请求。access_token相关文档见&lt;a href="http://mp.weixin.qq.com/wiki/index.php?title=%E8%8E%B7%E5%8F%96access_token"&gt;这里&lt;/a&gt;。&lt;/p&gt;
 &lt;p&gt;当成功获取access_token后就可以通过API创建、删除、查询服务号的自定义菜单了。&lt;/p&gt;
 &lt;p&gt;自定义菜单相关文档见&lt;a href="http://mp.weixin.qq.com/wiki/index.php?title=%E8%87%AA%E5%AE%9A%E4%B9%89%E8%8F%9C%E5%8D%95%E5%88%9B%E5%BB%BA%E6%8E%A5%E5%8F%A3"&gt;这里&lt;/a&gt;。&lt;/p&gt;
@@ -35,7 +35,7 @@ SDK是&lt;a href="https://github.com/netputer/wechat-php-sdk"&gt;这个&lt;/a&gt
 &lt;h3&gt;注意&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;
-&lt;p&gt;我在申请微信服务号之后，就直接使用该服务号进行开发测试，但在开发测试过程中，已经有一些产品的用户关注了该服务号，那么这个过程中用户的体验会很差。正确的过程应该是&lt;strong&gt;先申请测试帐号进行开发测试，等开发测试完成后，再上线服务号&lt;/strong&gt;。&lt;/p&gt;
+&lt;p&gt;我在启用微信服务号的开发模式之后，就直接使用该服务号进行开发测试，但在开发测试过程中，已经有一些产品的用户关注了该服务号，那么这个过程中用户的体验会很差。正确的过程应该是&lt;strong&gt;先申请测试帐号进行开发测试，等开发测试完成后，再上线服务号&lt;/strong&gt;。&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;自定义菜单在变更之后并不是实时更新的，官方文档的说明是：&lt;em&gt;创建自定义菜单后，由于微信客户端缓存，需要24小时微信客户端才会展现出来。建议测试时可以尝试取消关注公众账号后再次关注，则可以看到创建后的效果&lt;/em&gt;。&lt;/p&gt;

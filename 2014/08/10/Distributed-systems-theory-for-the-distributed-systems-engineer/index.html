@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>面向分布式系统工程师的分布式系统理论</title>
+        <meta charset="utf-8" />
+        <link href="http://youngsterxyf.github.io/feeds/all.xml" type="application/atom+xml" rel="alternate" title="黑 * 白 Full Atom Feed" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+              <script>
+                (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+                })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+                ga('create', 'UA-43488080-1', '黑白');
+                ga('send', 'pageview');
+
+              </script>
+
+              <script type="text/javascript" src="http://tajs.qq.com/stats?sId=27164999" charset="UTF-8"></script>
+ 
+</head>
+
+<body id="index" class="home">
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="../../../..">黑 * 白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+             
+              <ul class="columns">
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="/archives.html">归档</a></li>
+                <li><a href="/tags.html">标签</a></li>
+                <li><a href="/pages/tools.html">工具集</a></li>
+                <li><a href="/pages/links.html">链接</a></li>
+                <li><a href="/pages/aboutme.html">关于我</a></li>
+                <li><a href="/feeds/all.xml">RSS</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+   <div class="row">
+        <div class="columns">
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2014/08/10/Distributed-systems-theory-for-the-distributed-systems-engineer/" rel="bookmark" title="Permalink to 面向分布式系统工程师的分布式系统理论">面向分布式系统工程师的分布式系统理论</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2014-08-10T00:00:00">
+                2014-08-10 Sun
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>原文：<a href="http://the-paper-trail.org/blog/distributed-systems-theory-for-the-distributed-systems-engineer/">Distributed systems theory for the distributed systems engineer</a></p>
+<p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
+<p>Gwen Shapira，大腕级的解决方案架构师（SA），如今Cloudera的全职工程师，在<a href="https://twitter.com/gwenshap/status/497203248332165121">Twitter上提的一个问题</a>引起了我的思考。</p>
+<p>如果是以前，我可能会回答“嗯，这里有篇FLP论文，这里有篇Paxos论文，这里还有篇拜占庭将军问题的论文...”，我会罗列一箩筐重要的材料，如果你一头扎进去，至少花费6个月的时间才能过一遍这些材料。然而我已逐渐明白推荐大量的理论性的论文通常恰恰是着手学习分布式系统理论的错误方式（除非你在做一个PhD项目）。论文通常比较深入难懂，需要认真地研习，通常还需要<em>大量的时间投入(significant experience)</em>来理清这些论文的重要贡献，以及在整个理论体系中的位置。要求工程师具备这样的专业水平又有多大的意义呢？</p>
+<p>但是，很遗憾，对分布式系统理论方面的重大研究成果和思想进行概括、归纳、背景分析的‘导引’性质的优秀材料非常缺乏；特别是没有居高临下态度的材料。对这块空白区域的思考让我想到了另一个有趣的问题：</p>
+<p><em>一个分布式系统工程师应该知道些什么分布式系统理论？</em></p>
+<p>在这种情况下，一知半解(a little theory)并不会是一件多危险的事情。因此我尝试整理一个列表，罗列出作为一个分布式系统工程师的我认为能够直接应用于我日常工作的一些基本概念；或者让分布式系统工程师完全有能力设计一个新系统的“筹码”。如果你认为我漏掉了一些东西，请联系我。</p>
+<h4>入门第一步</h4>
+<p>以下4篇材料出色地解释了构建分布式系统会遇到的一些挑战，共同概述了一系列分布式系统工程师必须要解决的技术上的难题，为之后章节中更深入的研究做好准备。</p>
+<ul>
+<li><a href="http://book.mixu.net/distsys/">好玩又实在的分布式系统理论</a>是一本简短的书籍，其内容覆盖了分布式系统领域的一些基本议题，包括时间的作用及不同的复制策略。</li>
+<li><a href="http://www.somethingsimilar.com/2013/01/14/notes-on-distributed-systems-for-young-bloods/">为分布式系统领域新人整理的笔记</a> - 不是理论对理论地讲述，而是做一个非常好非常实用的平衡，让你对其余材料的阅读能够落地。</li>
+<li><a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.41.7628">分布式系统研究综述报告</a> - 一篇经典的论文，解释了为什么不能将所有远程交互都模拟成和本地对象一样。</li>
+<li><a href="http://en.wikipedia.org/wiki/Fallacies_of_Distributed_Computing">关于分布式计算的若干谬论</a> - 分布式计算方面的8点谬论，提醒系统设计者可能会忘记的几类事情。</li>
+</ul>
+<h4>失败和时间</h4>
+<p>分布式系统工程师需要面对的许多困难最终都可以归咎于两个潜在的原因：</p>
+<ul>
+<li>进程可能会失败</li>
+<li>不存在一种好的方式来周知目前为止进程已经做了些什么</li>
+</ul>
+<p>进程之间对于<em>时间</em>的认知能共享些什么？哪些失败的场景是能够检测到？什么算法和原语可能被正确地实现？这三个问题有着非常深层的联系。多数时候，我们会假设两个不同节点之间对于时间概念或时间以什么样的速度逝去没有任何可共享的认知。</p>
+<p>你应该知道：</p>
+<ul>
+<li>失败模式的（部分）分层：<a href="http://www.cse.psu.edu/~gcao/teach/513-00/c7.pdf">崩溃停止-&gt;排除(omission)</a>-&gt;<a href="http://en.wikipedia.org/wiki/Byzantine_fault_tolerance">拜占庭容错</a>。你应该理解：在高层次上可能发生的问题在低层次上肯定可能发生，在低层次上不可能发生的问题在高层次上也肯定不可能发生。</li>
+<li>在没有任何共享时钟的情况下如何判断在另一个事件之前是否产生了某事件。这意味着你需要理解<a href="http://web.stanford.edu/class/cs240/readings/lamport.pdf">Lamport时钟</a>及其一般化的<a href="http://en.wikipedia.org/wiki/Vector_clock">向量始终</a>，也需要阅读一下<a href="http://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf">这篇Dynamo论文</a>。</li>
+<li>单个失败发生的可能性对于我们实现正确的分布式系统到底会有多大的影响（请阅读下面关于FLP结果的笔记）？</li>
+<li>不同的时间模型：同步、部分同步和异步（若我找到好的参考文献会添加链接）</li>
+</ul>
+<h4>容错的基本矛盾</h4>
+<p>一个系统，若要不降级而容忍某些错误的发生，就必须能够好像那些错误没有发生一样地运作。这通常意味着系统的这些部分必须能够冗余地工作，但是非绝对必要地做更多的工作通常会在性能和资源耗用方面产生一些消耗。这是为系统添加容错带来的基本矛盾。</p>
+<p>你应该知道：</p>
+<ul>
+<li>确保单拷贝可串行化(single-copy serialisability)的仲裁(quorum)技术。可阅读<a href="https://ecommons.library.cornell.edu/bitstream/1813/6323/1/82-483.pdf">Skeen的原始论文</a>，但可能更建议阅读<a href="http://en.wikipedia.org/wiki/Quorum_(distributed_computing)">这个Wikipedia词条</a>。</li>
+<li>关于<a href="http://the-paper-trail.org/blog/consensus-protocols-two-phase-commit/">两阶段提交</a>、<a href="http://the-paper-trail.org/blog/consensus-protocols-three-phase-commit/">三阶段提交</a>和<a href="http://the-paper-trail.org/blog/consensus-protocols-paxos/">Paxos</a>算法，以及为什么它们有不同的容错性质。</li>
+<li>最终一致性，及其他技术是如何以弱化对系统行为的保证为代价来尝试避免这种矛盾的。这篇<a href="http://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf">Dynamo论文</a>是一个很好的起点，同时Pat Helland的经典之作<a href="http://www.ics.uci.edu/~cs223/papers/cidr07p15.pdf">Life Beyond Transactions</a>也是必读的。</li>
+</ul>
+<h4>基本的原语</h4>
+<p>分布式系统中很少有大家一致认同的基本构建块，但越来越多地在出现。你应该以下的问题是什么，以及在哪可以找到它们的解决方案：</p>
+<ul>
+<li>群首选举(leader election)（例如<a href="http://en.wikipedia.org/wiki/Bully_algorithm">Bully算法</a>）</li>
+<li>一致的快照（例如Chandy和Lamport所写的<a href="http://research.microsoft.com/en-us/um/people/lamport/pubs/chandy.pdf">经典论文</a>）</li>
+<li>共识（阅读上文提到的关于2PC和Paxos的博文）</li>
+<li>分布式状态机复制（看看<a href="http://en.wikipedia.org/wiki/State_machine_replication">Wikipedia</a>就可以，但<a href="http://research.microsoft.com/en-us/um/people/blampson/58-Consensus/Acrobat.pdf">Lampson的论文</a>更权威，只是枯燥了点）。</li>
+</ul>
+<h4>基础结论</h4>
+<p>某些客观事实是需要内化于心的，以下是几个关键点（a flavour）（当然还有更多）：</p>
+<ul>
+<li>如果进程之间可能丢失某些消息，那么不可能在实现一致性存储的同时能响应所有的请求。这就是<a href="http://lpd.epfl.ch/sgilbert/pubs/BrewersConjecture-SigAct.pdf">CAP定理</a>。</li>
+<li>以这样一种方式（a.始终是正确的、b.始终能终止-若在一个可能因失败崩溃停止(crash-* stop failures)的异步系统中有（甚至仅）一台机器失效时(FLP的结果)）。我希望在<a href="http://www.slideshare.net/HenryRobinson/pwl-nonotes">洛杉矶题为Papers We Love报告</a>的第一部分幻灯片-进行证明之前-已经合理地解释了这个结论。<em>建议：没有实际的必要理解这个证明。</em></li>
+<li>一般而言，消息交互少于两轮是不可能达成共识(Consensus)。</li>
+</ul>
+<h4>真实系统</h4>
+<p>最重要的练习是重复地阅读新兴的、真实系统的描述，并尝试评价它们的设计决策。一遍又一遍地这样去做。一些建议：</p>
+<p><strong>Google:</strong></p>
+<p><a href="http://static.googleusercontent.com/media/research.google.com/en/us/archive/gfs-sosp2003.pdf">GFS</a>、<a href="http://static.googleusercontent.com/media/research.google.com/en/us/archive/spanner-osdi2012.pdf">Spanner</a>、<a href="http://static.googleusercontent.com/media/research.google.com/en/us/pubs/archive/41344.pdf">F1</a>、<a href="http://static.googleusercontent.com/media/research.google.com/en/us/archive/chubby-osdi06.pdf">Chubby</a>、<a href="http://static.googleusercontent.com/media/research.google.com/en/us/archive/bigtable-osdi06.pdf">BigTable</a>、<a href="http://static.googleusercontent.com/media/research.google.com/en/us/pubs/archive/41378.pdf">MillWheel</a>、<a href="http://eurosys2013.tudos.org/wp-content/uploads/2013/paper/Schwarzkopf.pdf">Omega</a>、<a href="http://static.googleusercontent.com/media/research.google.com/en/us/pubs/archive/36356.pdf">Dapper</a>、<a href="http://www.cs.utexas.edu/users/lorenzo/corsi/cs380d/papers/paper2-1.pdf">Paxos Made Live</a>、<a href="http://cacm.acm.org/magazines/2013/2/160173-the-tail-at-scale/abstract">The Tail At Scale</a>。</p>
+<p><strong>Not Google:</strong></p>
+<p><a href="http://research.microsoft.com/en-us/projects/dryad/eurosys07.pdf">Dryad</a>, <a href="https://www.cs.cornell.edu/projects/ladis2009/papers/lakshman-ladis2009.pdf">Cassandra</a>, <a href="http://ceph.com/papers/weil-ceph-osdi06.pdf">Ceph</a>, <a href="https://ramcloud.stanford.edu/wiki/display/ramcloud/RAMCloud+Papers">RAMCloud</a>, <a href="http://hyperdex.org/papers/">HyperDex</a>, <a href="http://www.mpi-sws.org/~druschel/courses/ds/papers/cooper-pnuts.pdf">PNUTS</a></p>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2014/08/10/Distributed-systems-theory-for-the-distributed-systems-engineer/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+        </div><!-- /.twelve.columns -->
+ </div><!-- /.row -->
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+    
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+  <script src="../../../../theme/js/main.js"></script>
+</body>
+</html>

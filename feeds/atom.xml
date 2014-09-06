@@ -1,5 +1,127 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>黑 * 白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2014-09-06T00:00:00+08:00</updated><entry><title>基于socket.io的实时消息推送</title><link href="http://youngsterxyf.github.io/2014/09/06/socket.io-push-server/" rel="alternate"></link><updated>2014-09-06T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-09-06:2014/09/06/socket.io-push-server/</id><summary type="html">&lt;p&gt;用户访问Web站点的过程是基于HTTP协议的，而HTTP协议的工作模式是：请求-响应，客户端发出访问请求，服务器端以资源数据响应请求。
+<feed xmlns="http://www.w3.org/2005/Atom"><title>黑 * 白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2014-09-06T00:00:00+08:00</updated><entry><title>RESTful API设计的一点经验</title><link href="http://youngsterxyf.github.io/2014/09/06/experience-about-restful-api/" rel="alternate"></link><updated>2014-09-06T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-09-06:2014/09/06/experience-about-restful-api/</id><summary type="html">&lt;p&gt;前段时间的工作涉及产品开放API的设计与实现，整个过程大致可分为以下几个步骤：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;根据需求、原有数据库设计等，花了半天左右的工夫完成初稿；&lt;/li&gt;
+&lt;li&gt;就初稿与相关同事进行讨论，确定一些细节问题，逐步完善；&lt;/li&gt;
+&lt;li&gt;根据设计稿，基于Yii框架，配置路由，实现用户身份认证模块；&lt;/li&gt;
+&lt;li&gt;基于步骤3，逐个实现业务相关API；&lt;/li&gt;
+&lt;li&gt;对部分代码进行重构，减少不必要的代码重复。主要使用Yii控制器的before_action方法来实现多层过滤器。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3&gt;设计&lt;/h3&gt;
+&lt;p&gt;考虑到RESTful API简洁明了的接口表现形式，一开始我们就一致确定使用RESTful风格的API。参考以前自己使用多个开放平台API的经验，
+及&lt;a href="https://developer.github.com/v3/"&gt;Github的开放API文档&lt;/a&gt;，大致完成设计初稿。&lt;/p&gt;
+&lt;h4&gt;资源&lt;/h4&gt;
+&lt;p&gt;RESTful API主要有两个核心：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;HTTP协议的4个谓词 - GET、POST、PUT、DELETE，分别对应“查询”、“新增”、“更新”、“删除”4种操作&lt;/li&gt;
+&lt;li&gt;资源（resource）&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;RESTful风格API的设计，最难之处，我认为就是“资源”。&lt;/p&gt;
+&lt;p&gt;“资源”是什么？“资源”并不是对应数据库中一个一个数据表，“资源”是一个抽象的概念，
+你需要思考你的产品服务要通过API为用户提供什么？一个API提供的数据可能涉及多张数据表，所以“资源”与具体的数据库设计是独立的。&lt;/p&gt;
+&lt;p&gt;“资源”的抽象会遇到一个“粒度”的问题，比如一个API返回的数据不应该太多太复杂。&lt;/p&gt;
+&lt;p&gt;另外，不同“资源”之间可能存在归属关系，那么是否需要在HTTP API的URL中体现这种归属关系？如果要体现，那么当归属关系的层次较多时，URL的长度可能过长。&lt;/p&gt;
+&lt;p&gt;举个简单的例子来进一步解释上述问题：&lt;/p&gt;
+&lt;p&gt;假设我们要通过API提供“全国县一级的天气预报数据”。从这句话的表述可以很明显地知道（因为这句话本身是一个明确的需求）这里的“资源”是“全国县一级的天气预报数据”。&lt;/p&gt;
+&lt;p&gt;这个“全国县一级的天气预报数据”其实仍是抽象的，天气预报数据可能包含天气、气温、湿度、空气质量等指标，这些指标又是分别存储在不同的数据表中的，那么这个API
+的代码逻辑就需要读取几张数据表，然后做合并处理。又或者数据库中存储的数据是区域范围更小更准备的天气预报数据，那么也需要对这些数据按照一定的算法进行处理
+得出县一级的天气预报数据。&lt;/p&gt;
+&lt;p&gt;如果仅通过一个API来提供全国所有县一级的天气数据，那么可以想象，这个API返回的数据有多大多复杂。并且用户可能需要更灵活的数据查询方式，如仅查询某个省份
+所有县一级的天气预报数据。那么可以将这个API拆分成以下几个API：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;GET /province/
+GET /province/{province_name_or_id}/county/
+GET /province/{province_name_or_id}/county/{county_id_or_name}/weather/
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;拆分之后，可能需要多次调用API才能获取到需要的数据，但每个API的定义都简单而明确。&lt;/p&gt;
+&lt;p&gt;对于&lt;code&gt;GET /province/{province_name_or_id/county/{county_id_or_name/weather/}}&lt;/code&gt;这个URL，可能有人觉得它过长了，可以缩短设计为：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;GET /county/{county_id_or_name}/weather/
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;甚至&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;GET /{county_id_or_name}/weather/
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;但我更倾向于归属关系明确的长URL，主要原因是，API服务器端可以验证province_name_or_id与county_id_or_name之间的归属关系，以避免用户错误地调用API，
+特别是当涉及增删改操作时。&lt;/p&gt;
+&lt;p&gt;所以RESTful API设计时有许多细节之处需要权衡。&lt;/p&gt;
+&lt;h4&gt;响应码&lt;/h4&gt;
+&lt;p&gt;RESTful API请求的响应码通常有两种表现形式，一种是直接使用HTTP协议的HTTP code，另一种是HTTP协议的响应码始终为200，但在响应体中加入类似名为code的字段，
+来表达当前API请求的响应状态，这个code字段值的含义就是HTTP code含义，除了code字段外可能还会附加一个类似名为message的字段来进一步解释响应状态。&lt;/p&gt;
+&lt;p&gt;我倾向使用第二种形式，理由是：HTTP协议的HTTP code，在为404、500等错误码时，表现的应该是API服务器端程序的健壮性等问题，是未预期的错误，而响应体中的code字段，
+在返回404或500等错误码时，表达是API服务器端已预期到这些可能存在的错误，是主动返回这样的错误码的。这样API的调用者也能更容易判断某些问题的原因；&lt;/p&gt;
+&lt;h4&gt;请求的唯一标识&lt;/h4&gt;
+&lt;p&gt;为了方便快速定位用户反馈的问题，我们在每个API的响应内容中加入一个request_id字段作为API请求的唯一性标识，这个请求处理过程中产生的所有日志都是和这个
+request_id关联的，这样可以根据request_id聚合处理关联的log。在用户反馈问题时，仅需提供request_id，我们很容易地就能找到这个请求的所有日志。&lt;/p&gt;
+&lt;p&gt;但这个request_id是应该作为HTTP相应头的一个字段，还是作为响应体的一个字段返回？我倾向于第二种，理由是：我们希望API调用方能够在日志或数据库中记录
+所有请求的request_id，便于以后发现问题时进行问题追踪。对于这种调用方应该处理的响应数据项，明确地放在响应体中会更好。&lt;/p&gt;
+&lt;p&gt;另外，我们也会每个request_id记录对应请求的监控数据，如响应码、请求处理耗费的时间、请求的调用方、请求处理的路由等。这样在对监控数据进行数据可视化后，
+可以主动发现某些隐藏的问题。&lt;/p&gt;
+&lt;h3&gt;实现&lt;/h3&gt;
+&lt;p&gt;我们的开放API是基于Yii框架实现。&lt;/p&gt;
+&lt;h4&gt;路由&lt;/h4&gt;
+&lt;p&gt;Yii框架默认的路由形式为：查询字符串r=xxx/yyy，其中xxx为控制器(controller)的名称，yyy为动作方法(action)的名称，这种路由形式对应Yii内部的get路由类型，
+因为是默认形式，所以无需额外配置。
+Yii另外提供一种名为path的路由形式，即使用URL的路径(path)部分来表达路由。要这种形式的路由需要额外配置Yii框架，如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;&amp;#39;components&amp;#39; =&amp;gt; array(&lt;/span&gt;
+&lt;span class="x"&gt;    &amp;#39;urlManager&amp;#39; =&amp;gt; array(&lt;/span&gt;
+&lt;span class="x"&gt;        &amp;#39;urlFormat&amp;#39; =&amp;gt; &amp;#39;path&amp;#39;,&lt;/span&gt;
+&lt;span class="x"&gt;        &amp;#39;rules&amp;#39; =&amp;gt; array(&lt;/span&gt;
+&lt;span class="x"&gt;            array(&amp;#39;aaa/bbb&amp;#39;, &amp;#39;pattern&amp;#39; =&amp;gt; &amp;#39;/xxx/yyy&amp;#39;, &amp;#39;verb&amp;#39; =&amp;gt; &amp;#39;POST&amp;#39;),&lt;/span&gt;
+&lt;span class="x"&gt;            ...&lt;/span&gt;
+&lt;span class="x"&gt;        ),&lt;/span&gt;
+&lt;span class="x"&gt;    ),&lt;/span&gt;
+&lt;span class="x"&gt;    ...&lt;/span&gt;
+&lt;span class="x"&gt;),&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;urlManager是Yii使用的路由管理组件，其中的urlFormat指明使用path形式的路由，rules中的每一数组项即一个路由配置，路由配置数组的第一个元素（如aaa/bbb），
+其中aaa为实际控制器类的名称(不包含Controller后缀)，bbb为控制器类aaa中实际动作方法的名称(不包含action前缀)，pattern元素指明当前路由配置项会处理的URL，
+xxx为控制器名称，yyy为动作方法名称，这里可以看出HTTP API URL中的控制器名称、动作方法名称可以和实际的控制器类名称、动作方法名称不一样。verb元素指明
+当前路由配置项会处理哪个或哪些HTTP谓词对URL“/xxx/yyy”的请求，多个谓词时以逗号分隔。&lt;/p&gt;
+&lt;h4&gt;响应码&lt;/h4&gt;
+&lt;p&gt;对于API可能用到的所有响应码及其说明，我们使用一个单独的类来集中管理，以避免API中硬编码响应码，以及避免代码重复。如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+    &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;CodeStatus&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="no"&gt;OK&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;200&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="c1"&gt;// 成功&lt;/span&gt;
+        &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="no"&gt;CREATED&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;201&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="c1"&gt;// 创建成功&lt;/span&gt;
+
+        &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="no"&gt;REQUEST_WRONG&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;400&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="no"&gt;TOKEN_WRONG&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;403&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="c1"&gt;// token已过期或不存在&lt;/span&gt;
+        &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="no"&gt;NOT_FOUND&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;404&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="c1"&gt;// 资源不存在&lt;/span&gt;
+        &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="no"&gt;LACK_PARAM&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;423&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="c1"&gt;// 缺少必要的请求参数&lt;/span&gt;
+        &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="no"&gt;WRONG_PARAM&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;425&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="c1"&gt;// 请求参数不正确&lt;/span&gt;
+        &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="no"&gt;DUPLICATE_RESOURCE&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;426&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="c1"&gt;// 已经存在相同的资源&lt;/span&gt;
+
+        &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="no"&gt;SYSTEM_ERROR&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;500&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="c1"&gt;// 系统异常&lt;/span&gt;
+
+        &lt;span class="o"&gt;...&lt;/span&gt;
+
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;static&lt;/span&gt; &lt;span class="nv"&gt;$status_code&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+        &lt;span class="nx"&gt;self&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;OK&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;成功&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="nx"&gt;self&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;CREATED&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;创建成功&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="nx"&gt;self&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;TOKEN_WRONG&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;token已过期或不存在&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="nx"&gt;self&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;LACK_PARAM&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;缺少必要的请求参数&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="nx"&gt;self&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;SYSTEM_ERROR&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;系统异常&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="nx"&gt;self&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;WRONG_PARAM&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;请求参数不正确&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="nx"&gt;self&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;DUPLICATE_RESOURCE&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;已经存在相同的资源&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="nx"&gt;self&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;NOT_FOUND&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;资源不存在&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="o"&gt;...&lt;/span&gt;
+    &lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;API中仅需使用CodeStatus类定义的常量成员即可（如CodeStatus::OK）。&lt;/p&gt;
+&lt;h3&gt;推荐阅读&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://developer.github.com/v3/"&gt;Github API v3&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/interagent/http-api-design"&gt;Heroku HTTP API Design Guide&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</summary><category term="笔记"></category><category term="RESTful"></category></entry><entry><title>基于socket.io的实时消息推送</title><link href="http://youngsterxyf.github.io/2014/09/06/socket.io-push-server/" rel="alternate"></link><updated>2014-09-06T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-09-06:2014/09/06/socket.io-push-server/</id><summary type="html">&lt;p&gt;用户访问Web站点的过程是基于HTTP协议的，而HTTP协议的工作模式是：请求-响应，客户端发出访问请求，服务器端以资源数据响应请求。
 也就是说，服务器端始终是被动的，即使服务器端的资源数据发生变化，如果没有来自客户端的请求，用户就不会看到这些变化。
 这种模式是不适合某些应用场景的，比如在社交网络用户需要近乎实时地知道其他用户最新的信息。对于普通站点来说，
 请求-响应模式可以满足绝大多数的功能需求，但总有某些功能我们希望能够为用户提供实时消息的体验。&lt;/p&gt;
@@ -108,9 +230,9 @@
 &lt;p&gt;也许有人会问，既然在某些浏览器中socket.io会退化为使用polling/long-polling来传输消息，那么相比直接向站点服务器进行polling/long-polling，有什么优势吗？&lt;/p&gt;
 &lt;p&gt;我认为优势有两点：&lt;/p&gt;
 &lt;ol&gt;
-&lt;li&gt;NodeJS的异步事件回调的方式，适合大并发长连接的应用场景。如果Web后端是使用PHP等实现，则更适合短链接的服务。&lt;/li&gt;
+&lt;li&gt;NodeJS的异步事件回调的方式，适合大并发长连接的应用场景。如果Web后端是使用PHP等实现，则更适合短连接的服务。&lt;/li&gt;
 &lt;li&gt;将站点的业务逻辑与消息推送逻辑解耦，那么浏览器通过polling/long-polling来获取消息时，只是涉及消息推送逻辑，不需要执行业务逻辑的代码，而业务逻辑的代码可能很复杂，每次polling，都需要执行一遍的话，会浪费服务器很多资源。&lt;/li&gt;
-&lt;/ol&gt;</summary><category term="socket.io"></category><category term="消息推送"></category></entry><entry><title>面向分布式系统工程师的分布式系统理论</title><link href="http://youngsterxyf.github.io/2014/08/10/Distributed-systems-theory-for-the-distributed-systems-engineer/" rel="alternate"></link><updated>2014-08-10T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-08-10:2014/08/10/Distributed-systems-theory-for-the-distributed-systems-engineer/</id><summary type="html">&lt;p&gt;原文：&lt;a href="http://the-paper-trail.org/blog/distributed-systems-theory-for-the-distributed-systems-engineer/"&gt;Distributed systems theory for the distributed systems engineer&lt;/a&gt;&lt;/p&gt;
+&lt;/ol&gt;</summary><category term="socket.io"></category><category term="消息推送"></category><category term="笔记"></category></entry><entry><title>面向分布式系统工程师的分布式系统理论</title><link href="http://youngsterxyf.github.io/2014/08/10/Distributed-systems-theory-for-the-distributed-systems-engineer/" rel="alternate"></link><updated>2014-08-10T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-08-10:2014/08/10/Distributed-systems-theory-for-the-distributed-systems-engineer/</id><summary type="html">&lt;p&gt;原文：&lt;a href="http://the-paper-trail.org/blog/distributed-systems-theory-for-the-distributed-systems-engineer/"&gt;Distributed systems theory for the distributed systems engineer&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;译者：&lt;a href="https://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Gwen Shapira，大腕级的解决方案架构师（SA），如今Cloudera的全职工程师，在&lt;a href="https://twitter.com/gwenshap/status/497203248332165121"&gt;Twitter上提的一个问题&lt;/a&gt;引起了我的思考。&lt;/p&gt;
 &lt;p&gt;如果是以前，我可能会回答“嗯，这里有篇FLP论文，这里有篇Paxos论文，这里还有篇拜占庭将军问题的论文...”，我会罗列一箩筐重要的材料，如果你一头扎进去，至少花费6个月的时间才能过一遍这些材料。然而我已逐渐明白推荐大量的理论性的论文通常恰恰是着手学习分布式系统理论的错误方式（除非你在做一个PhD项目）。论文通常比较深入难懂，需要认真地研习，通常还需要&lt;em&gt;大量的时间投入(significant experience)&lt;/em&gt;来理清这些论文的重要贡献，以及在整个理论体系中的位置。要求工程师具备这样的专业水平又有多大的意义呢？&lt;/p&gt;

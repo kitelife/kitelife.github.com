@@ -35,7 +35,7 @@ GET /province/{province_name_or_id}/county/{county_id_or_name}/weather/
 
 
 &lt;p&gt;拆分之后，可能需要多次调用API才能获取到需要的数据，但每个API的定义都简单而明确。&lt;/p&gt;
-&lt;p&gt;对于&lt;code&gt;GET /province/{province_name_or_id/county/{county_id_or_name/weather/}}&lt;/code&gt;这个URL，可能有人觉得它过长了，可以缩短设计为：&lt;/p&gt;
+&lt;p&gt;对于&lt;code&gt;GET /province/{province_name_or_id}/county/{county_id_or_name}/weather/&lt;/code&gt;这个URL，可能有人觉得它过长了，可以缩短设计为：&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;GET /county/{county_id_or_name}/weather/
 &lt;/pre&gt;&lt;/div&gt;
 
@@ -60,6 +60,10 @@ request_id关联的，这样可以根据request_id聚合处理关联的log。在
 所有请求的request_id，便于以后发现问题时进行问题追踪。对于这种调用方应该处理的响应数据项，明确地放在响应体中会更好。&lt;/p&gt;
 &lt;p&gt;另外，我们也会每个request_id记录对应请求的监控数据，如响应码、请求处理耗费的时间、请求的调用方、请求处理的路由等。这样在对监控数据进行数据可视化后，
 可以主动发现某些隐藏的问题。&lt;/p&gt;
+&lt;h5&gt;兼容&lt;/h5&gt;
+&lt;p&gt;在某些情况下，客户端库或工具可能并不支持HTTP协议谓词PUT和DELETE，那么基于这两个谓词的RESTful
+API就需要提供兼容方案。我们的兼容方案是：以POST谓词来替代PUT和DELETE，同时在API请求URL的查询字符串中添加_method一项，指明POST替代的是PUT还是DELETE。如以&lt;code&gt;POST
+/xxx/yyy/?_method=DELETE&lt;/code&gt;作为&lt;code&gt;DELETE /xxx/yyy/&lt;/code&gt;的兼容方案。&lt;/p&gt;
 &lt;h3&gt;实现&lt;/h3&gt;
 &lt;p&gt;我们的开放API是基于Yii框架实现。&lt;/p&gt;
 &lt;h5&gt;路由&lt;/h5&gt;
@@ -83,6 +87,33 @@ Yii另外提供一种名为path的路由形式，即使用URL的路径(path)部�
 其中aaa为实际控制器类的名称(不包含Controller后缀)，bbb为控制器类aaa中实际动作方法的名称(不包含action前缀)，pattern元素指明当前路由配置项会处理的URL，
 xxx为控制器名称，yyy为动作方法名称，这里可以看出HTTP API URL中的控制器名称、动作方法名称可以和实际的控制器类名称、动作方法名称不一样。verb元素指明
 当前路由配置项会处理哪个或哪些HTTP谓词对URL“/xxx/yyy”的请求，多个谓词时以逗号分隔。&lt;/p&gt;
+&lt;h5&gt;兼容方案&lt;/h5&gt;
+&lt;p&gt;对于兼容方案，POST谓词原本是用来“新增”资源，那么对于相同的URL，POST谓词可能已经被占用，也即意味着谓词“DELETE”或“PUT”的“POST”兼容方案的API请求，也会被Yii框架路由到“新增”资源的处理逻辑，那么需要在“新增”资源的控制器类的beforeAction方法中，通过检查查询字符串参数_method，重新将请求路由到正确的
+动作方法上，代码如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;protected function beforeAction($action)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;requestMethod = Yii::app()-&amp;gt;request-&amp;gt;getRequestType();&lt;/span&gt;
+&lt;span class="x"&gt;    // 兼容方案&lt;/span&gt;
+&lt;span class="x"&gt;    // 带参数_method=DELETE的POST请求来代替DELETE请求&lt;/span&gt;
+&lt;span class="x"&gt;    // 带参数_method=PUT的POST请求来代替PUT请求&lt;/span&gt;
+&lt;span class="x"&gt;    if ($this-&amp;gt;requestMethod === &amp;#39;POST&amp;#39; &amp;amp;&amp;amp; isset($_POST[&amp;#39;_method&amp;#39;])) {&lt;/span&gt;
+&lt;span class="x"&gt;        if ($_POST[&amp;#39;_method&amp;#39;] === &amp;#39;DELETE&amp;#39;) {&lt;/span&gt;
+&lt;span class="x"&gt;            // 避免死循环&lt;/span&gt;
+&lt;span class="x"&gt;            unset($_POST[&amp;#39;_method&amp;#39;]);&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;forward($this-&amp;gt;getUniqueId() . &amp;#39;/delete&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;        } elseif ($_POST[&amp;#39;_method&amp;#39;] === &amp;#39;PUT&amp;#39;) {&lt;/span&gt;
+&lt;span class="x"&gt;            unset($_POST[&amp;#39;_method&amp;#39;]);&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;forward($this-&amp;gt;getUniqueId() . &amp;#39;/update&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;        } else {&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;echoJson(CodeStatus::WRONG_PARAM);&lt;/span&gt;
+&lt;span class="x"&gt;            return false;&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    ...&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
 &lt;h5&gt;响应码&lt;/h5&gt;
 &lt;p&gt;对于API可能用到的所有响应码及其说明，我们使用一个单独的类来集中管理，以避免API中硬编码响应码，以及避免代码重复。如下所示：&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;

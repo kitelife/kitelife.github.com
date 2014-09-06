@@ -1,5 +1,109 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>黑 * 白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2014-08-10T00:00:00+08:00</updated><entry><title>面向分布式系统工程师的分布式系统理论</title><link href="http://youngsterxyf.github.io/2014/08/10/Distributed-systems-theory-for-the-distributed-systems-engineer/" rel="alternate"></link><updated>2014-08-10T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-08-10:2014/08/10/Distributed-systems-theory-for-the-distributed-systems-engineer/</id><summary type="html">&lt;p&gt;原文：&lt;a href="http://the-paper-trail.org/blog/distributed-systems-theory-for-the-distributed-systems-engineer/"&gt;Distributed systems theory for the distributed systems engineer&lt;/a&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>黑 * 白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2014-09-06T00:00:00+08:00</updated><entry><title>基于socket.io的实时消息推送</title><link href="http://youngsterxyf.github.io/2014/09/06/socket.io-push-server/" rel="alternate"></link><updated>2014-09-06T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-09-06:2014/09/06/socket.io-push-server/</id><summary type="html">&lt;p&gt;用户访问Web站点的过程是基于HTTP协议的，而HTTP协议的工作模式是：请求-响应，客户端发出访问请求，服务器端以资源数据响应请求。
+也就是说，服务器端始终是被动的，即使服务器端的资源数据发生变化，如果没有来自客户端的请求，用户就不会看到这些变化。
+这种模式是不适合某些应用场景的，比如在社交网络用户需要近乎实时地知道其他用户最新的信息。对于普通站点来说，
+请求-响应模式可以满足绝大多数的功能需求，但总有某些功能我们希望能够为用户提供实时消息的体验。&lt;/p&gt;
+&lt;p&gt;为解决这个问题，有两种方案可以选择：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;仍旧使用请求-响应模式，只是增大请求的频率或者使用长连接，来达到尽可能接近实时的效果，如使用polling/long-polling，但可能会极大地增加服务器的负载压力或降低服务器的吞吐量&lt;/li&gt;
+&lt;li&gt;使用新的协议，在服务器端有资源数据更新时，主动推送给客户端，如WebSocket，虽然这种思路也是使用了长连接，但效率更高，且是客户端服务器端之间的全双工通信。
+问题在于目前各大浏览器并不都支持WebSocket。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;那么目前最好的方式就是结合以上两种方案，在不同的浏览器中，尽可能使用浏览器支持的最好的方案，即浏览器支持第二种方案时，优先使用第二种方案，否则使用第一种方案。socket.io就是这么做的，并且在服务器端和客户端对于不同的方案提供统一的接口。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;在我们产品的站内信功能中，希望能够给在线用户实时推送公共消息或私有消息。考虑到以后可能还有其他功能需要实现实时消息推送，所以将实时消息推送实现为一个单独的服务。这种针对不同特性的功能进行解耦也为之后针对性的优化做了铺垫。&lt;/p&gt;
+&lt;p&gt;解耦之后的系统结构如下所示：&lt;/p&gt;
+&lt;p&gt;&lt;img alt="socket.io-push-server" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/socket.io-push-server.png" /&gt;&lt;/p&gt;
+&lt;p&gt;当站点服务器(A)监测到资源数据更新事件发生时，先将数据推送到消息推送服务器(B)，B根据消息的类型以及消息的目标接收人来决定是否推送，如何推送。&lt;/p&gt;
+&lt;p&gt;由于我们的Web后端是基于Yii框架实现，那么该如何实现A与B的socket.io服务通信呢？socket.io有自己的一套协议，如果自己实现PHP库来与socket.io服务交互，还有一些工作量。最终我们选择&lt;a href="https://github.com/oncesk/elephant.io"&gt;elephant.io这个PHP库&lt;/a&gt;，并将elephant.io封装为Yii框架的一个组件，实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+
+&lt;span class="nv"&gt;$basePath&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;Yii&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;getPathOfAlias&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;application.vendor.elephantio.lib.ElephantIO&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+&lt;span class="k"&gt;require_once&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$basePath&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="nx"&gt;DIRECTORY_SEPARATOR&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;Client.php&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="k"&gt;require_once&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$basePath&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="nx"&gt;DIRECTORY_SEPARATOR&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;Payload.php&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+&lt;span class="k"&gt;use&lt;/span&gt; &lt;span class="nx"&gt;ElephantIO\Client&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nx"&gt;Elephant&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;extElephantIO&lt;/span&gt; &lt;span class="k"&gt;extends&lt;/span&gt; &lt;span class="nx"&gt;CApplicationComponent&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="nv"&gt;$host&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="nv"&gt;$port&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="nv"&gt;$namespace&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+    &lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="nv"&gt;$elephant&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="nv"&gt;$ioNameSpace&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;init&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;host&lt;/span&gt; &lt;span class="o"&gt;===&lt;/span&gt; &lt;span class="k"&gt;null&lt;/span&gt; &lt;span class="o"&gt;||&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;port&lt;/span&gt; &lt;span class="o"&gt;===&lt;/span&gt; &lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="k"&gt;throw&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Exception&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;%s: %s: %s, Please give me parameters host and port&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;basename&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+                &lt;span class="k"&gt;__FILE__&lt;/span&gt;
+            &lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="nx"&gt;__FUNCTION__&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;__LINE__&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+        &lt;span class="p"&gt;}&lt;/span&gt;
+
+    &lt;span class="p"&gt;}&lt;/span&gt;
+
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;setNameSpace&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$nameSpace&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;elephant&lt;/span&gt; &lt;span class="o"&gt;===&lt;/span&gt; &lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;elephant&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Elephant&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;http://&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;host&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;:&amp;#39;&lt;/span&gt;
+                &lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;port&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;socket.io&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;false&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;true&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+            &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;elephant&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;init&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+        &lt;span class="p"&gt;}&lt;/span&gt;
+        &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;ioNameSpace&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;elephant&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;createFrame&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$nameSpace&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;sendMsg&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$event&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$msg&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;ioNameSpace&lt;/span&gt; &lt;span class="o"&gt;===&lt;/span&gt; &lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;namespace&lt;/span&gt; &lt;span class="o"&gt;!==&lt;/span&gt; &lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+                &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;ioNameSpace&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;elephant&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;createFrame&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;namespace&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+            &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;else&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+                &lt;span class="k"&gt;throw&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Exception&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;%s: %s: %s, Please setNameSpace before sendMsg&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;basename&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+                    &lt;span class="k"&gt;__FILE__&lt;/span&gt;
+                &lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="nx"&gt;__FUNCTION__&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;__LINE__&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+            &lt;span class="p"&gt;}&lt;/span&gt;
+        &lt;span class="p"&gt;}&lt;/span&gt;
+        &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;ioNameSpace&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;emit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$event&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$msg&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;close&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;elephant&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;close&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+        &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;elephant&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;将该代码文件放在应用目录extensions下，然后为Yii添加如下配置项：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;&amp;#39;components&amp;#39; =&amp;gt; array(&lt;/span&gt;
+&lt;span class="x"&gt;    &amp;#39;ElephantIO&amp;#39; =&amp;gt; array(&lt;/span&gt;
+&lt;span class="x"&gt;        &amp;#39;class&amp;#39; =&amp;gt; &amp;#39;application.extensions.extElephantIO&amp;#39;,&lt;/span&gt;
+&lt;span class="x"&gt;        &amp;#39;host&amp;#39; =&amp;gt; &amp;#39;xxx&amp;#39;,&lt;/span&gt;
+&lt;span class="x"&gt;        &amp;#39;port&amp;#39; =&amp;gt; xxx,&lt;/span&gt;
+&lt;span class="x"&gt;    ),&lt;/span&gt;
+&lt;span class="x"&gt;    ...&lt;/span&gt;
+&lt;span class="x"&gt;),&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;当有资源数据变更事件产生时，如下调用向消息推送服务器发送消息：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;$elephant = Yii::app()-&amp;gt;ElephantIO;&lt;/span&gt;
+&lt;span class="x"&gt;$elephant-&amp;gt;setNameSpace(&amp;#39;/message_namespace&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;$elephant-&amp;gt;sendMsg(&lt;/span&gt;
+&lt;span class="x"&gt;    &amp;#39;message_event_type&amp;#39;,&lt;/span&gt;
+&lt;span class="x"&gt;    $messageContent&lt;/span&gt;
+&lt;span class="x"&gt;);       &lt;/span&gt;
+&lt;span class="x"&gt;$elephant-&amp;gt;close();&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;hr /&gt;
+&lt;p&gt;对于私有消息推送，如何判断用户当前是否在线？如何验证用户的身份？&lt;/p&gt;
+&lt;p&gt;可以基于cookie来实现，socket.io提供的浏览器端JS库，在每次连接时，和普通HTTP请求一样，会携带站点域名下的cookie（我们的消息推送服务的域名为站点服务器域名的子域，所以能拿到站点域名下的所有cookie），消息推送服务器在接收到连接(connection事件)请求时，从连接中取出所有cookie，然后向站点Web后端的某个API转发这些cookie，这个API根据cookie验证用户身份，并将用户信息返回给消息推送服务器，消息推送服务器根据用户信息存储当前连接对象，之后当站点服务器向消息推送服务器发送该用户的消息时，就通过该连接对象给用户推送消息。&lt;/p&gt;
+&lt;p&gt;对于公有消息，即广播消息，实现则比较简单，直接向当前所有连接推送消息即可。&lt;/p&gt;</summary><category term="socket.io"></category><category term="消息推送"></category></entry><entry><title>以创造为学习</title><link href="http://youngsterxyf.github.io/2014/09/04/learing-by-creating/" rel="alternate"></link><updated>2014-09-04T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-09-04:2014/09/04/learing-by-creating/</id><summary type="html"></summary><category term="心得"></category><category term="学习"></category></entry><entry><title>以分享为学习</title><link href="http://youngsterxyf.github.io/2014/09/03/learning-by-sharing/" rel="alternate"></link><updated>2014-09-03T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-09-03:2014/09/03/learning-by-sharing/</id><summary type="html"></summary><category term="心得"></category><category term="学习"></category></entry><entry><title>面向分布式系统工程师的分布式系统理论</title><link href="http://youngsterxyf.github.io/2014/08/10/Distributed-systems-theory-for-the-distributed-systems-engineer/" rel="alternate"></link><updated>2014-08-10T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-08-10:2014/08/10/Distributed-systems-theory-for-the-distributed-systems-engineer/</id><summary type="html">&lt;p&gt;原文：&lt;a href="http://the-paper-trail.org/blog/distributed-systems-theory-for-the-distributed-systems-engineer/"&gt;Distributed systems theory for the distributed systems engineer&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;译者：&lt;a href="https://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Gwen Shapira，大腕级的解决方案架构师（SA），如今Cloudera的全职工程师，在&lt;a href="https://twitter.com/gwenshap/status/497203248332165121"&gt;Twitter上提的一个问题&lt;/a&gt;引起了我的思考。&lt;/p&gt;
 &lt;p&gt;如果是以前，我可能会回答“嗯，这里有篇FLP论文，这里有篇Paxos论文，这里还有篇拜占庭将军问题的论文...”，我会罗列一箩筐重要的材料，如果你一头扎进去，至少花费6个月的时间才能过一遍这些材料。然而我已逐渐明白推荐大量的理论性的论文通常恰恰是着手学习分布式系统理论的错误方式（除非你在做一个PhD项目）。论文通常比较深入难懂，需要认真地研习，通常还需要&lt;em&gt;大量的时间投入(significant experience)&lt;/em&gt;来理清这些论文的重要贡献，以及在整个理论体系中的位置。要求工程师具备这样的专业水平又有多大的意义呢？&lt;/p&gt;

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>基于socket.io的实时消息推送</title>
+        <meta charset="utf-8" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑 * 白 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑 * 白 Full RSS Feed" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+              <script>
+                (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+                })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+                ga('create', 'UA-43488080-1', '黑白');
+                ga('send', 'pageview');
+
+              </script>
+
+              <script type="text/javascript" src="http://tajs.qq.com/stats?sId=27164999" charset="UTF-8"></script>
+ 
+</head>
+
+<body id="index" class="home">
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="../../../..">黑 * 白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+             
+              <ul class="columns">
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="/archives.html">归档</a></li>
+                <li><a href="/tags.html">标签</a></li>
+                <li><a href="/pages/tools.html">工具集</a></li>
+                <li><a href="/pages/links.html">链接</a></li>
+                <li><a href="/pages/aboutme.html">关于我</a></li>
+                <li><a href="/feeds/rss.xml">RSS</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+   <div class="row">
+        <div class="columns">
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2014/09/06/socket.io-push-server/" rel="bookmark" title="Permalink to 基于socket.io的实时消息推送">基于socket.io的实时消息推送</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2014-09-06T00:00:00">
+                2014-09-06 Sat
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>用户访问Web站点的过程是基于HTTP协议的，而HTTP协议的工作模式是：请求-响应，客户端发出访问请求，服务器端以资源数据响应请求。
+也就是说，服务器端始终是被动的，即使服务器端的资源数据发生变化，如果没有来自客户端的请求，用户就不会看到这些变化。
+这种模式是不适合某些应用场景的，比如在社交网络用户需要近乎实时地知道其他用户最新的信息。对于普通站点来说，
+请求-响应模式可以满足绝大多数的功能需求，但总有某些功能我们希望能够为用户提供实时消息的体验。</p>
+<p>为解决这个问题，有两种方案可以选择：</p>
+<ol>
+<li>仍旧使用请求-响应模式，只是增大请求的频率或者使用长连接，来达到尽可能接近实时的效果，如使用polling/long-polling，但可能会极大地增加服务器的负载压力或降低服务器的吞吐量</li>
+<li>使用新的协议，在服务器端有资源数据更新时，主动推送给客户端，如WebSocket，虽然这种思路也是使用了长连接，但效率更高，且是客户端服务器端之间的全双工通信。
+问题在于目前各大浏览器并不都支持WebSocket。</li>
+</ol>
+<p>那么目前最好的方式就是结合以上两种方案，在不同的浏览器中，尽可能使用浏览器支持的最好的方案，即浏览器支持第二种方案时，优先使用第二种方案，否则使用第一种方案。socket.io就是这么做的，并且在服务器端和客户端对于不同的方案提供统一的接口。</p>
+<hr />
+<p>在我们产品的站内信功能中，希望能够给在线用户实时推送公共消息或私有消息。考虑到以后可能还有其他功能需要实现实时消息推送，所以将实时消息推送实现为一个单独的服务。这种针对不同特性的功能进行解耦也为之后针对性的优化做了铺垫。</p>
+<p>解耦之后的系统结构如下所示：</p>
+<p><img alt="socket.io-push-server" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/socket.io-push-server.png" /></p>
+<p>当站点服务器(A)监测到资源数据更新事件发生时，先将数据推送到消息推送服务器(B)，B根据消息的类型以及消息的目标接收人来决定是否推送，如何推送。</p>
+<p>由于我们的Web后端是基于Yii框架实现，那么该如何实现A与B的socket.io服务通信呢？socket.io有自己的一套协议，如果自己实现PHP库来与socket.io服务交互，还有一些工作量。最终我们选择<a href="https://github.com/oncesk/elephant.io">elephant.io这个PHP库</a>，并将elephant.io封装为Yii框架的一个组件，实现如下：</p>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+
+<span class="nv">$basePath</span> <span class="o">=</span> <span class="nx">Yii</span><span class="o">::</span><span class="na">getPathOfAlias</span><span class="p">(</span><span class="s1">&#39;application.vendor.elephantio.lib.ElephantIO&#39;</span><span class="p">);</span>
+
+<span class="k">require_once</span><span class="p">(</span><span class="nv">$basePath</span> <span class="o">.</span> <span class="nx">DIRECTORY_SEPARATOR</span> <span class="o">.</span> <span class="s1">&#39;Client.php&#39;</span><span class="p">);</span>
+<span class="k">require_once</span><span class="p">(</span><span class="nv">$basePath</span> <span class="o">.</span> <span class="nx">DIRECTORY_SEPARATOR</span> <span class="o">.</span> <span class="s1">&#39;Payload.php&#39;</span><span class="p">);</span>
+
+<span class="k">use</span> <span class="nx">ElephantIO\Client</span> <span class="k">as</span> <span class="nx">Elephant</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">extElephantIO</span> <span class="k">extends</span> <span class="nx">CApplicationComponent</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="nv">$host</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
+    <span class="k">public</span> <span class="nv">$port</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
+    <span class="k">public</span> <span class="nv">$namespace</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
+
+    <span class="k">private</span> <span class="nv">$elephant</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
+    <span class="k">private</span> <span class="nv">$ioNameSpace</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">init</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">host</span> <span class="o">===</span> <span class="k">null</span> <span class="o">||</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">port</span> <span class="o">===</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span><span class="p">(</span><span class="s1">&#39;%s: %s: %s, Please give me parameters host and port&#39;</span><span class="p">,</span> <span class="nb">basename</span><span class="p">(</span>
+                <span class="k">__FILE__</span>
+            <span class="p">),</span> <span class="nx">__FUNCTION__</span><span class="p">,</span> <span class="k">__LINE__</span><span class="p">);</span>
+        <span class="p">}</span>
+
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">setNameSpace</span><span class="p">(</span><span class="nv">$nameSpace</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">elephant</span> <span class="o">===</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">elephant</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Elephant</span><span class="p">(</span><span class="s1">&#39;http://&#39;</span> <span class="o">.</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">host</span> <span class="o">.</span> <span class="s1">&#39;:&#39;</span>
+                <span class="o">.</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">port</span><span class="p">,</span> <span class="s1">&#39;socket.io&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="k">false</span><span class="p">,</span> <span class="k">true</span><span class="p">,</span> <span class="k">true</span><span class="p">);</span>
+            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">elephant</span><span class="o">-&gt;</span><span class="na">init</span><span class="p">();</span>
+        <span class="p">}</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">ioNameSpace</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">elephant</span><span class="o">-&gt;</span><span class="na">createFrame</span><span class="p">(</span><span class="k">null</span><span class="p">,</span> <span class="nv">$nameSpace</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">sendMsg</span><span class="p">(</span><span class="nv">$event</span><span class="p">,</span> <span class="nv">$msg</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">ioNameSpace</span> <span class="o">===</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">namespace</span> <span class="o">!==</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">ioNameSpace</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">elephant</span><span class="o">-&gt;</span><span class="na">createFrame</span><span class="p">(</span><span class="k">null</span><span class="p">,</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">namespace</span><span class="p">);</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span><span class="p">(</span><span class="s1">&#39;%s: %s: %s, Please setNameSpace before sendMsg&#39;</span><span class="p">,</span> <span class="nb">basename</span><span class="p">(</span>
+                    <span class="k">__FILE__</span>
+                <span class="p">),</span> <span class="nx">__FUNCTION__</span><span class="p">,</span> <span class="k">__LINE__</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">ioNameSpace</span><span class="o">-&gt;</span><span class="na">emit</span><span class="p">(</span><span class="nv">$event</span><span class="p">,</span> <span class="nv">$msg</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">close</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">elephant</span><span class="o">-&gt;</span><span class="na">close</span><span class="p">();</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">elephant</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>将该代码文件放在应用目录extensions下，然后为Yii添加如下配置项：</p>
+<div class="highlight"><pre><span class="x">&#39;components&#39; =&gt; array(</span>
+<span class="x">    &#39;ElephantIO&#39; =&gt; array(</span>
+<span class="x">        &#39;class&#39; =&gt; &#39;application.extensions.extElephantIO&#39;,</span>
+<span class="x">        &#39;host&#39; =&gt; &#39;xxx&#39;,</span>
+<span class="x">        &#39;port&#39; =&gt; xxx,</span>
+<span class="x">    ),</span>
+<span class="x">    ...</span>
+<span class="x">),</span>
+</pre></div>
+
+
+<p>当有资源数据变更事件产生时，如下调用向消息推送服务器发送消息：</p>
+<div class="highlight"><pre><span class="x">$elephant = Yii::app()-&gt;ElephantIO;</span>
+<span class="x">$elephant-&gt;setNameSpace(&#39;/message_namespace&#39;);</span>
+<span class="x">$elephant-&gt;sendMsg(</span>
+<span class="x">    &#39;message_event_type&#39;,</span>
+<span class="x">    $messageContent</span>
+<span class="x">);       </span>
+<span class="x">$elephant-&gt;close();</span>
+</pre></div>
+
+
+<hr />
+<p>对于私有消息推送，如何判断用户当前是否在线？如何验证用户的身份？</p>
+<p>可以基于cookie来实现，socket.io提供的浏览器端JS库，在每次连接时，和普通HTTP请求一样，会携带站点域名下的cookie（我们的消息推送服务的域名为站点服务器域名的子域，所以能拿到站点域名下的所有cookie），消息推送服务器在接收到连接(connection事件)请求时，从连接中取出所有cookie，然后向站点Web后端的某个API转发这些cookie，这个API根据cookie验证用户身份，并将用户信息返回给消息推送服务器，消息推送服务器根据用户信息存储当前连接对象，之后当站点服务器向消息推送服务器发送该用户的消息时，就通过该连接对象给用户推送消息。</p>
+<p>对于公有消息，即广播消息，实现则比较简单，直接向当前所有连接推送消息即可。</p>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2014/09/06/socket.io-push-server/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+        </div><!-- /.twelve.columns -->
+ </div><!-- /.row -->
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+    
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+  <script src="../../../../theme/js/main.js"></script>
+</body>
+</html>

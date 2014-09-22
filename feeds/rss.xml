@@ -1,5 +1,344 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>黑 * 白</title><link>http://youngsterxyf.github.io/</link><description></description><atom:link href="http://youngsterxyf.github.io/feeds/rss.xml" rel="self"></atom:link><lastBuildDate>Sat, 06 Sep 2014 00:00:00 +0800</lastBuildDate><item><title>RESTful API设计的一点经验</title><link>http://youngsterxyf.github.io/2014/09/06/experience-about-restful-api/</link><description>&lt;p&gt;前段时间的工作涉及产品开放API的设计与实现，整个过程大致可分为以下几个步骤：&lt;/p&gt;
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>黑 * 白</title><link>http://youngsterxyf.github.io/</link><description></description><atom:link href="http://youngsterxyf.github.io/feeds/rss.xml" rel="self"></atom:link><lastBuildDate>Mon, 22 Sep 2014 00:00:00 +0800</lastBuildDate><item><title>流行PHP开源项目的phpmetrics分析（译）</title><link>http://youngsterxyf.github.io/2014/09/22/phpmetrics-of-popular-php-projects/</link><description>&lt;p&gt;原文：&lt;a href="https://peteraba.com/blog/phpmetrics-of-popular-projects/"&gt;phpmetrics of popular php projects&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;译者：&lt;a href="https://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;之前我偶然发现了一个名为&lt;a href="http://www.phpmetrics.org/"&gt;phpmetrics&lt;/a&gt;的新工具，可用于计算及展示php的度量指标。我当时立马喜欢上了这个工具，并决定用它分析我认为重要的一些php项目。
+我知道这个项目列表还远远不够完善，但应该仍然值得一看。我特别喜欢其中的“可维护性”报告，我发现视觉上那些红色的斑点就和丑陋的代码一样令人厌恶。&lt;/p&gt;
+&lt;p&gt;这个工具貌似还有点小bug，我会尽力尽快修复这个工具项目的这些小问题。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;一些重要的说明&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;目前我还无法得到Cakephp和Typo3的分析报告，之后我会尽快调查一下这个问题。&lt;/li&gt;
+&lt;li&gt;我是在完整的代码库或下载的源码包上执行这个工具的，这意味着某些情况下还分析了项目的外部依赖库。之后我可能会调整，但目前不在计划之内。&lt;/li&gt;
+&lt;li&gt;有些项目包含很多代码库，所以我无法确保测试的都市正确的那个代码库。&lt;em&gt;Joomla&lt;/em&gt;尤其可能这样。&lt;/li&gt;
+&lt;li&gt;某些项目并非非常知名，但在github上呈现关注度上升趋势。&lt;/li&gt;
+&lt;li&gt;dm-mailer这个项目无足轻重，只是我最新的个人兴趣项目。我将它与phpmetrics一起归到Backfire一节。&lt;/li&gt;
+&lt;li&gt;注意：php-yaf和phalcon都是非常有意思的php框架，但多数代码是C实现的，因此没有包含进来。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr /&gt;
+&lt;p&gt;说明：阅读该报告的一点小提示：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;更多的斑点只是意味着更多的类&lt;/li&gt;
+&lt;li&gt;红色意味着不可维护，黄色表示可接受，绿色则表明良好、可维护的代码。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr /&gt;
+&lt;h3&gt;分析结果&lt;/h3&gt;
+&lt;h4&gt;框架&lt;/h4&gt;
+&lt;p&gt;项目：&lt;a href="http://www.agavi.org/"&gt;agavi&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="agavi-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/agavi-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/agavi/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/agavi/agavi"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交（均指master分支上的）：&lt;em&gt;4个月内&lt;/em&gt;&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://auraphp.com/"&gt;aura&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="aura-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/aura-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/aura/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/auraphp/Aura.Framework_Project"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：1周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://cakephp.org/"&gt;cakephp&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="cakephp-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/na.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;s&gt;戳这里&lt;/s&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/cakephp/cakephp"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：1周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="https://ellislab.com/codeigniter"&gt;codeigniter&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="codeigniter-phpmetrics" src="/assets/uploads/pics/phpmetric-result/codeigniter-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/codeigniter/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/EllisLab/CodeIgniter"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：1周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="https://github.com/colindean/deano"&gt;deano&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="deano-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/deano-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/deano/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/colindean/deano"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：&lt;em&gt;10个月内&lt;/em&gt;&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://fatfreeframework.com/home"&gt;fatfree&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="fatfree-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/fatfree-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/fatfree/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/bcosca/fatfree"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：1个月内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://flightphp.com/"&gt;flight&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="flight-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/flight-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/flight/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/mikecao/flight"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：2周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://fuelphp.com/"&gt;fuelphp&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="fuelphp-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/fuelphp-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/fuelphp/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/fuel/fuel"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：2个月内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://laravel.com/"&gt;laravel&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="laravel-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/laravel-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/laravel/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/laravel/laravel"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：2周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://limonade-php.github.io/"&gt;limonade&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="limonade-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/limonade-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/limonade/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/sofadesign/limonade/"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：2个月内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://nette.org/en/"&gt;nette&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="nette-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/nette-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/nette/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/nette/nette"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：1周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://phavour-project.com/"&gt;phavour&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="phavour-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/phavour-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/phavour/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/phavour/phavour"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：&lt;em&gt;6个月内&lt;/em&gt;&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://www.php-mvc.net/"&gt;php-mvc(advanced)&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="php-mvc-advanced-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/php-mvc-advanced-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/php-mvc-advanced/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/panique/php-mvc-advanced"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：2周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://phpixie.com/"&gt;phpixie&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="phpixie-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/phpixie-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/phpixie/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/dracony/PHPixie"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：&lt;em&gt;5个月内&lt;/em&gt;&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://www.popphp.org/"&gt;popphp2&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="popphp2-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/popphp2-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/popphp2/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/popphp/popphp2"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：3周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://silex.sensiolabs.org/"&gt;silex&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="silex-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/silex-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/silex/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/silexphp/Silex"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：1周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://slimframework.com/"&gt;slim&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="slim-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/slim-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/slim/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/codeguy/Slim"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：5个月内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://symfony.com/legacy"&gt;symfony1&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="symfony1-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/symfony1-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/symfony1/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/symfony/symfony1"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：&lt;em&gt;2年内&lt;/em&gt;&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://symfony.com/"&gt;symfony2&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="symfony2-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/symfony2-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/symfony2/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/symfony/symfony"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：1周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://typo3.org/"&gt;typo3&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="typo3-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/na.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;s&gt;戳这里&lt;/s&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://git.typo3.org/Packages/TYPO3.CMS.git"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：1周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://www.yiiframework.com/"&gt;yii1&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="yii1-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/yii1-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/yii1/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/yiisoft/yii"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：2周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://www.yiiframework.com/"&gt;yii2&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="yii2-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/yii2-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/yii2/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/yiisoft/yii2"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：1周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://framework.zend.com/"&gt;zf1&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="zf1-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/zf1-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/zf1/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/zendframework/zf1"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：1周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://framework.zend.com/"&gt;zf2&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="zf2-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/zf2-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/zf2/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/zendframework/zf2"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：2周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;h4&gt;CMS&lt;/h4&gt;
+&lt;p&gt;项目：&lt;a href="https://www.drupal.org/"&gt;drupal&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="drupal-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/drupal-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/drupal/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/drupal/drupal"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：1周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://www.joomla.org/"&gt;joomla&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="joomla-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/joomla-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/joomla/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/joomla/joomla-framework"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：5个月内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://getgrav.org/"&gt;grav&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="grav-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/grav-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/grav/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/getgrav/grav"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：1周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://pagekit.com/"&gt;pagekit&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="pagekit-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/pagekit-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/pagekit/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/pagekit/pagekit"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：1周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://www.webasyst.com/"&gt;os webasyst projects&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="os-webasyst-projects-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/os-webasyst-projects-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/webasyst/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：N/A&lt;/p&gt;
+&lt;p&gt;最近提交：N/A&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://wordpress.org/"&gt;wordpress&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="wordpress-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/wordpress-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/wordpress/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/WordPress/WordPress"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：1周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;h4&gt;电子商务&lt;/h4&gt;
+&lt;p&gt;项目：&lt;a href="http://magento.com/"&gt;magento1(1.8 copy)&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="magento1-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/magento1-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/magento1/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://bitbucket.org/ecgkodokux/magento1.8.git"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：N/A&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://magento.com/"&gt;magento2&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="magento2-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/magento2-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/magento2/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/magento/magento2"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：1周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://www.opencart.com/"&gt;opencart&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="opencart-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/opencart-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/opencart/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/opencart/opencart"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：1周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://www.oscommerce.com/"&gt;oscommerce&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="oscommerce-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/oscommerce-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/oscommerce/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/osCommerce/oscommerce"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：2年内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://www.prestashop.com/"&gt;prestashop&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="prestashop-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/prestashop-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/prestashop/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/PrestaShop/PrestaShop"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：1周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://sylius.org/"&gt;sylius&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="sylius-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/sylius-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/sylius/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/Sylius/Sylius"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：&lt;em&gt;10个月内&lt;/em&gt;&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://virtuemart.net/"&gt;virtuemart&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="virtuemart-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/virtuemart-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/virtuemart/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="http://dev.virtuemart.net/projects/virtuemart/repository"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：N/A&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://www.zen-cart.com/"&gt;zencart&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="zencart-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/zencart-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/zencart/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/zencart/zc-v1-series"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：1周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;h4&gt;开发工具&lt;/h4&gt;
+&lt;p&gt;项目：&lt;a href="http://codeception.com/"&gt;codeception&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="codeception-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/codeception-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/codeception/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/Codeception/Codeception"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：1周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://phpunit.de/"&gt;phpunit&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="phpunit-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/phpunit-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/phpunit/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/sebastianbergmann/phpunit"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：1周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;h4&gt;其他&lt;/h4&gt;
+&lt;p&gt;项目：&lt;a href="http://piwik.org/"&gt;piwik&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="piwik-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/piwik-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/piwik/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/piwik/piwik"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：1周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;h4&gt;Backfire&lt;/h4&gt;
+&lt;p&gt;项目：&lt;a href="https://github.com/peteraba/zf2-mailer"&gt;dm-mailer&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="dm-mailer-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/dm-mailer-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/dm-mailer/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/peteraba/zf2-mailer"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：&lt;em&gt;7个月内&lt;/em&gt;&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;项目：&lt;a href="http://www.phpmetrics.org/"&gt;phpmetrics&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;可维护性：&lt;img alt="phpmetrics-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/phpmetrics-phpmetric-maintenability.png" /&gt;&lt;/p&gt;
+&lt;p&gt;分析报告：&lt;a href="https://peteraba.com/metrics/phpmetrics/phpmetrics/report.html"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码库：&lt;a href="https://github.com/Halleck45/PhpMetrics"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;最近提交：1周内&lt;/p&gt;
+&lt;hr /&gt;
+&lt;h4&gt;问题(Issues)&lt;/h4&gt;
+&lt;p&gt;&lt;strong&gt;Cakephp&lt;/strong&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;594/666 [========================&amp;gt;---]  89%
+
+[Exception]                         
+Closure detected instead of method
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;strong&gt;Deano&lt;/strong&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;2/9 [======&amp;gt;---------------------]  22%file /home/peter/dev/php/opensource/deano/views/layout/layout.php is not valid and has been skipped
+9/9 [============================] 100%file /home/peter/dev/php/opensource/deano/deano.php is not valid and has been skipped
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;strong&gt;Limonade&lt;/strong&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt; 9/16 [===============&amp;gt;------------]  56%file /home/peter/dev/php/opensource/limonade/examples/example02/index.php is not valid and has been skipped
+16/16 [============================] 100%file /home/peter/dev/php/opensource/limonade/examples/example06/index.php is not valid and has been skipped
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;strong&gt;Magento&lt;/strong&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;3361/9868 [=========&amp;gt;------------------]  34%file ../../opensource/magento2/lib/internal/Zend/Mail/Protocol/Pop3.php is not valid and has been skipped
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;strong&gt;Pagekit&lt;/strong&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;102/215 [=============&amp;gt;--------------]  47%file /home/peter/dev/php/opensource/pagekit/extensions/system/src/System/Console/skeleton/extension/src/Controller/SiteController.php is not valid and has been skipped
+103/215 [=============&amp;gt;--------------]  47%file /home/peter/dev/php/opensource/pagekit/extensions/system/src/System/Console/skeleton/extension/src/DefaultExtension.php is not valid and has been skipped
+105/215 [=============&amp;gt;--------------]  48%file /home/peter/dev/php/opensource/pagekit/extensions/system/src/System/Console/skeleton/theme/src/DefaultTheme.php is not valid and has been skipped
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;strong&gt;Symfony1&lt;/strong&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;199/1320 [====&amp;gt;-----------------------]  15%file /home/peter/dev/php/opensource/symfony1/lib/task/generator/skeleton/module/module/actions/actions.class.php is not valid and has been skipped
+205/1320 [====&amp;gt;-----------------------]  15%file /home/peter/dev/php/opensource/symfony1/lib/task/generator/skeleton/app/web/index.php is not valid and has been skipped
+206/1320 [====&amp;gt;-----------------------]  15%file /home/peter/dev/php/opensource/symfony1/lib/task/generator/skeleton/app/app/config/ApplicationConfiguration.class.php is not valid and has been skipped
+397/1320 [========&amp;gt;-------------------]  30%file /home/peter/dev/php/opensource/symfony1/lib/plugins/sfPropelPlugin/data/generator/sfPropelModule/admin/skeleton/lib/helper.php is not valid and has been skipped
+398/1320 [========&amp;gt;-------------------]  30%file /home/peter/dev/php/opensource/symfony1/lib/plugins/sfPropelPlugin/data/generator/sfPropelModule/admin/skeleton/lib/configuration.php is not valid and has been skipped
+399/1320 [========&amp;gt;-------------------]  30%file /home/peter/dev/php/opensource/symfony1/lib/plugins/sfPropelPlugin/data/generator/sfPropelModule/admin/skeleton/actions/actions.class.php is not valid and has been skipped
+445/1320 [=========&amp;gt;------------------]  33%file /home/peter/dev/php/opensource/symfony1/lib/plugins/sfPropelPlugin/data/generator/sfPropelModule/default/skeleton/actions/actions.class.php is not valid and has been skipped
+652/1320 [=============&amp;gt;--------------]  49%file /home/peter/dev/php/opensource/symfony1/lib/plugins/sfDoctrinePlugin/data/generator/sfDoctrineModule/admin/skeleton/lib/helper.php is not valid and has been skipped
+653/1320 [=============&amp;gt;--------------]  49%file /home/peter/dev/php/opensource/symfony1/lib/plugins/sfDoctrinePlugin/data/generator/sfDoctrineModule/admin/skeleton/lib/configuration.php is not valid and has been skipped
+654/1320 [=============&amp;gt;--------------]  49%file /home/peter/dev/php/opensource/symfony1/lib/plugins/sfDoctrinePlugin/data/generator/sfDoctrineModule/admin/skeleton/actions/actions.class.php is not valid and has been skipped
+700/1320 [==============&amp;gt;-------------]  53%file /home/peter/dev/php/opensource/symfony1/lib/plugins/sfDoctrinePlugin/data/generator/sfDoctrineModule/default/skeleton/actions/actions.class.php is not valid and has been skipped
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;strong&gt;Typo3&lt;/strong&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;76/2583 [&amp;gt;---------------------------]   2%
+
+[Exception]                         
+Closure detected instead of method
+&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Mon, 22 Sep 2014 00:00:00 +0800</pubDate><guid>tag:youngsterxyf.github.io,2014-09-22:2014/09/22/phpmetrics-of-popular-php-projects/</guid><category>翻译</category><category>PHP</category><category>开源</category></item><item><title>RESTful API设计的一点经验</title><link>http://youngsterxyf.github.io/2014/09/06/experience-about-restful-api/</link><description>&lt;p&gt;前段时间的工作涉及产品开放API的设计与实现，整个过程大致可分为以下几个步骤：&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;根据需求、原有数据库设计等，花了半天左右的工夫完成初稿；&lt;/li&gt;
 &lt;li&gt;就初稿与相关同事进行讨论，确定一些细节问题，逐步完善；&lt;/li&gt;

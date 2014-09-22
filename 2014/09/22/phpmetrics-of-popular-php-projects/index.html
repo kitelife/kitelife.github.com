@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>流行PHP开源项目的phpmetrics分析（译）</title>
+        <meta charset="utf-8" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑 * 白 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑 * 白 Full RSS Feed" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+              <script>
+                (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+                })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+                ga('create', 'UA-43488080-1', '黑白');
+                ga('send', 'pageview');
+
+              </script>
+
+              <script type="text/javascript" src="http://tajs.qq.com/stats?sId=27164999" charset="UTF-8"></script>
+ 
+</head>
+
+<body id="index" class="home">
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="../../../..">黑 * 白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+             
+              <ul class="columns">
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="/archives.html">归档</a></li>
+                <li><a href="/tags.html">标签</a></li>
+                <li><a href="/pages/tools.html">工具集</a></li>
+                <li><a href="/pages/links.html">链接</a></li>
+                <li><a href="/pages/aboutme.html">关于我</a></li>
+                <li><a href="/feeds/rss.xml">RSS</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+   <div class="row">
+        <div class="columns">
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2014/09/22/phpmetrics-of-popular-php-projects/" rel="bookmark" title="Permalink to 流行PHP开源项目的phpmetrics分析（译）">流行PHP开源项目的phpmetrics分析（译）</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2014-09-22T00:00:00">
+                2014-09-22 Mon
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>原文：<a href="https://peteraba.com/blog/phpmetrics-of-popular-projects/">phpmetrics of popular php projects</a></p>
+<p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
+<p>之前我偶然发现了一个名为<a href="http://www.phpmetrics.org/">phpmetrics</a>的新工具，可用于计算及展示php的度量指标。我当时立马喜欢上了这个工具，并决定用它分析我认为重要的一些php项目。
+我知道这个项目列表还远远不够完善，但应该仍然值得一看。我特别喜欢其中的“可维护性”报告，我发现视觉上那些红色的斑点就和丑陋的代码一样令人厌恶。</p>
+<p>这个工具貌似还有点小bug，我会尽力尽快修复这个工具项目的这些小问题。</p>
+<p><strong>一些重要的说明</strong></p>
+<ul>
+<li>目前我还无法得到Cakephp和Typo3的分析报告，之后我会尽快调查一下这个问题。</li>
+<li>我是在完整的代码库或下载的源码包上执行这个工具的，这意味着某些情况下还分析了项目的外部依赖库。之后我可能会调整，但目前不在计划之内。</li>
+<li>有些项目包含很多代码库，所以我无法确保测试的都市正确的那个代码库。<em>Joomla</em>尤其可能这样。</li>
+<li>某些项目并非非常知名，但在github上呈现关注度上升趋势。</li>
+<li>dm-mailer这个项目无足轻重，只是我最新的个人兴趣项目。我将它与phpmetrics一起归到Backfire一节。</li>
+<li>注意：php-yaf和phalcon都是非常有意思的php框架，但多数代码是C实现的，因此没有包含进来。</li>
+</ul>
+<hr />
+<p>说明：阅读该报告的一点小提示：</p>
+<ul>
+<li>更多的斑点只是意味着更多的类</li>
+<li>红色意味着不可维护，黄色表示可接受，绿色则表明良好、可维护的代码。</li>
+</ul>
+<hr />
+<h3>分析结果</h3>
+<h4>框架</h4>
+<p>项目：<a href="http://www.agavi.org/">agavi</a></p>
+<p>可维护性：<img alt="agavi-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/agavi-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/agavi/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/agavi/agavi">戳这里</a></p>
+<p>最近提交（均指master分支上的）：<em>4个月内</em></p>
+<hr />
+<p>项目：<a href="http://auraphp.com/">aura</a></p>
+<p>可维护性：<img alt="aura-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/aura-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/aura/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/auraphp/Aura.Framework_Project">戳这里</a></p>
+<p>最近提交：1周内</p>
+<hr />
+<p>项目：<a href="http://cakephp.org/">cakephp</a></p>
+<p>可维护性：<img alt="cakephp-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/na.png" /></p>
+<p>分析报告：<s>戳这里</s></p>
+<p>代码库：<a href="https://github.com/cakephp/cakephp">戳这里</a></p>
+<p>最近提交：1周内</p>
+<hr />
+<p>项目：<a href="https://ellislab.com/codeigniter">codeigniter</a></p>
+<p>可维护性：<img alt="codeigniter-phpmetrics" src="/assets/uploads/pics/phpmetric-result/codeigniter-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/codeigniter/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/EllisLab/CodeIgniter">戳这里</a></p>
+<p>最近提交：1周内</p>
+<hr />
+<p>项目：<a href="https://github.com/colindean/deano">deano</a></p>
+<p>可维护性：<img alt="deano-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/deano-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/deano/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/colindean/deano">戳这里</a></p>
+<p>最近提交：<em>10个月内</em></p>
+<hr />
+<p>项目：<a href="http://fatfreeframework.com/home">fatfree</a></p>
+<p>可维护性：<img alt="fatfree-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/fatfree-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/fatfree/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/bcosca/fatfree">戳这里</a></p>
+<p>最近提交：1个月内</p>
+<hr />
+<p>项目：<a href="http://flightphp.com/">flight</a></p>
+<p>可维护性：<img alt="flight-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/flight-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/flight/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/mikecao/flight">戳这里</a></p>
+<p>最近提交：2周内</p>
+<hr />
+<p>项目：<a href="http://fuelphp.com/">fuelphp</a></p>
+<p>可维护性：<img alt="fuelphp-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/fuelphp-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/fuelphp/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/fuel/fuel">戳这里</a></p>
+<p>最近提交：2个月内</p>
+<hr />
+<p>项目：<a href="http://laravel.com/">laravel</a></p>
+<p>可维护性：<img alt="laravel-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/laravel-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/laravel/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/laravel/laravel">戳这里</a></p>
+<p>最近提交：2周内</p>
+<hr />
+<p>项目：<a href="http://limonade-php.github.io/">limonade</a></p>
+<p>可维护性：<img alt="limonade-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/limonade-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/limonade/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/sofadesign/limonade/">戳这里</a></p>
+<p>最近提交：2个月内</p>
+<hr />
+<p>项目：<a href="http://nette.org/en/">nette</a></p>
+<p>可维护性：<img alt="nette-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/nette-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/nette/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/nette/nette">戳这里</a></p>
+<p>最近提交：1周内</p>
+<hr />
+<p>项目：<a href="http://phavour-project.com/">phavour</a></p>
+<p>可维护性：<img alt="phavour-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/phavour-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/phavour/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/phavour/phavour">戳这里</a></p>
+<p>最近提交：<em>6个月内</em></p>
+<hr />
+<p>项目：<a href="http://www.php-mvc.net/">php-mvc(advanced)</a></p>
+<p>可维护性：<img alt="php-mvc-advanced-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/php-mvc-advanced-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/php-mvc-advanced/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/panique/php-mvc-advanced">戳这里</a></p>
+<p>最近提交：2周内</p>
+<hr />
+<p>项目：<a href="http://phpixie.com/">phpixie</a></p>
+<p>可维护性：<img alt="phpixie-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/phpixie-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/phpixie/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/dracony/PHPixie">戳这里</a></p>
+<p>最近提交：<em>5个月内</em></p>
+<hr />
+<p>项目：<a href="http://www.popphp.org/">popphp2</a></p>
+<p>可维护性：<img alt="popphp2-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/popphp2-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/popphp2/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/popphp/popphp2">戳这里</a></p>
+<p>最近提交：3周内</p>
+<hr />
+<p>项目：<a href="http://silex.sensiolabs.org/">silex</a></p>
+<p>可维护性：<img alt="silex-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/silex-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/silex/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/silexphp/Silex">戳这里</a></p>
+<p>最近提交：1周内</p>
+<hr />
+<p>项目：<a href="http://slimframework.com/">slim</a></p>
+<p>可维护性：<img alt="slim-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/slim-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/slim/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/codeguy/Slim">戳这里</a></p>
+<p>最近提交：5个月内</p>
+<hr />
+<p>项目：<a href="http://symfony.com/legacy">symfony1</a></p>
+<p>可维护性：<img alt="symfony1-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/symfony1-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/symfony1/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/symfony/symfony1">戳这里</a></p>
+<p>最近提交：<em>2年内</em></p>
+<hr />
+<p>项目：<a href="http://symfony.com/">symfony2</a></p>
+<p>可维护性：<img alt="symfony2-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/symfony2-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/symfony2/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/symfony/symfony">戳这里</a></p>
+<p>最近提交：1周内</p>
+<hr />
+<p>项目：<a href="http://typo3.org/">typo3</a></p>
+<p>可维护性：<img alt="typo3-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/na.png" /></p>
+<p>分析报告：<s>戳这里</s></p>
+<p>代码库：<a href="https://git.typo3.org/Packages/TYPO3.CMS.git">戳这里</a></p>
+<p>最近提交：1周内</p>
+<hr />
+<p>项目：<a href="http://www.yiiframework.com/">yii1</a></p>
+<p>可维护性：<img alt="yii1-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/yii1-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/yii1/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/yiisoft/yii">戳这里</a></p>
+<p>最近提交：2周内</p>
+<hr />
+<p>项目：<a href="http://www.yiiframework.com/">yii2</a></p>
+<p>可维护性：<img alt="yii2-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/yii2-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/yii2/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/yiisoft/yii2">戳这里</a></p>
+<p>最近提交：1周内</p>
+<hr />
+<p>项目：<a href="http://framework.zend.com/">zf1</a></p>
+<p>可维护性：<img alt="zf1-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/zf1-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/zf1/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/zendframework/zf1">戳这里</a></p>
+<p>最近提交：1周内</p>
+<hr />
+<p>项目：<a href="http://framework.zend.com/">zf2</a></p>
+<p>可维护性：<img alt="zf2-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/zf2-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/zf2/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/zendframework/zf2">戳这里</a></p>
+<p>最近提交：2周内</p>
+<hr />
+<h4>CMS</h4>
+<p>项目：<a href="https://www.drupal.org/">drupal</a></p>
+<p>可维护性：<img alt="drupal-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/drupal-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/drupal/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/drupal/drupal">戳这里</a></p>
+<p>最近提交：1周内</p>
+<hr />
+<p>项目：<a href="http://www.joomla.org/">joomla</a></p>
+<p>可维护性：<img alt="joomla-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/joomla-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/joomla/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/joomla/joomla-framework">戳这里</a></p>
+<p>最近提交：5个月内</p>
+<hr />
+<p>项目：<a href="http://getgrav.org/">grav</a></p>
+<p>可维护性：<img alt="grav-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/grav-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/grav/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/getgrav/grav">戳这里</a></p>
+<p>最近提交：1周内</p>
+<hr />
+<p>项目：<a href="http://pagekit.com/">pagekit</a></p>
+<p>可维护性：<img alt="pagekit-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/pagekit-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/pagekit/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/pagekit/pagekit">戳这里</a></p>
+<p>最近提交：1周内</p>
+<hr />
+<p>项目：<a href="http://www.webasyst.com/">os webasyst projects</a></p>
+<p>可维护性：<img alt="os-webasyst-projects-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/os-webasyst-projects-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/webasyst/report.html">戳这里</a></p>
+<p>代码库：N/A</p>
+<p>最近提交：N/A</p>
+<hr />
+<p>项目：<a href="http://wordpress.org/">wordpress</a></p>
+<p>可维护性：<img alt="wordpress-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/wordpress-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/wordpress/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/WordPress/WordPress">戳这里</a></p>
+<p>最近提交：1周内</p>
+<hr />
+<h4>电子商务</h4>
+<p>项目：<a href="http://magento.com/">magento1(1.8 copy)</a></p>
+<p>可维护性：<img alt="magento1-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/magento1-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/magento1/report.html">戳这里</a></p>
+<p>代码库：<a href="https://bitbucket.org/ecgkodokux/magento1.8.git">戳这里</a></p>
+<p>最近提交：N/A</p>
+<hr />
+<p>项目：<a href="http://magento.com/">magento2</a></p>
+<p>可维护性：<img alt="magento2-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/magento2-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/magento2/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/magento/magento2">戳这里</a></p>
+<p>最近提交：1周内</p>
+<hr />
+<p>项目：<a href="http://www.opencart.com/">opencart</a></p>
+<p>可维护性：<img alt="opencart-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/opencart-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/opencart/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/opencart/opencart">戳这里</a></p>
+<p>最近提交：1周内</p>
+<hr />
+<p>项目：<a href="http://www.oscommerce.com/">oscommerce</a></p>
+<p>可维护性：<img alt="oscommerce-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/oscommerce-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/oscommerce/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/osCommerce/oscommerce">戳这里</a></p>
+<p>最近提交：2年内</p>
+<hr />
+<p>项目：<a href="http://www.prestashop.com/">prestashop</a></p>
+<p>可维护性：<img alt="prestashop-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/prestashop-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/prestashop/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/PrestaShop/PrestaShop">戳这里</a></p>
+<p>最近提交：1周内</p>
+<hr />
+<p>项目：<a href="http://sylius.org/">sylius</a></p>
+<p>可维护性：<img alt="sylius-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/sylius-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/sylius/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/Sylius/Sylius">戳这里</a></p>
+<p>最近提交：<em>10个月内</em></p>
+<hr />
+<p>项目：<a href="http://virtuemart.net/">virtuemart</a></p>
+<p>可维护性：<img alt="virtuemart-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/virtuemart-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/virtuemart/report.html">戳这里</a></p>
+<p>代码库：<a href="http://dev.virtuemart.net/projects/virtuemart/repository">戳这里</a></p>
+<p>最近提交：N/A</p>
+<hr />
+<p>项目：<a href="http://www.zen-cart.com/">zencart</a></p>
+<p>可维护性：<img alt="zencart-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/zencart-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/zencart/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/zencart/zc-v1-series">戳这里</a></p>
+<p>最近提交：1周内</p>
+<hr />
+<h4>开发工具</h4>
+<p>项目：<a href="http://codeception.com/">codeception</a></p>
+<p>可维护性：<img alt="codeception-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/codeception-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/codeception/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/Codeception/Codeception">戳这里</a></p>
+<p>最近提交：1周内</p>
+<hr />
+<p>项目：<a href="http://phpunit.de/">phpunit</a></p>
+<p>可维护性：<img alt="phpunit-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/phpunit-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/phpunit/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/sebastianbergmann/phpunit">戳这里</a></p>
+<p>最近提交：1周内</p>
+<hr />
+<h4>其他</h4>
+<p>项目：<a href="http://piwik.org/">piwik</a></p>
+<p>可维护性：<img alt="piwik-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/piwik-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/piwik/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/piwik/piwik">戳这里</a></p>
+<p>最近提交：1周内</p>
+<hr />
+<h4>Backfire</h4>
+<p>项目：<a href="https://github.com/peteraba/zf2-mailer">dm-mailer</a></p>
+<p>可维护性：<img alt="dm-mailer-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/dm-mailer-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/dm-mailer/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/peteraba/zf2-mailer">戳这里</a></p>
+<p>最近提交：<em>7个月内</em></p>
+<hr />
+<p>项目：<a href="http://www.phpmetrics.org/">phpmetrics</a></p>
+<p>可维护性：<img alt="phpmetrics-phpmetrics" src="/assets/uploads/pics/phpmetrics-result/phpmetrics-phpmetric-maintenability.png" /></p>
+<p>分析报告：<a href="https://peteraba.com/metrics/phpmetrics/phpmetrics/report.html">戳这里</a></p>
+<p>代码库：<a href="https://github.com/Halleck45/PhpMetrics">戳这里</a></p>
+<p>最近提交：1周内</p>
+<hr />
+<h4>问题(Issues)</h4>
+<p><strong>Cakephp</strong></p>
+<div class="highlight"><pre>594/666 [========================&gt;---]  89%
+
+[Exception]                         
+Closure detected instead of method
+</pre></div>
+
+
+<p><strong>Deano</strong></p>
+<div class="highlight"><pre>2/9 [======&gt;---------------------]  22%file /home/peter/dev/php/opensource/deano/views/layout/layout.php is not valid and has been skipped
+9/9 [============================] 100%file /home/peter/dev/php/opensource/deano/deano.php is not valid and has been skipped
+</pre></div>
+
+
+<p><strong>Limonade</strong></p>
+<div class="highlight"><pre> 9/16 [===============&gt;------------]  56%file /home/peter/dev/php/opensource/limonade/examples/example02/index.php is not valid and has been skipped
+16/16 [============================] 100%file /home/peter/dev/php/opensource/limonade/examples/example06/index.php is not valid and has been skipped
+</pre></div>
+
+
+<p><strong>Magento</strong></p>
+<div class="highlight"><pre>3361/9868 [=========&gt;------------------]  34%file ../../opensource/magento2/lib/internal/Zend/Mail/Protocol/Pop3.php is not valid and has been skipped
+</pre></div>
+
+
+<p><strong>Pagekit</strong></p>
+<div class="highlight"><pre>102/215 [=============&gt;--------------]  47%file /home/peter/dev/php/opensource/pagekit/extensions/system/src/System/Console/skeleton/extension/src/Controller/SiteController.php is not valid and has been skipped
+103/215 [=============&gt;--------------]  47%file /home/peter/dev/php/opensource/pagekit/extensions/system/src/System/Console/skeleton/extension/src/DefaultExtension.php is not valid and has been skipped
+105/215 [=============&gt;--------------]  48%file /home/peter/dev/php/opensource/pagekit/extensions/system/src/System/Console/skeleton/theme/src/DefaultTheme.php is not valid and has been skipped
+</pre></div>
+
+
+<p><strong>Symfony1</strong></p>
+<div class="highlight"><pre>199/1320 [====&gt;-----------------------]  15%file /home/peter/dev/php/opensource/symfony1/lib/task/generator/skeleton/module/module/actions/actions.class.php is not valid and has been skipped
+205/1320 [====&gt;-----------------------]  15%file /home/peter/dev/php/opensource/symfony1/lib/task/generator/skeleton/app/web/index.php is not valid and has been skipped
+206/1320 [====&gt;-----------------------]  15%file /home/peter/dev/php/opensource/symfony1/lib/task/generator/skeleton/app/app/config/ApplicationConfiguration.class.php is not valid and has been skipped
+397/1320 [========&gt;-------------------]  30%file /home/peter/dev/php/opensource/symfony1/lib/plugins/sfPropelPlugin/data/generator/sfPropelModule/admin/skeleton/lib/helper.php is not valid and has been skipped
+398/1320 [========&gt;-------------------]  30%file /home/peter/dev/php/opensource/symfony1/lib/plugins/sfPropelPlugin/data/generator/sfPropelModule/admin/skeleton/lib/configuration.php is not valid and has been skipped
+399/1320 [========&gt;-------------------]  30%file /home/peter/dev/php/opensource/symfony1/lib/plugins/sfPropelPlugin/data/generator/sfPropelModule/admin/skeleton/actions/actions.class.php is not valid and has been skipped
+445/1320 [=========&gt;------------------]  33%file /home/peter/dev/php/opensource/symfony1/lib/plugins/sfPropelPlugin/data/generator/sfPropelModule/default/skeleton/actions/actions.class.php is not valid and has been skipped
+652/1320 [=============&gt;--------------]  49%file /home/peter/dev/php/opensource/symfony1/lib/plugins/sfDoctrinePlugin/data/generator/sfDoctrineModule/admin/skeleton/lib/helper.php is not valid and has been skipped
+653/1320 [=============&gt;--------------]  49%file /home/peter/dev/php/opensource/symfony1/lib/plugins/sfDoctrinePlugin/data/generator/sfDoctrineModule/admin/skeleton/lib/configuration.php is not valid and has been skipped
+654/1320 [=============&gt;--------------]  49%file /home/peter/dev/php/opensource/symfony1/lib/plugins/sfDoctrinePlugin/data/generator/sfDoctrineModule/admin/skeleton/actions/actions.class.php is not valid and has been skipped
+700/1320 [==============&gt;-------------]  53%file /home/peter/dev/php/opensource/symfony1/lib/plugins/sfDoctrinePlugin/data/generator/sfDoctrineModule/default/skeleton/actions/actions.class.php is not valid and has been skipped
+</pre></div>
+
+
+<p><strong>Typo3</strong></p>
+<div class="highlight"><pre>76/2583 [&gt;---------------------------]   2%
+
+[Exception]                         
+Closure detected instead of method
+</pre></div>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2014/09/22/phpmetrics-of-popular-php-projects/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+        </div><!-- /.twelve.columns -->
+ </div><!-- /.row -->
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+    
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+  <script src="../../../../theme/js/main.js"></script>
+</body>
+</html>

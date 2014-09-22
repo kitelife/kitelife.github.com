@@ -66,6 +66,82 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="../2014/02/25/read-the-art-of-capacity-planning/" rel="bookmark" title="Permalink to 读书笔记：Web容量规划的艺术">读书笔记：Web容量规划的艺术</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2014-02-25T00:00:00"> 2014-02-25 Tue </abbr>
+<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <h3>第1章 容量规划的目标、问题和过程</h3>
+<p>了解你的基础设施中每一部分何时会失败（最好不发生）对容量规划至关重要。</p>
+<p>假设你有一台数据库服务器用于响应从前端Web服务器提交过来的查询。容量规划意味着你应该知道下述问题的答案。</p>
+<ul>
+<li>考虑到特定的硬件配置，数据库服务器每秒可管理多少个查询？</li>
+<li>在性能降低到影响终端用户体验之前，它每秒可应答多少次查询？</li>
+</ul>
+<p><strong>性能与容量：两种不同的概念</strong></p>
+<p>性能调优是优化已经存在的性能。容量规划通过使用当前性能做为基线决定你的系统需要什么以及什么时候需要。</p>
+<p>当面对容量问题的时候，试着少花精力使已存在的设备运行更快，而是关注当下要解决的重点：找出你到底需要什么，什么时候需要。</p>
+<p>权衡对已有系统进行调优所花的人力时间，可能简简单单的买更多的硬件是正确的。在最优化和容量扩展方面的权衡是一个挑战，并且因环境而异。</p>
+<blockquote>
+<p>网站的架构和架构对容量方面的影响</p>
+<p>你的驾车风格会影响到你的车的里程，类似的原理能够应用于网站的架构上。在本书中一个反复出现的主题是你的网站架构对于如何使用、消耗
+和管理容量产生重大影响。在有效使用容量上，相比于调整和改变你的服务器和网络，设计能带来更大的影响。同时，随着需求的出现如何方便和灵活
+地进行增加或者减少容量，也是设计能带来的重要作用。</p>
+<p>调整架构以便更容易容量管理。保持你的架构易于分割和分段，可以帮助你处理大量的负载特性问题---即在你创建了一个需要增长什么和何时增长的准确规划之前，
+你需要解决的问题。</p>
+</blockquote>
+<p>通过开放API所提供的Web服务引入了另一个逐渐扩大的问题，因为你的应用程序数据会被更多的应用程序访问，它们也都有自己的使用和增长模式。
+这也意味着用户可以方便地滥用系统，从而将更多不确定因素放入容量公式中。API的使用情况需要监控，以观察新出现的模式。</p>
+<p>容量规划可以变得非常重要 ...</p> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2014/02/25/read-the-art-of-capacity-planning/" rel="bookmark" title="Permalink to 读书笔记：Web容量规划的艺术">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
+                    <a class="danger label" href="../tag/rong-liang-gui-hua.html">容量规划</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
+                        <a href="../2014/01/17/golang-http-handlers-as-middleware/" rel="bookmark" title="Permalink to 如何实现Golang的http请求处理中间件（译）">如何实现Golang的http请求处理中间件（译）</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2014-01-17T00:00:00"> 2014-01-17 Fri </abbr>
+<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <p>原文：<a href="http://capotej.com/blog/2013/10/07/golang-http-handlers-as-middleware/">Golang Http Handlers as Middleware</a></p>
+<p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
+<p>大多数现代Web组件栈允许通过栈式/组件式中间件“过滤”请求，这样就能干净地从web应用中分离出横切关注点（译注：面向方面程序设计中的概念？）。
+本周我尝试在Go语言的<code>http.FileServer</code>中植入钩子，发现实现起来十分简便，让我非常惊讶。</p>
+<p>让我们从一个基本的文件服务器开始说起：</p>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">http</span><span class="p">.</span><span class="nx">ListenAndServe</span><span class="p">(</span><span class="s">&quot;:8080&quot;</span><span class="p">,</span> <span class="nx">http</span><span class="p">.</span><span class="nx">FileServer</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">Dir</span><span class="p">(</span><span class="s">&quot;/tmp&quot;</span><span class="p">)))</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>这段程序会在端口8080上开启一个本地文件服务器。那么我们该如何在这其中植入钩子从而能够在文件请求处理之前执行一些代码？来看一下<code>http.ListenAndServe</code>的方法签名：</p>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">ListenAndServe</span><span class="p">(</span><span class="nx">addr</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">handler</span> <span class="nx">Handler</span><span class="p">)</span> <span class="kt">error</span>
+</pre></div>
+
+
+<p>看起来<code>http.FileServer</code>返回了一个<code>Handler ...</code></p> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2014/01/17/golang-http-handlers-as-middleware/" rel="bookmark" title="Permalink to 如何实现Golang的http请求处理中间件（译）">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="../tag/golang.html">Golang</a>
+                    <a class="danger label" href="../tag/fan-yi.html">翻译</a>
+                    <a class="danger label" href="../tag/zhong-jian-jian.html">中间件</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="../2014/01/17/goroutine-stack-infinite/" rel="bookmark" title="Permalink to 为何Goroutine的栈空间可以无限大？（译）">为何Goroutine的栈空间可以无限大？（译）</a>
                     </h2>
                 </header>
@@ -250,70 +326,6 @@ dateObj = new Date(year, month, date[, hours[, minutes[, seconds[,ms]]]])
                 </div>
             </article>
             </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="../2013/12/02/re_introduce_haproxyconsole/" rel="bookmark" title="Permalink to HAProxyConsole简介">HAProxyConsole简介</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2013-12-02T00:00:00"> 2013-12-02 Mon </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>之前在<a href="http://youngsterxyf.github.io/2013/11/01/unescape-html-in-golang-html_template/">Golang中如何让html/template不转义html标签</a>、<a href="http://youngsterxyf.github.io/2013/10/16/high-availability-load-balancer-and-dns/">搭建高可用负载均衡组件及缓存DNS</a>两篇文章中都提到为了方便使用HAProxy，我实现了一个简单的HAProxy负载均衡任务管理系统。前些天我把<a href="http://youngsterxyf.github.io/haproxyconsole/">代码放在Github上</a>，算是开源吧。</p>
-<p>同事使用该管理系统，遇到问题时，由于不清楚其实现，也就无法分析问题出在哪，同时也会有些恐慌，生怕搞挂了HAProxy，毕竟上面承载了一些关键的业务，所以我绘制一张图用于说明HAProxyConsole的应用场景和工作原理。</p>
-<p><img alt="HAProxyConsole-arch" src="/assets/uploads/pics/HAProxyConsole-arch.png" /></p>
-<p>图中蓝色标识的部分都属于HAProxyConsole。</p>
-<ul>
-<li>用户通过Web页面增/删/改/查负载均衡任务，但这4个操作直接修改的都仅是数据库（DB.json或MySQL数据库）。另外，HAProxyConsole的Web页面中还嵌入了主从HAProxy自带的数据统计页面。</li>
-<li>只有当用户点击按钮“应用到主HAProxy”或“应用到从HAProxy”后，HAProxyConsole才会根据DB.json或MySQL中存储的数据和配置文件haproxy_conf_comm.json生成最新的HAProxy配置文件，然后拷贝一份为主HAProxy的配置文件或远程拷贝一份为从HAProxy的配置文件，最后重启HAProxy进程（/path/to/haproxy/sbin/haproxy -f /path/to/haproxy/conf/haproxy.conf -st ...</li></ul> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2013/12/02/re_introduce_haproxyconsole/" rel="bookmark" title="Permalink to HAProxyConsole简介">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/haproxy.html">HAProxy</a>
-                    <a class="danger label" href="../tag/keepalived.html">Keepalived</a>
-                    <a class="danger label" href="../tag/fu-zai-jun-heng.html">负载均衡</a>
-                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
-                    <a class="danger label" href="../tag/zong-jie.html">总结</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="../2013/11/29/inner_warehouse_monitor_system/" rel="bookmark" title="Permalink to 仓库作业机器监控系统设计与实现">仓库作业机器监控系统设计与实现</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2013-11-29T00:00:00"> 2013-11-29 Fri </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>近期在参与一个仓库作业机器监控项目。该项目的需求背景是：公司的电商业务在全国各地有多处或大或小的仓库，仓库的作业人员（没有IT技术背景）经常反馈/投诉作业机器断网、断电、连不了服务等问题。实际情况经常与反馈的不一致，但运维侧并没有数据可以证明，所以才有了这个项目的需求。</p>
-<p>该项目第一期的目标仅是<em>收集、展示作业机器某些监控指标数据，以便在快速定位解决问题，或至少有数据可查</em>。</p>
-<p>为了避免大量监控数据上报影响到生产系统的网络服务，系统采用如下结构：</p>
-<p><img alt="inner_warehouse_monitor" src="/assets/uploads/pics/inner_warehouse_monitor.png" /></p>
-<ol>
-<li>实现一个agent用于在仓库作业PC或作业PDA上获取机器的监控数据；</li>
-<li>在仓库本地服务器上实现一个数据收集处理服务，提供API给agent上传监控数据；数据收集处理服务会将接收到的数据持久化到数据库，提供给仓库本地服务器上的webApp进行数据展示等；</li>
-<li>中心服务器可以调用各个仓库本地服务器上的webApp提供的数据查询接口（数据用于定位、发现问题）；定期按需对各个仓库本地服务器上的数据进行归档。</li>
-</ol>
-<p>这样，主要的工作都集中在<strong>作业机器上的agent</strong>和<strong>数据收集处理服务、webApp</strong>。这其中最关键的又是<strong>数据收集处理服务</strong>。考虑到需要多地部署运维仓库本地服务器，而且某些大仓库作业机器的数目目前已多达800-1000，我们做了如下技术选型：</p>
-<ol>
-<li>Golang实现agent、数据收集处理服务、webApp；</li>
-<li>以SQLite作为数据库来存储agent上报的所有数据；</li>
-<li>以<a href="http://bitly.github.io/nsq/">NSQ</a>作为异步消息队列中间件；</li>
-</ol>
-<p>选用Golang的理由是：可以静态编译，部署简单，只需将变异好的可执行二进制程序丢到服务器上跑起来就可以了 ...</p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2013/11/29/inner_warehouse_monitor_system/" rel="bookmark" title="Permalink to 仓库作业机器监控系统设计与实现">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/ji-zhu.html">技术</a>
-                    <a class="danger label" href="../tag/zong-jie.html">总结</a>
-                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
-                    <a class="danger label" href="../tag/golang.html">Golang</a>
-                </div>
-            </article>
-            </li>
         </ol><!-- /#posts-list -->
     </div><!-- /.eleven.columns -->
 <div class="three columns">
@@ -339,69 +351,72 @@ dateObj = new Date(year, month, date[, hours[, minutes[, seconds[,ms]]]])
 
 <h4>标签</h4>
 	<ul>
-	    <li class="tag-4"><a href="../tag/bing-xing.html">并行</a></li>
-	    <li class="tag-3"><a href="../tag/yue-du.html">阅读</a></li>
-	    <li class="tag-3"><a href="../tag/haproxy.html">HAProxy</a></li>
-	    <li class="tag-4"><a href="../tag/ming-ling.html">命令</a></li>
-	    <li class="tag-4"><a href="../tag/pypi.html">PyPI</a></li>
-	    <li class="tag-3"><a href="../tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
-	    <li class="tag-4"><a href="../tag/ying-yu.html">英语</a></li>
-	    <li class="tag-4"><a href="../tag/shu-ju-ku.html">数据库</a></li>
-	    <li class="tag-1"><a href="../tag/python.html">Python</a></li>
-	    <li class="tag-4"><a href="../tag/jekyll.html">jekyll</a></li>
-	    <li class="tag-1"><a href="../tag/linux.html">Linux</a></li>
-	    <li class="tag-4"><a href="../tag/css.html">CSS</a></li>
-	    <li class="tag-4"><a href="../tag/pip.html">pip</a></li>
-	    <li class="tag-2"><a href="../tag/php.html">PHP</a></li>
 	    <li class="tag-2"><a href="../tag/gong-zuo.html">工作</a></li>
-	    <li class="tag-4"><a href="../tag/zi-ti.html">字体</a></li>
-	    <li class="tag-4"><a href="../tag/wen-zi.html">文字</a></li>
-	    <li class="tag-4"><a href="../tag/ban-ben-kong-zhi.html">版本控制</a></li>
-	    <li class="tag-2"><a href="../tag/ji-zhu.html">技术</a></li>
-	    <li class="tag-4"><a href="../tag/python-weekly.html">python-weekly</a></li>
-	    <li class="tag-4"><a href="../tag/diao-shi.html">调试</a></li>
-	    <li class="tag-4"><a href="../tag/windows.html">Windows</a></li>
-	    <li class="tag-2"><a href="../tag/git.html">Git</a></li>
-	    <li class="tag-2"><a href="../tag/ming-ling-xing.html">命令行</a></li>
-	    <li class="tag-3"><a href="../tag/fu-zai-jun-heng.html">负载均衡</a></li>
-	    <li class="tag-2"><a href="../tag/javascript.html">JavaScript</a></li>
-	    <li class="tag-4"><a href="../tag/rong-liang-gui-hua.html">容量规划</a></li>
-	    <li class="tag-3"><a href="../tag/mian-shi.html">面试</a></li>
-	    <li class="tag-4"><a href="../tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
-	    <li class="tag-4"><a href="../tag/liu-lan-qi-jian-rong.html">浏览器兼容</a></li>
-	    <li class="tag-4"><a href="../tag/sheng-huo.html">生活</a></li>
-	    <li class="tag-2"><a href="../tag/gong-ju.html">工具</a></li>
-	    <li class="tag-4"><a href="../tag/easy_install.html">easy_install</a></li>
-	    <li class="tag-3"><a href="../tag/keepalived.html">Keepalived</a></li>
-	    <li class="tag-4"><a href="../tag/bind.html">BIND</a></li>
-	    <li class="tag-4"><a href="../tag/haproxyconsole.html">HAProxyConsole</a></li>
-	    <li class="tag-4"><a href="../tag/gao-ke-yong.html">高可用</a></li>
-	    <li class="tag-4"><a href="../tag/github.html">github</a></li>
-	    <li class="tag-4"><a href="../tag/zi-sheng.html">自省</a></li>
-	    <li class="tag-2"><a href="../tag/fu-wu-qi.html">服务器</a></li>
-	    <li class="tag-1"><a href="../tag/fan-yi.html">翻译</a></li>
-	    <li class="tag-4"><a href="../tag/vmware.html">VMware</a></li>
-	    <li class="tag-3"><a href="../tag/xue-xi-fang-fa.html">学习方法</a></li>
 	    <li class="tag-4"><a href="../tag/ssl.html">ssl</a></li>
-	    <li class="tag-4"><a href="../tag/wei-bo.html">微博</a></li>
-	    <li class="tag-3"><a href="../tag/mysql.html">MySQL</a></li>
-	    <li class="tag-3"><a href="../tag/suan-fa.html">算法</a></li>
-	    <li class="tag-2"><a href="../tag/shell.html">Shell</a></li>
-	    <li class="tag-3"><a href="../tag/wei-xin.html">微信</a></li>
-	    <li class="tag-4"><a href="../tag/teng-xun.html">腾讯</a></li>
-	    <li class="tag-3"><a href="../tag/jia-gou.html">架构</a></li>
-	    <li class="tag-4"><a href="../tag/zhong-jian-jian.html">中间件</a></li>
-	    <li class="tag-4"><a href="../tag/li-lun.html">理论</a></li>
-	    <li class="tag-2"><a href="../tag/bi-shi.html">笔试</a></li>
-	    <li class="tag-1"><a href="../tag/bi-ji.html">笔记</a></li>
-	    <li class="tag-2"><a href="../tag/zong-jie.html">总结</a></li>
-	    <li class="tag-4"><a href="../tag/gan-wu.html">感悟</a></li>
-	    <li class="tag-2"><a href="../tag/nginx.html">Nginx</a></li>
-	    <li class="tag-4"><a href="../tag/cc.html">C/C++</a></li>
-	    <li class="tag-2"><a href="../tag/golang.html">Golang</a></li>
-	    <li class="tag-3"><a href="../tag/shi-ge.html">诗歌</a></li>
+	    <li class="tag-4"><a href="../tag/ban-ben-kong-zhi.html">版本控制</a></li>
 	    <li class="tag-4"><a href="../tag/template.html">template</a></li>
+	    <li class="tag-4"><a href="../tag/xiao-xi-tui-song.html">消息推送</a></li>
+	    <li class="tag-3"><a href="../tag/xue-xi-fang-fa.html">学习方法</a></li>
+	    <li class="tag-2"><a href="../tag/git.html">Git</a></li>
+	    <li class="tag-2"><a href="../tag/ji-zhu.html">技术</a></li>
+	    <li class="tag-4"><a href="../tag/pip.html">pip</a></li>
+	    <li class="tag-4"><a href="../tag/gao-ke-yong.html">高可用</a></li>
+	    <li class="tag-2"><a href="../tag/javascript.html">JavaScript</a></li>
+	    <li class="tag-3"><a href="../tag/mian-shi.html">面试</a></li>
+	    <li class="tag-3"><a href="../tag/wei-xin.html">微信</a></li>
+	    <li class="tag-4"><a href="../tag/wen-zi.html">文字</a></li>
+	    <li class="tag-4"><a href="../tag/zhong-jian-jian.html">中间件</a></li>
+	    <li class="tag-4"><a href="../tag/zi-ti.html">字体</a></li>
+	    <li class="tag-4"><a href="../tag/jekyll.html">jekyll</a></li>
+	    <li class="tag-2"><a href="../tag/shell.html">Shell</a></li>
+	    <li class="tag-2"><a href="../tag/bi-shi.html">笔试</a></li>
+	    <li class="tag-2"><a href="../tag/ming-ling-xing.html">命令行</a></li>
+	    <li class="tag-4"><a href="../tag/rong-liang-gui-hua.html">容量规划</a></li>
+	    <li class="tag-4"><a href="../tag/teng-xun.html">腾讯</a></li>
+	    <li class="tag-3"><a href="../tag/shi-ge.html">诗歌</a></li>
+	    <li class="tag-4"><a href="../tag/easy_install.html">easy_install</a></li>
+	    <li class="tag-2"><a href="../tag/golang.html">Golang</a></li>
+	    <li class="tag-4"><a href="../tag/bind.html">BIND</a></li>
+	    <li class="tag-4"><a href="../tag/pypi.html">PyPI</a></li>
+	    <li class="tag-1"><a href="../tag/bi-ji.html">笔记</a></li>
+	    <li class="tag-4"><a href="../tag/ming-ling.html">命令</a></li>
+	    <li class="tag-2"><a href="../tag/php.html">PHP</a></li>
+	    <li class="tag-1"><a href="../tag/fan-yi.html">翻译</a></li>
+	    <li class="tag-2"><a href="../tag/nginx.html">Nginx</a></li>
+	    <li class="tag-4"><a href="../tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
+	    <li class="tag-4"><a href="../tag/shu-ju-ku.html">数据库</a></li>
+	    <li class="tag-4"><a href="../tag/vmware.html">VMware</a></li>
+	    <li class="tag-4"><a href="../tag/wei-bo.html">微博</a></li>
+	    <li class="tag-4"><a href="../tag/gan-wu.html">感悟</a></li>
+	    <li class="tag-3"><a href="../tag/suan-fa.html">算法</a></li>
+	    <li class="tag-3"><a href="../tag/jia-gou.html">架构</a></li>
+	    <li class="tag-4"><a href="../tag/python-weekly.html">python-weekly</a></li>
 	    <li class="tag-4"><a href="../tag/dns.html">DNS</a></li>
+	    <li class="tag-4"><a href="../tag/diao-shi.html">调试</a></li>
+	    <li class="tag-4"><a href="../tag/zi-sheng.html">自省</a></li>
+	    <li class="tag-3"><a href="../tag/fu-zai-jun-heng.html">负载均衡</a></li>
+	    <li class="tag-4"><a href="../tag/sheng-huo.html">生活</a></li>
+	    <li class="tag-2"><a href="../tag/fu-wu-qi.html">服务器</a></li>
+	    <li class="tag-3"><a href="../tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
+	    <li class="tag-4"><a href="../tag/restful.html">RESTful</a></li>
+	    <li class="tag-4"><a href="../tag/liu-lan-qi-jian-rong.html">浏览器兼容</a></li>
+	    <li class="tag-4"><a href="../tag/github.html">github</a></li>
+	    <li class="tag-3"><a href="../tag/keepalived.html">Keepalived</a></li>
+	    <li class="tag-4"><a href="../tag/socketio.html">socket.io</a></li>
+	    <li class="tag-3"><a href="../tag/haproxy.html">HAProxy</a></li>
+	    <li class="tag-4"><a href="../tag/haproxyconsole.html">HAProxyConsole</a></li>
+	    <li class="tag-1"><a href="../tag/linux.html">Linux</a></li>
+	    <li class="tag-4"><a href="../tag/windows.html">Windows</a></li>
+	    <li class="tag-3"><a href="../tag/yue-du.html">阅读</a></li>
+	    <li class="tag-4"><a href="../tag/css.html">CSS</a></li>
+	    <li class="tag-4"><a href="../tag/li-lun.html">理论</a></li>
+	    <li class="tag-1"><a href="../tag/python.html">Python</a></li>
+	    <li class="tag-4"><a href="../tag/ying-yu.html">英语</a></li>
+	    <li class="tag-2"><a href="../tag/zong-jie.html">总结</a></li>
+	    <li class="tag-4"><a href="../tag/cc.html">C/C++</a></li>
+	    <li class="tag-3"><a href="../tag/mysql.html">MySQL</a></li>
+	    <li class="tag-2"><a href="../tag/gong-ju.html">工具</a></li>
+	    <li class="tag-4"><a href="../tag/bing-xing.html">并行</a></li>
 </ul>
 
 <!--

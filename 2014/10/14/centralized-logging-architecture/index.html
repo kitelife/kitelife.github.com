@@ -77,7 +77,7 @@
               <p>原文：<a href="http://jasonwilder.com/blog/2013/07/16/centralized-logging-architecture/">Centralized Logging Architecture</a></p>
 <p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
 <p>在<a href="http://jasonwilder.com/blog/2012/01/03/centralized-logging/">中心化日志记录</a>一文中，我介绍了几个工具，用于解决中心化日志记录的问题。但这些工具一般仅能解决这个问题的一部分，
-这意味着你需要综合使用几个工具来构建一个健壮的解决方案。</p>
+这意味着需要综合使用几个工具来构建一个健壮的解决方案。</p>
 <p>你需要解决问题的这几个主要方面：<em>收集</em>、<em>传输</em>、<em>存储</em>、以及<em>分析</em>。某些特殊的应用场景下，也许还希望具备<em>告警</em>的能力。</p>
 <h4>收集</h4>
 <p>应用程序以不同的方式产生日志，一些是通过syslog，其他一些是直接写到文件。考虑一个运行在linux主机上的典型web应用，在<code>/var/log</code>目录会有十几个甚至更多的日志文件，
@@ -85,7 +85,7 @@
 <p>如果你正在运营一个基于web的应用，开发人员或者运维同事需要快速地访问日志数据以便对线上问题进行排错，那么就需要一个能够近乎实时监控日志文件变化的方案。
 如果使用基于日志拷贝的方式 --- 文件以固定的时间间隔拷贝到一台中心服务器上，那么仅能检查与复制操作频率相同的新增日志数据。当站点已经挂掉，而你正在等待相关日志数据的复制，
 那么一分钟一次的 rsync cron 任务也许还不够快。</p>
-<p>从另外一个角度来看，如果你需要分析线下日志数据，计算各种度量指标，或者其他批量的工作，文件复制的策略也许正合适。</p>
+<p>从另外一个角度来看，如果需要分析线下日志数据，计算各种度量指标，或者其他批量的工作，文件复制的策略也许正合适。</p>
 <h4>传输</h4>
 <p>日志数据会在多个主机上快速地累积起来。为了高效传输日志数据到中心位置，并保证数据不丢失，可能需要额外的工具。</p>
 <p><a href="https://github.com/facebookarchive/scribe">Scribe</a>、<a href="http://flume.apache.org/">Flume</a>、<a href="https://github.com/mozilla-services/heka">Heka</a>、<a href="http://logstash.net/">Logstash</a>、

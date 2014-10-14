@@ -2,7 +2,7 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>黑 * 白</title><link>http://youngsterxyf.github.io/</link><description></description><atom:link href="http://youngsterxyf.github.io/feeds/youngsterxyf.rss.xml" rel="self"></atom:link><lastBuildDate>Tue, 14 Oct 2014 00:00:00 +0800</lastBuildDate><item><title>中心化日志记录架构（译）</title><link>http://youngsterxyf.github.io/2014/10/14/centralized-logging-architecture/</link><description>&lt;p&gt;原文：&lt;a href="http://jasonwilder.com/blog/2013/07/16/centralized-logging-architecture/"&gt;Centralized Logging Architecture&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;译者：&lt;a href="https://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;在&lt;a href="http://jasonwilder.com/blog/2012/01/03/centralized-logging/"&gt;中心化日志记录&lt;/a&gt;一文中，我介绍了几个工具，用于解决中心化日志记录的问题。但这些工具一般仅能解决这个问题的一部分，
-这意味着你需要综合使用几个工具来构建一个健壮的解决方案。&lt;/p&gt;
+这意味着需要综合使用几个工具来构建一个健壮的解决方案。&lt;/p&gt;
 &lt;p&gt;你需要解决问题的这几个主要方面：&lt;em&gt;收集&lt;/em&gt;、&lt;em&gt;传输&lt;/em&gt;、&lt;em&gt;存储&lt;/em&gt;、以及&lt;em&gt;分析&lt;/em&gt;。某些特殊的应用场景下，也许还希望具备&lt;em&gt;告警&lt;/em&gt;的能力。&lt;/p&gt;
 &lt;h4&gt;收集&lt;/h4&gt;
 &lt;p&gt;应用程序以不同的方式产生日志，一些是通过syslog，其他一些是直接写到文件。考虑一个运行在linux主机上的典型web应用，在&lt;code&gt;/var/log&lt;/code&gt;目录会有十几个甚至更多的日志文件，
@@ -10,7 +10,7 @@
 &lt;p&gt;如果你正在运营一个基于web的应用，开发人员或者运维同事需要快速地访问日志数据以便对线上问题进行排错，那么就需要一个能够近乎实时监控日志文件变化的方案。
 如果使用基于日志拷贝的方式 --- 文件以固定的时间间隔拷贝到一台中心服务器上，那么仅能检查与复制操作频率相同的新增日志数据。当站点已经挂掉，而你正在等待相关日志数据的复制，
 那么一分钟一次的 rsync cron 任务也许还不够快。&lt;/p&gt;
-&lt;p&gt;从另外一个角度来看，如果你需要分析线下日志数据，计算各种度量指标，或者其他批量的工作，文件复制的策略也许正合适。&lt;/p&gt;
+&lt;p&gt;从另外一个角度来看，如果需要分析线下日志数据，计算各种度量指标，或者其他批量的工作，文件复制的策略也许正合适。&lt;/p&gt;
 &lt;h4&gt;传输&lt;/h4&gt;
 &lt;p&gt;日志数据会在多个主机上快速地累积起来。为了高效传输日志数据到中心位置，并保证数据不丢失，可能需要额外的工具。&lt;/p&gt;
 &lt;p&gt;&lt;a href="https://github.com/facebookarchive/scribe"&gt;Scribe&lt;/a&gt;、&lt;a href="http://flume.apache.org/"&gt;Flume&lt;/a&gt;、&lt;a href="https://github.com/mozilla-services/heka"&gt;Heka&lt;/a&gt;、&lt;a href="http://logstash.net/"&gt;Logstash&lt;/a&gt;、

@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 
-        <title>黑 * 白 - 算法</title>
+        <title>黑 * 白 - Yii</title>
         <meta charset="utf-8" />
         <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑 * 白 Full Atom Feed" />
         <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑 * 白 Full RSS Feed" />
@@ -65,71 +65,44 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
-                        <a href="../2012/12/05/sonicWALL-exam/" rel="bookmark" title="Permalink to 2012校招-sonicWALL的两道编程笔试题">2012校招-sonicWALL的两道编程笔试题</a>
+                        <a href="../2014/11/04/read-yii-code-1/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 请求处理基本流程">Yii源码阅读笔记 - 请求处理基本流程</a>
                     </h2>
                 </header>
                 <footer class="post-info">
-                    <abbr class="published" title="2012-12-05T00:00:00"> 2012-12-05 Wed </abbr>
+                    <abbr class="published" title="2014-11-04T00:00:00"> 2014-11-04 Tue </abbr>
 <address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <h2>求二叉树中两个结点的最近公共祖先</h2>
-<p>比如：对于树</p>
-<blockquote>
-<div class="highlight"><pre>         <span class="n">A</span>
-       <span class="o">/</span>
-      <span class="n">B</span>
-    <span class="o">/</span>   \
-   <span class="n">C</span>     <span class="n">D</span>
- <span class="o">/</span>   \
-<span class="n">E</span>     <span class="n">F</span>
-</pre></div>
-
-
-</blockquote>
-<p>结点D，F的最近公共祖先为B</p>
-<p>实现：<a href="https://github.com/youngsterxyf/Data-Structures-and-Algorithms/blob/master/nearest_common_ancestor.c">见源码</a></p>
-<h2>求二进制整数部分bits求反后的值</h2>
-<p>比如：对于整数0b1001101，将第2(begin)到第5(end)位(从右往左计数)上的bit求反，得到0b1110001。</p>
-<div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
-
-<span class="kt">int</span> <span class="nf">reverse_somebits</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">begin</span><span class="p">,</span> <span class="kt">int</span> <span class="n">end</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="k">return</span> <span class="n">a</span><span class="o">^</span><span class="p">((</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="n">end</span><span class="p">)</span><span class="o">|</span><span class="p">((</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="n">end</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">^</span><span class="p">((</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="n">begin</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
-<span class="p">}</span>
-
-<span class="kt">void</span> <span class="nf">ten_to_two</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="k">if ...</span></pre></div> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2012/12/05/sonicWALL-exam/" rel="bookmark" title="Permalink to 2012校招-sonicWALL的两道编程笔试题">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="entry-content"> <p>对于Web框架，我认为其主要有三点作用：</p>
+<ol>
+<li>提供多人协作的基本规范</li>
+<li>避免重复造轮子</li>
+<li>开发者只需关注业务逻辑，脏活（如：基本的安全防范、兼容问题）Web框架都已完成并提供设计良好的API</li>
+</ol>
+<p>但代价是学习成本 - 为了尽可能发挥Web框架的优势，需要花一些阅读文档，甚至是框架源码（特别是文档缺乏或者文档写得垃圾的），然后经过几次项目实践，一切才能了然于胸。</p>
+<p>喏，为了在工作中更好地使用、避免误用Yii框架，大致阅读了Yii框架的部分代码，然后有了这个系列的笔记。</p>
+<hr />
+<p>深入学习一个Web框架，首先要理解的是请求处理流程。对于PHP而言，处理流程也即包含了应用的初始化过程，如加载配置、初始化组件等。请求处理流程中最核心的应该是路由解析和分发，此外可能还有过滤器处理、事件处理等，直到请求处理进入具体的Controller和Action。响应生成、过滤等也可以关注。</p>
+<hr />
+<p>基于Yii框架的工程目录结构大致如下所示：</p>
+<p><img alt="Yii-Project-Structure" src="/assets/uploads/pics/yii-project-structure.png" /></p>
+<ul>
+<li>index.php是应用的入口</li>
+<li>protected目录是存放动态脚本的地方<ul>
+<li>components子目录存放各种组件类</li>
+<li>configs存放应用的配置文件</li>
+<li>controllers存放Controller类文件</li>
+<li>models存放Model类文件</li>
+<li>runtime存放一些应用生成的临时文件或者缓存文件，如Smarty编译好的模板、日志文件</li>
+<li>views存放View模板文件</li>
+</ul>
+</li>
+<li>static目录存放静态文件，如CSS、JS、图片等 ...</li></ul> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2014/11/04/read-yii-code-1/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 请求处理基本流程">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/bi-shi.html">笔试</a>
-                    <a class="danger label" href="../tag/suan-fa.html">算法</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="../2012/11/22/pi-parallel-algorithm/" rel="bookmark" title="Permalink to pi的一种并行算法">pi的一种并行算法</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2012-11-22T00:00:00"> 2012-11-22 Thu </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>我们都知道圆周率pi的值是3.141592653...，那么这个值是怎么算出来的呢？一种方式是通过某种方式算出圆的面积或者周长，然后根据公式$ S = pi \times r^2 $(或$ L = 2 \times pi \times r $)算出pi的值。但如何用计算机通过某种算法计算而得？有没有并行的算法？</p>
-<p><a href="/assets/uploads/files/mapreduce_intro.pdf">Introduction to Parallel Programming and MapReduce</a>一文中介绍了一种基于概率的并行算法---假设有个正方形，里面有个內切圆。</p>
-<p><img alt="sample pic" src="/assets/uploads/pics/inscribe.png" /></p>
-<p>设内切圆的半径为$ r $，则</p>
-<p>正方形的面积为$ S_z = 4r^2 $</p>
-<p>内切圆的面积为$ S_y = pi \times r^2 $</p>
-<p>那么$ pi = \frac{ S_y }{ r^2 } = \frac{ S_y }{ S_z ...</p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2012/11/22/pi-parallel-algorithm/" rel="bookmark" title="Permalink to pi的一种并行算法">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/suan-fa.html">算法</a>
-                    <a class="danger label" href="../tag/bing-xing.html">并行</a>
-                    <a class="danger label" href="../tag/python.html">Python</a>
+                    <a class="danger label" href="../tag/php.html">PHP</a>
+                    <a class="danger label" href="../tag/yii.html">Yii</a>
+                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
+                    <a class="danger label" href="../tag/zong-jie.html">总结</a>
                 </div>
             </article>
             </li>

@@ -1,5 +1,282 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>黑 * 白</title><link>http://youngsterxyf.github.io/</link><description></description><atom:link href="http://youngsterxyf.github.io/feeds/youngsterxyf.rss.xml" rel="self"></atom:link><lastBuildDate>Tue, 04 Nov 2014 00:00:00 +0800</lastBuildDate><item><title>Yii源码阅读笔记 - 请求处理基本流程</title><link>http://youngsterxyf.github.io/2014/11/04/read-yii-code-1/</link><description>&lt;p&gt;对于Web框架，我认为其主要有三点作用：&lt;/p&gt;
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>黑 * 白</title><link>http://youngsterxyf.github.io/</link><description></description><atom:link href="http://youngsterxyf.github.io/feeds/youngsterxyf.rss.xml" rel="self"></atom:link><lastBuildDate>Wed, 12 Nov 2014 00:00:00 +0800</lastBuildDate><item><title>Yii源码阅读笔记 - 路由解析</title><link>http://youngsterxyf.github.io/2014/11/12/read-yii-code-2/</link><description>&lt;h3&gt;概述&lt;/h3&gt;
+&lt;p&gt;Yii框架的路由解析功能由核心组件urlManager来完成。路由的形式有两种：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;get：通过URL中查询字符串（query string）参数r来指定路由，如：&lt;code&gt;r=controllerID/actionID&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;path：直接通过URL来指定，如：&lt;code&gt;/controllerID/actionID&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;默认使用get路由形式。由于Yii中controller类命名和action方法都是按照规则命名的，而路由也是按照规则来匹配的，所以完全可以不用额外配置urlManager。&lt;/p&gt;
+&lt;p&gt;若需要使用path方式，则可如下配置：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;&amp;quot;components&amp;quot; =&amp;gt; array(&lt;/span&gt;
+&lt;span class="x"&gt;    &amp;#39;urlManager&amp;#39; =&amp;gt; array(&lt;/span&gt;
+&lt;span class="x"&gt;        &amp;#39;urlFormat&amp;#39; =&amp;gt; &amp;#39;path&amp;#39;,&lt;/span&gt;
+&lt;span class="x"&gt;        &amp;#39;rules&amp;#39; =&amp;gt; array(&lt;/span&gt;
+&lt;span class="x"&gt;            ...&lt;/span&gt;
+&lt;span class="x"&gt;        ),&lt;/span&gt;
+&lt;span class="x"&gt;),&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;进一步说明可参考&lt;a href="http://youngsterxyf.github.io/2014/09/06/experience-about-restful-api/"&gt;RESTful API设计的一点经验&lt;/a&gt;一文。&lt;/p&gt;
+&lt;h3&gt;分析&lt;/h3&gt;
+&lt;p&gt;在“请求处理基本流程”一篇可以看到Yii框架路由解析流程的入口在类CWebApplication的processRequest方法中：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;$route=$this-&amp;gt;getUrlManager()-&amp;gt;parseUrl($this-&amp;gt;getRequest());&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中getUrlManager方法定义于类CApplication中，作用是初始化获取URL管理组件（ID为urlManager），实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function getUrlManager()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    return $this-&amp;gt;getComponent(&amp;#39;urlManager&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;在获取urlManager组件对象过程中，会对对象做初始化，调用对象的init方法，见类CUrlManager的init方法实现：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function init()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    parent::init();&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;processRules();&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中调用的方法processRules，是根据配置的rules解析创建规则对象，放到属性_rules中，实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;protected function processRules()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // 如果未配置rules，或使用的路由形式是get，则根本无需解析路由规则&lt;/span&gt;
+&lt;span class="x"&gt;    if(empty($this-&amp;gt;rules) || $this-&amp;gt;getUrlFormat()===self::GET_FORMAT)&lt;/span&gt;
+&lt;span class="x"&gt;        return;&lt;/span&gt;
+&lt;span class="x"&gt;    // 否则尝试从缓存中读取解析好的路由规则&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;cacheID!==false &amp;amp;&amp;amp; ($cache=Yii::app()-&amp;gt;getComponent($this-&amp;gt;cacheID))!==null)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        $hash=md5(serialize($this-&amp;gt;rules));&lt;/span&gt;
+&lt;span class="x"&gt;        if(($data=$cache-&amp;gt;get(self::CACHE_KEY))!==false &amp;amp;&amp;amp; isset($data[1]) &amp;amp;&amp;amp; $data[1]===$hash)&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;_rules=$data[0];&lt;/span&gt;
+&lt;span class="x"&gt;            return;&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    // 否则逐条路由规则解析&lt;/span&gt;
+&lt;span class="x"&gt;    foreach($this-&amp;gt;rules as $pattern=&amp;gt;$route)&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;_rules[]=$this-&amp;gt;createUrlRule($route,$pattern);&lt;/span&gt;
+&lt;span class="x"&gt;    // 尝试缓存解析好的路由规则&lt;/span&gt;
+&lt;span class="x"&gt;    if(isset($cache))&lt;/span&gt;
+&lt;span class="x"&gt;        $cache-&amp;gt;set(self::CACHE_KEY,array($this-&amp;gt;_rules,$hash));&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;从上述代码中，在解析创建规则对象前会先检查是否已缓存了解析创建好的规则，如果没有，则在解析创建好规则后，将这些规则缓存起来。这样就避免了每次请求处理都要解析一次rules列表。
+但这里需要注意的是&lt;strong&gt;urlManager组件默认使用ID为&lt;code&gt;cache&lt;/code&gt;的缓存组件（CUrlManager类的属性cacheID默认值为cache），而核心组件并不包含ID为&lt;code&gt;cache&lt;/code&gt;的缓存组件，所以若希望缓存解析好路由规则，
+则应该配置ID为cache的缓存组件，如果缓存组件的ID不是cache，则需要配置urlManager组件的cacheID属性&lt;/strong&gt;。&lt;/p&gt;
+&lt;p&gt;如果没有设置缓存组件，或者缓存中未找到解析好的路由规则，则需要对配置的rules逐条解析，解析过程见类CUrlManager的createUrlRule方法实现：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Creates a URL rule instance.&lt;/span&gt;
+&lt;span class="x"&gt; * The default implementation returns a CUrlRule object.&lt;/span&gt;
+&lt;span class="x"&gt; * @param mixed $route the route part of the rule. This could be a string or an array&lt;/span&gt;
+&lt;span class="x"&gt; * @param string $pattern the pattern part of the rule&lt;/span&gt;
+&lt;span class="x"&gt; * @return CUrlRule the URL rule instance&lt;/span&gt;
+&lt;span class="x"&gt; * @since 1.1.0&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;protected function createUrlRule($route,$pattern)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // 说明可以配置自定义的路由规则解析类&lt;/span&gt;
+&lt;span class="x"&gt;    if(is_array($route) &amp;amp;&amp;amp; isset($route[&amp;#39;class&amp;#39;]))&lt;/span&gt;
+&lt;span class="x"&gt;        return $route;&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        $urlRuleClass=Yii::import($this-&amp;gt;urlRuleClass,true);&lt;/span&gt;
+&lt;span class="x"&gt;        return new $urlRuleClass($route,$pattern);&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;以以下rules配置为例：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;&amp;#39;rules&amp;#39; =&amp;gt; array(&lt;/span&gt;
+&lt;span class="x"&gt;    array(&amp;#39;industry/index&amp;#39;, &amp;#39;pattern&amp;#39; =&amp;gt; &amp;#39;/v1/partner/industry/&amp;#39;, &amp;#39;verb&amp;#39; =&amp;gt; &amp;#39;GET&amp;#39;),&lt;/span&gt;
+&lt;span class="x"&gt;    array(&amp;#39;token/create&amp;#39;, &amp;#39;pattern&amp;#39; =&amp;gt; &amp;#39;/v1/partner/token&amp;#39;, &amp;#39;verb&amp;#39; =&amp;gt; &amp;#39;POST&amp;#39;),&lt;/span&gt;
+&lt;span class="x"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;在处理第一条规则时，方法createUrlRule的参数$pattern的值为数组的索引0，$route的值为关联数组&lt;code&gt;array('industry/index', 'pattern' =&amp;gt; '/v1/partner/industry/', 'verb' =&amp;gt; 'GET')&lt;/code&gt;，
+但因为$route里没有设置class字段，所以走的是else分支 - 先引入类CUrlRule（$this-&amp;gt;urlRuleClass的默认值），然后根据$route、$pattern实例化类CUrlRule，该类也定义在文件&lt;code&gt;yii/framework/web/CUrlManager.php&lt;/code&gt;中，
+直接继承自抽象类CBaseUrlRule。CUrlRule的构造方法实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function __construct($route,$pattern)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if(is_array($route))&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        // 从这里可知$route支持&amp;#39;urlSuffix&amp;#39;, &amp;#39;caseSensitive&amp;#39;, &amp;#39;defaultParams&amp;#39;, &amp;#39;matchValue&amp;#39;, &amp;#39;verb&amp;#39;, &amp;#39;parsingOnly&amp;#39;这些配置项&lt;/span&gt;
+&lt;span class="x"&gt;        foreach(array(&amp;#39;urlSuffix&amp;#39;, &amp;#39;caseSensitive&amp;#39;, &amp;#39;defaultParams&amp;#39;, &amp;#39;matchValue&amp;#39;, &amp;#39;verb&amp;#39;, &amp;#39;parsingOnly&amp;#39;) as $name)&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            if(isset($route[$name]))&lt;/span&gt;
+&lt;span class="x"&gt;                $this-&amp;gt;$name=$route[$name];&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;        // 如果$route中有pattern配置项，则将配置值赋值给$pattern&lt;/span&gt;
+&lt;span class="x"&gt;        if(isset($route[&amp;#39;pattern&amp;#39;]))&lt;/span&gt;
+&lt;span class="x"&gt;            $pattern=$route[&amp;#39;pattern&amp;#39;];&lt;/span&gt;
+&lt;span class="x"&gt;        // 而$route的第一个配置项才是真正的目标路由&lt;/span&gt;
+&lt;span class="x"&gt;        $route=$route[0];&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;route=trim($route,&amp;#39;/&amp;#39;);&lt;/span&gt;
+
+&lt;span class="x"&gt;    $tr2[&amp;#39;/&amp;#39;]=$tr[&amp;#39;/&amp;#39;]=&amp;#39;\\/&amp;#39;;&lt;/span&gt;
+
+&lt;span class="x"&gt;    if(strpos($route,&amp;#39;&amp;lt;&amp;#39;)!==false &amp;amp;&amp;amp; preg_match_all(&amp;#39;/&amp;lt;(\w+)&amp;gt;/&amp;#39;,$route,$matches2))&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        foreach($matches2[1] as $name)&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;references[$name]=&amp;quot;&amp;lt;$name&amp;gt;&amp;quot;;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+
+&lt;span class="x"&gt;    // 是否带协议头&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;hasHostInfo=!strncasecmp($pattern,&amp;#39;http://&amp;#39;,7) || !strncasecmp($pattern,&amp;#39;https://&amp;#39;,8);&lt;/span&gt;
+
+&lt;span class="x"&gt;    // 如果原$route有verb配置项&lt;/span&gt;
+&lt;span class="x"&gt;    // verb配置支持多个HTTP方法，以空格或逗号分隔，如：“GET,POST”&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;verb!==null)&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;verb=preg_split(&amp;#39;/[\s,]+/&amp;#39;,strtoupper($this-&amp;gt;verb),-1,PREG_SPLIT_NO_EMPTY);&lt;/span&gt;
+
+&lt;span class="x"&gt;    // $pattern中类正则片段支持两种形式：命名的和未命名的，如“&amp;lt;id:\d+&amp;gt;”和“&amp;lt;\d+&amp;gt;”&lt;/span&gt;
+&lt;span class="x"&gt;    if(preg_match_all(&amp;#39;/&amp;lt;(\w+):?(.*?)?&amp;gt;/&amp;#39;,$pattern,$matches))&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        $tokens=array_combine($matches[1],$matches[2]);&lt;/span&gt;
+&lt;span class="x"&gt;        foreach($tokens as $name=&amp;gt;$value)&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            if($value===&amp;#39;&amp;#39;)&lt;/span&gt;
+&lt;span class="x"&gt;                $value=&amp;#39;[^\/]+&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;            $tr[&amp;quot;&amp;lt;$name&amp;gt;&amp;quot;]=&amp;quot;(?P&amp;lt;$name&amp;gt;$value)&amp;quot;;&lt;/span&gt;
+&lt;span class="x"&gt;            if(isset($this-&amp;gt;references[$name]))&lt;/span&gt;
+&lt;span class="x"&gt;                $tr2[&amp;quot;&amp;lt;$name&amp;gt;&amp;quot;]=$tr[&amp;quot;&amp;lt;$name&amp;gt;&amp;quot;];&lt;/span&gt;
+&lt;span class="x"&gt;            else&lt;/span&gt;
+&lt;span class="x"&gt;                $this-&amp;gt;params[$name]=$value;&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    // 好吧，之后的这段代码我还没太看懂作用&lt;/span&gt;
+&lt;span class="x"&gt;    // 就是为了将$pattern转换成一个真正的正则表达式？&lt;/span&gt;
+&lt;span class="x"&gt;    $p=rtrim($pattern,&amp;#39;*&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;append=$p!==$pattern;&lt;/span&gt;
+&lt;span class="x"&gt;    $p=trim($p,&amp;#39;/&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;template=preg_replace(&amp;#39;/&amp;lt;(\w+):?.*?&amp;gt;/&amp;#39;,&amp;#39;&amp;lt;$1&amp;gt;&amp;#39;,$p);&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;pattern=&amp;#39;/^&amp;#39;.strtr($this-&amp;gt;template,$tr).&amp;#39;\/&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;append)&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;pattern.=&amp;#39;/u&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;pattern.=&amp;#39;$/u&amp;#39;;&lt;/span&gt;
+
+&lt;span class="x"&gt;    if($this-&amp;gt;references!==array())&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;routePattern=&amp;#39;/^&amp;#39;.strtr($this-&amp;gt;route,$tr2).&amp;#39;$/u&amp;#39;;&lt;/span&gt;
+
+&lt;span class="x"&gt;    if(YII_DEBUG &amp;amp;&amp;amp; @preg_match($this-&amp;gt;pattern,&amp;#39;test&amp;#39;)===false)&lt;/span&gt;
+&lt;span class="x"&gt;        throw new CException(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;The URL pattern &amp;quot;{pattern}&amp;quot; for route &amp;quot;{route}&amp;quot; is not a valid regular expression.&amp;#39;,&lt;/span&gt;
+&lt;span class="x"&gt;            array(&amp;#39;{route}&amp;#39;=&amp;gt;$route,&amp;#39;{pattern}&amp;#39;=&amp;gt;$pattern)));&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;hr /&gt;
+&lt;p&gt;在得到&lt;strong&gt;urlManager组件对象&lt;/strong&gt;后，调用其parseUrl方法，实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function parseUrl($request)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;getUrlFormat()===self::PATH_FORMAT)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        $rawPathInfo=$request-&amp;gt;getPathInfo();&lt;/span&gt;
+&lt;span class="x"&gt;        $pathInfo=$this-&amp;gt;removeUrlSuffix($rawPathInfo,$this-&amp;gt;urlSuffix);&lt;/span&gt;
+&lt;span class="x"&gt;        foreach($this-&amp;gt;_rules as $i=&amp;gt;$rule)&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            if(is_array($rule))&lt;/span&gt;
+&lt;span class="x"&gt;                $this-&amp;gt;_rules[$i]=$rule=Yii::createComponent($rule);&lt;/span&gt;
+&lt;span class="x"&gt;            // 逐个路由规则匹配&lt;/span&gt;
+&lt;span class="x"&gt;            if(($r=$rule-&amp;gt;parseUrl($this,$request,$pathInfo,$rawPathInfo))!==false)&lt;/span&gt;
+&lt;span class="x"&gt;                // 即使匹配到了路由规则，也还是得看一下URL中是否指定了路由，是的话则优先使用URL中指定的路由&lt;/span&gt;
+&lt;span class="x"&gt;                return isset($_GET[$this-&amp;gt;routeVar]) ? $_GET[$this-&amp;gt;routeVar] : $r;&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;        // 如果一定要匹配到某个路由规则才行，那么执行到这里就表示未有匹配的路由规则，所以就抛404错误了。&lt;/span&gt;
+&lt;span class="x"&gt;        if($this-&amp;gt;useStrictParsing)&lt;/span&gt;
+&lt;span class="x"&gt;            throw new CHttpException(404,Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;Unable to resolve the request &amp;quot;{route}&amp;quot;.&amp;#39;,&lt;/span&gt;
+&lt;span class="x"&gt;                array(&amp;#39;{route}&amp;#39;=&amp;gt;$pathInfo)));&lt;/span&gt;
+&lt;span class="x"&gt;        // 否则先返回请求路径作为目标路由&lt;/span&gt;
+&lt;span class="x"&gt;        else&lt;/span&gt;
+&lt;span class="x"&gt;            return $pathInfo;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    // 如果使用的是get路由形式，则从GET请求的查询字符串或POST请求的请求体找目标路由&lt;/span&gt;
+&lt;span class="x"&gt;    elseif(isset($_GET[$this-&amp;gt;routeVar]))&lt;/span&gt;
+&lt;span class="x"&gt;        return $_GET[$this-&amp;gt;routeVar];&lt;/span&gt;
+&lt;span class="x"&gt;    elseif(isset($_POST[$this-&amp;gt;routeVar]))&lt;/span&gt;
+&lt;span class="x"&gt;        return $_POST[$this-&amp;gt;routeVar];&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        return &amp;#39;&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;方法的参数是一个request组件对象。&lt;/p&gt;
+&lt;p&gt;先判断应用使用的路由形式是否为path，如果不是，则根据路由的参数名（默认为&lt;code&gt;r&lt;/code&gt;，由于urlManager类的routeVar属性是public的，所以可以通过配置routeVar的值来修改路由参数名）获取路由。并且路由可以通过GET方法放在URL查询字符串中，也可以通过POST方法放在请求体中。&lt;/p&gt;
+&lt;p&gt;对于path形式的路由，解析过程则要复杂一些。先通过request组件对象的getPathInfo方法取到请求的URL（会对原本的请求URL做一定的处理），然后根据解析好的路由规则列表逐个匹配。其中&lt;strong&gt;CUrlRule类&lt;/strong&gt;的parseUrl方法实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function parseUrl($manager,$request,$pathInfo,$rawPathInfo)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // 先检查HTTP谓词（verb）是否匹配&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;verb!==null &amp;amp;&amp;amp; !in_array($request-&amp;gt;getRequestType(), $this-&amp;gt;verb, true))&lt;/span&gt;
+&lt;span class="x"&gt;        return false;&lt;/span&gt;
+&lt;span class="x"&gt;    // 是否关心大小写&lt;/span&gt;
+&lt;span class="x"&gt;    if($manager-&amp;gt;caseSensitive &amp;amp;&amp;amp; $this-&amp;gt;caseSensitive===null || $this-&amp;gt;caseSensitive)&lt;/span&gt;
+&lt;span class="x"&gt;        $case=&amp;#39;&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        $case=&amp;#39;i&amp;#39;;&lt;/span&gt;
+
+&lt;span class="x"&gt;    // urlSiffix配置项是用来干嘛的？&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;urlSuffix!==null)&lt;/span&gt;
+&lt;span class="x"&gt;        $pathInfo=$manager-&amp;gt;removeUrlSuffix($rawPathInfo,$this-&amp;gt;urlSuffix);&lt;/span&gt;
+
+&lt;span class="x"&gt;    // URL suffix required, but not found in the requested URL&lt;/span&gt;
+&lt;span class="x"&gt;    if($manager-&amp;gt;useStrictParsing &amp;amp;&amp;amp; $pathInfo===$rawPathInfo)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        $urlSuffix=$this-&amp;gt;urlSuffix===null ? $manager-&amp;gt;urlSuffix : $this-&amp;gt;urlSuffix;&lt;/span&gt;
+&lt;span class="x"&gt;        if($urlSuffix!=&amp;#39;&amp;#39; &amp;amp;&amp;amp; $urlSuffix!==&amp;#39;/&amp;#39;)&lt;/span&gt;
+&lt;span class="x"&gt;            return false;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+
+&lt;span class="x"&gt;    if($this-&amp;gt;hasHostInfo)&lt;/span&gt;
+&lt;span class="x"&gt;        $pathInfo=strtolower($request-&amp;gt;getHostInfo()).rtrim(&amp;#39;/&amp;#39;.$pathInfo,&amp;#39;/&amp;#39;);&lt;/span&gt;
+
+&lt;span class="x"&gt;    $pathInfo.=&amp;#39;/&amp;#39;;&lt;/span&gt;
+
+&lt;span class="x"&gt;    // 正则匹配：用pattern来匹配路径&lt;/span&gt;
+&lt;span class="x"&gt;    if(preg_match($this-&amp;gt;pattern.$case,$pathInfo,$matches))&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        // 可以配置defaultParams数组来为请求未提供的必要参数指定默认值&lt;/span&gt;
+&lt;span class="x"&gt;        foreach($this-&amp;gt;defaultParams as $name=&amp;gt;$value)&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            if(!isset($_GET[$name]))&lt;/span&gt;
+&lt;span class="x"&gt;                $_REQUEST[$name]=$_GET[$name]=$value;&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;        $tr=array();&lt;/span&gt;
+&lt;span class="x"&gt;        foreach($matches as $key=&amp;gt;$value)&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            if(isset($this-&amp;gt;references[$key]))&lt;/span&gt;
+&lt;span class="x"&gt;                $tr[$this-&amp;gt;references[$key]]=$value;&lt;/span&gt;
+&lt;span class="x"&gt;            elseif(isset($this-&amp;gt;params[$key]))&lt;/span&gt;
+&lt;span class="x"&gt;                $_REQUEST[$key]=$_GET[$key]=$value;&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;        if($pathInfo!==$matches[0]) // there&amp;#39;re additional GET params&lt;/span&gt;
+&lt;span class="x"&gt;            $manager-&amp;gt;parsePathInfo(ltrim(substr($pathInfo,strlen($matches[0])),&amp;#39;/&amp;#39;));&lt;/span&gt;
+&lt;span class="x"&gt;        if($this-&amp;gt;routePattern!==null)&lt;/span&gt;
+&lt;span class="x"&gt;            return strtr($this-&amp;gt;route,$tr);&lt;/span&gt;
+&lt;span class="x"&gt;        else&lt;/span&gt;
+&lt;span class="x"&gt;            return $this-&amp;gt;route;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        return false;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;从上述代码可以看出，路由解析关键是根据$pattern匹配请求URL，并&lt;strong&gt;从URL取出需要的东西作为请求参数&lt;/strong&gt;，一旦匹配，就以$route作为该次请求的目标路由。&lt;/p&gt;
+&lt;p&gt;获得目标路由后，就可以根据目标路由查找调用对应的controller和action了。&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Wed, 12 Nov 2014 00:00:00 +0800</pubDate><guid>tag:youngsterxyf.github.io,2014-11-12:2014/11/12/read-yii-code-2/</guid><category>PHP</category><category>Yii</category><category>笔记</category><category>总结</category></item><item><title>读文笔记：An Introduction to APIs</title><link>http://youngsterxyf.github.io/2014/11/09/an-introduction-to-apis/</link><description>&lt;p&gt;原文：&lt;a href="https://zapier.com/learn/apis/"&gt;An Introduction to APIs&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;注：该文是入门级别的文章&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="mind-mapping" src="/assets/uploads/pics/An-Introduction-to-APIs.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/An-Introduction-to-APIs.png"&gt;高清无码大图&lt;/a&gt;&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Sun, 09 Nov 2014 00:00:00 +0800</pubDate><guid>tag:youngsterxyf.github.io,2014-11-09:2014/11/09/an-introduction-to-apis/</guid><category>笔记</category><category>API</category><category>REST</category></item><item><title>Yii源码阅读笔记 - 请求处理基本流程</title><link>http://youngsterxyf.github.io/2014/11/04/read-yii-code-1/</link><description>&lt;p&gt;对于Web框架，我认为其主要有三点作用：&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;提供多人协作的基本规范&lt;/li&gt;
 &lt;li&gt;避免重复造轮子&lt;/li&gt;

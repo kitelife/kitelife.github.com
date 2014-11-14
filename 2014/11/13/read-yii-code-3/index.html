@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>Yii源码阅读笔记 - 组件集成</title>
+        <meta charset="utf-8" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑 * 白 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑 * 白 Full RSS Feed" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+              <script>
+                (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+                })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+                ga('create', 'UA-43488080-1', '黑白');
+                ga('send', 'pageview');
+
+              </script>
+
+              <script type="text/javascript" src="http://tajs.qq.com/stats?sId=27164999" charset="UTF-8"></script>
+ 
+</head>
+
+<body id="index" class="home">
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="../../../..">黑 * 白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+             
+              <ul class="columns">
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="/archives.html">归 档</a></li>
+                <li><a href="/tags.html">标 签</a></li>
+                <li><a href="/pages/tools.html">工具集</a></li>
+                <li><a href="/pages/links.html">链 接</a></li>
+                <li><a href="/pages/aboutme.html">关于我</a></li>
+                <li><a href="/feeds/rss.xml">RSS</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+   <div class="row">
+        <div class="columns">
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2014/11/13/read-yii-code-3/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 组件集成">Yii源码阅读笔记 - 组件集成</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2014-11-13T00:00:00">
+                2014-11-13 Thu
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <h3>概述</h3>
+<p>Yii框架将各种功能封装成组件，使用时按需配置加载，从而提高应用的性能。内置的组件又分为核心组件与非核心组件，核心组件是任何Web应用和Console应用都需要的。
+此外，应用开发者还可以按照一定规则封装配置使用自己的功能组件。Yii会把应用需要的组件都加载到应用容器<code>Yii::app()</code>中，使得组件的使用方式一致方便。</p>
+<p>基于Yii框架开发应用需要理解如何配置组件、如何开发自己的组件，对应着需要理解Yii是如何注册加载组件的。</p>
+<h3>分析</h3>
+<p>从<a href="http://youngsterxyf.github.io/2014/11/04/read-yii-code-1/">Yii源码阅读笔记 - 请求处理基本流程</a>一文可知，Yii加载组件的入口为抽象类CApplication构造方法中的以下两行代码：</p>
+<div class="highlight"><pre><span class="x">$this-&gt;registerCoreComponents();</span>
+<span class="x">$this-&gt;configure($config);</span>
+</pre></div>
+
+
+<hr />
+<p><code>registerCoreComponents</code>方法定义于类CWebApplication中，用于加载Web应用的核心组件，组件列表如下：</p>
+<div class="highlight"><pre><span class="x">array(</span>
+<span class="x">    // 核心组件</span>
+<span class="x">    &#39;coreMessages&#39;=&gt;array(</span>
+<span class="x">        &#39;class&#39;=&gt;&#39;CPhpMessageSource&#39;,</span>
+<span class="x">        &#39;language&#39;=&gt;&#39;en_us&#39;,</span>
+<span class="x">        &#39;basePath&#39;=&gt;YII_PATH.DIRECTORY_SEPARATOR.&#39;messages&#39;,</span>
+<span class="x">    ),</span>
+<span class="x">    &#39;db&#39;=&gt;array(</span>
+<span class="x">        &#39;class&#39;=&gt;&#39;CDbConnection&#39;,</span>
+<span class="x">    ),</span>
+<span class="x">    &#39;messages&#39;=&gt;array(</span>
+<span class="x">        &#39;class&#39;=&gt;&#39;CPhpMessageSource&#39;,</span>
+<span class="x">    ),</span>
+<span class="x">    &#39;errorHandler&#39;=&gt;array(</span>
+<span class="x">        &#39;class&#39;=&gt;&#39;CErrorHandler&#39;,</span>
+<span class="x">    ),</span>
+<span class="x">    &#39;securityManager&#39;=&gt;array(</span>
+<span class="x">        &#39;class&#39;=&gt;&#39;CSecurityManager&#39;,</span>
+<span class="x">    ),</span>
+<span class="x">    &#39;statePersister&#39;=&gt;array(</span>
+<span class="x">        &#39;class&#39;=&gt;&#39;CStatePersister&#39;,</span>
+<span class="x">    ),</span>
+<span class="x">    &#39;urlManager&#39;=&gt;array(</span>
+<span class="x">        &#39;class&#39;=&gt;&#39;CUrlManager&#39;,</span>
+<span class="x">    ),</span>
+<span class="x">    &#39;request&#39;=&gt;array(</span>
+<span class="x">        &#39;class&#39;=&gt;&#39;CHttpRequest&#39;,</span>
+<span class="x">    ),</span>
+<span class="x">    &#39;format&#39;=&gt;array(</span>
+<span class="x">        &#39;class&#39;=&gt;&#39;CFormatter&#39;,</span>
+<span class="x">    ),</span>
+
+<span class="x">    // 以下是Web应用额外需要的核心组件</span>
+<span class="x">    &#39;session&#39;=&gt;array(</span>
+<span class="x">        &#39;class&#39;=&gt;&#39;CHttpSession&#39;,</span>
+<span class="x">    ),</span>
+<span class="x">    &#39;assetManager&#39;=&gt;array(</span>
+<span class="x">        &#39;class&#39;=&gt;&#39;CAssetManager&#39;,</span>
+<span class="x">    ),</span>
+<span class="x">    &#39;user&#39;=&gt;array(</span>
+<span class="x">        &#39;class&#39;=&gt;&#39;CWebUser&#39;,</span>
+<span class="x">    ),</span>
+<span class="x">    &#39;themeManager&#39;=&gt;array(</span>
+<span class="x">        &#39;class&#39;=&gt;&#39;CThemeManager&#39;,</span>
+<span class="x">    ),</span>
+<span class="x">    &#39;authManager&#39;=&gt;array(</span>
+<span class="x">        &#39;class&#39;=&gt;&#39;CPhpAuthManager&#39;,</span>
+<span class="x">    ),</span>
+<span class="x">    &#39;clientScript&#39;=&gt;array(</span>
+<span class="x">        &#39;class&#39;=&gt;&#39;CClientScript&#39;,</span>
+<span class="x">    ),</span>
+<span class="x">    &#39;widgetFactory&#39;=&gt;array(</span>
+<span class="x">        &#39;class&#39;=&gt;&#39;CWidgetFactory&#39;,</span>
+<span class="x">    ),</span>
+<span class="x">)</span>
+</pre></div>
+
+
+<p>注册加载组件都是直接调用方法<code>setComponents</code>，间接调用方法<code>setComponent</code>来完成的。</p>
+<hr />
+<p><code>configure</code>方法定义于类<code>CModule</code>中，是用于加载所有配置信息的，实现如下：</p>
+<div class="highlight"><pre><span class="x">public function configure($config)</span>
+<span class="x">{</span>
+<span class="x">    if(is_array($config))</span>
+<span class="x">    {</span>
+<span class="x">        foreach($config as $key=&gt;$value)</span>
+<span class="x">            $this-&gt;$key=$value;</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>从<a href="http://youngsterxyf.github.io/2014/11/04/read-yii-code-1/">Yii源码阅读笔记 - 请求处理基本流程</a>一文可知，配置信息的加载是基于类<code>CComponent</code>中的魔术方法<code>__set</code>来完成的，该方法实现如下：</p>
+<div class="highlight"><pre><span class="x">public function __set($name,$value)</span>
+<span class="x">{</span>
+<span class="x">    // PHP的类名、函数名、方法名都是不区分大小写的！</span>
+<span class="x">    $setter=&#39;set&#39;.$name;</span>
+<span class="x">    if(method_exists($this,$setter))</span>
+<span class="x">        return $this-&gt;$setter($value);</span>
+<span class="x">    elseif(strncasecmp($name,&#39;on&#39;,2)===0 &amp;&amp; method_exists($this,$name))</span>
+<span class="x">    {</span>
+<span class="x">        // duplicating getEventHandlers() here for performance</span>
+<span class="x">        $name=strtolower($name);</span>
+<span class="x">        if(!isset($this-&gt;_e[$name]))</span>
+<span class="x">            $this-&gt;_e[$name]=new CList;</span>
+<span class="x">        return $this-&gt;_e[$name]-&gt;add($value);</span>
+<span class="x">    }</span>
+<span class="x">    elseif(is_array($this-&gt;_m))</span>
+<span class="x">    {</span>
+<span class="x">        foreach($this-&gt;_m as $object)</span>
+<span class="x">        {</span>
+<span class="x">            if($object-&gt;getEnabled() &amp;&amp; (property_exists($object,$name) || $object-&gt;canSetProperty($name)))</span>
+<span class="x">                return $object-&gt;$name=$value;</span>
+<span class="x">        }</span>
+<span class="x">    }</span>
+<span class="x">    if(method_exists($this,&#39;get&#39;.$name))</span>
+<span class="x">        throw new CException(Yii::t(&#39;yii&#39;,&#39;Property &quot;{class}.{property}&quot; is read only.&#39;,</span>
+<span class="x">            array(&#39;{class}&#39;=&gt;get_class($this), &#39;{property}&#39;=&gt;$name)));</span>
+<span class="x">    else</span>
+<span class="x">        throw new CException(Yii::t(&#39;yii&#39;,&#39;Property &quot;{class}.{property}&quot; is not defined.&#39;,</span>
+<span class="x">            array(&#39;{class}&#39;=&gt;get_class($this), &#39;{property}&#39;=&gt;$name)));</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>而类CModule中又定义了方法<code>setComponents</code>，所以对于key为<code>components</code>的配置项，也是调用方法<code>setComponents</code>，间接调用方法<code>setComponent</code>来完成的。</p>
+<p>方法<code>setComponent</code>实现如下：</p>
+<div class="highlight"><pre><span class="x">/**</span>
+<span class="x"> * Puts a component under the management of the module.</span>
+<span class="x"> * The component will be initialized by calling its {@link CApplicationComponent::init() init()}</span>
+<span class="x"> * method if it has not done so.</span>
+<span class="x"> * @param string $id component ID</span>
+<span class="x"> * @param array|IApplicationComponent $component application component</span>
+<span class="x"> * (either configuration array or instance). If this parameter is null,</span>
+<span class="x"> * component will be unloaded from the module.</span>
+<span class="x"> * @param boolean $merge whether to merge the new component configuration</span>
+<span class="x"> * with the existing one. Defaults to true, meaning the previously registered</span>
+<span class="x"> * component configuration with the same ID will be merged with the new configuration.</span>
+<span class="x"> * If set to false, the existing configuration will be replaced completely.</span>
+<span class="x"> * This parameter is available since 1.1.13.</span>
+<span class="x"> */</span>
+<span class="x">public function setComponent($id,$component,$merge=true)</span>
+<span class="x">{</span>
+<span class="x">    if($component===null)</span>
+<span class="x">    {</span>
+<span class="x">        unset($this-&gt;_components[$id]);</span>
+<span class="x">        return;</span>
+<span class="x">    }</span>
+<span class="x">    elseif($component instanceof IApplicationComponent)</span>
+<span class="x">    {</span>
+<span class="x">        $this-&gt;_components[$id]=$component;</span>
+
+<span class="x">        if(!$component-&gt;getIsInitialized())</span>
+<span class="x">            $component-&gt;init();</span>
+
+<span class="x">        return;</span>
+<span class="x">    }</span>
+<span class="x">    elseif(isset($this-&gt;_components[$id]))</span>
+<span class="x">    {</span>
+<span class="x">        if(isset($component[&#39;class&#39;]) &amp;&amp; get_class($this-&gt;_components[$id])!==$component[&#39;class&#39;])</span>
+<span class="x">        {</span>
+<span class="x">            unset($this-&gt;_components[$id]);</span>
+<span class="x">            $this-&gt;_componentConfig[$id]=$component; //we should ignore merge here</span>
+<span class="x">            return;</span>
+<span class="x">        }</span>
+
+<span class="x">        foreach($component as $key=&gt;$value)</span>
+<span class="x">        {</span>
+<span class="x">            if($key!==&#39;class&#39;)</span>
+<span class="x">                $this-&gt;_components[$id]-&gt;$key=$value;</span>
+<span class="x">        }</span>
+<span class="x">    }</span>
+<span class="x">    // 以configure方法为入口的组件注册可能走的分支</span>
+<span class="x">    elseif(isset($this-&gt;_componentConfig[$id][&#39;class&#39;],$component[&#39;class&#39;])</span>
+<span class="x">        &amp;&amp; $this-&gt;_componentConfig[$id][&#39;class&#39;]!==$component[&#39;class&#39;])</span>
+<span class="x">    {</span>
+<span class="x">        $this-&gt;_componentConfig[$id]=$component; //we should ignore merge here</span>
+<span class="x">        return;</span>
+<span class="x">    }</span>
+
+<span class="x">    // 以configure方法为入口的组件注册可能走的分支</span>
+<span class="x">    if(isset($this-&gt;_componentConfig[$id]) &amp;&amp; $merge)</span>
+<span class="x">        // 对组件的信息进行合并，即意味着如果是对核心组件做额外配置，可以不用指定class等信息。</span>
+<span class="x">        $this-&gt;_componentConfig[$id]=CMap::mergeArray($this-&gt;_componentConfig[$id],$component);</span>
+<span class="x">    else</span>
+<span class="x">        // 核心组件注册全走这个分支</span>
+<span class="x">        // 非核心组件、自定义组件注册走这个分支</span>
+<span class="x">        $this-&gt;_componentConfig[$id]=$component;</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>对于以registerCoreComponents方法、configure方法为入口的组件注册，调用setComponent方法时的参数$component是一个数组。</p>
+<p>注册核心组件前，应用对象的属性<code>_component</code>和<code>_componentConfig</code>都为空，所以核心组件注册最终走的都是<strong>最后一个else分支</strong>。</p>
+<p>由于可以配置与核心组件相同ID的组件，比如db，那么注册配置的组件（以configure方法为入口）走的是<strong>最后一个elseif分支或者最后一个if分支</strong>。</p>
+<p>可以看到以这两个方法为入口的组件注册都没有对组件进行初始化。那么什么时候初始化组件的呢？只能是调用组件的时候了。</p>
+<hr />
+<p>组件是通过应用对象容器来调用的。以db组件为例，调用方式为：<code>Yii::app()-&gt;db</code>，但实际是基于魔术方法<code>__get</code>来完成的，该魔术方法定义于类CModule中，实现如下：</p>
+<div class="highlight"><pre><span class="x">public function __get($name)</span>
+<span class="x">{</span>
+<span class="x">    if($this-&gt;hasComponent($name))</span>
+<span class="x">        return $this-&gt;getComponent($name);</span>
+<span class="x">    else</span>
+<span class="x">        return parent::__get($name);</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>先尝试查找对应$name的组件。从这里可以看出Web应用容器中除了存组件，还可以存其他信息，如所有的配置信息。</p>
+<p>方法hasComponent实现如下：</p>
+<div class="highlight"><pre><span class="x">public function hasComponent($id)</span>
+<span class="x">{</span>
+<span class="x">    return isset($this-&gt;_components[$id]) || isset($this-&gt;_componentConfig[$id]);</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>之所以会先查看属性_components，是因为_components中保存的组件是已经加载好的，而_componentConfig保存的是所有注册的组件，但未初始化。即_components中的组件是_componentConfig中组件的子集，检测起来会更快？我的理解是这样的。</p>
+<p>方法getComponent实现如下：</p>
+<div class="highlight"><pre><span class="x">public function getComponent($id,$createIfNull=true)</span>
+<span class="x">{</span>
+<span class="x">    if(isset($this-&gt;_components[$id]))</span>
+<span class="x">        return $this-&gt;_components[$id];</span>
+<span class="x">    elseif(isset($this-&gt;_componentConfig[$id]) &amp;&amp; $createIfNull)</span>
+<span class="x">    {</span>
+<span class="x">        $config=$this-&gt;_componentConfig[$id];</span>
+<span class="x">        if(!isset($config[&#39;enabled&#39;]) || $config[&#39;enabled&#39;])</span>
+<span class="x">        {</span>
+<span class="x">            Yii::trace(&quot;Loading \&quot;$id\&quot; application component&quot;,&#39;system.CModule&#39;);</span>
+<span class="x">            unset($config[&#39;enabled&#39;]);</span>
+<span class="x">            $component=Yii::createComponent($config);</span>
+<span class="x">            $component-&gt;init();</span>
+<span class="x">            return $this-&gt;_components[$id]=$component;</span>
+<span class="x">        }</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>先查看属性_components中是否已保存初始化好的对应组件，是，则直接取出来返回，这样重复调用相同组件只会初始化一次；否，则对该组件进行初始化。</p>
+<p>组件初始化分为两个步骤：</p>
+<ol>
+<li>Yii根据组件的配置信息实例化一个组件对象，即<code>$component=Yii::createComponent($config)</code></li>
+<li>组件对象调用自己的方法<code>init</code>完成一些初始化操作，即<code>$component-&gt;init()</code></li>
+</ol>
+<p>初始化结束后，将组件对象存入属性_components中。</p>
+<hr />
+<p>静态方法<code>createComponent</code>定义于类YiiBase中，实现如下：</p>
+<div class="highlight"><pre><span class="x">/**</span>
+<span class="x"> * Creates an object and initializes it based on the given configuration.</span>
+<span class="x"> *</span>
+<span class="x"> * The specified configuration can be either a string or an array.</span>
+<span class="x"> * If the former, the string is treated as the object type which can</span>
+<span class="x"> * be either the class name or {@link YiiBase::getPathOfAlias class path alias}.</span>
+<span class="x"> * If the latter, the &#39;class&#39; element is treated as the object type,</span>
+<span class="x"> * and the rest of the name-value pairs in the array are used to initialize</span>
+<span class="x"> * the corresponding object properties.</span>
+<span class="x"> *</span>
+<span class="x"> * Any additional parameters passed to this method will be</span>
+<span class="x"> * passed to the constructor of the object being created.</span>
+<span class="x"> *</span>
+<span class="x"> * @param mixed $config the configuration. It can be either a string or an array.</span>
+<span class="x"> * @return mixed the created object</span>
+<span class="x"> * @throws CException if the configuration does not have a &#39;class&#39; element.</span>
+<span class="x"> */</span>
+<span class="x">public static function createComponent($config)</span>
+<span class="x">{</span>
+<span class="x">    // 如果传入的组件配置信息是字符串类型，则认为是对象类型</span>
+<span class="x">    if(is_string($config))</span>
+<span class="x">    {</span>
+<span class="x">        $type=$config;</span>
+<span class="x">        $config=array();</span>
+<span class="x">    }</span>
+<span class="x">    // 如果是数组，则必须指定组件所对应的class</span>
+<span class="x">    elseif(isset($config[&#39;class&#39;]))</span>
+<span class="x">    {</span>
+<span class="x">        $type=$config[&#39;class&#39;];</span>
+<span class="x">        unset($config[&#39;class&#39;]);</span>
+<span class="x">    }</span>
+<span class="x">    else</span>
+<span class="x">        throw new CException(Yii::t(&#39;yii&#39;,&#39;Object configuration must be an array containing a &quot;class&quot; element.&#39;));</span>
+
+<span class="x">    // 如果组件所对应的类型还没加载，则加载进来</span>
+<span class="x">    if(!class_exists($type,false))</span>
+<span class="x">        $type=Yii::import($type,true);</span>
+
+<span class="x">    // 如果除了$config，还传递了其他参数，则根据额外的参数来实例化。对于组件初始化来说，不会走这个分支</span>
+<span class="x">    if(($n=func_num_args())&gt;1)</span>
+<span class="x">    {</span>
+<span class="x">        $args=func_get_args();</span>
+<span class="x">        if($n===2)</span>
+<span class="x">            $object=new $type($args[1]);</span>
+<span class="x">        elseif($n===3)</span>
+<span class="x">            $object=new $type($args[1],$args[2]);</span>
+<span class="x">        elseif($n===4)</span>
+<span class="x">            $object=new $type($args[1],$args[2],$args[3]);</span>
+<span class="x">        else</span>
+<span class="x">        {</span>
+<span class="x">            unset($args[0]);</span>
+<span class="x">            $class=new ReflectionClass($type);</span>
+<span class="x">            // Note: ReflectionClass::newInstanceArgs() is available for PHP 5.1.3+</span>
+<span class="x">            // $object=$class-&gt;newInstanceArgs($args);</span>
+<span class="x">            $object=call_user_func_array(array($class,&#39;newInstance&#39;),$args);</span>
+<span class="x">        }</span>
+<span class="x">    }</span>
+<span class="x">    // 没有额外的参数，则直接实例化组件</span>
+<span class="x">    else</span>
+<span class="x">        $object=new $type;</span>
+
+<span class="x">    // $config中除了class外的其他字段都作为组件对象的属性进行赋值</span>
+<span class="x">    foreach($config as $key=&gt;$value)</span>
+<span class="x">        $object-&gt;$key=$value;</span>
+
+<span class="x">    return $object;</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>从上述代码可以看出，在配置组件时，如果是配置核心组件，可以不提供class字段，否则一定要提供。除了class字段，还可以为组件对象的属性赋值。按照PHP中对一个对象的属性进行赋值的规则：</p>
+<ol>
+<li>如果该对象有public的该属性，则直接赋值</li>
+<li>否则看该对象所在继承树上是否有定义魔术方法<code>__set</code>，如果有则调用<code>__set</code>来处理赋值过程</li>
+<li>如果连<code>__set</code>也没有，则为该对象生成一个public的属性，然后赋值给它</li>
+</ol>
+<p>可以将自定义组件类需要初始化赋值的属性：</p>
+<ol>
+<li>定义为public访问控制</li>
+<li>如果非public，则应该魔术方法<code>__set</code></li>
+<li>也可以不定义该属性（我觉得还是定义一下比较好，否则不好理解）</li>
+</ol>
+<hr />
+<p>在静态方法createComponent返回组件对象后，接着调用组件对象自身的init方法来完成一些初始化工具。这也就意味着自定义组件需要有init方法。</p>
+<p>从核心组件的定义可以看到，组件应该继承自抽象类<code>CApplicationComponent</code>（见文件<code>yii/framework/base/CApplicationComponent.php</code>）。该类定义了方法init和getIsInitialized。
+自定义组件继承自<code>CApplicationComponent</code>，若没有额外的初始化操作，也可以不再定义自己的init方法。如果定义自己的init方法，最好也间接调用一下父类的init方法（<code>parent::init()</code>），
+从而避免一些可能潜在的兼容问题。</p>
+<p>关于自定义组件的更多具体细节，可以参考<a href="http://youngsterxyf.github.io/2014/09/06/socket.io-push-server/">基于socket.io的实时消息推送</a>一文中的示例。</p>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2014/11/13/read-yii-code-3/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+        </div><!-- /.twelve.columns -->
+ </div><!-- /.row -->
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+    
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+  <script src="../../../../theme/js/main.js"></script>
+</body>
+</html>

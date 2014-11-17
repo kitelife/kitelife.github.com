@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>Yii源码阅读笔记 - Model层实现</title>
+        <meta charset="utf-8" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑 * 白 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑 * 白 Full RSS Feed" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+              <script>
+                (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+                })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+                ga('create', 'UA-43488080-1', '黑白');
+                ga('send', 'pageview');
+
+              </script>
+
+              <script type="text/javascript" src="http://tajs.qq.com/stats?sId=27164999" charset="UTF-8"></script>
+ 
+</head>
+
+<body id="index" class="home">
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="../../../..">黑 * 白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+             
+              <ul class="columns">
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="/archives.html">归 档</a></li>
+                <li><a href="/tags.html">标 签</a></li>
+                <li><a href="/pages/tools.html">工具集</a></li>
+                <li><a href="/pages/links.html">链 接</a></li>
+                <li><a href="/pages/tech-share.html">技术分享</a></li>
+                <li><a href="/pages/aboutme.html">关于我</a></li>
+                <li><a href="/feeds/rss.xml">RSS</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+   <div class="row">
+        <div class="columns">
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2014/11/14/read-yii-code-4/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - Model层实现">Yii源码阅读笔记 - Model层实现</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2014-11-14T00:00:00">
+                2014-11-14 Fri
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <h3>概述</h3>
+<p>Yii中，对Model层的使用，有两种方式：</p>
+<ol>
+<li>通过类CDbConnection和CDbCommand来操作</li>
+<li>使用ORM形式：编写model类继承自类CActiveRecord</li>
+</ol>
+<p>第1种方式的示例如下：</p>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="nv">$connection</span> <span class="o">=</span> <span class="nx">Yii</span><span class="o">::</span><span class="na">app</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">db</span><span class="p">;</span>  <span class="c1">// 或者Yii::app()-&gt;getComponent(&#39;db&#39;);</span>
+<span class="nv">$queryResult</span> <span class="o">=</span> <span class="nv">$connection</span><span class="o">-&gt;</span><span class="na">createCommand</span><span class="p">(</span><span class="nv">$sql</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">queryRow</span><span class="p">();</span>
+</pre></div>
+
+
+<p>第2种方式中编写的model类可能需要实现方法<code>getDbConnection</code>、<code>model</code>、<code>tableName</code>。</p>
+<p>在实现上，第2种方式是基于第1种方式的，即第2种方式的抽象程度更高。Yii没有屏蔽第1种方式，这样能让开发者按需选择。
+但我个人并不喜欢这样，两种方式同时存在，会导致应用的model实现稍显混乱。</p>
+<h3>分析</h3>
+<p>Yii框架model层的入口为CDbConnection类，该类有很多public的属性可供配置，如<code>connectionString</code>、<code>username</code>、<code>password</code>等。</p>
+<p>根据<a href="http://youngsterxyf.github.io/2014/11/13/read-yii-code-3/">Yii源码阅读笔记 - 组件集成</a>一文可知，组件初始化时会调用init方法。
+类CDbConnection的init类实现如下：</p>
+<div class="highlight"><pre><span class="x">public function init()</span>
+<span class="x">{</span>
+<span class="x">    parent::init();</span>
+<span class="x">    // 属性autoConnect默认为true</span>
+<span class="x">    if($this-&gt;autoConnect)</span>
+<span class="x">        $this-&gt;setActive(true);</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>其中调用的setActive方法实现如下：</p>
+<div class="highlight"><pre><span class="x">public function setActive($value)</span>
+<span class="x">{</span>
+<span class="x">    // 当$value为true，而_active为false（表示数据库连接未打开），则打开数据库连接</span>
+<span class="x">    // 当$value为false, 而_active为true（表示数据库连接已打开），则关闭数据库连接</span>
+<span class="x">    if($value!=$this-&gt;_active)</span>
+<span class="x">    {</span>
+<span class="x">        if($value)</span>
+<span class="x">            $this-&gt;open();</span>
+<span class="x">        else</span>
+<span class="x">            $this-&gt;close();</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>方法open实现如下：</p>
+<div class="highlight"><pre><span class="x">/**</span>
+<span class="x"> * Opens DB connection if it is currently not</span>
+<span class="x"> * @throws CException if connection fails</span>
+<span class="x"> */</span>
+<span class="x">protected function open()</span>
+<span class="x">{</span>
+<span class="x">    if($this-&gt;_pdo===null)</span>
+<span class="x">    {</span>
+<span class="x">        // 所以需要配置connectionString</span>
+<span class="x">        if(empty($this-&gt;connectionString))</span>
+<span class="x">            throw new CDbException(&#39;CDbConnection.connectionString cannot be empty.&#39;);</span>
+<span class="x">        try</span>
+<span class="x">        {</span>
+<span class="x">            Yii::trace(&#39;Opening DB connection&#39;,&#39;system.db.CDbConnection&#39;);</span>
+<span class="x">            // 基于PDO类建立数据库连接（对于某些数据库不使用PDO）</span>
+<span class="x">            $this-&gt;_pdo=$this-&gt;createPdoInstance();</span>
+<span class="x">            // 设置数据库连接的一些属性，如字符编码等</span>
+<span class="x">            $this-&gt;initConnection($this-&gt;_pdo);</span>
+<span class="x">            // 标志位设置为已打开</span>
+<span class="x">            $this-&gt;_active=true;</span>
+<span class="x">        }</span>
+<span class="x">        catch(PDOException $e)</span>
+<span class="x">        {</span>
+<span class="x">            if(YII_DEBUG)</span>
+<span class="x">            {</span>
+<span class="x">                throw new CDbException(&#39;CDbConnection failed to open the DB connection: &#39;.</span>
+<span class="x">                    $e-&gt;getMessage(),(int)$e-&gt;getCode(),$e-&gt;errorInfo);</span>
+<span class="x">            }</span>
+<span class="x">            else</span>
+<span class="x">            {</span>
+<span class="x">                Yii::log($e-&gt;getMessage(),CLogger::LEVEL_ERROR,&#39;exception.CDbException&#39;);</span>
+<span class="x">                throw new CDbException(&#39;CDbConnection failed to open the DB connection.&#39;,(int)$e-&gt;getCode(),$e-&gt;errorInfo);</span>
+<span class="x">            }</span>
+<span class="x">        }</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>方法close实现如下：</p>
+<div class="highlight"><pre><span class="x">/**</span>
+<span class="x"> * Closes the currently active DB connection.</span>
+<span class="x"> * It does nothing if the connection is already closed.</span>
+<span class="x"> */</span>
+<span class="x">protected function close()</span>
+<span class="x">{</span>
+<span class="x">    Yii::trace(&#39;Closing DB connection&#39;,&#39;system.db.CDbConnection&#39;);</span>
+<span class="x">    $this-&gt;_pdo=null;</span>
+<span class="x">    $this-&gt;_active=false;</span>
+<span class="x">    $this-&gt;_schema=null;</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>open方法中调用的方法createPdoInstance实现如下：</p>
+<div class="highlight"><pre><span class="x">/**</span>
+<span class="x"> * Creates the PDO instance.</span>
+<span class="x"> * When some functionalities are missing in the pdo driver, we may use</span>
+<span class="x"> * an adapter class to provide them.</span>
+<span class="x"> * @throws CDbException when failed to open DB connection</span>
+<span class="x"> * @return PDO the pdo instance</span>
+<span class="x"> */</span>
+<span class="x">protected function createPdoInstance()</span>
+<span class="x">{</span>
+<span class="x">    // 属性pdoClass默认为PDO</span>
+<span class="x">    $pdoClass=$this-&gt;pdoClass;</span>
+<span class="x">    if(($pos=strpos($this-&gt;connectionString,&#39;:&#39;))!==false)</span>
+<span class="x">    {</span>
+<span class="x">        // 取出数据库驱动类型</span>
+<span class="x">        $driver=strtolower(substr($this-&gt;connectionString,0,$pos));</span>
+<span class="x">        if($driver===&#39;mssql&#39; || $driver===&#39;dblib&#39;)</span>
+<span class="x">            $pdoClass=&#39;CMssqlPdoAdapter&#39;;</span>
+<span class="x">        elseif($driver===&#39;sqlsrv&#39;)</span>
+<span class="x">            $pdoClass=&#39;CMssqlSqlsrvPdoAdapter&#39;;</span>
+<span class="x">    }</span>
+
+<span class="x">    if(!class_exists($pdoClass))</span>
+<span class="x">        throw new CDbException(Yii::t(&#39;yii&#39;,&#39;CDbConnection is unable to find PDO class &quot;{className}&quot;. Make sure PDO is installed correctly.&#39;,</span>
+<span class="x">            array(&#39;{className}&#39;=&gt;$pdoClass)));</span>
+
+<span class="x">    // 实例化类PDO，可能失败</span>
+<span class="x">    @$instance=new $pdoClass($this-&gt;connectionString,$this-&gt;username,$this-&gt;password,$this-&gt;_attributes);</span>
+
+<span class="x">    if(!$instance)</span>
+<span class="x">        throw new CDbException(Yii::t(&#39;yii&#39;,&#39;CDbConnection failed to open the DB connection.&#39;));</span>
+
+<span class="x">    return $instance;</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>从中可以看出，对于MySQL数据库而言，方法createPdoInstance返回的是一个PDO对象，赋值给CDbConnection对象的_pdo属性。</p>
+<p>方法initConnection的实现如下：</p>
+<div class="highlight"><pre><span class="x">/**</span>
+<span class="x"> * Initializes the open db connection.</span>
+<span class="x"> * This method is invoked right after the db connection is established.</span>
+<span class="x"> * The default implementation is to set the charset for MySQL and PostgreSQL database connections.</span>
+<span class="x"> * @param PDO $pdo the PDO instance</span>
+<span class="x"> */</span>
+<span class="x">protected function initConnection($pdo)</span>
+<span class="x">{</span>
+<span class="x">    // 设置数据库连接的一些属性</span>
+<span class="x">    $pdo-&gt;setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);</span>
+<span class="x">    if($this-&gt;emulatePrepare!==null &amp;&amp; constant(&#39;PDO::ATTR_EMULATE_PREPARES&#39;))</span>
+<span class="x">        $pdo-&gt;setAttribute(PDO::ATTR_EMULATE_PREPARES,$this-&gt;emulatePrepare);</span>
+<span class="x">    if($this-&gt;charset!==null)</span>
+<span class="x">    {</span>
+<span class="x">        $driver=strtolower($pdo-&gt;getAttribute(PDO::ATTR_DRIVER_NAME));</span>
+<span class="x">        if(in_array($driver,array(&#39;pgsql&#39;,&#39;mysql&#39;,&#39;mysqli&#39;)))</span>
+<span class="x">            $pdo-&gt;exec(&#39;SET NAMES &#39;.$pdo-&gt;quote($this-&gt;charset));</span>
+<span class="x">    }</span>
+<span class="x">    // 执行一些初始化的SQL语句</span>
+<span class="x">    // public $initSQLs : array list of SQL statements that should be executed right after the DB connection is established.</span>
+<span class="x">    if($this-&gt;initSQLs!==null)</span>
+<span class="x">    {</span>
+<span class="x">        foreach($this-&gt;initSQLs as $sql)</span>
+<span class="x">            $pdo-&gt;exec($sql);</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<hr />
+<p>由于第2种方式是基于第1中方式实现的，所以我们先看看第1种方式的实现。</p>
+<p>类CDbConnection中方法createCommand的实现如下：</p>
+<div class="highlight"><pre><span class="x">public function createCommand($query=null)</span>
+<span class="x">{</span>
+<span class="x">    $this-&gt;setActive(true);</span>
+<span class="x">    return new CDbCommand($this,$query);</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>其中实例化的类CDbCommand的构造方法实现如下：</p>
+<div class="highlight"><pre><span class="x">/**</span>
+<span class="x"> * Constructor.</span>
+<span class="x"> * @param CDbConnection $connection the database connection</span>
+<span class="x"> * @param mixed $query the DB query to be executed. This can be either</span>
+<span class="x"> * a string representing a SQL statement, or an array whose name-value pairs</span>
+<span class="x"> * will be used to set the corresponding properties of the created command object.</span>
+<span class="x"> *</span>
+<span class="x"> * For example, you can pass in either &lt;code&gt;&#39;SELECT * FROM tbl_user&#39;&lt;/code&gt;</span>
+<span class="x"> * or &lt;code&gt;array(&#39;select&#39;=&gt;&#39;*&#39;, &#39;from&#39;=&gt;&#39;tbl_user&#39;)&lt;/code&gt;. They are equivalent</span>
+<span class="x"> * in terms of the final query result.</span>
+<span class="x"> *</span>
+<span class="x"> * When passing the query as an array, the following properties are commonly set:</span>
+<span class="x"> * {@link select}, {@link distinct}, {@link from}, {@link where}, {@link join},</span>
+<span class="x"> * {@link group}, {@link having}, {@link order}, {@link limit}, {@link offset} and</span>
+<span class="x"> * {@link union}. Please refer to the setter of each of these properties for details</span>
+<span class="x"> * about valid property values. This feature has been available since version 1.1.6.</span>
+<span class="x"> *</span>
+<span class="x"> * Since 1.1.7 it is possible to use a specific mode of data fetching by setting</span>
+<span class="x"> * {@link setFetchMode FetchMode}. See {@link http://www.php.net/manual/en/function.PDOStatement-setFetchMode.php}</span>
+<span class="x"> * for more details.</span>
+<span class="x"> */</span>
+<span class="x">public function __construct(CDbConnection $connection,$query=null)</span>
+<span class="x">{</span>
+<span class="x">    $this-&gt;_connection=$connection;</span>
+<span class="x">    if(is_array($query))</span>
+<span class="x">    {</span>
+<span class="x">        foreach($query as $name=&gt;$value)</span>
+<span class="x">            $this-&gt;$name=$value;</span>
+<span class="x">    }</span>
+<span class="x">    else</span>
+<span class="x">        $this-&gt;setText($query);</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>可以看到参数$query并不是必须提供，如果提供，则$query参数值可以是字符串也可以是数组。如果是字符串也就是一个原生的SQL语句（可能有参数需要填充），如果是数组，
+则可以为CDbCommand对象的select、distinct、from等属性赋值。</p>
+<p>方法setText实现如下：</p>
+<div class="highlight"><pre><span class="x">/**</span>
+<span class="x"> * Specifies the SQL statement to be executed.</span>
+<span class="x"> * Any previous execution will be terminated or cancel.</span>
+<span class="x"> * @param string $value the SQL statement to be executed</span>
+<span class="x"> * @return CDbCommand this command instance</span>
+<span class="x"> */</span>
+<span class="x">public function setText($value)</span>
+<span class="x">{</span>
+<span class="x">    if($this-&gt;_connection-&gt;tablePrefix!==null &amp;&amp; $value!=&#39;&#39;)</span>
+<span class="x">        $this-&gt;_text=preg_replace(&#39;/{{(.*?)}}/&#39;,$this-&gt;_connection-&gt;tablePrefix.&#39;\1&#39;,$value);</span>
+<span class="x">    else</span>
+<span class="x">        $this-&gt;_text=$value;</span>
+<span class="x">    // 因为是要新执行一条语句，所以需要重置状态，将属性_statement置为null。</span>
+<span class="x">    $this-&gt;cancel();</span>
+<span class="x">    return $this;</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>如果调用类CDbConnection的createCommand方法时提供了<code>$query</code>参数值，则在得到CDbCommand对象后，即可调用CDbCommand对象的execute方法（对于增、删、改操作）或query、queryAll、queryRow等方法（对于查询操作）来执行数据库操作。</p>
+<p>如果调用createCommand时未提供<code>$query</code>参数值，则有3种方式来完成数据库操作：</p>
+<ol>
+<li>
+<p>对于普通的数据库查询操作，得到CDbCommand对象后，链式调用方法select、from、where等（之所以能够链式调用，是因为这些方法的最后都返回了对象本身），并且链式调用的最后调用query一类方法来执行数据库操作。</p>
+</li>
+<li>
+<p>对于会对数据表结构或数据产生变更的操作，得到CDbCommand对象后，可以直接调用方法insert、update、delete、createTable等来执行操作。</p>
+</li>
+<li>
+<p>可以在得到CDbCommand对象后，调用方法setText来设置待执行的SQL语句，setText方法的$value参数类型应为字符串。如果调用setText方法前$value参数类型是关联数组，则可以先调用方法buildQuery从关联数组生成一个SQL语句字符串，再调用setText方法；或者直接调用setSelect、setFrom、setWhere等方法来设置SQL语句的各个组成部分。最后调用execute方法或query一类方法。可以看出相比传递<code>$query</code>参数，这种方式只不过是显式地设置SQL语句。通常这是不推荐的（搞这么麻烦，何必呢？呵呵）。</p>
+</li>
+</ol>
+<p>这样一看，类CDbCommand的实现稍显混乱。本意上额外的第3种方式应该是提供给类CActiveRecord使用的，所以不建议使用。</p>
+<p>接下来看看方法execute方法及query一类（仅以方法query、queryAll为例）方法的实现：</p>
+<div class="highlight"><pre><span class="x">/**</span>
+<span class="x"> * Executes the SQL statement.</span>
+<span class="x"> * This method is meant only for executing non-query SQL statement.</span>
+<span class="x"> * No result set will be returned.</span>
+<span class="x"> * @param array $params input parameters (name=&gt;value) for the SQL execution. This is an alternative</span>
+<span class="x"> * to {@link bindParam} and {@link bindValue}. If you have multiple input parameters, passing</span>
+<span class="x"> * them in this way can improve the performance. Note that if you pass parameters in this way,</span>
+<span class="x"> * you cannot bind parameters or values using {@link bindParam} or {@link bindValue}, and vice versa.</span>
+<span class="x"> * Please also note that all values are treated as strings in this case, if you need them to be handled as</span>
+<span class="x"> * their real data types, you have to use {@link bindParam} or {@link bindValue} instead.</span>
+<span class="x"> * @return integer number of rows affected by the execution.</span>
+<span class="x"> * @throws CDbException execution failed</span>
+<span class="x"> */</span>
+<span class="x">public function execute($params=array())</span>
+<span class="x">{</span>
+<span class="x">    if($this-&gt;_connection-&gt;enableParamLogging &amp;&amp; ($pars=array_merge($this-&gt;_paramLog,$params))!==array())</span>
+<span class="x">    {</span>
+<span class="x">        $p=array();</span>
+<span class="x">        foreach($pars as $name=&gt;$value)</span>
+<span class="x">            $p[$name]=$name.&#39;=&#39;.var_export($value,true);</span>
+<span class="x">        $par=&#39;. Bound with &#39; .implode(&#39;, &#39;,$p);</span>
+<span class="x">    }</span>
+<span class="x">    else</span>
+<span class="x">        $par=&#39;&#39;;</span>
+<span class="x">    Yii::trace(&#39;Executing SQL: &#39;.$this-&gt;getText().$par,&#39;system.db.CDbCommand&#39;);</span>
+<span class="x">    try</span>
+<span class="x">    {</span>
+<span class="x">        if($this-&gt;_connection-&gt;enableProfiling)</span>
+<span class="x">            Yii::beginProfile(&#39;system.db.CDbCommand.execute(&#39;.$this-&gt;getText().$par.&#39;)&#39;,&#39;system.db.CDbCommand.execute&#39;);</span>
+
+<span class="x">        // 以通过setText设置的SQL语句为参数间接调用PDO对象的prepare方法，并将返回的PDOStatement对象赋值给当前CDbCommand对象的_statement属性。</span>
+<span class="x">        $this-&gt;prepare();</span>
+<span class="x">        if($params===array())</span>
+<span class="x">            // 无参执行</span>
+<span class="x">            $this-&gt;_statement-&gt;execute();</span>
+<span class="x">        else</span>
+<span class="x">            // 带参执行</span>
+<span class="x">            $this-&gt;_statement-&gt;execute($params);</span>
+<span class="x">        // 操作影响的数据表行数</span>
+<span class="x">        $n=$this-&gt;_statement-&gt;rowCount();</span>
+
+<span class="x">        if($this-&gt;_connection-&gt;enableProfiling)</span>
+<span class="x">            Yii::endProfile(&#39;system.db.CDbCommand.execute(&#39;.$this-&gt;getText().$par.&#39;)&#39;,&#39;system.db.CDbCommand.execute&#39;);</span>
+
+<span class="x">        return $n;</span>
+<span class="x">    }</span>
+<span class="x">    catch(Exception $e)</span>
+<span class="x">    {</span>
+<span class="x">        if($this-&gt;_connection-&gt;enableProfiling)</span>
+<span class="x">            Yii::endProfile(&#39;system.db.CDbCommand.execute(&#39;.$this-&gt;getText().$par.&#39;)&#39;,&#39;system.db.CDbCommand.execute&#39;);</span>
+
+<span class="x">        $errorInfo=$e instanceof PDOException ? $e-&gt;errorInfo : null;</span>
+<span class="x">        $message=$e-&gt;getMessage();</span>
+<span class="x">        Yii::log(Yii::t(&#39;yii&#39;,&#39;CDbCommand::execute() failed: {error}. The SQL statement executed was: {sql}.&#39;,</span>
+<span class="x">            array(&#39;{error}&#39;=&gt;$message, &#39;{sql}&#39;=&gt;$this-&gt;getText().$par)),CLogger::LEVEL_ERROR,&#39;system.db.CDbCommand&#39;);</span>
+
+<span class="x">        if(YII_DEBUG)</span>
+<span class="x">            $message.=&#39;. The SQL statement executed was: &#39;.$this-&gt;getText().$par;</span>
+
+<span class="x">        throw new CDbException(Yii::t(&#39;yii&#39;,&#39;CDbCommand failed to execute the SQL statement: {error}&#39;,</span>
+<span class="x">            array(&#39;{error}&#39;=&gt;$message)),(int)$e-&gt;getCode(),$errorInfo);</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+
+<span class="x">:::php</span>
+<span class="x">public function query($params=array())</span>
+<span class="x">{</span>
+<span class="x">    return $this-&gt;queryInternal(&#39;&#39;,0,$params);</span>
+<span class="x">}</span>
+
+<span class="x">public function queryAll($fetchAssociative=true,$params=array())</span>
+<span class="x">{</span>
+<span class="x">    return $this-&gt;queryInternal(&#39;fetchAll&#39;,$fetchAssociative ? $this-&gt;_fetchMode : PDO::FETCH_NUM, $params);</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>可以看到query一类方法都是间接调用方法queryInternal来完成操作的。queryInternal方法实现如下：</p>
+<div class="highlight"><pre><span class="x">private function queryInternal($method,$mode,$params=array())</span>
+<span class="x">{</span>
+<span class="x">    $params=array_merge($this-&gt;params,$params);</span>
+
+<span class="x">    if($this-&gt;_connection-&gt;enableParamLogging &amp;&amp; ($pars=array_merge($this-&gt;_paramLog,$params))!==array())</span>
+<span class="x">    {</span>
+<span class="x">        $p=array();</span>
+<span class="x">        foreach($pars as $name=&gt;$value)</span>
+<span class="x">            $p[$name]=$name.&#39;=&#39;.var_export($value,true);</span>
+<span class="x">        $par=&#39;. Bound with &#39;.implode(&#39;, &#39;,$p);</span>
+<span class="x">    }</span>
+<span class="x">    else</span>
+<span class="x">        $par=&#39;&#39;;</span>
+
+<span class="x">    Yii::trace(&#39;Querying SQL: &#39;.$this-&gt;getText().$par,&#39;system.db.CDbCommand&#39;);</span>
+
+<span class="x">    // 先尝试从缓存中读取查询结果</span>
+<span class="x">    // 这里涉及CDbConnection类的三个属性queryCachingCount、queryCachingDuration、queryCacheID</span>
+<span class="x">    // 另外对于方法query（调用queryInternal时提供的method参数为空字符串）的操作不会缓存</span>
+<span class="x">    if($this-&gt;_connection-&gt;queryCachingCount&gt;0 &amp;&amp; $method!==&#39;&#39;</span>
+<span class="x">            &amp;&amp; $this-&gt;_connection-&gt;queryCachingDuration&gt;0</span>
+<span class="x">            &amp;&amp; $this-&gt;_connection-&gt;queryCacheID!==false</span>
+<span class="x">            &amp;&amp; ($cache=Yii::app()-&gt;getComponent($this-&gt;_connection-&gt;queryCacheID))!==null)</span>
+<span class="x">    {</span>
+<span class="x">        $this-&gt;_connection-&gt;queryCachingCount--;</span>
+<span class="x">        $cacheKey=&#39;yii:dbquery&#39;.$this-&gt;_connection-&gt;connectionString.&#39;:&#39;.$this-&gt;_connection-&gt;username;</span>
+<span class="x">        $cacheKey.=&#39;:&#39;.$this-&gt;getText().&#39;:&#39;.serialize(array_merge($this-&gt;_paramLog,$params));</span>
+<span class="x">        if(($result=$cache-&gt;get($cacheKey))!==false)</span>
+<span class="x">        {</span>
+<span class="x">            Yii::trace(&#39;Query result found in cache&#39;,&#39;system.db.CDbCommand&#39;);</span>
+<span class="x">            return $result[0];</span>
+<span class="x">        }</span>
+<span class="x">    }</span>
+
+<span class="x">    try</span>
+<span class="x">    {</span>
+<span class="x">        if($this-&gt;_connection-&gt;enableProfiling)</span>
+<span class="x">            Yii::beginProfile(&#39;system.db.CDbCommand.query(&#39;.$this-&gt;getText().$par.&#39;)&#39;,&#39;system.db.CDbCommand.query&#39;);</span>
+
+<span class="x">        $this-&gt;prepare();</span>
+<span class="x">        if($params===array())</span>
+<span class="x">            $this-&gt;_statement-&gt;execute();</span>
+<span class="x">        else</span>
+<span class="x">            $this-&gt;_statement-&gt;execute($params);</span>
+
+<span class="x">        // $method对应PDOStatement的结果获取方法，如果未提供$method，自然无法直接通过PDOStatement获取查询结果。</span>
+<span class="x">        if($method===&#39;&#39;)</span>
+<span class="x">            // 这个细看一下</span>
+<span class="x">            $result=new CDbDataReader($this);</span>
+<span class="x">        else</span>
+<span class="x">        {</span>
+<span class="x">            $mode=(array)$mode;</span>
+<span class="x">            call_user_func_array(array($this-&gt;_statement, &#39;setFetchMode&#39;), $mode);</span>
+<span class="x">            // 调用PDOStatement对应的方法</span>
+<span class="x">            $result=$this-&gt;_statement-&gt;$method();</span>
+<span class="x">            $this-&gt;_statement-&gt;closeCursor();</span>
+<span class="x">        }</span>
+
+<span class="x">        if($this-&gt;_connection-&gt;enableProfiling)</span>
+<span class="x">            Yii::endProfile(&#39;system.db.CDbCommand.query(&#39;.$this-&gt;getText().$par.&#39;)&#39;,&#39;system.db.CDbCommand.query&#39;);</span>
+
+<span class="x">        // 如果设置了$cache和$cacheKey</span>
+<span class="x">        // 将查询结果存入缓存</span>
+<span class="x">        if(isset($cache,$cacheKey))</span>
+<span class="x">            $cache-&gt;set($cacheKey, array($result), $this-&gt;_connection-&gt;queryCachingDuration, $this-&gt;_connection-&gt;queryCachingDependency);</span>
+
+<span class="x">        return $result;</span>
+<span class="x">    }</span>
+<span class="x">    catch(Exception $e)</span>
+<span class="x">    {</span>
+<span class="x">        if($this-&gt;_connection-&gt;enableProfiling)</span>
+<span class="x">            Yii::endProfile(&#39;system.db.CDbCommand.query(&#39;.$this-&gt;getText().$par.&#39;)&#39;,&#39;system.db.CDbCommand.query&#39;);</span>
+
+<span class="x">        $errorInfo=$e instanceof PDOException ? $e-&gt;errorInfo : null;</span>
+<span class="x">        $message=$e-&gt;getMessage();</span>
+<span class="x">        Yii::log(Yii::t(&#39;yii&#39;,&#39;CDbCommand::{method}() failed: {error}. The SQL statement executed was: {sql}.&#39;,</span>
+<span class="x">            array(&#39;{method}&#39;=&gt;$method, &#39;{error}&#39;=&gt;$message, &#39;{sql}&#39;=&gt;$this-&gt;getText().$par)),CLogger::LEVEL_ERROR,&#39;system.db.CDbCommand&#39;);</span>
+
+<span class="x">        if(YII_DEBUG)</span>
+<span class="x">            $message.=&#39;. The SQL statement executed was: &#39;.$this-&gt;getText().$par;</span>
+
+<span class="x">        throw new CDbException(Yii::t(&#39;yii&#39;,&#39;CDbCommand failed to execute the SQL statement: {error}&#39;,</span>
+<span class="x">            array(&#39;{error}&#39;=&gt;$message)),(int)$e-&gt;getCode(),$errorInfo);</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>可以看到query方法调用queryInternal时，结果是通过CDbDataReader对象来获取的。类CDbDataReader的构造方法实现如下：</p>
+<div class="highlight"><pre><span class="x">public function __construct(CDbCommand $command)</span>
+<span class="x">{</span>
+<span class="x">    $this-&gt;_statement=$command-&gt;getPdoStatement();</span>
+<span class="x">    $this-&gt;_statement-&gt;setFetchMode(PDO::FETCH_ASSOC);</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>得到CDbDataReader对象，即可通过它的read一类方法<strong>迭代</strong>获取查询结果。这些方法实际上是调用PDOStatement的fetch一类方法来获取结果的。</p>
+<hr />
+<p>再来看看Yii框架Model层的第2种使用方式。</p>
+<p>CActiveRecord的用法是，对于数据库的每个数据表，创建一个model类，如UserModel，这个类继承自CActiveRecord类。model类名可以和数据表名一致，也可以不一致，如果不一致，则需要重写CActiveRecord类的tableName方法，标明该model类对应的数据表名。方法tableName默认的实现如下：</p>
+<div class="highlight"><pre><span class="x">/**</span>
+<span class="x">* Returns the name of the associated database table.</span>
+<span class="x">* By default this method returns the class name as the table name.</span>
+<span class="x">* You may override this method if the table is not named after this convention.</span>
+<span class="x">* @return string the table name</span>
+<span class="x">*/</span>
+<span class="x">public function tableName()</span>
+<span class="x">{</span>
+<span class="x">    return get_class($this);</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>假设UserModel类对应的数据表名为User，则应如下重写tableName：</p>
+<div class="highlight"><pre><span class="x">public function tableName()</span>
+<span class="x">{</span>
+<span class="x">    return &#39;User&#39;;</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>使用CActiveRecord方式，若想向数据表中插入一条新纪录，则需要实例化当前model类。以UserModel类为例，若想向User表中插入一条新纪录，则需要先实例化UserModel，得到一个对象，然后对该对象的属性进行赋值指明对应数据表新记录每个字段的值。对象的属性名即数据表的字段名，赋值完毕，调用save或insert即向数据表中存入该新纪录。</p>
+<p>CActiveRecord类的构造方法如下所示：</p>
+<div class="highlight"><pre><span class="x">public function __construct($scenario=&#39;insert&#39;)</span>
+<span class="x">{</span>
+<span class="x">    if($scenario===null) // internally used by populateRecord() and model()</span>
+<span class="x">        return;</span>
+
+<span class="x">    $this-&gt;setScenario($scenario);</span>
+<span class="x">    $this-&gt;setIsNewRecord(true);</span>
+<span class="x">    $this-&gt;_attributes=$this-&gt;getMetaData()-&gt;attributeDefaults;</span>
+
+<span class="x">    $this-&gt;init();</span>
+
+<span class="x">    $this-&gt;attachBehaviors($this-&gt;behaviors());</span>
+<span class="x">    $this-&gt;afterConstruct();</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>$scenario='insert'，表示新实例化的对象处于待插入数据表的状态，在调用save等方法时，会检测该状态。在新实例化的对象插入到数据表后，该状态立即会变为"update"，表示之后对该对象的数据库写入操作，属于update操作。</p>
+<p>CActiveRecord类的save方法的实现如下：</p>
+<div class="highlight"><pre><span class="x">public function save($runValidation=true,$attributes=null)</span>
+<span class="x">{</span>
+<span class="x">    // 若需要则对某些属性做校验</span>
+<span class="x">    if(!$runValidation || $this-&gt;validate($attributes))</span>
+<span class="x">        // 如果是新纪录，则插入，否则更新</span>
+<span class="x">        return $this-&gt;getIsNewRecord() ? $this-&gt;insert($attributes) : $this-&gt;update($attributes);</span>
+<span class="x">    else</span>
+<span class="x">        return false;</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>而insert、update方法的实现如下所示：</p>
+<div class="highlight"><pre><span class="x">public function insert($attributes=null)</span>
+<span class="x">{</span>
+<span class="x">    if(!$this-&gt;getIsNewRecord())</span>
+<span class="x">        throw new CDbException(Yii::t(&#39;yii&#39;,&#39;The active record cannot be inserted to database because it is not new.&#39;));</span>
+<span class="x">    if($this-&gt;beforeSave())</span>
+<span class="x">    {</span>
+<span class="x">        Yii::trace(get_class($this).&#39;.insert()&#39;,&#39;system.db.ar.CActiveRecord&#39;);</span>
+<span class="x">        $builder=$this-&gt;getCommandBuilder();</span>
+<span class="x">        $table=$this-&gt;getMetaData()-&gt;tableSchema;</span>
+<span class="x">        $command=$builder-&gt;createInsertCommand($table,$this-&gt;getAttributes($attributes));</span>
+<span class="x">        if($command-&gt;execute())</span>
+<span class="x">        {</span>
+<span class="x">            $primaryKey=$table-&gt;primaryKey;</span>
+<span class="x">            if($table-&gt;sequenceName!==null)</span>
+<span class="x">            {</span>
+<span class="x">                if(is_string($primaryKey) &amp;&amp; $this-&gt;$primaryKey===null)</span>
+<span class="x">                    $this-&gt;$primaryKey=$builder-&gt;getLastInsertID($table);</span>
+<span class="x">                elseif(is_array($primaryKey))</span>
+<span class="x">                {</span>
+<span class="x">                    foreach($primaryKey as $pk)</span>
+<span class="x">                    {</span>
+<span class="x">                        if($this-&gt;$pk===null)</span>
+<span class="x">                        {</span>
+<span class="x">                            $this-&gt;$pk=$builder-&gt;getLastInsertID($table);</span>
+<span class="x">                            break;</span>
+<span class="x">                        }</span>
+<span class="x">                    }</span>
+<span class="x">                }</span>
+<span class="x">            }</span>
+<span class="x">            $this-&gt;_pk=$this-&gt;getPrimaryKey();</span>
+<span class="x">            $this-&gt;afterSave();</span>
+<span class="x">            $this-&gt;setIsNewRecord(false);</span>
+<span class="x">            $this-&gt;setScenario(&#39;update&#39;);</span>
+<span class="x">            return true;</span>
+<span class="x">        }</span>
+<span class="x">    }</span>
+<span class="x">    return false;</span>
+<span class="x">}</span>
+
+<span class="x">public function update($attributes=null)</span>
+<span class="x">{</span>
+<span class="x">    if($this-&gt;getIsNewRecord())</span>
+<span class="x">        throw new CDbException(Yii::t(&#39;yii&#39;,&#39;The active record cannot be updated because it is new.&#39;));</span>
+<span class="x">    if($this-&gt;beforeSave())</span>
+<span class="x">    {</span>
+<span class="x">        Yii::trace(get_class($this).&#39;.update()&#39;,&#39;system.db.ar.CActiveRecord&#39;);</span>
+<span class="x">        if($this-&gt;_pk===null)</span>
+<span class="x">            $this-&gt;_pk=$this-&gt;getPrimaryKey();</span>
+<span class="x">        // 间接调用updateByPk来完成操作</span>
+<span class="x">        $this-&gt;updateByPk($this-&gt;getOldPrimaryKey(),$this-&gt;getAttributes($attributes));</span>
+<span class="x">        $this-&gt;_pk=$this-&gt;getPrimaryKey();</span>
+<span class="x">        $this-&gt;afterSave();</span>
+<span class="x">        return true;</span>
+<span class="x">    }</span>
+<span class="x">    else</span>
+<span class="x">        return false;</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>insert方法中调用的getCommandBuilder方法实现如下：</p>
+<div class="highlight"><pre><span class="x">public function getCommandBuilder()</span>
+<span class="x">{</span>
+<span class="x">    return $this-&gt;getDbConnection()-&gt;getSchema()-&gt;getCommandBuilder();</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>其中getDbConnection方法实现如下：</p>
+<div class="highlight"><pre><span class="x">public function getDbConnection()</span>
+<span class="x">{</span>
+<span class="x">    if(self::$db!==null)</span>
+<span class="x">        return self::$db;</span>
+<span class="x">    else</span>
+<span class="x">    {</span>
+<span class="x">        self::$db=Yii::app()-&gt;getDb();</span>
+<span class="x">        if(self::$db instanceof CDbConnection)</span>
+<span class="x">            return self::$db;</span>
+<span class="x">        else</span>
+<span class="x">            throw new CDbException(Yii::t(&#39;yii&#39;,&#39;Active Record requires a &quot;db&quot; CDbConnection application component.&#39;));</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>Yii中默认的DB组件名为db，所以如果你使用的是默认的db数据库，那么不用重写这个方法。否则，需要重写该方法，指明需要使用的数据库连接。</p>
+<p>getDbConnection方法返回的是一个CDbConnection对象，其getSchema方法实现如下：</p>
+<div class="highlight"><pre><span class="x">public function getSchema()</span>
+<span class="x">{</span>
+<span class="x">    if($this-&gt;_schema!==null)</span>
+<span class="x">        return $this-&gt;_schema;</span>
+<span class="x">    else</span>
+<span class="x">    {</span>
+<span class="x">        // 返回数据库配置信息connectionString字段中的数据库驱动类型，如mysql</span>
+<span class="x">        $driver=$this-&gt;getDriverName();</span>
+<span class="x">        /*</span>
+<span class="x">            driverMap属性的定义：</span>
+<span class="x">            public $driverMap=array(</span>
+<span class="x">              &#39;pgsql&#39;=&gt;&#39;CPgsqlSchema&#39;,    // PostgreSQL</span>
+<span class="x">              &#39;mysqli&#39;=&gt;&#39;CMysqlSchema&#39;,   // MySQL</span>
+<span class="x">              &#39;mysql&#39;=&gt;&#39;CMysqlSchema&#39;,    // MySQL</span>
+<span class="x">              &#39;sqlite&#39;=&gt;&#39;CSqliteSchema&#39;,  // sqlite 3</span>
+<span class="x">              &#39;sqlite2&#39;=&gt;&#39;CSqliteSchema&#39;, // sqlite 2</span>
+<span class="x">              &#39;mssql&#39;=&gt;&#39;CMssqlSchema&#39;,    // Mssql driver on windows hosts</span>
+<span class="x">              &#39;dblib&#39;=&gt;&#39;CMssqlSchema&#39;,    // dblib drivers on linux (and maybe others os) hosts</span>
+<span class="x">              &#39;sqlsrv&#39;=&gt;&#39;CMssqlSchema&#39;,   // Mssql</span>
+<span class="x">              &#39;oci&#39;=&gt;&#39;COciSchema&#39;,        // Oracle driver</span>
+<span class="x">           );</span>
+<span class="x">        */</span>
+<span class="x">        if(isset($this-&gt;driverMap[$driver]))</span>
+<span class="x">            // 加载对应的数据库驱动组件</span>
+<span class="x">            return $this-&gt;_schema=Yii::createComponent($this-&gt;driverMap[$driver], $this);</span>
+<span class="x">        else</span>
+<span class="x">            throw new CDbException(Yii::t(&#39;yii&#39;,&#39;CDbConnection does not support reading schema for {driver} database.&#39;,</span>
+<span class="x">                array(&#39;{driver}&#39;=&gt;$driver)));</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>以mysql的CMysqlSchema为例，<code>Yii::createComponent($this-&gt;driverMap[$driver], $this)</code>一句会实例化yii/framework/db/schema/mysql/CMysqlSchema.php中定义的CMysqlSchema类。该类自身无构造方法，继承自抽象类CDbSchema，CDbSchema的构造方法实现如下：</p>
+<div class="highlight"><pre><span class="x">public function __construct($conn)</span>
+<span class="x">{</span>
+<span class="x">    // 保存着当前CDbConnection数据库连接对象</span>
+<span class="x">    $this-&gt;_connection=$conn;</span>
+<span class="x">    foreach($conn-&gt;schemaCachingExclude as $name)</span>
+<span class="x">        $this-&gt;_cacheExclude[$name]=true;</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>得到CMysqlSchema对象后，调用其getCommandBuilder方法，该方法定义于类CDbSchema中，实现如下：</p>
+<div class="highlight"><pre><span class="x">public function getCommandBuilder()</span>
+<span class="x">{</span>
+<span class="x">    if($this-&gt;_builder!==null)</span>
+<span class="x">        return $this-&gt;_builder;</span>
+<span class="x">    else</span>
+<span class="x">        return $this-&gt;_builder=$this-&gt;createCommandBuilder();</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>其中调用的方法createCommandBuilder实现如下：</p>
+<div class="highlight"><pre><span class="x">protected function createCommandBuilder()</span>
+<span class="x">{</span>
+<span class="x">    return new CDbCommandBuilder($this);</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>实例化的CDbCommandBuilder类的构造方法如下所示：</p>
+<div class="highlight"><pre><span class="x">public function __construct($schema)</span>
+<span class="x">{</span>
+<span class="x">    $this-&gt;_schema=$schema;</span>
+<span class="x">    $this-&gt;_connection=$schema-&gt;getDbConnection();</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>这样insert方法中调用的getCommandBuilder最终返回了一个CDbCommandBuilder对象。</p>
+<p>而insert方法中<code>$table=$this-&gt;getMetaData()-&gt;tableSchema</code>一句调用的getMetaData方法实现如下：</p>
+<div class="highlight"><pre><span class="x">public function getMetaData()</span>
+<span class="x">{</span>
+<span class="x">    $className=get_class($this);</span>
+<span class="x">    if(!array_key_exists($className,self::$_md))</span>
+<span class="x">    {</span>
+<span class="x">        self::$_md[$className]=null; // preventing recursive invokes of {@link getMetaData()} via {@link __get()}</span>
+<span class="x">        self::$_md[$className]=new CActiveRecordMetaData($this);</span>
+<span class="x">    }</span>
+<span class="x">    return self::$_md[$className];</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>其中实例化的类CActiveRecordMetaData，构造方法如下所示：</p>
+<div class="highlight"><pre><span class="x">public function __construct($model)</span>
+<span class="x">{</span>
+<span class="x">    // 当前model类名</span>
+<span class="x">    $this-&gt;_modelClassName=get_class($model);</span>
+
+<span class="x">    // 得到表名</span>
+<span class="x">    $tableName=$model-&gt;tableName();</span>
+
+<span class="x">    // 调用_schema（以mysql为例，其值为CMysqlSchema对象）的getTable方法</span>
+<span class="x">    if(($table=$model-&gt;getDbConnection()-&gt;getSchema()-&gt;getTable($tableName))===null)</span>
+<span class="x">        throw new CDbException(Yii::t(&#39;yii&#39;,&#39;The table &quot;{table}&quot; for active record class &quot;{class}&quot; cannot be found in the database.&#39;,</span>
+<span class="x">            array(&#39;{class}&#39;=&gt;$this-&gt;_modelClassName,&#39;{table}&#39;=&gt;$tableName)));</span>
+<span class="x">    if($table-&gt;primaryKey===null)</span>
+<span class="x">    {</span>
+<span class="x">        $table-&gt;primaryKey=$model-&gt;primaryKey();</span>
+<span class="x">        if(is_string($table-&gt;primaryKey) &amp;&amp; isset($table-&gt;columns[$table-&gt;primaryKey]))</span>
+<span class="x">            $table-&gt;columns[$table-&gt;primaryKey]-&gt;isPrimaryKey=true;</span>
+<span class="x">        elseif(is_array($table-&gt;primaryKey))</span>
+<span class="x">        {</span>
+<span class="x">            foreach($table-&gt;primaryKey as $name)</span>
+<span class="x">            {</span>
+<span class="x">                if(isset($table-&gt;columns[$name]))</span>
+<span class="x">                    $table-&gt;columns[$name]-&gt;isPrimaryKey=true;</span>
+<span class="x">            }</span>
+<span class="x">        }</span>
+<span class="x">    }</span>
+<span class="x">    // 将数据表结构信息存于属性tableSchema</span>
+<span class="x">    $this-&gt;tableSchema=$table;</span>
+<span class="x">    $this-&gt;columns=$table-&gt;columns;</span>
+
+<span class="x">    foreach($table-&gt;columns as $name=&gt;$column)</span>
+<span class="x">    {</span>
+<span class="x">        if(!$column-&gt;isPrimaryKey &amp;&amp; $column-&gt;defaultValue!==null)</span>
+<span class="x">            $this-&gt;attributeDefaults[$name]=$column-&gt;defaultValue;</span>
+<span class="x">    }</span>
+
+<span class="x">    foreach($model-&gt;relations() as $name=&gt;$config)</span>
+<span class="x">    {</span>
+<span class="x">        $this-&gt;addRelation($name,$config);</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>其中调用的getTable方法，定义于抽象类CDbSchema中，实现如下：</p>
+<div class="highlight"><pre><span class="x">public function getTable($name,$refresh=false)</span>
+<span class="x">{</span>
+<span class="x">    if($refresh===false &amp;&amp; isset($this-&gt;_tables[$name]))</span>
+<span class="x">        return $this-&gt;_tables[$name];</span>
+<span class="x">    else</span>
+<span class="x">    {</span>
+<span class="x">        if($this-&gt;_connection-&gt;tablePrefix!==null &amp;&amp; strpos($name,&#39;{{&#39;)!==false)</span>
+<span class="x">            $realName=preg_replace(&#39;/\{\{(.*?)\}\}/&#39;,$this-&gt;_connection-&gt;tablePrefix.&#39;$1&#39;,$name);</span>
+<span class="x">        else</span>
+<span class="x">            $realName=$name;</span>
+
+<span class="x">        // temporarily disable query caching</span>
+<span class="x">        if($this-&gt;_connection-&gt;queryCachingDuration&gt;0)</span>
+<span class="x">        {</span>
+<span class="x">            $qcDuration=$this-&gt;_connection-&gt;queryCachingDuration;</span>
+<span class="x">            $this-&gt;_connection-&gt;queryCachingDuration=0;</span>
+<span class="x">        }</span>
+
+<span class="x">        // 先尝试从缓存中取数据表结构信息</span>
+<span class="x">        if(!isset($this-&gt;_cacheExclude[$name]) &amp;&amp; ($duration=$this-&gt;_connection-&gt;schemaCachingDuration)&gt;0 &amp;&amp; $this-&gt;_connection-&gt;schemaCacheID!==false &amp;&amp; ($cache=Yii::app()-&gt;getComponent($this-&gt;_connection-&gt;schemaCacheID))!==null)</span>
+<span class="x">        {</span>
+<span class="x">            $key=&#39;yii:dbschema&#39;.$this-&gt;_connection-&gt;connectionString.&#39;:&#39;.$this-&gt;_connection-&gt;username.&#39;:&#39;.$name;</span>
+<span class="x">            $table=$cache-&gt;get($key);</span>
+<span class="x">            // 没取到或者需要刷新缓存，则从数据库获取，并更新缓存</span>
+<span class="x">            if($refresh===true || $table===false)</span>
+<span class="x">            {</span>
+<span class="x">                $table=$this-&gt;loadTable($realName);</span>
+<span class="x">                if($table!==null)</span>
+<span class="x">                    $cache-&gt;set($key,$table,$duration);</span>
+<span class="x">            }</span>
+<span class="x">            $this-&gt;_tables[$name]=$table;</span>
+<span class="x">        }</span>
+<span class="x">        else</span>
+<span class="x">            // 直接从数据库获取数据表结构信息</span>
+<span class="x">            $this-&gt;_tables[$name]=$table=$this-&gt;loadTable($realName);</span>
+
+<span class="x">        if(isset($qcDuration))  // re-enable query caching</span>
+<span class="x">            $this-&gt;_connection-&gt;queryCachingDuration=$qcDuration;</span>
+
+<span class="x">        return $table;</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>其中调用的loadTable方法最终是通过执行SQL语句：</p>
+<ul>
+<li><code>'SHOW FULL COLUMNS FROM '.$table-&gt;rawName</code></li>
+<li><code>'SHOW CREATE TABLE '.$table-&gt;rawName</code></li>
+</ul>
+<p>来获取数据表信息，并将信息存于一个CMysqlColumnSchema对象中（以mysql为例）。</p>
+<p>insert方法中<code>$command=$builder-&gt;createInsertCommand($table,$this-&gt;getAttributes($attributes))</code>一句createInsertCommand方法定义于CDbCommandBuilder类中，实现如下：</p>
+<div class="highlight"><pre><span class="x">public function createInsertCommand($table,$data)</span>
+<span class="x">{</span>
+<span class="x">    $this-&gt;ensureTable($table);</span>
+<span class="x">    $fields=array();</span>
+<span class="x">    $values=array();</span>
+<span class="x">    $placeholders=array();</span>
+<span class="x">    $i=0;</span>
+<span class="x">    foreach($data as $name=&gt;$value)</span>
+<span class="x">    {</span>
+<span class="x">        if(($column=$table-&gt;getColumn($name))!==null &amp;&amp; ($value!==null || $column-&gt;allowNull))</span>
+<span class="x">        {</span>
+<span class="x">            $fields[]=$column-&gt;rawName;</span>
+<span class="x">            if($value instanceof CDbExpression)</span>
+<span class="x">            {</span>
+<span class="x">                $placeholders[]=$value-&gt;expression;</span>
+<span class="x">                foreach($value-&gt;params as $n=&gt;$v)</span>
+<span class="x">                    $values[$n]=$v;</span>
+<span class="x">            }</span>
+<span class="x">            else</span>
+<span class="x">            {</span>
+<span class="x">                $placeholders[]=self::PARAM_PREFIX.$i;</span>
+<span class="x">                $values[self::PARAM_PREFIX.$i]=$column-&gt;typecast($value);</span>
+<span class="x">                $i++;</span>
+<span class="x">            }</span>
+<span class="x">        }</span>
+<span class="x">    }</span>
+<span class="x">    if($fields===array())</span>
+<span class="x">    {</span>
+<span class="x">        $pks=is_array($table-&gt;primaryKey) ? $table-&gt;primaryKey : array($table-&gt;primaryKey);</span>
+<span class="x">        foreach($pks as $pk)</span>
+<span class="x">        {</span>
+<span class="x">            $fields[]=$table-&gt;getColumn($pk)-&gt;rawName;</span>
+<span class="x">            $placeholders[]=$this-&gt;getIntegerPrimaryKeyDefaultValue();</span>
+<span class="x">        }</span>
+<span class="x">    }</span>
+<span class="x">    $sql=&quot;INSERT INTO {$table-&gt;rawName} (&quot;.implode(&#39;, &#39;,$fields).&#39;) VALUES (&#39;.implode(&#39;, &#39;,$placeholders).&#39;)&#39;;</span>
+<span class="x">    $command=$this-&gt;_connection-&gt;createCommand($sql);</span>
+
+<span class="x">    foreach($values as $name=&gt;$value)</span>
+<span class="x">        $command-&gt;bindValue($name,$value);</span>
+
+<span class="x">    return $command;</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>另外还有与update、delete等操作对应的方法createUpdateCommand、createDeleteCommand等。</p>
+<p>update方法与insert方法的逻辑基本是一致的。</p>
+<p>CActiveRecord中所有数据库增、删、改、查操作，在构建出目标sql语句后，都是调用CDbConnection类的方法createCommand来得到一个CDbCommand类的对象，最后调用该对象的execute、query、queryAll等方法来完成查询获取结果。</p>
+<hr />
+<p>对于model类实例对象的属性赋值，依赖于CActiveRecord类的方法__set，实现如下：</p>
+<div class="highlight"><pre><span class="x">public function __set($name,$value)</span>
+<span class="x">{</span>
+<span class="x">    if($this-&gt;setAttribute($name,$value)===false)</span>
+<span class="x">    {</span>
+<span class="x">        if(isset($this-&gt;getMetaData()-&gt;relations[$name]))</span>
+<span class="x">            $this-&gt;_related[$name]=$value;</span>
+<span class="x">        else</span>
+<span class="x">            parent::__set($name,$value);</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>其中调用的setAttribute方法的实现如下：</p>
+<div class="highlight"><pre><span class="x">public function setAttribute($name,$value)</span>
+<span class="x">{</span>
+<span class="x">    if(property_exists($this,$name))</span>
+<span class="x">        $this-&gt;$name=$value;</span>
+<span class="x">    elseif(isset($this-&gt;getMetaData()-&gt;columns[$name]))</span>
+<span class="x">        $this-&gt;_attributes[$name]=$value;</span>
+<span class="x">    else</span>
+<span class="x">        return false;</span>
+<span class="x">    return true;</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<hr />
+<p>基于CActiveRecord类，如果想进行读取操作，那么子类需要重写model方法。CActiveRecord类的model方法实现如下：</p>
+<div class="highlight"><pre><span class="cm">/**</span>
+<span class="cm"> * Returns the static model of the specified AR class.</span>
+<span class="cm"> * The model returned is a static instance of the AR class.</span>
+<span class="cm"> * It is provided for invoking class-level methods (something similar to static class methods.)</span>
+<span class="cm"> *</span>
+<span class="cm"> * EVERY derived AR class must override this method as follows,</span>
+<span class="cm"> * &lt;pre&gt;</span>
+<span class="cm"> * public static function model($className=__CLASS__)</span>
+<span class="cm"> * {</span>
+<span class="cm"> *     return parent::model($className);</span>
+<span class="cm"> * }</span>
+<span class="cm"> * &lt;/pre&gt;</span>
+<span class="cm"> *</span>
+<span class="cm"> * @param string $className active record class name.</span>
+<span class="cm"> * @return CActiveRecord active record model instance.</span>
+<span class="cm"> */</span>
+<span class="k">public</span> <span class="nf">static</span> <span class="nx">function</span> <span class="nx">model</span><span class="p">(</span><span class="nv">$className</span><span class="o">=</span><span class="nx">__CLASS__</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="bp">self</span><span class="p">::</span><span class="nv">$_models</span><span class="err">[</span><span class="nv">$className</span><span class="cp">]</span>))
+        return self::$_models<span class="cp">[</span><span class="nv">$className</span><span class="cp">]</span>;
+    else
+    {
+        $model=self::$_models<span class="cp">[</span><span class="nv">$className</span><span class="cp">]</span>=new $className(null);
+        $model-&gt;attachBehaviors($model-&gt;behaviors());
+        return $model;
+    }
+}
+</pre></div>
+
+
+<p>根据该方法的注释可知道，所有的子类必须如下重写model方法：</p>
+<div class="highlight"><pre><span class="x">public static function model($className = __CLASS__)</span>
+<span class="x">{</span>
+<span class="x">    return parent::model($className);</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>为什么必须重写model方法呢？因为<code>__CLASS__</code>指的并不是当前对象所属的类，而是方法定义所在的类。</p>
+<p>隔壁的哥们告诉我，在 PHP 5.3 之后，如果CActiveRecord的model方法如下实现，就可以不用这样使用需要重写了。</p>
+<div class="highlight"><pre><span class="x">public static function model()</span>
+<span class="x">{</span>
+<span class="x">    $className = get_called_class();</span>
+<span class="x">    if(isset(self::$_models[$className]))</span>
+<span class="x">        return self::$_models[$className];</span>
+<span class="x">    else</span>
+<span class="x">    {</span>
+<span class="x">        $model=self::$_models[$className]=new $className(null);</span>
+<span class="x">        $model-&gt;attachBehaviors($model-&gt;behaviors());</span>
+<span class="x">        return $model;</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>在得到$model后，就可以调用对象的query、find、findAll、findByPk、findAllByPk、findByAttributes、findAllByAttributes、findBySql、findAllBySql等方法来查询数据。其中find、findAll、findByPk、findAllByPk、findByAttributes、findAllByAttributes最终是通过调用query方法来实现查询的。query方法的第一个参数是一个CDbCriteria类实例对象，这就意味着调用query方法来实现查询的方法需要根据参数实例化一个CDbCriteria类对象。如find方法实现如下：</p>
+<div class="highlight"><pre><span class="x">/**</span>
+<span class="x"> * Finds a single active record with the specified condition.</span>
+<span class="x"> * @param mixed $condition query condition or criteria.</span>
+<span class="x"> * If a string, it is treated as query condition (the WHERE clause);</span>
+<span class="x"> * If an array, it is treated as the initial values for constructing a {@link CDbCriteria} object;</span>
+<span class="x"> * Otherwise, it should be an instance of {@link CDbCriteria}.</span>
+<span class="x"> * @param array $params parameters to be bound to an SQL statement.</span>
+<span class="x"> * This is only used when the first parameter is a string (query condition).</span>
+<span class="x"> * In other cases, please use {@link CDbCriteria::params} to set parameters.</span>
+<span class="x"> * @return CActiveRecord the record found. Null if no record is found.</span>
+<span class="x"> */</span>
+<span class="x">public function find($condition=&#39;&#39;,$params=array())</span>
+<span class="x">{</span>
+<span class="x">    Yii::trace(get_class($this).&#39;.find()&#39;,&#39;system.db.ar.CActiveRecord&#39;);</span>
+<span class="x">    // 实例化一个CDbCriteria对象</span>
+<span class="x">    $criteria=$this-&gt;getCommandBuilder()-&gt;createCriteria($condition,$params);</span>
+<span class="x">    return $this-&gt;query($criteria);</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>而query方法的实现如下所示：</p>
+<div class="highlight"><pre><span class="x">protected function query($criteria,$all=false)</span>
+<span class="x">{</span>
+<span class="x">    $this-&gt;beforeFind();</span>
+<span class="x">    $this-&gt;applyScopes($criteria);</span>
+
+<span class="x">    if(empty($criteria-&gt;with))</span>
+<span class="x">    {</span>
+<span class="x">        if(!$all)</span>
+<span class="x">            $criteria-&gt;limit=1;</span>
+<span class="x">        // createFindCommand在上面提过</span>
+<span class="x">        $command=$this-&gt;getCommandBuilder()-&gt;createFindCommand($this-&gt;getTableSchema(),$criteria,$this-&gt;getTableAlias());</span>
+<span class="x">        return $all ? $this-&gt;populateRecords($command-&gt;queryAll(), true, $criteria-&gt;index) : $this-&gt;populateRecord($command-&gt;queryRow());</span>
+<span class="x">    }</span>
+<span class="x">    else</span>
+<span class="x">    {</span>
+<span class="x">        $finder=$this-&gt;getActiveFinder($criteria-&gt;with);</span>
+<span class="x">        return $finder-&gt;query($criteria,$all);</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<hr />
+<p>对于查询操作，很多时候需要多表关联查询。那么基于CActiveRecord如何实现多表关联查询（隐式自动地）呢？</p>
+<p>CActiveRecord类有个方法relations()：</p>
+<div class="highlight"><pre><span class="x">public function relations()</span>
+<span class="x">{</span>
+<span class="x">    return array();</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>这个方法的注释非常长，说明如何通过该方法声明当前model对应的数据表有哪些关联数据表，是何种关联关系。继承自CActiveRecord类的model类若想使用隐式的多表关联查询，则需要重写该方法。</p>
+<p>举例来说，有数据表UserContacts、Users，UserContacts中有外键字段user_id关联到Users。如果基于CActiveRecord在查询UserContacts记录时，需要便捷地获取关联Users的记录。那么可以在UserContacts数据表对应的model类中，这样重写relations方法：</p>
+<div class="highlight"><pre><span class="x">public function relations()</span>
+<span class="x">{</span>
+<span class="x">    return array(</span>
+<span class="x">            &#39;user&#39; =&gt; array(self::BELONGS_TO, &#39;Users&#39;, &#39;user_id&#39;),</span>
+<span class="x">    );</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>那么在得到一条记录对象（$uc）时，通过调用$uc-&gt;user，即可得到与该UserContacts记录关联的Users记录。不过这条关联记录的获取可能是在调用$uc-&gt;user时才去查询数据库的。</p>
+<p>若想提前将关联记录查询出来准备好，则可以再调用find、findAll等查询方法之前先调用with方法，如<code>self::model()-&gt;with('user')-&gt;find(array('usercontact_id' =&gt; 1))</code>，或者这样调用find方法<code>self::model()-&gt;find(array('usercontact_id' =&gt; 1, 'with' =&gt; 'user'))</code>。</p>
+<p>那么在调用<code>$uc-&gt;user</code>时，如何知道user是一个关联项，而不是一个当前对象的属性？如果当前对象对应的数据表已有一个名为user的字段，是否会屏蔽掉关联项？且看CActiveRecord类的__get方法：</p>
+<div class="highlight"><pre><span class="x">public function __get($name)</span>
+<span class="x">{</span>
+<span class="x">    // 先查看当前model类对应的数据表是否有名为$name的字段</span>
+<span class="x">    if(isset($this-&gt;_attributes[$name]))</span>
+<span class="x">        return $this-&gt;_attributes[$name];</span>
+<span class="x">    elseif(isset($this-&gt;getMetaData()-&gt;columns[$name]))</span>
+<span class="x">        return null;</span>
+<span class="x">    // 查看是否有名为$name的关联项</span>
+<span class="x">    elseif(isset($this-&gt;_related[$name]))</span>
+<span class="x">        return $this-&gt;_related[$name];</span>
+<span class="x">    elseif(isset($this-&gt;getMetaData()-&gt;relations[$name]))</span>
+<span class="x">        return $this-&gt;getRelated($name);</span>
+<span class="x">    else</span>
+<span class="x">        return parent::__get($name);</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<hr />
+<p><em>注：本文为草稿状态</em></p>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2014/11/14/read-yii-code-4/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+        </div><!-- /.twelve.columns -->
+ </div><!-- /.row -->
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+    
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+  <script src="../../../../theme/js/main.js"></script>
+</body>
+</html>

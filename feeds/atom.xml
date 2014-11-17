@@ -3,7 +3,7 @@
 &lt;p&gt;Yii中，对Model层的使用，有两种方式：&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;通过类CDbConnection和CDbCommand来操作&lt;/li&gt;
-&lt;li&gt;使用ORM形式：编写model类继承自类CActiveRecord&lt;/li&gt;
+&lt;li&gt;使用ORM形式：编写model类继承自抽象类CActiveRecord&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;第1种方式的示例如下：&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
@@ -69,16 +69,7 @@
 &lt;span class="x"&gt;        }&lt;/span&gt;
 &lt;span class="x"&gt;        catch(PDOException $e)&lt;/span&gt;
 &lt;span class="x"&gt;        {&lt;/span&gt;
-&lt;span class="x"&gt;            if(YII_DEBUG)&lt;/span&gt;
-&lt;span class="x"&gt;            {&lt;/span&gt;
-&lt;span class="x"&gt;                throw new CDbException(&amp;#39;CDbConnection failed to open the DB connection: &amp;#39;.&lt;/span&gt;
-&lt;span class="x"&gt;                    $e-&amp;gt;getMessage(),(int)$e-&amp;gt;getCode(),$e-&amp;gt;errorInfo);&lt;/span&gt;
-&lt;span class="x"&gt;            }&lt;/span&gt;
-&lt;span class="x"&gt;            else&lt;/span&gt;
-&lt;span class="x"&gt;            {&lt;/span&gt;
-&lt;span class="x"&gt;                Yii::log($e-&amp;gt;getMessage(),CLogger::LEVEL_ERROR,&amp;#39;exception.CDbException&amp;#39;);&lt;/span&gt;
-&lt;span class="x"&gt;                throw new CDbException(&amp;#39;CDbConnection failed to open the DB connection.&amp;#39;,(int)$e-&amp;gt;getCode(),$e-&amp;gt;errorInfo);&lt;/span&gt;
-&lt;span class="x"&gt;            }&lt;/span&gt;
+&lt;span class="x"&gt;            // 省略&lt;/span&gt;
 &lt;span class="x"&gt;        }&lt;/span&gt;
 &lt;span class="x"&gt;    }&lt;/span&gt;
 &lt;span class="x"&gt;}&lt;/span&gt;
@@ -300,23 +291,10 @@
 &lt;span class="x"&gt;    }&lt;/span&gt;
 &lt;span class="x"&gt;    catch(Exception $e)&lt;/span&gt;
 &lt;span class="x"&gt;    {&lt;/span&gt;
-&lt;span class="x"&gt;        if($this-&amp;gt;_connection-&amp;gt;enableProfiling)&lt;/span&gt;
-&lt;span class="x"&gt;            Yii::endProfile(&amp;#39;system.db.CDbCommand.execute(&amp;#39;.$this-&amp;gt;getText().$par.&amp;#39;)&amp;#39;,&amp;#39;system.db.CDbCommand.execute&amp;#39;);&lt;/span&gt;
-
-&lt;span class="x"&gt;        $errorInfo=$e instanceof PDOException ? $e-&amp;gt;errorInfo : null;&lt;/span&gt;
-&lt;span class="x"&gt;        $message=$e-&amp;gt;getMessage();&lt;/span&gt;
-&lt;span class="x"&gt;        Yii::log(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;CDbCommand::execute() failed: {error}. The SQL statement executed was: {sql}.&amp;#39;,&lt;/span&gt;
-&lt;span class="x"&gt;            array(&amp;#39;{error}&amp;#39;=&amp;gt;$message, &amp;#39;{sql}&amp;#39;=&amp;gt;$this-&amp;gt;getText().$par)),CLogger::LEVEL_ERROR,&amp;#39;system.db.CDbCommand&amp;#39;);&lt;/span&gt;
-
-&lt;span class="x"&gt;        if(YII_DEBUG)&lt;/span&gt;
-&lt;span class="x"&gt;            $message.=&amp;#39;. The SQL statement executed was: &amp;#39;.$this-&amp;gt;getText().$par;&lt;/span&gt;
-
-&lt;span class="x"&gt;        throw new CDbException(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;CDbCommand failed to execute the SQL statement: {error}&amp;#39;,&lt;/span&gt;
-&lt;span class="x"&gt;            array(&amp;#39;{error}&amp;#39;=&amp;gt;$message)),(int)$e-&amp;gt;getCode(),$errorInfo);&lt;/span&gt;
+&lt;span class="x"&gt;        // 省略&lt;/span&gt;
 &lt;span class="x"&gt;    }&lt;/span&gt;
 &lt;span class="x"&gt;}&lt;/span&gt;
 
-&lt;span class="x"&gt;:::php&lt;/span&gt;
 &lt;span class="x"&gt;public function query($params=array())&lt;/span&gt;
 &lt;span class="x"&gt;{&lt;/span&gt;
 &lt;span class="x"&gt;    return $this-&amp;gt;queryInternal(&amp;#39;&amp;#39;,0,$params);&lt;/span&gt;
@@ -400,19 +378,7 @@
 &lt;span class="x"&gt;    }&lt;/span&gt;
 &lt;span class="x"&gt;    catch(Exception $e)&lt;/span&gt;
 &lt;span class="x"&gt;    {&lt;/span&gt;
-&lt;span class="x"&gt;        if($this-&amp;gt;_connection-&amp;gt;enableProfiling)&lt;/span&gt;
-&lt;span class="x"&gt;            Yii::endProfile(&amp;#39;system.db.CDbCommand.query(&amp;#39;.$this-&amp;gt;getText().$par.&amp;#39;)&amp;#39;,&amp;#39;system.db.CDbCommand.query&amp;#39;);&lt;/span&gt;
-
-&lt;span class="x"&gt;        $errorInfo=$e instanceof PDOException ? $e-&amp;gt;errorInfo : null;&lt;/span&gt;
-&lt;span class="x"&gt;        $message=$e-&amp;gt;getMessage();&lt;/span&gt;
-&lt;span class="x"&gt;        Yii::log(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;CDbCommand::{method}() failed: {error}. The SQL statement executed was: {sql}.&amp;#39;,&lt;/span&gt;
-&lt;span class="x"&gt;            array(&amp;#39;{method}&amp;#39;=&amp;gt;$method, &amp;#39;{error}&amp;#39;=&amp;gt;$message, &amp;#39;{sql}&amp;#39;=&amp;gt;$this-&amp;gt;getText().$par)),CLogger::LEVEL_ERROR,&amp;#39;system.db.CDbCommand&amp;#39;);&lt;/span&gt;
-
-&lt;span class="x"&gt;        if(YII_DEBUG)&lt;/span&gt;
-&lt;span class="x"&gt;            $message.=&amp;#39;. The SQL statement executed was: &amp;#39;.$this-&amp;gt;getText().$par;&lt;/span&gt;
-
-&lt;span class="x"&gt;        throw new CDbException(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;CDbCommand failed to execute the SQL statement: {error}&amp;#39;,&lt;/span&gt;
-&lt;span class="x"&gt;            array(&amp;#39;{error}&amp;#39;=&amp;gt;$message)),(int)$e-&amp;gt;getCode(),$errorInfo);&lt;/span&gt;
+&lt;span class="x"&gt;        // 省略&lt;/span&gt;
 &lt;span class="x"&gt;    }&lt;/span&gt;
 &lt;span class="x"&gt;}&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
@@ -493,7 +459,9 @@
 &lt;span class="x"&gt;    if($this-&amp;gt;beforeSave())&lt;/span&gt;
 &lt;span class="x"&gt;    {&lt;/span&gt;
 &lt;span class="x"&gt;        Yii::trace(get_class($this).&amp;#39;.insert()&amp;#39;,&amp;#39;system.db.ar.CActiveRecord&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;        // ...&lt;/span&gt;
 &lt;span class="x"&gt;        $builder=$this-&amp;gt;getCommandBuilder();&lt;/span&gt;
+&lt;span class="x"&gt;        // ...&lt;/span&gt;
 &lt;span class="x"&gt;        $table=$this-&amp;gt;getMetaData()-&amp;gt;tableSchema;&lt;/span&gt;
 &lt;span class="x"&gt;        $command=$builder-&amp;gt;createInsertCommand($table,$this-&amp;gt;getAttributes($attributes));&lt;/span&gt;
 &lt;span class="x"&gt;        if($command-&amp;gt;execute())&lt;/span&gt;
@@ -725,6 +693,8 @@
 &lt;span class="x"&gt;        }&lt;/span&gt;
 
 &lt;span class="x"&gt;        // 先尝试从缓存中取数据表结构信息&lt;/span&gt;
+&lt;span class="x"&gt;        // CDbConnection类的schemaCachingDuration属性默认为0，如果不配置该属性，那么就不会使用缓存，那么每次增、删、改、查操作都需要loadTable，&lt;/span&gt;
+&lt;span class="x"&gt;        // 对数据库的压力，以及性能影响是不是很大？！但如果加了缓存，那么当对数据表的结构做变更时会不会有问题？&lt;/span&gt;
 &lt;span class="x"&gt;        if(!isset($this-&amp;gt;_cacheExclude[$name]) &amp;amp;&amp;amp; ($duration=$this-&amp;gt;_connection-&amp;gt;schemaCachingDuration)&amp;gt;0 &amp;amp;&amp;amp; $this-&amp;gt;_connection-&amp;gt;schemaCacheID!==false &amp;amp;&amp;amp; ($cache=Yii::app()-&amp;gt;getComponent($this-&amp;gt;_connection-&amp;gt;schemaCacheID))!==null)&lt;/span&gt;
 &lt;span class="x"&gt;        {&lt;/span&gt;
 &lt;span class="x"&gt;            $key=&amp;#39;yii:dbschema&amp;#39;.$this-&amp;gt;_connection-&amp;gt;connectionString.&amp;#39;:&amp;#39;.$this-&amp;gt;_connection-&amp;gt;username.&amp;#39;:&amp;#39;.$name;&lt;/span&gt;

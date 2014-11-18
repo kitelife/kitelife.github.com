@@ -234,28 +234,29 @@ Yii提供了一个直接可用的模板引擎组件类CPradoViewRenderer（见�
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;&lt;code&gt;renderFile&lt;/code&gt;中&lt;code&gt;$content=$renderer-&amp;gt;renderFile($this,$viewFile,$data,$return);&lt;/code&gt;一行调用的renderFile方法，在抽象类CViewRenderer中定义如下：
-；
-    :::php
-    public function renderFile($context,$sourceFile,$data,$return)
-    {
-        if(!is_file($sourceFile) || ($file=realpath($sourceFile))===false)
-            throw new CException(Yii::t('yii','View file "{file}" does not exist.',array('{file}'=&amp;gt;$sourceFile)));
-        // 尝试从runtime目录中获取已编译好的模板，如果编译好的模板不是同一存放在runtime目录下，则默认和未编译的模板文件在同一个目录下，并且文件名多一个"c"后缀
-        // 得到$viewFile可能并不存在，第一次请求该模板
-        $viewFile=$this-&amp;gt;getViewFile($sourceFile);
-        // 如果相比已编译好的模板文件，未编译的模板已发生变更，则需要重新编译
-        // 如果已编译好的模板文件不存在，则@filemtime($viewFile)返回的是false，这个条件也是返回true
-        if(@filemtime($sourceFile)&amp;gt;@filemtime($viewFile))
-        {
-            // 抽象类CViewRenderer中generateViewFile方法并未实现，所以自己封装模板引擎组件时需要实现该方法
-            $this-&amp;gt;generateViewFile($sourceFile,$viewFile);
-            // 设置编译好的模板文件的访问权限，默认是0755 (owner rwx, group rx and others rx)
-            @chmod($viewFile,$this-&amp;gt;filePermission);
-        }
-        // 编译好的模板文件其实就是一个PHP脚本（HTML代码中夹杂PHP代码），所以还需要渲染一下
-        return $context-&amp;gt;renderInternal($viewFile,$data,$return);
-    }&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;renderFile&lt;/code&gt;中&lt;code&gt;$content=$renderer-&amp;gt;renderFile($this,$viewFile,$data,$return);&lt;/code&gt;一行调用的renderFile方法，在抽象类CViewRenderer中定义如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function renderFile($context,$sourceFile,$data,$return)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if(!is_file($sourceFile) || ($file=realpath($sourceFile))===false)&lt;/span&gt;
+&lt;span class="x"&gt;        throw new CException(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;View file &amp;quot;{file}&amp;quot; does not exist.&amp;#39;,array(&amp;#39;{file}&amp;#39;=&amp;gt;$sourceFile)));&lt;/span&gt;
+&lt;span class="x"&gt;    // 尝试从runtime目录中获取已编译好的模板，如果编译好的模板不是同一存放在runtime目录下，则默认和未编译的模板文件在同一个目录下，并且文件名多一个&amp;quot;c&amp;quot;后缀&lt;/span&gt;
+&lt;span class="x"&gt;    // 得到$viewFile可能并不存在，第一次请求该模板&lt;/span&gt;
+&lt;span class="x"&gt;    $viewFile=$this-&amp;gt;getViewFile($sourceFile);&lt;/span&gt;
+&lt;span class="x"&gt;    // 如果相比已编译好的模板文件，未编译的模板已发生变更，则需要重新编译&lt;/span&gt;
+&lt;span class="x"&gt;    // 如果已编译好的模板文件不存在，则@filemtime($viewFile)返回的是false，这个条件也是返回true&lt;/span&gt;
+&lt;span class="x"&gt;    if(@filemtime($sourceFile)&amp;gt;@filemtime($viewFile))&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        // 抽象类CViewRenderer中generateViewFile方法并未实现，所以自己封装模板引擎组件时需要实现该方法&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;generateViewFile($sourceFile,$viewFile);&lt;/span&gt;
+&lt;span class="x"&gt;        // 设置编译好的模板文件的访问权限，默认是0755 (owner rwx, group rx and others rx)&lt;/span&gt;
+&lt;span class="x"&gt;        @chmod($viewFile,$this-&amp;gt;filePermission);&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    // 编译好的模板文件其实就是一个PHP脚本（HTML代码中夹杂PHP代码），所以还需要渲染一下&lt;/span&gt;
+&lt;span class="x"&gt;    return $context-&amp;gt;renderInternal($viewFile,$data,$return);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
 &lt;p&gt;类&lt;code&gt;CController&lt;/code&gt;的&lt;code&gt;render&lt;/code&gt;方法在调用&lt;code&gt;renderPartial&lt;/code&gt;得到渲染结果后，取得页面布局模板文件，然后将&lt;code&gt;renderPartial&lt;/code&gt;的渲染结果作为数据渲染布局模板，从而得到一个完整HTML页面。
 获取布局模板文件路径的方法&lt;code&gt;getLayoutFile&lt;/code&gt;实现如下所示（定义于类CController中）：&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function getLayoutFile($layoutName)&lt;/span&gt;

@@ -51,6 +51,7 @@
                 <li><a href="/tags.html">标 签</a></li>
                 <li><a href="/pages/tools.html">工具集</a></li>
                 <li><a href="/pages/links.html">链 接</a></li>
+                <li><a href="/pages/tech-share.html">技术分享</a></li>
                 <li><a href="/pages/aboutme.html">关于我</a></li>
                 <li><a href="/feeds/rss.xml">RSS</a></li>
 
@@ -61,6 +62,111 @@
 <div class="row">
     <div class="eleven columns">
         <ol id="post-list">
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
+                        <a href="./2014/11/19/read-yii-code-6/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 缓存">Yii源码阅读笔记 - 缓存</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2014-11-19T00:00:00"> 2014-11-19 Wed </abbr>
+<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <h3>概述</h3>
+<p>从之前的文章<a href="http://youngsterxyf.github.io/2014/11/12/read-yii-code-2/">Yii源码阅读笔记 - 路由解析</a>
+及<a href="http://youngsterxyf.github.io/2014/11/14/read-yii-code-4/">Yii源码阅读笔记 - Model层实现</a>可以看到Yii框架对于<strong>解析好的路由规则</strong>及<strong>数据表的schema</strong>都会根据条件尝试读写缓存
+来提高应用性能。</p>
+<p>但缓存组件并非核心组件，需要额外的配置，默认ID为<code>cache</code>，如果不使用该ID，那么就得注意同时配置好框架中使用缓存的组件。</p>
+<p>恰当地使用缓存组件，能明显地提高应用的性能。</p>
+<p>针对不同的缓存后端（backend），Yii框架提供了多种缓存组件，如文件缓存（CFileCache）、Memcached缓存（CMemCache）、Redis缓存（CRedisCache）等。这些缓存组件（除CDummyCache外，CDummyCache并不是一个有效的缓存组件）均直接继承自抽象类CCache（见文件<code>yii/framework/caching/CCache.php</code>）。</p>
+<p>下面以使用Memcached缓存为例，分析Yii框架缓存组件的实现。</p>
+<h3>分析</h3>
+<p>类<code>CMemcache</code>所在的整个继承树（<code>CMemcache</code> -&gt; <code>CCache</code> -&gt; <code>CApplicationComponent ...</code></p> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="./2014/11/19/read-yii-code-6/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 缓存">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="./tag/php.html">PHP</a>
+                    <a class="danger label" href="./tag/yii.html">Yii</a>
+                    <a class="danger label" href="./tag/bi-ji.html">笔记</a>
+                    <a class="danger label" href="./tag/zong-jie.html">总结</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
+                        <a href="./2014/11/18/read-yii-code-5/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 模板引擎集成">Yii源码阅读笔记 - 模板引擎集成</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2014-11-18T00:00:00"> 2014-11-18 Tue </abbr>
+<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <h3>概述</h3>
+<p>通常我们会使用模板引擎来渲染HTML页面，而不是使用HTML代码中插入PHP代码的方式来编写动态页面。Yii框架中模板引擎也是作为组件引入的，默认ID为viewRenderer，
+但从<a href="http://youngsterxyf.github.io/2014/11/13/read-yii-code-3/">Yii源码阅读笔记 - 组件集成</a>可以看到Yii Web应用加载的核心组件中并没有viewRenderer，所以需要自己配置。
+Yii提供了一个直接可用的模板引擎组件类CPradoViewRenderer（见文件<code>yii/framework/web/renderers/CPradoViewRenderer.php</code>），该模板引擎类让开发者可以使用类Prado框架的模板语法。</p>
+<p>如果你想使用Smarty这种第三方模板引擎，有两种方式将模板引擎引入Yii中使用（以Smarty为例）：</p>
+<ol>
+<li>将Smarty封装成一个Yii的普通组件，然后配置加载到Yii::app()。假设组件ID为smarty，那么就可以通过<code>Yii::app()-&gt;smarty</code>来调用组件。</li>
+<li>参考CPradoViewRenderer类的实现，将Smarty封装成一个模板引擎组件，并以ID为viewRenderer进行配置加载。</li>
+</ol>
+<p>相比而言，第二种方式更好。原因是：第一种方式由于每种第三方模板引擎的接口不一样，如果应用要替换模板引擎，就需要修改控制器类中的代码。而第二种方式由于第三方组件统一封装成Yii框架定义的模板引擎接口形式，
+所以如果要替换模板引擎，只需修改自定义模板引擎组件类的接口实现就可以了。这样调用模板引擎的代码逻辑就只依赖接口形式，而不是依赖于接口实现，从而实现解耦。</p>
+<p>本文主要分析第二种方式的实现。</p>
+<h3>分析</h3>
+<p>Yii中对页面模板进行渲染可以调用 ...</p> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="./2014/11/18/read-yii-code-5/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 模板引擎集成">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="./tag/php.html">PHP</a>
+                    <a class="danger label" href="./tag/yii.html">Yii</a>
+                    <a class="danger label" href="./tag/bi-ji.html">笔记</a>
+                    <a class="danger label" href="./tag/zong-jie.html">总结</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
+                        <a href="./2014/11/14/read-yii-code-4/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - Model层实现">Yii源码阅读笔记 - Model层实现</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2014-11-14T00:00:00"> 2014-11-14 Fri </abbr>
+<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <h3>概述</h3>
+<p>Yii中，对Model层的使用，有两种方式：</p>
+<ol>
+<li>通过类CDbConnection和CDbCommand来操作</li>
+<li>使用ORM形式：编写model类继承自抽象类CActiveRecord</li>
+</ol>
+<p>第1种方式的示例如下：</p>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="nv">$connection</span> <span class="o">=</span> <span class="nx">Yii</span><span class="o">::</span><span class="na">app</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">db</span><span class="p">;</span>  <span class="c1">// 或者Yii::app()-&gt;getComponent(&#39;db&#39;);</span>
+<span class="nv">$queryResult</span> <span class="o">=</span> <span class="nv">$connection</span><span class="o">-&gt;</span><span class="na">createCommand</span><span class="p">(</span><span class="nv">$sql</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">queryRow</span><span class="p">();</span>
+</pre></div>
+
+
+<p>第2种方式中编写的model类可能需要实现方法<code>getDbConnection</code>、<code>model</code>、<code>tableName</code>。</p>
+<p>在实现上，第2种方式是基于第1种方式的，即第2种方式的抽象程度更高。Yii没有屏蔽第1种方式，这样能让开发者按需选择。
+但我个人并不喜欢这样，两种方式同时存在，会导致应用的model实现稍显混乱。</p>
+<h3>分析</h3>
+<p>Yii框架model层的入口为CDbConnection类，该类有很多public的属性可供配置，如<code>connectionString</code>、<code>username</code>、<code>password</code>等。</p>
+<p>根据<a href="http://youngsterxyf.github.io/2014/11/13/read-yii-code-3/">Yii源码阅读笔记 - 组件集成</a>一文可知，组件初始化时会调用init方法。
+类CDbConnection的init类实现如下：</p>
+<div class="highlight"><pre><span class="x">public function ...</span></pre></div> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="./2014/11/14/read-yii-code-4/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - Model层实现">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="./tag/php.html">PHP</a>
+                    <a class="danger label" href="./tag/yii.html">Yii</a>
+                    <a class="danger label" href="./tag/bi-ji.html">笔记</a>
+                    <a class="danger label" href="./tag/zong-jie.html">总结</a>
+                </div>
+            </article>
+            </li>
             <li>
             <article class="hentry">
                 <header>
@@ -258,114 +364,6 @@
                 </div>
             </article>
             </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="./2014/10/14/centralized-logging-architecture/" rel="bookmark" title="Permalink to 中心化日志记录架构（译）">中心化日志记录架构（译）</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2014-10-14T00:00:00"> 2014-10-14 Tue </abbr>
-<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>原文：<a href="http://jasonwilder.com/blog/2013/07/16/centralized-logging-architecture/">Centralized Logging Architecture</a></p>
-<p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
-<p>在<a href="http://jasonwilder.com/blog/2012/01/03/centralized-logging/">中心化日志记录</a>一文中，我介绍了几个工具，用于解决中心化日志记录的问题。但这些工具一般仅能解决这个问题的一部分，
-这意味着需要综合使用几个工具来构建一个健壮的解决方案。</p>
-<p>你需要解决问题的这几个主要方面：<em>收集</em>、<em>传输</em>、<em>存储</em>、以及<em>分析</em>。某些特殊的应用场景下，也许还希望具备<em>告警</em>的能力。</p>
-<h4>收集</h4>
-<p>应用程序以不同的方式产生日志，一些是通过syslog，其他一些是直接写到文件。考虑一个运行在linux主机上的典型web应用，在<code>/var/log</code>目录会有十几个甚至更多的日志文件，
-如果一些应用指定日志存放在HOME目录或者其他位置，则这些目录下也是如此。</p>
-<p>如果你正在运营一个基于web的应用，开发人员或者运维同事需要快速地访问日志数据以便对线上问题进行排错，那么就需要一个能够近乎实时监控日志文件变化的方案。
-如果使用基于日志拷贝的方式 --- 文件以固定的时间间隔拷贝到一台中心服务器上，那么仅能检查与复制操作频率相同的新增日志数据。当站点已经挂掉，而你正在等待相关日志数据的复制，
-那么一分钟一次的 rsync cron 任务也许还不够快。</p>
-<p>从另外一个角度来看，如果需要分析线下日志数据，计算各种度量指标，或者其他批量的工作 ...</p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="./2014/10/14/centralized-logging-architecture/" rel="bookmark" title="Permalink to 中心化日志记录架构（译）">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="./tag/fan-yi.html">翻译</a>
-                    <a class="danger label" href="./tag/ri-zhi.html">日志</a>
-                    <a class="danger label" href="./tag/jia-gou.html">架构</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="./2014/09/22/phpmetrics-of-popular-php-projects/" rel="bookmark" title="Permalink to 流行PHP项目的phpmetrics分析（译）">流行PHP项目的phpmetrics分析（译）</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2014-09-22T00:00:00"> 2014-09-22 Mon </abbr>
-<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>原文：<a href="https://peteraba.com/blog/phpmetrics-of-popular-projects/">phpmetrics of popular php projects</a></p>
-<p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
-<p>之前我偶然发现一个名为<a href="http://www.phpmetrics.org/">phpmetrics</a>的新工具，可用于计算及展示php的度量指标。我当时立马喜欢上了这个工具，并决定用它分析我认为重要的一些php项目。
-我知道这个项目列表还远远不够完善，但应该仍然值得一看。我特别喜欢其中的“可维护性”报告，我发现视觉上那些红色的斑点就和丑陋的代码一样令人厌恶。</p>
-<p>这个工具貌似还有点小bug，我会尽力尽快修复这个工具项目的这些小问题。</p>
-<p><strong>一些重要的说明</strong></p>
-<ul>
-<li>目前我还无法得到Cakephp和Typo3的分析报告，之后我会尽快调查一下这个问题。</li>
-<li>我是在完整的代码库或下载的源码包上执行这个工具的，这意味着某些情况下还分析了项目的外部依赖库。之后我可能会调整，但目前不在计划之内。</li>
-<li>有些项目包含很多代码库，所以我无法确保测试的都是正确的那个代码库。<em>Joomla</em>尤其可能这样。</li>
-<li>某些项目并非非常知名，但在github上呈现关注度上升趋势。</li>
-<li>dm-mailer这个项目无足轻重，只是我最新的个人兴趣项目。我将它与phpmetrics一起归到Backfire一节。</li>
-<li>注意：php-yaf和phalcon都是非常有意思的php框架，但多数代码是C实现的，因此没有包含进来。</li>
-</ul>
-<hr />
-<p>说明：阅读该报告的一点小提示：</p>
-<ul>
-<li>更多的斑点只是意味着更多的类</li>
-<li>红色意味着不可维护，黄色表示可接受，绿色则表明良好、可维护的代码。</li>
-</ul>
-<hr />
-<h3>分析结果 ...</h3> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="./2014/09/22/phpmetrics-of-popular-php-projects/" rel="bookmark" title="Permalink to 流行PHP项目的phpmetrics分析（译）">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="./tag/fan-yi.html">翻译</a>
-                    <a class="danger label" href="./tag/php.html">PHP</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="./2014/09/06/experience-about-restful-api/" rel="bookmark" title="Permalink to RESTful API设计的一点经验">RESTful API设计的一点经验</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2014-09-06T00:00:00"> 2014-09-06 Sat </abbr>
-<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>前段时间的工作涉及产品开放API的设计与实现，整个过程大致可分为以下几个步骤：</p>
-<ol>
-<li>根据需求、原有数据库设计等，花了半天左右的工夫完成初稿；</li>
-<li>就初稿与相关同事进行讨论，确定一些细节问题，逐步完善；</li>
-<li>根据设计稿，基于Yii框架，配置路由，实现用户身份认证模块；</li>
-<li>基于步骤3，逐个实现业务相关API；</li>
-<li>对部分代码进行重构，减少不必要的代码重复。主要使用Yii控制器的beforeAction方法来实现多层过滤器。</li>
-</ol>
-<h3>设计</h3>
-<p>考虑到RESTful API简洁明了的接口表现形式，一开始我们就一致确定使用RESTful风格的API。参考以前自己使用多个开放平台API的经验，
-及<a href="https://developer.github.com/v3/">Github的开放API文档</a>，大致完成设计初稿。</p>
-<h5>资源</h5>
-<p>RESTful API主要有两个核心：</p>
-<ol>
-<li>HTTP协议的4个谓词 - GET、POST、PUT、DELETE，分别对应“查询”、“新增”、“更新”、“删除”4种操作</li>
-<li>资源（resource）</li>
-</ol>
-<p>RESTful风格API的设计，最难之处，我认为就是“资源”。</p>
-<p>“资源”是什么？“资源”并不是对应数据库中一个一个数据表，“资源 ...</p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="./2014/09/06/experience-about-restful-api/" rel="bookmark" title="Permalink to RESTful API设计的一点经验">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="./tag/bi-ji.html">笔记</a>
-                    <a class="danger label" href="./tag/restful.html">RESTful</a>
-                </div>
-            </article>
-            </li>
         </ol><!-- /#posts-list -->
     </div><!-- /.eleven.columns -->
 <div class="three columns">
@@ -378,6 +376,7 @@
       <li><a href="/tags.html">标 签</a></li>
       <li><a href="/pages/tools.html">工具集</a></li>
       <li><a href="/pages/links.html">链 接</a></li>
+      <li><a href="/pages/tech-share.html">技术分享</a></li>
       <li><a href="/pages/aboutme.html">关于我</a></li>
       <li><a href="/feeds/rss.xml">RSS</a></li>
   </ul>
@@ -391,83 +390,83 @@
 
 <h4>标签</h4>
 	<ul>
-	    <li class="tag-4"><a href="./tag/teng-xun.html">腾讯</a></li>
-	    <li class="tag-2"><a href="./tag/golang.html">Golang</a></li>
-	    <li class="tag-2"><a href="./tag/javascript.html">JavaScript</a></li>
-	    <li class="tag-3"><a href="./tag/gong-zuo.html">工作</a></li>
-	    <li class="tag-4"><a href="./tag/jekyll.html">jekyll</a></li>
-	    <li class="tag-3"><a href="./tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
-	    <li class="tag-4"><a href="./tag/ri-zhi.html">日志</a></li>
 	    <li class="tag-4"><a href="./tag/zi-ti.html">字体</a></li>
 	    <li class="tag-1"><a href="./tag/linux.html">Linux</a></li>
-	    <li class="tag-4"><a href="./tag/python-weekly.html">python-weekly</a></li>
-	    <li class="tag-3"><a href="./tag/xue-xi-fang-fa.html">学习方法</a></li>
-	    <li class="tag-3"><a href="./tag/keepalived.html">Keepalived</a></li>
-	    <li class="tag-3"><a href="./tag/wei-xin.html">微信</a></li>
-	    <li class="tag-3"><a href="./tag/gong-ju.html">工具</a></li>
-	    <li class="tag-4"><a href="./tag/wei-bo.html">微博</a></li>
-	    <li class="tag-3"><a href="./tag/nginx.html">Nginx</a></li>
-	    <li class="tag-4"><a href="./tag/easy_install.html">easy_install</a></li>
-	    <li class="tag-4"><a href="./tag/rest.html">REST</a></li>
-	    <li class="tag-4"><a href="./tag/rong-liang-gui-hua.html">容量规划</a></li>
-	    <li class="tag-4"><a href="./tag/shu-ju-ku.html">数据库</a></li>
-	    <li class="tag-3"><a href="./tag/yii.html">Yii</a></li>
-	    <li class="tag-4"><a href="./tag/socketio.html">socket.io</a></li>
-	    <li class="tag-4"><a href="./tag/liu-lan-qi-jian-rong.html">浏览器兼容</a></li>
-	    <li class="tag-4"><a href="./tag/zhong-jian-jian.html">中间件</a></li>
-	    <li class="tag-4"><a href="./tag/vmware.html">VMware</a></li>
-	    <li class="tag-4"><a href="./tag/diao-shi.html">调试</a></li>
-	    <li class="tag-1"><a href="./tag/zong-jie.html">总结</a></li>
-	    <li class="tag-3"><a href="./tag/fu-zai-jun-heng.html">负载均衡</a></li>
-	    <li class="tag-4"><a href="./tag/pypi.html">PyPI</a></li>
-	    <li class="tag-2"><a href="./tag/shell.html">Shell</a></li>
-	    <li class="tag-4"><a href="./tag/dns.html">DNS</a></li>
-	    <li class="tag-4"><a href="./tag/haproxyconsole.html">HAProxyConsole</a></li>
 	    <li class="tag-2"><a href="./tag/git.html">Git</a></li>
-	    <li class="tag-4"><a href="./tag/gao-ke-yong.html">高可用</a></li>
-	    <li class="tag-4"><a href="./tag/ying-yu.html">英语</a></li>
-	    <li class="tag-4"><a href="./tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
-	    <li class="tag-4"><a href="./tag/windows.html">Windows</a></li>
-	    <li class="tag-3"><a href="./tag/haproxy.html">HAProxy</a></li>
+	    <li class="tag-4"><a href="./tag/diao-shi.html">调试</a></li>
 	    <li class="tag-1"><a href="./tag/php.html">PHP</a></li>
+	    <li class="tag-4"><a href="./tag/jekyll.html">jekyll</a></li>
 	    <li class="tag-1"><a href="./tag/bi-ji.html">笔记</a></li>
-	    <li class="tag-4"><a href="./tag/li-lun.html">理论</a></li>
-	    <li class="tag-4"><a href="./tag/restful.html">RESTful</a></li>
-	    <li class="tag-4"><a href="./tag/gan-wu.html">感悟</a></li>
-	    <li class="tag-3"><a href="./tag/suan-fa.html">算法</a></li>
-	    <li class="tag-4"><a href="./tag/bind.html">BIND</a></li>
-	    <li class="tag-3"><a href="./tag/mysql.html">MySQL</a></li>
-	    <li class="tag-4"><a href="./tag/wen-zi.html">文字</a></li>
-	    <li class="tag-3"><a href="./tag/jia-gou.html">架构</a></li>
-	    <li class="tag-4"><a href="./tag/pip.html">pip</a></li>
-	    <li class="tag-1"><a href="./tag/fan-yi.html">翻译</a></li>
-	    <li class="tag-4"><a href="./tag/css.html">CSS</a></li>
-	    <li class="tag-4"><a href="./tag/zi-sheng.html">自省</a></li>
-	    <li class="tag-4"><a href="./tag/github.html">github</a></li>
 	    <li class="tag-3"><a href="./tag/ming-ling-xing.html">命令行</a></li>
-	    <li class="tag-4"><a href="./tag/template.html">template</a></li>
-	    <li class="tag-2"><a href="./tag/ji-zhu.html">技术</a></li>
-	    <li class="tag-3"><a href="./tag/mian-shi.html">面试</a></li>
 	    <li class="tag-3"><a href="./tag/bi-shi.html">笔试</a></li>
-	    <li class="tag-3"><a href="./tag/yue-du.html">阅读</a></li>
-	    <li class="tag-4"><a href="./tag/cc.html">C/C++</a></li>
-	    <li class="tag-1"><a href="./tag/python.html">Python</a></li>
-	    <li class="tag-4"><a href="./tag/api.html">API</a></li>
-	    <li class="tag-4"><a href="./tag/bing-xing.html">并行</a></li>
-	    <li class="tag-4"><a href="./tag/ban-ben-kong-zhi.html">版本控制</a></li>
-	    <li class="tag-4"><a href="./tag/xiao-xi-tui-song.html">消息推送</a></li>
-	    <li class="tag-3"><a href="./tag/shi-ge.html">诗歌</a></li>
-	    <li class="tag-2"><a href="./tag/fu-wu-qi.html">服务器</a></li>
+	    <li class="tag-3"><a href="./tag/mysql.html">MySQL</a></li>
+	    <li class="tag-2"><a href="./tag/shell.html">Shell</a></li>
+	    <li class="tag-4"><a href="./tag/haproxyconsole.html">HAProxyConsole</a></li>
+	    <li class="tag-4"><a href="./tag/teng-xun.html">腾讯</a></li>
+	    <li class="tag-4"><a href="./tag/python-weekly.html">python-weekly</a></li>
+	    <li class="tag-4"><a href="./tag/ying-yu.html">英语</a></li>
 	    <li class="tag-4"><a href="./tag/ming-ling.html">命令</a></li>
-	    <li class="tag-4"><a href="./tag/ssl.html">ssl</a></li>
+	    <li class="tag-3"><a href="./tag/nginx.html">Nginx</a></li>
+	    <li class="tag-4"><a href="./tag/template.html">template</a></li>
+	    <li class="tag-3"><a href="./tag/shi-ge.html">诗歌</a></li>
+	    <li class="tag-3"><a href="./tag/jia-gou.html">架构</a></li>
+	    <li class="tag-3"><a href="./tag/haproxy.html">HAProxy</a></li>
+	    <li class="tag-4"><a href="./tag/wen-zi.html">文字</a></li>
 	    <li class="tag-4"><a href="./tag/sheng-huo.html">生活</a></li>
+	    <li class="tag-4"><a href="./tag/li-lun.html">理论</a></li>
+	    <li class="tag-4"><a href="./tag/windows.html">Windows</a></li>
+	    <li class="tag-1"><a href="./tag/fan-yi.html">翻译</a></li>
+	    <li class="tag-4"><a href="./tag/vmware.html">VMware</a></li>
+	    <li class="tag-4"><a href="./tag/zhong-jian-jian.html">中间件</a></li>
+	    <li class="tag-3"><a href="./tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
+	    <li class="tag-2"><a href="./tag/ji-zhu.html">技术</a></li>
+	    <li class="tag-2"><a href="./tag/fu-wu-qi.html">服务器</a></li>
+	    <li class="tag-2"><a href="./tag/golang.html">Golang</a></li>
+	    <li class="tag-3"><a href="./tag/suan-fa.html">算法</a></li>
+	    <li class="tag-4"><a href="./tag/bing-xing.html">并行</a></li>
+	    <li class="tag-1"><a href="./tag/zong-jie.html">总结</a></li>
+	    <li class="tag-4"><a href="./tag/gan-wu.html">感悟</a></li>
+	    <li class="tag-3"><a href="./tag/gong-ju.html">工具</a></li>
+	    <li class="tag-4"><a href="./tag/ssl.html">ssl</a></li>
+	    <li class="tag-4"><a href="./tag/pip.html">pip</a></li>
+	    <li class="tag-4"><a href="./tag/ban-ben-kong-zhi.html">版本控制</a></li>
+	    <li class="tag-3"><a href="./tag/mian-shi.html">面试</a></li>
+	    <li class="tag-4"><a href="./tag/pypi.html">PyPI</a></li>
+	    <li class="tag-3"><a href="./tag/gong-zuo.html">工作</a></li>
+	    <li class="tag-4"><a href="./tag/ri-zhi.html">日志</a></li>
+	    <li class="tag-4"><a href="./tag/rest.html">REST</a></li>
+	    <li class="tag-4"><a href="./tag/easy_install.html">easy_install</a></li>
+	    <li class="tag-4"><a href="./tag/github.html">github</a></li>
+	    <li class="tag-4"><a href="./tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
+	    <li class="tag-4"><a href="./tag/shu-ju-ku.html">数据库</a></li>
+	    <li class="tag-4"><a href="./tag/wei-bo.html">微博</a></li>
+	    <li class="tag-3"><a href="./tag/yue-du.html">阅读</a></li>
+	    <li class="tag-4"><a href="./tag/xiao-xi-tui-song.html">消息推送</a></li>
+	    <li class="tag-4"><a href="./tag/api.html">API</a></li>
+	    <li class="tag-4"><a href="./tag/cc.html">C/C++</a></li>
+	    <li class="tag-3"><a href="./tag/fu-zai-jun-heng.html">负载均衡</a></li>
+	    <li class="tag-4"><a href="./tag/liu-lan-qi-jian-rong.html">浏览器兼容</a></li>
+	    <li class="tag-4"><a href="./tag/rong-liang-gui-hua.html">容量规划</a></li>
+	    <li class="tag-4"><a href="./tag/gao-ke-yong.html">高可用</a></li>
+	    <li class="tag-4"><a href="./tag/zi-sheng.html">自省</a></li>
+	    <li class="tag-2"><a href="./tag/javascript.html">JavaScript</a></li>
+	    <li class="tag-2"><a href="./tag/yii.html">Yii</a></li>
+	    <li class="tag-3"><a href="./tag/wei-xin.html">微信</a></li>
+	    <li class="tag-4"><a href="./tag/socketio.html">socket.io</a></li>
+	    <li class="tag-3"><a href="./tag/xue-xi-fang-fa.html">学习方法</a></li>
+	    <li class="tag-4"><a href="./tag/dns.html">DNS</a></li>
+	    <li class="tag-4"><a href="./tag/restful.html">RESTful</a></li>
+	    <li class="tag-4"><a href="./tag/bind.html">BIND</a></li>
+	    <li class="tag-3"><a href="./tag/keepalived.html">Keepalived</a></li>
+	    <li class="tag-1"><a href="./tag/python.html">Python</a></li>
+	    <li class="tag-4"><a href="./tag/css.html">CSS</a></li>
 </ul>
 
 <!--
 -->
 </div> </div><!-- /.row -->
 <p class="paginator">
-    Page 1 / 12
+    Page 1 / 13
         <a href="./index2.html"><i class="icon-arrow-right"></i></a>
 </p>
 </section><!-- /#content -->

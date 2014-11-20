@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>Yii源码阅读笔记 - 缓存</title>
+        <meta charset="utf-8" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑 * 白 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑 * 白 Full RSS Feed" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+              <script>
+                (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+                })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+                ga('create', 'UA-43488080-1', '黑白');
+                ga('send', 'pageview');
+
+              </script>
+
+              <script type="text/javascript" src="http://tajs.qq.com/stats?sId=27164999" charset="UTF-8"></script>
+ 
+</head>
+
+<body id="index" class="home">
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="../../../..">黑 * 白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+             
+              <ul class="columns">
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="/archives.html">归 档</a></li>
+                <li><a href="/tags.html">标 签</a></li>
+                <li><a href="/pages/tools.html">工具集</a></li>
+                <li><a href="/pages/links.html">链 接</a></li>
+                <li><a href="/pages/tech-share.html">技术分享</a></li>
+                <li><a href="/pages/aboutme.html">关于我</a></li>
+                <li><a href="/feeds/rss.xml">RSS</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+   <div class="row">
+        <div class="columns">
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2014/11/19/read-yii-code-6/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 缓存">Yii源码阅读笔记 - 缓存</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2014-11-19T00:00:00">
+                2014-11-19 Wed
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <h3>概述</h3>
+<p>从之前的文章<a href="http://youngsterxyf.github.io/2014/11/12/read-yii-code-2/">Yii源码阅读笔记 - 路由解析</a>
+及<a href="http://youngsterxyf.github.io/2014/11/14/read-yii-code-4/">Yii源码阅读笔记 - Model层实现</a>可以看到Yii框架对于<strong>解析好的路由规则</strong>及<strong>数据表的schema</strong>都会根据条件尝试读写缓存
+来提高应用性能。</p>
+<p>但缓存组件并非核心组件，需要额外的配置，默认ID为<code>cache</code>，如果不使用该ID，那么就得注意同时配置好框架中使用缓存的组件。</p>
+<p>恰当地使用缓存组件，能明显地提高应用的性能。</p>
+<p>针对不同的缓存后端（backend），Yii框架提供了多种缓存组件，如文件缓存（CFileCache）、Memcached缓存（CMemCache）、Redis缓存（CRedisCache）等。这些缓存组件（除CDummyCache外，CDummyCache并不是一个有效的缓存组件）均直接继承自抽象类CCache（见文件<code>yii/framework/caching/CCache.php</code>）。</p>
+<p>下面以使用Memcached缓存为例，分析Yii框架缓存组件的实现。</p>
+<h3>分析</h3>
+<p>类<code>CMemcache</code>所在的整个继承树（<code>CMemcache</code> -&gt; <code>CCache</code> -&gt; <code>CApplicationComponent</code> -&gt; <code>CComponent</code>）上的类都没有构造方法。</p>
+<p><code>CMemcache</code>的init方法实现如下：</p>
+<div class="highlight"><pre><span class="x">public function init()</span>
+<span class="x">{</span>
+<span class="x">    // 调用父类CCache的init方法</span>
+<span class="x">    parent::init();</span>
+<span class="x">    // 获取配置的Memcached服务器列表</span>
+<span class="x">    $servers=$this-&gt;getServers();</span>
+<span class="x">    // 获取一个Memcache或Memcached对象</span>
+<span class="x">    $cache=$this-&gt;getMemCache();</span>
+<span class="x">    if(count($servers))</span>
+<span class="x">    {</span>
+<span class="x">        // 将配置的Memcached服务器加到池中</span>
+<span class="x">        foreach($servers as $server)</span>
+<span class="x">        {</span>
+<span class="x">            // 可选择使用memcached php扩展，但最好别这样，因为memcached扩展不支持一些有用的配置选项，从addServer方法的参数列表就可以看出</span>
+<span class="x">            // memcached扩展默认使用余数分步哈希算法，但可配置使用一致性哈希算法</span>
+<span class="x">            // 应使用memcache扩展</span>
+<span class="x">            if($this-&gt;useMemcached)</span>
+<span class="x">                $cache-&gt;addServer($server-&gt;host,$server-&gt;port,$server-&gt;weight);</span>
+<span class="x">            else</span>
+<span class="x">                $cache-&gt;addServer($server-&gt;host,$server-&gt;port,$server-&gt;persistent,$server-&gt;weight,$server-&gt;timeout,$server-&gt;retryInterval,$server-&gt;status);</span>
+<span class="x">        }</span>
+<span class="x">    }</span>
+<span class="x">    // 如果没有配置服务器列表，则默认使用localhost:11211</span>
+<span class="x">    else</span>
+<span class="x">        $cache-&gt;addServer(&#39;localhost&#39;,11211);</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>其中调用的父类的init方法实现如下：</p>
+<div class="highlight"><pre><span class="x">public function init()</span>
+<span class="x">{</span>
+<span class="x">    parent::init();</span>
+<span class="x">    // 可以为整个应用的缓存的key加一个统一的前缀，这是为了避免在同一个缓存池中，不同应用的key冲突</span>
+<span class="x">    if($this-&gt;keyPrefix===null)</span>
+<span class="x">        // 如果没有配置keyPrefix，则以应用的id作为keyPrefix，这个key，可以配置，如果未配置，则`sprintf(&#39;%x&#39;,crc32($this-&gt;getBasePath().$this-&gt;name))`这样生成，</span>
+<span class="x">        // 其中name表示应用的名称，可配置，默认为“My Application”</span>
+<span class="x">        // getId方法定义于抽象类CApplication中</span>
+<span class="x">        $this-&gt;keyPrefix=Yii::app()-&gt;getId();</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p><code>CMemcache</code>的init方法中调用的方法<code>getServers</code>和<code>getMemcache</code>，实现如下所示：</p>
+<div class="highlight"><pre><span class="x">public function getMemCache()</span>
+<span class="x">{</span>
+<span class="x">    // 单例</span>
+<span class="x">    if($this-&gt;_cache!==null)</span>
+<span class="x">        return $this-&gt;_cache;</span>
+<span class="x">    else</span>
+<span class="x">    {</span>
+<span class="x">        // 还是用memcache吧</span>
+<span class="x">        $extension=$this-&gt;useMemcached ? &#39;memcached&#39; : &#39;memcache&#39;;</span>
+<span class="x">        // 检测一下是否记载了所需扩展</span>
+<span class="x">        if(!extension_loaded($extension))</span>
+<span class="x">            throw new CException(Yii::t(&#39;yii&#39;,&quot;CMemCache requires PHP {extension} extension to be loaded.&quot;,</span>
+<span class="x">                array(&#39;{extension}&#39;=&gt;$extension)));</span>
+<span class="x">        // 实例化</span>
+<span class="x">        return $this-&gt;_cache=$this-&gt;useMemcached ? new Memcached : new Memcache;</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+
+<span class="x">public function getServers()</span>
+<span class="x">{</span>
+<span class="x">    return $this-&gt;_servers;</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>与<code>getServers</code>对应的有方法<code>setServers</code>，如果需要配置缓存服务器列表，则应该为缓存组件配置<code>servers</code>一项，基本形式为：</p>
+<div class="highlight"><pre><span class="x">&#39;servers&#39;=&gt;array(</span>
+<span class="x">    array(</span>
+<span class="x">        &#39;host&#39;=&gt;&#39;127.0.0.1&#39;,</span>
+<span class="x">        &#39;port&#39;=&gt;11211,</span>
+<span class="x">    ),</span>
+<span class="x">),</span>
+</pre></div>
+
+
+<p><code>setServers</code>方法实现如下：</p>
+<div class="highlight"><pre><span class="x">public function setServers($config)</span>
+<span class="x">{</span>
+<span class="x">    foreach($config as $c)</span>
+<span class="x">        $this-&gt;_servers[]=new CMemCacheServerConfiguration($c);</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>其中实例化的类<code>CMemCacheServerConfiguration</code>也定义于文件<code>yii/framework/caching/CMemCache.php</code>中，其构造方法实现如下：</p>
+<div class="highlight"><pre><span class="x">public function __construct($config)</span>
+<span class="x">{</span>
+<span class="x">    if(is_array($config))</span>
+<span class="x">    {</span>
+<span class="x">        foreach($config as $key=&gt;$value)</span>
+<span class="x">            $this-&gt;$key=$value;</span>
+<span class="x">        if($this-&gt;host===null)</span>
+<span class="x">            throw new CException(Yii::t(&#39;yii&#39;,&#39;CMemCache server configuration must have &quot;host&quot; value.&#39;));</span>
+<span class="x">    }</span>
+<span class="x">    else</span>
+<span class="x">        throw new CException(Yii::t(&#39;yii&#39;,&#39;CMemCache server configuration must be an array.&#39;));</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>从该构造方法可以看到该类的作用就是将一个Memcached缓存服务器的配置信息封装成一个配置类对象。该类有如下public的属性：</p>
+<div class="highlight"><pre><span class="x">/**</span>
+<span class="x"> * @var string memcache server hostname or IP address</span>
+<span class="x"> */</span>
+<span class="x">public $host;</span>
+<span class="x">/**</span>
+<span class="x"> * @var integer memcache server port</span>
+<span class="x"> */</span>
+<span class="x">public $port=11211;</span>
+<span class="x">/**</span>
+<span class="x"> * @var boolean whether to use a persistent connection</span>
+<span class="x"> */</span>
+<span class="x">public $persistent=true;</span>
+<span class="x">/**</span>
+<span class="x"> * @var integer probability of using this server among all servers.</span>
+<span class="x"> */</span>
+<span class="x">public $weight=1;</span>
+<span class="x">/**</span>
+<span class="x"> * @var integer value in seconds which will be used for connecting to the server</span>
+<span class="x"> */</span>
+<span class="x">public $timeout=15;</span>
+<span class="x">/**</span>
+<span class="x"> * @var integer how often a failed server will be retried (in seconds)</span>
+<span class="x"> */</span>
+<span class="x">public $retryInterval=15;</span>
+<span class="x">/**</span>
+<span class="x"> * @var boolean if the server should be flagged as online upon a failure</span>
+<span class="x"> */</span>
+<span class="x">public $status=true;</span>
+</pre></div>
+
+
+<p>这些属性也即是每台缓存服务器的可配置项，当然如果用的是memcached扩展，某些配置项就用不上了。</p>
+<hr />
+<p>类<code>CCache</code>定义了访问控制类型public的方法<code>get</code>、<code>mget</code>、<code>set</code>、<code>add</code>、<code>delete</code>、<code>flush</code>，对应Yii框架缓存组件提供的几个操作，即开发者可以使用这些方法来操作缓存。</p>
+<div class="highlight"><pre><span class="x">// 根据单个key，获取对应的value</span>
+<span class="x">public function get($id)</span>
+<span class="x">{</span>
+<span class="x">    // generateUniqueKey是根据$id来生成一个唯一的key，也即真正存到缓存的key并不是get方法的$id参数值</span>
+<span class="x">    $value = $this-&gt;getValue($this-&gt;generateUniqueKey($id));</span>
+<span class="x">    // 如果设置为不进行序列化，则直接返回取得的值</span>
+<span class="x">    if($value===false || $this-&gt;serializer===false)</span>
+<span class="x">        return $value;</span>
+<span class="x">    // 如果未设置serializer，则说明存储时使用的是默认的序列化方法，取到数据后对应地需要使用默认的方法进行反序列化</span>
+<span class="x">    if($this-&gt;serializer===null)</span>
+<span class="x">        $value=unserialize($value);</span>
+<span class="x">    else</span>
+<span class="x">        // 否则，使用指定的方法进行反序列化</span>
+<span class="x">        $value=call_user_func($this-&gt;serializer[1], $value);</span>
+<span class="x">    // 依赖检查，如果依赖没有变，则说明缓存有效，</span>
+<span class="x">    // 否则，返回false，表示缓存无效</span>
+<span class="x">    // 咦，不要清掉无效的缓存项么？</span>
+<span class="x">    if(is_array($value) &amp;&amp; (!$value[1] instanceof ICacheDependency || !$value[1]-&gt;getHasChanged()))</span>
+<span class="x">    {</span>
+<span class="x">        Yii::trace(&#39;Serving &quot;&#39;.$id.&#39;&quot; from cache&#39;,&#39;system.caching.&#39;.get_class($this));</span>
+<span class="x">        return $value[0];</span>
+<span class="x">    }</span>
+<span class="x">    else</span>
+<span class="x">        return false;</span>
+<span class="x">}</span>
+
+<span class="x">// 根据多个key值（$ids），获取多个value</span>
+<span class="x">public function mget($ids)</span>
+<span class="x">{</span>
+<span class="x">    $uids = array();</span>
+<span class="x">    foreach ($ids as $id)</span>
+<span class="x">        $uids[$id] = $this-&gt;generateUniqueKey($id);</span>
+
+<span class="x">    $values = $this-&gt;getValues($uids);</span>
+<span class="x">    $results = array();</span>
+<span class="x">    if($this-&gt;serializer === false)</span>
+<span class="x">    {</span>
+<span class="x">        foreach ($uids as $id =&gt; $uid)</span>
+<span class="x">            $results[$id] = isset($values[$uid]) ? $values[$uid] : false;</span>
+<span class="x">    }</span>
+<span class="x">    else</span>
+<span class="x">    {</span>
+<span class="x">        foreach($uids as $id =&gt; $uid)</span>
+<span class="x">        {</span>
+<span class="x">            $results[$id] = false;</span>
+<span class="x">            if(isset($values[$uid]))</span>
+<span class="x">            {</span>
+<span class="x">                $value = $this-&gt;serializer === null ? unserialize($values[$uid]) : call_user_func($this-&gt;serializer[1], $values[$uid]);</span>
+<span class="x">                if(is_array($value) &amp;&amp; (!$value[1] instanceof ICacheDependency || !$value[1]-&gt;getHasChanged()))</span>
+<span class="x">                {</span>
+<span class="x">                    Yii::trace(&#39;Serving &quot;&#39;.$id.&#39;&quot; from cache&#39;,&#39;system.caching.&#39;.get_class($this));</span>
+<span class="x">                    $results[$id] = $value[0];</span>
+<span class="x">                }</span>
+<span class="x">            }</span>
+<span class="x">        }</span>
+<span class="x">    }</span>
+<span class="x">    return $results;</span>
+<span class="x">}</span>
+
+<span class="x">// 向$id存储一个元素值为 $value</span>
+<span class="x">public function set($id,$value,$expire=0,$dependency=null)</span>
+<span class="x">{</span>
+<span class="x">    Yii::trace(&#39;Saving &quot;&#39;.$id.&#39;&quot; to cache&#39;,&#39;system.caching.&#39;.get_class($this));</span>
+
+<span class="x">    if ($dependency !== null &amp;&amp; $this-&gt;serializer !== false)</span>
+<span class="x">        // 获取依赖值</span>
+<span class="x">        $dependency-&gt;evaluateDependency();</span>
+
+<span class="x">    // 连同依赖一起序列化然后缓存起来</span>
+<span class="x">    // 下次获取缓存后，检查一下依赖是否发生变更，是则说明缓存已经失效</span>
+<span class="x">    if ($this-&gt;serializer === null)</span>
+<span class="x">        $value = serialize(array($value,$dependency));</span>
+<span class="x">    elseif ($this-&gt;serializer !== false)</span>
+<span class="x">        $value = call_user_func($this-&gt;serializer[0], array($value,$dependency));</span>
+
+<span class="x">    return $this-&gt;setValue($this-&gt;generateUniqueKey($id), $value, $expire);</span>
+<span class="x">}</span>
+
+<span class="x">// 在缓存服务器之前不存在$id时， 以id作为key存储一个变量$value到缓存服务器</span>
+<span class="x">public function add($id,$value,$expire=0,$dependency=null)</span>
+<span class="x">{</span>
+<span class="x">    Yii::trace(&#39;Adding &quot;&#39;.$id.&#39;&quot; to cache&#39;,&#39;system.caching.&#39;.get_class($this));</span>
+
+<span class="x">    if ($dependency !== null &amp;&amp; $this-&gt;serializer !== false)</span>
+<span class="x">        $dependency-&gt;evaluateDependency();</span>
+
+<span class="x">    if ($this-&gt;serializer === null)</span>
+<span class="x">        $value = serialize(array($value,$dependency));</span>
+<span class="x">    elseif ($this-&gt;serializer !== false)</span>
+<span class="x">        $value = call_user_func($this-&gt;serializer[0], array($value,$dependency));</span>
+
+<span class="x">    return $this-&gt;addValue($this-&gt;generateUniqueKey($id), $value, $expire);</span>
+<span class="x">}</span>
+
+<span class="x">// 根据id删除缓存项</span>
+<span class="x">public function delete($id)</span>
+<span class="x">{</span>
+<span class="x">    Yii::trace(&#39;Deleting &quot;&#39;.$id.&#39;&quot; from cache&#39;,&#39;system.caching.&#39;.get_class($this));</span>
+<span class="x">    return $this-&gt;deleteValue($this-&gt;generateUniqueKey($id));</span>
+<span class="x">}</span>
+
+<span class="x">// 清空缓存</span>
+<span class="x">public function flush()</span>
+<span class="x">{</span>
+<span class="x">    Yii::trace(&#39;Flushing cache&#39;,&#39;system.caching.&#39;.get_class($this));</span>
+<span class="x">    return $this-&gt;flushValues();</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>从上述代码中可以看到，每种操作方法实际上都是调用另一个方法来完成操作：</p>
+<ul>
+<li>get -&gt; getValue</li>
+<li>mget -&gt; getValues</li>
+<li>set -&gt; setValue</li>
+<li>add -&gt; addValue</li>
+<li>delete -&gt; deleteValue</li>
+<li>flush -&gt; flushValues</li>
+</ul>
+<p>但抽象类<code>CCache</code>中对于后面的这些方法并没有真正实现操作逻辑（除了getValues，其实现是循环调用getValue，也许并不是开发者想要的实现，<code>CMemCache</code>类重写了这个方法），需要在继承类中实现。<code>CMemCache</code>类中对这些方法实现如下：</p>
+<div class="highlight"><pre><span class="x">protected function getValue($key)</span>
+<span class="x">{</span>
+<span class="x">    return $this-&gt;_cache-&gt;get($key);</span>
+<span class="x">}</span>
+
+<span class="x">protected function getValues($keys)</span>
+<span class="x">{</span>
+<span class="x">    return $this-&gt;useMemcached ? $this-&gt;_cache-&gt;getMulti($keys) : $this-&gt;_cache-&gt;get($keys);</span>
+<span class="x">}</span>
+
+<span class="x">protected function setValue($key,$value,$expire)</span>
+<span class="x">{</span>
+<span class="x">    // 注意：这个地方对于开发者来说也许是个坑</span>
+<span class="x">    // 该方法的参数$expire并不是一个时间点，而是一个时间间隔</span>
+<span class="x">    // $expire = 0表示不会超时失效</span>
+<span class="x">    if($expire&gt;0)</span>
+<span class="x">        $expire+=time();</span>
+<span class="x">    else</span>
+<span class="x">        $expire=0;</span>
+
+<span class="x">    // 使用memcache扩展时，add方法的那个额外参数值0，对应参数flag，表示是否对数据使用zlib进行压缩</span>
+<span class="x">    return $this-&gt;useMemcached ? $this-&gt;_cache-&gt;set($key,$value,$expire) : $this-&gt;_cache-&gt;set($key,$value,0,$expire);</span>
+<span class="x">}</span>
+
+<span class="x">protected function addValue($key,$value,$expire)</span>
+<span class="x">{</span>
+<span class="x">    if($expire&gt;0)</span>
+<span class="x">        $expire+=time();</span>
+<span class="x">    else</span>
+<span class="x">        $expire=0;</span>
+
+<span class="x">    return $this-&gt;useMemcached ? $this-&gt;_cache-&gt;add($key,$value,$expire) : $this-&gt;_cache-&gt;add($key,$value,0,$expire);</span>
+<span class="x">}</span>
+
+<span class="x">protected function deleteValue($key)</span>
+<span class="x">{</span>
+<span class="x">    return $this-&gt;_cache-&gt;delete($key, 0);</span>
+<span class="x">}</span>
+
+<span class="x">protected function flushValues()</span>
+<span class="x">{</span>
+<span class="x">    return $this-&gt;_cache-&gt;flush();</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>方法<code>get</code>、<code>mget</code>、<code>set</code>、<code>add</code>、<code>delete</code>、<code>flush</code>的实现有两点需要注意：</p>
+<ol>
+<li>实际存储的key并不是方法调用时提供的key，而是经过方法<code>generateUniqueKey</code>处理的</li>
+<li>实际存储的value可能是经过序列化的，而且可能还包含依赖值</li>
+</ol>
+<p>关于第一点，<code>generateUniqueKey</code>方法在抽象类<code>CCache</code>中实现如下所示：</p>
+<div class="highlight"><pre><span class="x">/**</span>
+<span class="x"> * @param string $key a key identifying a value to be cached</span>
+<span class="x"> * @return string a key generated from the provided key which ensures the uniqueness across applications</span>
+<span class="x"> */</span>
+<span class="x">protected function generateUniqueKey($key)</span>
+<span class="x">{</span>
+<span class="x">    return $this-&gt;hashKey ? md5($this-&gt;keyPrefix.$key) : $this-&gt;keyPrefix.$key;</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>将原本的$key拼接上统一的前缀，如果需要，还进行md5哈希，这样能保证不同的应用之间不会有key冲突。属性hashKey默认值为true。</p>
+<hr />
+<p>关于第二点，缓存依赖的概念简单来说就是在取到一个缓存项后，判断该缓存项是否失效的一个条件。
+以页面缓存为例，也许应用中在页面模板渲染后并没有直接将结果响应给用户，而是先缓存起来，但页面可能涉及一些动态内容，这些动态内容是从数据库中某些数据生成的，为了保证正确性，下次读取页面缓存后，还得去数据库里读一下某些相关数据看是否有变更，，如果有变更，则需要重新渲染页面模板，如果没有变更，则直接将缓存的结果返回给用户。这样对于某些变更频率不高的动态内容，在请求处理时就可以避免不必要的页面模板渲染过程。</p>
+<p>判断缓存依赖是否有变更的逻辑是：<strong>在写缓存时，将当时缓存依赖的结果一并存入缓存，读缓存的时候，再将最新缓存依赖的结果与之前存入缓存的依赖结果做对比，不相同，则说明有变更</strong>。</p>
+<p>缓存依赖类需要实现接口<code>ICacheDependency</code>，该接口声明了两个方法<code>evaluateDependency</code>和<code>getHasChanged</code>。</p>
+<p>以缓存依赖类<code>CDbCacheDependency</code>为例（见文件<code>yii/framework/caching/dependencies/CDbCacheDependency.php</code>），
+该类直接继承自类<code>CCacheDependency</code>。类<code>CDbCacheDependency</code>的作用就是根据一条SQL语句从数据库查询数据，然后根据查询结果来判断缓存是否有效。</p>
+<p>父类<code>CCacheDependency</code>中实现方法<code>evaluateDependency</code>和<code>getHasChanged</code>，如下所示：</p>
+<div class="highlight"><pre><span class="x">/**</span>
+<span class="x"> * Evaluates the dependency by generating and saving the data related with dependency.</span>
+<span class="x"> * This method is invoked by cache before writing data into it.</span>
+<span class="x"> */</span>
+<span class="x">public function evaluateDependency()</span>
+<span class="x">{</span>
+<span class="x">    // 判断是否复用缓存依赖结果</span>
+<span class="x">    // 默认为false，可在实例化缓存依赖类时设置</span>
+<span class="x">    // 另外对于PHP来说，这个“复用”也只能是一次请求处理过程中的复用</span>
+<span class="x">    if ($this-&gt;reuseDependentData)</span>
+<span class="x">    {</span>
+<span class="x">        // hash方法：求当前对象序列化结果的sha1哈希值</span>
+<span class="x">        $hash=$this-&gt;getHash();</span>
+<span class="x">        if(!isset(self::$_reusableData[$hash][&#39;dependentData&#39;]))</span>
+<span class="x">            // 如果没有结果可复用，则得重新生成</span>
+<span class="x">            self::$_reusableData[$hash][&#39;dependentData&#39;]=$this-&gt;generateDependentData();</span>
+<span class="x">        $this-&gt;_data=self::$_reusableData[$hash][&#39;dependentData&#39;];</span>
+<span class="x">    }</span>
+<span class="x">    else</span>
+<span class="x">        $this-&gt;_data=$this-&gt;generateDependentData();</span>
+<span class="x">}</span>
+
+<span class="x">/**</span>
+<span class="x"> * @return boolean whether the dependency has changed.</span>
+<span class="x"> */</span>
+<span class="x">// 这个方法其实是读缓存时，从缓存数据中取出缓存依赖的部分反序列化后得到一个依赖对象，由该依赖对象调用它的这个方法来判断缓存依赖是否有变更，</span>
+<span class="x">// 所以它的_data属性是写缓存时的缓存依赖数据</span>
+<span class="x">public function getHasChanged()</span>
+<span class="x">{</span>
+<span class="x">    if ($this-&gt;reuseDependentData)</span>
+<span class="x">    {</span>
+<span class="x">        $hash=$this-&gt;getHash();</span>
+<span class="x">        if(!isset(self::$_reusableData[$hash][&#39;dependentData&#39;]))</span>
+<span class="x">            self::$_reusableData[$hash][&#39;dependentData&#39;]=$this-&gt;generateDependentData();</span>
+<span class="x">        // 不相等，则说明发生了变更</span>
+<span class="x">        return self::$_reusableData[$hash][&#39;dependentData&#39;]!=$this-&gt;_data;</span>
+<span class="x">    }</span>
+<span class="x">    else</span>
+<span class="x">        return $this-&gt;generateDependentData()!=$this-&gt;_data;</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>但父类<code>CCacheDependency</code>并未有效实现上述两个方法中调用的<code>generateDependentData</code>方法，在类<code>CDbCacheDependency</code>中实现如下：</p>
+<div class="highlight"><pre><span class="x">protected function generateDependentData()</span>
+<span class="x">{</span>
+<span class="x">    if($this-&gt;sql!==null)</span>
+<span class="x">    {</span>
+<span class="x">        // 获取数据库连接组件对象</span>
+<span class="x">        $db=$this-&gt;getDbConnection();</span>
+<span class="x">        // 准备SQL执行，其中sql属性在构造方法中赋值</span>
+<span class="x">        $command=$db-&gt;createCommand($this-&gt;sql);</span>
+<span class="x">        if(is_array($this-&gt;params))</span>
+<span class="x">        {</span>
+<span class="x">            // 绑定参数</span>
+<span class="x">            foreach($this-&gt;params as $name=&gt;$value)</span>
+<span class="x">                $command-&gt;bindValue($name,$value);</span>
+<span class="x">        }</span>
+<span class="x">        // 避免从缓存中读取数据库查询结果</span>
+<span class="x">        if($db-&gt;queryCachingDuration&gt;0)</span>
+<span class="x">        {</span>
+<span class="x">            // temporarily disable and re-enable query caching</span>
+<span class="x">            $duration=$db-&gt;queryCachingDuration;</span>
+<span class="x">            $db-&gt;queryCachingDuration=0;</span>
+<span class="x">            $result=$command-&gt;queryRow();</span>
+<span class="x">            $db-&gt;queryCachingDuration=$duration;</span>
+<span class="x">        }</span>
+<span class="x">        else</span>
+<span class="x">            $result=$command-&gt;queryRow();</span>
+<span class="x">        return $result;</span>
+<span class="x">    }</span>
+<span class="x">    else</span>
+<span class="x">        throw new CException(Yii::t(&#39;yii&#39;,&#39;CDbCacheDependency.sql cannot be empty.&#39;));</span>
+<span class="x">}</span>
+</pre></div>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2014/11/19/read-yii-code-6/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+        </div><!-- /.twelve.columns -->
+ </div><!-- /.row -->
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+    
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+  <script src="../../../../theme/js/main.js"></script>
+</body>
+</html>

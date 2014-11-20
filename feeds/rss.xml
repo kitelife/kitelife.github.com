@@ -1,5 +1,1669 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>黑 * 白</title><link>http://youngsterxyf.github.io/</link><description></description><atom:link href="http://youngsterxyf.github.io/feeds/rss.xml" rel="self"></atom:link><lastBuildDate>Thu, 13 Nov 2014 00:00:00 +0800</lastBuildDate><item><title>Yii源码阅读笔记 - 组件集成</title><link>http://youngsterxyf.github.io/2014/11/13/read-yii-code-3/</link><description>&lt;h3&gt;概述&lt;/h3&gt;
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>黑 * 白</title><link>http://youngsterxyf.github.io/</link><description></description><atom:link href="http://youngsterxyf.github.io/feeds/rss.xml" rel="self"></atom:link><lastBuildDate>Wed, 19 Nov 2014 00:00:00 +0800</lastBuildDate><item><title>Yii源码阅读笔记 - 缓存</title><link>http://youngsterxyf.github.io/2014/11/19/read-yii-code-6/</link><description>&lt;h3&gt;概述&lt;/h3&gt;
+&lt;p&gt;从之前的文章&lt;a href="http://youngsterxyf.github.io/2014/11/12/read-yii-code-2/"&gt;Yii源码阅读笔记 - 路由解析&lt;/a&gt;
+及&lt;a href="http://youngsterxyf.github.io/2014/11/14/read-yii-code-4/"&gt;Yii源码阅读笔记 - Model层实现&lt;/a&gt;可以看到Yii框架对于&lt;strong&gt;解析好的路由规则&lt;/strong&gt;及&lt;strong&gt;数据表的schema&lt;/strong&gt;都会根据条件尝试读写缓存
+来提高应用性能。&lt;/p&gt;
+&lt;p&gt;但缓存组件并非核心组件，需要额外的配置，默认ID为&lt;code&gt;cache&lt;/code&gt;，如果不使用该ID，那么就得注意同时配置好框架中使用缓存的组件。&lt;/p&gt;
+&lt;p&gt;恰当地使用缓存组件，能明显地提高应用的性能。&lt;/p&gt;
+&lt;p&gt;针对不同的缓存后端（backend），Yii框架提供了多种缓存组件，如文件缓存（CFileCache）、Memcached缓存（CMemCache）、Redis缓存（CRedisCache）等。这些缓存组件（除CDummyCache外，CDummyCache并不是一个有效的缓存组件）均直接继承自抽象类CCache（见文件&lt;code&gt;yii/framework/caching/CCache.php&lt;/code&gt;）。&lt;/p&gt;
+&lt;p&gt;下面以使用Memcached缓存为例，分析Yii框架缓存组件的实现。&lt;/p&gt;
+&lt;h3&gt;分析&lt;/h3&gt;
+&lt;p&gt;类&lt;code&gt;CMemcache&lt;/code&gt;所在的整个继承树（&lt;code&gt;CMemcache&lt;/code&gt; -&amp;gt; &lt;code&gt;CCache&lt;/code&gt; -&amp;gt; &lt;code&gt;CApplicationComponent&lt;/code&gt; -&amp;gt; &lt;code&gt;CComponent&lt;/code&gt;）上的类都没有构造方法。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;CMemcache&lt;/code&gt;的init方法实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function init()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // 调用父类CCache的init方法&lt;/span&gt;
+&lt;span class="x"&gt;    parent::init();&lt;/span&gt;
+&lt;span class="x"&gt;    // 获取配置的Memcached服务器列表&lt;/span&gt;
+&lt;span class="x"&gt;    $servers=$this-&amp;gt;getServers();&lt;/span&gt;
+&lt;span class="x"&gt;    // 获取一个Memcache或Memcached对象&lt;/span&gt;
+&lt;span class="x"&gt;    $cache=$this-&amp;gt;getMemCache();&lt;/span&gt;
+&lt;span class="x"&gt;    if(count($servers))&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        // 将配置的Memcached服务器加到池中&lt;/span&gt;
+&lt;span class="x"&gt;        foreach($servers as $server)&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            // 可选择使用memcached php扩展，但最好别这样，因为memcached扩展不支持一些有用的配置选项，从addServer方法的参数列表就可以看出&lt;/span&gt;
+&lt;span class="x"&gt;            // memcached扩展默认使用余数分步哈希算法，但可配置使用一致性哈希算法&lt;/span&gt;
+&lt;span class="x"&gt;            // 应使用memcache扩展&lt;/span&gt;
+&lt;span class="x"&gt;            if($this-&amp;gt;useMemcached)&lt;/span&gt;
+&lt;span class="x"&gt;                $cache-&amp;gt;addServer($server-&amp;gt;host,$server-&amp;gt;port,$server-&amp;gt;weight);&lt;/span&gt;
+&lt;span class="x"&gt;            else&lt;/span&gt;
+&lt;span class="x"&gt;                $cache-&amp;gt;addServer($server-&amp;gt;host,$server-&amp;gt;port,$server-&amp;gt;persistent,$server-&amp;gt;weight,$server-&amp;gt;timeout,$server-&amp;gt;retryInterval,$server-&amp;gt;status);&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    // 如果没有配置服务器列表，则默认使用localhost:11211&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        $cache-&amp;gt;addServer(&amp;#39;localhost&amp;#39;,11211);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中调用的父类的init方法实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function init()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    parent::init();&lt;/span&gt;
+&lt;span class="x"&gt;    // 可以为整个应用的缓存的key加一个统一的前缀，这是为了避免在同一个缓存池中，不同应用的key冲突&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;keyPrefix===null)&lt;/span&gt;
+&lt;span class="x"&gt;        // 如果没有配置keyPrefix，则以应用的id作为keyPrefix，这个key，可以配置，如果未配置，则`sprintf(&amp;#39;%x&amp;#39;,crc32($this-&amp;gt;getBasePath().$this-&amp;gt;name))`这样生成，&lt;/span&gt;
+&lt;span class="x"&gt;        // 其中name表示应用的名称，可配置，默认为“My Application”&lt;/span&gt;
+&lt;span class="x"&gt;        // getId方法定义于抽象类CApplication中&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;keyPrefix=Yii::app()-&amp;gt;getId();&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;code&gt;CMemcache&lt;/code&gt;的init方法中调用的方法&lt;code&gt;getServers&lt;/code&gt;和&lt;code&gt;getMemcache&lt;/code&gt;，实现如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function getMemCache()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // 单例&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;_cache!==null)&lt;/span&gt;
+&lt;span class="x"&gt;        return $this-&amp;gt;_cache;&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        // 还是用memcache吧&lt;/span&gt;
+&lt;span class="x"&gt;        $extension=$this-&amp;gt;useMemcached ? &amp;#39;memcached&amp;#39; : &amp;#39;memcache&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;        // 检测一下是否记载了所需扩展&lt;/span&gt;
+&lt;span class="x"&gt;        if(!extension_loaded($extension))&lt;/span&gt;
+&lt;span class="x"&gt;            throw new CException(Yii::t(&amp;#39;yii&amp;#39;,&amp;quot;CMemCache requires PHP {extension} extension to be loaded.&amp;quot;,&lt;/span&gt;
+&lt;span class="x"&gt;                array(&amp;#39;{extension}&amp;#39;=&amp;gt;$extension)));&lt;/span&gt;
+&lt;span class="x"&gt;        // 实例化&lt;/span&gt;
+&lt;span class="x"&gt;        return $this-&amp;gt;_cache=$this-&amp;gt;useMemcached ? new Memcached : new Memcache;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+
+&lt;span class="x"&gt;public function getServers()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    return $this-&amp;gt;_servers;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;与&lt;code&gt;getServers&lt;/code&gt;对应的有方法&lt;code&gt;setServers&lt;/code&gt;，如果需要配置缓存服务器列表，则应该为缓存组件配置&lt;code&gt;servers&lt;/code&gt;一项，基本形式为：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;&amp;#39;servers&amp;#39;=&amp;gt;array(&lt;/span&gt;
+&lt;span class="x"&gt;    array(&lt;/span&gt;
+&lt;span class="x"&gt;        &amp;#39;host&amp;#39;=&amp;gt;&amp;#39;127.0.0.1&amp;#39;,&lt;/span&gt;
+&lt;span class="x"&gt;        &amp;#39;port&amp;#39;=&amp;gt;11211,&lt;/span&gt;
+&lt;span class="x"&gt;    ),&lt;/span&gt;
+&lt;span class="x"&gt;),&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;code&gt;setServers&lt;/code&gt;方法实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function setServers($config)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    foreach($config as $c)&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;_servers[]=new CMemCacheServerConfiguration($c);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中实例化的类&lt;code&gt;CMemCacheServerConfiguration&lt;/code&gt;也定义于文件&lt;code&gt;yii/framework/caching/CMemCache.php&lt;/code&gt;中，其构造方法实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function __construct($config)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if(is_array($config))&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        foreach($config as $key=&amp;gt;$value)&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;$key=$value;&lt;/span&gt;
+&lt;span class="x"&gt;        if($this-&amp;gt;host===null)&lt;/span&gt;
+&lt;span class="x"&gt;            throw new CException(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;CMemCache server configuration must have &amp;quot;host&amp;quot; value.&amp;#39;));&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        throw new CException(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;CMemCache server configuration must be an array.&amp;#39;));&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;从该构造方法可以看到该类的作用就是将一个Memcached缓存服务器的配置信息封装成一个配置类对象。该类有如下public的属性：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * @var string memcache server hostname or IP address&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public $host;&lt;/span&gt;
+&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * @var integer memcache server port&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public $port=11211;&lt;/span&gt;
+&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * @var boolean whether to use a persistent connection&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public $persistent=true;&lt;/span&gt;
+&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * @var integer probability of using this server among all servers.&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public $weight=1;&lt;/span&gt;
+&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * @var integer value in seconds which will be used for connecting to the server&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public $timeout=15;&lt;/span&gt;
+&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * @var integer how often a failed server will be retried (in seconds)&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public $retryInterval=15;&lt;/span&gt;
+&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * @var boolean if the server should be flagged as online upon a failure&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public $status=true;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;这些属性也即是每台缓存服务器的可配置项，当然如果用的是memcached扩展，某些配置项就用不上了。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;类&lt;code&gt;CCache&lt;/code&gt;定义了访问控制类型public的方法&lt;code&gt;get&lt;/code&gt;、&lt;code&gt;mget&lt;/code&gt;、&lt;code&gt;set&lt;/code&gt;、&lt;code&gt;add&lt;/code&gt;、&lt;code&gt;delete&lt;/code&gt;、&lt;code&gt;flush&lt;/code&gt;，对应Yii框架缓存组件提供的几个操作，即开发者可以使用这些方法来操作缓存。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;// 根据单个key，获取对应的value&lt;/span&gt;
+&lt;span class="x"&gt;public function get($id)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // generateUniqueKey是根据$id来生成一个唯一的key，也即真正存到缓存的key并不是get方法的$id参数值&lt;/span&gt;
+&lt;span class="x"&gt;    $value = $this-&amp;gt;getValue($this-&amp;gt;generateUniqueKey($id));&lt;/span&gt;
+&lt;span class="x"&gt;    // 如果设置为不进行序列化，则直接返回取得的值&lt;/span&gt;
+&lt;span class="x"&gt;    if($value===false || $this-&amp;gt;serializer===false)&lt;/span&gt;
+&lt;span class="x"&gt;        return $value;&lt;/span&gt;
+&lt;span class="x"&gt;    // 如果未设置serializer，则说明存储时使用的是默认的序列化方法，取到数据后对应地需要使用默认的方法进行反序列化&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;serializer===null)&lt;/span&gt;
+&lt;span class="x"&gt;        $value=unserialize($value);&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        // 否则，使用指定的方法进行反序列化&lt;/span&gt;
+&lt;span class="x"&gt;        $value=call_user_func($this-&amp;gt;serializer[1], $value);&lt;/span&gt;
+&lt;span class="x"&gt;    // 依赖检查，如果依赖没有变，则说明缓存有效，&lt;/span&gt;
+&lt;span class="x"&gt;    // 否则，返回false，表示缓存无效&lt;/span&gt;
+&lt;span class="x"&gt;    // 咦，不要清掉无效的缓存项么？&lt;/span&gt;
+&lt;span class="x"&gt;    if(is_array($value) &amp;amp;&amp;amp; (!$value[1] instanceof ICacheDependency || !$value[1]-&amp;gt;getHasChanged()))&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        Yii::trace(&amp;#39;Serving &amp;quot;&amp;#39;.$id.&amp;#39;&amp;quot; from cache&amp;#39;,&amp;#39;system.caching.&amp;#39;.get_class($this));&lt;/span&gt;
+&lt;span class="x"&gt;        return $value[0];&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        return false;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+
+&lt;span class="x"&gt;// 根据多个key值（$ids），获取多个value&lt;/span&gt;
+&lt;span class="x"&gt;public function mget($ids)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    $uids = array();&lt;/span&gt;
+&lt;span class="x"&gt;    foreach ($ids as $id)&lt;/span&gt;
+&lt;span class="x"&gt;        $uids[$id] = $this-&amp;gt;generateUniqueKey($id);&lt;/span&gt;
+
+&lt;span class="x"&gt;    $values = $this-&amp;gt;getValues($uids);&lt;/span&gt;
+&lt;span class="x"&gt;    $results = array();&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;serializer === false)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        foreach ($uids as $id =&amp;gt; $uid)&lt;/span&gt;
+&lt;span class="x"&gt;            $results[$id] = isset($values[$uid]) ? $values[$uid] : false;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        foreach($uids as $id =&amp;gt; $uid)&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            $results[$id] = false;&lt;/span&gt;
+&lt;span class="x"&gt;            if(isset($values[$uid]))&lt;/span&gt;
+&lt;span class="x"&gt;            {&lt;/span&gt;
+&lt;span class="x"&gt;                $value = $this-&amp;gt;serializer === null ? unserialize($values[$uid]) : call_user_func($this-&amp;gt;serializer[1], $values[$uid]);&lt;/span&gt;
+&lt;span class="x"&gt;                if(is_array($value) &amp;amp;&amp;amp; (!$value[1] instanceof ICacheDependency || !$value[1]-&amp;gt;getHasChanged()))&lt;/span&gt;
+&lt;span class="x"&gt;                {&lt;/span&gt;
+&lt;span class="x"&gt;                    Yii::trace(&amp;#39;Serving &amp;quot;&amp;#39;.$id.&amp;#39;&amp;quot; from cache&amp;#39;,&amp;#39;system.caching.&amp;#39;.get_class($this));&lt;/span&gt;
+&lt;span class="x"&gt;                    $results[$id] = $value[0];&lt;/span&gt;
+&lt;span class="x"&gt;                }&lt;/span&gt;
+&lt;span class="x"&gt;            }&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    return $results;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+
+&lt;span class="x"&gt;// 向$id存储一个元素值为 $value&lt;/span&gt;
+&lt;span class="x"&gt;public function set($id,$value,$expire=0,$dependency=null)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    Yii::trace(&amp;#39;Saving &amp;quot;&amp;#39;.$id.&amp;#39;&amp;quot; to cache&amp;#39;,&amp;#39;system.caching.&amp;#39;.get_class($this));&lt;/span&gt;
+
+&lt;span class="x"&gt;    if ($dependency !== null &amp;amp;&amp;amp; $this-&amp;gt;serializer !== false)&lt;/span&gt;
+&lt;span class="x"&gt;        // 获取依赖值&lt;/span&gt;
+&lt;span class="x"&gt;        $dependency-&amp;gt;evaluateDependency();&lt;/span&gt;
+
+&lt;span class="x"&gt;    // 连同依赖一起序列化然后缓存起来&lt;/span&gt;
+&lt;span class="x"&gt;    // 下次获取缓存后，检查一下依赖是否发生变更，是则说明缓存已经失效&lt;/span&gt;
+&lt;span class="x"&gt;    if ($this-&amp;gt;serializer === null)&lt;/span&gt;
+&lt;span class="x"&gt;        $value = serialize(array($value,$dependency));&lt;/span&gt;
+&lt;span class="x"&gt;    elseif ($this-&amp;gt;serializer !== false)&lt;/span&gt;
+&lt;span class="x"&gt;        $value = call_user_func($this-&amp;gt;serializer[0], array($value,$dependency));&lt;/span&gt;
+
+&lt;span class="x"&gt;    return $this-&amp;gt;setValue($this-&amp;gt;generateUniqueKey($id), $value, $expire);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+
+&lt;span class="x"&gt;// 在缓存服务器之前不存在$id时， 以id作为key存储一个变量$value到缓存服务器&lt;/span&gt;
+&lt;span class="x"&gt;public function add($id,$value,$expire=0,$dependency=null)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    Yii::trace(&amp;#39;Adding &amp;quot;&amp;#39;.$id.&amp;#39;&amp;quot; to cache&amp;#39;,&amp;#39;system.caching.&amp;#39;.get_class($this));&lt;/span&gt;
+
+&lt;span class="x"&gt;    if ($dependency !== null &amp;amp;&amp;amp; $this-&amp;gt;serializer !== false)&lt;/span&gt;
+&lt;span class="x"&gt;        $dependency-&amp;gt;evaluateDependency();&lt;/span&gt;
+
+&lt;span class="x"&gt;    if ($this-&amp;gt;serializer === null)&lt;/span&gt;
+&lt;span class="x"&gt;        $value = serialize(array($value,$dependency));&lt;/span&gt;
+&lt;span class="x"&gt;    elseif ($this-&amp;gt;serializer !== false)&lt;/span&gt;
+&lt;span class="x"&gt;        $value = call_user_func($this-&amp;gt;serializer[0], array($value,$dependency));&lt;/span&gt;
+
+&lt;span class="x"&gt;    return $this-&amp;gt;addValue($this-&amp;gt;generateUniqueKey($id), $value, $expire);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+
+&lt;span class="x"&gt;// 根据id删除缓存项&lt;/span&gt;
+&lt;span class="x"&gt;public function delete($id)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    Yii::trace(&amp;#39;Deleting &amp;quot;&amp;#39;.$id.&amp;#39;&amp;quot; from cache&amp;#39;,&amp;#39;system.caching.&amp;#39;.get_class($this));&lt;/span&gt;
+&lt;span class="x"&gt;    return $this-&amp;gt;deleteValue($this-&amp;gt;generateUniqueKey($id));&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+
+&lt;span class="x"&gt;// 清空缓存&lt;/span&gt;
+&lt;span class="x"&gt;public function flush()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    Yii::trace(&amp;#39;Flushing cache&amp;#39;,&amp;#39;system.caching.&amp;#39;.get_class($this));&lt;/span&gt;
+&lt;span class="x"&gt;    return $this-&amp;gt;flushValues();&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;从上述代码中可以看到，每种操作方法实际上都是调用另一个方法来完成操作：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;get -&amp;gt; getValue&lt;/li&gt;
+&lt;li&gt;mget -&amp;gt; getValues&lt;/li&gt;
+&lt;li&gt;set -&amp;gt; setValue&lt;/li&gt;
+&lt;li&gt;add -&amp;gt; addValue&lt;/li&gt;
+&lt;li&gt;delete -&amp;gt; deleteValue&lt;/li&gt;
+&lt;li&gt;flush -&amp;gt; flushValues&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;但抽象类&lt;code&gt;CCache&lt;/code&gt;中对于后面的这些方法并没有真正实现操作逻辑（除了getValues，其实现是循环调用getValue，也许并不是开发者想要的实现，&lt;code&gt;CMemCache&lt;/code&gt;类重写了这个方法），需要在继承类中实现。&lt;code&gt;CMemCache&lt;/code&gt;类中对这些方法实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;protected function getValue($key)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    return $this-&amp;gt;_cache-&amp;gt;get($key);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+
+&lt;span class="x"&gt;protected function getValues($keys)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    return $this-&amp;gt;useMemcached ? $this-&amp;gt;_cache-&amp;gt;getMulti($keys) : $this-&amp;gt;_cache-&amp;gt;get($keys);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+
+&lt;span class="x"&gt;protected function setValue($key,$value,$expire)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // 注意：这个地方对于开发者来说也许是个坑&lt;/span&gt;
+&lt;span class="x"&gt;    // 该方法的参数$expire并不是一个时间点，而是一个时间间隔&lt;/span&gt;
+&lt;span class="x"&gt;    // $expire = 0表示不会超时失效&lt;/span&gt;
+&lt;span class="x"&gt;    if($expire&amp;gt;0)&lt;/span&gt;
+&lt;span class="x"&gt;        $expire+=time();&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        $expire=0;&lt;/span&gt;
+
+&lt;span class="x"&gt;    // 使用memcache扩展时，add方法的那个额外参数值0，对应参数flag，表示是否对数据使用zlib进行压缩&lt;/span&gt;
+&lt;span class="x"&gt;    return $this-&amp;gt;useMemcached ? $this-&amp;gt;_cache-&amp;gt;set($key,$value,$expire) : $this-&amp;gt;_cache-&amp;gt;set($key,$value,0,$expire);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+
+&lt;span class="x"&gt;protected function addValue($key,$value,$expire)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if($expire&amp;gt;0)&lt;/span&gt;
+&lt;span class="x"&gt;        $expire+=time();&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        $expire=0;&lt;/span&gt;
+
+&lt;span class="x"&gt;    return $this-&amp;gt;useMemcached ? $this-&amp;gt;_cache-&amp;gt;add($key,$value,$expire) : $this-&amp;gt;_cache-&amp;gt;add($key,$value,0,$expire);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+
+&lt;span class="x"&gt;protected function deleteValue($key)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    return $this-&amp;gt;_cache-&amp;gt;delete($key, 0);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+
+&lt;span class="x"&gt;protected function flushValues()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    return $this-&amp;gt;_cache-&amp;gt;flush();&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;方法&lt;code&gt;get&lt;/code&gt;、&lt;code&gt;mget&lt;/code&gt;、&lt;code&gt;set&lt;/code&gt;、&lt;code&gt;add&lt;/code&gt;、&lt;code&gt;delete&lt;/code&gt;、&lt;code&gt;flush&lt;/code&gt;的实现有两点需要注意：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;实际存储的key并不是方法调用时提供的key，而是经过方法&lt;code&gt;generateUniqueKey&lt;/code&gt;处理的&lt;/li&gt;
+&lt;li&gt;实际存储的value可能是经过序列化的，而且可能还包含依赖值&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;关于第一点，&lt;code&gt;generateUniqueKey&lt;/code&gt;方法在抽象类&lt;code&gt;CCache&lt;/code&gt;中实现如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * @param string $key a key identifying a value to be cached&lt;/span&gt;
+&lt;span class="x"&gt; * @return string a key generated from the provided key which ensures the uniqueness across applications&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;protected function generateUniqueKey($key)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    return $this-&amp;gt;hashKey ? md5($this-&amp;gt;keyPrefix.$key) : $this-&amp;gt;keyPrefix.$key;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;将原本的$key拼接上统一的前缀，如果需要，还进行md5哈希，这样能保证不同的应用之间不会有key冲突。属性hashKey默认值为true。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;关于第二点，缓存依赖的概念简单来说就是在取到一个缓存项后，判断该缓存项是否失效的一个条件。
+以页面缓存为例，也许应用中在页面模板渲染后并没有直接将结果响应给用户，而是先缓存起来，但页面可能涉及一些动态内容，这些动态内容是从数据库中某些数据生成的，为了保证正确性，下次读取页面缓存后，还得去数据库里读一下某些相关数据看是否有变更，，如果有变更，则需要重新渲染页面模板，如果没有变更，则直接将缓存的结果返回给用户。这样对于某些变更频率不高的动态内容，在请求处理时就可以避免不必要的页面模板渲染过程。&lt;/p&gt;
+&lt;p&gt;判断缓存依赖是否有变更的逻辑是：&lt;strong&gt;在写缓存时，将当时缓存依赖的结果一并存入缓存，读缓存的时候，再将最新缓存依赖的结果与之前存入缓存的依赖结果做对比，不相同，则说明有变更&lt;/strong&gt;。&lt;/p&gt;
+&lt;p&gt;缓存依赖类需要实现接口&lt;code&gt;ICacheDependency&lt;/code&gt;，该接口声明了两个方法&lt;code&gt;evaluateDependency&lt;/code&gt;和&lt;code&gt;getHasChanged&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;以缓存依赖类&lt;code&gt;CDbCacheDependency&lt;/code&gt;为例（见文件&lt;code&gt;yii/framework/caching/dependencies/CDbCacheDependency.php&lt;/code&gt;），
+该类直接继承自类&lt;code&gt;CCacheDependency&lt;/code&gt;。类&lt;code&gt;CDbCacheDependency&lt;/code&gt;的作用就是根据一条SQL语句从数据库查询数据，然后根据查询结果来判断缓存是否有效。&lt;/p&gt;
+&lt;p&gt;父类&lt;code&gt;CCacheDependency&lt;/code&gt;中实现方法&lt;code&gt;evaluateDependency&lt;/code&gt;和&lt;code&gt;getHasChanged&lt;/code&gt;，如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Evaluates the dependency by generating and saving the data related with dependency.&lt;/span&gt;
+&lt;span class="x"&gt; * This method is invoked by cache before writing data into it.&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public function evaluateDependency()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // 判断是否复用缓存依赖结果&lt;/span&gt;
+&lt;span class="x"&gt;    // 默认为false，可在实例化缓存依赖类时设置&lt;/span&gt;
+&lt;span class="x"&gt;    // 另外对于PHP来说，这个“复用”也只能是一次请求处理过程中的复用&lt;/span&gt;
+&lt;span class="x"&gt;    if ($this-&amp;gt;reuseDependentData)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        // hash方法：求当前对象序列化结果的sha1哈希值&lt;/span&gt;
+&lt;span class="x"&gt;        $hash=$this-&amp;gt;getHash();&lt;/span&gt;
+&lt;span class="x"&gt;        if(!isset(self::$_reusableData[$hash][&amp;#39;dependentData&amp;#39;]))&lt;/span&gt;
+&lt;span class="x"&gt;            // 如果没有结果可复用，则得重新生成&lt;/span&gt;
+&lt;span class="x"&gt;            self::$_reusableData[$hash][&amp;#39;dependentData&amp;#39;]=$this-&amp;gt;generateDependentData();&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;_data=self::$_reusableData[$hash][&amp;#39;dependentData&amp;#39;];&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;_data=$this-&amp;gt;generateDependentData();&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+
+&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * @return boolean whether the dependency has changed.&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;// 这个方法其实是读缓存时，从缓存数据中取出缓存依赖的部分反序列化后得到一个依赖对象，由该依赖对象调用它的这个方法来判断缓存依赖是否有变更，&lt;/span&gt;
+&lt;span class="x"&gt;// 所以它的_data属性是写缓存时的缓存依赖数据&lt;/span&gt;
+&lt;span class="x"&gt;public function getHasChanged()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if ($this-&amp;gt;reuseDependentData)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        $hash=$this-&amp;gt;getHash();&lt;/span&gt;
+&lt;span class="x"&gt;        if(!isset(self::$_reusableData[$hash][&amp;#39;dependentData&amp;#39;]))&lt;/span&gt;
+&lt;span class="x"&gt;            self::$_reusableData[$hash][&amp;#39;dependentData&amp;#39;]=$this-&amp;gt;generateDependentData();&lt;/span&gt;
+&lt;span class="x"&gt;        // 不相等，则说明发生了变更&lt;/span&gt;
+&lt;span class="x"&gt;        return self::$_reusableData[$hash][&amp;#39;dependentData&amp;#39;]!=$this-&amp;gt;_data;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        return $this-&amp;gt;generateDependentData()!=$this-&amp;gt;_data;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;但父类&lt;code&gt;CCacheDependency&lt;/code&gt;并未有效实现上述两个方法中调用的&lt;code&gt;generateDependentData&lt;/code&gt;方法，在类&lt;code&gt;CDbCacheDependency&lt;/code&gt;中实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;protected function generateDependentData()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;sql!==null)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        // 获取数据库连接组件对象&lt;/span&gt;
+&lt;span class="x"&gt;        $db=$this-&amp;gt;getDbConnection();&lt;/span&gt;
+&lt;span class="x"&gt;        // 准备SQL执行，其中sql属性在构造方法中赋值&lt;/span&gt;
+&lt;span class="x"&gt;        $command=$db-&amp;gt;createCommand($this-&amp;gt;sql);&lt;/span&gt;
+&lt;span class="x"&gt;        if(is_array($this-&amp;gt;params))&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            // 绑定参数&lt;/span&gt;
+&lt;span class="x"&gt;            foreach($this-&amp;gt;params as $name=&amp;gt;$value)&lt;/span&gt;
+&lt;span class="x"&gt;                $command-&amp;gt;bindValue($name,$value);&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;        // 避免从缓存中读取数据库查询结果&lt;/span&gt;
+&lt;span class="x"&gt;        if($db-&amp;gt;queryCachingDuration&amp;gt;0)&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            // temporarily disable and re-enable query caching&lt;/span&gt;
+&lt;span class="x"&gt;            $duration=$db-&amp;gt;queryCachingDuration;&lt;/span&gt;
+&lt;span class="x"&gt;            $db-&amp;gt;queryCachingDuration=0;&lt;/span&gt;
+&lt;span class="x"&gt;            $result=$command-&amp;gt;queryRow();&lt;/span&gt;
+&lt;span class="x"&gt;            $db-&amp;gt;queryCachingDuration=$duration;&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;        else&lt;/span&gt;
+&lt;span class="x"&gt;            $result=$command-&amp;gt;queryRow();&lt;/span&gt;
+&lt;span class="x"&gt;        return $result;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        throw new CException(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;CDbCacheDependency.sql cannot be empty.&amp;#39;));&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Wed, 19 Nov 2014 00:00:00 +0800</pubDate><guid>tag:youngsterxyf.github.io,2014-11-19:2014/11/19/read-yii-code-6/</guid><category>PHP</category><category>Yii</category><category>笔记</category><category>总结</category></item><item><title>Yii源码阅读笔记 - 模板引擎集成</title><link>http://youngsterxyf.github.io/2014/11/18/read-yii-code-5/</link><description>&lt;h3&gt;概述&lt;/h3&gt;
+&lt;p&gt;通常我们会使用模板引擎来渲染HTML页面，而不是使用HTML代码中插入PHP代码的方式来编写动态页面。Yii框架中模板引擎也是作为组件引入的，默认ID为viewRenderer，
+但从&lt;a href="http://youngsterxyf.github.io/2014/11/13/read-yii-code-3/"&gt;Yii源码阅读笔记 - 组件集成&lt;/a&gt;可以看到Yii Web应用加载的核心组件中并没有viewRenderer，所以需要自己配置。
+Yii提供了一个直接可用的模板引擎组件类CPradoViewRenderer（见文件&lt;code&gt;yii/framework/web/renderers/CPradoViewRenderer.php&lt;/code&gt;），该模板引擎类让开发者可以使用类Prado框架的模板语法。&lt;/p&gt;
+&lt;p&gt;如果你想使用Smarty这种第三方模板引擎，有两种方式将模板引擎引入Yii中使用（以Smarty为例）：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;将Smarty封装成一个Yii的普通组件，然后配置加载到Yii::app()。假设组件ID为smarty，那么就可以通过&lt;code&gt;Yii::app()-&amp;gt;smarty&lt;/code&gt;来调用组件。&lt;/li&gt;
+&lt;li&gt;参考CPradoViewRenderer类的实现，将Smarty封装成一个模板引擎组件，并以ID为viewRenderer进行配置加载。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;相比而言，第二种方式更好。原因是：第一种方式由于每种第三方模板引擎的接口不一样，如果应用要替换模板引擎，就需要修改控制器类中的代码。而第二种方式由于第三方组件统一封装成Yii框架定义的模板引擎接口形式，
+所以如果要替换模板引擎，只需修改自定义模板引擎组件类的接口实现就可以了。这样调用模板引擎的代码逻辑就只依赖接口形式，而不是依赖于接口实现，从而实现解耦。&lt;/p&gt;
+&lt;p&gt;本文主要分析第二种方式的实现。&lt;/p&gt;
+&lt;h3&gt;分析&lt;/h3&gt;
+&lt;p&gt;Yii中对页面模板进行渲染可以调用&lt;code&gt;CController&lt;/code&gt;类（见文件&lt;code&gt;yii/framework/web/CController.php&lt;/code&gt;）的方法&lt;code&gt;render&lt;/code&gt;，实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Renders a view with a layout.&lt;/span&gt;
+&lt;span class="x"&gt; *&lt;/span&gt;
+&lt;span class="x"&gt; * This method first calls {@link renderPartial} to render the view (called content view).&lt;/span&gt;
+&lt;span class="x"&gt; * It then renders the layout view which may embed the content view at appropriate place.&lt;/span&gt;
+&lt;span class="x"&gt; * In the layout view, the content view rendering result can be accessed via variable&lt;/span&gt;
+&lt;span class="x"&gt; * &amp;lt;code&amp;gt;$content&amp;lt;/code&amp;gt;. At the end, it calls {@link processOutput} to insert scripts&lt;/span&gt;
+&lt;span class="x"&gt; * and dynamic contents if they are available.&lt;/span&gt;
+&lt;span class="x"&gt; *&lt;/span&gt;
+&lt;span class="x"&gt; * By default, the layout view script is &amp;quot;protected/views/layouts/main.php&amp;quot;.&lt;/span&gt;
+&lt;span class="x"&gt; * This may be customized by changing {@link layout}.&lt;/span&gt;
+&lt;span class="x"&gt; *&lt;/span&gt;
+&lt;span class="x"&gt; * @param string $view name of the view to be rendered. See {@link getViewFile} for details&lt;/span&gt;
+&lt;span class="x"&gt; * about how the view script is resolved.&lt;/span&gt;
+&lt;span class="x"&gt; * @param array $data data to be extracted into PHP variables and made available to the view script&lt;/span&gt;
+&lt;span class="x"&gt; * @param boolean $return whether the rendering result should be returned instead of being displayed to end users.&lt;/span&gt;
+&lt;span class="x"&gt; * @return string the rendering result. Null if the rendering result is not required.&lt;/span&gt;
+&lt;span class="x"&gt; * @see renderPartial&lt;/span&gt;
+&lt;span class="x"&gt; * @see getLayoutFile&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public function render($view,$data=null,$return=false)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // beforeRender默认返回true，&lt;/span&gt;
+&lt;span class="x"&gt;    // 可以在自定义controller类中重写该方法，实现渲染之前的预处理&lt;/span&gt;
+&lt;span class="x"&gt;    // 但和beforeAction一样，应该要返回true或false&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;beforeRender($view))&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        // 渲染真正的内容部分&lt;/span&gt;
+&lt;span class="x"&gt;        $output=$this-&amp;gt;renderPartial($view,$data,true);&lt;/span&gt;
+&lt;span class="x"&gt;        // 获取布局文件&lt;/span&gt;
+&lt;span class="x"&gt;        if(($layoutFile=$this-&amp;gt;getLayoutFile($this-&amp;gt;layout))!==false)&lt;/span&gt;
+&lt;span class="x"&gt;            // 渲染整个页面&lt;/span&gt;
+&lt;span class="x"&gt;            $output=$this-&amp;gt;renderFile($layoutFile,array(&amp;#39;content&amp;#39;=&amp;gt;$output),true);&lt;/span&gt;
+
+&lt;span class="x"&gt;        // 渲染的后处理，默认为空，在processOutput之前调用&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;afterRender($view,$output);&lt;/span&gt;
+
+&lt;span class="x"&gt;        // 对渲染结果进行处理&lt;/span&gt;
+&lt;span class="x"&gt;        $output=$this-&amp;gt;processOutput($output);&lt;/span&gt;
+
+&lt;span class="x"&gt;        // 可以将渲染结果作为方法的返回值返回，或者直接输出到用户浏览器&lt;/span&gt;
+&lt;span class="x"&gt;        if($return)&lt;/span&gt;
+&lt;span class="x"&gt;            return $output;&lt;/span&gt;
+&lt;span class="x"&gt;        else&lt;/span&gt;
+&lt;span class="x"&gt;            echo $output;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中方法renderPartial的实现如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Renders a view.&lt;/span&gt;
+&lt;span class="x"&gt; *&lt;/span&gt;
+&lt;span class="x"&gt; * The named view refers to a PHP script (resolved via {@link getViewFile})&lt;/span&gt;
+&lt;span class="x"&gt; * that is included by this method. If $data is an associative array,&lt;/span&gt;
+&lt;span class="x"&gt; * it will be extracted as PHP variables and made available to the script.&lt;/span&gt;
+&lt;span class="x"&gt; *&lt;/span&gt;
+&lt;span class="x"&gt; * This method differs from {@link render()} in that it does not&lt;/span&gt;
+&lt;span class="x"&gt; * apply a layout to the rendered result. It is thus mostly used&lt;/span&gt;
+&lt;span class="x"&gt; * in rendering a partial view, or an AJAX response.&lt;/span&gt;
+&lt;span class="x"&gt; *&lt;/span&gt;
+&lt;span class="x"&gt; * @param string $view name of the view to be rendered. See {@link getViewFile} for details&lt;/span&gt;
+&lt;span class="x"&gt; * about how the view script is resolved.&lt;/span&gt;
+&lt;span class="x"&gt; * @param array $data data to be extracted into PHP variables and made available to the view script&lt;/span&gt;
+&lt;span class="x"&gt; * @param boolean $return whether the rendering result should be returned instead of being displayed to end users&lt;/span&gt;
+&lt;span class="x"&gt; * @param boolean $processOutput whether the rendering result should be postprocessed using {@link processOutput}.&lt;/span&gt;
+&lt;span class="x"&gt; * @return string the rendering result. Null if the rendering result is not required.&lt;/span&gt;
+&lt;span class="x"&gt; * @throws CException if the view does not exist&lt;/span&gt;
+&lt;span class="x"&gt; * @see getViewFile&lt;/span&gt;
+&lt;span class="x"&gt; * @see processOutput&lt;/span&gt;
+&lt;span class="x"&gt; * @see render&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public function renderPartial($view,$data=null,$return=false,$processOutput=false)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // 获取目标模板文件&lt;/span&gt;
+&lt;span class="x"&gt;    $viewFile=$this-&amp;gt;getViewFile($view);&lt;/span&gt;
+&lt;span class="x"&gt;    echo (basename(__FILE__).&amp;#39;:&amp;#39;.__LINE__.&amp;#39;:&amp;#39;.__FUNCTION__.&amp;#39;() $viewFile &amp;#39;. var_export($viewFile, true));&lt;/span&gt;
+&lt;span class="x"&gt;    if(($viewFile)!==false)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        // 渲染&lt;/span&gt;
+&lt;span class="x"&gt;        $output=$this-&amp;gt;renderFile($viewFile,$data,true);&lt;/span&gt;
+&lt;span class="x"&gt;        // 如果$processOutput为真，则也会对结果进行后处理&lt;/span&gt;
+&lt;span class="x"&gt;        if($processOutput)&lt;/span&gt;
+&lt;span class="x"&gt;            $output=$this-&amp;gt;processOutput($output);&lt;/span&gt;
+&lt;span class="x"&gt;        if($return)&lt;/span&gt;
+&lt;span class="x"&gt;            return $output;&lt;/span&gt;
+&lt;span class="x"&gt;        else&lt;/span&gt;
+&lt;span class="x"&gt;            echo $output;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        throw new CException(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;{controller} cannot find the requested view &amp;quot;{view}&amp;quot;.&amp;#39;,&lt;/span&gt;
+&lt;span class="x"&gt;            array(&amp;#39;{controller}&amp;#39;=&amp;gt;get_class($this), &amp;#39;{view}&amp;#39;=&amp;gt;$view)));&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;code&gt;renderPartial&lt;/code&gt;方法并不会渲染出一个完整的页面，只是渲染页面的一部分，通常是主体部分，或者为AJAX请求渲染出响应结果。
+其中调用的getViewFile方法实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function getViewFile($viewName)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // 如果未配置theme项，即表示不使用theme，那么getTheme方法返回null&lt;/span&gt;
+&lt;span class="x"&gt;    if(($theme=Yii::app()-&amp;gt;getTheme())!==null &amp;amp;&amp;amp; ($viewFile=$theme-&amp;gt;getViewFile($this,$viewName))!==false)&lt;/span&gt;
+&lt;span class="x"&gt;        return $viewFile;&lt;/span&gt;
+&lt;span class="x"&gt;    // viewPath默认为views，可配置&lt;/span&gt;
+&lt;span class="x"&gt;    $moduleViewPath=$basePath=Yii::app()-&amp;gt;getViewPath();&lt;/span&gt;
+&lt;span class="x"&gt;    echo (basename(__FILE__).&amp;#39;:&amp;#39;.__LINE__.&amp;#39;:&amp;#39;.__FUNCTION__.&amp;#39;() $moduleViewPath &amp;#39;. var_export($moduleViewPath, true)),&amp;quot;\n&amp;quot;;&lt;/span&gt;
+&lt;span class="x"&gt;    // 模块化，如果没有，则getModule返回null&lt;/span&gt;
+&lt;span class="x"&gt;    if(($module=$this-&amp;gt;getModule())!==null)&lt;/span&gt;
+&lt;span class="x"&gt;        $moduleViewPath=$module-&amp;gt;getViewPath();&lt;/span&gt;
+&lt;span class="x"&gt;    // $this-&amp;gt;getViewPath()得到的路径相比$moduleViewPath就是多了controller的ID一级&lt;/span&gt;
+&lt;span class="x"&gt;    return $this-&amp;gt;resolveViewFile($viewName,$this-&amp;gt;getViewPath(),$basePath,$moduleViewPath);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;代码中&lt;code&gt;$this-&amp;gt;getViewPath()&lt;/code&gt;方法的实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function getViewPath()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if(($module=$this-&amp;gt;getModule())===null)&lt;/span&gt;
+&lt;span class="x"&gt;        $module=Yii::app();&lt;/span&gt;
+&lt;span class="x"&gt;    // $this-&amp;gt;getId()是得到当前controller的ID，这个ID是在controller实例化时构造方法中赋值给属性_id的。&lt;/span&gt;
+&lt;span class="x"&gt;    // 这也就意味着页面模板文件需要按照controller的ID分目录存放&lt;/span&gt;
+&lt;span class="x"&gt;    return $module-&amp;gt;getViewPath().DIRECTORY_SEPARATOR.$this-&amp;gt;getId();&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;code&gt;getViewFile&lt;/code&gt;中最后调用的方法&lt;code&gt;resolveViewFile&lt;/code&gt;实现如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function resolveViewFile($viewName,$viewPath,$basePath,$moduleViewPath=null)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // 连模板文件名都不给，还玩个屁啊&lt;/span&gt;
+&lt;span class="x"&gt;    if(empty($viewName))&lt;/span&gt;
+&lt;span class="x"&gt;        return false;&lt;/span&gt;
+
+&lt;span class="x"&gt;    // 若$moduleViewPath未设置，则在应用的页面模板的根目录下找&lt;/span&gt;
+&lt;span class="x"&gt;    if($moduleViewPath===null)&lt;/span&gt;
+&lt;span class="x"&gt;        $moduleViewPath=$basePath;&lt;/span&gt;
+
+&lt;span class="x"&gt;    // 获取设置的模板渲染引擎，其实就是加载ID为viewRenderer的组件&lt;/span&gt;
+&lt;span class="x"&gt;    if(($renderer=Yii::app()-&amp;gt;getViewRenderer())!==null)&lt;/span&gt;
+&lt;span class="x"&gt;        // 模板文件的扩展类型默认为&amp;#39;.php&amp;#39;，可配置&lt;/span&gt;
+&lt;span class="x"&gt;        $extension=$renderer-&amp;gt;fileExtension;&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        $extension=&amp;#39;.php&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;    echo (basename(__FILE__).&amp;#39;:&amp;#39;.__LINE__.&amp;#39;:&amp;#39;.__FUNCTION__.&amp;#39;() $extension &amp;#39;. var_export($extension, true)),&amp;quot;\n&amp;quot;;&lt;/span&gt;
+&lt;span class="x"&gt;    // 如果指定的模板文件名以/开始&lt;/span&gt;
+&lt;span class="x"&gt;    if($viewName[0]===&amp;#39;/&amp;#39;)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        // 如果指定的模板文件名以//开始，则表示在模板的根目录下查找&lt;/span&gt;
+&lt;span class="x"&gt;        if(strncmp($viewName,&amp;#39;//&amp;#39;,2)===0)&lt;/span&gt;
+&lt;span class="x"&gt;            $viewFile=$basePath.$viewName;&lt;/span&gt;
+&lt;span class="x"&gt;        // 否则（以单个/开始）在模块的模板目录下查找&lt;/span&gt;
+&lt;span class="x"&gt;        else&lt;/span&gt;
+&lt;span class="x"&gt;            $viewFile=$moduleViewPath.$viewName;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    // 如果模板文件名中存在.且.不出现在第一个位置，则认为这是一个路径别名，需要转换真正的路径&lt;/span&gt;
+&lt;span class="x"&gt;    elseif(strpos($viewName,&amp;#39;.&amp;#39;))&lt;/span&gt;
+&lt;span class="x"&gt;        $viewFile=Yii::getPathOfAlias($viewName);&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        // 否则在当前controller的模板目录下找&lt;/span&gt;
+&lt;span class="x"&gt;        $viewFile=$viewPath.DIRECTORY_SEPARATOR.$viewName;&lt;/span&gt;
+
+&lt;span class="x"&gt;    // 可能站点是需要国际化的&lt;/span&gt;
+&lt;span class="x"&gt;    // 所以在找到默认的模板文件后，尝试找一下对应用户目标语言的模板文件&lt;/span&gt;
+&lt;span class="x"&gt;    if(is_file($viewFile.$extension))&lt;/span&gt;
+&lt;span class="x"&gt;        return Yii::app()-&amp;gt;findLocalizedFile($viewFile.$extension);&lt;/span&gt;
+&lt;span class="x"&gt;    // 如果不存在指定扩展类型的模板文件，且扩展类型不为&amp;#39;.php&amp;#39;，则看一下&amp;#39;.php&amp;#39;类型的模板文件是否存在&lt;/span&gt;
+&lt;span class="x"&gt;    elseif($extension!==&amp;#39;.php&amp;#39; &amp;amp;&amp;amp; is_file($viewFile.&amp;#39;.php&amp;#39;))&lt;/span&gt;
+&lt;span class="x"&gt;        return Yii::app()-&amp;gt;findLocalizedFile($viewFile.&amp;#39;.php&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        return false;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;方法&lt;code&gt;resolveViewFile&lt;/code&gt;中最后调用的方法&lt;code&gt;findLocalizedFile&lt;/code&gt;，定义于抽象类CApplication中，实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function findLocalizedFile($srcFile,$srcLanguage=null,$language=null)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if($srcLanguage===null)&lt;/span&gt;
+&lt;span class="x"&gt;        // sourceLanguage为public的属性，可配置，默认为en_us&lt;/span&gt;
+&lt;span class="x"&gt;        $srcLanguage=$this-&amp;gt;sourceLanguage;&lt;/span&gt;
+&lt;span class="x"&gt;    if($language===null)&lt;/span&gt;
+&lt;span class="x"&gt;        // getLanguage的实现：$this-&amp;gt;_language===null ? $this-&amp;gt;sourceLanguage : $this-&amp;gt;_language&lt;/span&gt;
+&lt;span class="x"&gt;        // 默认_language为未赋值，即null，所以取到的还是sourceLanguage属性值。&lt;/span&gt;
+&lt;span class="x"&gt;        // 但因为__set，所以也是可赋值的，这个赋值不应该是配置造成的，应该是根据用户的cookie中指定的语言选项，在请求处理时设置的，表示用户的目标语言&lt;/span&gt;
+&lt;span class="x"&gt;        $language=$this-&amp;gt;getLanguage();&lt;/span&gt;
+&lt;span class="x"&gt;    // 如果用户的目标语言（或者用户选择的是默认语言），则直接返回默认模板文件的路径&lt;/span&gt;
+&lt;span class="x"&gt;    if($language===$srcLanguage)&lt;/span&gt;
+&lt;span class="x"&gt;        return $srcFile;&lt;/span&gt;
+&lt;span class="x"&gt;    // 否则取到对应目标语言的模板文件&lt;/span&gt;
+&lt;span class="x"&gt;    $desiredFile=dirname($srcFile).DIRECTORY_SEPARATOR.$language.DIRECTORY_SEPARATOR.basename($srcFile);&lt;/span&gt;
+&lt;span class="x"&gt;    // 如果对应目标语言的模板文件不存在，则还是返回默认的模板文件&lt;/span&gt;
+&lt;span class="x"&gt;    return is_file($desiredFile) ? $desiredFile : $srcFile;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;从上述模板文件的寻找过程可以看到，最后返回的目标模板文件的路径是一个相对路径，以动态脚本根目录（默认为protected）开始。&lt;/p&gt;
+&lt;p&gt;方法&lt;code&gt;renderPartial&lt;/code&gt;中在得到目标模板文件相对路径后，即调用renderFile方法（定义于CBaseController类中）来渲染模板，该方法的实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function renderFile($viewFile,$data=null,$return=false)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    $widgetCount=count($this-&amp;gt;_widgetStack);&lt;/span&gt;
+&lt;span class="x"&gt;    // Yii::app()-&amp;gt;getViewRenderer() 获取模板引擎组件&lt;/span&gt;
+&lt;span class="x"&gt;    if(($renderer=Yii::app()-&amp;gt;getViewRenderer())!==null &amp;amp;&amp;amp; $renderer-&amp;gt;fileExtension===&amp;#39;.&amp;#39;.CFileHelper::getExtension($viewFile))&lt;/span&gt;
+&lt;span class="x"&gt;        $content=$renderer-&amp;gt;renderFile($this,$viewFile,$data,$return);&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        // 如果没法用模板引擎来渲染（可能不是模板引擎的目标模板，也可能是没设置模板引擎组件），则当前普通的PHP文件（HTML代码中夹杂着PHP代码）来渲染&lt;/span&gt;
+&lt;span class="x"&gt;        $content=$this-&amp;gt;renderInternal($viewFile,$data,$return);&lt;/span&gt;
+&lt;span class="x"&gt;    if(count($this-&amp;gt;_widgetStack)===$widgetCount)&lt;/span&gt;
+&lt;span class="x"&gt;        return $content;&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        $widget=end($this-&amp;gt;_widgetStack);&lt;/span&gt;
+&lt;span class="x"&gt;        throw new CException(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;{controller} contains improperly nested widget tags in its view &amp;quot;{view}&amp;quot;. A {widget} widget does not have an endWidget() call.&amp;#39;,&lt;/span&gt;
+&lt;span class="x"&gt;            array(&amp;#39;{controller}&amp;#39;=&amp;gt;get_class($this), &amp;#39;{view}&amp;#39;=&amp;gt;$viewFile, &amp;#39;{widget}&amp;#39;=&amp;gt;get_class($widget))));&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;code&gt;renderFile&lt;/code&gt;中&lt;code&gt;$content=$renderer-&amp;gt;renderFile($this,$viewFile,$data,$return);&lt;/code&gt;一行调用的renderFile方法，在抽象类CViewRenderer中定义如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function renderFile($context,$sourceFile,$data,$return)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if(!is_file($sourceFile) || ($file=realpath($sourceFile))===false)&lt;/span&gt;
+&lt;span class="x"&gt;        throw new CException(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;View file &amp;quot;{file}&amp;quot; does not exist.&amp;#39;,array(&amp;#39;{file}&amp;#39;=&amp;gt;$sourceFile)));&lt;/span&gt;
+&lt;span class="x"&gt;    // 尝试从runtime目录中获取已编译好的模板，如果编译好的模板不是同一存放在runtime目录下，则默认和未编译的模板文件在同一个目录下，并且文件名多一个&amp;quot;c&amp;quot;后缀&lt;/span&gt;
+&lt;span class="x"&gt;    // 得到$viewFile可能并不存在，第一次请求该模板&lt;/span&gt;
+&lt;span class="x"&gt;    $viewFile=$this-&amp;gt;getViewFile($sourceFile);&lt;/span&gt;
+&lt;span class="x"&gt;    // 如果相比已编译好的模板文件，未编译的模板已发生变更，则需要重新编译&lt;/span&gt;
+&lt;span class="x"&gt;    // 如果已编译好的模板文件不存在，则@filemtime($viewFile)返回的是false，这个条件也是返回true&lt;/span&gt;
+&lt;span class="x"&gt;    if(@filemtime($sourceFile)&amp;gt;@filemtime($viewFile))&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        // 抽象类CViewRenderer中generateViewFile方法并未实现，所以自己封装模板引擎组件时需要实现该方法&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;generateViewFile($sourceFile,$viewFile);&lt;/span&gt;
+&lt;span class="x"&gt;        // 设置编译好的模板文件的访问权限，默认是0755 (owner rwx, group rx and others rx)&lt;/span&gt;
+&lt;span class="x"&gt;        @chmod($viewFile,$this-&amp;gt;filePermission);&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    // 编译好的模板文件其实就是一个PHP脚本（HTML代码中夹杂PHP代码），所以还需要渲染一下&lt;/span&gt;
+&lt;span class="x"&gt;    return $context-&amp;gt;renderInternal($viewFile,$data,$return);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;类&lt;code&gt;CController&lt;/code&gt;的&lt;code&gt;render&lt;/code&gt;方法在调用&lt;code&gt;renderPartial&lt;/code&gt;得到渲染结果后，取得页面布局模板文件，然后将&lt;code&gt;renderPartial&lt;/code&gt;的渲染结果作为数据渲染布局模板，从而得到一个完整HTML页面。
+获取布局模板文件路径的方法&lt;code&gt;getLayoutFile&lt;/code&gt;实现如下所示（定义于类CController中）：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function getLayoutFile($layoutName)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if($layoutName===false)&lt;/span&gt;
+&lt;span class="x"&gt;        return false;&lt;/span&gt;
+&lt;span class="x"&gt;    if(($theme=Yii::app()-&amp;gt;getTheme())!==null &amp;amp;&amp;amp; ($layoutFile=$theme-&amp;gt;getLayoutFile($this,$layoutName))!==false)&lt;/span&gt;
+&lt;span class="x"&gt;        return $layoutFile;&lt;/span&gt;
+
+&lt;span class="x"&gt;    if(empty($layoutName))&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        $module=$this-&amp;gt;getModule();&lt;/span&gt;
+&lt;span class="x"&gt;        // 递归向父级模板查找布局文件&lt;/span&gt;
+&lt;span class="x"&gt;        while($module!==null)&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            if($module-&amp;gt;layout===false)&lt;/span&gt;
+&lt;span class="x"&gt;                return false;&lt;/span&gt;
+&lt;span class="x"&gt;            if(!empty($module-&amp;gt;layout))&lt;/span&gt;
+&lt;span class="x"&gt;                break;&lt;/span&gt;
+&lt;span class="x"&gt;            $module=$module-&amp;gt;getParentModule();&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;        // 如果当前controller不属于某个module&lt;/span&gt;
+&lt;span class="x"&gt;        if($module===null)&lt;/span&gt;
+&lt;span class="x"&gt;            $module=Yii::app();&lt;/span&gt;
+&lt;span class="x"&gt;        // 默认为main，可配置&lt;/span&gt;
+&lt;span class="x"&gt;        $layoutName=$module-&amp;gt;layout;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    elseif(($module=$this-&amp;gt;getModule())===null)&lt;/span&gt;
+&lt;span class="x"&gt;        $module=Yii::app();&lt;/span&gt;
+
+&lt;span class="x"&gt;    return $this-&amp;gt;resolveViewFile($layoutName,$module-&amp;gt;getLayoutPath(),Yii::app()-&amp;gt;getViewPath(),$module-&amp;gt;getViewPath());&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其逻辑与方法&lt;code&gt;getViewFile&lt;/code&gt;类似。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;由上述分析可知，将第三方模板引擎封装成Yii框架的模板引擎组件，可以继承自抽象类&lt;code&gt;CViewRenderer&lt;/code&gt;，并实现其方法&lt;code&gt;generateViewFile&lt;/code&gt;，然后配置该组件的ID为&lt;code&gt;viewRenderer&lt;/code&gt;。
+对于模板文件的存放，需要考虑Web应用是否分模块、应用是否国际化、模板文件相关controller的ID等，模板文件名的扩展类型应与模板引擎组件配置的一样。&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Tue, 18 Nov 2014 00:00:00 +0800</pubDate><guid>tag:youngsterxyf.github.io,2014-11-18:2014/11/18/read-yii-code-5/</guid><category>PHP</category><category>Yii</category><category>笔记</category><category>总结</category></item><item><title>Yii源码阅读笔记 - Model层实现</title><link>http://youngsterxyf.github.io/2014/11/14/read-yii-code-4/</link><description>&lt;h3&gt;概述&lt;/h3&gt;
+&lt;p&gt;Yii中，对Model层的使用，有两种方式：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;通过类CDbConnection和CDbCommand来操作&lt;/li&gt;
+&lt;li&gt;使用ORM形式：编写model类继承自抽象类CActiveRecord&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;第1种方式的示例如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="nv"&gt;$connection&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;Yii&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;app&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;db&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;  &lt;span class="c1"&gt;// 或者Yii::app()-&amp;gt;getComponent(&amp;#39;db&amp;#39;);&lt;/span&gt;
+&lt;span class="nv"&gt;$queryResult&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$connection&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;createCommand&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$sql&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;queryRow&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;第2种方式中编写的model类可能需要实现方法&lt;code&gt;getDbConnection&lt;/code&gt;、&lt;code&gt;model&lt;/code&gt;、&lt;code&gt;tableName&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;在实现上，第2种方式是基于第1种方式的，即第2种方式的抽象程度更高。Yii没有屏蔽第1种方式，这样能让开发者按需选择。
+但我个人并不喜欢这样，两种方式同时存在，会导致应用的model实现稍显混乱。&lt;/p&gt;
+&lt;h3&gt;分析&lt;/h3&gt;
+&lt;p&gt;Yii框架model层的入口为CDbConnection类，该类有很多public的属性可供配置，如&lt;code&gt;connectionString&lt;/code&gt;、&lt;code&gt;username&lt;/code&gt;、&lt;code&gt;password&lt;/code&gt;等。&lt;/p&gt;
+&lt;p&gt;根据&lt;a href="http://youngsterxyf.github.io/2014/11/13/read-yii-code-3/"&gt;Yii源码阅读笔记 - 组件集成&lt;/a&gt;一文可知，组件初始化时会调用init方法。
+类CDbConnection的init类实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function init()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    parent::init();&lt;/span&gt;
+&lt;span class="x"&gt;    // 属性autoConnect默认为true&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;autoConnect)&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;setActive(true);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中调用的setActive方法实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function setActive($value)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // 当$value为true，而_active为false（表示数据库连接未打开），则打开数据库连接&lt;/span&gt;
+&lt;span class="x"&gt;    // 当$value为false, 而_active为true（表示数据库连接已打开），则关闭数据库连接&lt;/span&gt;
+&lt;span class="x"&gt;    if($value!=$this-&amp;gt;_active)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        if($value)&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;open();&lt;/span&gt;
+&lt;span class="x"&gt;        else&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;close();&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;方法open实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Opens DB connection if it is currently not&lt;/span&gt;
+&lt;span class="x"&gt; * @throws CException if connection fails&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;protected function open()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;_pdo===null)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        // 所以需要配置connectionString&lt;/span&gt;
+&lt;span class="x"&gt;        if(empty($this-&amp;gt;connectionString))&lt;/span&gt;
+&lt;span class="x"&gt;            throw new CDbException(&amp;#39;CDbConnection.connectionString cannot be empty.&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;        try&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            Yii::trace(&amp;#39;Opening DB connection&amp;#39;,&amp;#39;system.db.CDbConnection&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;            // 基于PDO类建立数据库连接（对于某些数据库不使用PDO）&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;_pdo=$this-&amp;gt;createPdoInstance();&lt;/span&gt;
+&lt;span class="x"&gt;            // 设置数据库连接的一些属性，如字符编码等&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;initConnection($this-&amp;gt;_pdo);&lt;/span&gt;
+&lt;span class="x"&gt;            // 标志位设置为已打开&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;_active=true;&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;        catch(PDOException $e)&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            // 省略&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;方法close实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Closes the currently active DB connection.&lt;/span&gt;
+&lt;span class="x"&gt; * It does nothing if the connection is already closed.&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;protected function close()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    Yii::trace(&amp;#39;Closing DB connection&amp;#39;,&amp;#39;system.db.CDbConnection&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;_pdo=null;&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;_active=false;&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;_schema=null;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;open方法中调用的方法createPdoInstance实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Creates the PDO instance.&lt;/span&gt;
+&lt;span class="x"&gt; * When some functionalities are missing in the pdo driver, we may use&lt;/span&gt;
+&lt;span class="x"&gt; * an adapter class to provide them.&lt;/span&gt;
+&lt;span class="x"&gt; * @throws CDbException when failed to open DB connection&lt;/span&gt;
+&lt;span class="x"&gt; * @return PDO the pdo instance&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;protected function createPdoInstance()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // 属性pdoClass默认为PDO&lt;/span&gt;
+&lt;span class="x"&gt;    $pdoClass=$this-&amp;gt;pdoClass;&lt;/span&gt;
+&lt;span class="x"&gt;    if(($pos=strpos($this-&amp;gt;connectionString,&amp;#39;:&amp;#39;))!==false)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        // 取出数据库驱动类型&lt;/span&gt;
+&lt;span class="x"&gt;        $driver=strtolower(substr($this-&amp;gt;connectionString,0,$pos));&lt;/span&gt;
+&lt;span class="x"&gt;        if($driver===&amp;#39;mssql&amp;#39; || $driver===&amp;#39;dblib&amp;#39;)&lt;/span&gt;
+&lt;span class="x"&gt;            $pdoClass=&amp;#39;CMssqlPdoAdapter&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;        elseif($driver===&amp;#39;sqlsrv&amp;#39;)&lt;/span&gt;
+&lt;span class="x"&gt;            $pdoClass=&amp;#39;CMssqlSqlsrvPdoAdapter&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+
+&lt;span class="x"&gt;    if(!class_exists($pdoClass))&lt;/span&gt;
+&lt;span class="x"&gt;        throw new CDbException(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;CDbConnection is unable to find PDO class &amp;quot;{className}&amp;quot;. Make sure PDO is installed correctly.&amp;#39;,&lt;/span&gt;
+&lt;span class="x"&gt;            array(&amp;#39;{className}&amp;#39;=&amp;gt;$pdoClass)));&lt;/span&gt;
+
+&lt;span class="x"&gt;    // 实例化类PDO，可能失败&lt;/span&gt;
+&lt;span class="x"&gt;    @$instance=new $pdoClass($this-&amp;gt;connectionString,$this-&amp;gt;username,$this-&amp;gt;password,$this-&amp;gt;_attributes);&lt;/span&gt;
+
+&lt;span class="x"&gt;    if(!$instance)&lt;/span&gt;
+&lt;span class="x"&gt;        throw new CDbException(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;CDbConnection failed to open the DB connection.&amp;#39;));&lt;/span&gt;
+
+&lt;span class="x"&gt;    return $instance;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;从中可以看出，对于MySQL数据库而言，方法createPdoInstance返回的是一个PDO对象，赋值给CDbConnection对象的_pdo属性。&lt;/p&gt;
+&lt;p&gt;方法initConnection的实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Initializes the open db connection.&lt;/span&gt;
+&lt;span class="x"&gt; * This method is invoked right after the db connection is established.&lt;/span&gt;
+&lt;span class="x"&gt; * The default implementation is to set the charset for MySQL and PostgreSQL database connections.&lt;/span&gt;
+&lt;span class="x"&gt; * @param PDO $pdo the PDO instance&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;protected function initConnection($pdo)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // 设置数据库连接的一些属性&lt;/span&gt;
+&lt;span class="x"&gt;    $pdo-&amp;gt;setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;emulatePrepare!==null &amp;amp;&amp;amp; constant(&amp;#39;PDO::ATTR_EMULATE_PREPARES&amp;#39;))&lt;/span&gt;
+&lt;span class="x"&gt;        $pdo-&amp;gt;setAttribute(PDO::ATTR_EMULATE_PREPARES,$this-&amp;gt;emulatePrepare);&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;charset!==null)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        $driver=strtolower($pdo-&amp;gt;getAttribute(PDO::ATTR_DRIVER_NAME));&lt;/span&gt;
+&lt;span class="x"&gt;        if(in_array($driver,array(&amp;#39;pgsql&amp;#39;,&amp;#39;mysql&amp;#39;,&amp;#39;mysqli&amp;#39;)))&lt;/span&gt;
+&lt;span class="x"&gt;            $pdo-&amp;gt;exec(&amp;#39;SET NAMES &amp;#39;.$pdo-&amp;gt;quote($this-&amp;gt;charset));&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    // 执行一些初始化的SQL语句&lt;/span&gt;
+&lt;span class="x"&gt;    // public $initSQLs : array list of SQL statements that should be executed right after the DB connection is established.&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;initSQLs!==null)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        foreach($this-&amp;gt;initSQLs as $sql)&lt;/span&gt;
+&lt;span class="x"&gt;            $pdo-&amp;gt;exec($sql);&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;hr /&gt;
+&lt;p&gt;由于第2种方式是基于第1中方式实现的，所以我们先看看第1种方式的实现。&lt;/p&gt;
+&lt;p&gt;类CDbConnection中方法createCommand的实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function createCommand($query=null)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;setActive(true);&lt;/span&gt;
+&lt;span class="x"&gt;    return new CDbCommand($this,$query);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中实例化的类CDbCommand的构造方法实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Constructor.&lt;/span&gt;
+&lt;span class="x"&gt; * @param CDbConnection $connection the database connection&lt;/span&gt;
+&lt;span class="x"&gt; * @param mixed $query the DB query to be executed. This can be either&lt;/span&gt;
+&lt;span class="x"&gt; * a string representing a SQL statement, or an array whose name-value pairs&lt;/span&gt;
+&lt;span class="x"&gt; * will be used to set the corresponding properties of the created command object.&lt;/span&gt;
+&lt;span class="x"&gt; *&lt;/span&gt;
+&lt;span class="x"&gt; * For example, you can pass in either &amp;lt;code&amp;gt;&amp;#39;SELECT * FROM tbl_user&amp;#39;&amp;lt;/code&amp;gt;&lt;/span&gt;
+&lt;span class="x"&gt; * or &amp;lt;code&amp;gt;array(&amp;#39;select&amp;#39;=&amp;gt;&amp;#39;*&amp;#39;, &amp;#39;from&amp;#39;=&amp;gt;&amp;#39;tbl_user&amp;#39;)&amp;lt;/code&amp;gt;. They are equivalent&lt;/span&gt;
+&lt;span class="x"&gt; * in terms of the final query result.&lt;/span&gt;
+&lt;span class="x"&gt; *&lt;/span&gt;
+&lt;span class="x"&gt; * When passing the query as an array, the following properties are commonly set:&lt;/span&gt;
+&lt;span class="x"&gt; * {@link select}, {@link distinct}, {@link from}, {@link where}, {@link join},&lt;/span&gt;
+&lt;span class="x"&gt; * {@link group}, {@link having}, {@link order}, {@link limit}, {@link offset} and&lt;/span&gt;
+&lt;span class="x"&gt; * {@link union}. Please refer to the setter of each of these properties for details&lt;/span&gt;
+&lt;span class="x"&gt; * about valid property values. This feature has been available since version 1.1.6.&lt;/span&gt;
+&lt;span class="x"&gt; *&lt;/span&gt;
+&lt;span class="x"&gt; * Since 1.1.7 it is possible to use a specific mode of data fetching by setting&lt;/span&gt;
+&lt;span class="x"&gt; * {@link setFetchMode FetchMode}. See {@link http://www.php.net/manual/en/function.PDOStatement-setFetchMode.php}&lt;/span&gt;
+&lt;span class="x"&gt; * for more details.&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public function __construct(CDbConnection $connection,$query=null)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;_connection=$connection;&lt;/span&gt;
+&lt;span class="x"&gt;    if(is_array($query))&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        foreach($query as $name=&amp;gt;$value)&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;$name=$value;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;setText($query);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;可以看到参数$query并不是必须提供，如果提供，则$query参数值可以是字符串也可以是数组。如果是字符串也就是一个原生的SQL语句（可能有参数需要填充），如果是数组，
+则可以为CDbCommand对象的select、distinct、from等属性赋值。&lt;/p&gt;
+&lt;p&gt;方法setText实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Specifies the SQL statement to be executed.&lt;/span&gt;
+&lt;span class="x"&gt; * Any previous execution will be terminated or cancel.&lt;/span&gt;
+&lt;span class="x"&gt; * @param string $value the SQL statement to be executed&lt;/span&gt;
+&lt;span class="x"&gt; * @return CDbCommand this command instance&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public function setText($value)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;_connection-&amp;gt;tablePrefix!==null &amp;amp;&amp;amp; $value!=&amp;#39;&amp;#39;)&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;_text=preg_replace(&amp;#39;/{{(.*?)}}/&amp;#39;,$this-&amp;gt;_connection-&amp;gt;tablePrefix.&amp;#39;\1&amp;#39;,$value);&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;_text=$value;&lt;/span&gt;
+&lt;span class="x"&gt;    // 因为是要新执行一条语句，所以需要重置状态，将属性_statement置为null。&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;cancel();&lt;/span&gt;
+&lt;span class="x"&gt;    return $this;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;如果调用类CDbConnection的createCommand方法时提供了&lt;code&gt;$query&lt;/code&gt;参数值，则在得到CDbCommand对象后，即可调用CDbCommand对象的execute方法（对于增、删、改操作）或query、queryAll、queryRow等方法（对于查询操作）来执行数据库操作。&lt;/p&gt;
+&lt;p&gt;如果调用createCommand时未提供&lt;code&gt;$query&lt;/code&gt;参数值，则有3种方式来完成数据库操作：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;对于普通的数据库查询操作，得到CDbCommand对象后，链式调用方法select、from、where等（之所以能够链式调用，是因为这些方法的最后都返回了对象本身），并且链式调用的最后调用query一类方法来执行数据库操作。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;对于会对数据表结构或数据产生变更的操作，得到CDbCommand对象后，可以直接调用方法insert、update、delete、createTable等来执行操作。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;可以在得到CDbCommand对象后，调用方法setText来设置待执行的SQL语句，setText方法的$value参数类型应为字符串。如果调用setText方法前$value参数类型是关联数组，则可以先调用方法buildQuery从关联数组生成一个SQL语句字符串，再调用setText方法；或者直接调用setSelect、setFrom、setWhere等方法来设置SQL语句的各个组成部分。最后调用execute方法或query一类方法。可以看出相比传递&lt;code&gt;$query&lt;/code&gt;参数，这种方式只不过是显式地设置SQL语句。通常这是不推荐的（搞这么麻烦，何必呢？呵呵）。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;这样一看，类CDbCommand的实现稍显混乱。本意上额外的第3种方式应该是提供给类CActiveRecord使用的，所以不建议使用。&lt;/p&gt;
+&lt;p&gt;接下来看看方法execute方法及query一类（仅以方法query、queryAll为例）方法的实现：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Executes the SQL statement.&lt;/span&gt;
+&lt;span class="x"&gt; * This method is meant only for executing non-query SQL statement.&lt;/span&gt;
+&lt;span class="x"&gt; * No result set will be returned.&lt;/span&gt;
+&lt;span class="x"&gt; * @param array $params input parameters (name=&amp;gt;value) for the SQL execution. This is an alternative&lt;/span&gt;
+&lt;span class="x"&gt; * to {@link bindParam} and {@link bindValue}. If you have multiple input parameters, passing&lt;/span&gt;
+&lt;span class="x"&gt; * them in this way can improve the performance. Note that if you pass parameters in this way,&lt;/span&gt;
+&lt;span class="x"&gt; * you cannot bind parameters or values using {@link bindParam} or {@link bindValue}, and vice versa.&lt;/span&gt;
+&lt;span class="x"&gt; * Please also note that all values are treated as strings in this case, if you need them to be handled as&lt;/span&gt;
+&lt;span class="x"&gt; * their real data types, you have to use {@link bindParam} or {@link bindValue} instead.&lt;/span&gt;
+&lt;span class="x"&gt; * @return integer number of rows affected by the execution.&lt;/span&gt;
+&lt;span class="x"&gt; * @throws CDbException execution failed&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public function execute($params=array())&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;_connection-&amp;gt;enableParamLogging &amp;amp;&amp;amp; ($pars=array_merge($this-&amp;gt;_paramLog,$params))!==array())&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        $p=array();&lt;/span&gt;
+&lt;span class="x"&gt;        foreach($pars as $name=&amp;gt;$value)&lt;/span&gt;
+&lt;span class="x"&gt;            $p[$name]=$name.&amp;#39;=&amp;#39;.var_export($value,true);&lt;/span&gt;
+&lt;span class="x"&gt;        $par=&amp;#39;. Bound with &amp;#39; .implode(&amp;#39;, &amp;#39;,$p);&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        $par=&amp;#39;&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;    Yii::trace(&amp;#39;Executing SQL: &amp;#39;.$this-&amp;gt;getText().$par,&amp;#39;system.db.CDbCommand&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;    try&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        if($this-&amp;gt;_connection-&amp;gt;enableProfiling)&lt;/span&gt;
+&lt;span class="x"&gt;            Yii::beginProfile(&amp;#39;system.db.CDbCommand.execute(&amp;#39;.$this-&amp;gt;getText().$par.&amp;#39;)&amp;#39;,&amp;#39;system.db.CDbCommand.execute&amp;#39;);&lt;/span&gt;
+
+&lt;span class="x"&gt;        // 以通过setText设置的SQL语句为参数间接调用PDO对象的prepare方法，并将返回的PDOStatement对象赋值给当前CDbCommand对象的_statement属性。&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;prepare();&lt;/span&gt;
+&lt;span class="x"&gt;        if($params===array())&lt;/span&gt;
+&lt;span class="x"&gt;            // 无参执行&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;_statement-&amp;gt;execute();&lt;/span&gt;
+&lt;span class="x"&gt;        else&lt;/span&gt;
+&lt;span class="x"&gt;            // 带参执行&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;_statement-&amp;gt;execute($params);&lt;/span&gt;
+&lt;span class="x"&gt;        // 操作影响的数据表行数&lt;/span&gt;
+&lt;span class="x"&gt;        $n=$this-&amp;gt;_statement-&amp;gt;rowCount();&lt;/span&gt;
+
+&lt;span class="x"&gt;        if($this-&amp;gt;_connection-&amp;gt;enableProfiling)&lt;/span&gt;
+&lt;span class="x"&gt;            Yii::endProfile(&amp;#39;system.db.CDbCommand.execute(&amp;#39;.$this-&amp;gt;getText().$par.&amp;#39;)&amp;#39;,&amp;#39;system.db.CDbCommand.execute&amp;#39;);&lt;/span&gt;
+
+&lt;span class="x"&gt;        return $n;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    catch(Exception $e)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        // 省略&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+
+&lt;span class="x"&gt;public function query($params=array())&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    return $this-&amp;gt;queryInternal(&amp;#39;&amp;#39;,0,$params);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+
+&lt;span class="x"&gt;public function queryAll($fetchAssociative=true,$params=array())&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    return $this-&amp;gt;queryInternal(&amp;#39;fetchAll&amp;#39;,$fetchAssociative ? $this-&amp;gt;_fetchMode : PDO::FETCH_NUM, $params);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;可以看到query一类方法都是间接调用方法queryInternal来完成操作的。queryInternal方法实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;private function queryInternal($method,$mode,$params=array())&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    $params=array_merge($this-&amp;gt;params,$params);&lt;/span&gt;
+
+&lt;span class="x"&gt;    if($this-&amp;gt;_connection-&amp;gt;enableParamLogging &amp;amp;&amp;amp; ($pars=array_merge($this-&amp;gt;_paramLog,$params))!==array())&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        $p=array();&lt;/span&gt;
+&lt;span class="x"&gt;        foreach($pars as $name=&amp;gt;$value)&lt;/span&gt;
+&lt;span class="x"&gt;            $p[$name]=$name.&amp;#39;=&amp;#39;.var_export($value,true);&lt;/span&gt;
+&lt;span class="x"&gt;        $par=&amp;#39;. Bound with &amp;#39;.implode(&amp;#39;, &amp;#39;,$p);&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        $par=&amp;#39;&amp;#39;;&lt;/span&gt;
+
+&lt;span class="x"&gt;    Yii::trace(&amp;#39;Querying SQL: &amp;#39;.$this-&amp;gt;getText().$par,&amp;#39;system.db.CDbCommand&amp;#39;);&lt;/span&gt;
+
+&lt;span class="x"&gt;    // 先尝试从缓存中读取查询结果&lt;/span&gt;
+&lt;span class="x"&gt;    // 这里涉及CDbConnection类的三个属性queryCachingCount、queryCachingDuration、queryCacheID&lt;/span&gt;
+&lt;span class="x"&gt;    // 另外对于方法query（调用queryInternal时提供的method参数为空字符串）的操作不会缓存&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;_connection-&amp;gt;queryCachingCount&amp;gt;0 &amp;amp;&amp;amp; $method!==&amp;#39;&amp;#39;&lt;/span&gt;
+&lt;span class="x"&gt;            &amp;amp;&amp;amp; $this-&amp;gt;_connection-&amp;gt;queryCachingDuration&amp;gt;0&lt;/span&gt;
+&lt;span class="x"&gt;            &amp;amp;&amp;amp; $this-&amp;gt;_connection-&amp;gt;queryCacheID!==false&lt;/span&gt;
+&lt;span class="x"&gt;            &amp;amp;&amp;amp; ($cache=Yii::app()-&amp;gt;getComponent($this-&amp;gt;_connection-&amp;gt;queryCacheID))!==null)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;_connection-&amp;gt;queryCachingCount--;&lt;/span&gt;
+&lt;span class="x"&gt;        $cacheKey=&amp;#39;yii:dbquery&amp;#39;.$this-&amp;gt;_connection-&amp;gt;connectionString.&amp;#39;:&amp;#39;.$this-&amp;gt;_connection-&amp;gt;username;&lt;/span&gt;
+&lt;span class="x"&gt;        $cacheKey.=&amp;#39;:&amp;#39;.$this-&amp;gt;getText().&amp;#39;:&amp;#39;.serialize(array_merge($this-&amp;gt;_paramLog,$params));&lt;/span&gt;
+&lt;span class="x"&gt;        if(($result=$cache-&amp;gt;get($cacheKey))!==false)&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            Yii::trace(&amp;#39;Query result found in cache&amp;#39;,&amp;#39;system.db.CDbCommand&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;            return $result[0];&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+
+&lt;span class="x"&gt;    try&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        if($this-&amp;gt;_connection-&amp;gt;enableProfiling)&lt;/span&gt;
+&lt;span class="x"&gt;            Yii::beginProfile(&amp;#39;system.db.CDbCommand.query(&amp;#39;.$this-&amp;gt;getText().$par.&amp;#39;)&amp;#39;,&amp;#39;system.db.CDbCommand.query&amp;#39;);&lt;/span&gt;
+
+&lt;span class="x"&gt;        $this-&amp;gt;prepare();&lt;/span&gt;
+&lt;span class="x"&gt;        if($params===array())&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;_statement-&amp;gt;execute();&lt;/span&gt;
+&lt;span class="x"&gt;        else&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;_statement-&amp;gt;execute($params);&lt;/span&gt;
+
+&lt;span class="x"&gt;        // $method对应PDOStatement的结果获取方法，如果未提供$method，自然无法直接通过PDOStatement获取查询结果。&lt;/span&gt;
+&lt;span class="x"&gt;        if($method===&amp;#39;&amp;#39;)&lt;/span&gt;
+&lt;span class="x"&gt;            // 这个细看一下&lt;/span&gt;
+&lt;span class="x"&gt;            $result=new CDbDataReader($this);&lt;/span&gt;
+&lt;span class="x"&gt;        else&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            $mode=(array)$mode;&lt;/span&gt;
+&lt;span class="x"&gt;            call_user_func_array(array($this-&amp;gt;_statement, &amp;#39;setFetchMode&amp;#39;), $mode);&lt;/span&gt;
+&lt;span class="x"&gt;            // 调用PDOStatement对应的方法&lt;/span&gt;
+&lt;span class="x"&gt;            $result=$this-&amp;gt;_statement-&amp;gt;$method();&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;_statement-&amp;gt;closeCursor();&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+
+&lt;span class="x"&gt;        if($this-&amp;gt;_connection-&amp;gt;enableProfiling)&lt;/span&gt;
+&lt;span class="x"&gt;            Yii::endProfile(&amp;#39;system.db.CDbCommand.query(&amp;#39;.$this-&amp;gt;getText().$par.&amp;#39;)&amp;#39;,&amp;#39;system.db.CDbCommand.query&amp;#39;);&lt;/span&gt;
+
+&lt;span class="x"&gt;        // 如果设置了$cache和$cacheKey&lt;/span&gt;
+&lt;span class="x"&gt;        // 将查询结果存入缓存&lt;/span&gt;
+&lt;span class="x"&gt;        if(isset($cache,$cacheKey))&lt;/span&gt;
+&lt;span class="x"&gt;            $cache-&amp;gt;set($cacheKey, array($result), $this-&amp;gt;_connection-&amp;gt;queryCachingDuration, $this-&amp;gt;_connection-&amp;gt;queryCachingDependency);&lt;/span&gt;
+
+&lt;span class="x"&gt;        return $result;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    catch(Exception $e)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        // 省略&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;可以看到query方法调用queryInternal时，结果是通过CDbDataReader对象来获取的。类CDbDataReader的构造方法实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function __construct(CDbCommand $command)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;_statement=$command-&amp;gt;getPdoStatement();&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;_statement-&amp;gt;setFetchMode(PDO::FETCH_ASSOC);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;得到CDbDataReader对象，即可通过它的read一类方法&lt;strong&gt;迭代&lt;/strong&gt;获取查询结果。这些方法实际上是调用PDOStatement的fetch一类方法来获取结果的。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;再来看看Yii框架Model层的第2种使用方式。&lt;/p&gt;
+&lt;p&gt;CActiveRecord的用法是，对于数据库的每个数据表，创建一个model类，如UserModel，这个类继承自CActiveRecord类。model类名可以和数据表名一致，也可以不一致，如果不一致，则需要重写CActiveRecord类的tableName方法，标明该model类对应的数据表名。方法tableName默认的实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt;* Returns the name of the associated database table.&lt;/span&gt;
+&lt;span class="x"&gt;* By default this method returns the class name as the table name.&lt;/span&gt;
+&lt;span class="x"&gt;* You may override this method if the table is not named after this convention.&lt;/span&gt;
+&lt;span class="x"&gt;* @return string the table name&lt;/span&gt;
+&lt;span class="x"&gt;*/&lt;/span&gt;
+&lt;span class="x"&gt;public function tableName()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    return get_class($this);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;假设UserModel类对应的数据表名为User，则应如下重写tableName：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function tableName()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    return &amp;#39;User&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;使用CActiveRecord方式，若想向数据表中插入一条新纪录，则需要实例化当前model类。以UserModel类为例，若想向User表中插入一条新纪录，则需要先实例化UserModel，得到一个对象，然后对该对象的属性进行赋值指明对应数据表新记录每个字段的值。对象的属性名即数据表的字段名，赋值完毕，调用save或insert即向数据表中存入该新纪录。&lt;/p&gt;
+&lt;p&gt;CActiveRecord类的构造方法如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function __construct($scenario=&amp;#39;insert&amp;#39;)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if($scenario===null) // internally used by populateRecord() and model()&lt;/span&gt;
+&lt;span class="x"&gt;        return;&lt;/span&gt;
+
+&lt;span class="x"&gt;    $this-&amp;gt;setScenario($scenario);&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;setIsNewRecord(true);&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;_attributes=$this-&amp;gt;getMetaData()-&amp;gt;attributeDefaults;&lt;/span&gt;
+
+&lt;span class="x"&gt;    $this-&amp;gt;init();&lt;/span&gt;
+
+&lt;span class="x"&gt;    $this-&amp;gt;attachBehaviors($this-&amp;gt;behaviors());&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;afterConstruct();&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;$scenario='insert'，表示新实例化的对象处于待插入数据表的状态，在调用save等方法时，会检测该状态。在新实例化的对象插入到数据表后，该状态立即会变为"update"，表示之后对该对象的数据库写入操作，属于update操作。&lt;/p&gt;
+&lt;p&gt;CActiveRecord类的save方法的实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function save($runValidation=true,$attributes=null)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // 若需要则对某些属性做校验&lt;/span&gt;
+&lt;span class="x"&gt;    if(!$runValidation || $this-&amp;gt;validate($attributes))&lt;/span&gt;
+&lt;span class="x"&gt;        // 如果是新纪录，则插入，否则更新&lt;/span&gt;
+&lt;span class="x"&gt;        return $this-&amp;gt;getIsNewRecord() ? $this-&amp;gt;insert($attributes) : $this-&amp;gt;update($attributes);&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        return false;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;而insert、update方法的实现如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function insert($attributes=null)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if(!$this-&amp;gt;getIsNewRecord())&lt;/span&gt;
+&lt;span class="x"&gt;        throw new CDbException(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;The active record cannot be inserted to database because it is not new.&amp;#39;));&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;beforeSave())&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        Yii::trace(get_class($this).&amp;#39;.insert()&amp;#39;,&amp;#39;system.db.ar.CActiveRecord&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;        // ...&lt;/span&gt;
+&lt;span class="x"&gt;        $builder=$this-&amp;gt;getCommandBuilder();&lt;/span&gt;
+&lt;span class="x"&gt;        // ...&lt;/span&gt;
+&lt;span class="x"&gt;        $table=$this-&amp;gt;getMetaData()-&amp;gt;tableSchema;&lt;/span&gt;
+&lt;span class="x"&gt;        $command=$builder-&amp;gt;createInsertCommand($table,$this-&amp;gt;getAttributes($attributes));&lt;/span&gt;
+&lt;span class="x"&gt;        if($command-&amp;gt;execute())&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            $primaryKey=$table-&amp;gt;primaryKey;&lt;/span&gt;
+&lt;span class="x"&gt;            if($table-&amp;gt;sequenceName!==null)&lt;/span&gt;
+&lt;span class="x"&gt;            {&lt;/span&gt;
+&lt;span class="x"&gt;                if(is_string($primaryKey) &amp;amp;&amp;amp; $this-&amp;gt;$primaryKey===null)&lt;/span&gt;
+&lt;span class="x"&gt;                    $this-&amp;gt;$primaryKey=$builder-&amp;gt;getLastInsertID($table);&lt;/span&gt;
+&lt;span class="x"&gt;                elseif(is_array($primaryKey))&lt;/span&gt;
+&lt;span class="x"&gt;                {&lt;/span&gt;
+&lt;span class="x"&gt;                    foreach($primaryKey as $pk)&lt;/span&gt;
+&lt;span class="x"&gt;                    {&lt;/span&gt;
+&lt;span class="x"&gt;                        if($this-&amp;gt;$pk===null)&lt;/span&gt;
+&lt;span class="x"&gt;                        {&lt;/span&gt;
+&lt;span class="x"&gt;                            $this-&amp;gt;$pk=$builder-&amp;gt;getLastInsertID($table);&lt;/span&gt;
+&lt;span class="x"&gt;                            break;&lt;/span&gt;
+&lt;span class="x"&gt;                        }&lt;/span&gt;
+&lt;span class="x"&gt;                    }&lt;/span&gt;
+&lt;span class="x"&gt;                }&lt;/span&gt;
+&lt;span class="x"&gt;            }&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;_pk=$this-&amp;gt;getPrimaryKey();&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;afterSave();&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;setIsNewRecord(false);&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;setScenario(&amp;#39;update&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;            return true;&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    return false;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+
+&lt;span class="x"&gt;public function update($attributes=null)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;getIsNewRecord())&lt;/span&gt;
+&lt;span class="x"&gt;        throw new CDbException(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;The active record cannot be updated because it is new.&amp;#39;));&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;beforeSave())&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        Yii::trace(get_class($this).&amp;#39;.update()&amp;#39;,&amp;#39;system.db.ar.CActiveRecord&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;        if($this-&amp;gt;_pk===null)&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;_pk=$this-&amp;gt;getPrimaryKey();&lt;/span&gt;
+&lt;span class="x"&gt;        // 间接调用updateByPk来完成操作&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;updateByPk($this-&amp;gt;getOldPrimaryKey(),$this-&amp;gt;getAttributes($attributes));&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;_pk=$this-&amp;gt;getPrimaryKey();&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;afterSave();&lt;/span&gt;
+&lt;span class="x"&gt;        return true;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        return false;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;insert方法中调用的getCommandBuilder方法实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function getCommandBuilder()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    return $this-&amp;gt;getDbConnection()-&amp;gt;getSchema()-&amp;gt;getCommandBuilder();&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中getDbConnection方法实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function getDbConnection()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if(self::$db!==null)&lt;/span&gt;
+&lt;span class="x"&gt;        return self::$db;&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        self::$db=Yii::app()-&amp;gt;getDb();&lt;/span&gt;
+&lt;span class="x"&gt;        if(self::$db instanceof CDbConnection)&lt;/span&gt;
+&lt;span class="x"&gt;            return self::$db;&lt;/span&gt;
+&lt;span class="x"&gt;        else&lt;/span&gt;
+&lt;span class="x"&gt;            throw new CDbException(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;Active Record requires a &amp;quot;db&amp;quot; CDbConnection application component.&amp;#39;));&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Yii中默认的DB组件名为db，所以如果你使用的是默认的db数据库，那么不用重写这个方法。否则，需要重写该方法，指明需要使用的数据库连接。&lt;/p&gt;
+&lt;p&gt;getDbConnection方法返回的是一个CDbConnection对象，其getSchema方法实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function getSchema()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;_schema!==null)&lt;/span&gt;
+&lt;span class="x"&gt;        return $this-&amp;gt;_schema;&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        // 返回数据库配置信息connectionString字段中的数据库驱动类型，如mysql&lt;/span&gt;
+&lt;span class="x"&gt;        $driver=$this-&amp;gt;getDriverName();&lt;/span&gt;
+&lt;span class="x"&gt;        /*&lt;/span&gt;
+&lt;span class="x"&gt;            driverMap属性的定义：&lt;/span&gt;
+&lt;span class="x"&gt;            public $driverMap=array(&lt;/span&gt;
+&lt;span class="x"&gt;              &amp;#39;pgsql&amp;#39;=&amp;gt;&amp;#39;CPgsqlSchema&amp;#39;,    // PostgreSQL&lt;/span&gt;
+&lt;span class="x"&gt;              &amp;#39;mysqli&amp;#39;=&amp;gt;&amp;#39;CMysqlSchema&amp;#39;,   // MySQL&lt;/span&gt;
+&lt;span class="x"&gt;              &amp;#39;mysql&amp;#39;=&amp;gt;&amp;#39;CMysqlSchema&amp;#39;,    // MySQL&lt;/span&gt;
+&lt;span class="x"&gt;              &amp;#39;sqlite&amp;#39;=&amp;gt;&amp;#39;CSqliteSchema&amp;#39;,  // sqlite 3&lt;/span&gt;
+&lt;span class="x"&gt;              &amp;#39;sqlite2&amp;#39;=&amp;gt;&amp;#39;CSqliteSchema&amp;#39;, // sqlite 2&lt;/span&gt;
+&lt;span class="x"&gt;              &amp;#39;mssql&amp;#39;=&amp;gt;&amp;#39;CMssqlSchema&amp;#39;,    // Mssql driver on windows hosts&lt;/span&gt;
+&lt;span class="x"&gt;              &amp;#39;dblib&amp;#39;=&amp;gt;&amp;#39;CMssqlSchema&amp;#39;,    // dblib drivers on linux (and maybe others os) hosts&lt;/span&gt;
+&lt;span class="x"&gt;              &amp;#39;sqlsrv&amp;#39;=&amp;gt;&amp;#39;CMssqlSchema&amp;#39;,   // Mssql&lt;/span&gt;
+&lt;span class="x"&gt;              &amp;#39;oci&amp;#39;=&amp;gt;&amp;#39;COciSchema&amp;#39;,        // Oracle driver&lt;/span&gt;
+&lt;span class="x"&gt;           );&lt;/span&gt;
+&lt;span class="x"&gt;        */&lt;/span&gt;
+&lt;span class="x"&gt;        if(isset($this-&amp;gt;driverMap[$driver]))&lt;/span&gt;
+&lt;span class="x"&gt;            // 加载对应的数据库驱动组件&lt;/span&gt;
+&lt;span class="x"&gt;            return $this-&amp;gt;_schema=Yii::createComponent($this-&amp;gt;driverMap[$driver], $this);&lt;/span&gt;
+&lt;span class="x"&gt;        else&lt;/span&gt;
+&lt;span class="x"&gt;            throw new CDbException(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;CDbConnection does not support reading schema for {driver} database.&amp;#39;,&lt;/span&gt;
+&lt;span class="x"&gt;                array(&amp;#39;{driver}&amp;#39;=&amp;gt;$driver)));&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;以mysql的CMysqlSchema为例，&lt;code&gt;Yii::createComponent($this-&amp;gt;driverMap[$driver], $this)&lt;/code&gt;一句会实例化yii/framework/db/schema/mysql/CMysqlSchema.php中定义的CMysqlSchema类。该类自身无构造方法，继承自抽象类CDbSchema，CDbSchema的构造方法实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function __construct($conn)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // 保存着当前CDbConnection数据库连接对象&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;_connection=$conn;&lt;/span&gt;
+&lt;span class="x"&gt;    foreach($conn-&amp;gt;schemaCachingExclude as $name)&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;_cacheExclude[$name]=true;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;得到CMysqlSchema对象后，调用其getCommandBuilder方法，该方法定义于类CDbSchema中，实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function getCommandBuilder()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;_builder!==null)&lt;/span&gt;
+&lt;span class="x"&gt;        return $this-&amp;gt;_builder;&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        return $this-&amp;gt;_builder=$this-&amp;gt;createCommandBuilder();&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中调用的方法createCommandBuilder实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;protected function createCommandBuilder()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    return new CDbCommandBuilder($this);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;实例化的CDbCommandBuilder类的构造方法如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function __construct($schema)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;_schema=$schema;&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;_connection=$schema-&amp;gt;getDbConnection();&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;这样insert方法中调用的getCommandBuilder最终返回了一个CDbCommandBuilder对象。&lt;/p&gt;
+&lt;p&gt;而insert方法中&lt;code&gt;$table=$this-&amp;gt;getMetaData()-&amp;gt;tableSchema&lt;/code&gt;一句调用的getMetaData方法实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function getMetaData()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    $className=get_class($this);&lt;/span&gt;
+&lt;span class="x"&gt;    if(!array_key_exists($className,self::$_md))&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        self::$_md[$className]=null; // preventing recursive invokes of {@link getMetaData()} via {@link __get()}&lt;/span&gt;
+&lt;span class="x"&gt;        self::$_md[$className]=new CActiveRecordMetaData($this);&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    return self::$_md[$className];&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中实例化的类CActiveRecordMetaData，构造方法如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function __construct($model)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // 当前model类名&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;_modelClassName=get_class($model);&lt;/span&gt;
+
+&lt;span class="x"&gt;    // 得到表名&lt;/span&gt;
+&lt;span class="x"&gt;    $tableName=$model-&amp;gt;tableName();&lt;/span&gt;
+
+&lt;span class="x"&gt;    // 调用_schema（以mysql为例，其值为CMysqlSchema对象）的getTable方法&lt;/span&gt;
+&lt;span class="x"&gt;    if(($table=$model-&amp;gt;getDbConnection()-&amp;gt;getSchema()-&amp;gt;getTable($tableName))===null)&lt;/span&gt;
+&lt;span class="x"&gt;        throw new CDbException(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;The table &amp;quot;{table}&amp;quot; for active record class &amp;quot;{class}&amp;quot; cannot be found in the database.&amp;#39;,&lt;/span&gt;
+&lt;span class="x"&gt;            array(&amp;#39;{class}&amp;#39;=&amp;gt;$this-&amp;gt;_modelClassName,&amp;#39;{table}&amp;#39;=&amp;gt;$tableName)));&lt;/span&gt;
+&lt;span class="x"&gt;    if($table-&amp;gt;primaryKey===null)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        $table-&amp;gt;primaryKey=$model-&amp;gt;primaryKey();&lt;/span&gt;
+&lt;span class="x"&gt;        if(is_string($table-&amp;gt;primaryKey) &amp;amp;&amp;amp; isset($table-&amp;gt;columns[$table-&amp;gt;primaryKey]))&lt;/span&gt;
+&lt;span class="x"&gt;            $table-&amp;gt;columns[$table-&amp;gt;primaryKey]-&amp;gt;isPrimaryKey=true;&lt;/span&gt;
+&lt;span class="x"&gt;        elseif(is_array($table-&amp;gt;primaryKey))&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            foreach($table-&amp;gt;primaryKey as $name)&lt;/span&gt;
+&lt;span class="x"&gt;            {&lt;/span&gt;
+&lt;span class="x"&gt;                if(isset($table-&amp;gt;columns[$name]))&lt;/span&gt;
+&lt;span class="x"&gt;                    $table-&amp;gt;columns[$name]-&amp;gt;isPrimaryKey=true;&lt;/span&gt;
+&lt;span class="x"&gt;            }&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    // 将数据表结构信息存于属性tableSchema&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;tableSchema=$table;&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;columns=$table-&amp;gt;columns;&lt;/span&gt;
+
+&lt;span class="x"&gt;    foreach($table-&amp;gt;columns as $name=&amp;gt;$column)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        if(!$column-&amp;gt;isPrimaryKey &amp;amp;&amp;amp; $column-&amp;gt;defaultValue!==null)&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;attributeDefaults[$name]=$column-&amp;gt;defaultValue;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+
+&lt;span class="x"&gt;    foreach($model-&amp;gt;relations() as $name=&amp;gt;$config)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;addRelation($name,$config);&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中调用的getTable方法，定义于抽象类CDbSchema中，实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function getTable($name,$refresh=false)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if($refresh===false &amp;amp;&amp;amp; isset($this-&amp;gt;_tables[$name]))&lt;/span&gt;
+&lt;span class="x"&gt;        return $this-&amp;gt;_tables[$name];&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        if($this-&amp;gt;_connection-&amp;gt;tablePrefix!==null &amp;amp;&amp;amp; strpos($name,&amp;#39;{{&amp;#39;)!==false)&lt;/span&gt;
+&lt;span class="x"&gt;            $realName=preg_replace(&amp;#39;/\{\{(.*?)\}\}/&amp;#39;,$this-&amp;gt;_connection-&amp;gt;tablePrefix.&amp;#39;$1&amp;#39;,$name);&lt;/span&gt;
+&lt;span class="x"&gt;        else&lt;/span&gt;
+&lt;span class="x"&gt;            $realName=$name;&lt;/span&gt;
+
+&lt;span class="x"&gt;        // temporarily disable query caching&lt;/span&gt;
+&lt;span class="x"&gt;        if($this-&amp;gt;_connection-&amp;gt;queryCachingDuration&amp;gt;0)&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            $qcDuration=$this-&amp;gt;_connection-&amp;gt;queryCachingDuration;&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;_connection-&amp;gt;queryCachingDuration=0;&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+
+&lt;span class="x"&gt;        // 先尝试从缓存中取数据表结构信息&lt;/span&gt;
+&lt;span class="x"&gt;        // CDbConnection类的schemaCachingDuration属性默认为0，如果不配置该属性，那么就不会使用缓存，那么每次增、删、改、查操作都需要loadTable，&lt;/span&gt;
+&lt;span class="x"&gt;        // 对数据库的压力，以及性能影响是不是很大？！但如果加了缓存，那么当对数据表的结构做变更时会不会有问题？&lt;/span&gt;
+&lt;span class="x"&gt;        if(!isset($this-&amp;gt;_cacheExclude[$name]) &amp;amp;&amp;amp; ($duration=$this-&amp;gt;_connection-&amp;gt;schemaCachingDuration)&amp;gt;0 &amp;amp;&amp;amp; $this-&amp;gt;_connection-&amp;gt;schemaCacheID!==false &amp;amp;&amp;amp; ($cache=Yii::app()-&amp;gt;getComponent($this-&amp;gt;_connection-&amp;gt;schemaCacheID))!==null)&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            $key=&amp;#39;yii:dbschema&amp;#39;.$this-&amp;gt;_connection-&amp;gt;connectionString.&amp;#39;:&amp;#39;.$this-&amp;gt;_connection-&amp;gt;username.&amp;#39;:&amp;#39;.$name;&lt;/span&gt;
+&lt;span class="x"&gt;            $table=$cache-&amp;gt;get($key);&lt;/span&gt;
+&lt;span class="x"&gt;            // 没取到或者需要刷新缓存，则从数据库获取，并更新缓存&lt;/span&gt;
+&lt;span class="x"&gt;            if($refresh===true || $table===false)&lt;/span&gt;
+&lt;span class="x"&gt;            {&lt;/span&gt;
+&lt;span class="x"&gt;                $table=$this-&amp;gt;loadTable($realName);&lt;/span&gt;
+&lt;span class="x"&gt;                if($table!==null)&lt;/span&gt;
+&lt;span class="x"&gt;                    $cache-&amp;gt;set($key,$table,$duration);&lt;/span&gt;
+&lt;span class="x"&gt;            }&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;_tables[$name]=$table;&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;        else&lt;/span&gt;
+&lt;span class="x"&gt;            // 直接从数据库获取数据表结构信息&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;_tables[$name]=$table=$this-&amp;gt;loadTable($realName);&lt;/span&gt;
+
+&lt;span class="x"&gt;        if(isset($qcDuration))  // re-enable query caching&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;_connection-&amp;gt;queryCachingDuration=$qcDuration;&lt;/span&gt;
+
+&lt;span class="x"&gt;        return $table;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中调用的loadTable方法最终是通过执行SQL语句：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;'SHOW FULL COLUMNS FROM '.$table-&amp;gt;rawName&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;'SHOW CREATE TABLE '.$table-&amp;gt;rawName&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;来获取数据表信息，并将信息存于一个CMysqlColumnSchema对象中（以mysql为例）。&lt;/p&gt;
+&lt;p&gt;insert方法中&lt;code&gt;$command=$builder-&amp;gt;createInsertCommand($table,$this-&amp;gt;getAttributes($attributes))&lt;/code&gt;一句createInsertCommand方法定义于CDbCommandBuilder类中，实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function createInsertCommand($table,$data)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;ensureTable($table);&lt;/span&gt;
+&lt;span class="x"&gt;    $fields=array();&lt;/span&gt;
+&lt;span class="x"&gt;    $values=array();&lt;/span&gt;
+&lt;span class="x"&gt;    $placeholders=array();&lt;/span&gt;
+&lt;span class="x"&gt;    $i=0;&lt;/span&gt;
+&lt;span class="x"&gt;    foreach($data as $name=&amp;gt;$value)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        if(($column=$table-&amp;gt;getColumn($name))!==null &amp;amp;&amp;amp; ($value!==null || $column-&amp;gt;allowNull))&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            $fields[]=$column-&amp;gt;rawName;&lt;/span&gt;
+&lt;span class="x"&gt;            if($value instanceof CDbExpression)&lt;/span&gt;
+&lt;span class="x"&gt;            {&lt;/span&gt;
+&lt;span class="x"&gt;                $placeholders[]=$value-&amp;gt;expression;&lt;/span&gt;
+&lt;span class="x"&gt;                foreach($value-&amp;gt;params as $n=&amp;gt;$v)&lt;/span&gt;
+&lt;span class="x"&gt;                    $values[$n]=$v;&lt;/span&gt;
+&lt;span class="x"&gt;            }&lt;/span&gt;
+&lt;span class="x"&gt;            else&lt;/span&gt;
+&lt;span class="x"&gt;            {&lt;/span&gt;
+&lt;span class="x"&gt;                $placeholders[]=self::PARAM_PREFIX.$i;&lt;/span&gt;
+&lt;span class="x"&gt;                $values[self::PARAM_PREFIX.$i]=$column-&amp;gt;typecast($value);&lt;/span&gt;
+&lt;span class="x"&gt;                $i++;&lt;/span&gt;
+&lt;span class="x"&gt;            }&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    if($fields===array())&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        $pks=is_array($table-&amp;gt;primaryKey) ? $table-&amp;gt;primaryKey : array($table-&amp;gt;primaryKey);&lt;/span&gt;
+&lt;span class="x"&gt;        foreach($pks as $pk)&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            $fields[]=$table-&amp;gt;getColumn($pk)-&amp;gt;rawName;&lt;/span&gt;
+&lt;span class="x"&gt;            $placeholders[]=$this-&amp;gt;getIntegerPrimaryKeyDefaultValue();&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    $sql=&amp;quot;INSERT INTO {$table-&amp;gt;rawName} (&amp;quot;.implode(&amp;#39;, &amp;#39;,$fields).&amp;#39;) VALUES (&amp;#39;.implode(&amp;#39;, &amp;#39;,$placeholders).&amp;#39;)&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;    $command=$this-&amp;gt;_connection-&amp;gt;createCommand($sql);&lt;/span&gt;
+
+&lt;span class="x"&gt;    foreach($values as $name=&amp;gt;$value)&lt;/span&gt;
+&lt;span class="x"&gt;        $command-&amp;gt;bindValue($name,$value);&lt;/span&gt;
+
+&lt;span class="x"&gt;    return $command;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;另外还有与update、delete等操作对应的方法createUpdateCommand、createDeleteCommand等。&lt;/p&gt;
+&lt;p&gt;update方法与insert方法的逻辑基本是一致的。&lt;/p&gt;
+&lt;p&gt;CActiveRecord中所有数据库增、删、改、查操作，在构建出目标sql语句后，都是调用CDbConnection类的方法createCommand来得到一个CDbCommand类的对象，最后调用该对象的execute、query、queryAll等方法来完成查询获取结果。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;对于model类实例对象的属性赋值，依赖于CActiveRecord类的方法__set，实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function __set($name,$value)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;setAttribute($name,$value)===false)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        if(isset($this-&amp;gt;getMetaData()-&amp;gt;relations[$name]))&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;_related[$name]=$value;&lt;/span&gt;
+&lt;span class="x"&gt;        else&lt;/span&gt;
+&lt;span class="x"&gt;            parent::__set($name,$value);&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中调用的setAttribute方法的实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function setAttribute($name,$value)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if(property_exists($this,$name))&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;$name=$value;&lt;/span&gt;
+&lt;span class="x"&gt;    elseif(isset($this-&amp;gt;getMetaData()-&amp;gt;columns[$name]))&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;_attributes[$name]=$value;&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        return false;&lt;/span&gt;
+&lt;span class="x"&gt;    return true;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;hr /&gt;
+&lt;p&gt;基于CActiveRecord类，如果想进行读取操作，那么子类需要重写model方法。CActiveRecord类的model方法实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cm"&gt;/**&lt;/span&gt;
+&lt;span class="cm"&gt; * Returns the static model of the specified AR class.&lt;/span&gt;
+&lt;span class="cm"&gt; * The model returned is a static instance of the AR class.&lt;/span&gt;
+&lt;span class="cm"&gt; * It is provided for invoking class-level methods (something similar to static class methods.)&lt;/span&gt;
+&lt;span class="cm"&gt; *&lt;/span&gt;
+&lt;span class="cm"&gt; * EVERY derived AR class must override this method as follows,&lt;/span&gt;
+&lt;span class="cm"&gt; * &amp;lt;pre&amp;gt;&lt;/span&gt;
+&lt;span class="cm"&gt; * public static function model($className=__CLASS__)&lt;/span&gt;
+&lt;span class="cm"&gt; * {&lt;/span&gt;
+&lt;span class="cm"&gt; *     return parent::model($className);&lt;/span&gt;
+&lt;span class="cm"&gt; * }&lt;/span&gt;
+&lt;span class="cm"&gt; * &amp;lt;/pre&amp;gt;&lt;/span&gt;
+&lt;span class="cm"&gt; *&lt;/span&gt;
+&lt;span class="cm"&gt; * @param string $className active record class name.&lt;/span&gt;
+&lt;span class="cm"&gt; * @return CActiveRecord active record model instance.&lt;/span&gt;
+&lt;span class="cm"&gt; */&lt;/span&gt;
+&lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="nf"&gt;static&lt;/span&gt; &lt;span class="nx"&gt;function&lt;/span&gt; &lt;span class="nx"&gt;model&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$className&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nx"&gt;__CLASS__&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;isset&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="nv"&gt;$_models&lt;/span&gt;&lt;span class="err"&gt;[&lt;/span&gt;&lt;span class="nv"&gt;$className&lt;/span&gt;&lt;span class="cp"&gt;]&lt;/span&gt;))
+        return self::$_models&lt;span class="cp"&gt;[&lt;/span&gt;&lt;span class="nv"&gt;$className&lt;/span&gt;&lt;span class="cp"&gt;]&lt;/span&gt;;
+    else
+    {
+        $model=self::$_models&lt;span class="cp"&gt;[&lt;/span&gt;&lt;span class="nv"&gt;$className&lt;/span&gt;&lt;span class="cp"&gt;]&lt;/span&gt;=new $className(null);
+        $model-&amp;gt;attachBehaviors($model-&amp;gt;behaviors());
+        return $model;
+    }
+}
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;根据该方法的注释可知道，所有的子类必须如下重写model方法：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public static function model($className = __CLASS__)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    return parent::model($className);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;为什么必须重写model方法呢？因为&lt;code&gt;__CLASS__&lt;/code&gt;指的并不是当前对象所属的类，而是方法定义所在的类。&lt;/p&gt;
+&lt;p&gt;隔壁的哥们告诉我，在 PHP 5.3 之后，如果CActiveRecord的model方法如下实现，就可以不用这样使用需要重写了。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public static function model()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    $className = get_called_class();&lt;/span&gt;
+&lt;span class="x"&gt;    if(isset(self::$_models[$className]))&lt;/span&gt;
+&lt;span class="x"&gt;        return self::$_models[$className];&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        $model=self::$_models[$className]=new $className(null);&lt;/span&gt;
+&lt;span class="x"&gt;        $model-&amp;gt;attachBehaviors($model-&amp;gt;behaviors());&lt;/span&gt;
+&lt;span class="x"&gt;        return $model;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;在得到$model后，就可以调用对象的query、find、findAll、findByPk、findAllByPk、findByAttributes、findAllByAttributes、findBySql、findAllBySql等方法来查询数据。其中find、findAll、findByPk、findAllByPk、findByAttributes、findAllByAttributes最终是通过调用query方法来实现查询的。query方法的第一个参数是一个CDbCriteria类实例对象，这就意味着调用query方法来实现查询的方法需要根据参数实例化一个CDbCriteria类对象。如find方法实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Finds a single active record with the specified condition.&lt;/span&gt;
+&lt;span class="x"&gt; * @param mixed $condition query condition or criteria.&lt;/span&gt;
+&lt;span class="x"&gt; * If a string, it is treated as query condition (the WHERE clause);&lt;/span&gt;
+&lt;span class="x"&gt; * If an array, it is treated as the initial values for constructing a {@link CDbCriteria} object;&lt;/span&gt;
+&lt;span class="x"&gt; * Otherwise, it should be an instance of {@link CDbCriteria}.&lt;/span&gt;
+&lt;span class="x"&gt; * @param array $params parameters to be bound to an SQL statement.&lt;/span&gt;
+&lt;span class="x"&gt; * This is only used when the first parameter is a string (query condition).&lt;/span&gt;
+&lt;span class="x"&gt; * In other cases, please use {@link CDbCriteria::params} to set parameters.&lt;/span&gt;
+&lt;span class="x"&gt; * @return CActiveRecord the record found. Null if no record is found.&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public function find($condition=&amp;#39;&amp;#39;,$params=array())&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    Yii::trace(get_class($this).&amp;#39;.find()&amp;#39;,&amp;#39;system.db.ar.CActiveRecord&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;    // 实例化一个CDbCriteria对象&lt;/span&gt;
+&lt;span class="x"&gt;    $criteria=$this-&amp;gt;getCommandBuilder()-&amp;gt;createCriteria($condition,$params);&lt;/span&gt;
+&lt;span class="x"&gt;    return $this-&amp;gt;query($criteria);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;而query方法的实现如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;protected function query($criteria,$all=false)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;beforeFind();&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;applyScopes($criteria);&lt;/span&gt;
+
+&lt;span class="x"&gt;    if(empty($criteria-&amp;gt;with))&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        if(!$all)&lt;/span&gt;
+&lt;span class="x"&gt;            $criteria-&amp;gt;limit=1;&lt;/span&gt;
+&lt;span class="x"&gt;        // createFindCommand在上面提过&lt;/span&gt;
+&lt;span class="x"&gt;        $command=$this-&amp;gt;getCommandBuilder()-&amp;gt;createFindCommand($this-&amp;gt;getTableSchema(),$criteria,$this-&amp;gt;getTableAlias());&lt;/span&gt;
+&lt;span class="x"&gt;        return $all ? $this-&amp;gt;populateRecords($command-&amp;gt;queryAll(), true, $criteria-&amp;gt;index) : $this-&amp;gt;populateRecord($command-&amp;gt;queryRow());&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        $finder=$this-&amp;gt;getActiveFinder($criteria-&amp;gt;with);&lt;/span&gt;
+&lt;span class="x"&gt;        return $finder-&amp;gt;query($criteria,$all);&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;hr /&gt;
+&lt;p&gt;对于查询操作，很多时候需要多表关联查询。那么基于CActiveRecord如何实现多表关联查询（隐式自动地）呢？&lt;/p&gt;
+&lt;p&gt;CActiveRecord类有个方法relations()：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function relations()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    return array();&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;这个方法的注释非常长，说明如何通过该方法声明当前model对应的数据表有哪些关联数据表，是何种关联关系。继承自CActiveRecord类的model类若想使用隐式的多表关联查询，则需要重写该方法。&lt;/p&gt;
+&lt;p&gt;举例来说，有数据表UserContacts、Users，UserContacts中有外键字段user_id关联到Users。如果基于CActiveRecord在查询UserContacts记录时，需要便捷地获取关联Users的记录。那么可以在UserContacts数据表对应的model类中，这样重写relations方法：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function relations()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    return array(&lt;/span&gt;
+&lt;span class="x"&gt;            &amp;#39;user&amp;#39; =&amp;gt; array(self::BELONGS_TO, &amp;#39;Users&amp;#39;, &amp;#39;user_id&amp;#39;),&lt;/span&gt;
+&lt;span class="x"&gt;    );&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;那么在得到一条记录对象（$uc）时，通过调用$uc-&amp;gt;user，即可得到与该UserContacts记录关联的Users记录。不过这条关联记录的获取可能是在调用$uc-&amp;gt;user时才去查询数据库的。&lt;/p&gt;
+&lt;p&gt;若想提前将关联记录查询出来准备好，则可以再调用find、findAll等查询方法之前先调用with方法，如&lt;code&gt;self::model()-&amp;gt;with('user')-&amp;gt;find(array('usercontact_id' =&amp;gt; 1))&lt;/code&gt;，或者这样调用find方法&lt;code&gt;self::model()-&amp;gt;find(array('usercontact_id' =&amp;gt; 1, 'with' =&amp;gt; 'user'))&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;那么在调用&lt;code&gt;$uc-&amp;gt;user&lt;/code&gt;时，如何知道user是一个关联项，而不是一个当前对象的属性？如果当前对象对应的数据表已有一个名为user的字段，是否会屏蔽掉关联项？且看CActiveRecord类的__get方法：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function __get($name)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // 先查看当前model类对应的数据表是否有名为$name的字段&lt;/span&gt;
+&lt;span class="x"&gt;    if(isset($this-&amp;gt;_attributes[$name]))&lt;/span&gt;
+&lt;span class="x"&gt;        return $this-&amp;gt;_attributes[$name];&lt;/span&gt;
+&lt;span class="x"&gt;    elseif(isset($this-&amp;gt;getMetaData()-&amp;gt;columns[$name]))&lt;/span&gt;
+&lt;span class="x"&gt;        return null;&lt;/span&gt;
+&lt;span class="x"&gt;    // 查看是否有名为$name的关联项&lt;/span&gt;
+&lt;span class="x"&gt;    elseif(isset($this-&amp;gt;_related[$name]))&lt;/span&gt;
+&lt;span class="x"&gt;        return $this-&amp;gt;_related[$name];&lt;/span&gt;
+&lt;span class="x"&gt;    elseif(isset($this-&amp;gt;getMetaData()-&amp;gt;relations[$name]))&lt;/span&gt;
+&lt;span class="x"&gt;        return $this-&amp;gt;getRelated($name);&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        return parent::__get($name);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;hr /&gt;
+&lt;p&gt;&lt;em&gt;注：本文为草稿状态&lt;/em&gt;&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Fri, 14 Nov 2014 00:00:00 +0800</pubDate><guid>tag:youngsterxyf.github.io,2014-11-14:2014/11/14/read-yii-code-4/</guid><category>PHP</category><category>Yii</category><category>笔记</category><category>总结</category></item><item><title>Yii源码阅读笔记 - 组件集成</title><link>http://youngsterxyf.github.io/2014/11/13/read-yii-code-3/</link><description>&lt;h3&gt;概述&lt;/h3&gt;
 &lt;p&gt;Yii框架将各种功能封装成组件，使用时按需配置加载，从而提高应用的性能。内置的组件又分为核心组件与非核心组件，核心组件是任何Web应用和Console应用都需要的。
 此外，应用开发者还可以按照一定规则封装配置使用自己的功能组件。Yii会把应用需要的组件都加载到应用容器&lt;code&gt;Yii::app()&lt;/code&gt;中，使得组件的使用方式一致方便。&lt;/p&gt;
 &lt;p&gt;基于Yii框架开发应用需要理解如何配置组件、如何开发自己的组件，对应着需要理解Yii是如何注册加载组件的。&lt;/p&gt;

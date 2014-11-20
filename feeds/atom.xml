@@ -1,5 +1,353 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>黑 * 白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2014-11-19T00:00:00+08:00</updated><entry><title>Yii源码阅读笔记 - 缓存</title><link href="http://youngsterxyf.github.io/2014/11/19/read-yii-code-6/" rel="alternate"></link><updated>2014-11-19T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-11-19:2014/11/19/read-yii-code-6/</id><summary type="html">&lt;h3&gt;概述&lt;/h3&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>黑 * 白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2014-11-20T00:00:00+08:00</updated><entry><title>Yii源码阅读笔记 - 应用模块化</title><link href="http://youngsterxyf.github.io/2014/11/20/read-yii-code-7/" rel="alternate"></link><updated>2014-11-20T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-11-20:2014/11/20/read-yii-code-7/</id><summary type="html">&lt;h3&gt;概述&lt;/h3&gt;
+&lt;p&gt;Yii框架有个“模块（Module）”的概念，与“应用（Application）”类似，模块必须归属于一个父模块或者一个应用，模块不能单独部署，一个应用不一定要分模块。&lt;/p&gt;
+&lt;p&gt;由此可以看到，Yii的“模块”和“应用”类似于Django框架中的“应用（App）”和“项目（Project）”。&lt;/p&gt;
+&lt;p&gt;当一个应用的规模大到一定的程度 - 可能涉及多个团队来开发，就应该考虑分“模块”开发。“模块”通常对应应用的一个相对独立的功能。&lt;/p&gt;
+&lt;p&gt;一个模块化的Yii框架应用的工程目录结构大致示例如下：&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Yii-WebApp-Modules" src="/assets/uploads/pics/yii-webapp-modules.png" /&gt;&lt;/p&gt;
+&lt;p&gt;上图所示项目有一个名为“forum”的模块，该模块下也有自己的&lt;code&gt;components&lt;/code&gt;、&lt;code&gt;controllers&lt;/code&gt;、&lt;code&gt;models&lt;/code&gt;、&lt;code&gt;views&lt;/code&gt;、&lt;code&gt;extensions&lt;/code&gt;目录，与一个普通的/不分模块的Yii框架Web应用的项目结构非常相似。&lt;/p&gt;
+&lt;p&gt;Yii框架模块化应用的所有模块默认都是放在&lt;code&gt;protected/modules&lt;/code&gt;目录下，每个模块的内容又各自放在以模块ID（如&lt;code&gt;forum&lt;/code&gt;）为名称的子目录下，并且在模块子目录下要有一个模块类文件，如&lt;code&gt;ForumModule.php&lt;/code&gt;，该类文件的命名规范是：模块ID首字母大写，然后拼接上字符串Module。&lt;/p&gt;
+&lt;p&gt;模块化的应用需要在配置文件中配置&lt;code&gt;modules&lt;/code&gt;一项 - 指定模块列表，示例如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;&amp;#39;modules&amp;#39; =&amp;gt; array(&lt;/span&gt;
+&lt;span class="x"&gt;    &amp;#39;forum&amp;#39; =&amp;gt; array(&lt;/span&gt;
+&lt;span class="x"&gt;        ...&lt;/span&gt;
+&lt;span class="x"&gt;    ),&lt;/span&gt;
+&lt;span class="x"&gt;    &amp;#39;anotherModule&amp;#39;,&lt;/span&gt;
+&lt;span class="x"&gt;    ...&lt;/span&gt;
+&lt;span class="x"&gt;),&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;每个模块的配置，可以只指定模块ID，也可以通过数组来指定额外的信息，如模块类、类实例化参数、params、components，以及子模块等等。Yii中模块是可以嵌套的，并且嵌套深度没有限制（有这个必要么？不要玩脱了啊）。&lt;/p&gt;
+&lt;p&gt;对应某个模块中的控制器及控制器中的Action，路由中需要带模块ID前缀，如&lt;code&gt;moduleID/controllerID/actionID&lt;/code&gt;，对于嵌套的模块，路由的形式则为&lt;code&gt;parentModuleID/childModuleID/controllerID/actionID&lt;/code&gt;。路由分发逻辑会根据模块ID到配置信息中查找对应的模块，最终分发到某个模块的某个控制器的某个Action中做处理。&lt;/p&gt;
+&lt;p&gt;另外，Yii框架应用的模块化并不是必须把所有功能逻辑都拆分到各个模块，而是可以部分功能逻辑归到应用，部分逻辑归到模块，即可以不彻底地模块化，但个人认为最好别这么玩（应用下的controller的id和模块的id冲突怎么办？），并且最好不要用模块嵌套，以免搞得过于复杂，降低项目的可维护性。&lt;/p&gt;
+&lt;h3&gt;分析&lt;/h3&gt;
+&lt;p&gt;先从继承关系上看看“模块”与“应用”的相似性：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;CWebApplication&lt;/code&gt; -&amp;gt; &lt;code&gt;CApplication&lt;/code&gt; -&amp;gt; &lt;code&gt;CModule&lt;/code&gt; -&amp;gt; &lt;code&gt;CComponent&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;自定义模块类 -&amp;gt; &lt;code&gt;CWebModule&lt;/code&gt; -&amp;gt; &lt;code&gt;CModule&lt;/code&gt; -&amp;gt; &lt;code&gt;CComponent&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;由此可以看到继承链中类&lt;code&gt;CModule&lt;/code&gt;及上溯类的属性和方法，“模块”类和“应用”都有。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;由&lt;a href="http://youngsterxyf.github.io/2014/11/04/read-yii-code-1/"&gt;Yii源码阅读笔记 - 请求处理基本流程&lt;/a&gt;一文可知，应用配置的加载是抽象类CApplication的构造方法中调用方法&lt;code&gt;configure&lt;/code&gt;来完成的，
+该方法定义于类&lt;code&gt;CModule&lt;/code&gt;中，实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Configures the module with the specified configuration.&lt;/span&gt;
+&lt;span class="x"&gt; * @param array $config the configuration array&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public function configure($config)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if(is_array($config))&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        foreach($config as $key=&amp;gt;$value)&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;$key=$value;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;对于配置项“modules”的加载，则是通过类&lt;code&gt;CComponent&lt;/code&gt;中的魔术方法&lt;code&gt;__set&lt;/code&gt;最终调用类&lt;code&gt;CModule&lt;/code&gt;中的&lt;code&gt;setModules&lt;/code&gt;方法来完成的：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Configures the sub-modules of this module.&lt;/span&gt;
+&lt;span class="x"&gt; *&lt;/span&gt;
+&lt;span class="x"&gt; * Call this method to declare sub-modules and configure them with their initial property values.&lt;/span&gt;
+&lt;span class="x"&gt; * The parameter should be an array of module configurations. Each array element represents a single module,&lt;/span&gt;
+&lt;span class="x"&gt; * which can be either a string representing the module ID or an ID-configuration pair representing&lt;/span&gt;
+&lt;span class="x"&gt; * a module with the specified ID and the initial property values.&lt;/span&gt;
+&lt;span class="x"&gt; *&lt;/span&gt;
+&lt;span class="x"&gt; * For example, the following array declares two modules:&lt;/span&gt;
+&lt;span class="x"&gt; * &amp;lt;pre&amp;gt;&lt;/span&gt;
+&lt;span class="x"&gt; * array(&lt;/span&gt;
+&lt;span class="x"&gt; *     &amp;#39;admin&amp;#39;,                // a single module ID&lt;/span&gt;
+&lt;span class="x"&gt; *     &amp;#39;payment&amp;#39;=&amp;gt;array(       // ID-configuration pair&lt;/span&gt;
+&lt;span class="x"&gt; *         &amp;#39;server&amp;#39;=&amp;gt;&amp;#39;paymentserver.com&amp;#39;,&lt;/span&gt;
+&lt;span class="x"&gt; *     ),&lt;/span&gt;
+&lt;span class="x"&gt; * )&lt;/span&gt;
+&lt;span class="x"&gt; * &amp;lt;/pre&amp;gt;&lt;/span&gt;
+&lt;span class="x"&gt; *&lt;/span&gt;
+&lt;span class="x"&gt; * By default, the module class is determined using the expression &amp;lt;code&amp;gt;ucfirst($moduleID).&amp;#39;Module&amp;#39;&amp;lt;/code&amp;gt;.&lt;/span&gt;
+&lt;span class="x"&gt; * And the class file is located under &amp;lt;code&amp;gt;modules/$moduleID&amp;lt;/code&amp;gt;.&lt;/span&gt;
+&lt;span class="x"&gt; * You may override this default by explicitly specifying the &amp;#39;class&amp;#39; option in the configuration.&lt;/span&gt;
+&lt;span class="x"&gt; *&lt;/span&gt;
+&lt;span class="x"&gt; * You may also enable or disable a module by specifying the &amp;#39;enabled&amp;#39; option in the configuration.&lt;/span&gt;
+&lt;span class="x"&gt; *&lt;/span&gt;
+&lt;span class="x"&gt; * @param array $modules module configurations.&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public function setModules($modules)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    foreach($modules as $id=&amp;gt;$module)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        // 如果只指定了模块的id&lt;/span&gt;
+&lt;span class="x"&gt;        if(is_int($id))&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            $id=$module;&lt;/span&gt;
+&lt;span class="x"&gt;            $module=array();&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;        // 如果未指定模块对应的模块类，则默认通过路径别名$id.&amp;#39;.&amp;#39;.ucfirst($id).&amp;#39;Module&amp;#39;来查找对应的模块类&lt;/span&gt;
+&lt;span class="x"&gt;        if(!isset($module[&amp;#39;class&amp;#39;]))&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            Yii::setPathOfAlias($id,$this-&amp;gt;getModulePath().DIRECTORY_SEPARATOR.$id);&lt;/span&gt;
+&lt;span class="x"&gt;            $module[&amp;#39;class&amp;#39;]=$id.&amp;#39;.&amp;#39;.ucfirst($id).&amp;#39;Module&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+
+&lt;span class="x"&gt;        // 将模块配置信息存入属性_moduleConfig中&lt;/span&gt;
+&lt;span class="x"&gt;        if(isset($this-&amp;gt;_moduleConfig[$id]))&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;_moduleConfig[$id]=CMap::mergeArray($this-&amp;gt;_moduleConfig[$id],$module);&lt;/span&gt;
+&lt;span class="x"&gt;        else&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;_moduleConfig[$id]=$module;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;可以看到模块列表配置信息加载后并未对模块类进行实例化初始化。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;请求处理在路由解析得到目标路由后，调用方法&lt;code&gt;createController&lt;/code&gt;来做路由分发（这样表述可能不太严谨），该方法定义于类&lt;code&gt;CWebApplication&lt;/code&gt;中，实现如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function createController($route,$owner=null)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // 如果未提供参数$owner，即未指定当前$route所属的模块，则默认当前应用对象为owner，可以将应用当做是顶级模块&lt;/span&gt;
+&lt;span class="x"&gt;    if($owner===null)&lt;/span&gt;
+&lt;span class="x"&gt;        $owner=$this;&lt;/span&gt;
+&lt;span class="x"&gt;    // 如果路由为空，则使用默认路由&lt;/span&gt;
+&lt;span class="x"&gt;    // 应用的默认路由ID是site，模块的默认路由ID为default&lt;/span&gt;
+&lt;span class="x"&gt;    if(($route=trim($route,&amp;#39;/&amp;#39;))===&amp;#39;&amp;#39;)&lt;/span&gt;
+&lt;span class="x"&gt;        $route=$owner-&amp;gt;defaultController;&lt;/span&gt;
+&lt;span class="x"&gt;    // 路由是否大小写敏感&lt;/span&gt;
+&lt;span class="x"&gt;    $caseSensitive=$this-&amp;gt;getUrlManager()-&amp;gt;caseSensitive;&lt;/span&gt;
+
+&lt;span class="x"&gt;    $route.=&amp;#39;/&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;    // 如果路由中还有斜杠&lt;/span&gt;
+&lt;span class="x"&gt;    // 注意这里是个while循环&lt;/span&gt;
+&lt;span class="x"&gt;    while(($pos=strpos($route,&amp;#39;/&amp;#39;))!==false)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        // 取出第一个斜杠之前的部分，用于之后的代码看看是否有对应该ID的controller或module&lt;/span&gt;
+&lt;span class="x"&gt;        $id=substr($route,0,$pos);&lt;/span&gt;
+&lt;span class="x"&gt;        if(!preg_match(&amp;#39;/^\w+$/&amp;#39;,$id))&lt;/span&gt;
+&lt;span class="x"&gt;            return null;&lt;/span&gt;
+&lt;span class="x"&gt;        if(!$caseSensitive)&lt;/span&gt;
+&lt;span class="x"&gt;            $id=strtolower($id);&lt;/span&gt;
+&lt;span class="x"&gt;        // 取出第一个斜杠之后的部分，用于可能的下一次循环处理&lt;/span&gt;
+&lt;span class="x"&gt;        $route=(string)substr($route,$pos+1);&lt;/span&gt;
+&lt;span class="x"&gt;        // 看看是否是第一次循环处理&lt;/span&gt;
+&lt;span class="x"&gt;        // $basePath是在第一次循环处理时在这个if条件分支中才赋值的，所以第一次循环处理到这里时$basePath是未定义&lt;/span&gt;
+&lt;span class="x"&gt;        if(!isset($basePath))  // first segment&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            // 先从应用或模块配置的controllerMap中看看是否有$id为key的controller，若有，则直接实例化对应的controll类并返回&lt;/span&gt;
+&lt;span class="x"&gt;            if(isset($owner-&amp;gt;controllerMap[$id]))&lt;/span&gt;
+&lt;span class="x"&gt;            {&lt;/span&gt;
+&lt;span class="x"&gt;                return array(&lt;/span&gt;
+&lt;span class="x"&gt;                    Yii::createComponent($owner-&amp;gt;controllerMap[$id],$id,$owner===$this?null:$owner),&lt;/span&gt;
+&lt;span class="x"&gt;                    $this-&amp;gt;parseActionParams($route),&lt;/span&gt;
+&lt;span class="x"&gt;                );&lt;/span&gt;
+&lt;span class="x"&gt;            }&lt;/span&gt;
+
+&lt;span class="x"&gt;            // 看看当前应用的modules配置项中是否有以$id为key的模块，或当前模块的modules配置中是否有以$id为key的子模块，如果有则以$module为$owner参数值递归调用createController方法&lt;/span&gt;
+&lt;span class="x"&gt;            if(($module=$owner-&amp;gt;getModule($id))!==null)&lt;/span&gt;
+&lt;span class="x"&gt;                return $this-&amp;gt;createController($route,$module);&lt;/span&gt;
+
+&lt;span class="x"&gt;            // 当前应用或模块下的控制器类的存放目录&lt;/span&gt;
+&lt;span class="x"&gt;            $basePath=$owner-&amp;gt;getControllerPath();&lt;/span&gt;
+&lt;span class="x"&gt;            $controllerID=&amp;#39;&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;        else&lt;/span&gt;
+&lt;span class="x"&gt;            $controllerID.=&amp;#39;/&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;        // 默认以$id为controller的ID，在当前应用或模块下查找是否有对应的控制器类文件&lt;/span&gt;
+&lt;span class="x"&gt;        $className=ucfirst($id).&amp;#39;Controller&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;        $classFile=$basePath.DIRECTORY_SEPARATOR.$className.&amp;#39;.php&amp;#39;;&lt;/span&gt;
+
+&lt;span class="x"&gt;        // 擦，怎么多出一个命名空间的东西？&lt;/span&gt;
+&lt;span class="x"&gt;        if($owner-&amp;gt;controllerNamespace!==null)&lt;/span&gt;
+&lt;span class="x"&gt;            $className=$owner-&amp;gt;controllerNamespace.&amp;#39;\\&amp;#39;.$className;&lt;/span&gt;
+&lt;span class="x"&gt;        // 如果有对应的控制器类文件，则尝试加载实例化&lt;/span&gt;
+&lt;span class="x"&gt;        if(is_file($classFile))&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            if(!class_exists($className,false))&lt;/span&gt;
+&lt;span class="x"&gt;                require($classFile);&lt;/span&gt;
+&lt;span class="x"&gt;            if(class_exists($className,false) &amp;amp;&amp;amp; is_subclass_of($className,&amp;#39;CController&amp;#39;))&lt;/span&gt;
+&lt;span class="x"&gt;            {&lt;/span&gt;
+&lt;span class="x"&gt;                $id[0]=strtolower($id[0]);&lt;/span&gt;
+&lt;span class="x"&gt;                return array(&lt;/span&gt;
+&lt;span class="x"&gt;                    new $className($controllerID.$id,$owner===$this?null:$owner),&lt;/span&gt;
+&lt;span class="x"&gt;                    $this-&amp;gt;parseActionParams($route),&lt;/span&gt;
+&lt;span class="x"&gt;                );&lt;/span&gt;
+&lt;span class="x"&gt;            }&lt;/span&gt;
+&lt;span class="x"&gt;            return null;&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;        // 否则把$id看成普通的一级目录名&lt;/span&gt;
+&lt;span class="x"&gt;        $controllerID.=$id;&lt;/span&gt;
+&lt;span class="x"&gt;        $basePath.=DIRECTORY_SEPARATOR.$id;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;从上述代码中可以看到，控制器类在实例化时需要传入该控制器类属于应用还是属于某个模块，这个归属记录在控制器类实例的_module属性中，如果属性值为null，则表示属于应用，_module属性定义于类&lt;code&gt;CController&lt;/code&gt;中。&lt;/p&gt;
+&lt;p&gt;我们来看看上述代码中调用的方法&lt;code&gt;getModule&lt;/code&gt;的实现，这个方法调用的&lt;code&gt;$owner&lt;/code&gt;可能是应用对象也可能是某个模块类对象，该方法定义于抽象类&lt;code&gt;CModule&lt;/code&gt;中，实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function getModule($id)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // 如果$id对应的module已经实例化好，则直接返回&lt;/span&gt;
+&lt;span class="x"&gt;    if(isset($this-&amp;gt;_modules[$id]) || array_key_exists($id,$this-&amp;gt;_modules))&lt;/span&gt;
+&lt;span class="x"&gt;        return $this-&amp;gt;_modules[$id];&lt;/span&gt;
+&lt;span class="x"&gt;    // 看是否配置了$id对应的module&lt;/span&gt;
+&lt;span class="x"&gt;    elseif(isset($this-&amp;gt;_moduleConfig[$id]))&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        $config=$this-&amp;gt;_moduleConfig[$id];&lt;/span&gt;
+&lt;span class="x"&gt;        if(!isset($config[&amp;#39;enabled&amp;#39;]) || $config[&amp;#39;enabled&amp;#39;])&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            Yii::trace(&amp;quot;Loading \&amp;quot;$id\&amp;quot; module&amp;quot;,&amp;#39;system.base.CModule&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;            $class=$config[&amp;#39;class&amp;#39;];&lt;/span&gt;
+&lt;span class="x"&gt;            unset($config[&amp;#39;class&amp;#39;], $config[&amp;#39;enabled&amp;#39;]);&lt;/span&gt;
+&lt;span class="x"&gt;            // 实例化module，module的$owner可能是当前应用对象，也可能是一个模块对象&lt;/span&gt;
+&lt;span class="x"&gt;            if($this===Yii::app())&lt;/span&gt;
+&lt;span class="x"&gt;                $module=Yii::createComponent($class,$id,null,$config);&lt;/span&gt;
+&lt;span class="x"&gt;            else&lt;/span&gt;
+&lt;span class="x"&gt;                $module=Yii::createComponent($class,$this-&amp;gt;getId().&amp;#39;/&amp;#39;.$id,$this,$config);&lt;/span&gt;
+&lt;span class="x"&gt;            return $this-&amp;gt;_modules[$id]=$module;&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;从上述代码可以看到，每个模块对象也会记录它的归属 - 属于应用对象，还是某个父模块对象。&lt;/p&gt;
+&lt;p&gt;自定义模块类无需定义自己的构造方法，构造方法可以间接继承自抽象类&lt;code&gt;CModule&lt;/code&gt;（&lt;code&gt;CWebModule&lt;/code&gt;类并未定义自己的构造方法），其构造方法实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function __construct($id,$parent,$config=null)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;_id=$id;&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;_parentModule=$parent;&lt;/span&gt;
+
+&lt;span class="x"&gt;    // set basePath at early as possible to avoid trouble&lt;/span&gt;
+&lt;span class="x"&gt;    if(is_string($config))&lt;/span&gt;
+&lt;span class="x"&gt;        $config=require($config);&lt;/span&gt;
+&lt;span class="x"&gt;    if(isset($config[&amp;#39;basePath&amp;#39;]))&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;setBasePath($config[&amp;#39;basePath&amp;#39;]);&lt;/span&gt;
+&lt;span class="x"&gt;        unset($config[&amp;#39;basePath&amp;#39;]);&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    Yii::setPathOfAlias($id,$this-&amp;gt;getBasePath());&lt;/span&gt;
+
+&lt;span class="x"&gt;    $this-&amp;gt;preinit();&lt;/span&gt;
+
+&lt;span class="x"&gt;    $this-&amp;gt;configure($config);&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;attachBehaviors($this-&amp;gt;behaviors);&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;preloadComponents();&lt;/span&gt;
+
+&lt;span class="x"&gt;    $this-&amp;gt;init();&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;这个方法与Web应用类的构造方法（定义于抽象类&lt;code&gt;CApplication&lt;/code&gt;中）实现非常相似。这两个构造方法是调用同一个&lt;code&gt;configure&lt;/code&gt;方法来加载配置的，所以很多“应用”的配置项，“模块”也都支持。
+从上述模块的构造方法中可以看到当前模块属于哪个父模块是记录在属性&lt;code&gt;_parentModule&lt;/code&gt;中的，如果该属性值为null，则表示当前模块属于当前Web应用对象。这样通过获取控制器对象的&lt;code&gt;_module&lt;/code&gt;属性值，继而获取模块对象的&lt;code&gt;_parentModule&lt;/code&gt;属性值，就能知道整个归属关系链。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;注：&lt;em&gt;以下部分是对&lt;a href="http://youngsterxyf.github.io/2014/11/04/read-yii-code-1/"&gt;Yii源码阅读笔记 - 请求处理基本流程&lt;/a&gt;一文的补充。&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;前面讨论的方法&lt;code&gt;createController&lt;/code&gt;中还调用了方法&lt;code&gt;parseActionParams&lt;/code&gt;来解析获取Action的ID，也定义于类&lt;code&gt;CWebApplication&lt;/code&gt;中，实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Parses a path info into an action ID and GET variables.&lt;/span&gt;
+&lt;span class="x"&gt; * @param string $pathInfo path info&lt;/span&gt;
+&lt;span class="x"&gt; * @return string action ID&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;protected function parseActionParams($pathInfo)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // 屌！其实就是以斜杠分割$pathInfo取第一个部分作为Action的ID&lt;/span&gt;
+&lt;span class="x"&gt;    if(($pos=strpos($pathInfo,&amp;#39;/&amp;#39;))!==false)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        $manager=$this-&amp;gt;getUrlManager();&lt;/span&gt;
+&lt;span class="x"&gt;        // 第一个部分之外剩余的部分做请求参数解析&lt;/span&gt;
+&lt;span class="x"&gt;        $manager-&amp;gt;parsePathInfo((string)substr($pathInfo,$pos+1));&lt;/span&gt;
+
+&lt;span class="x"&gt;        $actionID=substr($pathInfo,0,$pos);&lt;/span&gt;
+&lt;span class="x"&gt;        return $manager-&amp;gt;caseSensitive ? $actionID : strtolower($actionID);&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        // 如果$pathInfoH中不存在斜杠，则就将$pathInfo作为Action的ID&lt;/span&gt;
+&lt;span class="x"&gt;        return $pathInfo;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中调用的&lt;code&gt;parsePathInfo&lt;/code&gt;方法，定义于类&lt;code&gt;CUrlManager&lt;/code&gt;中，实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Parses a path info into URL segments and saves them to $_GET and $_REQUEST.&lt;/span&gt;
+&lt;span class="x"&gt; * @param string $pathInfo path info&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public function parsePathInfo($pathInfo)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if($pathInfo===&amp;#39;&amp;#39;)&lt;/span&gt;
+&lt;span class="x"&gt;        return;&lt;/span&gt;
+&lt;span class="x"&gt;    $segs=explode(&amp;#39;/&amp;#39;,$pathInfo.&amp;#39;/&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;    $n=count($segs);&lt;/span&gt;
+&lt;span class="x"&gt;    for($i=0;$i&amp;lt;$n-1;$i+=2)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        $key=$segs[$i];&lt;/span&gt;
+&lt;span class="x"&gt;        if($key===&amp;#39;&amp;#39;) continue;&lt;/span&gt;
+&lt;span class="x"&gt;        $value=$segs[$i+1];&lt;/span&gt;
+&lt;span class="x"&gt;        if(($pos=strpos($key,&amp;#39;[&amp;#39;))!==false &amp;amp;&amp;amp; ($m=preg_match_all(&amp;#39;/\[(.*?)\]/&amp;#39;,$key,$matches))&amp;gt;0)&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            $name=substr($key,0,$pos);&lt;/span&gt;
+&lt;span class="x"&gt;            for($j=$m-1;$j&amp;gt;=0;--$j)&lt;/span&gt;
+&lt;span class="x"&gt;            {&lt;/span&gt;
+&lt;span class="x"&gt;                if($matches[1][$j]===&amp;#39;&amp;#39;)&lt;/span&gt;
+&lt;span class="x"&gt;                    $value=array($value);&lt;/span&gt;
+&lt;span class="x"&gt;                else&lt;/span&gt;
+&lt;span class="x"&gt;                    $value=array($matches[1][$j]=&amp;gt;$value);&lt;/span&gt;
+&lt;span class="x"&gt;            }&lt;/span&gt;
+&lt;span class="x"&gt;            if(isset($_GET[$name]) &amp;amp;&amp;amp; is_array($_GET[$name]))&lt;/span&gt;
+&lt;span class="x"&gt;                $value=CMap::mergeArray($_GET[$name],$value);&lt;/span&gt;
+&lt;span class="x"&gt;            $_REQUEST[$name]=$_GET[$name]=$value;&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;        else&lt;/span&gt;
+&lt;span class="x"&gt;            $_REQUEST[$key]=$_GET[$key]=$value;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;仔细看看上述代码的逻辑吧，累觉不爱啊！&lt;/p&gt;
+&lt;p&gt;这个方法的作用：在目标路由去除Controller ID和Action ID两个部分后，从剩余部分中按一定规则解析出请求参数，那么规则是什么样的呢？&lt;/p&gt;
+&lt;p&gt;举例来说，这个目标路由剩余部分的基本形式如下所示：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;key/value/key/value/&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;其中&lt;code&gt;key&lt;/code&gt;为参数名，&lt;code&gt;value&lt;/code&gt;为参数值。&lt;/p&gt;
+&lt;p&gt;但&lt;code&gt;key&lt;/code&gt;的形式可以数组取值的形式，如：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;name[x][y][z]&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;这种形式的&lt;code&gt;key&lt;/code&gt;对应的&lt;code&gt;value&lt;/code&gt;会从原来的字符串转换成数组形式，如：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;array(&lt;/span&gt;
+&lt;span class="x"&gt;    &amp;#39;x&amp;#39; =&amp;gt; array(&lt;/span&gt;
+&lt;span class="x"&gt;        &amp;#39;y&amp;#39; =&amp;gt; array(&lt;/span&gt;
+&lt;span class="x"&gt;            &amp;#39;z&amp;#39; =&amp;gt; array(&amp;#39;value&amp;#39;)&lt;/span&gt;
+&lt;span class="x"&gt;        )&lt;/span&gt;
+&lt;span class="x"&gt;    )&lt;/span&gt;
+&lt;span class="x"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;多个&lt;code&gt;key&lt;/code&gt;的&lt;code&gt;name&lt;/code&gt;可以相同，如果相同，则会合并数组。如：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;name[a][b][c]/value1/name[A][B][C]/value2/name[x][y][z]/value3/name[a][X][f]/value4/&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;最终会转换成请求参数项：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;$_REQUEST[&amp;#39;name&amp;#39;] = $_GET[&amp;#39;name&amp;#39;] = array(&lt;/span&gt;
+&lt;span class="x"&gt;    &amp;#39;a&amp;#39; =&amp;gt; array(&lt;/span&gt;
+&lt;span class="x"&gt;        &amp;#39;b&amp;#39; =&amp;gt; array(&lt;/span&gt;
+&lt;span class="x"&gt;            &amp;#39;c&amp;#39; =&amp;gt; array(&amp;#39;value1&amp;#39;),&lt;/span&gt;
+&lt;span class="x"&gt;        ),&lt;/span&gt;
+&lt;span class="x"&gt;        &amp;#39;X&amp;#39; =&amp;gt; array(&lt;/span&gt;
+&lt;span class="x"&gt;            &amp;#39;f&amp;#39; =&amp;gt; array(&amp;#39;value4&amp;#39;),&lt;/span&gt;
+&lt;span class="x"&gt;        ),&lt;/span&gt;
+&lt;span class="x"&gt;    ),&lt;/span&gt;
+&lt;span class="x"&gt;    &amp;#39;A&amp;#39; =&amp;gt; array(&lt;/span&gt;
+&lt;span class="x"&gt;        &amp;#39;B&amp;#39; =&amp;gt; array(&lt;/span&gt;
+&lt;span class="x"&gt;            &amp;#39;C&amp;#39; =&amp;gt; array(&amp;#39;value2&amp;#39;),&lt;/span&gt;
+&lt;span class="x"&gt;        ),&lt;/span&gt;
+&lt;span class="x"&gt;    ),&lt;/span&gt;
+&lt;span class="x"&gt;    &amp;#39;x&amp;#39; =&amp;gt; array(&lt;/span&gt;
+&lt;span class="x"&gt;        &amp;#39;y&amp;#39; =&amp;gt; array(&lt;/span&gt;
+&lt;span class="x"&gt;            &amp;#39;z&amp;#39; =&amp;gt; array(&amp;#39;value3&amp;#39;),&lt;/span&gt;
+&lt;span class="x"&gt;        ),&lt;/span&gt;
+&lt;span class="x"&gt;    ),&lt;/span&gt;
+&lt;span class="x"&gt;);&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;擦，牛逼到死啊！&lt;/p&gt;</summary><category term="PHP"></category><category term="Yii"></category><category term="笔记"></category><category term="总结"></category></entry><entry><title>Yii源码阅读笔记 - 缓存</title><link href="http://youngsterxyf.github.io/2014/11/19/read-yii-code-6/" rel="alternate"></link><updated>2014-11-19T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2014-11-19:2014/11/19/read-yii-code-6/</id><summary type="html">&lt;h3&gt;概述&lt;/h3&gt;
 &lt;p&gt;从之前的文章&lt;a href="http://youngsterxyf.github.io/2014/11/12/read-yii-code-2/"&gt;Yii源码阅读笔记 - 路由解析&lt;/a&gt;
 及&lt;a href="http://youngsterxyf.github.io/2014/11/14/read-yii-code-4/"&gt;Yii源码阅读笔记 - Model层实现&lt;/a&gt;可以看到Yii框架对于&lt;strong&gt;解析好的路由规则&lt;/strong&gt;及&lt;strong&gt;数据表的schema&lt;/strong&gt;都会根据条件尝试读写缓存
 来提高应用性能。&lt;/p&gt;
@@ -2561,7 +2909,7 @@ Yii提供了一个直接可用的模板引擎组件类CPradoViewRenderer（见�
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;其中方法Controller根据$route按照一定的规则找到对应的controller类，之后调用controller的init方法和run方法。但这个调用之前和之后还恢复老的controller，这应该是因为在一个controller中可以forward到另一个controller中去，也即controller可以递归执行，所以需要保存和恢复上下文。&lt;/p&gt;
+&lt;p&gt;其中方法createController根据$route按照一定的规则找到对应的controller类，之后调用controller的init方法和run方法。但这个调用之前和之后还恢复老的controller，这应该是因为在一个controller中可以forward到另一个controller中去，也即controller可以递归执行，所以需要保存和恢复上下文。&lt;/p&gt;
 &lt;p&gt;Yii中所有Controller类都必须直接或间接继承自类CController，该类的init方法实现为空，如有需要可以在子类中重写。而其run方法实现如下：&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function run($actionID)&lt;/span&gt;
 &lt;span class="x"&gt;{&lt;/span&gt;

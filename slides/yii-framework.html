@@ -37,44 +37,53 @@
 
 <section id="缘起" class="slide level2">
 <h1>缘起</h1>
-<ul>
-<li>不是：
-<ol type="1">
-<li>因为学霸</li>
-<li>为了装B</li>
-<li>工作不饱和</li>
-<li>为了技术分享</li>
-</ol></li>
-<li>是：
 <ol type="1">
 <li>因为Yii的文档很渣</li>
+<li>为了充分了解框架的能力</li>
 <li>知其所以然</li>
-</ol></li>
-</ul>
+</ol>
 </section>
 <section id="请求初始化" class="slide level2">
 <h1>请求初始化</h1>
 <ul>
 <li><code>Yii::app()</code>应用容器</li>
 <li>核心组件加载</li>
-<li>配置加载 - params、components、urlManager等</li>
+<li>配置加载 - params、components、urlManager等
+<ul>
+<li>PHP对象属性赋值的规则：
+<ol type="1">
+<li>如果该对象有public的该属性，则直接赋值</li>
+<li>否则看该对象所在继承树上是否有定义魔术方法__set，如果有则调用__set来处理赋值过程</li>
+<li>如果连__set也没有，则为该对象生成一个public的属性，然后赋值给它</li>
+</ol></li>
+</ul></li>
+<li>应用容器继承树：CWebApplication -&gt; CApplication -&gt; CModule -&gt; CComponent</li>
 </ul>
 </section>
 <section id="路由解析分发" class="slide level2">
 <h1>路由解析分发</h1>
 <ul>
+<li>两种路由形式：
+<ul>
+<li>get, 如：r=controllerID/actionID</li>
+<li>path, 如：/controllerID/actionID</li>
+</ul></li>
 <li>路由规则解析
 <ul>
 <li>路由规则缓存</li>
 </ul></li>
 <li>路由规则匹配</li>
 <li>路由分发</li>
-<li>过滤器， VS. <code>beforeAction</code></li>
+<li>过滤器， VS. <code>beforeAction</code>
+<ul>
+<li>过滤器实现原理</li>
+</ul></li>
 </ul>
 </section>
 <section id="组件集成" class="slide level2">
 <h1>组件集成</h1>
 <ul>
+<li>延迟初始化/懒加载</li>
 <li>组件对象赋值逻辑</li>
 <li>init方法</li>
 </ul>
@@ -90,7 +99,6 @@
 <li>两种方式的关系</li>
 <li>Model层查询缓存</li>
 <li>CActiveRecord的Schema问题</li>
-<li>Model层即是一个抽象层</li>
 </ul>
 </section>
 <section id="模板引擎集成" class="slide level2">
@@ -114,7 +122,7 @@
 <ul>
 <li>应用与模块的关系与区别
 <ul>
-<li>继承树</li>
+<li>继承树：CWebModule -&gt; CModule -&gt; CComponent</li>
 <li>组件配置</li>
 </ul></li>
 <li>模块对路由的影响</li>

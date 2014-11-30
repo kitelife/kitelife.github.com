@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="author" content="夏永锋" />
+  <title>Yii框架原理简介</title>
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="reveal.js/css/reveal.min.css"/>
+    <style type="text/css">code{white-space: pre;}</style>
+    <link rel="stylesheet" href="reveal.js/css/theme/simple.css" id="theme">
+    <!-- If the query includes 'print-pdf', include the PDF print sheet -->
+    <script>
+      if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+      }
+    </script>
+    <!--[if lt IE 9]>
+    <script src="reveal.js/lib/js/html5shiv.js"></script>
+    <![endif]-->
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+<section>
+    <h1 class="title">Yii框架原理简介</h1>
+    <h2 class="author">夏永锋</h2>
+    <h3 class="date">2014-11-26 @ 众成聚乐部</h3>
+</section>
+
+<section id="缘起" class="slide level2">
+<h1>缘起</h1>
+<ol type="1">
+<li>因为Yii的文档很渣</li>
+<li>为了充分了解框架的能力</li>
+<li>知其所以然</li>
+</ol>
+</section>
+<section id="请求初始化" class="slide level2">
+<h1>请求初始化</h1>
+<ul>
+<li><code>Yii::app()</code>应用容器</li>
+<li>核心组件加载</li>
+<li>配置加载 - params、components、urlManager等
+<ul>
+<li>PHP对象属性赋值的规则：
+<ol type="1">
+<li>如果该对象有public的该属性，则直接赋值</li>
+<li>否则看该对象所在继承树上是否有定义魔术方法__set，如果有则调用__set来处理赋值过程</li>
+<li>如果连__set也没有，则为该对象生成一个public的属性，然后赋值给它</li>
+</ol></li>
+</ul></li>
+<li>应用容器继承树：CWebApplication -&gt; CApplication -&gt; CModule -&gt; CComponent</li>
+</ul>
+</section>
+<section id="路由解析分发" class="slide level2">
+<h1>路由解析分发</h1>
+<ul>
+<li>两种路由形式：
+<ul>
+<li>get, 如：r=controllerID/actionID</li>
+<li>path, 如：/controllerID/actionID</li>
+</ul></li>
+<li>路由规则解析
+<ul>
+<li>路由规则缓存</li>
+</ul></li>
+<li>路由规则匹配</li>
+<li>路由分发</li>
+<li>过滤器， VS. <code>beforeAction</code>
+<ul>
+<li>过滤器实现原理</li>
+</ul></li>
+</ul>
+</section>
+<section id="组件集成" class="slide level2">
+<h1>组件集成</h1>
+<ul>
+<li>延迟初始化/懒加载</li>
+<li>组件对象赋值逻辑</li>
+<li>init方法</li>
+</ul>
+</section>
+<section id="model层实现" class="slide level2">
+<h1>Model层实现</h1>
+<ul>
+<li>两种使用方式：
+<ol type="1">
+<li>CDbConnection + CDbCommand</li>
+<li>CActiveRecord</li>
+</ol></li>
+<li>两种方式的关系</li>
+<li>Model层查询缓存</li>
+<li>CActiveRecord的Schema问题</li>
+</ul>
+</section>
+<section id="模板引擎集成" class="slide level2">
+<h1>模板引擎集成</h1>
+<ul>
+<li>作为普通组件的问题</li>
+<li>依赖于接口，而不依赖于实现</li>
+</ul>
+</section>
+<section id="缓存" class="slide level2">
+<h1>缓存</h1>
+<ul>
+<li>框架中哪些地方基于缓存进行性能优化？</li>
+<li>支持多种缓存后端</li>
+<li>多应用共缓存的key冲突问题</li>
+<li>缓存依赖</li>
+</ul>
+</section>
+<section id="应用模块化" class="slide level2">
+<h1>应用模块化</h1>
+<ul>
+<li>应用与模块的关系与区别
+<ul>
+<li>继承树：CWebModule -&gt; CModule -&gt; CComponent</li>
+<li>组件配置</li>
+</ul></li>
+<li>模块对路由的影响</li>
+<li>模块嵌套，模块归属链</li>
+<li>正常使用模块
+<ul>
+<li>要么全部模块化，要么不使用模块</li>
+<li>不要使用模块嵌套</li>
+</ul></li>
+</ul>
+</section>
+<section id="进一步阅读" class="slide level2">
+<h1>进一步阅读</h1>
+<ul>
+<li><a href="http://youngsterxyf.github.io/tag/yii.html">Yii源码阅读笔记 系列</a></li>
+<li><a href="http://pan.baidu.com/s/1o6uS38Y">从源码学习如何正确使用Yii框架</a></li>
+</ul>
+</section>
+<section id="谢-谢" class="slide level2">
+<h1>谢 谢！</h1>
+</section>
+    </div>
+  </div>
+
+
+  <script src="reveal.js/lib/js/head.min.js"></script>
+  <script src="reveal.js/js/reveal.min.js"></script>
+
+  <script>
+
+      // Full list of configuration options available here:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+        theme: 'solarized', // available themes are in /css/theme
+        transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+        // Optional libraries used to extend on reveal.js
+        dependencies: [
+          { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+          { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } },
+//          { src: 'reveal.js/plugin/search/search.js', async: true, condition: function() { return !!document.body.classList; }, }
+//          { src: 'reveal.js/plugin/remotes/remotes.js', async: true, condition: function() { return !!document.body.classList; } }
+]});
+    </script>
+    </body>
+</html>

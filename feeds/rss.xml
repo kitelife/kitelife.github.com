@@ -1,5 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>黑 * 白</title><link>http://youngsterxyf.github.io/</link><description></description><atom:link href="http://youngsterxyf.github.io/feeds/rss.xml" rel="self"></atom:link><lastBuildDate>Mon, 15 Dec 2014 00:00:00 +0800</lastBuildDate><item><title>读书笔记：演讲之禅-一个技术演讲家的自白</title><link>http://youngsterxyf.github.io/2014/12/15/read-confessions-of-a-public-speaker/</link><description>&lt;p&gt;大大小小的技术会议参加过不少，关于演讲，从一个听众的角度也有一些心得；随着技术积累能力提升，也希望能够在一些正式场合做技术演讲。年轻的技术人应该学会经营自己，show出你自己。&lt;/p&gt;
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>黑 * 白</title><link>http://youngsterxyf.github.io/</link><description></description><atom:link href="http://youngsterxyf.github.io/feeds/rss.xml" rel="self"></atom:link><lastBuildDate>Wed, 31 Dec 2014 00:00:00 +0800</lastBuildDate><item><title>Cordova/Phonegap应用构建环境搭建</title><link>http://youngsterxyf.github.io/2014/12/31/setup-cordova-env/</link><description>&lt;p&gt;混合（Hybrid）移动开发将Web开发与原生开发优势互补，之后应该是一个不错的方向。Phonegap是混合移动开发的一个方案，
+开发者可以使用标准的Web技术进行开发，然后使用Phonegap打包成原生APP，也可以为Phonegap开发插件来扩展APP功能。
+Cordova是Apache的顶级项目，起于Adobe贡献给Apache基金会的Phonegap技术源码，之后Phonegap官方貌似则专注于提供Phonegap应用的云构建服务。
+Phonegap官网的文档与Apache Cordova的文档是相同的，所以从技术上可以将Phonegap与Cordova视为同一个东西。&lt;/p&gt;
+&lt;p&gt;虽然Phonegap官方提供免费的开放（public）应用以及一个私有应用构建服务。但对于应用调试或插件开发来说，
+使用云构建服务上传源码下载APP还是挺耗时间的，不太方便，所以搭建本地的应用构建环境是必要的。&lt;/p&gt;
+&lt;p&gt;依据Cordova文档的&lt;a href="http://cordova.apache.org/docs/en/4.0.0/guide_cli_index.md.html#The%20Command-Line%20Interface"&gt;The Command-Line Interface&lt;/a&gt;
+部分，针对Android应用，在Ubuntu上搭建Cordova应用构建环境的步骤如下所示：&lt;/p&gt;
+&lt;h4&gt;1. 安装Node.js和git客户端&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;从&lt;a href="http://nodejs.org/download/"&gt;NodeJS官网&lt;/a&gt;下载Linux二进制压缩包，解压缩后将bin路径加入PATH环境变量，即可从命令行执行node、npm命令。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;sudo apt-get install git&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;2. 安装Cordova：&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;sudo npm install -g cordova&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;3. 下载JDK：&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;sudo apt-get install default-jdk default-jre&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;4. 安装Android SDK：&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;从Android官网的&lt;a href="http://developer.android.com/sdk/installing/index.html"&gt;这里&lt;/a&gt;下载Android Studio或独立的SDK工具&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;如果下载Android Studio，解压缩后执行&lt;code&gt;bin/android.sh&lt;/code&gt;，Android Studio启动时需要从Google的服务器上获取一些SDK相关的文件，
+由于GFW的原因，无法成功获取，也就无法顺利启动。Android Studio网络代理设置的方法（参考&lt;a href="http://stackoverflow.com/questions/27683678/android-studio-component-installation-not-working-in-proxy-security-server?lq=1"&gt;这里&lt;/a&gt;）：&lt;/p&gt;
+&lt;p&gt;在Android Studio首次启动后，可以在HOME目录下找到文件&lt;code&gt;~/.AndroidStudio/config/options/other.xml&lt;/code&gt;，在该文件中，可以找到如下几行：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;option&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;PROXY_TYPE_IS_SOCKS&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;false&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;/&amp;gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;option&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;USE_HTTP_PROXY&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;false&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;/&amp;gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;option&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;USE_PROXY_PAC&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;false&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;/&amp;gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;option&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;PROXY_HOST&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;/&amp;gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;option&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;PROXY_PORT&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;80&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;/&amp;gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;option&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;PROXY_AUTHENTICATION&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;false&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;/&amp;gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;option&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;PROXY_LOGIN&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;/&amp;gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;option&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;PROXY_PASSWORD_CRYPT&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;/&amp;gt;&lt;/span&gt;
+&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;option&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;KEEP_PROXY_PASSWORD&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;false&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;/&amp;gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;如果使用HTTP协议的代理，则将“USE_HTTP_PROXY”一项的value改为“true”，“PROXY_HOST”、“PROXY_PORT”的value分别设置为代理的域名和端口，
+如果代理需要身份认证，则将“PROXY_AUTHENTICATION”的value改为“true”，并设置“PROXY_LOGIN”、“PROXY_PASSWORD_CRYPT”两项。&lt;/p&gt;
+&lt;p&gt;重启Android Studio即可。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;如果下载独立的SDK工具，假设解压缩后的路径为&lt;code&gt;~/Android&lt;/code&gt;，则添加环境变量&lt;code&gt;ANDROID_HOME=~/Android&lt;/code&gt;，并将子目录tools加入PATH环境变量。&lt;/p&gt;
+&lt;p&gt;执行命令 &lt;code&gt;android&lt;/code&gt; 打开Android SDK管理器，与Android Studio一样，也需要设置网络代理：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;打开菜单项“Tools -&amp;gt; Options”，填入“HTTP Proxy Server”、“HTTP Proxy Port”两项的值，重新启动Android SDK管理器即可。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr /&gt;
+&lt;p&gt;由于当前Cordora构建Android应用依赖于Android API 19，即Android 4.4.2，所以需要在“Android Studio”或“Android SDK管理器”
+下载“Android API 19”相关的依赖包。&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;注：下载速度很慢，请耐心等待...&lt;/em&gt;&lt;/p&gt;
+&lt;h4&gt;5. 安装ant&lt;/h4&gt;
+&lt;p&gt;当前Cordora构建Android应用也依赖于ant。从&lt;a href="https://www.apache.org/dist/ant/binaries/"&gt;Apache Ant&lt;/a&gt;官网下载二进制包，
+解压缩后，将子目录bin加入PATH环境变量。&lt;/p&gt;
+&lt;h4&gt;6. 测试&lt;/h4&gt;
+&lt;p&gt;依次执行以下命令：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;cordova create hello com.example.hello HelloWorld&lt;/code&gt;，该命令会在当前目录下创建hello子目录；&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;cd hello&lt;/code&gt;，进入该示例工程目录；&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;cordova platform add android&lt;/code&gt;，为该工程添加Android平台支持；&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;cordova build android&lt;/code&gt;，将该工程构建成原生Android应用；&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;cordova emulate android&lt;/code&gt;，打开Android模拟器运行示例应用；&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;模拟器启动后如下图所示：&lt;/p&gt;
+&lt;p&gt;&lt;img alt="cordova-demo" src="/assets/uploads/pics/cordova_demo.png" /&gt;&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;最终生成的apk文件在&lt;code&gt;hello/platforms/android/ant-build/&lt;/code&gt;路径下，默认名为“CordovaApp-debug.apk”。&lt;/p&gt;
+&lt;p&gt;对于Cordora项目来说，源码目录即项目的www子目录。&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Wed, 31 Dec 2014 00:00:00 +0800</pubDate><guid>tag:youngsterxyf.github.io,2014-12-31:2014/12/31/setup-cordova-env/</guid><category>笔记</category><category>Cordova</category><category>Phonegap</category></item><item><title>读书笔记：演讲之禅-一个技术演讲家的自白</title><link>http://youngsterxyf.github.io/2014/12/15/read-confessions-of-a-public-speaker/</link><description>&lt;p&gt;大大小小的技术会议参加过不少，关于演讲，从一个听众的角度也有一些心得；随着技术积累能力提升，也希望能够在一些正式场合做技术演讲。年轻的技术人应该学会经营自己，show出你自己。&lt;/p&gt;
 &lt;p&gt;我并不是一个擅长表达的人，虽然私底下在朋友技术圈内做过一些技术分享，但对于正式场合的技术演讲却没什么经验。&lt;/p&gt;
 &lt;p&gt;演讲是个经验活，但总归有一些可事先准备、能够提高成功概率的方法和注意事项吧？所以找来《演讲之禅-一个技术演讲家的自白》一书，看看是否能从别人的经验中学到点什么。&lt;/p&gt;
 &lt;hr /&gt;
@@ -3043,7 +3112,22 @@ Yii提供了一个直接可用的模板引擎组件类CPradoViewRenderer（见�
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;这个时候你应该感到疑惑 - 既然是一个过滤器链，那么循环在哪？事实上，Yii的这个地方并没有提供循环来让过滤器逐个执行，这就意味着在自定义的过滤器中，如果过滤条件通过，则需要尾递归地显式调用过滤器链的run方法，这样直到所有的过滤器都通过，才执行目标action&lt;code&gt;$this-&amp;gt;controller-&amp;gt;runAction($this-&amp;gt;action)&lt;/code&gt;。&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Tue, 04 Nov 2014 00:00:00 +0800</pubDate><guid>tag:youngsterxyf.github.io,2014-11-04:2014/11/04/read-yii-code-1/</guid><category>PHP</category><category>Yii</category><category>笔记</category><category>总结</category></item><item><title>QCon上海2014大会见闻录</title><link>http://youngsterxyf.github.io/2014/10/21/qcon-sh-2014-seen-heard/</link><description>&lt;h2&gt;技术&lt;/h2&gt;
+&lt;p&gt;这个时候你应该感到疑惑 - 既然是一个过滤器链，那么循环在哪？事实上，Yii的这个地方并没有提供循环来让过滤器逐个执行，这就意味着在自定义的过滤器中，如果过滤条件通过，则需要尾递归地显式调用过滤器链的run方法，这样直到所有的过滤器都通过，才执行目标action&lt;code&gt;$this-&amp;gt;controller-&amp;gt;runAction($this-&amp;gt;action)&lt;/code&gt;。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;ul&gt;
+&lt;li&gt;2014-12-18 补充：&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;类YiiBase的方法createApplication：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public static function createApplication($class, $config=null)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    return new $class($config);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;是如何找到&lt;code&gt;$class&lt;/code&gt;代表的类（CWebApplication或CConsoleApplication类）的呢？类文件&lt;code&gt;yii/framework/YiiBase.php&lt;/code&gt;的倒数第二行代码为：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;spl_autoload_register(array('YiiBase','autoload'));&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;当类文件&lt;code&gt;yii/framework/yii.php&lt;/code&gt;中 &lt;strong&gt;require&lt;/strong&gt; YiiBase类文件时就执行了这句代码。&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Tue, 04 Nov 2014 00:00:00 +0800</pubDate><guid>tag:youngsterxyf.github.io,2014-11-04:2014/11/04/read-yii-code-1/</guid><category>PHP</category><category>Yii</category><category>笔记</category><category>总结</category></item><item><title>QCon上海2014大会见闻录</title><link>http://youngsterxyf.github.io/2014/10/21/qcon-sh-2014-seen-heard/</link><description>&lt;h2&gt;技术&lt;/h2&gt;
 &lt;h4&gt;主题演讲&lt;/h4&gt;
 &lt;p&gt;&lt;strong&gt;软件项目变更的管理和生存之道&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;个人对这个演讲的印象比较深。演讲者即是最近比较火的《Java程序员修炼之道》一书的作者。&lt;/p&gt;

@@ -466,6 +466,21 @@
 
 
 <p>这个时候你应该感到疑惑 - 既然是一个过滤器链，那么循环在哪？事实上，Yii的这个地方并没有提供循环来让过滤器逐个执行，这就意味着在自定义的过滤器中，如果过滤条件通过，则需要尾递归地显式调用过滤器链的run方法，这样直到所有的过滤器都通过，才执行目标action<code>$this-&gt;controller-&gt;runAction($this-&gt;action)</code>。</p>
+<hr />
+<ul>
+<li>2014-12-18 补充：</li>
+</ul>
+<p>类YiiBase的方法createApplication：</p>
+<div class="highlight"><pre><span class="x">public static function createApplication($class, $config=null)</span>
+<span class="x">{</span>
+<span class="x">    return new $class($config);</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>是如何找到<code>$class</code>代表的类（CWebApplication或CConsoleApplication类）的呢？类文件<code>yii/framework/YiiBase.php</code>的倒数第二行代码为：</p>
+<p><code>spl_autoload_register(array('YiiBase','autoload'));</code></p>
+<p>当类文件<code>yii/framework/yii.php</code>中 <strong>require</strong> YiiBase类文件时就执行了这句代码。</p>
             </div><!-- /.entry-content -->
             <div class="comments">
               <h3>Comments</h3>

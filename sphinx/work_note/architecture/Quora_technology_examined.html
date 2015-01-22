@@ -62,23 +62,7 @@
 <li class="toctree-l2"><a class="reference internal" href="read_high_scalability.html#tumblr">Tumblr架构设计</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">读文笔记：Quora’s Technology Examined</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#the-search-box">The Search-Box</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#webnode2-and-livenode">Webnode2 And LiveNode</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#amazon-web-services">Amazon Web Services</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#haproxy-load-balancing">HAProxy Load-Balancing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#nginx">Nginx</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#pylons-and-paste">Pylons And Paste</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#python">Python</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#thrift">Thrift</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#tornado">Tornado</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#long-polling-comet">Long Polling (Comet)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#mysql">MySQL</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#memcached">Memcached</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#git">Git</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#javascript-placement">JavaScript Placement</a></li>
-</ul>
-</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">读文笔记：Quora’s Technology Examined</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">参考资料</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="reference.html#id2">知乎</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference.html#netflix">Netflix</a></li>
@@ -367,59 +351,40 @@
             
   <div class="section" id="quoras-technology-examined">
 <h1>读文笔记：Quora’s Technology Examined<a class="headerlink" href="#quoras-technology-examined" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="the-search-box">
-<h2>The Search-Box<a class="headerlink" href="#the-search-box" title="Permalink to this headline">¶</a></h2>
+<p><strong>The Search-Box</strong></p>
 <p>Previously, they did use an open source search server, called Sphinx. It supports the features they are using above, but they have since moved from this due to real-time constraints. Their new solution is built in-house and allows them better prefix indexing and control over the matching algorithms. They built this in Python.</p>
-<p><strong>Speedy Queries</strong></p>
+<p><em>Speedy Queries</em></p>
 <p>Queries are sent over AJAX as a GET request. Responses come back as JSON with the rendered HTML embedded inside the JSON. Rendering of the results on the server-side, as opposed to rendering them in JavaScript, seems to be due to the need to highlight matching words in the text. This is sometimes too complex for JavaScript.</p>
 <p>Quora uses persistent connections. A HTTP connection is established with the server when you start tying the search query. This connection is kept open and futher requests are made on this same open connection. The connection will terminate (times-out) if not used for 60 seconds. If a connection times-out then a new connection is established when tying begins.</p>
-</div>
-<div class="section" id="webnode2-and-livenode">
-<h2>Webnode2 And LiveNode<a class="headerlink" href="#webnode2-and-livenode" title="Permalink to this headline">¶</a></h2>
+<p><strong>Webnode2 And LiveNode</strong></p>
 <p>Webnode2 and LiveNode are some of Quora&#8217;s internal systems, which were built for managing the content.</p>
 <p>Webnode2 generates HTML, CSS and JavaScript and is tightly coupled with LiveNode, which is responsible for managing the display of the content on the webpage.</p>
 <p>One weakness of them is that it is tricky for LiveNode to keep track of what is happening within the browser as it pushes changes from the server. If users A and B are viewing the same question then ones interactions will affect the other. For instance, if user A up-votes an answer then that answer will be promoted and will visibly move up the page. This display change will be pushed over AJAX to user B&#8217;s browser. Any prior browser-side change that user B made, such as expanding a comments section, might be lost.</p>
 <p>LiveNode is written in Python, C++, and JavaScript. jQuery and Cython is also used.</p>
-</div>
-<div class="section" id="amazon-web-services">
-<h2>Amazon Web Services<a class="headerlink" href="#amazon-web-services" title="Permalink to this headline">¶</a></h2>
+<p><strong>Amazon Web Services</strong></p>
 <p>Amazon EC2 and S3 is used for their hosting.</p>
-<p><strong>Ubuntu Linux</strong></p>
-<p><strong>Static Content</strong></p>
+<p><em>Ubuntu Linux</em></p>
+<p><em>Static Content</em></p>
 <p>Using Amazon&#8217;s distributed content delivery network, Cloudfront.（注：貌似现在Quora是用自己的CDN了，如http://qph.is.quoracdn.net/main-thumb-t-2803-50-pABO3faE4RywN4mCnyw8pMthjzRjmyh3.jpeg）</p>
-</div>
-<div class="section" id="haproxy-load-balancing">
-<h2>HAProxy Load-Balancing<a class="headerlink" href="#haproxy-load-balancing" title="Permalink to this headline">¶</a></h2>
+<p><strong>HAProxy Load-Balancing</strong></p>
 <p>Quora uses HAProxy at the front-line, which load-balances onto the distributed Nginx server behind them.</p>
-</div>
-<div class="section" id="nginx">
-<h2>Nginx<a class="headerlink" href="#nginx" title="Permalink to this headline">¶</a></h2>
+<p><strong>Nginx</strong></p>
 <p>Behind the load-balancer, Nginx is used as a reverse-proxy server onto the web-servers.</p>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last"><a class="reference external" href="http://kovyrin.net/2006/05/18/nginx-as-reverse-proxy/">Using Nginx As Reverse-Proxy Server On High-Loaded Sites</a></p>
 </div>
-</div>
-<div class="section" id="pylons-and-paste">
-<h2>Pylons And Paste<a class="headerlink" href="#pylons-and-paste" title="Permalink to this headline">¶</a></h2>
+<p><strong>Pylons And Paste</strong></p>
 <p>Pylons, a lightweight web framework, is used as their main web-server behind Nginx. The use the default <a class="reference external" href="http://spacepants.org/blog/pylons-paste-stack">Pylons + Paste stack</a></p>
-</div>
-<div class="section" id="python">
-<h2>Python<a class="headerlink" href="#python" title="Permalink to this headline">¶</a></h2>
+<p><strong>Python</strong></p>
 <p>Coming from Facebook, it was a good bet that Charlie and Adam would choose PHP for their development language. As Adam points out, &#8220;Facebook is stuck on that for legacy reasons, not because it is the best choice right now&#8221;. <strong>From this experience they knew that choosing technologies, especially programming languages, for the long-run was very important. Python won over Java because it is more expressive and quicker to write code than Java. Scala was too new. Adam mentions *speed and the lack of type-checking as drawbacks with Python* , but they both already knew the language reasonably well. Where Python lacks speed for performance critical backend components, they opt to write them in C++</strong> . They saw Ruby as a close match to Python, but their experience with Python and lack of experience in Ruby, made Python the winner. Python 2.6, to be precise.</p>
 <p>Additional benefits for using Python are the fact that data-structures that map well to JSON, code readability, there is a large collection of libraries and the availability of good debuggers and reloaders. Browser-server communication using JSON is major component of what Quora does, so this was an important factor.</p>
 <p>PyPy, a project that aims to produce a flexible and fast Python implementation, was also mentioned as something that might give them a speed-boost.</p>
-</div>
-<div class="section" id="thrift">
-<h2>Thrift<a class="headerlink" href="#thrift" title="Permalink to this headline">¶</a></h2>
+<p><strong>Thrift</strong></p>
 <p>Thrift is used for communications between backend systems. The Thrift service is written in C++.</p>
-</div>
-<div class="section" id="tornado">
-<h2>Tornado<a class="headerlink" href="#tornado" title="Permalink to this headline">¶</a></h2>
+<p><strong>Tornado</strong></p>
 <p>The Tornado web framework is used for live updating. This is their Comet server, which handles <strong>the large volumes of open connections used for long-polling</strong> and pushed updates to the browsers.</p>
-</div>
-<div class="section" id="long-polling-comet">
-<h2>Long Polling (Comet)<a class="headerlink" href="#long-polling-comet" title="Permalink to this headline">¶</a></h2>
+<p><strong>Long Polling (Comet)</strong></p>
 <p>Quora does not display just static web pages. Each page will updates new content as questions, answers and comments are submitted by other others. As Adam D&#8217;Angelo points out, one of the best ways to do this currently is with &#8220;long polling&#8221;. This is different to &#8220;polling&#8221;.</p>
 <p>Long polling, also known as <a class="reference external" href="http://en.wikipedia.org/wiki/Comet_(programming)">Comet</a> , puts the server in control, by making the client wait for responses.</p>
 <p>The benefit to long-polling is that there is less back-and-forth between the client and server. The server is in control of the timing, so updates to the browser can be made within milliseconds. This makes it ideal for chat applications or applications that want really snappy updates for their users.</p>
@@ -433,27 +398,18 @@
 <p class="first admonition-title">See also</p>
 <p class="last"><a class="reference external" href="http://qinxuye.me/article/ways-to-continual-sync-browser-and-server/">Browser和Server持续同步的几种方式（jQuery+tornado演示）</a> , <a class="reference external" href="http://ued.sina.com.cn/?p=900">WebSocket实战</a></p>
 </div>
-</div>
-<div class="section" id="mysql">
-<h2>MySQL<a class="headerlink" href="#mysql" title="Permalink to this headline">¶</a></h2>
+<p><strong>MySQL</strong></p>
 <p>The basic advice is to only partition data if necessary, keep data on one machine if possible and use a hash of the primary key to partition larger datasets across multiple databases. Joins must be avoided.</p>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last"><a class="reference external" href="http://backchannel.org/blog/friendfeed-schemaless-mysql">How FriendFeed uses MySQL to store schema-less data</a> , <a class="reference external" href="http://www.quora.com/How-does-one-evaluate-if-a-database-is-efficient-enough-to-not-crash-as-its-put-under-increasing-load">How does one evaluate if a database is efficient enough to not crash as it&#8217;s put under increasing load?</a></p>
 </div>
-</div>
-<div class="section" id="memcached">
-<h2>Memcached<a class="headerlink" href="#memcached" title="Permalink to this headline">¶</a></h2>
+<p><strong>Memcached</strong></p>
 <p>Memcached is used as a caching layer in front of MySQL.</p>
-</div>
-<div class="section" id="git">
-<h2>Git<a class="headerlink" href="#git" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="javascript-placement">
-<h2>JavaScript Placement<a class="headerlink" href="#javascript-placement" title="Permalink to this headline">¶</a></h2>
+<p><strong>Git</strong></p>
+<p><strong>JavaScript Placement</strong></p>
 <p>To place JavaScript at the end of the page will give the feeling of a quicker loading page, since the browser has content to display before the JavaScript has be seen.</p>
-<div class="section" id="charlie-cheever-follows-14-rules-for-faster-loading-web-sites">
-<h3>Charlie Cheever Follows &#8220;14 Rules for Faster-Loading Web Sites&#8221;<a class="headerlink" href="#charlie-cheever-follows-14-rules-for-faster-loading-web-sites" title="Permalink to this headline">¶</a></h3>
+<p><strong>Charlie Cheever Follows &#8220;14 Rules for Faster-Loading Web Sites&#8221;</strong></p>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last"><a class="reference external" href="http://stevesouders.com/hpws/rules.php">14 Rules for Faster-Loading Web Sites</a></p>
@@ -462,8 +418,6 @@
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last"><a class="reference external" href="http://www.bigfastblog.com/quoras-technology-examined">原文</a></p>
-</div>
-</div>
 </div>
 </div>
 

@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>Linux系统编程简介(1)</title>
+
+    <meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+    <meta name="author" content="Hakim El Hattab">
+
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="reveal.js/css/theme/solarized.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="reveal.js/lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = window.location.search.match(/print-pdf/gi) ? 'reveal.js/css/print/pdf.css' : 'reveal.js/css/print/paper.css';
+        document.getElementsByTagName('head')[0].appendChild(link);
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="reveal.js/lib/js/html5shiv.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+
+<div class="reveal">
+
+    <!-- Any section element inside of this container is displayed as a slide -->
+    <div class="slides">
+        <section>
+            <h1>Linux系统编程<br/>简介(1)</h1>
+
+            <p>
+                <small>众成技术聚乐部 / <a href="https://github.com/youngsterxyf">夏永锋</a></small>
+            </p>
+        </section>
+
+        <section>
+            <h2>声明</h2>
+
+            <p>此分享内容仅为学习总结，并非实战经验，若有不对之处，欢迎批评指正！</p>
+            <img src="http://ec4.images-amazon.com/images/I/51tM%2BAYRc%2BL.jpg"/>
+        </section>
+
+        <!-- Example of nested vertical slides -->
+        <section>
+            <section>
+                <h2>系统编程概念</h2>
+            </section>
+            <section>
+                <h3>操作系统内核</h3>
+                <div style="font-weight: bold;">内核的职责：</div>
+                <ul>
+                    <li>进程调度</li>
+                    <li>内存管理</li>
+                    <li>提供了文件系统</li>
+                    <li>创建和终止进程</li>
+                    <li>对设备的访问</li>
+                    <li>联网</li>
+                    <li>提供系统调用应用编程接口</li>
+                </ul>
+            </section>
+            <section>
+                <h3>系统调用</h3>
+                <div style="font-weight: bold;">系统调用执行流程：</div>
+                <ol style="font-size: 21px;">
+                    <li>应用程序通过调用C语言函数库中的外壳（wrapper）函数，发起系统调用;</li>
+                    <li>对系统调用中断处理程序来说，外壳函数必须保证所有的系统调用参数可用。通过堆栈，这些参数传入外壳函数，但内核却希望将这些参数置入特定寄存器。因此，外壳函数会将上述参数复制到寄存器;</li>
+                    <li>由于所有系统调用进入内核的方式相同，内核需要设法区分每个系统调用。为此，外壳函数会将系统调用编号复制到一个特殊的CPU寄存器（%eax）中;</li>
+                    <li>外壳函数执行一条中断机器指令（int 0x80），引发处理器从用户态切换到内核态，并执行系统中断0x80（十进制数128）的中断矢量所指向的代码。</li>
+                    <li>为响应中断0x80,内核会调用 system_call() 例程（位于汇编文件 arch/i386/entry.S 中）来处理这次中断，具体如下：
+                        <ul>
+                            <li>在内核栈中保存寄存器值</li>
+                            <li>审核系统调用编号的有效性</li>
+                            <li>以系统调用编号对存放所有调用服务例程的列表（内核变量 sys_call_table ）进行索引，发现并调用相应的系统调用服务例程。如果系统调用服务例程带有参数，那么将首先检查参数的有效性。随后，该服务例程会执行必要的任务，这可能涉及对特定参数中指定地址处的值进行修改，以及在用户内存和内核内存间传递数据。最后，该服务例程会将结果状态返回给 system_call() 例程。</li>
+                            <li>从内核栈中恢复各寄存器值，并将系统调用返回值置于栈中</li>
+                            <li>返回至外壳函数，同时将处理器切换回用户态。</li>
+                        </ul>
+                    </li>
+                    <li>若系统调用服务例程的返回值表明调用有误，外壳函数会使用该值来设置全局变量errno。然后，外壳函数会返回到调用程序，并同时返回一个整型值，以表明系统调用是否成功。</li>
+                </ol>
+            </section>
+            <section>
+            	<p>所有的系统调用都是以原子操作方式执行的。之所以这么说，是指内核保证了某系统调用中的所有步骤会作为独立操作而一次性加以执行，其间不会为其他进程或线程所中断。</p>
+            </section>
+        </section>
+
+        <section>
+            <section>
+                <h2>文件I/O</h2>
+                <p>所有执行I/O操作的系统调用都以文件描述符（一个非负整数）来指代打开的文件。文件描述符用以表示所有类型的已打开文件，包括管道、FIFO、socket、终端、设备和普通文件。针对每个进程，文件描述符都自成一套。</p>
+            </section>
+            <section>
+            	<div style="font-weight: bold">文件描述符、打开的文件句柄和i-node之间的关系：</div>
+            	<img src="./file-descriptor-relations.png" />
+            </section>
+            <section>
+                <div style="font-weight: bold">打开文件：open()</div>
+                <pre><code data-trim contenteditable class="c">
+// 调用成功则返回文件描述符，否则返回-1
+int open(const char *pathname, int flags, ... /* mode_t mode */);
+                </code></pre>
+                <div style="font-weight: bold">读取文件内容：read()</div>
+				<pre><code data-trim contenteditable class="c">
+ssize_t read(int fd, void *buffer, size_t count);
+				</code></pre>
+				<div style="font-weight: bold">数据写入文件：write()</div>
+            	<pre><code data-trim contenteditable class="c">
+// 调用成功则返回写入的字节数，否则返回-1
+ssize_t write(int fd, void *buffer, size_t count);
+            	</code></pre>
+            	<div style="font-weight: bold">关闭文件：close()</div>
+            	<pre><code data-trim contenteditable class="c">
+// 当一进程终止时，将自动关闭其已打开的所有文件描述符
+// 成功则返回0，否则返回-1
+int close(int fd);
+            	</code></pre>
+            	<div style="font-weight: bold">改变文件偏移量：lseek()</div>
+            	<pre><code data-trim contenteditable class="c">
+// 成功则返回新的文件偏移量，否则返回-1
+// whence：SEEK_SET, SEEK_CUR, SEEK_END
+off_t lseek(int fd, off_t offset, int whence);
+            	</code></pre>
+            </section>
+            <section>
+            	<div style="font-weight: bold">复制文件描述符</div>
+            	<pre><code data-trim contenteditable class="c">
+// 举例：shell命令中的输出重定向
+
+// dup()调用复制一个打开的文件描述符oldfd, 并返回一个新描述符，二者都指向同一打开的文件句柄。系统会保证新描述符一定是编号值最低的未用文件描述符
+int dup(int oldfd);
+
+// dup2()系统调用会为oldfd参数所指定的文件描述符创建副本，其编号由newfd参数指定。如果由newfd所指定编号的文件描述符之前已经打开，那么dup2()会首先将其关闭
+int dup2(int oldfd, int newfd);
+
+int dup3(int oldfd, int newfd, int flags);
+            	</code></pre>
+            </section>
+            <section>
+            	<div style="font-weight: bold;">/dev/fd目录</div>
+            	<p>对于每个进程，内核都提供有一个特殊的虚拟目录/dev/fd。该目录包含“/dev/fd/n”形式的文件，其中n是与进程打开的文件描述符相对应的编号。</p>
+            	<p>/dev/fd实际上是一个符号链接，链接到Linux专有的/proc/self/fd目录。后者又是Linux特有的/proc/PID/fd目录族的特例之一。</p>
+            </section>
+        </section>
+
+        <section>
+            <section>
+                <h2>进程</h2>
+            </section>
+            <section>
+            	<p>从内核角度看，进程由用户内存空间(user-space memory)和一系列内核数据结构组成，其中用户内存空间包含了程序代码及代码所使用的变量，而内核数据结构则用于维护进程状态信息。记录在内核数据结构中的信息包括许多与进程相关的标识ID、虚拟内存表、打开文件的描述符表、信号传递及处理的相关信息、进程资源使用及限制、当前工作目录和大量的其他信息。</p>
+            </section>
+            <section>
+            	<div style="font-weight: bold;">进程内存布局</div>
+				<p>为每个进程所分配的内存由很多部分组成，通常称之为“段”（segment）</p>
+				<ul>
+					<li>文本段：包含进程运行的程序机器语言指令。只读、可共享</li>
+					<li>初始化数据段：包含显式初始化的全局变量和静态变量。当程序加载到内存时，从可执行文件中读取这些变量的值</li>
+					<li>未初始化数据段：包含未进行显式初始化的全局变量和静态变量。程序启动之前，系统将本段内所有内存初始化为0</li>
+					<li>栈：一个动态增长和收缩的段，由栈帧（stack frames）组成。系统会为每个当前调用的函数分配一个栈帧。栈帧中存储了函数的局部变量、实参和返回值</li>
+					<li>堆：可在运行时（为变量）动态进行内存分配的一块区域</li>
+				</ul>
+            </section>
+			<section>
+				<img src="./process-memory-layout.png" height=650 />
+			</section>
+
+			<section>
+				<div style="font-weight: bold;">进程号和父进程号</div>
+				<p>每个进程都有一个进程号（PID），进程号是一个正数，用以唯一标识系统中的某个进程。Linux内核限制进程号需小于32767。新进程创建时，内核会按顺序将下一个可用的进程号分配给其使用。每当进程号达到32767的限制时，内核将重置进程号计数器，以便从小整数开始分配。</p>
+				<pre><code data-trim contentedtitable class="c">
+pid_t getpid(void);
+
+pid_t getppid(void);
+				</code></pre>
+				<p>每个进程的父进程号属性反映了系统上所有进程间的树状关系。所有进程的始祖为1号进程-init进程。使用pstree命令可以查看进程树。</p>
+			</section>
+        </section>
+
+        <section>
+            <section>
+                <h2>内存分配</h2>
+            </section>
+        </section>
+
+        <section>
+            <section>
+                <h2>时间</h2>
+            </section>
+        </section>
+
+        <section>
+            <h2>谢&nbsp;&nbsp;谢！</h2>
+        </section>
+    </div>
+
+</div>
+
+<script src="reveal.js/lib/js/head.min.js"></script>
+<script src="reveal.js/js/reveal.js"></script>
+
+<script>
+
+    // Full list of configuration options available at:
+    // https://github.com/hakimel/reveal.js#configuration
+    Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+        // Optional reveal.js plugins
+        dependencies: [
+            {
+                src: 'reveal.js/lib/js/classList.js', condition: function () {
+                return !document.body.classList;
+            }
+            },
+            {
+                src: 'reveal.js/plugin/markdown/marked.js', condition: function () {
+                return !!document.querySelector('[data-markdown]');
+            }
+            },
+            {
+                src: 'reveal.js/plugin/markdown/markdown.js', condition: function () {
+                return !!document.querySelector('[data-markdown]');
+            }
+            },
+            {
+                src: 'reveal.js/plugin/highlight/highlight.js', async: true, condition: function () {
+                return !!document.querySelector('pre code');
+            }, callback: function () {
+                hljs.initHighlightingOnLoad();
+            }
+            },
+            {src: 'reveal.js/plugin/zoom-js/zoom.js', async: true},
+            {src: 'reveal.js/plugin/notes/notes.js', async: true}
+        ]
+    });
+
+</script>
+
+</body>
+</html>

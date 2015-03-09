@@ -135,6 +135,9 @@
 &lt;span class="x"&gt; */&lt;/span&gt;
 &lt;span class="x"&gt;public function flush($dumpLogs=false)&lt;/span&gt;
 &lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // 事件对象中会带有当前的CLogger对象，作为事件的发送者&lt;/span&gt;
+&lt;span class="x"&gt;    // 但在类CLogRouter的方法collectLogs和processLogs中并没有使用这个CLogger对象，&lt;/span&gt;
+&lt;span class="x"&gt;    // 而是通过Yii::getLogger()来得到同一个CLogger对象，为什么不直接使用呢？&lt;/span&gt;
 &lt;span class="x"&gt;    $this-&amp;gt;onFlush(new CEvent($this, array(&amp;#39;dumpLogs&amp;#39;=&amp;gt;$dumpLogs)));&lt;/span&gt;
 &lt;span class="x"&gt;    // 清空重置&lt;/span&gt;
 &lt;span class="x"&gt;    $this-&amp;gt;_logs=array();&lt;/span&gt;

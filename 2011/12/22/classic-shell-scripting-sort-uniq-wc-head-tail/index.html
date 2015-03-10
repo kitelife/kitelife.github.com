@@ -75,20 +75,19 @@
               </address>
             </footer><!-- /.post-info -->
             <div class="entry-content">
-              <h4>一.sort</h4>
+              <h4 id="sort">一.sort</h4>
 <p>就像awk,cut与join一样，sort将输入看作具有多条记录的数据流，而记录是由可变宽度的字段组成，记录是以换行符作为定界符，字段的定界符则是空白字符或是用户指定的单个字符。</p>
 <p>语法</p>
-<div class="highlight"><pre>sort [ options ] [ file(s)]
-</pre></div>
-
-
+<pre><code>:::text
+sort [ options ] [ file(s)]
+</code></pre>
 <p>用途</p>
-<div class="highlight"><pre>将输入行按照键值字段与数据类型选项以及locale排序
-</pre></div>
-
-
+<pre><code>:::text
+将输入行按照键值字段与数据类型选项以及locale排序
+</code></pre>
 <p>主要选项</p>
-<div class="highlight"><pre>-b : 忽略开头的空白
+<pre><code>:::text
+-b : 忽略开头的空白
 -c : 检查输入是否已正确地排序。如输入未经排序，但退出码(exit code)为非零值，则不会有任何输出
 -d : 字典顺序，仅文字数字与空白才有意义
 -g : 一般数值，以浮点数字类型比较字段
@@ -101,56 +100,49 @@
 -r : 倒置排序的顺序为由大到小，而非默认的由小到大。
 -t char : 使用单个字符char作为默认的字段分隔字符，取代默认的空白字符
 -u : 只有惟一的记录：丢弃所有具有相同键值的记录，只留其中的第一条。只有键值字段是重要的，也就是说，被丢弃的记录其他部分可能是不同值。
-</pre></div>
-
-
+</code></pre>
 <p>行为模式</p>
-<div class="highlight"><pre>sort会读取指定的文件，如果未给定文件，则读取标准输入，再将排序好的数据写至标准输出。
-</pre></div>
-
-
+<pre><code>:::text
+sort会读取指定的文件，如果未给定文件，则读取标准输入，再将排序好的数据写至标准输出。
+</code></pre>
 <p><strong>举例如下</strong>:</p>
-<div class="highlight"><pre>sort -t: -k1,1 /etc/passwd    <span class="c">#以用户名称排序</span>
-sort -t: -k3nr /etc/passwd    <span class="c">#反向UID的排序</span>
-sort -t: -k4n -k3n /etc/passwd   <span class="c">#先以GID排序，再以UID排序</span>
-</pre></div>
-
-
+<pre><code>:::bash
+sort -t: -k1,1 /etc/passwd    #以用户名称排序
+sort -t: -k3nr /etc/passwd    #反向UID的排序
+sort -t: -k4n -k3n /etc/passwd   #先以GID排序，再以UID排序
+</code></pre>
 <p>sort排序算法并不稳定，幸好GNU实现了coreutils弥补不足，它可以通过--stable选项补救此问题。</p>
-<h4>二.uniq</h4>
+<h4 id="uniq">二.uniq</h4>
 <p>uniq常用于管道中，用来删除已使用sort排序完成的重复记录：sort ... | uniq | ...</p>
 <p>范例：</p>
-<div class="highlight"><pre>sort latin-numbers | uniq     <span class="c">#显示唯一的，排序后的记录，重复则仅取唯一行。</span>
-sort latin-numbers | uniq -c  <span class="c">#计数唯一的，排序后的记录</span>
-sort latin-numbers | uniq -d  <span class="c">#仅显示重复的记录</span>
-sort latin-numbers | uniq -u  <span class="c">#仅显示未重复的记录</span>
-</pre></div>
-
-
-<h4>三.wc</h4>
-<div class="highlight"><pre><span class="nb">echo </span>Testing one two three | wc -c  <span class="c">#计算字节数</span>
-<span class="nb">echo </span>Testing one two three | wc -l  <span class="c">#计算行数</span>
-<span class="nb">echo </span>Testing one two three | wc -w  <span class="c">#计算字数/单词数</span>
-</pre></div>
-
-
+<pre><code>:::bash
+sort latin-numbers | uniq     #显示唯一的，排序后的记录，重复则仅取唯一行。
+sort latin-numbers | uniq -c  #计数唯一的，排序后的记录
+sort latin-numbers | uniq -d  #仅显示重复的记录
+sort latin-numbers | uniq -u  #仅显示未重复的记录
+</code></pre>
+<h4 id="wc">三.wc</h4>
+<pre><code>:::bash
+echo Testing one two three | wc -c  #计算字节数
+echo Testing one two three | wc -l  #计算行数
+echo Testing one two three | wc -w  #计算字数/单词数
+</code></pre>
 <p>-c选项原本是表示字符数，但因为有多字节字符集的编码存在---像UTF-8，因此在当前系统上，字节数已不再等于字符数了，也因此，POSIX出现了-m选项，用以计算多字节字符，对8位字符数据而言，它等同于-c。</p>
 <p>虽然wc最常处理的是来自于管道的输入数据，但它也接受命令行的文件参数，可以生成一行一个结果: wc /etc/passwd /etc/group</p>
-<h4>四.head and tail</h4>
+<h4 id="head-and-tail">四.head and tail</h4>
 <p>有时，你会需要从文本文件里把几行字---多半是靠近开头或结尾的几行，提取出来。</p>
-<div class="highlight"><pre>head [-n] n [ file(s) ]    #取出文件的前n行
-</pre></div>
-
-
+<pre><code>:::text
+head [-n] n [ file(s) ]    #取出文件的前n行
+</code></pre>
 <p>同样功能的命令有:</p>
-<div class="highlight"><pre>awk &#39;FNR &lt;= n&#39; [ file(s) ]
+<pre><code>:::text
+awk 'FNR &lt;= n' [ file(s) ]
 sed [-e] nq    [ file(s) ]
-</pre></div>
-
-
+</code></pre>
 <p><strong>tail</strong>:</p>
-<div class="highlight"><pre>tail [-n] n [ file(s) ]   #取出文件的后n行
-</pre></div>
+<pre><code>:::text
+tail [-n] n [ file(s) ]   #取出文件的后n行
+</code></pre>
             </div><!-- /.entry-content -->
             <div class="comments">
               <h3>Comments</h3>

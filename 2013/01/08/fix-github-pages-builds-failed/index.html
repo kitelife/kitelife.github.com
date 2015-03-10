@@ -84,34 +84,29 @@ pages自动构建始终不成功。原以为是新提交中引入了错误，于
 <p>关于构建失败的原因一丁点都没有告诉我们，所以根本没法调试嘛。</p>
 <p>在阅读github的官方帮助文档<a href="https://help.github.com/articles/pages-don-t-build-unable-to-run-jekyll">Pages don't build: "Unable to run Jekyll"</a>后，决定按照其中Syntax errors部分的内容做如下尝试：</p>
 <p>首先，按照<a href="https://github.com/mojombo/jekyll/wiki/install">jekyll的官方安装文档</a>安装jekyll：</p>
-<div class="highlight"><pre>sudo gem install jekyll
-</pre></div>
-
-
+<pre><code>:::bash
+sudo gem install jekyll
+</code></pre>
 <p>然后，在博客的根目录下，执行：</p>
-<div class="highlight"><pre>jekyll --safe
-</pre></div>
-
-
+<pre><code>:::bash
+jekyll --safe
+</code></pre>
 <p>命令会输出详细的信息，如果构建失败，则在输出的信息中查找错误原因，比如本博客构建失败的原因出在文章的头部添加了如下类似的标记：</p>
-<div class="highlight"><pre>category:
+<pre><code>:::text
+category:
     - Algorithms
-</pre></div>
-
-
+</code></pre>
 <p>导致之后一行的tags标记数据在构建时出错。我直接将每次执行构建 <code>jekyll --safe</code>
 提示的错误信息中相关的category标记直接删除(也许其后加个空行就可以了，没尝试过)，然后重新执行构建，依次循环，直到构建成功。然后将数据提交到远程版本库。</p>
 <p>由于jekyll本地构建时输出的信息也比较隐晦，很难一下子找到问题所在。比如提示
 <code>Algorithms</code> 元素构建出错，</p>
-<div class="highlight"><pre>Not creating a link for ref_id = &quot;0&quot;.Liquid Exception: undefined method `gsub&#39; for [&quot;Algorithms&quot;]:Array in post
-</pre></div>
-
-
+<pre><code>:::text
+Not creating a link for ref_id = "0".Liquid Exception: undefined method `gsub' for ["Algorithms"]:Array in post
+</code></pre>
 <p>但没说是哪篇文章的哪一行，没办法只好使用grep查找：</p>
-<div class="highlight"><pre>grep Algorithms _posts/*
-</pre></div>
-
-
+<pre><code>:::bash
+grep Algorithms _posts/*
+</code></pre>
 <p>找出所有存在Algorithms单词的文章，然后逐个文章打开查看。</p>
             </div><!-- /.entry-content -->
             <div class="comments">

@@ -79,119 +79,116 @@
 <p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
 <p>对于具备基于类的编程语言（如Java或C++）经验的程序员来说，JavaScript有点混乱，因为它是一种动态语言，并且不提供<code>class</code>的实现（虽然关键字<code>class</code>是保留的，不可用作变量名）。</p>
 <p>说到继承，JavaScript只有一种结构：对象。每个对象都有一个内部链接指向另一个对象，这个对象称为<strong>原型</strong> (prototype)。那个原型对象也有自己的原型，如此直到某个对象以<code>null</code>作为其原型。<code>null</code>，根据定义，没有原型，作为这种<strong>原型链</strong>的最后一环而存在。</p>
-<h2>以原型链实现继承</h2>
-<h3>继承属性</h3>
+<h2 id="_1">以原型链实现继承</h2>
+<h3 id="_2">继承属性</h3>
 <p>JavaScript对象可看作是动态地装载属性（这里指<strong>自有属性</strong>）的"包包"，并且每个对象都有一个链指向一个原型对象。如下即为当尝试访问一个属性时发生的事情：</p>
-<div class="highlight"><pre><span class="c1">// 假设有个对象o，其原型链如下所示：</span>
-<span class="c1">// {a: 1, b: 2} ---&gt; {b: 3, c: 4} ---&gt; null</span>
-<span class="c1">// &#39;a&#39;和&#39;b&#39;是o的自有属性。</span>
+<pre><code>:::js
+// 假设有个对象o，其原型链如下所示：
+// {a: 1, b: 2} ---&gt; {b: 3, c: 4} ---&gt; null
+// 'a'和'b'是o的自有属性。
 
-<span class="c1">// 本例中，someObject.[[Prototype]]指定someObject的原型。</span>
-<span class="c1">// 这完全是一种标记符号（基于ECMAScript标准中所使用的），不可用于脚本中。</span>
+// 本例中，someObject.[[Prototype]]指定someObject的原型。
+// 这完全是一种标记符号（基于ECMAScript标准中所使用的），不可用于脚本中。
 
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">a</span><span class="p">);</span>   <span class="c1">// 1</span>
-<span class="c1">// o有一个自有属性&#39;a&#39;吗？是的，其值为1</span>
+console.log(o.a);   // 1
+// o有一个自有属性'a'吗？是的，其值为1
 
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">b</span><span class="p">);</span>   <span class="c1">// 2</span>
-<span class="c1">// o有自有属性&#39;b&#39;吗？是的，其值为2</span>
-<span class="c1">// o的原型也有一个属性&#39;b&#39;，但是这里不会被访问。这被称为“属性隐藏”（property shadowing）</span>
+console.log(o.b);   // 2
+// o有自有属性'b'吗？是的，其值为2
+// o的原型也有一个属性'b'，但是这里不会被访问。这被称为“属性隐藏”（property shadowing）
 
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">c</span><span class="p">);</span>   <span class="c1">// 4</span>
-<span class="c1">// o有自有属性&#39;c&#39;吗？没有，检查它的原型</span>
-<span class="c1">// o.[[Prototype]]有自有属性&#39;c&#39;吗？是的，其值为4。</span>
+console.log(o.c);   // 4
+// o有自有属性'c'吗？没有，检查它的原型
+// o.[[Prototype]]有自有属性'c'吗？是的，其值为4。
 
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">d</span><span class="p">);</span>   <span class="c1">// undefined</span>
-<span class="c1">// o有自有属性&#39;d&#39;吗？没有，检查其原型</span>
-<span class="c1">// o.[[Prototype]]有自有属性&#39;d&#39;吗？没有，检查其原型</span>
-<span class="c1">// o.[[Prototype]].[[Prototype]]为null，停止搜索，没有找到属性，返回undefined。</span>
-</pre></div>
-
-
+console.log(o.d);   // undefined
+// o有自有属性'd'吗？没有，检查其原型
+// o.[[Prototype]]有自有属性'd'吗？没有，检查其原型
+// o.[[Prototype]].[[Prototype]]为null，停止搜索，没有找到属性，返回undefined。
+</code></pre>
 <p>将一个属性分配给一个对象会创建一个自有属性。对于获取和设置属性的行为规则，唯一的例外是当一个继承而来的属性带有一个<a href="https://developer.mozilla.org/en/docs/JavaScript/Guide/Working_with_Objects?redirectlocale=en-US&amp;redirectslug=Core_JavaScript_1.5_Guide%2FWorking_with_Objects#Defining_getters_and_setters">属性值获取器或设置器</a>。</p>
-<h3>继承"方法"</h3>
+<h3 id="_3">继承"方法"</h3>
 <p>JavaScript没有以基于类的编程语言定义方法的形式出现的"方法"。JavaScript中，任何函数都可以作为一个属性被添加到一个对象。一个继承而来的函数，操作起来与任何其他属性相同，包括如上所示的属性隐藏（在这里，称为<em>方法覆盖</em>）。</p>
 <p>当执行一个继承而来的函数时，<a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Operators/this">this</a>的值指向继承对象，而不是原型对象，该函数是原型对象的自有属性。</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">o</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="nx">a</span><span class="o">:</span> <span class="mi">2</span><span class="p">,</span>
-    <span class="nx">m</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">b</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">};</span>
+<pre><code>:::js
+var o = {
+    a: 2,
+    m: function(b) {
+        return this.a + 1;
+    }
+};
 
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">m</span><span class="p">());</span> <span class="c1">// 3</span>
-<span class="c1">// 这里当调用o.m时，&#39;this&#39;引用o</span>
+console.log(o.m()); // 3
+// 这里当调用o.m时，'this'引用o
 
-<span class="kd">var</span> <span class="nx">p</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="nx">o</span><span class="p">);</span>
-<span class="c1">// p是一个继承自o的对象</span>
+var p = Object.create(o);
+// p是一个继承自o的对象
 
-<span class="nx">p</span><span class="p">.</span><span class="nx">a</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>   <span class="c1">// 为p创建一个自有属性&#39;a&#39;</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">m</span><span class="p">());</span> <span class="c1">// 13</span>
-<span class="c1">// 这里调用p.m时，&#39;this&#39;引用p</span>
-<span class="c1">// 因此，当p继承了o的函数m，&#39;this.a&#39;意味着p.a，p的自有属性&#39;a&#39;</span>
-</pre></div>
+p.a = 12;   // 为p创建一个自有属性'a'
+console.log(p.m()); // 13
+// 这里调用p.m时，'this'引用p
+// 因此，当p继承了o的函数m，'this.a'意味着p.a，p的自有属性'a'
+</code></pre>
+<h2 id="_4">创建对象的不同方式，以及由此产生的原型链</h2>
+<h3 id="_5">以语法结构创建对象</h3>
+<pre><code>:::js
+var o = {a: 1};
 
+// 新创建的对象o有Object.prototype作为其[[Prototype]]
+// o没有名为'hasOwnProperty'的自有属性
+// hasOwnProperty是Object.prototype的自有属性。因此o从Object.prototype继承了hasOwnProperty
+// Object.prototype以null为其prototype。
+// o ---&gt; Object.prototype ---&gt; null
 
-<h2>创建对象的不同方式，以及由此产生的原型链</h2>
-<h3>以语法结构创建对象</h3>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">o</span> <span class="o">=</span> <span class="p">{</span><span class="nx">a</span><span class="o">:</span> <span class="mi">1</span><span class="p">};</span>
+var a = ["yo", "whadup", "?"];
 
-<span class="c1">// 新创建的对象o有Object.prototype作为其[[Prototype]]</span>
-<span class="c1">// o没有名为&#39;hasOwnProperty&#39;的自有属性</span>
-<span class="c1">// hasOwnProperty是Object.prototype的自有属性。因此o从Object.prototype继承了hasOwnProperty</span>
-<span class="c1">// Object.prototype以null为其prototype。</span>
-<span class="c1">// o ---&gt; Object.prototype ---&gt; null</span>
+// 数组继承自Array.prototype（它具有indexOf, forEach等方法）。
+// 该原型链如下所示：
+// a ---&gt; Array.prototype ---&gt; Object.prototype ---&gt; null
 
-<span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;yo&quot;</span><span class="p">,</span> <span class="s2">&quot;whadup&quot;</span><span class="p">,</span> <span class="s2">&quot;?&quot;</span><span class="p">];</span>
+function f() {
+    return 2;
+}
 
-<span class="c1">// 数组继承自Array.prototype（它具有indexOf, forEach等方法）。</span>
-<span class="c1">// 该原型链如下所示：</span>
-<span class="c1">// a ---&gt; Array.prototype ---&gt; Object.prototype ---&gt; null</span>
-
-<span class="kd">function</span> <span class="nx">f</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="mi">2</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="c1">// 函数继承自Function.prototype（它具有call，bind等方法）：</span>
-<span class="c1">// f ---&gt; Function.prototype ---&gt; Object.prototype ---&gt; null</span>
-</pre></div>
-
-
-<h3>使用构造器</h3>
+// 函数继承自Function.prototype（它具有call，bind等方法）：
+// f ---&gt; Function.prototype ---&gt; Object.prototype ---&gt; null
+</code></pre>
+<h3 id="_6">使用构造器</h3>
 <p>JavaScript中，"构造器""就"是一个恰好以<a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Operators/new">new操作符</a>调用的函数。</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">Graph</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">vertexes</span> <span class="o">=</span> <span class="p">[];</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">edges</span> <span class="o">=</span> <span class="p">[];</span>
-<span class="p">}</span>
+<pre><code>:::js
+function Graph() {
+    this.vertexes = [];
+    this.edges = [];
+}
 
-<span class="nx">Graph</span><span class="p">.</span><span class="nx">prototype</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="nx">addVertex</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">v</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">this</span><span class="p">.</span><span class="nx">vertexes</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">v</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">};</span>
+Graph.prototype = {
+    addVertex: function(v) {
+        this.vertexes.push(v);
+    }
+};
 
-<span class="kd">var</span> <span class="nx">g</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Graph</span><span class="p">();</span>
-<span class="c1">// g是一个带有自有属性&#39;vertexes&#39;和&#39;edges&#39;的对象。</span>
-<span class="c1">// 执行new Graph()后，g.[[Prototype]]是Graph.prototype的值。</span>
-</pre></div>
-
-
-<h3>使用Object.create</h3>
+var g = new Graph();
+// g是一个带有自有属性'vertexes'和'edges'的对象。
+// 执行new Graph()后，g.[[Prototype]]是Graph.prototype的值。
+</code></pre>
+<h3 id="objectcreate">使用Object.create</h3>
 <p>ECMAScript
 5引入了一个新方法：<a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Object/create">Object.create</a>。调用这个方法会创建一个新对象。这个对象的原型是该函数的第一个参数：</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="p">{</span><span class="nx">a</span><span class="o">:</span> <span class="mi">1</span><span class="p">};</span>
-<span class="c1">// a ---&gt; Object.prototype ---&gt; null</span>
+<pre><code>:::js
+var a = {a: 1};
+// a ---&gt; Object.prototype ---&gt; null
 
-<span class="kd">var</span> <span class="nx">b</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="nx">a</span><span class="p">);</span>
-<span class="c1">// b ---&gt; a ---&gt; Object.prototype ---&gt; null</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">b</span><span class="p">.</span><span class="nx">a</span><span class="p">);</span>   <span class="c1">// 1 (继承而来)</span>
+var b = Object.create(a);
+// b ---&gt; a ---&gt; Object.prototype ---&gt; null
+console.log(b.a);   // 1 (继承而来)
 
-<span class="kd">var</span> <span class="nx">c</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="nx">b</span><span class="p">);</span>
-<span class="c1">// c ---&gt; b ---&gt; a ---&gt; Object.prototype ---&gt; null</span>
+var c = Object.create(b);
+// c ---&gt; b ---&gt; a ---&gt; Object.prototype ---&gt; null
 
-<span class="kd">var</span> <span class="nx">d</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="kc">null</span><span class="p">);</span>
-<span class="c1">// d ---&gt; null</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">d</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">);</span>  <span class="c1">// undefined，因为d并不继承自Object.prototype</span>
-</pre></div>
+var d = Object.create(null);
+// d ---&gt; null
+console.log(d.hasOwnProperty);  // undefined，因为d并不继承自Object.prototype
+</code></pre>
             </div><!-- /.entry-content -->
             <div class="comments">
               <h3>Comments</h3>

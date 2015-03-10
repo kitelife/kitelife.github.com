@@ -77,7 +77,7 @@
 <p>在<a href="http://jasonwilder.com/blog/2012/01/03/centralized-logging/">中心化日志记录</a>一文中，我介绍了几个工具，用于解决中心化日志记录的问题。但这些工具一般仅能解决这个问题的一部分，
 这意味着需要综合使用几个工具来构建一个健壮的解决方案。</p>
 <p>你需要解决问题的这几个主要方面：<em>收集</em>、<em>传输</em>、<em>存储</em>、以及<em>分析</em>。某些特殊的应用场景下，也许还希望具备<em>告警</em>的能力。</p>
-<h4>收集</h4>
+<h4 id="_1">收集</h4>
 <p>应用程序以不同的方式产生日志，一些是通过syslog，其他一些是直接写到文件。考虑一个运行在linux主机上的典型web应用，在<code>/var/log</code>目录会有十几个甚至更多的日志文件，
 如果一些应用指定日志存放在HOME目录或者其他位置，则这些目录下也是如此。</p>
 <p>如果你正在运营一个基于web的应用，开发人员或者运维同事需要快速地访问日志数据以便对线上问题进行排错，那么就需要一个能够近乎实时监控日志文件变化的方案。
@@ -124,7 +124,7 @@
 <li>红色意味着不可维护，黄色表示可接受，绿色则表明良好、可维护的代码。</li>
 </ul>
 <hr />
-<h3>分析结果 ...</h3> </div><!-- /.entry-content -->
+<h3 id="_1">分析结果 ...</h3> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2014/09/22/phpmetrics-of-popular-php-projects/" rel="bookmark" title="Permalink to 流行PHP项目的phpmetrics分析（译）">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -204,18 +204,16 @@
 <p>大多数现代Web组件栈允许通过栈式/组件式中间件“过滤”请求，这样就能干净地从web应用中分离出横切关注点（译注：面向方面程序设计中的概念？）。
 本周我尝试在Go语言的<code>http.FileServer</code>中植入钩子，发现实现起来十分简便，让我非常惊讶。</p>
 <p>让我们从一个基本的文件服务器开始说起：</p>
-<div class="highlight"><pre><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">http</span><span class="p">.</span><span class="nx">ListenAndServe</span><span class="p">(</span><span class="s">&quot;:8080&quot;</span><span class="p">,</span> <span class="nx">http</span><span class="p">.</span><span class="nx">FileServer</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">Dir</span><span class="p">(</span><span class="s">&quot;/tmp&quot;</span><span class="p">)))</span>
-<span class="p">}</span>
-</pre></div>
-
-
+<pre><code>:::go
+func main() {
+    http.ListenAndServe(":8080", http.FileServer(http.Dir("/tmp")))
+}
+</code></pre>
 <p>这段程序会在端口8080上开启一个本地文件服务器。那么我们该如何在这其中植入钩子从而能够在文件请求处理之前执行一些代码？来看一下<code>http.ListenAndServe</code>的方法签名：</p>
-<div class="highlight"><pre><span class="kd">func</span> <span class="nx">ListenAndServe</span><span class="p">(</span><span class="nx">addr</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">handler</span> <span class="nx">Handler</span><span class="p">)</span> <span class="kt">error</span>
-</pre></div>
-
-
-<p>看起来<code>http.FileServer</code>返回了一个<code>Handler ...</code></p> </div><!-- /.entry-content -->
+<pre><code>:::go
+func ListenAndServe(addr string, handler Handler) error
+</code></pre>
+<p>看起来<code>http.FileServer ...</code></p> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2014/01/17/golang-http-handlers-as-middleware/" rel="bookmark" title="Permalink to 如何实现Golang的http请求处理中间件（译）">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -239,17 +237,18 @@
 <p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
 <p>Go编程新手可能会偶然发现<a href="http://golang.org/">Go语言</a>---与一个Goroutine可用栈空间大小相关---的一个古怪特性。这通常是由于程序员
 无意间构造了一个无限递归函数调用而产生的。为了阐明这个特性，以如下代码（有点刻意设计的）为例。</p>
-<div class="highlight"><pre><span class="kn">package</span> <span class="nx">main</span>
+<pre><code>:::go
+package main
 
-<span class="kn">import</span> <span class="s">&quot;fmt&quot;</span>
+import "fmt"
 
-<span class="kd">type</span> <span class="nx">S</span> <span class="kd">struct</span> <span class="p">{</span>
-    <span class="nx">a</span><span class="p">,</span> <span class="nx">b</span> <span class="kt">int</span>
-<span class="p">}</span>
+type S struct {
+    a, b int
+}
 
-<span class="c1">// String implements the fmt.Stringer interface</span>
-<span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <span class="o">*</span><span class="nx">S</span><span class="p">)</span> <span class="nx">String</span><span class="p">()</span> <span class="kt">string</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="nx">fmt</span><span class="p">.</span><span class="nx">Sprintf</span><span class="p">(</span><span class="s">&quot;%s&quot;</span><span class="p">,</span> <span class="nx">s</span><span class="p">)</span>     <span class="c1">// Sprintf will call s.String ...</span></pre></div> </div><!-- /.entry-content -->
+// String implements the fmt.Stringer interface
+func (s *S) String() string {
+    return fmt.Sprintf("%s", s)     // Sprintf will call s ...</code></pre> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2014/01/17/goroutine-stack-infinite/" rel="bookmark" title="Permalink to 为何Goroutine的栈空间可以无限大？（译）">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -273,16 +272,16 @@
 <p>最近参与的一个业余项目，<a href="https://github.com/ahmetalpbalkan/go-linq">go-linq</a>，让我了解到Go语言的类型系统并不是为任何类面向
 对象编程而设计的。没有泛型，没有类型继承，也没有提供任何对这些特性有用的东西。</p>
 <p>但是，提供了一个名为<code>interface{}</code>的类型，你可以向其赋予几乎任意类型的值，不会抛出编译错误，就像.NET的<code>Object</code>或Java的<code>Object</code>：</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">o</span> <span class="kd">interface</span><span class="p">{}</span>
-<span class="nx">o</span> <span class="o">:=</span> <span class="mf">3.14</span>
-<span class="nx">o</span> <span class="o">:=</span> <span class="nx">Student</span><span class="p">{</span><span class="nx">Name</span><span class="p">:</span> <span class="s">&quot;Ahmet&quot;</span><span class="p">}</span>
-</pre></div>
-
-
+<pre><code>:::go
+var o interface{}
+o := 3.14
+o := Student{Name: "Ahmet"}
+</code></pre>
 <p>我们假设你需要一个可以接收任意类型slices的函数，如果考虑如下这样实现：</p>
-<div class="highlight"><pre><span class="kd">func</span> <span class="nx">Method</span><span class="p">(</span><span class="nx">in</span> <span class="p">[]</span><span class="kd">interface</span><span class="p">{}){</span><span class="o">...</span><span class="p">}</span>
-<span class="o">...</span>
-<span class="nx">slice</span> <span class="o">:=</span> <span class="p">[]</span><span class="kt">int</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2 ...</span></pre></div> </div><!-- /.entry-content -->
+<pre><code>:::go
+func Method(in []interface{}){...}
+...
+slice := []int ...</code></pre> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2014/01/16/go-input-slices-any-type/" rel="bookmark" title="Permalink to Go - 以任意类型的slices作为输入参数（译）">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -306,16 +305,16 @@
 <hr />
 <p>状态：草稿</p>
 <p>计划修订本文，未来可能会简化一些...</p>
-<h2>动机</h2>
+<h2 id="_1">动机</h2>
 <p>从Subversion和Mercurial切换到Git之后的几个月，我始终觉得Git在本质上是不同于Subversion和Mercurial的，但没法确切地说出区别。
 我经常在Github上看到tree、parent等术语，也搞不清楚它们确切的含义。</p>
 <p>因此我决定花些时间学学Git。</p>
 <p>我会尝试概述，并阐述一路走来学到的关于Git的关键信息...但这仅是有助于我回答Git与其他源码控制工具区别的Git内部构造基本知识。</p>
-<h2>实体、引用、索引（Objects，References，The Index）</h2>
+<h2 id="objectsreferencesthe-index">实体、引用、索引（Objects，References，The Index）</h2>
 <p>要理解Git内部构造的核心，我们应理解三个东西： <strong>实体</strong>、<strong>引用</strong>、 <strong>索引</strong>。</p>
 <p>我发现这个模型非常优雅。用一个小小的图表就能完全展现，也易于理解记忆。</p>
 <p><img alt="Big Picture" src="/assets/uploads/pics/git-internals/big-picture.png" /></p>
-<h3>实体</h3>
+<h3 id="_2">实体</h3>
 <p>你提交到一个Git代码仓库中的所有文件，包括每个提交的说明信息（the commit info）都在目录 <code>.git/objects/</code>中存储为<strong>实体</strong>。</p>
 <p>一个实体以一个40字符长度的字符串 ...</p> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2013/09/28/learning-git-internals-by-example/" rel="bookmark" title="Permalink to 通过示例学习Git内部构造（译）">Read more <i class="icon-arrow-right"></i></a></div>
@@ -353,78 +352,78 @@
 <h4>标签</h4>
 	<ul>
 	    <li class="tag-4"><a href="../tag/liu-lan-qi-jian-rong.html">浏览器兼容</a></li>
-	    <li class="tag-3"><a href="../tag/mysql.html">MySQL</a></li>
-	    <li class="tag-3"><a href="../tag/ming-ling-xing.html">命令行</a></li>
-	    <li class="tag-3"><a href="../tag/fu-zai-jun-heng.html">负载均衡</a></li>
-	    <li class="tag-1"><a href="../tag/zong-jie.html">总结</a></li>
-	    <li class="tag-4"><a href="../tag/cordova.html">Cordova</a></li>
-	    <li class="tag-4"><a href="../tag/restful.html">RESTful</a></li>
-	    <li class="tag-3"><a href="../tag/suan-fa.html">算法</a></li>
-	    <li class="tag-4"><a href="../tag/ying-yu.html">英语</a></li>
-	    <li class="tag-4"><a href="../tag/css.html">CSS</a></li>
-	    <li class="tag-4"><a href="../tag/cc.html">C/C++</a></li>
-	    <li class="tag-4"><a href="../tag/haproxyconsole.html">HAProxyConsole</a></li>
-	    <li class="tag-1"><a href="../tag/python.html">Python</a></li>
+	    <li class="tag-3"><a href="../tag/mian-shi.html">面试</a></li>
+	    <li class="tag-4"><a href="../tag/wen-zi.html">文字</a></li>
+	    <li class="tag-4"><a href="../tag/api.html">API</a></li>
+	    <li class="tag-4"><a href="../tag/bing-xing.html">并行</a></li>
+	    <li class="tag-4"><a href="../tag/dns.html">DNS</a></li>
+	    <li class="tag-4"><a href="../tag/jekyll.html">jekyll</a></li>
+	    <li class="tag-4"><a href="../tag/ming-ling.html">命令</a></li>
 	    <li class="tag-4"><a href="../tag/python-weekly.html">python-weekly</a></li>
+	    <li class="tag-4"><a href="../tag/pypi.html">PyPI</a></li>
+	    <li class="tag-4"><a href="../tag/teng-xun.html">腾讯</a></li>
+	    <li class="tag-4"><a href="../tag/rest.html">REST</a></li>
+	    <li class="tag-3"><a href="../tag/suan-fa.html">算法</a></li>
+	    <li class="tag-4"><a href="../tag/pip.html">pip</a></li>
+	    <li class="tag-2"><a href="../tag/golang.html">Golang</a></li>
 	    <li class="tag-3"><a href="../tag/gong-zuo.html">工作</a></li>
-	    <li class="tag-4"><a href="../tag/vmware.html">VMware</a></li>
-	    <li class="tag-3"><a href="../tag/xue-xi-fang-fa.html">学习方法</a></li>
-	    <li class="tag-3"><a href="../tag/nginx.html">Nginx</a></li>
-	    <li class="tag-4"><a href="../tag/zi-sheng.html">自省</a></li>
-	    <li class="tag-4"><a href="../tag/ban-ben-kong-zhi.html">版本控制</a></li>
+	    <li class="tag-4"><a href="../tag/ying-yu.html">英语</a></li>
 	    <li class="tag-4"><a href="../tag/rong-liang-gui-hua.html">容量规划</a></li>
 	    <li class="tag-3"><a href="../tag/keepalived.html">Keepalived</a></li>
-	    <li class="tag-4"><a href="../tag/sheng-huo.html">生活</a></li>
-	    <li class="tag-1"><a href="../tag/php.html">PHP</a></li>
-	    <li class="tag-3"><a href="../tag/mian-shi.html">面试</a></li>
-	    <li class="tag-4"><a href="../tag/xiao-xi-tui-song.html">消息推送</a></li>
-	    <li class="tag-2"><a href="../tag/javascript.html">JavaScript</a></li>
-	    <li class="tag-4"><a href="../tag/teng-xun.html">腾讯</a></li>
-	    <li class="tag-3"><a href="../tag/haproxy.html">HAProxy</a></li>
-	    <li class="tag-4"><a href="../tag/pip.html">pip</a></li>
-	    <li class="tag-4"><a href="../tag/jekyll.html">jekyll</a></li>
-	    <li class="tag-2"><a href="../tag/yii.html">Yii</a></li>
-	    <li class="tag-4"><a href="../tag/dns.html">DNS</a></li>
-	    <li class="tag-2"><a href="../tag/shell.html">Shell</a></li>
-	    <li class="tag-4"><a href="../tag/ssl.html">ssl</a></li>
-	    <li class="tag-4"><a href="../tag/li-lun.html">理论</a></li>
-	    <li class="tag-4"><a href="../tag/zi-ti.html">字体</a></li>
-	    <li class="tag-3"><a href="../tag/shi-ge.html">诗歌</a></li>
-	    <li class="tag-4"><a href="../tag/windows.html">Windows</a></li>
-	    <li class="tag-4"><a href="../tag/rest.html">REST</a></li>
-	    <li class="tag-3"><a href="../tag/bi-shi.html">笔试</a></li>
-	    <li class="tag-3"><a href="../tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
-	    <li class="tag-2"><a href="../tag/golang.html">Golang</a></li>
-	    <li class="tag-4"><a href="../tag/yan-jiang.html">演讲</a></li>
-	    <li class="tag-4"><a href="../tag/bind.html">BIND</a></li>
-	    <li class="tag-1"><a href="../tag/bi-ji.html">笔记</a></li>
-	    <li class="tag-3"><a href="../tag/yue-du.html">阅读</a></li>
-	    <li class="tag-2"><a href="../tag/git.html">Git</a></li>
-	    <li class="tag-4"><a href="../tag/phonegap.html">Phonegap</a></li>
-	    <li class="tag-1"><a href="../tag/linux.html">Linux</a></li>
-	    <li class="tag-4"><a href="../tag/bing-xing.html">并行</a></li>
-	    <li class="tag-4"><a href="../tag/zhong-jian-jian.html">中间件</a></li>
-	    <li class="tag-4"><a href="../tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
-	    <li class="tag-2"><a href="../tag/fu-wu-qi.html">服务器</a></li>
-	    <li class="tag-3"><a href="../tag/jia-gou.html">架构</a></li>
-	    <li class="tag-1"><a href="../tag/fan-yi.html">翻译</a></li>
-	    <li class="tag-4"><a href="../tag/ri-zhi.html">日志</a></li>
-	    <li class="tag-4"><a href="../tag/github.html">github</a></li>
-	    <li class="tag-4"><a href="../tag/wei-bo.html">微博</a></li>
-	    <li class="tag-4"><a href="../tag/ming-ling.html">命令</a></li>
-	    <li class="tag-4"><a href="../tag/api.html">API</a></li>
 	    <li class="tag-4"><a href="../tag/gao-ke-yong.html">高可用</a></li>
-	    <li class="tag-4"><a href="../tag/socketio.html">socket.io</a></li>
-	    <li class="tag-4"><a href="../tag/easy_install.html">easy_install</a></li>
-	    <li class="tag-4"><a href="../tag/pypi.html">PyPI</a></li>
-	    <li class="tag-3"><a href="../tag/gong-ju.html">工具</a></li>
-	    <li class="tag-4"><a href="../tag/template.html">template</a></li>
-	    <li class="tag-4"><a href="../tag/wen-zi.html">文字</a></li>
-	    <li class="tag-3"><a href="../tag/wei-xin.html">微信</a></li>
-	    <li class="tag-4"><a href="../tag/shu-ju-ku.html">数据库</a></li>
-	    <li class="tag-2"><a href="../tag/ji-zhu.html">技术</a></li>
+	    <li class="tag-4"><a href="../tag/css.html">CSS</a></li>
+	    <li class="tag-3"><a href="../tag/ming-ling-xing.html">命令行</a></li>
+	    <li class="tag-4"><a href="../tag/ri-zhi.html">日志</a></li>
 	    <li class="tag-4"><a href="../tag/diao-shi.html">调试</a></li>
+	    <li class="tag-2"><a href="../tag/fu-wu-qi.html">服务器</a></li>
+	    <li class="tag-3"><a href="../tag/gong-ju.html">工具</a></li>
+	    <li class="tag-3"><a href="../tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
+	    <li class="tag-4"><a href="../tag/zi-ti.html">字体</a></li>
+	    <li class="tag-2"><a href="../tag/javascript.html">JavaScript</a></li>
+	    <li class="tag-1"><a href="../tag/fan-yi.html">翻译</a></li>
+	    <li class="tag-3"><a href="../tag/wei-xin.html">微信</a></li>
+	    <li class="tag-2"><a href="../tag/git.html">Git</a></li>
+	    <li class="tag-4"><a href="../tag/github.html">github</a></li>
+	    <li class="tag-4"><a href="../tag/windows.html">Windows</a></li>
+	    <li class="tag-4"><a href="../tag/phonegap.html">Phonegap</a></li>
+	    <li class="tag-4"><a href="../tag/restful.html">RESTful</a></li>
+	    <li class="tag-4"><a href="../tag/cc.html">C/C++</a></li>
+	    <li class="tag-1"><a href="../tag/zong-jie.html">总结</a></li>
+	    <li class="tag-4"><a href="../tag/yan-jiang.html">演讲</a></li>
+	    <li class="tag-3"><a href="../tag/nginx.html">Nginx</a></li>
+	    <li class="tag-4"><a href="../tag/xiao-xi-tui-song.html">消息推送</a></li>
+	    <li class="tag-4"><a href="../tag/wei-bo.html">微博</a></li>
+	    <li class="tag-4"><a href="../tag/easy_install.html">easy_install</a></li>
+	    <li class="tag-4"><a href="../tag/shu-ju-ku.html">数据库</a></li>
 	    <li class="tag-4"><a href="../tag/gan-wu.html">感悟</a></li>
+	    <li class="tag-4"><a href="../tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
+	    <li class="tag-4"><a href="../tag/socketio.html">socket.io</a></li>
+	    <li class="tag-2"><a href="../tag/yii.html">Yii</a></li>
+	    <li class="tag-3"><a href="../tag/haproxy.html">HAProxy</a></li>
+	    <li class="tag-3"><a href="../tag/yue-du.html">阅读</a></li>
+	    <li class="tag-1"><a href="../tag/python.html">Python</a></li>
+	    <li class="tag-3"><a href="../tag/mysql.html">MySQL</a></li>
+	    <li class="tag-1"><a href="../tag/bi-ji.html">笔记</a></li>
+	    <li class="tag-4"><a href="../tag/haproxyconsole.html">HAProxyConsole</a></li>
+	    <li class="tag-4"><a href="../tag/vmware.html">VMware</a></li>
+	    <li class="tag-4"><a href="../tag/ssl.html">ssl</a></li>
+	    <li class="tag-3"><a href="../tag/jia-gou.html">架构</a></li>
+	    <li class="tag-4"><a href="../tag/ban-ben-kong-zhi.html">版本控制</a></li>
+	    <li class="tag-3"><a href="../tag/xue-xi-fang-fa.html">学习方法</a></li>
+	    <li class="tag-3"><a href="../tag/shi-ge.html">诗歌</a></li>
+	    <li class="tag-3"><a href="../tag/fu-zai-jun-heng.html">负载均衡</a></li>
+	    <li class="tag-4"><a href="../tag/template.html">template</a></li>
+	    <li class="tag-2"><a href="../tag/ji-zhu.html">技术</a></li>
+	    <li class="tag-2"><a href="../tag/shell.html">Shell</a></li>
+	    <li class="tag-1"><a href="../tag/php.html">PHP</a></li>
+	    <li class="tag-4"><a href="../tag/sheng-huo.html">生活</a></li>
+	    <li class="tag-3"><a href="../tag/bi-shi.html">笔试</a></li>
+	    <li class="tag-1"><a href="../tag/linux.html">Linux</a></li>
+	    <li class="tag-4"><a href="../tag/li-lun.html">理论</a></li>
+	    <li class="tag-4"><a href="../tag/cordova.html">Cordova</a></li>
+	    <li class="tag-4"><a href="../tag/bind.html">BIND</a></li>
+	    <li class="tag-4"><a href="../tag/zhong-jian-jian.html">中间件</a></li>
+	    <li class="tag-4"><a href="../tag/zi-sheng.html">自省</a></li>
 </ul>
 
 <!--

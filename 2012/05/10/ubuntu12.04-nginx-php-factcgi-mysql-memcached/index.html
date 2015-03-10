@@ -77,17 +77,17 @@
             <div class="entry-content">
               <p>1.
 安装必要的软件</p>
-<div class="highlight"><pre>sudo apt-get install nginx php5-cli php5-cgi spawn-fcgi psmisc mysql-server <span class="se">\</span>
+<pre><code>:::bash
+sudo apt-get install nginx php5-cli php5-cgi spawn-fcgi psmisc mysql-server \
 mysql-client php5-mysql memcached php5-memcache php5-curl php5-gd
-</pre></div>
-
-
+</code></pre>
 <p>2.
 打开浏览器访问: 127.0.0.1。就能看到表示nginx安装成功的页面。但这时访问php文件页面还不行。
 （注：ngnix的配置文件目录为/etc/ngnix/，默认网站根目录为/usr/share/ngnix/www/；php配置文件目录为/etc/php5/）</p>
 <p>3.
 编辑文件/etc/ngnix/sites-available/default，内容如下(可以先把原文件备份一下)：</p>
-<div class="highlight"><pre>server {
+<pre><code>:::text
+server {
     #listen   80; ## listen for ipv4; this line is default and implied
     #listen   [::]:80 default ipv6only=on; ## listen for ipv6
 
@@ -110,128 +110,120 @@ mysql-client php5-mysql memcached php5-memcache php5-curl php5-gd
 
     error_page 404 /404.html;
 }
-</pre></div>
-
-
+</code></pre>
 <p>4.
 修改文件/etc/php5/cgi/php.ini。去除</p>
-<div class="highlight"><pre>#cgi.fix_pathinfo=1
-</pre></div>
-
-
+<pre><code>:::text
+#cgi.fix_pathinfo=1
+</code></pre>
 <p>一行前面的<code>#</code>。具体信息请看php.ini的相关注释。</p>
 <p>5.
 创建文件/usr/bin/php-fastcgi :</p>
-<div class="highlight"><pre><span class="c">#!/bin/bash</span>
+<pre><code>:::bash
+#!/bin/bash
 
-<span class="nv">FASTCGI_USER</span><span class="o">=</span>www-data
-<span class="nv">FASTCGI_GROUP</span><span class="o">=</span>www-data
+FASTCGI_USER=www-data
+FASTCGI_GROUP=www-data
 
-<span class="nv">ADDRESS</span><span class="o">=</span>127.0.0.1
-<span class="nv">PORT</span><span class="o">=</span>9000
+ADDRESS=127.0.0.1
+PORT=9000
 
-<span class="nv">PIDFILE</span><span class="o">=</span>/var/run/php-fastcgi/php-fastcgi.pid
-<span class="nv">CHILDREN</span><span class="o">=</span>6
+PIDFILE=/var/run/php-fastcgi/php-fastcgi.pid
+CHILDREN=6
 
-<span class="nv">PHP5</span><span class="o">=</span>/usr/bin/php5-cgi
-/usr/bin/spawn-fcgi -a <span class="nv">$ADDRESS</span> -p <span class="nv">$PORT</span> -P <span class="nv">$PIDFILE</span> -C <span class="nv">$CHILDREN</span> -u <span class="nv">$FASTCGI_USER</span> -g <span class="nv">$FASTCGI_GROUP</span> -f <span class="nv">$PHP5</span>
-</pre></div>
-
-
+PHP5=/usr/bin/php5-cgi
+/usr/bin/spawn-fcgi -a $ADDRESS -p $PORT -P $PIDFILE -C $CHILDREN -u $FASTCGI_USER -g $FASTCGI_GROUP -f $PHP5
+</code></pre>
 <p>6.
 设置/usr/bin/php-fastcgi为可执行：</p>
-<div class="highlight"><pre>sudo chmod +x /usr/bin/php-fastcgi
-</pre></div>
-
-
+<pre><code>:::bash
+sudo chmod +x /usr/bin/php-fastcgi
+</code></pre>
 <p>7.
 创建文件/etc/init.d/php-fastcgi：</p>
-<div class="highlight"><pre><span class="c">#!/bin/bash</span>
+<pre><code>:::bash
+#!/bin/bash
 
-<span class="nv">PHP_SCRIPT</span><span class="o">=</span>/usr/bin/php-fastcgi
+PHP_SCRIPT=/usr/bin/php-fastcgi
 
-<span class="nv">FASTCGI_USER</span><span class="o">=</span>www-data
-<span class="nv">FASTCGI_GROUP</span><span class="o">=</span>www-data
+FASTCGI_USER=www-data
+FASTCGI_GROUP=www-data
 
-<span class="nv">PID_DIR</span><span class="o">=</span>/var/run/php-fastcgi
-<span class="nv">PID_FILE</span><span class="o">=</span>/var/run/php-fastcgi/php-fastcgi.pid
-<span class="nv">RET_VAL</span><span class="o">=</span>0
+PID_DIR=/var/run/php-fastcgi
+PID_FILE=/var/run/php-fastcgi/php-fastcgi.pid
+RET_VAL=0
 
-<span class="k">case</span> <span class="s2">&quot;$1&quot;</span> in
-    start<span class="o">)</span>
-        <span class="k">if</span> <span class="o">[[</span> ! -d <span class="nv">$PID_DIR</span> <span class="o">]]</span>
-        <span class="k">then</span>
-<span class="k">            </span>mkdir <span class="nv">$PID_DIR</span>
-            chown <span class="nv">$FASTCGI_USER</span>:<span class="nv">$FASTCGI_GROUP</span> <span class="nv">$PID_DIR</span>
-            chmod 0770 <span class="nv">$PID_DIR</span>
-        <span class="k">fi</span>
-<span class="k">        if</span> <span class="o">[[</span> -r <span class="nv">$PID_FILE</span> <span class="o">]]</span>
-        <span class="k">then</span>
-<span class="k">            </span><span class="nb">echo</span> <span class="s2">&quot;php-fastcgi already running with PID `cat $PID_FILE`&quot;</span>
-            <span class="nv">RET_VAL</span><span class="o">=</span>1
-        <span class="k">else</span>
-            <span class="nv">$PHP_SCRIPT</span>
-            <span class="nv">RET_VAL</span><span class="o">=</span><span class="nv">$?</span>
-        <span class="k">fi</span>
+case "$1" in
+    start)
+        if [[ ! -d $PID_DIR ]]
+        then
+            mkdir $PID_DIR
+            chown $FASTCGI_USER:$FASTCGI_GROUP $PID_DIR
+            chmod 0770 $PID_DIR
+        fi
+        if [[ -r $PID_FILE ]]
+        then
+            echo "php-fastcgi already running with PID `cat $PID_FILE`"
+            RET_VAL=1
+        else
+            $PHP_SCRIPT
+            RET_VAL=$?
+        fi
     ;;
-    stop<span class="o">)</span>
-        <span class="k">if</span> <span class="o">[[</span> -r <span class="nv">$PID_FILE</span> <span class="o">]]</span>
-        <span class="k">then</span>
-<span class="k">            </span><span class="nb">kill</span> <span class="sb">`</span>cat <span class="nv">$PID_FILE</span><span class="sb">`</span>
-            rm <span class="nv">$PID_FILE</span>
-            <span class="nv">RET_VAL</span><span class="o">=</span><span class="nv">$?</span>
-        <span class="k">else</span>
-<span class="k">            </span><span class="nb">echo</span> <span class="s2">&quot;Could not find PID file $PID_FILE&quot;</span>
-            <span class="nv">RET_VAL</span><span class="o">=</span>1
-        <span class="k">fi</span>
+    stop)
+        if [[ -r $PID_FILE ]]
+        then
+            kill `cat $PID_FILE`
+            rm $PID_FILE
+            RET_VAL=$?
+        else
+            echo "Could not find PID file $PID_FILE"
+            RET_VAL=1
+        fi
     ;;
-    restart<span class="o">)</span>
-        <span class="k">if</span> <span class="o">[[</span> -r <span class="nv">$PID_FILE</span> <span class="o">]]</span>
-        <span class="k">then</span>
-<span class="k">            </span><span class="nb">kill</span> <span class="sb">`</span>cat <span class="nv">$PID_FILE</span><span class="sb">`</span>
-            rm <span class="nv">$PID_FILE</span>
-            <span class="nv">RET_VAL</span><span class="o">=</span><span class="nv">$?</span>
-        <span class="k">else</span>
-<span class="k">            </span><span class="nb">echo</span> <span class="s2">&quot;Could not find PID file $PID_FILE&quot;</span>
-        <span class="k">fi</span>
-        <span class="nv">$PHP_SCRIPT</span>
-        <span class="nv">RET_VAL</span><span class="o">=</span><span class="nv">$?</span>
+    restart)
+        if [[ -r $PID_FILE ]]
+        then
+            kill `cat $PID_FILE`
+            rm $PID_FILE
+            RET_VAL=$?
+        else
+            echo "Could not find PID file $PID_FILE"
+        fi
+        $PHP_SCRIPT
+        RET_VAL=$?
     ;;
-    status<span class="o">)</span>
-        <span class="k">if</span> <span class="o">[[</span> -r <span class="nv">$PID_FILE</span> <span class="o">]]</span>
-        <span class="k">then</span>
-<span class="k">            </span><span class="nb">echo</span> <span class="s2">&quot;php-fastcgi running with PID `cat $PID_FILE`&quot;</span>
-            <span class="nv">RET_VAL</span><span class="o">=</span><span class="nv">$?</span>
-        <span class="k">else</span>
-<span class="k">            </span><span class="nb">echo</span> <span class="s2">&quot;Could not find PID file $PID_FILE, php-fastcgi does not appear to be running&quot;</span>
-        <span class="k">fi</span>
+    status)
+        if [[ -r $PID_FILE ]]
+        then
+            echo "php-fastcgi running with PID `cat $PID_FILE`"
+            RET_VAL=$?
+        else
+            echo "Could not find PID file $PID_FILE, php-fastcgi does not appear to be running"
+        fi
     ;;
-    *<span class="o">)</span>
-        <span class="nb">echo</span> <span class="s2">&quot;Usage: php-fastcgi {start|stop|restart|status}&quot;</span>
-        <span class="nv">RET_VAL</span><span class="o">=</span>1
+    *)
+        echo "Usage: php-fastcgi {start|stop|restart|status}"
+        RET_VAL=1
     ;;
-<span class="k">esac</span>
-<span class="nb">exit</span> <span class="nv">$RET_VAL</span>
-</pre></div>
-
-
+esac
+exit $RET_VAL
+</code></pre>
 <p>8.
 添加可执行权限，以及设置为开机启动</p>
-<div class="highlight"><pre>sudo chmod +x /etc/init.d/php-fastcgi
+<pre><code>:::bash
+sudo chmod +x /etc/init.d/php-fastcgi
 sudo update-rc.d php-fastcgi defaults
 sudo /etc/init.d/php-fastcgi start
 sudo /etc/init.d/nginx start
-</pre></div>
-
-
+</code></pre>
 <p>9.
 创建文件/usr/share/nginx/www/test.php, 内容如下:</p>
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
-    <span class="nb">phpinfo</span><span class="p">();</span>
-<span class="cp">?&gt;</span><span class="x"></span>
-</pre></div>
-
-
+<pre><code>:::php
+&lt;?php
+    phpinfo();
+?&gt;
+</code></pre>
 <p>10.
 打开浏览器访问127.0.0.1/test.php，就能看到关于php信息的表格页面了。</p>
 <p><strong>参考资料</strong></p>

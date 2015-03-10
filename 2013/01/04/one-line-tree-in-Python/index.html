@@ -78,85 +78,76 @@
               <p>原文：<a href="https://gist.github.com/2012250">One-line Tree in Python</a></p>
 <p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
 <p>使用Python内置的<a href="http://docs.python.org/2/library/collections.html#collections.defaultdict">defaultdict</a>可以轻松定义一棵树：</p>
-<div class="highlight"><pre><span class="k">def</span> <span class="nf">tree</span><span class="p">():</span> <span class="k">return</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
-</pre></div>
-
-
+<pre><code>:::python
+def tree(): return defaultdict(tree)
+</code></pre>
 <p>就这样！</p>
 <p>这段代码简单地说明一棵树是一个字典，其缺省的值（译注：与键对应的值的概念）是树。</p>
 <p>（如果你正随着我写下代码，请先确保 <code>from collections import defaultdict</code> ）</p>
 <p>（还有：Hacker News读者@zbuc指出这种方法被称为<a href="https://en.wikipedia.org/wiki/Autovivification">自动唤醒</a>。Cool！）</p>
-<h2>示例</h2>
-<h3>JSON形式</h3>
+<h2 id="_1">示例</h2>
+<h3 id="json">JSON形式</h3>
 <p>现在我们可以创建JSON式的嵌套字典，而无需显式创建子级字典——当我们引用它们，就会神奇地自动产生：</p>
-<div class="highlight"><pre><span class="n">users</span> <span class="o">=</span> <span class="n">tree</span><span class="p">()</span>
-<span class="n">users</span><span class="p">[</span><span class="s">&#39;harold&#39;</span><span class="p">][</span><span class="s">&#39;username&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;hrldcpr&#39;</span>
-<span class="n">users</span><span class="p">[</span><span class="s">&#39;handler&#39;</span><span class="p">][</span><span class="s">&#39;username&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;matthandlersux&#39;</span>
-</pre></div>
-
-
+<pre><code>:::python
+users = tree()
+users['harold']['username'] = 'hrldcpr'
+users['handler']['username'] = 'matthandlersux'
+</code></pre>
 <p>我们可以使用 <code>print(json.dumps(users))</code> 将这棵树作为JSON打印出来（译注：先 <code>import json</code> ），得到如下输出：</p>
-<div class="highlight"><pre>{&quot;harold&quot;: {&quot;username&quot;: &quot;hrldcpr&quot;}, &quot;handler&quot;: {&quot;username&quot;: &quot;matthandlersux&quot;}}
-</pre></div>
-
-
-<h3>无需赋值</h3>
+<pre><code>:::text
+{"harold": {"username": "hrldcpr"}, "handler": {"username": "matthandlersux"}}
+</code></pre>
+<h3 id="_2">无需赋值</h3>
 <p>我们甚至根本不用赋值操作就可以构建树结构：</p>
-<div class="highlight"><pre><span class="n">taxonomy</span> <span class="o">=</span> <span class="n">tree</span><span class="p">()</span>
-<span class="n">taxonomy</span><span class="p">[</span><span class="s">&#39;Animalia&#39;</span><span class="p">][</span><span class="s">&#39;Chordata&#39;</span><span class="p">][</span><span class="s">&#39;Mammalia&#39;</span><span class="p">][</span><span class="s">&#39;Carnivora&#39;</span><span class="p">][</span><span class="s">&#39;Felidae&#39;</span><span class="p">][</span><span class="s">&#39;Felis&#39;</span><span class="p">][</span><span class="s">&#39;cat&#39;</span><span class="p">]</span>
-<span class="n">taxonomy</span><span class="p">[</span><span class="s">&#39;Animalia&#39;</span><span class="p">][</span><span class="s">&#39;Chordata&#39;</span><span class="p">][</span><span class="s">&#39;Mammalia&#39;</span><span class="p">][</span><span class="s">&#39;Carnivora&#39;</span><span class="p">][</span><span class="s">&#39;Felidae&#39;</span><span class="p">][</span><span class="s">&#39;Panthera&#39;</span><span class="p">][</span><span class="s">&#39;lion&#39;</span><span class="p">]</span>
-<span class="n">taxonomy</span><span class="p">[</span><span class="s">&#39;Animalia&#39;</span><span class="p">][</span><span class="s">&#39;Chordata&#39;</span><span class="p">][</span><span class="s">&#39;Mammalia&#39;</span><span class="p">][</span><span class="s">&#39;Carnivora&#39;</span><span class="p">][</span><span class="s">&#39;Canidae&#39;</span><span class="p">][</span><span class="s">&#39;Canis&#39;</span><span class="p">][</span><span class="s">&#39;dog&#39;</span><span class="p">]</span>
-<span class="n">taxonomy</span><span class="p">[</span><span class="s">&#39;Animalia&#39;</span><span class="p">][</span><span class="s">&#39;Chordata&#39;</span><span class="p">][</span><span class="s">&#39;Mammalia&#39;</span><span class="p">][</span><span class="s">&#39;Carnivora&#39;</span><span class="p">][</span><span class="s">&#39;Canidae&#39;</span><span class="p">][</span><span class="s">&#39;Canis&#39;</span><span class="p">][</span><span class="s">&#39;coyote&#39;</span><span class="p">]</span>
-<span class="n">taxonomy</span><span class="p">[</span><span class="s">&#39;Plantae&#39;</span><span class="p">][</span><span class="s">&#39;Solanales&#39;</span><span class="p">][</span><span class="s">&#39;Solanaceae&#39;</span><span class="p">][</span><span class="s">&#39;Solanum&#39;</span><span class="p">][</span><span class="s">&#39;tomato&#39;</span><span class="p">]</span>
-<span class="n">taxonomy</span><span class="p">[</span><span class="s">&#39;Plantae&#39;</span><span class="p">][</span><span class="s">&#39;Solanales&#39;</span><span class="p">][</span><span class="s">&#39;Solanaceae&#39;</span><span class="p">][</span><span class="s">&#39;Solanum&#39;</span><span class="p">][</span><span class="s">&#39;potato&#39;</span><span class="p">]</span>
-<span class="n">taxonomy</span><span class="p">[</span><span class="s">&#39;Plantae&#39;</span><span class="p">][</span><span class="s">&#39;Solanales&#39;</span><span class="p">][</span><span class="s">&#39;Convolvulaceae&#39;</span><span class="p">][</span><span class="s">&#39;Ipomoea&#39;</span><span class="p">][</span><span class="s">&#39;sweet potato&#39;</span><span class="p">]</span>
-</pre></div>
-
-
+<pre><code>:::python
+taxonomy = tree()
+taxonomy['Animalia']['Chordata']['Mammalia']['Carnivora']['Felidae']['Felis']['cat']
+taxonomy['Animalia']['Chordata']['Mammalia']['Carnivora']['Felidae']['Panthera']['lion']
+taxonomy['Animalia']['Chordata']['Mammalia']['Carnivora']['Canidae']['Canis']['dog']
+taxonomy['Animalia']['Chordata']['Mammalia']['Carnivora']['Canidae']['Canis']['coyote']
+taxonomy['Plantae']['Solanales']['Solanaceae']['Solanum']['tomato']
+taxonomy['Plantae']['Solanales']['Solanaceae']['Solanum']['potato']
+taxonomy['Plantae']['Solanales']['Convolvulaceae']['Ipomoea']['sweet potato']
+</code></pre>
 <p>这次我们打印得好看些，不过需要先将其转换成标准字典：</p>
-<div class="highlight"><pre><span class="k">def</span> <span class="nf">dicts</span><span class="p">(</span><span class="n">t</span><span class="p">):</span> <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">dicts</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">t</span><span class="p">}</span>
-</pre></div>
-
-
+<pre><code>:::python
+def dicts(t): return {k: dicts(t[k]) for k in t}
+</code></pre>
 <p>现在可以使用 <code>pprint(dicts(taxonomy))</code> 漂亮地打印该数据结构（译注：先 <code>from pprint import pprint</code> ）：</p>
-<div class="highlight"><pre>{&#39;Animalia&#39;: {&#39;Chordata&#39;: {&#39;Mammalia&#39;: {&#39;Carnivora&#39;: {&#39;Canidae&#39;: {&#39;Canis&#39;: {&#39;coyote&#39;: {},
-                                                                            &#39;dog&#39;: {}}},
-                                                      &#39;Felidae&#39;: {&#39;Felis&#39;: {&#39;cat&#39;: {}},
-                                                                  &#39;Panthera&#39;: {&#39;lion&#39;: {}}}}}}},
- &#39;Plantae&#39;: {&#39;Solanales&#39;: {&#39;Convolvulaceae&#39;: {&#39;Ipomoea&#39;: {&#39;sweet potato&#39;: {}}},
-                           &#39;Solanaceae&#39;: {&#39;Solanum&#39;: {&#39;potato&#39;: {},
-                                                      &#39;tomato&#39;: {}}}}}}
-</pre></div>
-
-
+<pre><code>:::text
+{'Animalia': {'Chordata': {'Mammalia': {'Carnivora': {'Canidae': {'Canis': {'coyote': {},
+                                                                            'dog': {}}},
+                                                      'Felidae': {'Felis': {'cat': {}},
+                                                                  'Panthera': {'lion': {}}}}}}},
+ 'Plantae': {'Solanales': {'Convolvulaceae': {'Ipomoea': {'sweet potato': {}}},
+                           'Solanaceae': {'Solanum': {'potato': {},
+                                                      'tomato': {}}}}}}
+</code></pre>
 <p>我们引用的子级结构都以字典形式存在，叶子为空字典。</p>
-<h3>迭代</h3>
+<h3 id="_3">迭代</h3>
 <p>迭代遍历这棵树会比较有趣，也是因为结构在引用的时候就会自动产生。</p>
 <p>例如，假设我们正在解析一个新动物的列表，添加到上面的 <code>taxonomy</code> 中，我们希望调用如下这样的一个函数：</p>
-<div class="highlight"><pre><span class="n">add</span><span class="p">(</span><span class="n">taxonomy</span><span class="p">,</span> <span class="s">&#39;Animalia,Chordata,Mammalia,Cetacea,Balaenopteridae,Balaenoptera,blue whale&#39;</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">))</span>
-</pre></div>
-
-
+<pre><code>:::python
+add(taxonomy, 'Animalia,Chordata,Mammalia,Cetacea,Balaenopteridae,Balaenoptera,blue whale'.split(','))
+</code></pre>
 <p>可以简单地这样实现：</p>
-<div class="highlight"><pre><span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">keys</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
-        <span class="n">t</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-</pre></div>
-
-
+<pre><code>:::python
+def add(t, keys):
+    for key in keys:
+        t = t[key]
+</code></pre>
 <p>再一次我们根本没有对字典赋值，仅通过引用这些键就创建了新的结构：</p>
-<div class="highlight"><pre>{&#39;Animalia&#39;: {&#39;Chordata&#39;: {&#39;Mammalia&#39;: {&#39;Carnivora&#39;: {&#39;Canidae&#39;: {&#39;Canis&#39;: {&#39;coyote&#39;: {},
-                                                                            &#39;dog&#39;: {}}},
-                                                      &#39;Felidae&#39;: {&#39;Felis&#39;: {&#39;cat&#39;: {}},
-                                                                  &#39;Panthera&#39;: {&#39;lion&#39;: {}}}},
-                                        &#39;Cetacea&#39;: {&#39;Balaenopteridae&#39;: {&#39;Balaenoptera&#39;: {&#39;blue whale&#39;: {}}}}}}},
- &#39;Plantae&#39;: {&#39;Solanales&#39;: {&#39;Convolvulaceae&#39;: {&#39;Ipomoea&#39;: {&#39;sweet potato&#39;: {}}},
-                           &#39;Solanaceae&#39;: {&#39;Solanum&#39;: {&#39;potato&#39;: {},
-                                                      &#39;tomato&#39;: {}}}}}}
-</pre></div>
-
-
-<h2>总结</h2>
+<pre><code>:::text
+{'Animalia': {'Chordata': {'Mammalia': {'Carnivora': {'Canidae': {'Canis': {'coyote': {},
+                                                                            'dog': {}}},
+                                                      'Felidae': {'Felis': {'cat': {}},
+                                                                  'Panthera': {'lion': {}}}},
+                                        'Cetacea': {'Balaenopteridae': {'Balaenoptera': {'blue whale': {}}}}}}},
+ 'Plantae': {'Solanales': {'Convolvulaceae': {'Ipomoea': {'sweet potato': {}}},
+                           'Solanaceae': {'Solanum': {'potato': {},
+                                                      'tomato': {}}}}}}
+</code></pre>
+<h2 id="_4">总结</h2>
 <p>这个可能不是很有用，且需要一些令人费解的代码（见如上 <code>add()</code> ）。但是如果你喜欢Python，我希望这个会让你觉得有趣或者值得去理解。</p>
             </div><!-- /.entry-content -->
             <div class="comments">

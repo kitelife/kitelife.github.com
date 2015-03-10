@@ -75,8 +75,7 @@
               </address>
             </footer><!-- /.post-info -->
             <div class="entry-content">
-              <div class="toc">
-<ul>
+              <div class="toc"><span class="toctitle">目录</span><ul>
 <li><a href="#_1">使用</a></li>
 <li><a href="#_2">分析</a></li>
 <li><a href="#_3">参考</a></li>
@@ -84,17 +83,14 @@
 </div>
 <h3 id="_1">使用</h3>
 <p>Yii框架为开发者提供两个静态方法进行日志记录：</p>
-<table class="codehilitetable"><tr><td><div class="linenodiv" style="background-color: #f0f0f0; padding-right: 10px"><pre style="line-height: 125%">1
-2</pre></div></td><td class="code"><div class="codehilite" style="background: #ffffff"><pre style="line-height: 125%">Yii::log($message, $level, $category);
+<pre><code>:::php
+Yii::log($message, $level, $category);
 Yii::trace($message, $category);
-</pre></div>
-</td></tr></table>
-
+</code></pre>
 <p>两者的区别在于后者依赖于应用开启调试模式，即定义常量YII_DEBUG：</p>
-<table class="codehilitetable"><tr><td><div class="linenodiv" style="background-color: #f0f0f0; padding-right: 10px"><pre style="line-height: 125%">1</pre></div></td><td class="code"><div class="codehilite" style="background: #ffffff"><pre style="line-height: 125%">defined(&#39;YII_DEBUG&#39;) or define(&#39;YII_DEBUG&#39;, true);
-</pre></div>
-</td></tr></table>
-
+<pre><code>:::php
+defined('YII_DEBUG') or define('YII_DEBUG', true);
+</code></pre>
 <p>Yii::log方法的调用需要指定message的level和category。category是格式为“xxx.yyy.zzz”的路径别名字符串，比如日志是在yii/framework/web/CController类中记录的，那么category为“system.web.CController”。level应为以下几种之一：</p>
 <ul>
 <li>trace：Yii::trace方法即是使用的这个level。用于跟踪执行流</li>
@@ -104,111 +100,44 @@ Yii::trace($message, $category);
 <li>error：用于记录重大错误日志</li>
 </ul>
 <p>要想日志真的输出到文件、邮件、web页面等地方，还得为应用添加如下配置：</p>
-<table class="codehilitetable"><tr><td><div class="linenodiv" style="background-color: #f0f0f0; padding-right: 10px"><pre style="line-height: 125%"> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22</pre></div></td><td class="code"><div class="codehilite" style="background: #ffffff"><pre style="line-height: 125%">array(
+<pre><code>:::php
+array(
     ......
-    &#39;preload&#39;=&gt;array(&#39;log&#39;),
-    &#39;components&#39;=&gt;array(
+    'preload'=&gt;array('log'),
+    'components'=&gt;array(
         ......
-        &#39;log&#39;=&gt;array(
-            &#39;class&#39;=&gt;&#39;CLogRouter&#39;,
-            &#39;routes&#39;=&gt;array(
+        'log'=&gt;array(
+            'class'=&gt;'CLogRouter',
+            'routes'=&gt;array(
                 array(
-                    &#39;class&#39;=&gt;&#39;CFileLogRoute&#39;,
-                    &#39;levels&#39;=&gt;&#39;trace, info&#39;,
-                    &#39;categories&#39;=&gt;&#39;system.*&#39;,
+                    'class'=&gt;'CFileLogRoute',
+                    'levels'=&gt;'trace, info',
+                    'categories'=&gt;'system.*',
                 ),
                 array(
-                    &#39;class&#39;=&gt;&#39;CEmailLogRoute&#39;,
-                    &#39;levels&#39;=&gt;&#39;error, warning&#39;,
-                    &#39;emails&#39;=&gt;&#39;admin@example.com&#39;,
+                    'class'=&gt;'CEmailLogRoute',
+                    'levels'=&gt;'error, warning',
+                    'emails'=&gt;'admin@example.com',
                 ),
             ),
         ),
     ),
 )
-</pre></div>
-</td></tr></table>
-
+</code></pre>
 <p>注册使用名为log的组件，组件对应的类为CLogRouter（见类文件yii/framework/logging/CLogRouter.php），并且需要为组件提供参数routes，
 从目录yii/framework/logging可以看到可使用的日志输出目标路由有：<code>CDbLogRoute</code>（将日志记录到数据库中）、<code>CEmailLogRoute</code>（将日志发送到邮箱）、<code>CFileLogRoute</code>（记录到文件中）、<code>CWebLogRoute</code>（将日志显示在对应的网页中）、<code>CProfileLogRoute</code>，其中CProfileLogRoute直接继承自CWebLogRoute，其他路由类都直接继承自CLogRoute类。</p>
 <p>至于为什么需要对log组件进行preload，即预先实例化，后边再说。</p>
 <h3 id="_2">分析</h3>
 <p>先来看看Yii::log和Yii::trace的实现：</p>
-<table class="codehilitetable"><tr><td><div class="linenodiv" style="background-color: #f0f0f0; padding-right: 10px"><pre style="line-height: 125%"> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33
-34
-35
-36
-37
-38
-39
-40
-41
-42
-43
-44
-45
-46
-47</pre></div></td><td class="code"><div class="codehilite" style="background: #ffffff"><pre style="line-height: 125%">/**
+<pre><code>:::php
+/**
  * Writes a trace message.
  * This method will only log a message when the application is in debug mode.
  * @param string $msg message to be logged
  * @param string $category category of the message
  * @see log
  */
-public static function trace($msg,$category=&#39;application&#39;)
+public static function trace($msg,$category='application')
 {
     // 得先定义常量YII_DEBUG为true
     if(YII_DEBUG)
@@ -222,10 +151,10 @@ public static function trace($msg,$category=&#39;application&#39;)
  * and may be recorded in different media, such as file, email, database, using
  * {@link CLogRouter}.
  * @param string $msg message to be logged
- * @param string $level level of the message (e.g. &#39;trace&#39;, &#39;warning&#39;, &#39;error&#39;). It is case-insensitive.
- * @param string $category category of the message (e.g. &#39;system.web&#39;). It is case-insensitive.
+ * @param string $level level of the message (e.g. 'trace', 'warning', 'error'). It is case-insensitive.
+ * @param string $category category of the message (e.g. 'system.web'). It is case-insensitive.
  */
-public static function log($msg,$level=CLogger::LEVEL_INFO,$category=&#39;application&#39;)
+public static function log($msg,$level=CLogger::LEVEL_INFO,$category='application')
 {
     if(self::$_logger===null)
         self::$_logger=new CLogger;
@@ -237,9 +166,9 @@ public static function log($msg,$level=CLogger::LEVEL_INFO,$category=&#39;applic
         $count=0;
         foreach($traces as $trace)
         {
-            if(isset($trace[&#39;file&#39;],$trace[&#39;line&#39;]) &amp;&amp; strpos($trace[&#39;file&#39;],YII_PATH)!==0)
+            if(isset($trace['file'],$trace['line']) &amp;&amp; strpos($trace['file'],YII_PATH)!==0)
             {
-                $msg.=&quot;\nin &quot;.$trace[&#39;file&#39;].&#39; (&#39;.$trace[&#39;line&#39;].&#39;)&#39;;
+                $msg.="\nin ".$trace['file'].' ('.$trace['line'].')';
                 if(++$count&gt;=YII_TRACE_LEVEL)
                     break;
             }
@@ -248,39 +177,18 @@ public static function log($msg,$level=CLogger::LEVEL_INFO,$category=&#39;applic
     // 调用的是CLogger类的log方法
     self::$_logger-&gt;log($msg,$level,$category);
 }
-</pre></div>
-</td></tr></table>
-
+</code></pre>
 <p>CLogger类的log方法实现如下所示：</p>
-<table class="codehilitetable"><tr><td><div class="linenodiv" style="background-color: #f0f0f0; padding-right: 10px"><pre style="line-height: 125%"> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21</pre></div></td><td class="code"><div class="codehilite" style="background: #ffffff"><pre style="line-height: 125%">/**
+<pre><code>:::php
+/**
  * Logs a message.
  * Messages logged by this method may be retrieved back via {@link getLogs}.
  * @param string $message message to be logged
- * @param string $level level of the message (e.g. &#39;Trace&#39;, &#39;Warning&#39;, &#39;Error&#39;). It is case-insensitive.
- * @param string $category category of the message (e.g. &#39;system.web&#39;). It is case-insensitive.
+ * @param string $level level of the message (e.g. 'Trace', 'Warning', 'Error'). It is case-insensitive.
+ * @param string $category category of the message (e.g. 'system.web'). It is case-insensitive.
  * @see getLogs
  */
-public function log($message,$level=&#39;info&#39;,$category=&#39;application&#39;)
+public function log($message,$level='info',$category='application')
 {
     $this-&gt;_logs[]=array($message,$level,$category,microtime(true));
     $this-&gt;_logCount++;
@@ -293,39 +201,10 @@ public function log($message,$level=&#39;info&#39;,$category=&#39;application&#3
         $this-&gt;_processing=false;
     }
 }
-</pre></div>
-</td></tr></table>
-
+</code></pre>
 <p>CLogger类的flush方法实现如下所示：</p>
-<table class="codehilitetable"><tr><td><div class="linenodiv" style="background-color: #f0f0f0; padding-right: 10px"><pre style="line-height: 125%"> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29</pre></div></td><td class="code"><div class="codehilite" style="background: #ffffff"><pre style="line-height: 125%">/**
+<pre><code>:::php
+/**
  * Removes all recorded messages from the memory.
  * This method will raise an {@link onFlush} event.
  * The attached event handlers can process the log messages before they are removed.
@@ -337,7 +216,7 @@ public function flush($dumpLogs=false)
     // 事件对象中会带有当前的CLogger对象，作为事件的发送者
     // 但在类CLogRouter的方法collectLogs和processLogs中并没有使用这个CLogger对象，
     // 而是通过Yii::getLogger()来得到同一个CLogger对象，为什么不直接使用呢？
-    $this-&gt;onFlush(new CEvent($this, array(&#39;dumpLogs&#39;=&gt;$dumpLogs)));
+    $this-&gt;onFlush(new CEvent($this, array('dumpLogs'=&gt;$dumpLogs)));
     // 清空重置
     $this-&gt;_logs=array();
     $this-&gt;_logCount=0;
@@ -352,60 +231,12 @@ public function onFlush($event)
 {
     // 抛出onFlush事件
     // raiseEvent方法定义在CComponent类中，CLogger类继承自CComponent类
-    $this-&gt;raiseEvent(&#39;onFlush&#39;, $event);
+    $this-&gt;raiseEvent('onFlush', $event);
 }
-</pre></div>
-</td></tr></table>
-
+</code></pre>
 <p>CComponent类的raiseEvent方法实现如下所示：</p>
-<table class="codehilitetable"><tr><td><div class="linenodiv" style="background-color: #f0f0f0; padding-right: 10px"><pre style="line-height: 125%"> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33
-34
-35
-36
-37
-38
-39
-40
-41
-42
-43
-44
-45
-46
-47
-48</pre></div></td><td class="code"><div class="codehilite" style="background: #ffffff"><pre style="line-height: 125%">/**
+<pre><code>:::php
+/**
  * Raises an event.
  * This method represents the happening of an event. It invokes
  * all attached handlers for the event.
@@ -435,50 +266,31 @@ public function raiseEvent($name,$event)
                     elseif(method_exists($object,$method))
                         $object-&gt;$method($event);
                     else
-                        throw new CException(Yii::t(&#39;yii&#39;,&#39;Event &quot;{class}.{event}&quot; is attached with an invalid handler &quot;{handler}&quot;.&#39;,
-                            array(&#39;{class}&#39;=&gt;get_class($this), &#39;{event}&#39;=&gt;$name, &#39;{handler}&#39;=&gt;$handler[1])));
+                        throw new CException(Yii::t('yii','Event "{class}.{event}" is attached with an invalid handler "{handler}".',
+                            array('{class}'=&gt;get_class($this), '{event}'=&gt;$name, '{handler}'=&gt;$handler[1])));
                 }
                 else // PHP 5.3: anonymous function
                     call_user_func($handler,$event);
             }
             else
-                throw new CException(Yii::t(&#39;yii&#39;,&#39;Event &quot;{class}.{event}&quot; is attached with an invalid handler &quot;{handler}&quot;.&#39;,
-                    array(&#39;{class}&#39;=&gt;get_class($this), &#39;{event}&#39;=&gt;$name, &#39;{handler}&#39;=&gt;gettype($handler))));
+                throw new CException(Yii::t('yii','Event "{class}.{event}" is attached with an invalid handler "{handler}".',
+                    array('{class}'=&gt;get_class($this), '{event}'=&gt;$name, '{handler}'=&gt;gettype($handler))));
             // stop further handling if param.handled is set true
             if(($event instanceof CEvent) &amp;&amp; $event-&gt;handled)
                 return;
         }
     }
     elseif(YII_DEBUG &amp;&amp; !$this-&gt;hasEvent($name))
-        throw new CException(Yii::t(&#39;yii&#39;,&#39;Event &quot;{class}.{event}&quot; is not defined.&#39;,
-            array(&#39;{class}&#39;=&gt;get_class($this), &#39;{event}&#39;=&gt;$name)));
+        throw new CException(Yii::t('yii','Event "{class}.{event}" is not defined.',
+            array('{class}'=&gt;get_class($this), '{event}'=&gt;$name)));
 }
-</pre></div>
-</td></tr></table>
-
+</code></pre>
 <p>看到这里，你可能会很奇怪怎么都没看到真正记录日志的代码呢？在与事件绑定的各个$handler里呢，这也是log组件的routes参数配置成数组的原因，$handle就是该数组中对应类的实例化对象的日志记录方法。</p>
 <p>那么这些$handle是在哪里绑定事件的呢？</p>
 <p>既然log组件对应的是CLogRouter类，那么来看看其实现。</p>
 <p>类CLogRouter继承自类CApplicationComponent。根据<a href="http://youngsterxyf.github.io/2014/11/13/read-yii-code-3/">Yii源码阅读笔记 - 组件集成</a>一文，可知组件初始化时实例化对象会调用init方法来完成一些初始化操作，类CLogRouter的init方法实现如下所示：</p>
-<table class="codehilitetable"><tr><td><div class="linenodiv" style="background-color: #f0f0f0; padding-right: 10px"><pre style="line-height: 125%"> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19</pre></div></td><td class="code"><div class="codehilite" style="background: #ffffff"><pre style="line-height: 125%">/**
+<pre><code>:::php
+/**
  * Initializes this application component.
  * This method is required by the IApplicationComponent interface.
  */
@@ -493,50 +305,14 @@ public function init()
         $this-&gt;_routes[$name]=$route;
     }
     // 将当前对象的collectLogs方法绑定到事件onFlush
-    Yii::getLogger()-&gt;attachEventHandler(&#39;onFlush&#39;,array($this,&#39;collectLogs&#39;));
+    Yii::getLogger()-&gt;attachEventHandler('onFlush',array($this,'collectLogs'));
     // 将当前对象的processLogs方法绑定到事件onEndRequest（表示请求处理结束？）
-    Yii::app()-&gt;attachEventHandler(&#39;onEndRequest&#39;,array($this,&#39;processLogs&#39;));
+    Yii::app()-&gt;attachEventHandler('onEndRequest',array($this,'processLogs'));
 }
-</pre></div>
-</td></tr></table>
-
+</code></pre>
 <p>而类CLogRouter的方法collectLogs和processLogs实现如下所示：</p>
-<table class="codehilitetable"><tr><td><div class="linenodiv" style="background-color: #f0f0f0; padding-right: 10px"><pre style="line-height: 125%"> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33
-34
-35
-36</pre></div></td><td class="code"><div class="codehilite" style="background: #ffffff"><pre style="line-height: 125%">/**
+<pre><code>:::php
+/**
  * Collects log messages from a logger.
  * This method is an event handler to the {@link CLogger::onFlush} event.
  * @param CEvent $event event parameter
@@ -544,7 +320,7 @@ public function init()
 public function collectLogs($event)
 {
     $logger=Yii::getLogger();
-    $dumpLogs=isset($event-&gt;params[&#39;dumpLogs&#39;]) &amp;&amp; $event-&gt;params[&#39;dumpLogs&#39;];
+    $dumpLogs=isset($event-&gt;params['dumpLogs']) &amp;&amp; $event-&gt;params['dumpLogs'];
     // 遍历所有日志路由对象，执行其方法collectLogs
     foreach($this-&gt;_routes as $route)
     {
@@ -572,31 +348,10 @@ public function processLogs($event)
             $route-&gt;collectLogs($logger,true);
     }
 }
-</pre></div>
-</td></tr></table>
-
+</code></pre>
 <p>以类CWebLogRoute为例来看看日志路由类的方法collectLogs，该方法定义于类CLogRoute中，实现如下所示：</p>
-<table class="codehilitetable"><tr><td><div class="linenodiv" style="background-color: #f0f0f0; padding-right: 10px"><pre style="line-height: 125%"> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21</pre></div></td><td class="code"><div class="codehilite" style="background: #ffffff"><pre style="line-height: 125%">/**
+<pre><code>:::php
+/**
  * Retrieves filtered log messages from logger for further processing.
  * @param CLogger $logger logger instance
  * @param boolean $processLogs whether to process the logs after they are collected from the logger
@@ -617,57 +372,16 @@ public function collectLogs($logger, $processLogs=false)
         $this-&gt;logs=array();
     }
 }
-</pre></div>
-</td></tr></table>
-
+</code></pre>
 <p>而类CWebLogRoute的processLogs方法实现如下所示：</p>
-<table class="codehilitetable"><tr><td><div class="linenodiv" style="background-color: #f0f0f0; padding-right: 10px"><pre style="line-height: 125%"> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33
-34
-35
-36
-37
-38
-39
-40
-41</pre></div></td><td class="code"><div class="codehilite" style="background: #ffffff"><pre style="line-height: 125%">/**
+<pre><code>:::php
+/**
  * Displays the log messages.
  * @param array $logs list of log messages
  */
 public function processLogs($logs)
 {
-    $this-&gt;render(&#39;log&#39;,$logs);
+    $this-&gt;render('log',$logs);
 }
 
 /**
@@ -687,58 +401,34 @@ protected function render($view,$data)
         // do not output anything for ajax and/or flash requests if needed
         if($isAjax &amp;&amp; $this-&gt;ignoreAjaxInFireBug || $isFlash &amp;&amp; $this-&gt;ignoreFlashInFireBug)
             return;
-        $view.=&#39;-firebug&#39;;
-        if(($userAgent=$app-&gt;getRequest()-&gt;getUserAgent())!==null &amp;&amp; preg_match(&#39;/msie [5-9]/i&#39;,$userAgent))
+        $view.='-firebug';
+        if(($userAgent=$app-&gt;getRequest()-&gt;getUserAgent())!==null &amp;&amp; preg_match('/msie [5-9]/i',$userAgent))
         {
-            echo &#39;&lt;script type=&quot;text/javascript&quot;&gt;&#39;;
-            echo file_get_contents(dirname(__FILE__).&#39;/../vendors/console-normalizer/normalizeconsole.min.js&#39;);
-            echo &quot;&lt;/script&gt;\n&quot;;
+            echo '&lt;script type="text/javascript"&gt;';
+            echo file_get_contents(dirname(__FILE__).'/../vendors/console-normalizer/normalizeconsole.min.js');
+            echo "&lt;/script&gt;\n";
         }
     }
     elseif(!($app instanceof CWebApplication) || $isAjax || $isFlash)
         return;
 
     // 渲染yii/framework/views/log.php（log-firebug.php），将结果放在实际请求页面内容的下面
-    $viewFile=YII_PATH.DIRECTORY_SEPARATOR.&#39;views&#39;.DIRECTORY_SEPARATOR.$view.&#39;.php&#39;;
-    include($app-&gt;findLocalizedFile($viewFile,&#39;en&#39;));
+    $viewFile=YII_PATH.DIRECTORY_SEPARATOR.'views'.DIRECTORY_SEPARATOR.$view.'.php';
+    include($app-&gt;findLocalizedFile($viewFile,'en'));
 }
-</pre></div>
-</td></tr></table>
-
+</code></pre>
 <p>从上述代码可以知道日志路由类是将日志信息按照一定格式显示在实际请求页面内容的下方。</p>
 <p>再来看看方法init中调用的两个attachEventHandler，它们的定义是同一个，定义在类CComponent中（类CLogger直接继承自类CComponent），实现如下所示：</p>
-<table class="codehilitetable"><tr><td><div class="linenodiv" style="background-color: #f0f0f0; padding-right: 10px"><pre style="line-height: 125%">1
-2
-3
-4
-5</pre></div></td><td class="code"><div class="codehilite" style="background: #ffffff"><pre style="line-height: 125%">public function attachEventHandler($name,$handler)
+<pre><code>:::php
+public function attachEventHandler($name,$handler)
 {
     // 将事件处理器$handler加到处理器列表中，在事件发生时会逐个处理器触发执行
     $this-&gt;getEventHandlers($name)-&gt;add($handler);
 }
-</pre></div>
-</td></tr></table>
-
+</code></pre>
 <p>其中方法EventHandlers的实现如下所示：</p>
-<table class="codehilitetable"><tr><td><div class="linenodiv" style="background-color: #f0f0f0; padding-right: 10px"><pre style="line-height: 125%"> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19</pre></div></td><td class="code"><div class="codehilite" style="background: #ffffff"><pre style="line-height: 125%">/**
+<pre><code>:::php
+/**
  * Returns the list of attached event handlers for an event.
  * @param string $name the event name
  * @return CList list of attached event handlers for the event
@@ -754,12 +444,10 @@ public function getEventHandlers($name)
         return $this-&gt;_e[$name];
     }
     else
-        throw new CException(Yii::t(&#39;yii&#39;,&#39;Event &quot;{class}.{event}&quot; is not defined.&#39;,
-            array(&#39;{class}&#39;=&gt;get_class($this), &#39;{event}&#39;=&gt;$name)));
+        throw new CException(Yii::t('yii','Event "{class}.{event}" is not defined.',
+            array('{class}'=&gt;get_class($this), '{event}'=&gt;$name)));
 }
-</pre></div>
-</td></tr></table>
-
+</code></pre>
 <p>从上述分析可以知道所谓事件系统，其实就是将处理函数/对象方法放到与事件ID对应的一个列表中，然后在事件触发时，逐个调用执行这些函数/对象方法。</p>
 <p>Yii框架基于事件系统，可以做到同时将日志信息写到多个目标输出中。</p>
 <hr />

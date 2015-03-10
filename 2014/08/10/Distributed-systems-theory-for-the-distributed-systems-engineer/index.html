@@ -82,7 +82,7 @@
 <p>但是，很遗憾，对分布式系统理论方面的重大研究成果和思想进行概括、归纳、背景分析的‘导引’性质的优秀材料非常缺乏；特别是没有居高临下态度的材料。对这块空白区域的思考让我想到了另一个有趣的问题：</p>
 <p><em>一个分布式系统工程师应该知道些什么分布式系统理论？</em></p>
 <p>在这种情况下，一知半解(a little theory)并不会是一件多危险的事情。因此我尝试整理一个列表，罗列出作为一个分布式系统工程师的我认为能够直接应用于我日常工作的一些基本概念；或者让分布式系统工程师完全有能力设计一个新系统的“筹码”。如果你认为我漏掉了一些东西，请联系我。</p>
-<h4>入门第一步</h4>
+<h4 id="_1">入门第一步</h4>
 <p>以下4篇材料出色地解释了构建分布式系统会遇到的一些挑战，共同概述了一系列分布式系统工程师必须要解决的技术上的难题，为之后章节中更深入的研究做好准备。</p>
 <ul>
 <li><a href="http://book.mixu.net/distsys/">好玩又实在的分布式系统理论</a>是一本简短的书籍，其内容覆盖了分布式系统领域的一些基本议题，包括时间的作用及不同的复制策略。</li>
@@ -90,7 +90,7 @@
 <li><a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.41.7628">分布式系统研究综述报告</a> - 一篇经典的论文，解释了为什么不能将所有远程交互都模拟成和本地对象一样。</li>
 <li><a href="http://en.wikipedia.org/wiki/Fallacies_of_Distributed_Computing">关于分布式计算的若干谬论</a> - 分布式计算方面的8点谬论，提醒系统设计者可能会忘记的几类事情。</li>
 </ul>
-<h4>失败和时间</h4>
+<h4 id="_2">失败和时间</h4>
 <p>分布式系统工程师需要面对的许多困难最终都可以归咎于两个潜在的原因：</p>
 <ul>
 <li>进程可能会失败</li>
@@ -104,7 +104,7 @@
 <li>单个失败发生的可能性对于我们实现正确的分布式系统到底会有多大的影响（请阅读下面关于FLP结果的笔记）？</li>
 <li>不同的时间模型：同步、部分同步和异步（若我找到好的参考文献会添加链接）</li>
 </ul>
-<h4>容错的基本矛盾</h4>
+<h4 id="_3">容错的基本矛盾</h4>
 <p>一个系统，若要不降级而容忍某些错误的发生，就必须能够好像那些错误没有发生一样地运作。这通常意味着系统的这些部分必须能够冗余地工作，但是非绝对必要地做更多的工作通常会在性能和资源耗用方面产生一些消耗。这是为系统添加容错带来的基本矛盾。</p>
 <p>你应该知道：</p>
 <ul>
@@ -112,7 +112,7 @@
 <li>关于<a href="http://the-paper-trail.org/blog/consensus-protocols-two-phase-commit/">两阶段提交</a>、<a href="http://the-paper-trail.org/blog/consensus-protocols-three-phase-commit/">三阶段提交</a>和<a href="http://the-paper-trail.org/blog/consensus-protocols-paxos/">Paxos</a>算法，以及为什么它们有不同的容错性质。</li>
 <li>最终一致性，及其他技术是如何以弱化对系统行为的保证为代价来尝试避免这种矛盾的。这篇<a href="http://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf">Dynamo论文</a>是一个很好的起点，同时Pat Helland的经典之作<a href="http://www.ics.uci.edu/~cs223/papers/cidr07p15.pdf">Life Beyond Transactions</a>也是必读的。</li>
 </ul>
-<h4>基本的原语</h4>
+<h4 id="_4">基本的原语</h4>
 <p>分布式系统中很少有大家一致认同的基本构建块，但越来越多地在出现。你应该以下的问题是什么，以及在哪可以找到它们的解决方案：</p>
 <ul>
 <li>群首选举(leader election)（例如<a href="http://en.wikipedia.org/wiki/Bully_algorithm">Bully算法</a>）</li>
@@ -120,14 +120,14 @@
 <li>共识（阅读上文提到的关于2PC和Paxos的博文）</li>
 <li>分布式状态机复制（看看<a href="http://en.wikipedia.org/wiki/State_machine_replication">Wikipedia</a>就可以，但<a href="http://research.microsoft.com/en-us/um/people/blampson/58-Consensus/Acrobat.pdf">Lampson的论文</a>更权威，只是枯燥了点）。</li>
 </ul>
-<h4>基础结论</h4>
+<h4 id="_5">基础结论</h4>
 <p>某些客观事实是需要内化于心的，以下是几个关键点（a flavour）（当然还有更多）：</p>
 <ul>
 <li>如果进程之间可能丢失某些消息，那么不可能在实现一致性存储的同时能响应所有的请求。这就是<a href="http://lpd.epfl.ch/sgilbert/pubs/BrewersConjecture-SigAct.pdf">CAP定理</a>。</li>
 <li>以这样一种方式（a.始终是正确的、b.始终能终止-若在一个可能因失败崩溃停止(crash-* stop failures)的异步系统中有（甚至仅）一台机器失效时(FLP的结果)）。我希望在<a href="http://www.slideshare.net/HenryRobinson/pwl-nonotes">洛杉矶题为Papers We Love报告</a>的第一部分幻灯片-进行证明之前-已经合理地解释了这个结论。<em>建议：没有实际的必要理解这个证明。</em></li>
 <li>一般而言，消息交互少于两轮是不可能达成共识(Consensus)。</li>
 </ul>
-<h4>真实系统</h4>
+<h4 id="_6">真实系统</h4>
 <p>最重要的练习是重复地阅读新兴的、真实系统的描述，并尝试评价它们的设计决策。一遍又一遍地这样去做。一些建议：</p>
 <p><strong>Google:</strong></p>
 <p><a href="http://static.googleusercontent.com/media/research.google.com/en/us/archive/gfs-sosp2003.pdf">GFS</a>、<a href="http://static.googleusercontent.com/media/research.google.com/en/us/archive/spanner-osdi2012.pdf">Spanner</a>、<a href="http://static.googleusercontent.com/media/research.google.com/en/us/pubs/archive/41344.pdf">F1</a>、<a href="http://static.googleusercontent.com/media/research.google.com/en/us/archive/chubby-osdi06.pdf">Chubby</a>、<a href="http://static.googleusercontent.com/media/research.google.com/en/us/archive/bigtable-osdi06.pdf">BigTable</a>、<a href="http://static.googleusercontent.com/media/research.google.com/en/us/pubs/archive/41378.pdf">MillWheel</a>、<a href="http://eurosys2013.tudos.org/wp-content/uploads/2013/paper/Schwarzkopf.pdf">Omega</a>、<a href="http://static.googleusercontent.com/media/research.google.com/en/us/pubs/archive/36356.pdf">Dapper</a>、<a href="http://www.cs.utexas.edu/users/lorenzo/corsi/cs380d/papers/paper2-1.pdf">Paxos Made Live</a>、<a href="http://cacm.acm.org/magazines/2013/2/160173-the-tail-at-scale/abstract">The Tail At Scale</a>。</p>

@@ -80,14 +80,14 @@
 <p>在<a href="http://jasonwilder.com/blog/2012/01/03/centralized-logging/">中心化日志记录</a>一文中，我介绍了几个工具，用于解决中心化日志记录的问题。但这些工具一般仅能解决这个问题的一部分，
 这意味着需要综合使用几个工具来构建一个健壮的解决方案。</p>
 <p>你需要解决问题的这几个主要方面：<em>收集</em>、<em>传输</em>、<em>存储</em>、以及<em>分析</em>。某些特殊的应用场景下，也许还希望具备<em>告警</em>的能力。</p>
-<h4>收集</h4>
+<h4 id="_1">收集</h4>
 <p>应用程序以不同的方式产生日志，一些是通过syslog，其他一些是直接写到文件。考虑一个运行在linux主机上的典型web应用，在<code>/var/log</code>目录会有十几个甚至更多的日志文件，
 如果一些应用指定日志存放在HOME目录或者其他位置，则这些目录下也是如此。</p>
 <p>如果你正在运营一个基于web的应用，开发人员或者运维同事需要快速地访问日志数据以便对线上问题进行排错，那么就需要一个能够近乎实时监控日志文件变化的方案。
 如果使用基于日志拷贝的方式 --- 文件以固定的时间间隔拷贝到一台中心服务器上，那么仅能检查与复制操作频率相同的新增日志数据。当站点已经挂掉，而你正在等待相关日志数据的复制，
 那么一分钟一次的 rsync cron 任务也许还不够快。</p>
 <p>从另外一个角度来看，如果需要分析线下日志数据，计算各种度量指标，或者其他批量的工作，文件复制的策略也许正合适。</p>
-<h4>传输</h4>
+<h4 id="_2">传输</h4>
 <p>日志数据会在多个主机上快速地累积起来。为了高效传输日志数据到中心位置，并保证数据不丢失，可能需要额外的工具。</p>
 <p><a href="https://github.com/facebookarchive/scribe">Scribe</a>、<a href="http://flume.apache.org/">Flume</a>、<a href="https://github.com/mozilla-services/heka">Heka</a>、<a href="http://logstash.net/">Logstash</a>、
 <a href="http://chukwa.apache.org/">Chukwa</a>、<a href="http://www.fluentd.org/">fluentd</a>、<a href="https://github.com/bitly/nsq">nsq</a>、<a href="http://kafka.apache.org/">Kafka</a> 这些框架正是被设计用于
@@ -98,7 +98,7 @@
 <p><a href="http://logstash.net/">Logstash</a>、<a href="https://github.com/mozilla-services/heka">Heka</a>、<a href="http://www.fluentd.org/">fluentd</a> 以及 <a href="http://flume.apache.org/">Flume</a> 则提供许多输入源方式，
 支持本机跟踪(tailing)文件变化并可靠地传输数据。对于更广泛的日志收集来说，是个更合适的选择。</p>
 <p>虽然 <a href="http://rsyslog.com/">rsyslog</a>和<a href="http://www.balabit.com/network-security/syslog-ng">Syslog-ng</a> 通常被认为是事实上的日志收集器，但并不是所有应用程序都使用 syslog。</p>
-<h4>存储</h4>
+<h4 id="_3">存储</h4>
 <p>现在可以传输日志数据了，但数据存放在哪呢？中心化的存储系统需要能够处理数据随着时间的增长。每天都会增加一定量的数据存储，数据量和产生日志数据的主机和进程数量相关。</p>
 <p>如何存储依赖于以下几个问题：</p>
 <ul>
@@ -119,13 +119,13 @@
     配合 <a href="http://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html">HDFS</a>。</p>
 </li>
 </ul>
-<h4>分析</h4>
+<h4 id="_4">分析</h4>
 <p>一旦日志已经存到一个中心化存储平台，就需要一种方式来分析日志。最常见的方式是定期执行一个面向批量处理的进程。如果日志是存储在 <a href="http://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html">HDFS</a> 中，
 那么 <a href="http://hive.apache.org/">Hive</a> 或 <a href="http://pig.apache.org/">Pig</a> 相比编写原生MapReduce任务，更易于帮助分析数据。</p>
 <p>如果需要一个用于分析的用户界面，可以将解析过的日志数据存到 <a href="http://elasticsearch.org/">ElasticSearch</a>，然后使用一个前端方案，如 <a href="http://kibana.org/">Kibana</a> 或
 <a href="http://www.graylog2.org/">Graylog2</a>来查询检查数据。日志解析可以通过 <a href="http://logstash.net/">Logstash</a> 或 <a href="https://github.com/mozilla-services/heka">Heka</a>来处理，
 应用程序也可以直接以JSON格式记录日志。这种方式允许更加实时、交互式的数据获取，但不适于大批量的处理。</p>
-<h4>告警</h4>
+<h4 id="_5">告警</h4>
 <p>最后一个组件，有时是可以锦上添花的 --- 针对日志模式或基于日志数据计算出来的度量指标进行告警。两种常见用法是：错误报告和监控。</p>
 <p>多数日志数据是无关紧要的，但错误日志则通常说明存在问题。让日志系统在问题发生时给相关人员发送邮件或通知，相比让某个人重复地监视事件，要高效得多。
 有几种服务组件可单独提供应用错误日志记录的功能，如 <a href="https://www.getsentry.com/">Sentry</a> 或 <a href="https://www.honeybadger.io/">HoneyBadger</a> 。这些服务也可以聚合重复的异常，

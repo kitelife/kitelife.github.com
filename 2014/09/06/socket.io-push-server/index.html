@@ -92,90 +92,87 @@
 <p><img alt="socket.io-push-server" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/socket.io-push-server.png" /></p>
 <p>当站点服务器(A)监测到资源数据更新事件发生时，先将数据推送到消息推送服务器(B)，B根据消息的类型以及消息的目标接收人来决定是否推送，如何推送。</p>
 <p>由于我们的Web后端是基于Yii框架实现，那么该如何实现A与B的socket.io服务通信呢？socket.io有自己的一套协议，如果自己实现PHP库来与socket.io服务交互，还有一些工作量。最终我们选择<a href="https://github.com/oncesk/elephant.io">elephant.io这个PHP库</a>，并将elephant.io封装为Yii框架的一个组件，实现如下：</p>
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<pre><code>:::php
+&lt;?php
 
-<span class="nv">$basePath</span> <span class="o">=</span> <span class="nx">Yii</span><span class="o">::</span><span class="na">getPathOfAlias</span><span class="p">(</span><span class="s1">&#39;application.vendor.elephantio.lib.ElephantIO&#39;</span><span class="p">);</span>
+$basePath = Yii::getPathOfAlias('application.vendor.elephantio.lib.ElephantIO');
 
-<span class="k">require_once</span><span class="p">(</span><span class="nv">$basePath</span> <span class="o">.</span> <span class="nx">DIRECTORY_SEPARATOR</span> <span class="o">.</span> <span class="s1">&#39;Client.php&#39;</span><span class="p">);</span>
-<span class="k">require_once</span><span class="p">(</span><span class="nv">$basePath</span> <span class="o">.</span> <span class="nx">DIRECTORY_SEPARATOR</span> <span class="o">.</span> <span class="s1">&#39;Payload.php&#39;</span><span class="p">);</span>
+require_once($basePath . DIRECTORY_SEPARATOR . 'Client.php');
+require_once($basePath . DIRECTORY_SEPARATOR . 'Payload.php');
 
-<span class="k">use</span> <span class="nx">ElephantIO\Client</span> <span class="k">as</span> <span class="nx">Elephant</span><span class="p">;</span>
+use ElephantIO\Client as Elephant;
 
-<span class="k">class</span> <span class="nc">extElephantIO</span> <span class="k">extends</span> <span class="nx">CApplicationComponent</span>
-<span class="p">{</span>
-    <span class="k">public</span> <span class="nv">$host</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
-    <span class="k">public</span> <span class="nv">$port</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
-    <span class="k">public</span> <span class="nv">$namespace</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
+class extElephantIO extends CApplicationComponent
+{
+    public $host = null;
+    public $port = null;
+    public $namespace = null;
 
-    <span class="k">private</span> <span class="nv">$elephant</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
-    <span class="k">private</span> <span class="nv">$ioNameSpace</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
+    private $elephant = null;
+    private $ioNameSpace = null;
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">init</span><span class="p">()</span>
-    <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">host</span> <span class="o">===</span> <span class="k">null</span> <span class="o">||</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">port</span> <span class="o">===</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
-            <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span><span class="p">(</span><span class="s1">&#39;%s: %s: %s, Please give me parameters host and port&#39;</span><span class="p">,</span> <span class="nb">basename</span><span class="p">(</span>
-                <span class="k">__FILE__</span>
-            <span class="p">),</span> <span class="nx">__FUNCTION__</span><span class="p">,</span> <span class="k">__LINE__</span><span class="p">);</span>
-        <span class="p">}</span>
+    public function init()
+    {
+        if ($this-&gt;host === null || $this-&gt;port === null) {
+            throw new Exception('%s: %s: %s, Please give me parameters host and port', basename(
+                __FILE__
+            ), __FUNCTION__, __LINE__);
+        }
 
-    <span class="p">}</span>
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">setNameSpace</span><span class="p">(</span><span class="nv">$nameSpace</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">elephant</span> <span class="o">===</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">elephant</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Elephant</span><span class="p">(</span><span class="s1">&#39;http://&#39;</span> <span class="o">.</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">host</span> <span class="o">.</span> <span class="s1">&#39;:&#39;</span>
-                <span class="o">.</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">port</span><span class="p">,</span> <span class="s1">&#39;socket.io&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="k">false</span><span class="p">,</span> <span class="k">true</span><span class="p">,</span> <span class="k">true</span><span class="p">);</span>
-            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">elephant</span><span class="o">-&gt;</span><span class="na">init</span><span class="p">();</span>
-        <span class="p">}</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">ioNameSpace</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">elephant</span><span class="o">-&gt;</span><span class="na">createFrame</span><span class="p">(</span><span class="k">null</span><span class="p">,</span> <span class="nv">$nameSpace</span><span class="p">);</span>
-    <span class="p">}</span>
+    public function setNameSpace($nameSpace)
+    {
+        if ($this-&gt;elephant === null) {
+            $this-&gt;elephant = new Elephant('http://' . $this-&gt;host . ':'
+                . $this-&gt;port, 'socket.io', 1, false, true, true);
+            $this-&gt;elephant-&gt;init();
+        }
+        $this-&gt;ioNameSpace = $this-&gt;elephant-&gt;createFrame(null, $nameSpace);
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">sendMsg</span><span class="p">(</span><span class="nv">$event</span><span class="p">,</span> <span class="nv">$msg</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">ioNameSpace</span> <span class="o">===</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
-            <span class="k">if</span> <span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">namespace</span> <span class="o">!==</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
-                <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">ioNameSpace</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">elephant</span><span class="o">-&gt;</span><span class="na">createFrame</span><span class="p">(</span><span class="k">null</span><span class="p">,</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">namespace</span><span class="p">);</span>
-            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-                <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span><span class="p">(</span><span class="s1">&#39;%s: %s: %s, Please setNameSpace before sendMsg&#39;</span><span class="p">,</span> <span class="nb">basename</span><span class="p">(</span>
-                    <span class="k">__FILE__</span>
-                <span class="p">),</span> <span class="nx">__FUNCTION__</span><span class="p">,</span> <span class="k">__LINE__</span><span class="p">);</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">ioNameSpace</span><span class="o">-&gt;</span><span class="na">emit</span><span class="p">(</span><span class="nv">$event</span><span class="p">,</span> <span class="nv">$msg</span><span class="p">);</span>
-    <span class="p">}</span>
+    public function sendMsg($event, $msg)
+    {
+        if ($this-&gt;ioNameSpace === null) {
+            if ($this-&gt;namespace !== null) {
+                $this-&gt;ioNameSpace = $this-&gt;elephant-&gt;createFrame(null, $this-&gt;namespace);
+            } else {
+                throw new Exception('%s: %s: %s, Please setNameSpace before sendMsg', basename(
+                    __FILE__
+                ), __FUNCTION__, __LINE__);
+            }
+        }
+        $this-&gt;ioNameSpace-&gt;emit($event, $msg);
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">close</span><span class="p">()</span>
-    <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">elephant</span><span class="o">-&gt;</span><span class="na">close</span><span class="p">();</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">elephant</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-
-
+    public function close()
+    {
+        $this-&gt;elephant-&gt;close();
+        $this-&gt;elephant = null;
+    }
+}
+</code></pre>
 <p>将该代码文件放在应用目录extensions下，然后为Yii添加如下配置项：</p>
-<div class="highlight"><pre><span class="x">&#39;components&#39; =&gt; array(</span>
-<span class="x">    &#39;ElephantIO&#39; =&gt; array(</span>
-<span class="x">        &#39;class&#39; =&gt; &#39;application.extensions.extElephantIO&#39;,</span>
-<span class="x">        &#39;host&#39; =&gt; &#39;xxx&#39;,</span>
-<span class="x">        &#39;port&#39; =&gt; xxx,</span>
-<span class="x">    ),</span>
-<span class="x">    ...</span>
-<span class="x">),</span>
-</pre></div>
-
-
+<pre><code>:::php
+'components' =&gt; array(
+    'ElephantIO' =&gt; array(
+        'class' =&gt; 'application.extensions.extElephantIO',
+        'host' =&gt; 'xxx',
+        'port' =&gt; xxx,
+    ),
+    ...
+),
+</code></pre>
 <p>当有资源数据变更事件产生时，如下调用向消息推送服务器发送消息：</p>
-<div class="highlight"><pre><span class="x">$elephant = Yii::app()-&gt;ElephantIO;</span>
-<span class="x">$elephant-&gt;setNameSpace(&#39;/message_namespace&#39;);</span>
-<span class="x">$elephant-&gt;sendMsg(</span>
-<span class="x">    &#39;message_event_type&#39;,</span>
-<span class="x">    $messageContent</span>
-<span class="x">);       </span>
-<span class="x">$elephant-&gt;close();</span>
-</pre></div>
-
-
+<pre><code>:::php
+$elephant = Yii::app()-&gt;ElephantIO;
+$elephant-&gt;setNameSpace('/message_namespace');
+$elephant-&gt;sendMsg(
+    'message_event_type',
+    $messageContent
+);       
+$elephant-&gt;close();
+</code></pre>
 <hr />
 <p>对于私有消息推送，如何判断用户当前是否在线？如何验证用户的身份？</p>
 <p>可以基于cookie来实现，socket.io提供的浏览器端JS库，在每次连接时，和普通HTTP请求一样，会携带站点域名下的cookie（我们的消息推送服务的域名为站点服务器域名的子域，所以能拿到站点域名下的所有cookie），消息推送服务器在接收到连接(connection事件)请求时，从连接中取出所有cookie，然后向站点Web后端的某个API转发这些cookie，这个API根据cookie验证用户身份，并将用户信息返回给消息推送服务器，消息推送服务器根据用户信息存储当前连接对象，之后当站点服务器向消息推送服务器发送该用户的消息时，就通过该连接对象给用户推送消息。</p>

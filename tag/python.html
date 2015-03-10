@@ -90,7 +90,8 @@
 <ul>
 <li>
 <p>easy_install</p>
-<div class="highlight"><pre><span class="n">easy_install</span> <span class="o">-</span><span class="n">i</span> <span class="n">http</span><span class="o">:</span><span class="c1">//e.pypi.python.org/simple requests ...</span></pre></div></li></ul> </div><!-- /.entry-content -->
+<pre><code>:::shell
+easy_install -i http://e.pypi.python.org/simple ...</code></pre></li></ul> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2013/11/01/change-pypi-mirror/" rel="bookmark" title="Permalink to 修改PyPI源">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -138,7 +139,7 @@
 <li>定期code review</li>
 </ol>
 <p>为了解决上述问题，我陆续地做了如下工作：</p>
-<h3>搭建Gitlab服务器、测试服务器</h3>
+<h3 id="gitlab">搭建Gitlab服务器、测试服务器</h3>
 <p>个人认为开发工作规范化的第一点就是版本控制，基于版本控制可以完成很多自动化的任务。</p>
 <p>平时个人的代码、文档都通过Git版本控制存放在Github上 ...</p> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2013/10/15/standardization-operation-development/" rel="bookmark" title="Permalink to 运营开发规范化">Read more <i class="icon-arrow-right"></i></a></div>
@@ -168,24 +169,24 @@
 说是可执行的伪代码。</p>
 <p>非常欢迎反馈！你可以通过推特<a href="https://twitter.com/louiedinh">@louiedinh</a>或louiedinh AT gmail联系我。</p>
 <p>备注：本文是专门针对Python 2.7的，但应该是适用于Python 2.x的。很快我也会为Python 3写这样的一篇文章！</p>
-<div class="highlight"><pre><span class="c"># 单行注释以井字符开头</span>
-<span class="sd">&quot;&quot;&quot; 我们可以使用三个双引号（&quot;）或单引号（&#39;）</span>
-<span class="sd">    来编写多行注释</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<pre><code>:::python
+# 单行注释以井字符开头
+""" 我们可以使用三个双引号（"）或单引号（'）
+    来编写多行注释
+"""
 
 
-<span class="c">##########################################################</span>
-<span class="c">## 1. 基本数据类型和操作符</span>
-<span class="c">##########################################################</span>
+##########################################################
+## 1. 基本数据类型和操作符
+##########################################################
 
-<span class="c"># 数字</span>
-<span class="mi">3</span> <span class="c">#=&gt; 3</span>
+# 数字
+3 #=&gt; 3
 
-<span class="c"># 你预想的数学运算</span>
-<span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span> <span class="c">#=&gt; 2</span>
-<span class="mi">8</span> <span class="o">-</span> <span class="mi">1</span> <span class="c">#=&gt; 7</span>
-<span class="mi">10</span> <span class="o">*</span> <span class="mi">2</span> <span class="c">#=&gt; 20</span>
-<span class="mi">35 ...</span></pre></div> </div><!-- /.entry-content -->
+# 你预想的数学运算
+1 + 1 #=&gt; 2
+8 - 1 #=&gt; 7
+10 * 2 #=&gt; 20 ...</code></pre> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2013/06/29/learn-python-in-y-minutes/" rel="bookmark" title="Permalink to Y分钟学会Python（译）">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -234,19 +235,18 @@
                 <div class="entry-content"> <p>原文：<a href="http://pymotw.com/2/argparse/">argparse – Command line option and argument parsing</a></p>
 <p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
 <p>argparse模块作为optparse的一个替代被添加到Python2.7。argparse的实现支持一些不易于添加到optparse以及要求向后不兼容API变化的特性，因此以一个新模块添加到标准库。</p>
-<h3>与optparse相比较</h3>
+<h3 id="optparse">与optparse相比较</h3>
 <p>argparse的API类似于optparse，甚至在很多情况下通过更新所使用的类名和方法名，使用argparse作为一个简单的替代。然而，有些地方在添加新特性时不能保持直接兼容性。</p>
 <p>你必须视情况决定是否升级已有的程序。如果你已编写了额外的代码以弥补optparse的局限，也许你想升级程序以减少你需要维护的代码量。若argparse在所有部署平台上都可用，那么新的程序应尽可能使用argparse。</p>
-<h3>设置一个解析器</h3>
+<h3 id="_1">设置一个解析器</h3>
 <p>使用argparse的第一步就是创建一个解析器对象，并告诉它将会有些什么参数。那么当你的程序运行时，该解析器就可以用于处理命令行参数。</p>
 <p>解析器类是 <strong>ArgumentParser</strong> 。构造方法接收几个参数来设置用于程序帮助文本的描述信息以及其他全局的行为或设置。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
-<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s">&#39;This is a PyMOTW sample program&#39;</span><span class="p">)</span>
-</pre></div>
-
-
-<h3>定义参数</h3>
-<p>argparse是一个全面的参数处理库。参数可以触发不同的动作，动作由 <strong>add_argument ...</strong></p> </div><!-- /.entry-content -->
+<pre><code>:::python
+import argparse
+parser = argparse.ArgumentParser(description='This is a PyMOTW sample program')
+</code></pre>
+<h3 id="_2">定义参数</h3>
+<p>argparse是一个全面的参数处理库。参数可以触发不同的动作，动作由 ...</p> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2013/03/30/argparse/" rel="bookmark" title="Permalink to argparse - 命令行选项与参数解析（译）">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -268,22 +268,17 @@
                 <div class="entry-content"> <p>以前在遇到这个问题时，都是偷懒使用<code>sudo apt-get install python-lxml</code>（Debian系的Linux发行版）直接安装已打包好的deb包。但一方面这样安装的不是最新的库，另一方面我希望把所有的Python第三方库都限制在virtualenv中使用，所以希望使用<code>pip install lxml</code>，那么这个问题就必须解决了。</p>
 <p>Google了一把，在<a href="http://stackoverflow.com/questions/5178416/pip-install-lxml-error">这里</a>找到了解答。</p>
 <p>其实在编译失败的log里，已经有提示：</p>
-<div class="highlight"><pre>make sure the development packages of libxml2 and libxslt are installed
-</pre></div>
-
-
+<pre><code>:::text
+make sure the development packages of libxml2 and libxslt are installed
+</code></pre>
 <p>所以正确编译需先安装libxml2和libxslt这两个包。</p>
-<div class="highlight"><pre>sudo apt-get install libxml2
+<pre><code>:::bash
+sudo apt-get install libxml2
 sudo apt-get install libxslt
-</pre></div>
-
-
+</code></pre>
 <p>另外，还需安装Python开发包python-dev：</p>
-<div class="highlight"><pre>sudo apt-get install python-dev
-</pre></div>
-
-
-<p>OK，再执行<code>pip ...</code></p> </div><!-- /.entry-content -->
+<pre><code>:::bash
+sudo apt-get install python-dev ...</code></pre> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2013/03/17/pip-install-lxml-problem/" rel="bookmark" title="Permalink to pip install lxml编译失败问题解决">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -305,7 +300,7 @@ sudo apt-get install libxslt
 <p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
 <p>每次使用Python的格式字符串（string formatter），2.7及以上版本的，我都会犯错，并且有生之年，我想我都理解不了它们的文档。我非常习惯于更老的
 <code>%</code> 方法。所以着手编写自己的格式字符串手册。若你有一些其他好的示例请告知我。</p>
-<h2>格式字符串手册</h2>
+<h2 id="_1">格式字符串手册</h2>
 <p><strong>数字格式化</strong></p>
 <p>下面的表格展示了使用Python的后起新秀str.format()格式化数字的多种方法，包含浮点数格式化与整数格式化示例。可使用
 <code>print("FORMAT".format(NUMBER));</code> 来运行示例，因此你可以运行：
@@ -382,78 +377,78 @@ gifs based on Super Mario Bros in Python.</p>
 <h4>标签</h4>
 	<ul>
 	    <li class="tag-4"><a href="../tag/liu-lan-qi-jian-rong.html">浏览器兼容</a></li>
-	    <li class="tag-3"><a href="../tag/mysql.html">MySQL</a></li>
-	    <li class="tag-3"><a href="../tag/ming-ling-xing.html">命令行</a></li>
-	    <li class="tag-3"><a href="../tag/fu-zai-jun-heng.html">负载均衡</a></li>
-	    <li class="tag-1"><a href="../tag/zong-jie.html">总结</a></li>
-	    <li class="tag-4"><a href="../tag/cordova.html">Cordova</a></li>
-	    <li class="tag-4"><a href="../tag/restful.html">RESTful</a></li>
-	    <li class="tag-3"><a href="../tag/suan-fa.html">算法</a></li>
-	    <li class="tag-4"><a href="../tag/ying-yu.html">英语</a></li>
-	    <li class="tag-4"><a href="../tag/css.html">CSS</a></li>
-	    <li class="tag-4"><a href="../tag/cc.html">C/C++</a></li>
-	    <li class="tag-4"><a href="../tag/haproxyconsole.html">HAProxyConsole</a></li>
-	    <li class="tag-1"><a href="../tag/python.html">Python</a></li>
+	    <li class="tag-3"><a href="../tag/mian-shi.html">面试</a></li>
+	    <li class="tag-4"><a href="../tag/wen-zi.html">文字</a></li>
+	    <li class="tag-4"><a href="../tag/api.html">API</a></li>
+	    <li class="tag-4"><a href="../tag/bing-xing.html">并行</a></li>
+	    <li class="tag-4"><a href="../tag/dns.html">DNS</a></li>
+	    <li class="tag-4"><a href="../tag/jekyll.html">jekyll</a></li>
+	    <li class="tag-4"><a href="../tag/ming-ling.html">命令</a></li>
 	    <li class="tag-4"><a href="../tag/python-weekly.html">python-weekly</a></li>
+	    <li class="tag-4"><a href="../tag/pypi.html">PyPI</a></li>
+	    <li class="tag-4"><a href="../tag/teng-xun.html">腾讯</a></li>
+	    <li class="tag-4"><a href="../tag/rest.html">REST</a></li>
+	    <li class="tag-3"><a href="../tag/suan-fa.html">算法</a></li>
+	    <li class="tag-4"><a href="../tag/pip.html">pip</a></li>
+	    <li class="tag-2"><a href="../tag/golang.html">Golang</a></li>
 	    <li class="tag-3"><a href="../tag/gong-zuo.html">工作</a></li>
-	    <li class="tag-4"><a href="../tag/vmware.html">VMware</a></li>
-	    <li class="tag-3"><a href="../tag/xue-xi-fang-fa.html">学习方法</a></li>
-	    <li class="tag-3"><a href="../tag/nginx.html">Nginx</a></li>
-	    <li class="tag-4"><a href="../tag/zi-sheng.html">自省</a></li>
-	    <li class="tag-4"><a href="../tag/ban-ben-kong-zhi.html">版本控制</a></li>
+	    <li class="tag-4"><a href="../tag/ying-yu.html">英语</a></li>
 	    <li class="tag-4"><a href="../tag/rong-liang-gui-hua.html">容量规划</a></li>
 	    <li class="tag-3"><a href="../tag/keepalived.html">Keepalived</a></li>
-	    <li class="tag-4"><a href="../tag/sheng-huo.html">生活</a></li>
-	    <li class="tag-1"><a href="../tag/php.html">PHP</a></li>
-	    <li class="tag-3"><a href="../tag/mian-shi.html">面试</a></li>
-	    <li class="tag-4"><a href="../tag/xiao-xi-tui-song.html">消息推送</a></li>
-	    <li class="tag-2"><a href="../tag/javascript.html">JavaScript</a></li>
-	    <li class="tag-4"><a href="../tag/teng-xun.html">腾讯</a></li>
-	    <li class="tag-3"><a href="../tag/haproxy.html">HAProxy</a></li>
-	    <li class="tag-4"><a href="../tag/pip.html">pip</a></li>
-	    <li class="tag-4"><a href="../tag/jekyll.html">jekyll</a></li>
-	    <li class="tag-2"><a href="../tag/yii.html">Yii</a></li>
-	    <li class="tag-4"><a href="../tag/dns.html">DNS</a></li>
-	    <li class="tag-2"><a href="../tag/shell.html">Shell</a></li>
-	    <li class="tag-4"><a href="../tag/ssl.html">ssl</a></li>
-	    <li class="tag-4"><a href="../tag/li-lun.html">理论</a></li>
-	    <li class="tag-4"><a href="../tag/zi-ti.html">字体</a></li>
-	    <li class="tag-3"><a href="../tag/shi-ge.html">诗歌</a></li>
-	    <li class="tag-4"><a href="../tag/windows.html">Windows</a></li>
-	    <li class="tag-4"><a href="../tag/rest.html">REST</a></li>
-	    <li class="tag-3"><a href="../tag/bi-shi.html">笔试</a></li>
-	    <li class="tag-3"><a href="../tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
-	    <li class="tag-2"><a href="../tag/golang.html">Golang</a></li>
-	    <li class="tag-4"><a href="../tag/yan-jiang.html">演讲</a></li>
-	    <li class="tag-4"><a href="../tag/bind.html">BIND</a></li>
-	    <li class="tag-1"><a href="../tag/bi-ji.html">笔记</a></li>
-	    <li class="tag-3"><a href="../tag/yue-du.html">阅读</a></li>
-	    <li class="tag-2"><a href="../tag/git.html">Git</a></li>
-	    <li class="tag-4"><a href="../tag/phonegap.html">Phonegap</a></li>
-	    <li class="tag-1"><a href="../tag/linux.html">Linux</a></li>
-	    <li class="tag-4"><a href="../tag/bing-xing.html">并行</a></li>
-	    <li class="tag-4"><a href="../tag/zhong-jian-jian.html">中间件</a></li>
-	    <li class="tag-4"><a href="../tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
-	    <li class="tag-2"><a href="../tag/fu-wu-qi.html">服务器</a></li>
-	    <li class="tag-3"><a href="../tag/jia-gou.html">架构</a></li>
-	    <li class="tag-1"><a href="../tag/fan-yi.html">翻译</a></li>
-	    <li class="tag-4"><a href="../tag/ri-zhi.html">日志</a></li>
-	    <li class="tag-4"><a href="../tag/github.html">github</a></li>
-	    <li class="tag-4"><a href="../tag/wei-bo.html">微博</a></li>
-	    <li class="tag-4"><a href="../tag/ming-ling.html">命令</a></li>
-	    <li class="tag-4"><a href="../tag/api.html">API</a></li>
 	    <li class="tag-4"><a href="../tag/gao-ke-yong.html">高可用</a></li>
-	    <li class="tag-4"><a href="../tag/socketio.html">socket.io</a></li>
-	    <li class="tag-4"><a href="../tag/easy_install.html">easy_install</a></li>
-	    <li class="tag-4"><a href="../tag/pypi.html">PyPI</a></li>
-	    <li class="tag-3"><a href="../tag/gong-ju.html">工具</a></li>
-	    <li class="tag-4"><a href="../tag/template.html">template</a></li>
-	    <li class="tag-4"><a href="../tag/wen-zi.html">文字</a></li>
-	    <li class="tag-3"><a href="../tag/wei-xin.html">微信</a></li>
-	    <li class="tag-4"><a href="../tag/shu-ju-ku.html">数据库</a></li>
-	    <li class="tag-2"><a href="../tag/ji-zhu.html">技术</a></li>
+	    <li class="tag-4"><a href="../tag/css.html">CSS</a></li>
+	    <li class="tag-3"><a href="../tag/ming-ling-xing.html">命令行</a></li>
+	    <li class="tag-4"><a href="../tag/ri-zhi.html">日志</a></li>
 	    <li class="tag-4"><a href="../tag/diao-shi.html">调试</a></li>
+	    <li class="tag-2"><a href="../tag/fu-wu-qi.html">服务器</a></li>
+	    <li class="tag-3"><a href="../tag/gong-ju.html">工具</a></li>
+	    <li class="tag-3"><a href="../tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
+	    <li class="tag-4"><a href="../tag/zi-ti.html">字体</a></li>
+	    <li class="tag-2"><a href="../tag/javascript.html">JavaScript</a></li>
+	    <li class="tag-1"><a href="../tag/fan-yi.html">翻译</a></li>
+	    <li class="tag-3"><a href="../tag/wei-xin.html">微信</a></li>
+	    <li class="tag-2"><a href="../tag/git.html">Git</a></li>
+	    <li class="tag-4"><a href="../tag/github.html">github</a></li>
+	    <li class="tag-4"><a href="../tag/windows.html">Windows</a></li>
+	    <li class="tag-4"><a href="../tag/phonegap.html">Phonegap</a></li>
+	    <li class="tag-4"><a href="../tag/restful.html">RESTful</a></li>
+	    <li class="tag-4"><a href="../tag/cc.html">C/C++</a></li>
+	    <li class="tag-1"><a href="../tag/zong-jie.html">总结</a></li>
+	    <li class="tag-4"><a href="../tag/yan-jiang.html">演讲</a></li>
+	    <li class="tag-3"><a href="../tag/nginx.html">Nginx</a></li>
+	    <li class="tag-4"><a href="../tag/xiao-xi-tui-song.html">消息推送</a></li>
+	    <li class="tag-4"><a href="../tag/wei-bo.html">微博</a></li>
+	    <li class="tag-4"><a href="../tag/easy_install.html">easy_install</a></li>
+	    <li class="tag-4"><a href="../tag/shu-ju-ku.html">数据库</a></li>
 	    <li class="tag-4"><a href="../tag/gan-wu.html">感悟</a></li>
+	    <li class="tag-4"><a href="../tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
+	    <li class="tag-4"><a href="../tag/socketio.html">socket.io</a></li>
+	    <li class="tag-2"><a href="../tag/yii.html">Yii</a></li>
+	    <li class="tag-3"><a href="../tag/haproxy.html">HAProxy</a></li>
+	    <li class="tag-3"><a href="../tag/yue-du.html">阅读</a></li>
+	    <li class="tag-1"><a href="../tag/python.html">Python</a></li>
+	    <li class="tag-3"><a href="../tag/mysql.html">MySQL</a></li>
+	    <li class="tag-1"><a href="../tag/bi-ji.html">笔记</a></li>
+	    <li class="tag-4"><a href="../tag/haproxyconsole.html">HAProxyConsole</a></li>
+	    <li class="tag-4"><a href="../tag/vmware.html">VMware</a></li>
+	    <li class="tag-4"><a href="../tag/ssl.html">ssl</a></li>
+	    <li class="tag-3"><a href="../tag/jia-gou.html">架构</a></li>
+	    <li class="tag-4"><a href="../tag/ban-ben-kong-zhi.html">版本控制</a></li>
+	    <li class="tag-3"><a href="../tag/xue-xi-fang-fa.html">学习方法</a></li>
+	    <li class="tag-3"><a href="../tag/shi-ge.html">诗歌</a></li>
+	    <li class="tag-3"><a href="../tag/fu-zai-jun-heng.html">负载均衡</a></li>
+	    <li class="tag-4"><a href="../tag/template.html">template</a></li>
+	    <li class="tag-2"><a href="../tag/ji-zhu.html">技术</a></li>
+	    <li class="tag-2"><a href="../tag/shell.html">Shell</a></li>
+	    <li class="tag-1"><a href="../tag/php.html">PHP</a></li>
+	    <li class="tag-4"><a href="../tag/sheng-huo.html">生活</a></li>
+	    <li class="tag-3"><a href="../tag/bi-shi.html">笔试</a></li>
+	    <li class="tag-1"><a href="../tag/linux.html">Linux</a></li>
+	    <li class="tag-4"><a href="../tag/li-lun.html">理论</a></li>
+	    <li class="tag-4"><a href="../tag/cordova.html">Cordova</a></li>
+	    <li class="tag-4"><a href="../tag/bind.html">BIND</a></li>
+	    <li class="tag-4"><a href="../tag/zhong-jian-jian.html">中间件</a></li>
+	    <li class="tag-4"><a href="../tag/zi-sheng.html">自省</a></li>
 </ul>
 
 <!--

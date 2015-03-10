@@ -102,50 +102,49 @@
 <p>大量生成属于正方形里的随机点(x, y)，并统计属于内切圆范围内的点的出现次数，当次数达到一定量级之后，属于内切圆范围内的点的数目与随机点的总数目的比即为$ \frac{ S_y }{ S_z } $的近似值，再乘以4即为pi的近似值。</p>
 <p>并且由于任意两个随机数的生成是相互独立的，所以可以使用多个进程/线程/多个计算机来分别计算一定量的随机数，然后把它们计算所得属于内切圆范围的点的数目相加，再根据公式计算pi值。</p>
 <p>假设r的值为单位1，则程序实现如下：</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">random</span>
-<span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">import</span> <span class="nn">threading</span>
+<pre><code>:::python
+import random
+import math
+import threading
 
-<span class="k">def</span> <span class="nf">worker</span><span class="p">(</span><span class="n">taskNum</span><span class="p">):</span>
-    <span class="c"># set r = 1</span>
-    <span class="k">global</span> <span class="n">allcount</span><span class="p">,</span> <span class="n">mutex</span>
-    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+def worker(taskNum):
+    # set r = 1
+    global allcount, mutex
+    count = 0
 
-    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">taskNum</span><span class="p">):</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">&lt;=</span><span class="mi">1</span><span class="p">:</span>
-            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
-    <span class="n">mutex</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
-    <span class="n">allcount</span> <span class="o">+=</span> <span class="n">count</span>
-    <span class="n">mutex</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+    for _ in xrange(taskNum):
+        x = random.uniform(-1, 1)
+        y = random.uniform(-1, 1)
+        if math.sqrt(x**2 + y**2)&lt;=1:
+            count += 1
+    mutex.acquire()
+    allcount += count
+    mutex.release()
 
-<span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">task_all_num</span><span class="p">,</span> <span class="n">worker_num</span><span class="p">):</span>
-    <span class="k">global</span> <span class="n">allcount</span><span class="p">,</span> <span class="n">mutex</span>
-    <span class="n">threads</span> <span class="o">=</span> <span class="p">[]</span>
+def main(task_all_num, worker_num):
+    global allcount, mutex
+    threads = []
 
-    <span class="n">allcount</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">mutex</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
-    <span class="n">task_num</span> <span class="o">=</span> <span class="n">task_all_num</span> <span class="o">/</span> <span class="n">worker_num</span>
-    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">worker_num</span><span class="p">):</span>
-        <span class="n">threads</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">worker</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">task_num</span><span class="p">,)))</span>
+    allcount = 0
+    mutex = threading.Lock()
+    task_num = task_all_num / worker_num
+    for _ in xrange(0, worker_num):
+        threads.append(threading.Thread(target=worker, args=(task_num,)))
 
-    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">threads</span><span class="p">:</span>
-        <span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    for t in threads:
+        t.start()
 
-    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">threads</span><span class="p">:</span>
-        <span class="n">t</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+    for t in threads:
+        t.join()
 
-    <span class="k">print</span> <span class="s">&#39;pi: &#39;</span><span class="p">,</span> <span class="mf">4.0</span> <span class="o">*</span> <span class="n">allcount</span> <span class="o">/</span> <span class="n">task_all_num</span>
+    print 'pi: ', 4.0 * allcount / task_all_num
 
-<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+if __name__ == '__main__':
 
-    <span class="n">TASKALLNUM</span> <span class="o">=</span> <span class="mi">40000000</span>
-    <span class="n">WORKERNUM</span> <span class="o">=</span> <span class="mi">40</span>
-    <span class="n">main</span><span class="p">(</span><span class="n">TASKALLNUM</span><span class="p">,</span> <span class="n">WORKERNUM</span><span class="p">)</span>
-</pre></div>
-
-
+    TASKALLNUM = 40000000
+    WORKERNUM = 40
+    main(TASKALLNUM, WORKERNUM)
+</code></pre>
 <p>程序总共计算4千万次随机数，使用40个线程，计算得pi近似值为3.141298，由于是基于概率的，所以每次计算所得值会有差异，并且理论上来说随机数生成总次数越大，越精确。</p>
             </div><!-- /.entry-content -->
             <div class="comments">

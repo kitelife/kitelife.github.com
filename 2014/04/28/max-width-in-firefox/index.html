@@ -80,12 +80,11 @@
 右边栏去掉，这导致在Firefox等浏览器中，正文中大的图片会突破正文块的宽度，高度也得不到限制，显示效果非常差。</p>
 <p>其原因是：Markdown的<a href="http://wowubuntu.com/markdown/#img">图片区块元素</a><code>![Alt
 text](/path/to/img.jpg)</code>渲染成HTML元素的结果为 -</p>
-<div class="highlight"><pre><span class="nt">&lt;p&gt;</span>
-    <span class="nt">&lt;img</span> <span class="na">src=</span><span class="s">&quot;/path/to/img.jpg&quot;</span> <span class="na">alt=</span><span class="s">&quot;Alt text&quot;</span><span class="nt">&gt;&lt;/img&gt;</span>
-<span class="nt">&lt;/p&gt;</span>
-</pre></div>
-
-
+<pre><code>:::html
+&lt;p&gt;
+    &lt;img src="/path/to/img.jpg" alt="Alt text"&gt;&lt;/img&gt;
+&lt;/p&gt;
+</code></pre>
 <p><code>&lt;p&gt;</code>元素内的元素是行内(inline)元素。主题my-gum使用的CSS框架<a href="http://gumbyframework.com/">gumby</a>对img元素是使用<code>max-width:
 100%</code>将图片的最大宽度限制为父元素的宽度。但<a href="https://developer.mozilla.org/en-US/docs/Web/CSS/max-width">在Firefox中max-width对于行内元素并不会生效(all elements but non-replaced 
 inline elements, table rows, and row
@@ -97,19 +96,18 @@ groups)</a>，所以造成了显示问题。</p>
 <p>我的想法是：既然使用CSS不能解决这个问题，那就尝试使用Javascript。当图片加载完毕后，将图片宽度与正文宽度做比较，如果
 图片宽度大于正文宽度，则为该图片设置<code>width: 100%</code>。唯一不完美的地方是某些大图片加载完毕之前的宽度很大，比较难看。</p>
 <p>代码如下所示：</p>
-<div class="highlight"><pre><span class="nx">$</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">entryContentWidth</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;.row&#39;</span><span class="p">).</span><span class="nx">width</span><span class="p">();</span>
+<pre><code>:::javascript
+$(function() {
+    var entryContentWidth = $('.row').width();
 
-    <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;.entry-content img&#39;</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;load&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
-        <span class="k">if</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">width</span><span class="p">()</span> <span class="o">&gt;</span> <span class="nx">entryContentWidth</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">width</span><span class="p">(</span><span class="s1">&#39;100%&#39;</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">});</span>
-<span class="p">});</span>
-</pre></div>
-
-
-<h3>参考资料</h3>
+    $('.entry-content img').on('load', function(){
+        if($(this).width() &gt; entryContentWidth) {
+            $(this).width('100%');
+        }
+    });
+});
+</code></pre>
+<h3 id="_1">参考资料</h3>
 <ul>
 <li><a href="http://stackoverflow.com/questions/14550356/image-mysteriously-ignoring-max-width-in-firefox-ie">Image mysteriously ignoring max-width in Firefox &amp; IE</a></li>
 <li><a href="http://stackoverflow.com/questions/2789727/is-p-a-block-level-or-inline-level-element">is &lt;p> a block-level or inline-level element?</a></li>

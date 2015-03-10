@@ -81,395 +81,394 @@
 说是可执行的伪代码。</p>
 <p>非常欢迎反馈！你可以通过推特<a href="https://twitter.com/louiedinh">@louiedinh</a>或louiedinh AT gmail联系我。</p>
 <p>备注：本文是专门针对Python 2.7的，但应该是适用于Python 2.x的。很快我也会为Python 3写这样的一篇文章！</p>
-<div class="highlight"><pre><span class="c"># 单行注释以井字符开头</span>
-<span class="sd">&quot;&quot;&quot; 我们可以使用三个双引号（&quot;）或单引号（&#39;）</span>
-<span class="sd">    来编写多行注释</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<pre><code>:::python
+# 单行注释以井字符开头
+""" 我们可以使用三个双引号（"）或单引号（'）
+    来编写多行注释
+"""
 
 
-<span class="c">##########################################################</span>
-<span class="c">## 1. 基本数据类型和操作符</span>
-<span class="c">##########################################################</span>
+##########################################################
+## 1. 基本数据类型和操作符
+##########################################################
 
-<span class="c"># 数字</span>
-<span class="mi">3</span> <span class="c">#=&gt; 3</span>
-
-<span class="c"># 你预想的数学运算</span>
-<span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span> <span class="c">#=&gt; 2</span>
-<span class="mi">8</span> <span class="o">-</span> <span class="mi">1</span> <span class="c">#=&gt; 7</span>
-<span class="mi">10</span> <span class="o">*</span> <span class="mi">2</span> <span class="c">#=&gt; 20</span>
-<span class="mi">35</span> <span class="o">/</span> <span class="mi">5</span> <span class="c">#=&gt; 7</span>
-
-<span class="c"># 除法略显诡异。整数相除会自动向下取小于结果的最大整数</span>
-<span class="mi">11</span> <span class="o">/</span> <span class="mi">4</span> <span class="c">#=&gt; 2</span>
-
-<span class="c"># 还有浮点数和浮点数除法（译注：除数和被除数两者至少一个为浮点数，结果才会是浮点数）</span>
-<span class="mf">2.0</span>     <span class="c"># 这是一个浮点数</span>
-<span class="mf">5.0</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="c">#=&gt; 2.5 额...语法更明确一些</span>
-
-<span class="c"># 使用括号来强制优先级</span>
-<span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span> <span class="c">#=&gt; 8</span>
-
-
-<span class="c"># 布尔值也是基本类型数据</span>
-<span class="bp">True</span>
-<span class="bp">False</span>
-
-<span class="c"># 使用not来求反</span>
-<span class="ow">not</span> <span class="bp">True</span> <span class="c">#=&gt; False</span>
-<span class="ow">not</span> <span class="bp">False</span> <span class="c">#=&gt; True</span>
-
-<span class="c"># 相等比较使用==</span>
-<span class="mi">1</span> <span class="o">==</span> <span class="mi">1</span> <span class="c">#=&gt; True</span>
-<span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span> <span class="c">#=&gt; False</span>
-
-<span class="c"># 不相等比较使用!=</span>
-<span class="mi">1</span> <span class="o">!=</span> <span class="mi">1</span> <span class="c">#=&gt; False</span>
-<span class="mi">2</span> <span class="o">!=</span> <span class="mi">1</span> <span class="c">#=&gt; True</span>
-
-<span class="c"># 更多的比较方式</span>
-<span class="mi">1</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="c">#=&gt; True</span>
-<span class="mi">1</span> <span class="o">&gt;</span> <span class="mi">10</span> <span class="c">#=&gt; False</span>
-<span class="mi">2</span> <span class="o">&lt;=</span> <span class="mi">2</span> <span class="c">#=&gt; True</span>
-<span class="mi">2</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="c">#=&gt; True</span>
-
-<span class="c"># 比较操作可以串接！</span>
-<span class="mi">1</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="o">&lt;</span> <span class="mi">3</span> <span class="c">#=&gt; True</span>
-<span class="mi">2</span> <span class="o">&lt;</span> <span class="mi">3</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="c">#=&gt; False</span>
-
-<span class="c"># 可以使用&quot;或&#39;创建字符串</span>
-<span class="s">&quot;This is a string.&quot;</span>
-<span class="s">&#39;This is also a string.&#39;</span>
-
-<span class="c"># 字符串也可以相加！</span>
-<span class="s">&quot;Hello &quot;</span> <span class="o">+</span> <span class="s">&quot;world!&quot;</span> <span class="c">#=&gt; &quot;Hello world!&quot;</span>
-
-<span class="c"># 字符串可以看作是一个字符列表</span>
-<span class="s">&quot;This is a string&quot;</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c">#=&gt; &#39;T&#39;</span>
-
-<span class="c"># None是一个对象</span>
-<span class="bp">None</span> <span class="c">#=&gt; None</span>
-
-
-<span class="c">####################################################</span>
-<span class="c">## 2. 变量与数据容器</span>
-<span class="c">####################################################</span>
-
-<span class="c"># 打印输出非常简单</span>
-<span class="k">print</span> <span class="s">&quot;I&#39;m Python. Nice to meet you!&quot;</span>
-
-<span class="c"># 赋值之前不需要声明变量</span>
-<span class="n">some_var</span> <span class="o">=</span> <span class="mi">5</span>    <span class="c"># 约定使用 小写_字母_和_下划线 的命名方式</span>
-<span class="n">some_var</span> <span class="c">#=&gt; 5</span>
-
-<span class="c"># 访问之前未赋值的变量会产生一个异常</span>
-<span class="k">try</span><span class="p">:</span>
-    <span class="n">some_other_var</span>
-<span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
-    <span class="k">print</span> <span class="s">&quot;Raises a name error&quot;</span>
-
-<span class="c"># 赋值时可以使用条件表达式</span>
-<span class="n">some_var</span> <span class="o">=</span> <span class="n">a</span> <span class="k">if</span> <span class="n">a</span> <span class="o">&gt;</span> <span class="n">b</span> <span class="k">else</span> <span class="n">b</span>
-<span class="c"># 如果a大于b，则将a赋给some_var，</span>
-<span class="c"># 否则将b赋给some_var</span>
-
-<span class="c"># 列表用于存储数据序列</span>
-<span class="n">li</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="c"># 你可以一个预先填充的列表开始</span>
-<span class="n">other_li</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]</span>
-
-<span class="c"># 使用append将数据添加到列表的末尾</span>
-<span class="n">li</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>    <span class="c">#li现在为[1]</span>
-<span class="n">li</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>    <span class="c">#li现在为[1, 2]</span>
-<span class="n">li</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>    <span class="c">#li现在为[1, 2, 4]</span>
-<span class="n">li</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>    <span class="c">#li现在为[1, 2, 4, 3]</span>
-
-<span class="c"># 使用pop从列表末尾删除数据</span>
-<span class="n">li</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>    <span class="c">#=&gt; 3，li现在为[1, 2, 4]</span>
-<span class="c"># 把刚刚删除的数据存回来</span>
-<span class="n">li</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>    <span class="c"># 现在li再一次为[1, 2, 4, 3]</span>
-
-<span class="c"># 像访问数组一样访问列表</span>
-<span class="n">li</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c">#=&gt; 1</span>
-<span class="c"># 看看最后一个元素</span>
-<span class="n">li</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="c">#=&gt; 3</span>
-
-<span class="c"># 越界访问会产生一个IndexError</span>
-<span class="k">try</span><span class="p">:</span>
-    <span class="n">li</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="c"># 抛出一个IndexError异常</span>
-<span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
-    <span class="k">print</span> <span class="s">&quot;Raises an IndexError&quot;</span>
-
-<span class="c"># 可以通过分片(slice)语法来查看列表中某个区间的数据</span>
-<span class="c"># 以数学角度来说，这是一个闭合/开放区间</span>
-<span class="n">li</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="c">#=&gt; [2, 4]</span>
-<span class="c"># 省略结束位置</span>
-<span class="n">li</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="c">#=&gt; [4, 3]</span>
-<span class="c"># 省略开始位置</span>
-<span class="n">li</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span> <span class="c">#=&gt; [1, 2, 4]</span>
-
-<span class="c"># 使用del从列表中删除任意元素</span>
-<span class="k">del</span> <span class="n">li</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="c">#li现在为[1, 2, 3]</span>
-
-<span class="c"># 列表可以相加</span>
-<span class="n">li</span> <span class="o">+</span> <span class="n">other_li</span> <span class="c">#=&gt; [1, 3, 3, 4, 5, 6] - 注意：li和other_li并未改变</span>
-
-<span class="c"># 以extend来连结列表</span>
-<span class="n">li</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">other_li</span><span class="p">)</span> <span class="c"># 现在li为[1, 2, 3, 4, 5, 6]</span>
-
-<span class="c"># 以in来检测列表中是否存在某元素</span>
-<span class="mi">1</span> <span class="ow">in</span> <span class="n">li</span> <span class="c">#=&gt; True</span>
-
-<span class="c"># 以len函数来检测列表长度</span>
-<span class="nb">len</span><span class="p">(</span><span class="n">li</span><span class="p">)</span> <span class="c">#=&gt; 6</span>
-
-<span class="c"># 元组类似列表，但不可变</span>
-<span class="n">tup</span>  <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-<span class="n">tup</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c">#=&gt; 1</span>
-<span class="k">try</span><span class="p">:</span>
-    <span class="n">tup</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span> <span class="c"># 抛出一个TypeError异常</span>
-<span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-    <span class="k">print</span> <span class="s">&quot;Tuples cannot be mutated.&quot;</span>
-
-<span class="c"># 可以在元组上使用和列表一样的操作</span>
-<span class="nb">len</span><span class="p">(</span><span class="n">tup</span><span class="p">)</span> <span class="c">#=&gt; 3</span>
-<span class="n">tup</span> <span class="o">+</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span> <span class="c">#=&gt; (1, 2, 3, 4, 5, 6)</span>
-<span class="n">tup</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="c">#=&gt; (1, 2)</span>
-<span class="mi">2</span> <span class="ow">in</span> <span class="n">tup</span> <span class="c">#=&gt; True</span>
-
-<span class="c"># 可以将元组解包到变量</span>
-<span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="c"># 现在a等于1，b等于2，c等于3</span>
-<span class="c"># 如果你省略括号，默认也会创建元组</span>
-<span class="n">d</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">f</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span>
-<span class="c"># 看看两个变量互换值有多简单</span>
-<span class="n">e</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">d</span><span class="p">,</span> <span class="n">e</span>     <span class="c">#现在d为5，e为4</span>
-
-
-<span class="c"># 字典存储映射关系</span>
-<span class="n">empty_dict</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="c"># 这是一个预先填充的字典</span>
-<span class="n">filled_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;one&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&quot;two&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&quot;three&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}</span>
-
-<span class="c"># 以[]语法查找值</span>
-<span class="n">filled_dict</span><span class="p">[</span><span class="s">&#39;one&#39;</span><span class="p">]</span> <span class="c">#=&gt; 1</span>
-
-<span class="c"># 以列表形式获取所有的键</span>
-<span class="n">filled_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="c">#=&gt; [&quot;three&quot;, &quot;two&quot;, &quot;one&quot;]</span>
-<span class="c"># 注意 - 字典键的顺序是不确定的</span>
-<span class="c"># 你的结果也许和上面的输出结果并不一致</span>
-
-<span class="c"># 以in来检测字典中是否存在某个键</span>
-<span class="s">&quot;one&quot;</span> <span class="ow">in</span> <span class="n">filled_dict</span> <span class="c">#=&gt; True</span>
-<span class="mi">1</span> <span class="ow">in</span> <span class="n">filled_dict</span> <span class="c">#=&gt; False</span>
-
-<span class="c"># 试图使用某个不存在的键会抛出一个KeyError异常</span>
-<span class="n">filled_dict</span><span class="p">[</span><span class="s">&#39;four&#39;</span><span class="p">]</span> <span class="c">#=&gt; 抛出KeyError异常</span>
-
-<span class="c"># 使用get方法来避免KeyError</span>
-<span class="n">filled_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;one&quot;</span><span class="p">)</span> <span class="c">#=&gt; 1</span>
-<span class="n">filled_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;four&quot;</span><span class="p">)</span> <span class="c">#=&gt; None</span>
-
-<span class="c"># get方法支持一个默认参数，不存在某个键时返回该默认参数值</span>
-<span class="n">filled_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;one&quot;</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="c">#=&gt; 1</span>
-<span class="n">filled_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;four&quot;</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="c">#=&gt; 4</span>
-
-<span class="c"># setdefault方法是一种添加新的键-值对到字典的安全方式</span>
-<span class="n">filled_dict</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s">&quot;five&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span> <span class="c">#filled_dict[&quot;five&quot;]设置为5</span>
-<span class="n">filled_dict</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s">&quot;five&quot;</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span> <span class="c">#filled_dict[&quot;five&quot;]仍为5</span>
-
-
-<span class="c"># 集合</span>
-<span class="n">empty_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-<span class="c"># 以几个值初始化一个集合</span>
-<span class="n">filled_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span> <span class="c"># filled_set现为set([1, 2, 3, 4, 5])</span>
-
-<span class="c"># 以&amp;执行集合交运算</span>
-<span class="n">other_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">])</span>
-<span class="n">filled_set</span> <span class="o">&amp;</span> <span class="n">other_set</span> <span class="c">#=&gt; set([3, 4, 5])</span>
-<span class="c"># 以|执行集合并运算</span>
-<span class="n">filled_set</span> <span class="o">|</span> <span class="n">other_set</span> <span class="c">#=&gt; set([1, 2, 3, 4, 5, 6])</span>
-<span class="c"># 以-执行集合差运算</span>
-<span class="nb">set</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span> <span class="o">-</span> <span class="nb">set</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span> <span class="c">#=&gt; set([1, 4])</span>
-
-<span class="c"># 以in来检测集合中是否存在某个值</span>
-<span class="mi">2</span> <span class="ow">in</span> <span class="n">filled_set</span> <span class="c">#=&gt; True</span>
-<span class="mi">10</span> <span class="ow">in</span> <span class="n">filled_set</span> <span class="c">#=&gt; False</span>
-
-
-<span class="c">####################################################</span>
-<span class="c">## 3. 控制流程</span>
-<span class="c">####################################################</span>
-
-<span class="c"># 创建个变量</span>
-<span class="n">some_var</span> <span class="o">=</span> <span class="mi">5</span>
-
-<span class="c"># 以下是一个if语句。缩进在Python是有重要意义的。</span>
-<span class="c"># 打印 &quot;some_var is smaller than 10&quot;</span>
-<span class="k">if</span> <span class="n">some_var</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
-    <span class="k">print</span> <span class="s">&quot;some_var is totally bigger than 10.&quot;</span>
-<span class="k">elif</span> <span class="n">some_var</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
-    <span class="k">print</span> <span class="s">&quot;some_var is smaller than 10.&quot;</span>
-<span class="k">else</span><span class="p">:</span>
-    <span class="k">print</span> <span class="s">&quot;some_var is indeed 10.&quot;</span>
-
-
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">For循环在列表上迭代</span>
-<span class="sd">输出：</span>
-<span class="sd">    dog is a mammal</span>
-<span class="sd">    cat is a mammal</span>
-<span class="sd">    mouse is a mammal</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="k">for</span> <span class="n">animal</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&quot;dog&quot;</span><span class="p">,</span> <span class="s">&quot;cat&quot;</span><span class="p">,</span> <span class="s">&quot;mouse&quot;</span><span class="p">]:</span>
-    <span class="c"># 可以使用%来插补格式化字符串</span>
-    <span class="k">print</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> is a mammal&quot;</span> <span class="o">%</span> <span class="n">animal</span>
-
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">while循环直到未满足某个条件。</span>
-<span class="sd">输出：</span>
-<span class="sd">    0</span>
-<span class="sd">    1</span>
-<span class="sd">    2</span>
-<span class="sd">    3</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="n">x</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="k">while</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
-    <span class="k">print</span> <span class="n">x</span>
-    <span class="n">x</span> <span class="o">+=</span> <span class="mi">1</span>    <span class="c"># x = x + 1的一种简写</span>
-
-<span class="c"># 使用try/except块来处理异常</span>
-
-<span class="c"># 对Python 2.6及以上版本有效</span>
-<span class="k">try</span><span class="p">:</span>
-    <span class="c"># 使用raise来抛出一个错误</span>
-    <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s">&quot;This is an index error&quot;</span><span class="p">)</span>
-<span class="k">except</span> <span class="ne">IndexError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-    <span class="k">pass</span>    <span class="c"># pass就是什么都不干。通常这里用来做一些恢复工作</span>
-
-<span class="c"># 对于Python 2.7及以下版本有效</span>
-<span class="k">try</span><span class="p">:</span>
-    <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s">&quot;This is an index error&quot;</span><span class="p">)</span>
-<span class="k">except</span> <span class="ne">IndexError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>   <span class="c"># 没有&quot;as&quot;，以逗号替代</span>
-    <span class="k">pass</span>
-
-
-<span class="c">####################################################</span>
-<span class="c">## 4. 函数</span>
-<span class="c">####################################################</span>
-
-<span class="c"># 使用def来创建新函数</span>
-<span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-    <span class="k">print</span> <span class="s">&quot;x is </span><span class="si">%s</span><span class="s"> and y is </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>    <span class="c"># 以一个return语句来返回值</span>
-
-<span class="c"># 以参数调用函数</span>
-<span class="n">add</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span> <span class="c">#=&gt; 11 并输出 &quot;x is 5 and y is 6&quot;</span>
-<span class="c"># 另一种调用函数的方式是关键字参数</span>
-<span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>   <span class="c"># 关键字参数可以任意顺序输入</span>
-
-<span class="c"># 可定义接受可变数量的位置参数的函数</span>
-<span class="k">def</span> <span class="nf">varargs</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">args</span>
-
-<span class="n">varargs</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="c">#=&gt; (1, 2, 3)</span>
-
-
-<span class="c"># 也可以定义接受可变数量关键字参数的函数</span>
-<span class="k">def</span> <span class="nf">keyword_args</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">kwargs</span>
-
-<span class="c"># 调用一下该函数看看会发生什么</span>
-<span class="n">keyword_args</span><span class="p">(</span><span class="n">big</span><span class="o">=</span><span class="s">&quot;foot&quot;</span><span class="p">,</span> <span class="n">loch</span><span class="o">=</span><span class="s">&quot;ness&quot;</span><span class="p">)</span> <span class="c">#=&gt; {&quot;big&quot;: &quot;foo&quot;, &quot;loch&quot;: &quot;ness&quot;}</span>
-
-<span class="c"># 也可以一次性接受两种参数</span>
-<span class="k">def</span> <span class="nf">all_the_args</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="k">print</span> <span class="n">args</span>
-    <span class="k">print</span> <span class="n">kwargs</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">all_the_args(1, 2, a=3, b=4)输出：</span>
-<span class="sd">    [1, 2]</span>
-<span class="sd">    {&quot;a&quot;: 3, &quot;b&quot;: 4}</span>
-<span class="sd">&quot;&quot;&quot;</span>
-
-<span class="c"># 在调用一个函数时也可以使用*和**</span>
-<span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
-<span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;a&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">}</span>
-<span class="n">foo</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>  <span class="c">#等价于foo(1, 2, 3, 4)</span>
-<span class="n">foo</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>   <span class="c"># 等价于foo(a=3, b=4)</span>
-<span class="n">foo</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>    <span class="c"># 等价于foo(1, 2, 3, 4, a=3, b=4)</span>
-
-<span class="c"># Python的函数是一等函数</span>
-<span class="k">def</span> <span class="nf">create_adder</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">adder</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
-    <span class="k">return</span> <span class="n">adder</span>
-
-<span class="n">add_10</span> <span class="o">=</span> <span class="n">create_adder</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
-<span class="n">add_10</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="c">#=&gt; 13</span>
-
-<span class="c"># 也有匿名函数</span>
-<span class="p">(</span><span class="n">lamda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">)(</span><span class="mi">3</span><span class="p">)</span> <span class="c">#=&gt; True</span>
-
-<span class="c"># 有一些内置的高阶函数</span>
-<span class="nb">map</span><span class="p">(</span><span class="n">add_10</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span> <span class="c">#=&gt; [11, 12, 13]</span>
-<span class="nb">filter</span><span class="p">(</span><span class="n">lamda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">,</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span> <span class="c">#=&gt;[6, 7]</span>
-
-<span class="c"># 可以使用列表推导来实现映射和过滤</span>
-<span class="p">[</span><span class="n">add_10</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]]</span> <span class="c">#=&gt; [11, 13, 13]</span>
-<span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span><span class="mi">7</span> <span class="p">]</span> <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">]</span> <span class="c">#=&gt; [6, 7]</span>
-
-<span class="c">####################################################</span>
-<span class="c">## 5. 类</span>
-<span class="c">####################################################</span>
-
-<span class="c"># 创建一个子类继承自object来得到一个类</span>
-<span class="k">class</span> <span class="nc">Human</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-
-    <span class="c"># 类属性。在该类的所有示例之间共享</span>
-    <span class="n">species</span> <span class="o">=</span> <span class="s">&quot;H. sapiens&quot;</span>
-
-    <span class="c"># 基本初始化构造方法</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-        <span class="c"># 将参数赋值给实例的name属性</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
-
-    <span class="c"># 实例方法。所有示例方法都以self为第一个参数</span>
-    <span class="k">def</span> <span class="nf">say</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
-
-    <span class="c"># 类方法由所有实例共享</span>
-    <span class="c"># 以调用类为第一个参数进行调用</span>
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">get_species</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">species</span>
-
-    <span class="c"># 静态方法的调用不需要一个类或实例的引用</span>
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">grunt</span><span class="p">():</span>
-        <span class="k">return</span> <span class="s">&quot;*grunt*&quot;</span>
-
-<span class="c"># 实例化一个类</span>
-<span class="n">i</span> <span class="o">=</span> <span class="n">Human</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;Ian&quot;</span><span class="p">)</span>
-<span class="k">print</span> <span class="n">i</span><span class="o">.</span><span class="n">say</span><span class="p">(</span><span class="s">&quot;hi&quot;</span><span class="p">)</span>       <span class="c"># 输出&quot;Ian: hi&quot;</span>
-
-<span class="n">j</span> <span class="o">=</span> <span class="n">Human</span><span class="p">(</span><span class="s">&quot;Joel&quot;</span><span class="p">)</span>
-<span class="k">print</span> <span class="n">j</span><span class="o">.</span><span class="n">say</span><span class="p">(</span><span class="s">&quot;hello&quot;</span><span class="p">)</span>        <span class="c"># 输出&quot;Joel: hello&quot;</span>
-
-<span class="c"># 调用类方法</span>
-<span class="n">i</span><span class="o">.</span><span class="n">get_species</span><span class="p">()</span> <span class="c">#=&gt; &quot;H. sapiens&quot;</span>
-
-<span class="c"># 修改共享属性</span>
-<span class="n">Human</span><span class="o">.</span><span class="n">species</span> <span class="o">=</span> <span class="s">&quot;H. neanderthalensis&quot;</span>
-<span class="n">i</span><span class="o">.</span><span class="n">get_species</span><span class="p">()</span> <span class="c">#=&gt; &quot;H. neanderthalensis&quot;</span>
-<span class="n">j</span><span class="o">.</span><span class="n">get_species</span><span class="p">()</span> <span class="c">#=&gt; &quot;H. neanderthalensis&quot;</span>
-
-<span class="c"># 调用静态方法</span>
-<span class="n">Human</span><span class="o">.</span><span class="n">grunt</span><span class="p">()</span>   <span class="c">#=&gt; &quot;*grunt*&quot;</span>
-<span class="p">{</span><span class="o">%</span> <span class="n">endhighlight</span> <span class="o">%</span><span class="p">}</span>
-</pre></div>
-
-
-<h3>进一步阅读</h3>
+# 数字
+3 #=&gt; 3
+
+# 你预想的数学运算
+1 + 1 #=&gt; 2
+8 - 1 #=&gt; 7
+10 * 2 #=&gt; 20
+35 / 5 #=&gt; 7
+
+# 除法略显诡异。整数相除会自动向下取小于结果的最大整数
+11 / 4 #=&gt; 2
+
+# 还有浮点数和浮点数除法（译注：除数和被除数两者至少一个为浮点数，结果才会是浮点数）
+2.0     # 这是一个浮点数
+5.0 / 2.0 #=&gt; 2.5 额...语法更明确一些
+
+# 使用括号来强制优先级
+(1 + 3) * 2 #=&gt; 8
+
+
+# 布尔值也是基本类型数据
+True
+False
+
+# 使用not来求反
+not True #=&gt; False
+not False #=&gt; True
+
+# 相等比较使用==
+1 == 1 #=&gt; True
+2 == 1 #=&gt; False
+
+# 不相等比较使用!=
+1 != 1 #=&gt; False
+2 != 1 #=&gt; True
+
+# 更多的比较方式
+1 &lt; 10 #=&gt; True
+1 &gt; 10 #=&gt; False
+2 &lt;= 2 #=&gt; True
+2 &gt;= 2 #=&gt; True
+
+# 比较操作可以串接！
+1 &lt; 2 &lt; 3 #=&gt; True
+2 &lt; 3 &lt; 2 #=&gt; False
+
+# 可以使用"或'创建字符串
+"This is a string."
+'This is also a string.'
+
+# 字符串也可以相加！
+"Hello " + "world!" #=&gt; "Hello world!"
+
+# 字符串可以看作是一个字符列表
+"This is a string"[0] #=&gt; 'T'
+
+# None是一个对象
+None #=&gt; None
+
+
+####################################################
+## 2. 变量与数据容器
+####################################################
+
+# 打印输出非常简单
+print "I'm Python. Nice to meet you!"
+
+# 赋值之前不需要声明变量
+some_var = 5    # 约定使用 小写_字母_和_下划线 的命名方式
+some_var #=&gt; 5
+
+# 访问之前未赋值的变量会产生一个异常
+try:
+    some_other_var
+except NameError:
+    print "Raises a name error"
+
+# 赋值时可以使用条件表达式
+some_var = a if a &gt; b else b
+# 如果a大于b，则将a赋给some_var，
+# 否则将b赋给some_var
+
+# 列表用于存储数据序列
+li = []
+# 你可以一个预先填充的列表开始
+other_li = [4, 5, 6]
+
+# 使用append将数据添加到列表的末尾
+li.append(1)    #li现在为[1]
+li.append(2)    #li现在为[1, 2]
+li.append(4)    #li现在为[1, 2, 4]
+li.append(3)    #li现在为[1, 2, 4, 3]
+
+# 使用pop从列表末尾删除数据
+li.pop()    #=&gt; 3，li现在为[1, 2, 4]
+# 把刚刚删除的数据存回来
+li.append(3)    # 现在li再一次为[1, 2, 4, 3]
+
+# 像访问数组一样访问列表
+li[0] #=&gt; 1
+# 看看最后一个元素
+li[-1] #=&gt; 3
+
+# 越界访问会产生一个IndexError
+try:
+    li[4] # 抛出一个IndexError异常
+except IndexError:
+    print "Raises an IndexError"
+
+# 可以通过分片(slice)语法来查看列表中某个区间的数据
+# 以数学角度来说，这是一个闭合/开放区间
+li[1:3] #=&gt; [2, 4]
+# 省略结束位置
+li[2:] #=&gt; [4, 3]
+# 省略开始位置
+li[:3] #=&gt; [1, 2, 4]
+
+# 使用del从列表中删除任意元素
+del li[2] #li现在为[1, 2, 3]
+
+# 列表可以相加
+li + other_li #=&gt; [1, 3, 3, 4, 5, 6] - 注意：li和other_li并未改变
+
+# 以extend来连结列表
+li.extend(other_li) # 现在li为[1, 2, 3, 4, 5, 6]
+
+# 以in来检测列表中是否存在某元素
+1 in li #=&gt; True
+
+# 以len函数来检测列表长度
+len(li) #=&gt; 6
+
+# 元组类似列表，但不可变
+tup  = (1, 2, 3)
+tup[0] #=&gt; 1
+try:
+    tup[0] = 3 # 抛出一个TypeError异常
+except TypeError:
+    print "Tuples cannot be mutated."
+
+# 可以在元组上使用和列表一样的操作
+len(tup) #=&gt; 3
+tup + (4, 5, 6) #=&gt; (1, 2, 3, 4, 5, 6)
+tup[:2] #=&gt; (1, 2)
+2 in tup #=&gt; True
+
+# 可以将元组解包到变量
+a, b, c = (1, 2, 3) # 现在a等于1，b等于2，c等于3
+# 如果你省略括号，默认也会创建元组
+d, e, f = 4, 5, 6
+# 看看两个变量互换值有多简单
+e, d = d, e     #现在d为5，e为4
+
+
+# 字典存储映射关系
+empty_dict = {}
+# 这是一个预先填充的字典
+filled_dict = {"one": 1, "two": 2, "three": 3}
+
+# 以[]语法查找值
+filled_dict['one'] #=&gt; 1
+
+# 以列表形式获取所有的键
+filled_dict.keys() #=&gt; ["three", "two", "one"]
+# 注意 - 字典键的顺序是不确定的
+# 你的结果也许和上面的输出结果并不一致
+
+# 以in来检测字典中是否存在某个键
+"one" in filled_dict #=&gt; True
+1 in filled_dict #=&gt; False
+
+# 试图使用某个不存在的键会抛出一个KeyError异常
+filled_dict['four'] #=&gt; 抛出KeyError异常
+
+# 使用get方法来避免KeyError
+filled_dict.get("one") #=&gt; 1
+filled_dict.get("four") #=&gt; None
+
+# get方法支持一个默认参数，不存在某个键时返回该默认参数值
+filled_dict.get("one", 4) #=&gt; 1
+filled_dict.get("four", 4) #=&gt; 4
+
+# setdefault方法是一种添加新的键-值对到字典的安全方式
+filled_dict.setdefault("five", 5) #filled_dict["five"]设置为5
+filled_dict.setdefault("five", 6) #filled_dict["five"]仍为5
+
+
+# 集合
+empty_set = set()
+# 以几个值初始化一个集合
+filled_set = set([1, 2, 2, 3, 4]) # filled_set现为set([1, 2, 3, 4, 5])
+
+# 以&amp;执行集合交运算
+other_set = set([3, 4, 5, 6])
+filled_set &amp; other_set #=&gt; set([3, 4, 5])
+# 以|执行集合并运算
+filled_set | other_set #=&gt; set([1, 2, 3, 4, 5, 6])
+# 以-执行集合差运算
+set([1, 2, 3, 4]) - set([2, 3, 5]) #=&gt; set([1, 4])
+
+# 以in来检测集合中是否存在某个值
+2 in filled_set #=&gt; True
+10 in filled_set #=&gt; False
+
+
+####################################################
+## 3. 控制流程
+####################################################
+
+# 创建个变量
+some_var = 5
+
+# 以下是一个if语句。缩进在Python是有重要意义的。
+# 打印 "some_var is smaller than 10"
+if some_var &gt; 10:
+    print "some_var is totally bigger than 10."
+elif some_var &lt; 10:
+    print "some_var is smaller than 10."
+else:
+    print "some_var is indeed 10."
+
+
+"""
+For循环在列表上迭代
+输出：
+    dog is a mammal
+    cat is a mammal
+    mouse is a mammal
+"""
+for animal in ["dog", "cat", "mouse"]:
+    # 可以使用%来插补格式化字符串
+    print "%s is a mammal" % animal
+
+"""
+while循环直到未满足某个条件。
+输出：
+    0
+    1
+    2
+    3
+"""
+x = 0
+while x &lt; 4:
+    print x
+    x += 1    # x = x + 1的一种简写
+
+# 使用try/except块来处理异常
+
+# 对Python 2.6及以上版本有效
+try:
+    # 使用raise来抛出一个错误
+    raise IndexError("This is an index error")
+except IndexError as e:
+    pass    # pass就是什么都不干。通常这里用来做一些恢复工作
+
+# 对于Python 2.7及以下版本有效
+try:
+    raise IndexError("This is an index error")
+except IndexError, e:   # 没有"as"，以逗号替代
+    pass
+
+
+####################################################
+## 4. 函数
+####################################################
+
+# 使用def来创建新函数
+def add(x, y):
+    print "x is %s and y is %s" % (x, y)
+    return x + y    # 以一个return语句来返回值
+
+# 以参数调用函数
+add(5, 6) #=&gt; 11 并输出 "x is 5 and y is 6"
+# 另一种调用函数的方式是关键字参数
+add(x=5, y=6)   # 关键字参数可以任意顺序输入
+
+# 可定义接受可变数量的位置参数的函数
+def varargs(*args):
+    return args
+
+varargs(1, 2, 3) #=&gt; (1, 2, 3)
+
+
+# 也可以定义接受可变数量关键字参数的函数
+def keyword_args(**kwargs):
+    return kwargs
+
+# 调用一下该函数看看会发生什么
+keyword_args(big="foot", loch="ness") #=&gt; {"big": "foo", "loch": "ness"}
+
+# 也可以一次性接受两种参数
+def all_the_args(*args, **kwargs):
+    print args
+    print kwargs
+"""
+all_the_args(1, 2, a=3, b=4)输出：
+    [1, 2]
+    {"a": 3, "b": 4}
+"""
+
+# 在调用一个函数时也可以使用*和**
+args = (1, 2, 3, 4)
+kwargs = {"a": 3, "b": 4}
+foo(*args)  #等价于foo(1, 2, 3, 4)
+foo(**kwargs)   # 等价于foo(a=3, b=4)
+foo(*args, **kwargs)    # 等价于foo(1, 2, 3, 4, a=3, b=4)
+
+# Python的函数是一等函数
+def create_adder(x):
+    def adder(y):
+        return x + y
+    return adder
+
+add_10 = create_adder(10)
+add_10(3) #=&gt; 13
+
+# 也有匿名函数
+(lamda x: x &gt; 2)(3) #=&gt; True
+
+# 有一些内置的高阶函数
+map(add_10, [1, 2, 3]) #=&gt; [11, 12, 13]
+filter(lamda x: x &gt; 5, [3, 4, 5, 6, 7]) #=&gt;[6, 7]
+
+# 可以使用列表推导来实现映射和过滤
+[add_10(i) for i in [1, 2, 3]] #=&gt; [11, 13, 13]
+[x for x in [3, 4, 5, 6,7 ] if x &gt; 5] #=&gt; [6, 7]
+
+####################################################
+## 5. 类
+####################################################
+
+# 创建一个子类继承自object来得到一个类
+class Human(object):
+
+    # 类属性。在该类的所有示例之间共享
+    species = "H. sapiens"
+
+    # 基本初始化构造方法
+    def __init__(self, name):
+        # 将参数赋值给实例的name属性
+        self.name = name
+
+    # 实例方法。所有示例方法都以self为第一个参数
+    def say(self, msg):
+        return "%s: %s" % (self.name, msg)
+
+    # 类方法由所有实例共享
+    # 以调用类为第一个参数进行调用
+    @classmethod
+    def get_species(cls):
+        return cls.species
+
+    # 静态方法的调用不需要一个类或实例的引用
+    @staticmethod
+    def grunt():
+        return "*grunt*"
+
+# 实例化一个类
+i = Human(name="Ian")
+print i.say("hi")       # 输出"Ian: hi"
+
+j = Human("Joel")
+print j.say("hello")        # 输出"Joel: hello"
+
+# 调用类方法
+i.get_species() #=&gt; "H. sapiens"
+
+# 修改共享属性
+Human.species = "H. neanderthalensis"
+i.get_species() #=&gt; "H. neanderthalensis"
+j.get_species() #=&gt; "H. neanderthalensis"
+
+# 调用静态方法
+Human.grunt()   #=&gt; "*grunt*"
+{% endhighlight %}
+</code></pre>
+<h3 id="_1">进一步阅读</h3>
 <p>想要学习更多？试试<a href="http://learnpythonthehardway.org/book/">笨方法学习Python</a>。</p>
             </div><!-- /.entry-content -->
             <div class="comments">

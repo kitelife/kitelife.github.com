@@ -138,7 +138,7 @@
 <li>红色意味着不可维护，黄色表示可接受，绿色则表明良好、可维护的代码。</li>
 </ul>
 <hr />
-<h3>分析结果 ...</h3> </div><!-- /.entry-content -->
+<h3 id="_1">分析结果 ...</h3> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2014/09/22/phpmetrics-of-popular-php-projects/" rel="bookmark" title="Permalink to 流行PHP项目的phpmetrics分析（译）">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -157,7 +157,7 @@
                 <footer class="post-info">
                     <abbr class="published" title="2014-06-14T00:00:00"> 2014-06-14 Sat </abbr>
 <address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <h3>原理</h3>
+                <div class="entry-content"> <h3 id="_1">原理</h3>
 <p>微信服务号的原理比较简单。从请求响应角度来看，逻辑是：</p>
 <p><strong>用户微信客户端 &lt;---&gt; 微信服务器 &lt;---&gt; 微信服务号后台程序 &lt;---&gt; 数据库或Web Service</strong></p>
 <p>也就是，用户的各种请求先经过微信的服务器，微信服务器将请求转发给微信服务号后台程序。</p>
@@ -193,10 +193,11 @@
 <p>译者：<a href="https://github.com/youngsterxyf/">youngsterxyf</a></p>
 <p>使用Nginx搭配PHP已有7年的这份经历让我们学会如何为高流量站点优化NGINX和PHP-fpm配置。</p>
 <p>以下正是这方面的一些提示和建议：</p>
-<h4>1. 将TCP切换为UNIX域套接字</h4>
+<h4 id="1-tcpunix">1. 将TCP切换为UNIX域套接字</h4>
 <p>UNIX域套接字相比TCP套接字在loopback接口上能提供更好的性能（更少的数据拷贝和上下文切换）。</p>
 <p>但有一点需要牢记：仅运行在同一台服务器上的程序可以访问UNIX域套接字（显然没有网络支持）。</p>
-<div class="highlight"><pre>upstream backend
+<pre><code>:::text
+upstream backend
 {
     # UNIX domain sockets
     server unix:/var/run/fastcgi.sock;
@@ -204,14 +205,11 @@
     # TCP sockets
     # server 127.0.0.1:8080;
 }
-</pre></div>
-
-
-<h4>2. 调整工作进程数</h4>
+</code></pre>
+<h4 id="2">2. 调整工作进程数</h4>
 <p>现代计算机硬件是多处理器的，NGINX可以利用多物理或虚拟处理器。</p>
 <p>多数情况下，你的Web服务器都不会配置为处理多种任务（比如作为Web服务器提供服务的同时也是一个打印服务器），你可以配置NGINX使用所有可用的处理器，NGINX工作进程并不是多线程的。</p>
-<p>运行以下命令可以获知你的机器有多少个处理器：</p>
-<p>Linux上 ...</p> </div><!-- /.entry-content -->
+<p>运行以下命令可以获知你的机器有多少个处理器 ...</p> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2014/05/03/optimizing-nginx-and-php-fpm-for-high-traffic-sites/" rel="bookmark" title="Permalink to 高流量站点NGINX与PHP-fpm配置优化（译）">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -260,7 +258,7 @@
 <address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
                 <div class="entry-content"> <p>原文： <a href="https://phpbestpractices.org/">PHP Best Practices-A short, practical guide for common and confusing PHP tasks</a></p>
 <p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
-<h2>最后修订日期&amp;维护者</h2>
+<h2 id="_1">最后修订日期&amp;维护者</h2>
 <p>本文档最后审阅于2013年3月8日。最后修改于2013年5月8日。</p>
 <p>由我，<a href="https://alexcabal.com/">Alex Cabal</a>，维护该文档。我编写PHP程序已有很长一段时间了，当前我
 经营着<a href="http://www.scribophile.com/">Scribophile，由认真作家组成的一个在线写作团体</a>,
@@ -268,7 +266,7 @@
 <a href="https://standardebooks.com">Standard Ebooks，一个图文并茂、无数字版权管理的公共领域电子书出版商</a>。
 有时我是个为吸引我的项目或客户而工作的自由职业者。</p>
 <p>如果你认为我在某些事情上能够帮到你，或者对本文档有点建议或纠正存在的错误，<a href="https://alexcabal.com/contact/">请给我写封邮件</a>。</p>
-<h2>简介</h2>
+<h2 id="_2">简介</h2>
 <p>PHP是一门复杂的语言，经过多年折腾，使其不同版本之间高度不一致，有时还有些bug。
 每个版本都有自己独有的特性、多余和怪异之处，也很难跟踪哪个版本有哪些问题。这也就
 很好理解为什么有时它会遭到那么多的厌恶。</p>
@@ -300,7 +298,8 @@
 </ul>
 <p>除了PHP与文件系统之间的交互，其他几种交互均为客户端-服务器模式，以Socket方式进行连接，都需要安装配置相关组件。</p>
 <p>对于Nginx与PHP-CGI(PHP)的交互，PHP-CGI默认打开9000端口，等待Nginx转发过来的请求，所以需要在Nginx配置文件中添加类似于如下所示的虚拟主机配置：</p>
-<div class="highlight"><pre>server {
+<pre><code>:::text
+server {
     listen  8000;
     server_name localhost;
 
@@ -312,7 +311,7 @@
     location ~ \.php$ {
         root    html;   # 这里也设置为你的网站的根目录
         fastcgi_pass    127.0.0.1:9000; # 这里设置为你的PHP-CGI监听的网络地址
-        fastcgi_index   index ...</pre></div> </div><!-- /.entry-content -->
+        fastcgi_index ...</code></pre> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2013/04/15/install-php-development-environment-on-windows/" rel="bookmark" title="Permalink to Windows上安装PHP开发测试环境">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -333,20 +332,21 @@
 <address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
                 <div class="entry-content"> <p>原文：<a href="http://wulijun.github.com/php-the-right-way/pages/The-Basics.html">PHP: The Right Way - The Basics</a></p>
 <p>译者：<a href="http://github.com/youngsterxyf">youngsterxyf</a></p>
-<h2>比较操作符</h2>
+<h2 id="_1">比较操作符</h2>
 <p>比较操作符往往是PHP的一个被忽视的方面，这会导致很多意想不到的结果。其中的一个问题源于严格比较（布尔值为整数的比较）。</p>
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
-<span class="nv">$a</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>     <span class="c1">// 5为一个整数</span>
+<pre><code>:::php
+&lt;?php
+$a = 5;     // 5为一个整数
 
-<span class="nb">var_dump</span><span class="p">(</span><span class="nv">$a</span> <span class="o">==</span> <span class="mi">5</span><span class="p">);</span>      <span class="c1">// 比较值；返回true</span>
-<span class="nb">var_dump</span><span class="p">(</span><span class="nv">$a</span> <span class="o">==</span> <span class="s1">&#39;5&#39;</span><span class="p">);</span>        <span class="c1">// 比较值（忽略类型）；返回true</span>
-<span class="nb">var_dump</span><span class="p">(</span><span class="nv">$a</span> <span class="o">===</span> <span class="mi">5</span><span class="p">);</span>         <span class="c1">// 比较类型/值（整数 vs. 整数）；返回true</span>
-<span class="nb">var_dump</span><span class="p">(</span><span class="nv">$a</span> <span class="o">===</span> <span class="s1">&#39;5&#39;</span><span class="p">);</span>       <span class="c1">// 比较类型/值（整数 vs. 整数）；返回false</span>
+var_dump($a == 5);      // 比较值；返回true
+var_dump($a == '5');        // 比较值（忽略类型）；返回true
+var_dump($a === 5);         // 比较类型/值（整数 vs. 整数）；返回true
+var_dump($a === '5');       // 比较类型/值（整数 vs. 整数）；返回false
 
-<span class="sd">/**</span>
-<span class="sd">  * 严格比较</span>
-<span class="sd">  */</span>
-<span class="k">if</span> <span class="p">(</span><span class="nb">strpos ...</span></pre></div> </div><!-- /.entry-content -->
+/**
+  * 严格比较
+  */
+if ...</code></pre> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2013/03/08/php-basics/" rel="bookmark" title="Permalink to PHP之道---PHP基础知识（译）">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -382,78 +382,78 @@
 <h4>标签</h4>
 	<ul>
 	    <li class="tag-4"><a href="../tag/liu-lan-qi-jian-rong.html">浏览器兼容</a></li>
-	    <li class="tag-3"><a href="../tag/mysql.html">MySQL</a></li>
-	    <li class="tag-3"><a href="../tag/ming-ling-xing.html">命令行</a></li>
-	    <li class="tag-3"><a href="../tag/fu-zai-jun-heng.html">负载均衡</a></li>
-	    <li class="tag-1"><a href="../tag/zong-jie.html">总结</a></li>
-	    <li class="tag-4"><a href="../tag/cordova.html">Cordova</a></li>
-	    <li class="tag-4"><a href="../tag/restful.html">RESTful</a></li>
-	    <li class="tag-3"><a href="../tag/suan-fa.html">算法</a></li>
-	    <li class="tag-4"><a href="../tag/ying-yu.html">英语</a></li>
-	    <li class="tag-4"><a href="../tag/css.html">CSS</a></li>
-	    <li class="tag-4"><a href="../tag/cc.html">C/C++</a></li>
-	    <li class="tag-4"><a href="../tag/haproxyconsole.html">HAProxyConsole</a></li>
-	    <li class="tag-1"><a href="../tag/python.html">Python</a></li>
+	    <li class="tag-3"><a href="../tag/mian-shi.html">面试</a></li>
+	    <li class="tag-4"><a href="../tag/wen-zi.html">文字</a></li>
+	    <li class="tag-4"><a href="../tag/api.html">API</a></li>
+	    <li class="tag-4"><a href="../tag/bing-xing.html">并行</a></li>
+	    <li class="tag-4"><a href="../tag/dns.html">DNS</a></li>
+	    <li class="tag-4"><a href="../tag/jekyll.html">jekyll</a></li>
+	    <li class="tag-4"><a href="../tag/ming-ling.html">命令</a></li>
 	    <li class="tag-4"><a href="../tag/python-weekly.html">python-weekly</a></li>
+	    <li class="tag-4"><a href="../tag/pypi.html">PyPI</a></li>
+	    <li class="tag-4"><a href="../tag/teng-xun.html">腾讯</a></li>
+	    <li class="tag-4"><a href="../tag/rest.html">REST</a></li>
+	    <li class="tag-3"><a href="../tag/suan-fa.html">算法</a></li>
+	    <li class="tag-4"><a href="../tag/pip.html">pip</a></li>
+	    <li class="tag-2"><a href="../tag/golang.html">Golang</a></li>
 	    <li class="tag-3"><a href="../tag/gong-zuo.html">工作</a></li>
-	    <li class="tag-4"><a href="../tag/vmware.html">VMware</a></li>
-	    <li class="tag-3"><a href="../tag/xue-xi-fang-fa.html">学习方法</a></li>
-	    <li class="tag-3"><a href="../tag/nginx.html">Nginx</a></li>
-	    <li class="tag-4"><a href="../tag/zi-sheng.html">自省</a></li>
-	    <li class="tag-4"><a href="../tag/ban-ben-kong-zhi.html">版本控制</a></li>
+	    <li class="tag-4"><a href="../tag/ying-yu.html">英语</a></li>
 	    <li class="tag-4"><a href="../tag/rong-liang-gui-hua.html">容量规划</a></li>
 	    <li class="tag-3"><a href="../tag/keepalived.html">Keepalived</a></li>
-	    <li class="tag-4"><a href="../tag/sheng-huo.html">生活</a></li>
-	    <li class="tag-1"><a href="../tag/php.html">PHP</a></li>
-	    <li class="tag-3"><a href="../tag/mian-shi.html">面试</a></li>
-	    <li class="tag-4"><a href="../tag/xiao-xi-tui-song.html">消息推送</a></li>
-	    <li class="tag-2"><a href="../tag/javascript.html">JavaScript</a></li>
-	    <li class="tag-4"><a href="../tag/teng-xun.html">腾讯</a></li>
-	    <li class="tag-3"><a href="../tag/haproxy.html">HAProxy</a></li>
-	    <li class="tag-4"><a href="../tag/pip.html">pip</a></li>
-	    <li class="tag-4"><a href="../tag/jekyll.html">jekyll</a></li>
-	    <li class="tag-2"><a href="../tag/yii.html">Yii</a></li>
-	    <li class="tag-4"><a href="../tag/dns.html">DNS</a></li>
-	    <li class="tag-2"><a href="../tag/shell.html">Shell</a></li>
-	    <li class="tag-4"><a href="../tag/ssl.html">ssl</a></li>
-	    <li class="tag-4"><a href="../tag/li-lun.html">理论</a></li>
-	    <li class="tag-4"><a href="../tag/zi-ti.html">字体</a></li>
-	    <li class="tag-3"><a href="../tag/shi-ge.html">诗歌</a></li>
-	    <li class="tag-4"><a href="../tag/windows.html">Windows</a></li>
-	    <li class="tag-4"><a href="../tag/rest.html">REST</a></li>
-	    <li class="tag-3"><a href="../tag/bi-shi.html">笔试</a></li>
-	    <li class="tag-3"><a href="../tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
-	    <li class="tag-2"><a href="../tag/golang.html">Golang</a></li>
-	    <li class="tag-4"><a href="../tag/yan-jiang.html">演讲</a></li>
-	    <li class="tag-4"><a href="../tag/bind.html">BIND</a></li>
-	    <li class="tag-1"><a href="../tag/bi-ji.html">笔记</a></li>
-	    <li class="tag-3"><a href="../tag/yue-du.html">阅读</a></li>
-	    <li class="tag-2"><a href="../tag/git.html">Git</a></li>
-	    <li class="tag-4"><a href="../tag/phonegap.html">Phonegap</a></li>
-	    <li class="tag-1"><a href="../tag/linux.html">Linux</a></li>
-	    <li class="tag-4"><a href="../tag/bing-xing.html">并行</a></li>
-	    <li class="tag-4"><a href="../tag/zhong-jian-jian.html">中间件</a></li>
-	    <li class="tag-4"><a href="../tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
-	    <li class="tag-2"><a href="../tag/fu-wu-qi.html">服务器</a></li>
-	    <li class="tag-3"><a href="../tag/jia-gou.html">架构</a></li>
-	    <li class="tag-1"><a href="../tag/fan-yi.html">翻译</a></li>
-	    <li class="tag-4"><a href="../tag/ri-zhi.html">日志</a></li>
-	    <li class="tag-4"><a href="../tag/github.html">github</a></li>
-	    <li class="tag-4"><a href="../tag/wei-bo.html">微博</a></li>
-	    <li class="tag-4"><a href="../tag/ming-ling.html">命令</a></li>
-	    <li class="tag-4"><a href="../tag/api.html">API</a></li>
 	    <li class="tag-4"><a href="../tag/gao-ke-yong.html">高可用</a></li>
-	    <li class="tag-4"><a href="../tag/socketio.html">socket.io</a></li>
-	    <li class="tag-4"><a href="../tag/easy_install.html">easy_install</a></li>
-	    <li class="tag-4"><a href="../tag/pypi.html">PyPI</a></li>
-	    <li class="tag-3"><a href="../tag/gong-ju.html">工具</a></li>
-	    <li class="tag-4"><a href="../tag/template.html">template</a></li>
-	    <li class="tag-4"><a href="../tag/wen-zi.html">文字</a></li>
-	    <li class="tag-3"><a href="../tag/wei-xin.html">微信</a></li>
-	    <li class="tag-4"><a href="../tag/shu-ju-ku.html">数据库</a></li>
-	    <li class="tag-2"><a href="../tag/ji-zhu.html">技术</a></li>
+	    <li class="tag-4"><a href="../tag/css.html">CSS</a></li>
+	    <li class="tag-3"><a href="../tag/ming-ling-xing.html">命令行</a></li>
+	    <li class="tag-4"><a href="../tag/ri-zhi.html">日志</a></li>
 	    <li class="tag-4"><a href="../tag/diao-shi.html">调试</a></li>
+	    <li class="tag-2"><a href="../tag/fu-wu-qi.html">服务器</a></li>
+	    <li class="tag-3"><a href="../tag/gong-ju.html">工具</a></li>
+	    <li class="tag-3"><a href="../tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
+	    <li class="tag-4"><a href="../tag/zi-ti.html">字体</a></li>
+	    <li class="tag-2"><a href="../tag/javascript.html">JavaScript</a></li>
+	    <li class="tag-1"><a href="../tag/fan-yi.html">翻译</a></li>
+	    <li class="tag-3"><a href="../tag/wei-xin.html">微信</a></li>
+	    <li class="tag-2"><a href="../tag/git.html">Git</a></li>
+	    <li class="tag-4"><a href="../tag/github.html">github</a></li>
+	    <li class="tag-4"><a href="../tag/windows.html">Windows</a></li>
+	    <li class="tag-4"><a href="../tag/phonegap.html">Phonegap</a></li>
+	    <li class="tag-4"><a href="../tag/restful.html">RESTful</a></li>
+	    <li class="tag-4"><a href="../tag/cc.html">C/C++</a></li>
+	    <li class="tag-1"><a href="../tag/zong-jie.html">总结</a></li>
+	    <li class="tag-4"><a href="../tag/yan-jiang.html">演讲</a></li>
+	    <li class="tag-3"><a href="../tag/nginx.html">Nginx</a></li>
+	    <li class="tag-4"><a href="../tag/xiao-xi-tui-song.html">消息推送</a></li>
+	    <li class="tag-4"><a href="../tag/wei-bo.html">微博</a></li>
+	    <li class="tag-4"><a href="../tag/easy_install.html">easy_install</a></li>
+	    <li class="tag-4"><a href="../tag/shu-ju-ku.html">数据库</a></li>
 	    <li class="tag-4"><a href="../tag/gan-wu.html">感悟</a></li>
+	    <li class="tag-4"><a href="../tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
+	    <li class="tag-4"><a href="../tag/socketio.html">socket.io</a></li>
+	    <li class="tag-2"><a href="../tag/yii.html">Yii</a></li>
+	    <li class="tag-3"><a href="../tag/haproxy.html">HAProxy</a></li>
+	    <li class="tag-3"><a href="../tag/yue-du.html">阅读</a></li>
+	    <li class="tag-1"><a href="../tag/python.html">Python</a></li>
+	    <li class="tag-3"><a href="../tag/mysql.html">MySQL</a></li>
+	    <li class="tag-1"><a href="../tag/bi-ji.html">笔记</a></li>
+	    <li class="tag-4"><a href="../tag/haproxyconsole.html">HAProxyConsole</a></li>
+	    <li class="tag-4"><a href="../tag/vmware.html">VMware</a></li>
+	    <li class="tag-4"><a href="../tag/ssl.html">ssl</a></li>
+	    <li class="tag-3"><a href="../tag/jia-gou.html">架构</a></li>
+	    <li class="tag-4"><a href="../tag/ban-ben-kong-zhi.html">版本控制</a></li>
+	    <li class="tag-3"><a href="../tag/xue-xi-fang-fa.html">学习方法</a></li>
+	    <li class="tag-3"><a href="../tag/shi-ge.html">诗歌</a></li>
+	    <li class="tag-3"><a href="../tag/fu-zai-jun-heng.html">负载均衡</a></li>
+	    <li class="tag-4"><a href="../tag/template.html">template</a></li>
+	    <li class="tag-2"><a href="../tag/ji-zhu.html">技术</a></li>
+	    <li class="tag-2"><a href="../tag/shell.html">Shell</a></li>
+	    <li class="tag-1"><a href="../tag/php.html">PHP</a></li>
+	    <li class="tag-4"><a href="../tag/sheng-huo.html">生活</a></li>
+	    <li class="tag-3"><a href="../tag/bi-shi.html">笔试</a></li>
+	    <li class="tag-1"><a href="../tag/linux.html">Linux</a></li>
+	    <li class="tag-4"><a href="../tag/li-lun.html">理论</a></li>
+	    <li class="tag-4"><a href="../tag/cordova.html">Cordova</a></li>
+	    <li class="tag-4"><a href="../tag/bind.html">BIND</a></li>
+	    <li class="tag-4"><a href="../tag/zhong-jian-jian.html">中间件</a></li>
+	    <li class="tag-4"><a href="../tag/zi-sheng.html">自省</a></li>
 </ul>
 
 <!--

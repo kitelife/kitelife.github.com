@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom"><title>黑 * 白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2015-03-09T00:00:00+08:00</updated><entry><title>Yii源码阅读笔记 - 日志组件</title><link href="http://youngsterxyf.github.io/2015/03/09/read-yii-code-8/" rel="alternate"></link><updated>2015-03-09T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2015-03-09:2015/03/09/read-yii-code-8/</id><summary type="html">&lt;h3&gt;使用&lt;/h3&gt;
 &lt;p&gt;Yii框架为开发者提供两个静态方法进行日志记录：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;Yii::log($message, $level, $category);&lt;/span&gt;
-&lt;span class="x"&gt;Yii::trace($message, $category);&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="nx"&gt;Yii&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;log&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$message&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$level&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$category&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="nx"&gt;Yii&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;trace&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$message&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$category&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;两者的区别在于后者依赖于应用开启调试模式，即定义常量YII_DEBUG：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;defined(&amp;#39;YII_DEBUG&amp;#39;) or define(&amp;#39;YII_DEBUG&amp;#39;, true);&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="nb"&gt;defined&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;YII_DEBUG&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;or&lt;/span&gt; &lt;span class="nb"&gt;define&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;YII_DEBUG&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;true&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -20,28 +22,29 @@
 &lt;li&gt;error：用于记录重大错误日志&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;要想日志真的输出到文件、邮件、web页面等地方，还得为应用添加如下配置：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;array(&lt;/span&gt;
-&lt;span class="x"&gt;    ......&lt;/span&gt;
-&lt;span class="x"&gt;    &amp;#39;preload&amp;#39;=&amp;gt;array(&amp;#39;log&amp;#39;),&lt;/span&gt;
-&lt;span class="x"&gt;    &amp;#39;components&amp;#39;=&amp;gt;array(&lt;/span&gt;
-&lt;span class="x"&gt;        ......&lt;/span&gt;
-&lt;span class="x"&gt;        &amp;#39;log&amp;#39;=&amp;gt;array(&lt;/span&gt;
-&lt;span class="x"&gt;            &amp;#39;class&amp;#39;=&amp;gt;&amp;#39;CLogRouter&amp;#39;,&lt;/span&gt;
-&lt;span class="x"&gt;            &amp;#39;routes&amp;#39;=&amp;gt;array(&lt;/span&gt;
-&lt;span class="x"&gt;                array(&lt;/span&gt;
-&lt;span class="x"&gt;                    &amp;#39;class&amp;#39;=&amp;gt;&amp;#39;CFileLogRoute&amp;#39;,&lt;/span&gt;
-&lt;span class="x"&gt;                    &amp;#39;levels&amp;#39;=&amp;gt;&amp;#39;trace, info&amp;#39;,&lt;/span&gt;
-&lt;span class="x"&gt;                    &amp;#39;categories&amp;#39;=&amp;gt;&amp;#39;system.*&amp;#39;,&lt;/span&gt;
-&lt;span class="x"&gt;                ),&lt;/span&gt;
-&lt;span class="x"&gt;                array(&lt;/span&gt;
-&lt;span class="x"&gt;                    &amp;#39;class&amp;#39;=&amp;gt;&amp;#39;CEmailLogRoute&amp;#39;,&lt;/span&gt;
-&lt;span class="x"&gt;                    &amp;#39;levels&amp;#39;=&amp;gt;&amp;#39;error, warning&amp;#39;,&lt;/span&gt;
-&lt;span class="x"&gt;                    &amp;#39;emails&amp;#39;=&amp;gt;&amp;#39;admin@example.com&amp;#39;,&lt;/span&gt;
-&lt;span class="x"&gt;                ),&lt;/span&gt;
-&lt;span class="x"&gt;            ),&lt;/span&gt;
-&lt;span class="x"&gt;        ),&lt;/span&gt;
-&lt;span class="x"&gt;    ),&lt;/span&gt;
-&lt;span class="x"&gt;)&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+    &lt;span class="o"&gt;......&lt;/span&gt;
+    &lt;span class="s1"&gt;&amp;#39;preload&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;log&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+    &lt;span class="s1"&gt;&amp;#39;components&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+        &lt;span class="o"&gt;......&lt;/span&gt;
+        &lt;span class="s1"&gt;&amp;#39;log&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+            &lt;span class="s1"&gt;&amp;#39;class&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;CLogRouter&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+            &lt;span class="s1"&gt;&amp;#39;routes&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+                &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+                    &lt;span class="s1"&gt;&amp;#39;class&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;CFileLogRoute&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                    &lt;span class="s1"&gt;&amp;#39;levels&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;trace, info&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                    &lt;span class="s1"&gt;&amp;#39;categories&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;system.*&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                &lt;span class="p"&gt;),&lt;/span&gt;
+                &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+                    &lt;span class="s1"&gt;&amp;#39;class&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;CEmailLogRoute&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                    &lt;span class="s1"&gt;&amp;#39;levels&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;error, warning&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                    &lt;span class="s1"&gt;&amp;#39;emails&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;admin@example.com&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                &lt;span class="p"&gt;),&lt;/span&gt;
+            &lt;span class="p"&gt;),&lt;/span&gt;
+        &lt;span class="p"&gt;),&lt;/span&gt;
+    &lt;span class="p"&gt;),&lt;/span&gt;
+&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 

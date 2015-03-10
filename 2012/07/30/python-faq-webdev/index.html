@@ -82,12 +82,12 @@
 <p>这是一个相当复杂的问题，甚至很容易就能写一本书来探讨Web开发与Python，以及如何关联两者，所以我很想先把这个问题放一放。但是鉴于我刚<a href="http://me.veekun.com/blog/2012/04/09/php-a-fractal-of-bad-design/">相当粗暴地捣毁了PHP</a>，明智些，还是回答这个问题吧，宜早不宜迟。</p>
 <p>最直接简单的回答是：不要再读了，马上使用<a href="http://flask.pocoo.org/">Flask</a>着手构建一样东西。然而，我觉得还有更好回答。</p>
 <p>本文并非是教程。也许将来我会写一篇，但现在已经存在大量的教程了，我认为你可以阅读那些文档。相反，本文是为新手而写的Python Web开发相关事情的概览。</p>
-<h2 id="_1">起步</h2>
+<h2>起步</h2>
 <p>显然，你需要安装Python。确保使用Python 2，而不是3。Python 3有一些向后不兼容的改变，并非所有的库都更新过。</p>
 <p>安装Python库，可以考虑使用 <code>pip</code> 。(如果你在使用类Unix操作系统，那么也许可以通过系统包管理器安装pip，否则使用 <code>easy_install pip</code> ) <code>pip</code> 是一个小巧的Python包管理器，便于安装，删除，升级，以及检查Python库。当然，尽可能使用你的系统包管理器，不行的话就用 <code>pip</code> 。</p>
 <p>可以使用 <code>pip install --user ...</code> 将Python库安装到你的home目录，但更好的方式是保持库为每个项目局部可用---这样，你就可以为一个项目升级依赖项而不会破坏其他项目的依赖。(或者破坏Python编写的系统软件。我就曾干过这种事。) <code>virtualenv</code> 使用单个命令就能助你创建一个独立的Python安装环境。</p>
 <p>当然，你已计划使用源码控制，对吧？我喜欢<a href="http://www.git-scm.com/">git</a> ,  但有聊胜于无，其他的也OK的。</p>
-<h2 id="_2">框架</h2>
+<h2>框架</h2>
 <p>第一个障碍是如何将你代码与浏览器相关连。PHP中，最简单的方式是安装Apache并将它指向一些文件。Python中，如同更大的PHP项目，一般需要使用Web框架。</p>
 <p>框架多半有相似的工作流程：</p>
 <ul>
@@ -120,18 +120,19 @@
 <p>曾经有一个Apache模块 <code>mod_python</code> ，本质上类似于 <code>mod_perl</code> ，但很早就被抛弃了。请 <strong>不要</strong> 使用它。</p>
 <p>最后，你也可以完全"手动"编写Python web代码，但那多半是一次令人沮丧的练习。不会更快，不会有什么教育意义，也不会有什么用。不要自找麻烦。</p>
 <p>我的建议？如果你只是想折腾捣鼓，那就从Flask入手吧，随你添加东西。如果你有想法要做一个网站，并且想旗开得胜(hit the ground running)，那就使用一个Pyramid脚手架(scaffold)，跟随它的叙述性文档进行开发。</p>
-<h2 id="routing">路由选择(Routing)</h2>
+<h2>路由选择(Routing)</h2>
 <p>PHP是根据URL执行一整个文件，Python web应用则倾向"拥有"一整个目录结构(或者甚至是整个域(domain))。因此，将特定的代码连接到特定的代码更加灵活，这种连接通常是由一个路由选择系统来处理。</p>
 <p>路由(routes)是包含可选占位符的URL，就像这样：</p>
-<pre><code>:::text
-/users/{name}
+<div class="highlight"><pre>/users/{name}
 /companies/{id}/products
 /blog/{year:\d\d\d\d}/{month:\d\d}/{day:\d\d}/{title}
-</code></pre>
+</pre></div>
+
+
 <p>你可以把这样的一个路由绑定到一个函数，那么当你浏览到 <code>/users/eevee</code> ，那个函数就会被执行，占位符则以 <code>dict(name=u'eevee')</code> 这样的结构可供使用。</p>
 <p>一些框架(比如Pyramid)在这一步上走得更远：不是直接将路由绑定到函数，而是给路由一个名字，然后把名字绑定到函数。需要一点额外的工作，但优点是在你的应用中只需维护一个所有页面的核心列表。你也可以一个路由名和占位符值来生成一个URL---那么，之后，你就可以只在一个地方修改一下就能改变一个URL，而不需要接触其他东西，并且开发过程中打字错误会产生一个错误信息而不是一个404页面。</p>
 <p>语法和具体实现会有些不同，但每个框架都是使用这个系统的某个变种。有些有助于创建REST风格的路由或者其他常见模式，或者你可以很容易编写自己的模式。</p>
-<h2 id="_3">请求周期</h2>
+<h2>请求周期</h2>
 <p>一次HTTP请求往往会执行某处的一个函数(由一个路由选择)，然后给函数传递一个 <code>request</code> 对象参数。</p>
 <p>request对象的确切接口依赖于特定的框架，但是它们一般都比较类似：解析过的查询数据，一些cookie，请求消息头，等等。举例来说， <code>webob</code> (http://www.webob.org) 的 <code>Request</code> 对象包含：</p>
 <ul>
@@ -153,7 +154,7 @@
 </ul>
 <p>request对象的文档一般非常齐全，因此只要浏览一下你所选择的框架的文档，挑出其中重要的内容。</p>
 <p>当你的应用完成了一些非常酷的事情之后，你要让它返回一个响应消息。通常你能选择是否明确地构建一个 <code>Response</code> 对象(包括HTTP消息头和其他可手动设置的细节)还是简单返回一块HTML代码，其他所有东西都使用默认设置。很少需要你自己创建一个响应。对于像返回JSON这样的常见工作，每个框架都有某种快捷的或辅助的装饰器。</p>
-<h2 id="_4">模板</h2>
+<h2>模板</h2>
 <p>组装HTML的工作一般是由模板引擎来完成的。<a href="http://www.makotemplates.org/">Mako</a>和<a href="http://jinja.pocoo.org/">Jiaja2</a>是两个主要的竞争者。</p>
 <p>我真的喜欢Mako。真的，真的，真的。使用它吧。它使用朴素的Python作为语法，使用起来非常自然。你甚至可以在模板里编写纯粹的Python代码块，但是你得控制住，尽可能避免这样做。:)</p>
 <p>Jinja2也不错，但提醒你一下：Jinja2中，如果 <code>foo</code> 看起来像一个字典，那么 <code>foo.bar</code> 就会被当作 <code>foo['bar']</code> 处理，反之亦然。恰巧我认为这并不是一个好主意，我曾遭遇过许多诡异的问题，都是模板系统中这种"特性"所造成的。(另外， <code>{% %}</code> 这种语法真的很烦人，但这有些鸡蛋里挑骨头了)。除此之外，Jinja2是一个非常可靠的库，而你肯定会做得更糟，<a href="http://www.cheetahtemplate.org/">糟得多</a>。</p>
@@ -162,10 +163,10 @@
 <p>当然还有其他的竞争者：排名第三的可能是Genshi，但它令人极其费解，以至于<a href="http://genshi.edgewall.org/">主页</a>上一开始就用了一张流程图； Djano有自己的模板引擎，千方百计想把逻辑剔除出模板(在我看来，对其是不利的)；Bottle同样有自己的极其简单的模板，但是可能很快就会让你感到越来越痛苦；Pyramid的另一个内建模板引擎是Chameleon，将类似HTML的属性标签用于循环和其他逻辑，太TMD古怪了。</p>
 <p>也许你会喜欢其中之一；我并没有都深入使用过它们。</p>
 <p>不管你做什么，都不要使用Cheetah。 <strong>不要</strong> 使用Cheetah。它邪恶可憎。不要再提到它。</p>
-<h2 id="_5">模板中的逻辑</h2>
+<h2>模板中的逻辑</h2>
 <p>也许你以前没用过模板，那你不可避免地会遭遇这个问题---一些复杂的表现代码是应该用Python实现，还是放在模板中实现。</p>
 <p>这是无聊的老生常谈，但我想说：就像许多程序设计中的架构决策，归结起来就是要尽可能减少以后因为它而对自己的厌恶感。尽可能保持模板简单，如果不行的话，也不用勉强。谨记你始终可以在简单的Python模块中编写简单的Python函数，然后导入它。一个强大的模板语言对于你的问题可能内建了创造性的解决方案，所以当你在想办法的时候可以先浏览一下文档。</p>
-<h2 id="unicode">Unicode</h2>
+<h2>Unicode</h2>
 <p>Unicode很烂。这是众所周知的事实。(我在说谎。编码(encoding)处理得很烂。Unicode很伟大。这个问题比较复杂，之后我会写到。)</p>
 <p>Python(2)有两种"字符串"类型： <code>str</code> 和 <code>unicode</code> 。这是一个巧妙的谎言。事实是：一个 <code>str</code> 并不真的是一个字符串。它只是一串字节。有时恰巧看起来像一个字符串，但事实上只是一个二进制表示，就像 <code>85 00 00 00</code> 是数字133的常见二进制表示。一个真正的数字是 <code>int</code> 类型的，一个真正的字符串是 <code>unicode</code> 类型的。</p>
 <p>这个问题很复杂，值得单独写一篇文章来解释(迟早我会写的)，但现在可以有些快速的笔记：</p>
@@ -189,38 +190,41 @@
 <p>实际上，对于撼动编码问题，重音字母和亚洲字符功不可没。将一些非ASCII字符的莫名其妙的话粘贴到你的网站表单中，看看会发生什么。</p>
 </li>
 </ul>
-<h2 id="xss">XSS(跨站脚本攻击)</h2>
+<h2>XSS(跨站脚本攻击)</h2>
 <p>实际上，现在的每项相关技术都内建某种形式的自动HTML转义过滤器。理念是：对于这样的一个模板：</p>
-<pre><code>:::text
-&lt;p&gt;Hello, ${name}!&lt;/p&gt;
-</code></pre>
+<div class="highlight"><pre>&lt;p&gt;Hello, ${name}!&lt;/p&gt;
+</pre></div>
+
+
 <p>当给定 <code>name = '&lt;b&gt;'</code> ，将安全地打印出 <code>Hello, &amp;lt;b&amp;gt;!</code> 。这意味着，大多数时候，你并不需要担心XSS。</p>
 <p>大多数时候，如果没有别的，你必须核对所使用框架和模板引擎的文档，确保自动HTML转义过滤功能默认开启，如果不是，则开启它。(随便说一下：对于Pyramid，Django和Flask，你能轻松获得此项功能。如果你的模板文件具备一个处理HTML的扩展，Bottle则也能自动做到。)</p>
 <p>那么，棘手的地方就是知道何时以及如何关闭它。如果你在Python代码中构建了某种复杂的HTML，且不想完全转义它，那么仅仅使得转义行为失效是个蹩脚的解决方案。任何转义失效的地方都可能发生注入。幸运的是，许多框架(至少有Pyramid和Flask)使用了<a href="http://pypi.python.org/pypi/MarkupSafe">markupsafe</a>库，它能智能地帮助避免这个问题。</p>
 <p>markupsafe提供一个单一的类， <code>Markup</code> ，继承自 <code>unicode</code> . <code>Markup(u'Hello!')</code> ，会产生一个行为上相当像字符串的对象。类方法 <code>Markup.escape</code> 工作方式相同，但会转义经过包裹的字符串中的任意HTML字符。</p>
 <p>这里有两个鬼祟的花招。第一：一个 <code>Markup</code> 对象不会被转义两次。请看：</p>
-<pre><code>:::text
-&gt;&gt;&gt; s = u'&lt;b&gt;oh noo xss&lt;/b&gt;'
+<div class="highlight"><pre>&gt;&gt;&gt; s = u&#39;&lt;b&gt;oh noo xss&lt;/b&gt;&#39;
 &gt;&gt;&gt; Markup.escape(s)
-Markup(u'&amp;lt;b&amp;gt;oh noo xss&amp;lt;/b&amp;gt;')
+Markup(u&#39;&amp;lt;b&amp;gt;oh noo xss&amp;lt;/b&amp;gt;&#39;)
 &gt;&gt; Markup.escape(Markup.escape(s))
-Markup(u'&amp;lt;b&amp;gt;oh noo xss&amp;lt;/b&amp;gt;')
-</code></pre>
+Markup(u&#39;&amp;lt;b&amp;gt;oh noo xss&amp;lt;/b&amp;gt;&#39;)
+</pre></div>
+
+
 <p>因此，一旦创建了一个 <code>Markup</code> 对象，就可将它用于你的模板，过滤器不会管它---即使它包含HTML。</p>
 <p>另一个把戏是， <code>Markup</code> 对象重载了所有string的方法，并且自动转义所有的参数。这意味着在Python里，你可以这么干：</p>
-<pre><code>:::text
-&gt;&gt;&gt; user_input = u'&lt;script&gt;alert("pwn");&lt;/script&gt;'
-&gt;&gt;&gt; Markup(u'&lt;p&gt;Hello, %s!&lt;/p&gt;') % user_input
-Markup(u'&lt;p&gt;Hello, &amp;lt;script&amp;gt;alert(&amp;#34;pwn&amp;#34;);&amp;lt;/script&amp;gt;!&lt;/p&gt;')
-</code></pre>
+<div class="highlight"><pre>&gt;&gt;&gt; user_input = u&#39;&lt;script&gt;alert(&quot;pwn&quot;);&lt;/script&gt;&#39;
+&gt;&gt;&gt; Markup(u&#39;&lt;p&gt;Hello, %s!&lt;/p&gt;&#39;) % user_input
+Markup(u&#39;&lt;p&gt;Hello, &amp;lt;script&amp;gt;alert(&amp;#34;pwn&amp;#34;);&amp;lt;/script&amp;gt;!&lt;/p&gt;&#39;)
+</pre></div>
+
+
 <p>因此你可以相当安全地构建一些复杂的HTML代码，而不用太担心转义不够或者过分转义。</p>
 <p>当然，这并不完美。主要问题是你需要将 <code>Markup().join(...)</code> 用于一些其他的 <code>Markup</code> 对象，而不是 <code>''.join(...)</code> 。并且某些操作，比如分片(slicing)，分割(splitting)，以及正则表达式，有可能产生没有意义的结果。 <strong>绝对</strong> 不要试图分解一个 <code>Markup</code> 对象或者任何其他HTML字符串；如果实在需要的话，那就使用一个真正的解析器，比如 <code>lxml</code> ，但是大多数时候，你可以在将普通字符串包裹进HTML之前，对它做任何你需要的转换。</p>
-<h2 id="_6">表单</h2>
+<h2>表单</h2>
 <p>我厌恶所有处理表单的库。每个单一的库。它们都把作者的疯狂命名方式强加到我的表单。我甚至不喜欢PHP使用 <code>foo[]</code> 作为字段名称的行为；这有多丑陋啊。</p>
 <p>至今让我讨厌程度最低的是<a href="http://wtforms.simplecodes.com/docs/dev/">wtform</a>；它强加的设计上的限制相当少，并且使用起来非常简单。它甚至内建支持配合markupsafe。主要的缺陷是要想去除那些设计上的缺陷比较困难(每个表单元素都有一个与名字相匹配的 <code>id</code> 属性)，并且实现一种新的字段会有点复杂。</p>
 <p>对于其他的我没法多说些什么，唉。<a href="http://www.formencode.org/en/latest/index.html">FormEncode</a>是一个东西。Pyramid的维护者还拥有<a href="http://docs.pylonsproject.org/projects/deform/en/latest/index.html">deform</a> 。它们都做了一些愚蠢的事情，也许确实是因为太挑剔了，我才这样烦扰。货比三家吧。</p>
 <p>无论你做啥，都要确保你使用东西不会使得你的项目变得太大。比表单处理库更让我厌恶的一件事是手动编写验证码。</p>
-<h2 id="santizing">"净化(Santizing)"</h2>
+<h2>"净化(Santizing)"</h2>
 <p>关于PHP界共同趋势的笔记。</p>
 <p><strong>不要</strong> "净化(sanitize)"。</p>
 <p>这个词语本身没有什么意义。不存在某种你可以用于任意字符串并使之"安全"的方法。这种想法就是我一直遇到银行网站的联系表单告诉我不能使用 <code>&lt;</code> 字符的原因；某些傻瓜企业开发者并不知道如何处理数据，所以他强迫所有数据必须简单易懂。</p>
@@ -230,27 +234,27 @@ Markup(u'&lt;p&gt;Hello, &amp;lt;script&amp;gt;alert(&amp;#34;pwn&amp;#34;);&amp
 <p>这并不是说你应该从不修改或过滤用户输入，而是你应该尽可能地避免它，并且当你做的时候应该极其小心。以常见的密码为例，为什么一般都禁止在密码中使用空格或者要将密码限制为16个字符？并没有明确的理由；仅仅是做了的一件事情。</p>
 <p>我仍然被这个问题所困扰：不让我输入 <code>&lt;</code> 的那个地方还坚持要我输入16个数字的字符串作为我的信用卡号。这就很难一目了然地证实我的输入是否正确---此外，在我的信用卡上的号码中间是有空格的呀！为什么不剔除空格和连字符？</p>
 <p>仔细思考你正在做的事情以及你正试图解决什么问题。人们会使用从右到左的Uniode字符对你的站点做一些愚蠢的事情么？你想阻止他们？没有理由要强迫每个人都使用ASCII；Unicode有<a href="http://www.fileformat.info/info/unicode/category/index.htm">类别之分</a>，你可以仅过滤怪异类别的字符。但更好的做法是，修改你的网站，使得说希伯来语的人都能使用它。:)</p>
-<h2 id="_7">调试</h2>
+<h2>调试</h2>
 <p>如果你有幸(例如，使用Pyramid)，那么当你的程序崩溃时，你会有一个交互式的调试器，允许你检查程序的实时状态。你可以运行任意的Python代码，观察变量的状态，审核堆栈，以及耍着玩。</p>
 <p>如果你不幸，也不用担心；你还可以使用<a href="http://werkzeug.pocoo.org/docs/debug/">werkzeug调试器</a>。它相当易于使用；它能包裹任何WSGI应用，然后捕捉异常。(看到没有？WSGI妙得很。)</p>
 <p>只是当你部署应用的时候，要确保关闭调试，否则就会为别人所用；"任意Python代码"意味着任何看到调试屏幕的人都可以做你能在你的电脑做的任何事情。</p>
-<h2 id="_8">数据库</h2>
+<h2>数据库</h2>
 <p>一罐子的蠕虫啊。这话有些武断(This is as opinionated as I'm going to get.)。</p>
 <p>其一：你应该使用ORM。它是尝试将数据表映射到Python类，数据行映射到对象，查询映射到方法的物件。结果更加简单明了，通常更加容易理解，并且有时甚至正确率更高。</p>
 <p>你应该使用的ORM是<a href="http://www.sqlalchemy.org/">SQLAlchemy</a>。Pyramid对它有内建支持；如果你使用的框架没有内置支持，SQLAlchemy这么受欢迎，框架文档肯定有说明如何与它相连。如果你在使用Django，它有自己的ORM，虽然没有SQLAlchemy这么好，但要想把Django自带的ORM替换掉非常麻烦，不值得，除非你有迫切的需求。</p>
 <p>许多贬低ORM的人会告诉你ORM会产生糟糕的SQL。是的，糟糕的ORM确实会，但优秀的ORM，比如SQLAlchemy，对于SQL，和你理解得一样好。如果你懂SQL，SQLAlchemy会非常适合你；如果你不懂SQL，SQLAlchemy至少能帮你避免很多编写糟糕SQL的尴尬。记住你总是可以察看执行过的查询；SQLAlchemy可以把它们全部记录下来，并且各种调试工具栏会显示查询执行时间列表。(另外，留心那些执行多次的相同查询，这标示需要预先加载。)</p>
 <p>接下来，使用事务(transaction)。希望你不要对这个有太多的顾虑；如果一个框架集成了SQLAlchemy，它很可能会为你做这事。理念是：当开始一个请求，则开始一个事务，如果发生异常，事务会自动回滚。这是你一开始就想要的行为。这是使用数据库的一半(不对，是1/4)原因。</p>
 <p>还有一件事：既然本文中我所说的都是关于尝试新事物，那么 <strong>不要使用MySQL</strong> 。在我能想到的任何意义上，MySQL都是数据库中的PHP(the PHP of databases)。考虑一下<a href="http://www.postgresql.org/">PostgreSQL</a>，它搭建起来并不会更难，使用起来更友好，也不会让你做在日期栏中存储字符串那样的蠢事。(在我看来，最友好的事情之一是PostgreSQL可以使用你的Unix用户帐号登录，不需要密码)。唯一的有人曾经反对使用Postgres的理由是它"不能扩展"。请放心，我还没看到这种情况的实际例子，总之，当访问者超过百万的时候，你才需要担心这个问题。</p>
-<h2 id="sessions">会话(Sessions)</h2>
+<h2>会话(Sessions)</h2>
 <p>每个框架都支持会话。看起来我们也熟悉：一个会话标识存储于cookie中，并且在后端你能魔法般地得到一个字典，可以往其中存储任意数据。随你怎么用。但尽量不要把它当作垃圾场。这事实证明数据库非常适合存储数据，你明白的。</p>
 <p>额外的特性包括：对CSRF(译注：Cross Site Request Forgery，跨站请求伪造)保护的一等(first-class)支持，以及信息提示(Pyramid，Flask，Django)。去阅读文档吧。</p>
 <p>提醒一句：如果你使用Beaker会话(Pyramid采用这个独立的库)，繁琐的东西会逐渐积累。默认情况下是为每个会话在磁盘上创建一个文件，但是如果使用数据库支持会话，你将得到一个存储了大量会话的数据表，并且这个数据表只增不减。这是一个非常糟糕却不明显的问题，主要的修复方法是手工操作。深表遗憾。</p>
-<h2 id="_9">部署</h2>
+<h2>部署</h2>
 <p>啊哈，你明白我的意思的，部署有很多种方式，应该花更多的时间来讲述，但这里我没法花那么多的时间。</p>
 <p>如果可能，还是宁愿花些钱吧。提供服务肯定是要有代价的。如果你有自己的专用(虚拟的或者不是)机器随你摆弄，那么这是部署应用最简单的方式---手头有台服务器是件很酷的事情。你可以每月花费$20而获得一个基本的<a href="http://www.linode.com/?r=c5316aa7d1cfce6f5fe611bb455ef1548cc1946c">Linode</a>，还存在更便宜的托管服务提供商(但是没那么酷了)。</p>
 <p><a href="http://www.heroku.com/">Heroku</a>也是值得选择的，其收费等级中有一个免费级，只提供一个工作进程(worker，译注：Heroku官网解释"A worker dyno is a single background process running your code and processing jobs from a queue.")(类似于最低级Linode)，但是每个额外的工作进程都需要你另外支付$36/每月。(可以同时处理的请求数目正比于你持有的工作进程数目。具体需要多少工作进程则要看你的应用以及你如何运行它。)优点是你的应用会被部署得很专业。Heroku现在还支持多个应用副本。</p>
 <p>正如他们所说，部署是个很好的问题：因为这意味着你确实构建了有用的东西。那么在我努力写一篇关于部署选项的文章之时，你赶紧去构建某个应用吧。</p>
-<h2 id="_10">总结</h2>
+<h2>总结</h2>
 <p>Web是复杂的，涉及很多活动件(moving parts)。聪明的人们已经为你解决了很多问题。去捣鼓吧。</p>
 <p>希望本文足够让你开始Web开发了！</p>
 <p>一如既往，我并不知道自己做得怎么样，所以请你告诉怎样做得更好。</p>

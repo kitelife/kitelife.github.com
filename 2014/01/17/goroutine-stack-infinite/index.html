@@ -96,25 +96,26 @@
 <p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
 <p>Go编程新手可能会偶然发现<a href="http://golang.org/">Go语言</a>---与一个Goroutine可用栈空间大小相关---的一个古怪特性。这通常是由于程序员
 无意间构造了一个无限递归函数调用而产生的。为了阐明这个特性，以如下代码（有点刻意设计的）为例。</p>
-<pre><code>:::go
-package main
+<div class="highlight"><pre><span class="kn">package</span> <span class="nx">main</span>
 
-import "fmt"
+<span class="kn">import</span> <span class="s">&quot;fmt&quot;</span>
 
-type S struct {
-    a, b int
-}
+<span class="kd">type</span> <span class="nx">S</span> <span class="kd">struct</span> <span class="p">{</span>
+    <span class="nx">a</span><span class="p">,</span> <span class="nx">b</span> <span class="kt">int</span>
+<span class="p">}</span>
 
-// String implements the fmt.Stringer interface
-func (s *S) String() string {
-    return fmt.Sprintf("%s", s)     // Sprintf will call s.String()
-}
+<span class="c1">// String implements the fmt.Stringer interface</span>
+<span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <span class="o">*</span><span class="nx">S</span><span class="p">)</span> <span class="nx">String</span><span class="p">()</span> <span class="kt">string</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">fmt</span><span class="p">.</span><span class="nx">Sprintf</span><span class="p">(</span><span class="s">&quot;%s&quot;</span><span class="p">,</span> <span class="nx">s</span><span class="p">)</span>     <span class="c1">// Sprintf will call s.String()</span>
+<span class="p">}</span>
 
-func main() {
-    s := &amp;S{a: 1, b: 2}
-    fmt.Println(s)
-}
-</code></pre>
+<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">s</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">S</span><span class="p">{</span><span class="nx">a</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">b</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+    <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">s</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+
+
 <p>如果你运行这个程序（我不建议你这样做），你会发现你的机器开始频繁地swap（译注：不了解swap的，可以简单理解为“内存与硬盘之间数据的导出导入”），
 并且可能不再响应操作事件，除非你在一切无法挽回之前及时地按下^C。我知道所有人都会先在Go官网的playground中尝试运行这个程序，
 <a href="http://dave.cheney.net/2013/06/02/why-is-a-goroutines-stack-infinite">所以我已经为你准备好了</a>。</p>

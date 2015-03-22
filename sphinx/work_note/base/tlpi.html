@@ -425,7 +425,9 @@
 <div class="section" id="id5">
 <h2>第10章：时间<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
 <img alt="https://raw.github.com/youngsterxyf/work_note/master/base/pics/time-system-calls.png" src="https://raw.github.com/youngsterxyf/work_note/master/base/pics/time-system-calls.png" />
-<p>SUSv3规定，调用 <tt class="docutils literal"><span class="pre">ctime()</span></tt> 、 <tt class="docutils literal"><span class="pre">gmtime()</span></tt> 、 <tt class="docutils literal"><span class="pre">localTime()</span></tt> 或 <tt class="docutils literal"><span class="pre">asctime()</span></tt> 中的任一函数，都可能会覆盖由其他函数返回，且经静态分配的数据结构。换言之，这些函数可以共享返回的字符数据和tm结构体。</p>
+<p>SUSv3规定，调用``ctime()``、<tt class="docutils literal"><span class="pre">gmtime()</span></tt>、<a href="#id6"><span class="problematic" id="id7">``</span></a>localTime()``或``asctime()``中的任一函数，都可能会覆盖由其他函数返回，且经静态分配的数据结构。换言之，这些函数可以共享返回的字符数据和tm结构体。</p>
+<p>系统的本地时区由时区文件/etc/localtime定义，通常链接到/usr/share/zoneinfo下的一个文件。</p>
+<p>为运行中的程序指定一个时区，需要将TZ环境变量设置为由一冒号（:）和时区名称组成的字符串，其中时区名称定义于/usr/share/zoneinfo中。设置时区会自动影响到函数``ctime()``、<tt class="docutils literal"><span class="pre">localtime()</span></tt>、<tt class="docutils literal"><span class="pre">mktime()``和``strftime()</span></tt>。为了获取当前的时区设置，上述函数都会调用tzset(3)。函数``tzset()``会首先检查环境变量TZ。如果尚未设置该变量，那么就采用/etc/localtime中定义的默认时区来初始化时区。如果TZ环境变量的值为空，或无法与时区文件名相匹配，那么就使用UTC。</p>
 </div>
 </div>
 

@@ -1,5 +1,310 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>黑 * 白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/youngsterxyf.atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2015-03-12T00:00:00+08:00</updated><entry><title>读书笔记：Modern PHP - New Features and Good Practices</title><link href="http://youngsterxyf.github.io/2015/03/12/read-modern-php/" rel="alternate"></link><updated>2015-03-12T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2015-03-12:2015/03/12/read-modern-php/</id><summary type="html">&lt;p&gt;&lt;img alt="modern-php" src="/assets/uploads/pics/modern-php.png" /&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>黑 * 白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/youngsterxyf.atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2015-03-22T00:00:00+08:00</updated><entry><title>Slim源码阅读笔记</title><link href="http://youngsterxyf.github.io/2015/03/22/read-slim/" rel="alternate"></link><updated>2015-03-22T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2015-03-22:2015/03/22/read-slim/</id><summary type="html">&lt;p&gt;以前读过 &lt;a href="http://www.phptherightway.com/"&gt;PHP - The Right Way&lt;/a&gt; 一文，
+还翻译过其中的 &lt;a href="http://www.phptherightway.com/pages/The-Basics.html"&gt;The Baiscs&lt;/a&gt; 一节
+(译文见 &lt;a href="http://blog.xiayf.cn/2013/03/08/php-basics/"&gt;这里&lt;/a&gt;)。&lt;/p&gt;
+&lt;p&gt;前两周读了 &lt;a href="http://www.amazon.cn/Modern-PHP-Lockhart-Josh/dp/1491905018/ref=sr_1_1?ie=UTF8&amp;amp;qid=1427031708&amp;amp;sr=8-1&amp;amp;keywords=Modern+PHP"&gt;Modern PHP - New Features and Good Practices&lt;/a&gt; 一书
+（读书笔记见&lt;a href="http://blog.xiayf.cn/2015/03/12/read-modern-php/"&gt;这里&lt;/a&gt;），
+甚是不错。&lt;/p&gt;
+&lt;p&gt;这篇文档和这本书的作者都是&lt;a href="https://github.com/codeguy"&gt;Josh Lockhart&lt;/a&gt;，
+他写了一个Web框架&lt;a href="http://www.slimframework.com/"&gt;Slim&lt;/a&gt;，文档与书籍内容的精华都体现在这个框架中，
+所以个人觉得这个框架值得一读。&lt;/p&gt;
+&lt;p&gt;Slim的设计与实现都非常精简易懂，其对请求的主处理流程如下图所示：&lt;/p&gt;
+&lt;p&gt;&lt;img alt="slim-process" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/slim.png" /&gt;&lt;/p&gt;
+&lt;p&gt;其中的核心概念包括：IoC容器、中间件、路由匹配等。&lt;/p&gt;
+&lt;h4&gt;IoC容器&lt;/h4&gt;
+&lt;p&gt;IoC，为Inversion of Control的缩写，中文翻译为“控制反转” - 是一种解决组件间依赖关系、配置和生命周期的设计模式，其最常见的实现方式为：依赖注入（DI）-
+当系统/应用需要使用某个依赖组件时，容器根据配置信息构建一个组件对象返回给系统/应用。&lt;/p&gt;
+&lt;p&gt;对于Web框架来说，基于Ioc容器可以将框架的功能拆解成多个组件，按需配置调用。&lt;/p&gt;
+&lt;p&gt;Slim的IoC容器类为：&lt;code&gt;\Slim\Helper\Set&lt;/code&gt;，以单例request为例，当调用request对象时&lt;code&gt;$app-&amp;gt;request&lt;/code&gt;，先触发Slim类的魔术方法&lt;code&gt;__get&lt;/code&gt;，其实现如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function __get($name)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    return $this-&amp;gt;container-&amp;gt;get($name);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;而容器类Set的get方法实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Get data value with key&lt;/span&gt;
+&lt;span class="x"&gt; * @param  string $key     The data key&lt;/span&gt;
+&lt;span class="x"&gt; * @param  mixed  $default The value to return if data key does not exist&lt;/span&gt;
+&lt;span class="x"&gt; * @return mixed           The data value, or the default value&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public function get($key, $default = null)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if ($this-&amp;gt;has($key)) {&lt;/span&gt;
+&lt;span class="x"&gt;        $isInvokable = is_object($this-&amp;gt;data[$this-&amp;gt;normalizeKey($key)]) &amp;amp;&amp;amp; method_exists($this-&amp;gt;data[$this-&amp;gt;normalizeKey($key)], &amp;#39;__invoke&amp;#39;);&lt;/span&gt;
+
+&lt;span class="x"&gt;        // 注意这里的$this，在初始化组件时，将当前容器对象作为参数传入&lt;/span&gt;
+&lt;span class="x"&gt;        // 从这里可以看到，容器里可以存放普通的配置信息（如settings），也可以存放组件配置&lt;/span&gt;
+&lt;span class="x"&gt;        return $isInvokable ? $this-&amp;gt;data[$this-&amp;gt;normalizeKey($key)]($this) : $this-&amp;gt;data[$this-&amp;gt;normalizeKey($key)];&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+
+&lt;span class="x"&gt;    return $default;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;我们再来看看单例组件的实现，以request为例：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;// 注册单例组件request&lt;/span&gt;
+&lt;span class="x"&gt;$this-&amp;gt;container-&amp;gt;singleton(&amp;#39;request&amp;#39;, function ($c) {&lt;/span&gt;
+&lt;span class="x"&gt;    // request组件的实例化依赖于environment组件，&lt;/span&gt;
+&lt;span class="x"&gt;    // 而environment组件包含了$_SERVER以及进程标准输入的数据&lt;/span&gt;
+&lt;span class="x"&gt;    return new \Slim\Http\Request($c[&amp;#39;environment&amp;#39;]);&lt;/span&gt;
+&lt;span class="x"&gt;});&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中&lt;code&gt;singleton&lt;/code&gt;方法的实现如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Ensure a value or object will remain globally unique&lt;/span&gt;
+&lt;span class="x"&gt; * @param  string   $key   The value or object name&lt;/span&gt;
+&lt;span class="x"&gt; * @param  \Closure $value The closure that defines the object&lt;/span&gt;
+&lt;span class="x"&gt; * @return mixed&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public function singleton($key, $value)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;set($key, function ($c) use ($value) {&lt;/span&gt;
+&lt;span class="x"&gt;        // 静态对象&lt;/span&gt;
+&lt;span class="x"&gt;        static $object;&lt;/span&gt;
+
+&lt;span class="x"&gt;        if (null === $object) {&lt;/span&gt;
+&lt;span class="x"&gt;            $object = $value($c);&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+
+&lt;span class="x"&gt;        return $object;&lt;/span&gt;
+&lt;span class="x"&gt;    });&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h4&gt;中间件&lt;/h4&gt;
+&lt;p&gt;Slim中的中间件分两种：应用级中间件、路由级中间件。&lt;/p&gt;
+&lt;p&gt;应用中间件基于Rack协议实现，可以在应用对象调用之前或之后检查、分析、或修改应用环境变量、请求对象、响应对象。&lt;/p&gt;
+&lt;p&gt;每个中间件类都继承自抽象类Middleware，且需要实现其抽象方法call。所有注册的中间件组成一个中间件栈，其结构类似于一个洋葱，先注册的中间件在里层，后注册的在外层，最里层的是应用对象自身，请求从外到里逐层进行处理，任何一层都可以根据条件直接响应请求或递归调用往里一层/下一个中间件。&lt;/p&gt;
+&lt;p&gt;以中间件SessionCookie与MethodOverride为例，其call方法实现如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;// 中间件SessionCookie&lt;/span&gt;
+&lt;span class="x"&gt;public function call()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // 加载session数据&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;loadSession();&lt;/span&gt;
+&lt;span class="x"&gt;    // 调用下一个中间件&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;next-&amp;gt;call();&lt;/span&gt;
+&lt;span class="x"&gt;    // 保存session数据&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;saveSession();&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+
+&lt;span class="x"&gt;// 中间件MethodOverride&lt;/span&gt;
+&lt;span class="x"&gt;public function call()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    $env = $this-&amp;gt;app-&amp;gt;environment();&lt;/span&gt;
+&lt;span class="x"&gt;    if (isset($env[&amp;#39;HTTP_X_HTTP_METHOD_OVERRIDE&amp;#39;])) {&lt;/span&gt;
+&lt;span class="x"&gt;        // Header commonly used by Backbone.js and others&lt;/span&gt;
+&lt;span class="x"&gt;        $env[&amp;#39;slim.method_override.original_method&amp;#39;] = $env[&amp;#39;REQUEST_METHOD&amp;#39;];&lt;/span&gt;
+&lt;span class="x"&gt;        $env[&amp;#39;REQUEST_METHOD&amp;#39;] = strtoupper($env[&amp;#39;HTTP_X_HTTP_METHOD_OVERRIDE&amp;#39;]);&lt;/span&gt;
+&lt;span class="x"&gt;    } elseif (isset($env[&amp;#39;REQUEST_METHOD&amp;#39;]) &amp;amp;&amp;amp; $env[&amp;#39;REQUEST_METHOD&amp;#39;] === &amp;#39;POST&amp;#39;) {&lt;/span&gt;
+&lt;span class="x"&gt;        // HTML Form Override&lt;/span&gt;
+&lt;span class="x"&gt;        $req = new \Slim\Http\Request($env);&lt;/span&gt;
+&lt;span class="x"&gt;        // $this-&amp;gt;settings[&amp;#39;key&amp;#39;] 默认为_METHOD&lt;/span&gt;
+&lt;span class="x"&gt;        $method = $req-&amp;gt;post($this-&amp;gt;settings[&amp;#39;key&amp;#39;]);&lt;/span&gt;
+&lt;span class="x"&gt;        if ($method) {&lt;/span&gt;
+&lt;span class="x"&gt;            $env[&amp;#39;slim.method_override.original_method&amp;#39;] = $env[&amp;#39;REQUEST_METHOD&amp;#39;];&lt;/span&gt;
+&lt;span class="x"&gt;            $env[&amp;#39;REQUEST_METHOD&amp;#39;] = strtoupper($method);&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    // 调用下一个中间件&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;next-&amp;gt;call();&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;hr /&gt;
+&lt;p&gt;路由级中间件可以是任何可被调用的东西（&lt;code&gt;is_callable&lt;/code&gt;返回&lt;code&gt;true&lt;/code&gt;）。在相关路由的回调触发之前，会逐个调用绑定到这个路由的所有路由级中间件，代码实现如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;// 路由类Route的dispatch方法：&lt;/span&gt;
+&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Dispatch route&lt;/span&gt;
+&lt;span class="x"&gt; *&lt;/span&gt;
+&lt;span class="x"&gt; * This method invokes the route object&amp;#39;s callable. If middleware is&lt;/span&gt;
+&lt;span class="x"&gt; * registered for the route, each callable middleware is invoked in&lt;/span&gt;
+&lt;span class="x"&gt; * the order specified.&lt;/span&gt;
+&lt;span class="x"&gt; *&lt;/span&gt;
+&lt;span class="x"&gt; * @return bool&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public function dispatch()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // 逐个调用绑定的路由级中间件，以当前路由对象作为参数传入&lt;/span&gt;
+&lt;span class="x"&gt;    foreach ($this-&amp;gt;middleware as $mw) {&lt;/span&gt;
+&lt;span class="x"&gt;        call_user_func_array($mw, array($this));&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+
+&lt;span class="x"&gt;    // 调用路由回调，并将通过路由模式从URL中正则匹配到的参数传入回调&lt;/span&gt;
+&lt;span class="x"&gt;    $return = call_user_func_array($this-&amp;gt;getCallable(), array_values($this-&amp;gt;getParams()));&lt;/span&gt;
+&lt;span class="x"&gt;    return ($return === false) ? false : true;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h4&gt;路由匹配&lt;/h4&gt;
+&lt;p&gt;先来看看Slim应用对象的call方法：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Call&lt;/span&gt;
+&lt;span class="x"&gt; *&lt;/span&gt;
+&lt;span class="x"&gt; * This method finds and iterates all route objects that match the current request URI.&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public function call()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    try {&lt;/span&gt;
+&lt;span class="x"&gt;        if (isset($this-&amp;gt;environment[&amp;#39;slim.flash&amp;#39;])) {&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;view()-&amp;gt;setData(&amp;#39;flash&amp;#39;, $this-&amp;gt;environment[&amp;#39;slim.flash&amp;#39;]);&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;applyHook(&amp;#39;slim.before&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;        ob_start();&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;applyHook(&amp;#39;slim.before.router&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;        $dispatched = false;&lt;/span&gt;
+&lt;span class="x"&gt;        // 路由匹配&lt;/span&gt;
+&lt;span class="x"&gt;        $matchedRoutes = $this-&amp;gt;router-&amp;gt;getMatchedRoutes($this-&amp;gt;request-&amp;gt;getMethod(), $this-&amp;gt;request-&amp;gt;getResourceUri());&lt;/span&gt;
+&lt;span class="x"&gt;        // 逐个路由分发执行&lt;/span&gt;
+&lt;span class="x"&gt;        foreach ($matchedRoutes as $route) {&lt;/span&gt;
+&lt;span class="x"&gt;            try {&lt;/span&gt;
+&lt;span class="x"&gt;                $this-&amp;gt;applyHook(&amp;#39;slim.before.dispatch&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;                $dispatched = $route-&amp;gt;dispatch();&lt;/span&gt;
+&lt;span class="x"&gt;                $this-&amp;gt;applyHook(&amp;#39;slim.after.dispatch&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;                if ($dispatched) {&lt;/span&gt;
+&lt;span class="x"&gt;                    break;&lt;/span&gt;
+&lt;span class="x"&gt;                }&lt;/span&gt;
+&lt;span class="x"&gt;            } catch (\Slim\Exception\Pass $e) {&lt;/span&gt;
+&lt;span class="x"&gt;                continue;&lt;/span&gt;
+&lt;span class="x"&gt;            }&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;        if (!$dispatched) {&lt;/span&gt;
+&lt;span class="x"&gt;            $this-&amp;gt;notFound();&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;applyHook(&amp;#39;slim.after.router&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;stop();&lt;/span&gt;
+&lt;span class="x"&gt;    } catch (\Slim\Exception\Stop $e) {&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;response()-&amp;gt;write(ob_get_clean());&lt;/span&gt;
+&lt;span class="x"&gt;    } catch (\Exception $e) {&lt;/span&gt;
+&lt;span class="x"&gt;        if ($this-&amp;gt;config(&amp;#39;debug&amp;#39;)) {&lt;/span&gt;
+&lt;span class="x"&gt;            throw $e;&lt;/span&gt;
+&lt;span class="x"&gt;        } else {&lt;/span&gt;
+&lt;span class="x"&gt;            try {&lt;/span&gt;
+&lt;span class="x"&gt;                $this-&amp;gt;response()-&amp;gt;write(ob_get_clean());&lt;/span&gt;
+&lt;span class="x"&gt;                $this-&amp;gt;error($e);&lt;/span&gt;
+&lt;span class="x"&gt;            } catch (\Slim\Exception\Stop $e) {&lt;/span&gt;
+&lt;span class="x"&gt;                // Do nothing&lt;/span&gt;
+&lt;span class="x"&gt;            }&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中用于路由匹配的Router类的getMatchedRoutes方法实现如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Return route objects that match the given HTTP method and URI&lt;/span&gt;
+&lt;span class="x"&gt; * @param  string               $httpMethod   The HTTP method to match against&lt;/span&gt;
+&lt;span class="x"&gt; * @param  string               $resourceUri  The resource URI to match against&lt;/span&gt;
+&lt;span class="x"&gt; * @param  bool                 $reload       Should matching routes be re-parsed?&lt;/span&gt;
+&lt;span class="x"&gt; * @return array[\Slim\Route]&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public function getMatchedRoutes($httpMethod, $resourceUri, $reload = false)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if ($reload || is_null($this-&amp;gt;matchedRoutes)) {&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;matchedRoutes = array();&lt;/span&gt;
+&lt;span class="x"&gt;        foreach ($this-&amp;gt;routes as $route) {&lt;/span&gt;
+&lt;span class="x"&gt;            // 如果当前请求的HTTP方法不被当前route支持且不是ANY，则跳过&lt;/span&gt;
+&lt;span class="x"&gt;            if (!$route-&amp;gt;supportsHttpMethod($httpMethod) &amp;amp;&amp;amp; !$route-&amp;gt;supportsHttpMethod(&amp;quot;ANY&amp;quot;)) {&lt;/span&gt;
+&lt;span class="x"&gt;                continue;&lt;/span&gt;
+&lt;span class="x"&gt;            }&lt;/span&gt;
+
+&lt;span class="x"&gt;            // 否则继续匹配环境变量PATH_INFO&lt;/span&gt;
+&lt;span class="x"&gt;            if ($route-&amp;gt;matches($resourceUri)) {&lt;/span&gt;
+&lt;span class="x"&gt;                $this-&amp;gt;matchedRoutes[] = $route;&lt;/span&gt;
+&lt;span class="x"&gt;            }&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+
+&lt;span class="x"&gt;    return $this-&amp;gt;matchedRoutes;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中用于PATH_INFO匹配的Route类的matches方法实现如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Matches URI?&lt;/span&gt;
+&lt;span class="x"&gt; *&lt;/span&gt;
+&lt;span class="x"&gt; * Parse this route&amp;#39;s pattern, and then compare it to an HTTP resource URI&lt;/span&gt;
+&lt;span class="x"&gt; * This method was modeled after the techniques demonstrated by Dan Sosedoff at:&lt;/span&gt;
+&lt;span class="x"&gt; *&lt;/span&gt;
+&lt;span class="x"&gt; * http://blog.sosedoff.com/2009/09/20/rails-like-php-url-router/&lt;/span&gt;
+&lt;span class="x"&gt; *&lt;/span&gt;
+&lt;span class="x"&gt; * @param  string $resourceUri A Request URI&lt;/span&gt;
+&lt;span class="x"&gt; * @return bool&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public function matches($resourceUri)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    //Convert URL params into regex patterns, construct a regex for this route, init params&lt;/span&gt;
+&lt;span class="x"&gt;    // preg_replace_callback — 执行一个正则表达式搜索并且使用一个回调进行替换&lt;/span&gt;
+&lt;span class="x"&gt;    $patternAsRegex = preg_replace_callback(&lt;/span&gt;
+&lt;span class="x"&gt;        &amp;#39;#:([\w]+)\+?#&amp;#39;,&lt;/span&gt;
+&lt;span class="x"&gt;        array($this, &amp;#39;matchesCallback&amp;#39;),&lt;/span&gt;
+&lt;span class="x"&gt;        // 括号中的部分表示可选&lt;/span&gt;
+&lt;span class="x"&gt;        // 如：/archive(/:year(/:month(/:day)))&lt;/span&gt;
+&lt;span class="x"&gt;        str_replace(&amp;#39;)&amp;#39;, &amp;#39;)?&amp;#39;, (string)$this-&amp;gt;pattern)&lt;/span&gt;
+&lt;span class="x"&gt;    );&lt;/span&gt;
+&lt;span class="x"&gt;    // 即使pattern最后有斜杠/，对于URL来说也是可选的&lt;/span&gt;
+&lt;span class="x"&gt;    if (substr($this-&amp;gt;pattern, -1) === &amp;#39;/&amp;#39;) {&lt;/span&gt;
+&lt;span class="x"&gt;        $patternAsRegex .= &amp;#39;?&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+
+&lt;span class="x"&gt;    $regex = &amp;#39;#^&amp;#39; . $patternAsRegex . &amp;#39;$#&amp;#39;;&lt;/span&gt;
+
+&lt;span class="x"&gt;    // 大小写不敏感&lt;/span&gt;
+&lt;span class="x"&gt;    if ($this-&amp;gt;caseSensitive === false) {&lt;/span&gt;
+&lt;span class="x"&gt;        $regex .= &amp;#39;i&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+
+&lt;span class="x"&gt;    //Cache URL params&amp;#39; names and values if this route matches the current HTTP request&lt;/span&gt;
+&lt;span class="x"&gt;    // 正则匹配&lt;/span&gt;
+&lt;span class="x"&gt;    if (!preg_match($regex, $resourceUri, $paramValues)) {&lt;/span&gt;
+&lt;span class="x"&gt;        return false;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    foreach ($this-&amp;gt;paramNames as $name) {&lt;/span&gt;
+&lt;span class="x"&gt;        if (isset($paramValues[$name])) {&lt;/span&gt;
+&lt;span class="x"&gt;            if (isset($this-&amp;gt;paramNamesPath[$name])) {&lt;/span&gt;
+&lt;span class="x"&gt;                $this-&amp;gt;params[$name] = explode(&amp;#39;/&amp;#39;, urldecode($paramValues[$name]));&lt;/span&gt;
+&lt;span class="x"&gt;            } else {&lt;/span&gt;
+&lt;span class="x"&gt;                $this-&amp;gt;params[$name] = urldecode($paramValues[$name]);&lt;/span&gt;
+&lt;span class="x"&gt;            }&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+
+&lt;span class="x"&gt;    return true;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中正则搜索替换的回调方法matchesCallback的实现如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Convert a URL parameter (e.g. &amp;quot;:id&amp;quot;, &amp;quot;:id+&amp;quot;) into a regular expression&lt;/span&gt;
+&lt;span class="x"&gt; * @param  array $m URL parameters&lt;/span&gt;
+&lt;span class="x"&gt; * @return string       Regular expression for URL parameter&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;protected function matchesCallback($m)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;paramNames[] = $m[1];&lt;/span&gt;
+&lt;span class="x"&gt;    if (isset($this-&amp;gt;conditions[$m[1]])) {&lt;/span&gt;
+&lt;span class="x"&gt;        return &amp;#39;(?P&amp;lt;&amp;#39; . $m[1] . &amp;#39;&amp;gt;&amp;#39; . $this-&amp;gt;conditions[$m[1]] . &amp;#39;)&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    if (substr($m[0], -1) === &amp;#39;+&amp;#39;) {&lt;/span&gt;
+&lt;span class="x"&gt;        $this-&amp;gt;paramNamesPath[$m[1]] = 1;&lt;/span&gt;
+
+&lt;span class="x"&gt;        return &amp;#39;(?P&amp;lt;&amp;#39; . $m[1] . &amp;#39;&amp;gt;.+)&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+
+&lt;span class="x"&gt;    return &amp;#39;(?P&amp;lt;&amp;#39; . $m[1] . &amp;#39;&amp;gt;[^/]+)&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;</summary><category term="PHP"></category><category term="slim"></category><category term="笔记"></category><category term="总结"></category></entry><entry><title>读书笔记：Modern PHP - New Features and Good Practices</title><link href="http://youngsterxyf.github.io/2015/03/12/read-modern-php/" rel="alternate"></link><updated>2015-03-12T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2015-03-12:2015/03/12/read-modern-php/</id><summary type="html">&lt;p&gt;&lt;img alt="modern-php" src="/assets/uploads/pics/modern-php.png" /&gt;&lt;/p&gt;
 &lt;p&gt;高清无码大图：&lt;a href="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/modern-php.png"&gt;戳这里&lt;/a&gt;&lt;/p&gt;
 &lt;hr /&gt;
 &lt;p&gt;推荐阅读！&lt;/p&gt;</summary><category term="笔记"></category><category term="PHP"></category></entry><entry><title>Yii源码阅读笔记 - 日志组件</title><link href="http://youngsterxyf.github.io/2015/03/09/read-yii-code-8/" rel="alternate"></link><updated>2015-03-09T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2015-03-09:2015/03/09/read-yii-code-8/</id><summary type="html">&lt;h3&gt;使用&lt;/h3&gt;

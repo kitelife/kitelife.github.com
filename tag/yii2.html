@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 
-        <title>黑 * 白 - 负载均衡</title>
+        <title>黑 * 白 - Yii</title>
         <meta charset="utf-8" />
         <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑 * 白 Full Atom Feed" />
         <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑 * 白 Full RSS Feed" />
@@ -66,70 +66,44 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
-                        <a href="../2013/12/02/re_introduce_haproxyconsole/" rel="bookmark" title="Permalink to HAProxyConsole简介">HAProxyConsole简介</a>
+                        <a href="../2014/11/04/read-yii-code-1/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 请求处理基本流程">Yii源码阅读笔记 - 请求处理基本流程</a>
                     </h2>
                 </header>
                 <footer class="post-info">
-                    <abbr class="published" title="2013-12-02T00:00:00"> 2013-12-02 Mon </abbr>
+                    <abbr class="published" title="2014-11-04T00:00:00"> 2014-11-04 Tue </abbr>
 <address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>之前在<a href="http://youngsterxyf.github.io/2013/11/01/unescape-html-in-golang-html_template/">Golang中如何让html/template不转义html标签</a>、<a href="http://youngsterxyf.github.io/2013/10/16/high-availability-load-balancer-and-dns/">搭建高可用负载均衡组件及缓存DNS</a>两篇文章中都提到为了方便使用HAProxy，我实现了一个简单的HAProxy负载均衡任务管理系统。前些天我把<a href="http://youngsterxyf.github.io/haproxyconsole/">代码放在Github上</a>，算是开源吧。</p>
-<p>同事使用该管理系统，遇到问题时，由于不清楚其实现，也就无法分析问题出在哪，同时也会有些恐慌，生怕搞挂了HAProxy，毕竟上面承载了一些关键的业务，所以我绘制一张图用于说明HAProxyConsole的应用场景和工作原理。</p>
-<p><img alt="HAProxyConsole-arch" src="/assets/uploads/pics/HAProxyConsole-arch.png" /></p>
-<p>图中蓝色标识的部分都属于HAProxyConsole。</p>
+                <div class="entry-content"> <p>对于Web框架，我认为其主要有三点作用：</p>
+<ol>
+<li>提供多人协作的基本规范</li>
+<li>避免重复造轮子</li>
+<li>开发者只需关注业务逻辑，脏活（如：基本的安全防范、兼容问题）Web框架都已完成并提供设计良好的API</li>
+</ol>
+<p>但代价是学习成本 - 为了尽可能发挥Web框架的优势，需要花一些阅读文档，甚至是框架源码（特别是文档缺乏或者文档写得垃圾的），然后经过几次项目实践，一切才能了然于胸。</p>
+<p>喏，为了在工作中更好地使用、避免误用Yii框架，大致阅读了Yii框架的部分代码，然后有了这个系列的笔记。</p>
+<hr />
+<p>深入学习一个Web框架，首先要理解的是请求处理流程。对于PHP而言，处理流程也即包含了应用的初始化过程，如加载配置、初始化组件等。请求处理流程中最核心的应该是路由解析和分发，此外可能还有过滤器处理、事件处理等，直到请求处理进入具体的Controller和Action。响应生成、过滤等也可以关注。</p>
+<hr />
+<p>基于Yii框架的工程目录结构大致如下所示：</p>
+<p><img alt="Yii-Project-Structure" src="/assets/uploads/pics/yii-project-structure.png" /></p>
 <ul>
-<li>用户通过Web页面增/删/改/查负载均衡任务，但这4个操作直接修改的都仅是数据库（DB.json或MySQL数据库）。另外，HAProxyConsole的Web页面中还嵌入了主从HAProxy自带的数据统计页面。</li>
-<li>只有当用户点击按钮“应用到主HAProxy”或“应用到从HAProxy”后，HAProxyConsole才会根据DB.json或MySQL中存储的数据和配置文件haproxy_conf_comm.json生成最新的HAProxy配置文件，然后拷贝一份为主HAProxy的配置文件或远程拷贝一份为从HAProxy的配置文件，最后重启HAProxy进程（/path/to/haproxy/sbin/haproxy -f /path/to/haproxy/conf/haproxy.conf -st ...</li></ul> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2013/12/02/re_introduce_haproxyconsole/" rel="bookmark" title="Permalink to HAProxyConsole简介">Read more <i class="icon-arrow-right"></i></a></div>
+<li>index.php是应用的入口</li>
+<li>protected目录是存放动态脚本的地方<ul>
+<li>components子目录存放各种组件类</li>
+<li>configs存放应用的配置文件</li>
+<li>controllers存放Controller类文件</li>
+<li>models存放Model类文件</li>
+<li>runtime存放一些应用生成的临时文件或者缓存文件，如Smarty编译好的模板、日志文件</li>
+<li>views存放View模板文件</li>
+</ul>
+</li>
+<li>static目录存放静态文件，如CSS、JS、图片等 ...</li></ul> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2014/11/04/read-yii-code-1/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 请求处理基本流程">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/haproxy.html">HAProxy</a>
-                    <a class="danger label" href="../tag/keepalived.html">Keepalived</a>
-                    <a class="danger label" href="../tag/fu-zai-jun-heng.html">负载均衡</a>
+                    <a class="danger label" href="../tag/php.html">PHP</a>
+                    <a class="danger label" href="../tag/yii.html">Yii</a>
                     <a class="danger label" href="../tag/bi-ji.html">笔记</a>
                     <a class="danger label" href="../tag/zong-jie.html">总结</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="../2013/10/16/high-availability-load-balancer-and-dns/" rel="bookmark" title="Permalink to 搭建高可用负载均衡组件及缓存DNS">搭建高可用负载均衡组件及缓存DNS</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2013-10-16T00:00:00"> 2013-10-16 Wed </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>该项工作，如题所示，主要分为两部分：高可用负载均衡组件、缓存DNS。</p>
-<h3>高可用负载均衡组件</h3>
-<p>需求：优化业务系统架构中某些关键环节，针对TCP层数据流量进行负载均衡，并保证服务的高可用。</p>
-<p>技术选型：HAProxy + Keepalived，这对组合比较常见成熟。</p>
-<p>另外，由于HAProxy的负载均衡任务可能比较多，靠人工修改配置来增删改任务不方便可靠，所以实现了一个简单的HAProxy管理系统，
-以后经实际使用验证和完善会开放源码。</p>
-<p><img alt="high availability load balancer" src="/assets/uploads/pics/high-availability-load-balancer.png" /></p>
-<h3>缓存DNS</h3>
-<p>先以www.qq.com为例，解释一下域名解析过程：</p>
-<p><img alt="resolve qq.com" src="/assets/uploads/pics/resolve-qq-com.jpg" /></p>
-<p>1.
-用户向Local DNS发起www.qq.com.查询请求；</p>
-<p>2.
-Local DNS向根服务器发起com.查询请求；</p>
-<p>3.
-根服务器向Local DNS返回com.解析记录；</p>
-<p>4.
-Local DNS向com.权威服务器发起qq.com.查询请求；</p>
-<p>5.
-com.权威服务器向Local DNS返回qq.com.解析记录 ...</p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2013/10/16/high-availability-load-balancer-and-dns/" rel="bookmark" title="Permalink to 搭建高可用负载均衡组件及缓存DNS">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/gao-ke-yong.html">高可用</a>
-                    <a class="danger label" href="../tag/fu-zai-jun-heng.html">负载均衡</a>
-                    <a class="danger label" href="../tag/haproxy.html">HAProxy</a>
-                    <a class="danger label" href="../tag/keepalived.html">Keepalived</a>
-                    <a class="danger label" href="../tag/haproxyconsole.html">HAProxyConsole</a>
-                    <a class="danger label" href="../tag/dns.html">DNS</a>
-                    <a class="danger label" href="../tag/bind.html">BIND</a>
                 </div>
             </article>
             </li>
@@ -239,7 +213,8 @@ com.权威服务器向Local DNS返回qq.com.解析记录 ...</p> </div><!-- /.en
 -->
 </div> </div><!-- /.row -->
 <p class="paginator">
-    Page 1 / 1
+            <a href="../tag/yii.html"><i class="icon-arrow-left"></i></a>
+    Page 2 / 2
 </p>
 </section><!-- /#content -->
 

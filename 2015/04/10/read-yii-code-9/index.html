@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>Yii源码阅读笔记 - 自定义类自动加载</title>
+        <meta charset="utf-8" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑 * 白 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑 * 白 Full RSS Feed" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+
+        <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+              <script>
+                (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+                })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+                ga('create', 'UA-43488080-1', '黑白');
+                ga('send', 'pageview');
+
+              </script>
+
+              <script type="text/javascript" src="http://tajs.qq.com/stats?sId=27164999" charset="UTF-8"></script>
+</head>
+
+<body id="index" class="home">
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="../../../..">黑 * 白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+
+              <ul class="columns">
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="/archives.html">归 档</a></li>
+                <li><a href="/tags.html">标 签</a></li>
+                <li><a href="/pages/tools.html">工具集</a></li>
+                <li><a href="/pages/links.html">链 接</a></li>
+                <li><a href="/pages/tech-share.html">技术分享</a></li>
+                <li><a href="/pages/aboutme.html">关于我</a></li>
+                <li><a href="/feeds/rss.xml">RSS</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+   <div class="row">
+        <div class="columns">
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2015/04/10/read-yii-code-9/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 自定义类自动加载">Yii源码阅读笔记 - 自定义类自动加载</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2015-04-10T00:00:00">
+                2015-04-10 Fri
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>前两天突然发现：之前的阅读笔记对于Yii应用中如何自动加载自定义类的问题没有解释。这里的自定义类是指非Yii框架本身的类。</p>
+<p>关于组件类的配置加载已在 <a href="http://blog.xiayf.cn/2014/11/13/read-yii-code-3/">Yii源码阅读笔记 - 组件集成</a> 一文中做了较为详细的说明，
+所以这里不再涉及。</p>
+<p>本文主要解释以下两点：</p>
+<ol>
+<li>Yii框架是如何找到请求对应的自定义控制器类？</li>
+<li>在自定义控制器类中使用其他类（如Model类、或其他任意目录下文件中定义的类）时，Yii框架是如何自动加载的？</li>
+</ol>
+<hr />
+<p>在 <a href="http://blog.xiayf.cn/2014/11/20/read-yii-code-7/">Yii源码阅读笔记 - 应用模块化</a> 一文中介绍类 <code>CWebApplication</code> 中的方法 <code>createController</code> ，
+该方法根据目标路由找到对应的控制器类文件并加载，方法中有行代码：</p>
+<div class="highlight"><pre><span class="x">$basePath=$owner-&gt;getControllerPath();</span>
+</pre></div>
+
+
+<p>这里的 <code>getControllerPath</code> 会返回当前应用或模块下的控制器类的存放目录，对应应用级与模块级，其实现有两处，其一是在类 <code>CWebApplication</code> 中：</p>
+<div class="highlight"><pre><span class="x">/**</span>
+<span class="x"> * @return string the directory that contains the controller classes. Defaults to &#39;protected/controllers&#39;.</span>
+<span class="x"> */</span>
+<span class="x">public function getControllerPath()</span>
+<span class="x">{</span>
+<span class="x">    if($this-&gt;_controllerPath!==null)</span>
+<span class="x">        return $this-&gt;_controllerPath;</span>
+<span class="x">    else</span>
+<span class="x">        return $this-&gt;_controllerPath=$this-&gt;getBasePath().DIRECTORY_SEPARATOR.&#39;controllers&#39;;</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>另一处是在类 <code>CWebModule</code> 中：</p>
+<div class="highlight"><pre><span class="x">/**</span>
+<span class="x"> * @return string the directory that contains the controller classes. Defaults to &#39;moduleDir/controllers&#39; where</span>
+<span class="x"> * moduleDir is the directory containing the module class.</span>
+<span class="x"> */</span>
+<span class="x">public function getControllerPath()</span>
+<span class="x">{</span>
+<span class="x">    if($this-&gt;_controllerPath!==null)</span>
+<span class="x">        return $this-&gt;_controllerPath;</span>
+<span class="x">    else</span>
+<span class="x">        return $this-&gt;_controllerPath=$this-&gt;getBasePath().DIRECTORY_SEPARATOR.&#39;controllers&#39;;</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>这两处实现的逻辑是一样的：如果属性 <code>_controllerPath</code> 未赋值，则<strong>默认</strong>以应用或模块目录下的<strong>controllers</strong>子目录作为自定义控制器类的存放目录。</p>
+<p>如果不想以该路径作为自定义控制器类的存放目录，那么就得为 <code>_controllerPath</code> 赋值 - 与 <code>getControllerPath</code> 对应的有方法 <code>setControllerPath</code> （同样有两处定义，实现一样）：</p>
+<div class="highlight"><pre><span class="x">/**</span>
+<span class="x"> * @param string $value the directory that contains the controller classes.</span>
+<span class="x"> * @throws CException if the directory is invalid</span>
+<span class="x"> */</span>
+<span class="x">public function setControllerPath($value)</span>
+<span class="x">{</span>
+<span class="x">    if(($this-&gt;_controllerPath=realpath($value))===false || !is_dir($this-&gt;_controllerPath))</span>
+<span class="x">        throw new CException(Yii::t(&#39;yii&#39;,&#39;The controller path &quot;{path}&quot; is not a valid directory.&#39;,</span>
+<span class="x">            array(&#39;{path}&#39;=&gt;$value)));</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>从 <code>getControllerPath</code> 和 <code>setControllerPath</code> 的命名上就能知道这两个方法是分别由魔术方法 <code>__get</code> 和 <code>__set</code> 间接调用的。由 <a href="http://blog.xiayf.cn/2014/11/04/read-yii-code-1/">Yii源码阅读笔记 - 请求处理基本流程</a> 一文内容可知，配置初始化的时候会调用类 <code>CModule</code> 的方法 <code>configure</code> ，该方法中又会触发魔术方法 <code>__set</code> 。这也就意味着可以在应用配置中添加 <code>controllerPath</code> 一项来声明自定义控制器类的存放目录。</p>
+<hr />
+<p>那么当自定义控制类中使用Model类或者其他辅助类时，Yii是如何自动加载的呢？</p>
+<p>以 <strong>在控制器类中IndexController调用Model类UserModel的getUserInfo方法获取用户信息</strong> 为例，Yii是怎么找到并加载UserModel类文件的呢？</p>
+<p>在 <a href="http://blog.xiayf.cn/2014/11/04/read-yii-code-1/">Yii源码阅读笔记 - 请求处理基本流程</a> 一文的最后提到 - 类文件yii/framework/YiiBase.php的倒数第二行代码为：</p>
+<div class="highlight"><pre><span class="x">spl_autoload_register(array(&#39;YiiBase&#39;,&#39;autoload&#39;));</span>
+</pre></div>
+
+
+<p>在应用初始化时，类文件 <code>Yii.php</code> 中会require类文件 <code>YiiBase.php</code>，从而会执行该句代码，将YiiBase类的方法autoload注册到 <code>SPL __autoload</code> 函数队列中。</p>
+<p>而类 YiiBase 的 autoload 方法实现如下：</p>
+<div class="highlight"><pre><span class="x">/**</span>
+<span class="x"> * Class autoload loader.</span>
+<span class="x"> * This method is provided to be invoked within an __autoload() magic method.</span>
+<span class="x"> * @param string $className class name</span>
+<span class="x"> * @return boolean whether the class has been loaded successfully</span>
+<span class="x"> */</span>
+<span class="x">public static function autoload($className)</span>
+<span class="x">{</span>
+<span class="x">    // use include so that the error PHP file may appear</span>
+<span class="x">    // 先在 $classMap 中查找</span>
+<span class="x">    if(isset(self::$classMap[$className]))</span>
+<span class="x">        include(self::$classMap[$className]);</span>
+<span class="x">    // 在 $_coreClasses 中查找</span>
+<span class="x">    elseif(isset(self::$_coreClasses[$className]))</span>
+<span class="x">        include(YII_PATH.self::$_coreClasses[$className]);</span>
+<span class="x">    else</span>
+<span class="x">    {</span>
+<span class="x">        // 如果 $className 不带 命名空间</span>
+<span class="x">        // include class file relying on include_path</span>
+<span class="x">        if(strpos($className,&#39;\\&#39;)===false)  // class without namespace</span>
+<span class="x">        {</span>
+<span class="x">            if(self::$enableIncludePath===false)</span>
+<span class="x">            {</span>
+<span class="x">                foreach(self::$_includePaths as $path)</span>
+<span class="x">                {</span>
+<span class="x">                    $classFile=$path.DIRECTORY_SEPARATOR.$className.&#39;.php&#39;;</span>
+<span class="x">                    if(is_file($classFile))</span>
+<span class="x">                    {</span>
+<span class="x">                        include($classFile);</span>
+<span class="x">                        if(YII_DEBUG &amp;&amp; basename(realpath($classFile))!==$className.&#39;.php&#39;)</span>
+<span class="x">                            throw new CException(Yii::t(&#39;yii&#39;,&#39;Class name &quot;{class}&quot; does not match class file &quot;{file}&quot;.&#39;, array(</span>
+<span class="x">                                &#39;{class}&#39;=&gt;$className,</span>
+<span class="x">                                &#39;{file}&#39;=&gt;$classFile,</span>
+<span class="x">                            )));</span>
+<span class="x">                        break;</span>
+<span class="x">                    }</span>
+<span class="x">                }</span>
+<span class="x">            }</span>
+<span class="x">            else</span>
+<span class="x">                include($className.&#39;.php&#39;);</span>
+<span class="x">        }</span>
+<span class="x">        // $className 带 命名空间</span>
+<span class="x">        else  // class name with namespace in PHP 5.3</span>
+<span class="x">        {</span>
+<span class="x">            $namespace=str_replace(&#39;\\&#39;,&#39;.&#39;,ltrim($className,&#39;\\&#39;));</span>
+<span class="x">            if(($path=self::getPathOfAlias($namespace))!==false)</span>
+<span class="x">                include($path.&#39;.php&#39;);</span>
+<span class="x">            else</span>
+<span class="x">                return false;</span>
+<span class="x">        }</span>
+<span class="x">        return class_exists($className,false) || interface_exists($className,false);</span>
+<span class="x">    }</span>
+<span class="x">    return true;</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>上述代码中涉及的 <code>self::$_coreClasses</code> 属性定义于类 YiiBase，其中罗列了Yii框架核心类的名称与相对路径。</p>
+<p>属性 <code>self::$_classMap</code> ，默认是一个空数组，在类 YiiBase 的静态方法 import 中根据条件可能被赋予元素；属性 <code>self::$_includePaths</code> 也是如此，只不过默认未赋值。静态方法 <code>import</code> 实现如下所示：</p>
+<div class="highlight"><pre><span class="x">public static function import($alias,$forceInclude=false)</span>
+<span class="x">{</span>
+<span class="x">    if(isset(self::$_imports[$alias]))  // previously imported</span>
+<span class="x">        return self::$_imports[$alias];</span>
+
+<span class="x">    if(class_exists($alias,false) || interface_exists($alias,false))</span>
+<span class="x">        return self::$_imports[$alias]=$alias;</span>
+
+<span class="x">    // 带 命名空间</span>
+<span class="x">    if(($pos=strrpos($alias,&#39;\\&#39;))!==false) // a class name in PHP 5.3 namespace format</span>
+<span class="x">    {</span>
+<span class="x">        $namespace=str_replace(&#39;\\&#39;,&#39;.&#39;,ltrim(substr($alias,0,$pos),&#39;\\&#39;));</span>
+<span class="x">        if(($path=self::getPathOfAlias($namespace))!==false)</span>
+<span class="x">        {</span>
+<span class="x">            $classFile=$path.DIRECTORY_SEPARATOR.substr($alias,$pos+1).&#39;.php&#39;;</span>
+
+<span class="x">            // 默认为false的哦</span>
+<span class="x">            if($forceInclude)</span>
+<span class="x">            {</span>
+<span class="x">                if(is_file($classFile))</span>
+<span class="x">                    require($classFile);</span>
+<span class="x">                else</span>
+<span class="x">                    throw new CException(Yii::t(&#39;yii&#39;,&#39;Alias &quot;{alias}&quot; is invalid. Make sure it points to an existing PHP file and the file is readable.&#39;,array(&#39;{alias}&#39;=&gt;$alias)));</span>
+<span class="x">                self::$_imports[$alias]=$alias;</span>
+<span class="x">            }</span>
+<span class="x">            else</span>
+<span class="x">                self::$classMap[$alias]=$classFile;</span>
+<span class="x">            return $alias;</span>
+<span class="x">        }</span>
+<span class="x">        else</span>
+<span class="x">        {</span>
+<span class="x">            // try to autoload the class with an autoloader</span>
+<span class="x">            if (class_exists($alias,true))</span>
+<span class="x">                return self::$_imports[$alias]=$alias;</span>
+<span class="x">            else</span>
+<span class="x">                throw new CException(Yii::t(&#39;yii&#39;,&#39;Alias &quot;{alias}&quot; is invalid. Make sure it points to an existing directory or file.&#39;,</span>
+<span class="x">                    array(&#39;{alias}&#39;=&gt;$namespace)));</span>
+<span class="x">        }</span>
+<span class="x">    }</span>
+
+<span class="x">    // 从后往前第一个 . 的位置</span>
+<span class="x">    if(($pos=strrpos($alias,&#39;.&#39;))===false)  // a simple class name</span>
+<span class="x">    {</span>
+<span class="x">        if($forceInclude &amp;&amp; self::autoload($alias))</span>
+<span class="x">            self::$_imports[$alias]=$alias;</span>
+<span class="x">        return $alias;</span>
+<span class="x">    }</span>
+
+<span class="x">    // 取类名部分</span>
+<span class="x">    $className=(string)substr($alias,$pos+1);</span>
+<span class="x">    // 如果类名为 * 则表示非类文件，而是目录</span>
+<span class="x">    $isClass=$className!==&#39;*&#39;;</span>
+
+<span class="x">    if($isClass &amp;&amp; (class_exists($className,false) || interface_exists($className,false)))</span>
+<span class="x">        return self::$_imports[$alias]=$className;</span>
+
+<span class="x">    if(($path=self::getPathOfAlias($alias))!==false)</span>
+<span class="x">    {</span>
+<span class="x">        // 类文件</span>
+<span class="x">        if($isClass)</span>
+<span class="x">        {</span>
+<span class="x">            if($forceInclude)</span>
+<span class="x">            {</span>
+<span class="x">                if(is_file($path.&#39;.php&#39;))</span>
+<span class="x">                    require($path.&#39;.php&#39;);</span>
+<span class="x">                else</span>
+<span class="x">                    throw new CException(Yii::t(&#39;yii&#39;,&#39;Alias &quot;{alias}&quot; is invalid. Make sure it points to an existing PHP file and the file is readable.&#39;,array(&#39;{alias}&#39;=&gt;$alias)));</span>
+<span class="x">                self::$_imports[$alias]=$className;</span>
+<span class="x">            }</span>
+<span class="x">            else</span>
+<span class="x">                self::$classMap[$className]=$path.&#39;.php&#39;;</span>
+<span class="x">            return $className;</span>
+<span class="x">        }</span>
+<span class="x">        // 目录</span>
+<span class="x">        else  // a directory</span>
+<span class="x">        {</span>
+<span class="x">            if(self::$_includePaths===null)</span>
+<span class="x">            {</span>
+<span class="x">                self::$_includePaths=array_unique(explode(PATH_SEPARATOR,get_include_path()));</span>
+<span class="x">                if(($pos=array_search(&#39;.&#39;,self::$_includePaths,true))!==false)</span>
+<span class="x">                    unset(self::$_includePaths[$pos]);</span>
+<span class="x">            }</span>
+
+<span class="x">            array_unshift(self::$_includePaths,$path);</span>
+
+<span class="x">            if(self::$enableIncludePath &amp;&amp; set_include_path(&#39;.&#39;.PATH_SEPARATOR.implode(PATH_SEPARATOR,self::$_includePaths))===false)</span>
+<span class="x">                self::$enableIncludePath=false;</span>
+
+<span class="x">            return self::$_imports[$alias]=$path;</span>
+<span class="x">        }</span>
+<span class="x">    }</span>
+<span class="x">    else</span>
+<span class="x">        throw new CException(Yii::t(&#39;yii&#39;,&#39;Alias &quot;{alias}&quot; is invalid. Make sure it points to an existing directory or file.&#39;,</span>
+<span class="x">            array(&#39;{alias}&#39;=&gt;$alias)));</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>静态方法import在类CModule（CWebApplication类间接继承自该类）的方法 <code>setImport</code> 中会被调用（当然还有其他地方也会调用import方法）：</p>
+<div class="highlight"><pre><span class="x">/**</span>
+<span class="x"> * Sets the aliases that are used in the module.</span>
+<span class="x"> * @param array $aliases list of aliases to be imported</span>
+<span class="x"> */</span>
+<span class="x">public function setImport($aliases)</span>
+<span class="x">{</span>
+<span class="x">    foreach($aliases as $alias)</span>
+<span class="x">        Yii::import($alias);</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>看到前缀为<code>set</code>，就知道魔术方法 <code>__set</code> 能间接调用该方法，如前所述，可以为应用提供名为 <strong>import</strong> 的配置项。例如目前我们项目中有import配置项如下所示：</p>
+<div class="highlight"><pre><span class="x">&#39;import&#39;=&gt;array(</span>
+<span class="x">    &#39;application.models.*&#39;,</span>
+<span class="x">    &#39;application.components.*&#39;,</span>
+<span class="x">)</span>
+</pre></div>
+
+
+<p>表示业务逻辑的代码（如自定义控制器类）中会使用到应用的子目录models和components下的类文件，需要Yii（准确地说是YiiBase类autoload方法）帮忙自动查找加载。
+这样也就能任意组织项目的目录结构（<strong>当然不要太任性！</strong>）。</p>
+<p>import配置项的值是一个路径别名数组，路径别名中的application表示应用的根目录，默认为与index.php同一级的protected目录，也可以通过配置项basePath来指定。对于basePath配置项，在类CApplication的构造方法 <code>__contruct</code> 中有如下相关代码：</p>
+<div class="highlight"><pre><span class="x">if(isset($config[&#39;basePath&#39;]))</span>
+<span class="x">{</span>
+<span class="x">    $this-&gt;setBasePath($config[&#39;basePath&#39;]);</span>
+<span class="x">    unset($config[&#39;basePath&#39;]);</span>
+<span class="x">}</span>
+<span class="x">else</span>
+<span class="x">    $this-&gt;setBasePath(&#39;protected&#39;);</span>
+<span class="x">Yii::setPathOfAlias(&#39;application&#39;,$this-&gt;getBasePath());</span>
+</pre></div>
+
+
+<p>其中方法 <code>setPathAlias</code> 的实现如下所示：</p>
+<div class="highlight"><pre><span class="x">public static function setPathOfAlias($alias,$path)</span>
+<span class="x">{</span>
+<span class="x">    if(empty($path))</span>
+<span class="x">        unset(self::$_aliases[$alias]);</span>
+<span class="x">    else</span>
+<span class="x">        self::$_aliases[$alias]=rtrim($path,&#39;\\/&#39;);</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<hr />
+<p>除了通过import配置项指定autoload的查找路径，从类YiiBase的autoload方法实现可以看到，对于PHP 5.3以上版本，可以使用命名空间的方式来自动查找类，命名空间字符串会被替换成路径别名，所以命名空间字符串应以 <code>application\\</code> 开始，如应这样 <code>application\\models\\UserModel</code> 来引用models目录下的UserModel类文件，除非额外通过 <code>Yii::setPathOfAlias</code>为models路径指定别名。</p>
+<p>另外，类YiiBase中提供了一个静态方法 <code>registerAutoloader</code> ：</p>
+<div class="highlight"><pre><span class="x">/**</span>
+<span class="x"> * Registers a new class autoloader.</span>
+<span class="x"> * The new autoloader will be placed before {@link autoload} and after</span>
+<span class="x"> * any other existing autoloaders.</span>
+<span class="x"> * @param callback $callback a valid PHP callback (function name or array($className,$methodName)).</span>
+<span class="x"> * @param boolean $append whether to append the new autoloader after the default Yii autoloader.</span>
+<span class="x"> * Be careful using this option as it will disable {@link enableIncludePath autoloading via include path}</span>
+<span class="x"> * when set to true. After this the Yii autoloader can not rely on loading classes via simple include anymore</span>
+<span class="x"> * and you have to {@link import} all classes explicitly.</span>
+<span class="x"> */</span>
+<span class="x">public static function registerAutoloader($callback, $append=false)</span>
+<span class="x">{</span>
+<span class="x">    if($append)</span>
+<span class="x">    {</span>
+<span class="x">        self::$enableIncludePath=false;</span>
+<span class="x">        spl_autoload_register($callback);</span>
+<span class="x">    }</span>
+<span class="x">    else</span>
+<span class="x">    {</span>
+<span class="x">        spl_autoload_unregister(array(&#39;YiiBase&#39;,&#39;autoload&#39;));</span>
+<span class="x">        spl_autoload_register($callback);</span>
+<span class="x">        spl_autoload_register(array(&#39;YiiBase&#39;,&#39;autoload&#39;));</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>可通过该静态方法针对项目的目录结构添加一个自定义的自动查找加载方式。</p>
+<h4>参考资料</h4>
+<ul>
+<li><a href="http://php.net/manual/zh/function.spl-autoload-register.php">PHP手册 - spl_autoload_register</a></li>
+</ul>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2015/04/10/read-yii-code-9/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+        </div><!-- /.twelve.columns -->
+ </div><!-- /.row -->
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+  <script src="../../../../theme/js/main.js"></script>
+</body>
+</html>

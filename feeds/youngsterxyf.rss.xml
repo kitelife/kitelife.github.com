@@ -1,5 +1,312 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>黑 * 白</title><link>http://youngsterxyf.github.io/</link><description></description><atom:link href="http://youngsterxyf.github.io/feeds/youngsterxyf.rss.xml" rel="self"></atom:link><lastBuildDate>Sun, 22 Mar 2015 00:00:00 +0800</lastBuildDate><item><title>Slim源码阅读笔记</title><link>http://youngsterxyf.github.io/2015/03/22/read-slim/</link><description>&lt;p&gt;以前读过 &lt;a href="http://www.phptherightway.com/"&gt;PHP - The Right Way&lt;/a&gt; 一文，
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>黑 * 白</title><link>http://youngsterxyf.github.io/</link><description></description><atom:link href="http://youngsterxyf.github.io/feeds/youngsterxyf.rss.xml" rel="self"></atom:link><lastBuildDate>Fri, 10 Apr 2015 00:00:00 +0800</lastBuildDate><item><title>Yii源码阅读笔记 - 自定义类自动加载</title><link>http://youngsterxyf.github.io/2015/04/10/read-yii-code-9/</link><description>&lt;p&gt;前两天突然发现：之前的阅读笔记对于Yii应用中如何自动加载自定义类的问题没有解释。这里的自定义类是指非Yii框架本身的类。&lt;/p&gt;
+&lt;p&gt;关于组件类的配置加载已在 &lt;a href="http://blog.xiayf.cn/2014/11/13/read-yii-code-3/"&gt;Yii源码阅读笔记 - 组件集成&lt;/a&gt; 一文中做了较为详细的说明，
+所以这里不再涉及。&lt;/p&gt;
+&lt;p&gt;本文主要解释以下两点：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Yii框架是如何找到请求对应的自定义控制器类？&lt;/li&gt;
+&lt;li&gt;在自定义控制器类中使用其他类（如Model类、或其他任意目录下文件中定义的类）时，Yii框架是如何自动加载的？&lt;/li&gt;
+&lt;/ol&gt;
+&lt;hr /&gt;
+&lt;p&gt;在 &lt;a href="http://blog.xiayf.cn/2014/11/20/read-yii-code-7/"&gt;Yii源码阅读笔记 - 应用模块化&lt;/a&gt; 一文中介绍类 &lt;code&gt;CWebApplication&lt;/code&gt; 中的方法 &lt;code&gt;createController&lt;/code&gt; ，
+该方法根据目标路由找到对应的控制器类文件并加载，方法中有行代码：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;$basePath=$owner-&amp;gt;getControllerPath();&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;这里的 &lt;code&gt;getControllerPath&lt;/code&gt; 会返回当前应用或模块下的控制器类的存放目录，对应应用级与模块级，其实现有两处，其一是在类 &lt;code&gt;CWebApplication&lt;/code&gt; 中：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * @return string the directory that contains the controller classes. Defaults to &amp;#39;protected/controllers&amp;#39;.&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public function getControllerPath()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;_controllerPath!==null)&lt;/span&gt;
+&lt;span class="x"&gt;        return $this-&amp;gt;_controllerPath;&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        return $this-&amp;gt;_controllerPath=$this-&amp;gt;getBasePath().DIRECTORY_SEPARATOR.&amp;#39;controllers&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;另一处是在类 &lt;code&gt;CWebModule&lt;/code&gt; 中：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * @return string the directory that contains the controller classes. Defaults to &amp;#39;moduleDir/controllers&amp;#39; where&lt;/span&gt;
+&lt;span class="x"&gt; * moduleDir is the directory containing the module class.&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public function getControllerPath()&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if($this-&amp;gt;_controllerPath!==null)&lt;/span&gt;
+&lt;span class="x"&gt;        return $this-&amp;gt;_controllerPath;&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        return $this-&amp;gt;_controllerPath=$this-&amp;gt;getBasePath().DIRECTORY_SEPARATOR.&amp;#39;controllers&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;这两处实现的逻辑是一样的：如果属性 &lt;code&gt;_controllerPath&lt;/code&gt; 未赋值，则&lt;strong&gt;默认&lt;/strong&gt;以应用或模块目录下的&lt;strong&gt;controllers&lt;/strong&gt;子目录作为自定义控制器类的存放目录。&lt;/p&gt;
+&lt;p&gt;如果不想以该路径作为自定义控制器类的存放目录，那么就得为 &lt;code&gt;_controllerPath&lt;/code&gt; 赋值 - 与 &lt;code&gt;getControllerPath&lt;/code&gt; 对应的有方法 &lt;code&gt;setControllerPath&lt;/code&gt; （同样有两处定义，实现一样）：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * @param string $value the directory that contains the controller classes.&lt;/span&gt;
+&lt;span class="x"&gt; * @throws CException if the directory is invalid&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public function setControllerPath($value)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if(($this-&amp;gt;_controllerPath=realpath($value))===false || !is_dir($this-&amp;gt;_controllerPath))&lt;/span&gt;
+&lt;span class="x"&gt;        throw new CException(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;The controller path &amp;quot;{path}&amp;quot; is not a valid directory.&amp;#39;,&lt;/span&gt;
+&lt;span class="x"&gt;            array(&amp;#39;{path}&amp;#39;=&amp;gt;$value)));&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;从 &lt;code&gt;getControllerPath&lt;/code&gt; 和 &lt;code&gt;setControllerPath&lt;/code&gt; 的命名上就能知道这两个方法是分别由魔术方法 &lt;code&gt;__get&lt;/code&gt; 和 &lt;code&gt;__set&lt;/code&gt; 间接调用的。由 &lt;a href="http://blog.xiayf.cn/2014/11/04/read-yii-code-1/"&gt;Yii源码阅读笔记 - 请求处理基本流程&lt;/a&gt; 一文内容可知，配置初始化的时候会调用类 &lt;code&gt;CModule&lt;/code&gt; 的方法 &lt;code&gt;configure&lt;/code&gt; ，该方法中又会触发魔术方法 &lt;code&gt;__set&lt;/code&gt; 。这也就意味着可以在应用配置中添加 &lt;code&gt;controllerPath&lt;/code&gt; 一项来声明自定义控制器类的存放目录。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;那么当自定义控制类中使用Model类或者其他辅助类时，Yii是如何自动加载的呢？&lt;/p&gt;
+&lt;p&gt;以 &lt;strong&gt;在控制器类中IndexController调用Model类UserModel的getUserInfo方法获取用户信息&lt;/strong&gt; 为例，Yii是怎么找到并加载UserModel类文件的呢？&lt;/p&gt;
+&lt;p&gt;在 &lt;a href="http://blog.xiayf.cn/2014/11/04/read-yii-code-1/"&gt;Yii源码阅读笔记 - 请求处理基本流程&lt;/a&gt; 一文的最后提到 - 类文件yii/framework/YiiBase.php的倒数第二行代码为：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;spl_autoload_register(array(&amp;#39;YiiBase&amp;#39;,&amp;#39;autoload&amp;#39;));&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;在应用初始化时，类文件 &lt;code&gt;Yii.php&lt;/code&gt; 中会require类文件 &lt;code&gt;YiiBase.php&lt;/code&gt;，从而会执行该句代码，将YiiBase类的方法autoload注册到 &lt;code&gt;SPL __autoload&lt;/code&gt; 函数队列中。&lt;/p&gt;
+&lt;p&gt;而类 YiiBase 的 autoload 方法实现如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Class autoload loader.&lt;/span&gt;
+&lt;span class="x"&gt; * This method is provided to be invoked within an __autoload() magic method.&lt;/span&gt;
+&lt;span class="x"&gt; * @param string $className class name&lt;/span&gt;
+&lt;span class="x"&gt; * @return boolean whether the class has been loaded successfully&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public static function autoload($className)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    // use include so that the error PHP file may appear&lt;/span&gt;
+&lt;span class="x"&gt;    // 先在 $classMap 中查找&lt;/span&gt;
+&lt;span class="x"&gt;    if(isset(self::$classMap[$className]))&lt;/span&gt;
+&lt;span class="x"&gt;        include(self::$classMap[$className]);&lt;/span&gt;
+&lt;span class="x"&gt;    // 在 $_coreClasses 中查找&lt;/span&gt;
+&lt;span class="x"&gt;    elseif(isset(self::$_coreClasses[$className]))&lt;/span&gt;
+&lt;span class="x"&gt;        include(YII_PATH.self::$_coreClasses[$className]);&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        // 如果 $className 不带 命名空间&lt;/span&gt;
+&lt;span class="x"&gt;        // include class file relying on include_path&lt;/span&gt;
+&lt;span class="x"&gt;        if(strpos($className,&amp;#39;\\&amp;#39;)===false)  // class without namespace&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            if(self::$enableIncludePath===false)&lt;/span&gt;
+&lt;span class="x"&gt;            {&lt;/span&gt;
+&lt;span class="x"&gt;                foreach(self::$_includePaths as $path)&lt;/span&gt;
+&lt;span class="x"&gt;                {&lt;/span&gt;
+&lt;span class="x"&gt;                    $classFile=$path.DIRECTORY_SEPARATOR.$className.&amp;#39;.php&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;                    if(is_file($classFile))&lt;/span&gt;
+&lt;span class="x"&gt;                    {&lt;/span&gt;
+&lt;span class="x"&gt;                        include($classFile);&lt;/span&gt;
+&lt;span class="x"&gt;                        if(YII_DEBUG &amp;amp;&amp;amp; basename(realpath($classFile))!==$className.&amp;#39;.php&amp;#39;)&lt;/span&gt;
+&lt;span class="x"&gt;                            throw new CException(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;Class name &amp;quot;{class}&amp;quot; does not match class file &amp;quot;{file}&amp;quot;.&amp;#39;, array(&lt;/span&gt;
+&lt;span class="x"&gt;                                &amp;#39;{class}&amp;#39;=&amp;gt;$className,&lt;/span&gt;
+&lt;span class="x"&gt;                                &amp;#39;{file}&amp;#39;=&amp;gt;$classFile,&lt;/span&gt;
+&lt;span class="x"&gt;                            )));&lt;/span&gt;
+&lt;span class="x"&gt;                        break;&lt;/span&gt;
+&lt;span class="x"&gt;                    }&lt;/span&gt;
+&lt;span class="x"&gt;                }&lt;/span&gt;
+&lt;span class="x"&gt;            }&lt;/span&gt;
+&lt;span class="x"&gt;            else&lt;/span&gt;
+&lt;span class="x"&gt;                include($className.&amp;#39;.php&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;        // $className 带 命名空间&lt;/span&gt;
+&lt;span class="x"&gt;        else  // class name with namespace in PHP 5.3&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            $namespace=str_replace(&amp;#39;\\&amp;#39;,&amp;#39;.&amp;#39;,ltrim($className,&amp;#39;\\&amp;#39;));&lt;/span&gt;
+&lt;span class="x"&gt;            if(($path=self::getPathOfAlias($namespace))!==false)&lt;/span&gt;
+&lt;span class="x"&gt;                include($path.&amp;#39;.php&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;            else&lt;/span&gt;
+&lt;span class="x"&gt;                return false;&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;        return class_exists($className,false) || interface_exists($className,false);&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    return true;&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;上述代码中涉及的 &lt;code&gt;self::$_coreClasses&lt;/code&gt; 属性定义于类 YiiBase，其中罗列了Yii框架核心类的名称与相对路径。&lt;/p&gt;
+&lt;p&gt;属性 &lt;code&gt;self::$_classMap&lt;/code&gt; ，默认是一个空数组，在类 YiiBase 的静态方法 import 中根据条件可能被赋予元素；属性 &lt;code&gt;self::$_includePaths&lt;/code&gt; 也是如此，只不过默认未赋值。静态方法 &lt;code&gt;import&lt;/code&gt; 实现如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public static function import($alias,$forceInclude=false)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if(isset(self::$_imports[$alias]))  // previously imported&lt;/span&gt;
+&lt;span class="x"&gt;        return self::$_imports[$alias];&lt;/span&gt;
+
+&lt;span class="x"&gt;    if(class_exists($alias,false) || interface_exists($alias,false))&lt;/span&gt;
+&lt;span class="x"&gt;        return self::$_imports[$alias]=$alias;&lt;/span&gt;
+
+&lt;span class="x"&gt;    // 带 命名空间&lt;/span&gt;
+&lt;span class="x"&gt;    if(($pos=strrpos($alias,&amp;#39;\\&amp;#39;))!==false) // a class name in PHP 5.3 namespace format&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        $namespace=str_replace(&amp;#39;\\&amp;#39;,&amp;#39;.&amp;#39;,ltrim(substr($alias,0,$pos),&amp;#39;\\&amp;#39;));&lt;/span&gt;
+&lt;span class="x"&gt;        if(($path=self::getPathOfAlias($namespace))!==false)&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            $classFile=$path.DIRECTORY_SEPARATOR.substr($alias,$pos+1).&amp;#39;.php&amp;#39;;&lt;/span&gt;
+
+&lt;span class="x"&gt;            // 默认为false的哦&lt;/span&gt;
+&lt;span class="x"&gt;            if($forceInclude)&lt;/span&gt;
+&lt;span class="x"&gt;            {&lt;/span&gt;
+&lt;span class="x"&gt;                if(is_file($classFile))&lt;/span&gt;
+&lt;span class="x"&gt;                    require($classFile);&lt;/span&gt;
+&lt;span class="x"&gt;                else&lt;/span&gt;
+&lt;span class="x"&gt;                    throw new CException(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;Alias &amp;quot;{alias}&amp;quot; is invalid. Make sure it points to an existing PHP file and the file is readable.&amp;#39;,array(&amp;#39;{alias}&amp;#39;=&amp;gt;$alias)));&lt;/span&gt;
+&lt;span class="x"&gt;                self::$_imports[$alias]=$alias;&lt;/span&gt;
+&lt;span class="x"&gt;            }&lt;/span&gt;
+&lt;span class="x"&gt;            else&lt;/span&gt;
+&lt;span class="x"&gt;                self::$classMap[$alias]=$classFile;&lt;/span&gt;
+&lt;span class="x"&gt;            return $alias;&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;        else&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            // try to autoload the class with an autoloader&lt;/span&gt;
+&lt;span class="x"&gt;            if (class_exists($alias,true))&lt;/span&gt;
+&lt;span class="x"&gt;                return self::$_imports[$alias]=$alias;&lt;/span&gt;
+&lt;span class="x"&gt;            else&lt;/span&gt;
+&lt;span class="x"&gt;                throw new CException(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;Alias &amp;quot;{alias}&amp;quot; is invalid. Make sure it points to an existing directory or file.&amp;#39;,&lt;/span&gt;
+&lt;span class="x"&gt;                    array(&amp;#39;{alias}&amp;#39;=&amp;gt;$namespace)));&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+
+&lt;span class="x"&gt;    // 从后往前第一个 . 的位置&lt;/span&gt;
+&lt;span class="x"&gt;    if(($pos=strrpos($alias,&amp;#39;.&amp;#39;))===false)  // a simple class name&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        if($forceInclude &amp;amp;&amp;amp; self::autoload($alias))&lt;/span&gt;
+&lt;span class="x"&gt;            self::$_imports[$alias]=$alias;&lt;/span&gt;
+&lt;span class="x"&gt;        return $alias;&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+
+&lt;span class="x"&gt;    // 取类名部分&lt;/span&gt;
+&lt;span class="x"&gt;    $className=(string)substr($alias,$pos+1);&lt;/span&gt;
+&lt;span class="x"&gt;    // 如果类名为 * 则表示非类文件，而是目录&lt;/span&gt;
+&lt;span class="x"&gt;    $isClass=$className!==&amp;#39;*&amp;#39;;&lt;/span&gt;
+
+&lt;span class="x"&gt;    if($isClass &amp;amp;&amp;amp; (class_exists($className,false) || interface_exists($className,false)))&lt;/span&gt;
+&lt;span class="x"&gt;        return self::$_imports[$alias]=$className;&lt;/span&gt;
+
+&lt;span class="x"&gt;    if(($path=self::getPathOfAlias($alias))!==false)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        // 类文件&lt;/span&gt;
+&lt;span class="x"&gt;        if($isClass)&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            if($forceInclude)&lt;/span&gt;
+&lt;span class="x"&gt;            {&lt;/span&gt;
+&lt;span class="x"&gt;                if(is_file($path.&amp;#39;.php&amp;#39;))&lt;/span&gt;
+&lt;span class="x"&gt;                    require($path.&amp;#39;.php&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;                else&lt;/span&gt;
+&lt;span class="x"&gt;                    throw new CException(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;Alias &amp;quot;{alias}&amp;quot; is invalid. Make sure it points to an existing PHP file and the file is readable.&amp;#39;,array(&amp;#39;{alias}&amp;#39;=&amp;gt;$alias)));&lt;/span&gt;
+&lt;span class="x"&gt;                self::$_imports[$alias]=$className;&lt;/span&gt;
+&lt;span class="x"&gt;            }&lt;/span&gt;
+&lt;span class="x"&gt;            else&lt;/span&gt;
+&lt;span class="x"&gt;                self::$classMap[$className]=$path.&amp;#39;.php&amp;#39;;&lt;/span&gt;
+&lt;span class="x"&gt;            return $className;&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;        // 目录&lt;/span&gt;
+&lt;span class="x"&gt;        else  // a directory&lt;/span&gt;
+&lt;span class="x"&gt;        {&lt;/span&gt;
+&lt;span class="x"&gt;            if(self::$_includePaths===null)&lt;/span&gt;
+&lt;span class="x"&gt;            {&lt;/span&gt;
+&lt;span class="x"&gt;                self::$_includePaths=array_unique(explode(PATH_SEPARATOR,get_include_path()));&lt;/span&gt;
+&lt;span class="x"&gt;                if(($pos=array_search(&amp;#39;.&amp;#39;,self::$_includePaths,true))!==false)&lt;/span&gt;
+&lt;span class="x"&gt;                    unset(self::$_includePaths[$pos]);&lt;/span&gt;
+&lt;span class="x"&gt;            }&lt;/span&gt;
+
+&lt;span class="x"&gt;            array_unshift(self::$_includePaths,$path);&lt;/span&gt;
+
+&lt;span class="x"&gt;            if(self::$enableIncludePath &amp;amp;&amp;amp; set_include_path(&amp;#39;.&amp;#39;.PATH_SEPARATOR.implode(PATH_SEPARATOR,self::$_includePaths))===false)&lt;/span&gt;
+&lt;span class="x"&gt;                self::$enableIncludePath=false;&lt;/span&gt;
+
+&lt;span class="x"&gt;            return self::$_imports[$alias]=$path;&lt;/span&gt;
+&lt;span class="x"&gt;        }&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        throw new CException(Yii::t(&amp;#39;yii&amp;#39;,&amp;#39;Alias &amp;quot;{alias}&amp;quot; is invalid. Make sure it points to an existing directory or file.&amp;#39;,&lt;/span&gt;
+&lt;span class="x"&gt;            array(&amp;#39;{alias}&amp;#39;=&amp;gt;$alias)));&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;静态方法import在类CModule（CWebApplication类间接继承自该类）的方法 &lt;code&gt;setImport&lt;/code&gt; 中会被调用（当然还有其他地方也会调用import方法）：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Sets the aliases that are used in the module.&lt;/span&gt;
+&lt;span class="x"&gt; * @param array $aliases list of aliases to be imported&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public function setImport($aliases)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    foreach($aliases as $alias)&lt;/span&gt;
+&lt;span class="x"&gt;        Yii::import($alias);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;看到前缀为&lt;code&gt;set&lt;/code&gt;，就知道魔术方法 &lt;code&gt;__set&lt;/code&gt; 能间接调用该方法，如前所述，可以为应用提供名为 &lt;strong&gt;import&lt;/strong&gt; 的配置项。例如目前我们项目中有import配置项如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;&amp;#39;import&amp;#39;=&amp;gt;array(&lt;/span&gt;
+&lt;span class="x"&gt;    &amp;#39;application.models.*&amp;#39;,&lt;/span&gt;
+&lt;span class="x"&gt;    &amp;#39;application.components.*&amp;#39;,&lt;/span&gt;
+&lt;span class="x"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;表示业务逻辑的代码（如自定义控制器类）中会使用到应用的子目录models和components下的类文件，需要Yii（准确地说是YiiBase类autoload方法）帮忙自动查找加载。
+这样也就能任意组织项目的目录结构（&lt;strong&gt;当然不要太任性！&lt;/strong&gt;）。&lt;/p&gt;
+&lt;p&gt;import配置项的值是一个路径别名数组，路径别名中的application表示应用的根目录，默认为与index.php同一级的protected目录，也可以通过配置项basePath来指定。对于basePath配置项，在类CApplication的构造方法 &lt;code&gt;__contruct&lt;/code&gt; 中有如下相关代码：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;if(isset($config[&amp;#39;basePath&amp;#39;]))&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;setBasePath($config[&amp;#39;basePath&amp;#39;]);&lt;/span&gt;
+&lt;span class="x"&gt;    unset($config[&amp;#39;basePath&amp;#39;]);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;span class="x"&gt;else&lt;/span&gt;
+&lt;span class="x"&gt;    $this-&amp;gt;setBasePath(&amp;#39;protected&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;Yii::setPathOfAlias(&amp;#39;application&amp;#39;,$this-&amp;gt;getBasePath());&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中方法 &lt;code&gt;setPathAlias&lt;/code&gt; 的实现如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public static function setPathOfAlias($alias,$path)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if(empty($path))&lt;/span&gt;
+&lt;span class="x"&gt;        unset(self::$_aliases[$alias]);&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;        self::$_aliases[$alias]=rtrim($path,&amp;#39;\\/&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;hr /&gt;
+&lt;p&gt;除了通过import配置项指定autoload的查找路径，从类YiiBase的autoload方法实现可以看到，对于PHP 5.3以上版本，可以使用命名空间的方式来自动查找类，命名空间字符串会被替换成路径别名，所以命名空间字符串应以 &lt;code&gt;application\&lt;/code&gt; 开始，如应这样 &lt;code&gt;application\models\UserModel&lt;/code&gt; 来引用models目录下的UserModel类文件，除非额外通过 &lt;code&gt;Yii::setPathOfAlias&lt;/code&gt;为models路径指定别名。&lt;/p&gt;
+&lt;p&gt;另外，类YiiBase中提供了一个静态方法 &lt;code&gt;registerAutoloader&lt;/code&gt; ：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;span class="x"&gt; * Registers a new class autoloader.&lt;/span&gt;
+&lt;span class="x"&gt; * The new autoloader will be placed before {@link autoload} and after&lt;/span&gt;
+&lt;span class="x"&gt; * any other existing autoloaders.&lt;/span&gt;
+&lt;span class="x"&gt; * @param callback $callback a valid PHP callback (function name or array($className,$methodName)).&lt;/span&gt;
+&lt;span class="x"&gt; * @param boolean $append whether to append the new autoloader after the default Yii autoloader.&lt;/span&gt;
+&lt;span class="x"&gt; * Be careful using this option as it will disable {@link enableIncludePath autoloading via include path}&lt;/span&gt;
+&lt;span class="x"&gt; * when set to true. After this the Yii autoloader can not rely on loading classes via simple include anymore&lt;/span&gt;
+&lt;span class="x"&gt; * and you have to {@link import} all classes explicitly.&lt;/span&gt;
+&lt;span class="x"&gt; */&lt;/span&gt;
+&lt;span class="x"&gt;public static function registerAutoloader($callback, $append=false)&lt;/span&gt;
+&lt;span class="x"&gt;{&lt;/span&gt;
+&lt;span class="x"&gt;    if($append)&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        self::$enableIncludePath=false;&lt;/span&gt;
+&lt;span class="x"&gt;        spl_autoload_register($callback);&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;    else&lt;/span&gt;
+&lt;span class="x"&gt;    {&lt;/span&gt;
+&lt;span class="x"&gt;        spl_autoload_unregister(array(&amp;#39;YiiBase&amp;#39;,&amp;#39;autoload&amp;#39;));&lt;/span&gt;
+&lt;span class="x"&gt;        spl_autoload_register($callback);&lt;/span&gt;
+&lt;span class="x"&gt;        spl_autoload_register(array(&amp;#39;YiiBase&amp;#39;,&amp;#39;autoload&amp;#39;));&lt;/span&gt;
+&lt;span class="x"&gt;    }&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;可通过该静态方法针对项目的目录结构添加一个自定义的自动查找加载方式。&lt;/p&gt;
+&lt;h4&gt;参考资料&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="http://php.net/manual/zh/function.spl-autoload-register.php"&gt;PHP手册 - spl_autoload_register&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Fri, 10 Apr 2015 00:00:00 +0800</pubDate><guid>tag:youngsterxyf.github.io,2015-04-10:2015/04/10/read-yii-code-9/</guid><category>PHP</category><category>Yii</category><category>笔记</category><category>总结</category></item><item><title>Slim源码阅读笔记</title><link>http://youngsterxyf.github.io/2015/03/22/read-slim/</link><description>&lt;p&gt;以前读过 &lt;a href="http://www.phptherightway.com/"&gt;PHP - The Right Way&lt;/a&gt; 一文，
 还翻译过其中的 &lt;a href="http://www.phptherightway.com/pages/The-Basics.html"&gt;The Baiscs&lt;/a&gt; 一节
 (译文见 &lt;a href="http://blog.xiayf.cn/2013/03/08/php-basics/"&gt;这里&lt;/a&gt;)。&lt;/p&gt;
 &lt;p&gt;前两周读了 &lt;a href="http://www.amazon.cn/Modern-PHP-Lockhart-Josh/dp/1491905018/ref=sr_1_1?ie=UTF8&amp;amp;qid=1427031708&amp;amp;sr=8-1&amp;amp;keywords=Modern+PHP"&gt;Modern PHP - New Features and Good Practices&lt;/a&gt; 一书
@@ -5384,7 +5691,108 @@ access_token需要通过API向微信服务器获取。成功启用服务号的�
 &lt;p&gt;当成功获取access_token后就可以通过API创建、删除、查询服务号的自定义菜单了。&lt;/p&gt;
 &lt;p&gt;自定义菜单相关文档见&lt;a href="http://mp.weixin.qq.com/wiki/index.php?title=%E8%87%AA%E5%AE%9A%E4%B9%89%E8%8F%9C%E5%8D%95%E5%88%9B%E5%BB%BA%E6%8E%A5%E5%8F%A3"&gt;这里&lt;/a&gt;。&lt;/p&gt;
 &lt;p&gt;以下Python代码是对自定义菜单API的简单封装：&lt;/p&gt;
-&lt;script src="https://gist.github.com/youngsterxyf/be823dc38a1c578875b7.js"&gt;&lt;/script&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c"&gt;#coding: utf-8&lt;/span&gt;
+
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;requests&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;os&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;json&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;time&lt;/span&gt;
+
+
+&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;WechatAdmin&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;__init__&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;app_id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;&amp;#39;&lt;/span&gt;
+        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;app_secret&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;&amp;#39;&lt;/span&gt;
+        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;session&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;requests&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;session&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;access_token_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;access_token.json&amp;#39;&lt;/span&gt;
+        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;access_token&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;&amp;#39;&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;fetch_access_token&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;access_token&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;access_token&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;exists&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;access_token_file&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+            &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="nb"&gt;open&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;access_token_file&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;fh&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+                &lt;span class="n"&gt;origin_content&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;json&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;load&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fh&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+                &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="nb"&gt;float&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;origin_content&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;update_time&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nb"&gt;float&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;origin_content&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;expires_in&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="n"&gt;time&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;time&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+                    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;_remote_fetch_access_token&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+                &lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+                    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;origin_content&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;access_token&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+        &lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;_remote_fetch_access_token&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;_remote_fetch_access_token&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="n"&gt;target_url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&amp;amp;appid=&lt;/span&gt;&lt;span class="si"&gt;%s&lt;/span&gt;&lt;span class="s"&gt;&amp;amp;secret=&lt;/span&gt;&lt;span class="si"&gt;%s&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;&lt;/span&gt; \
+                     &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;app_id&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;app_secret&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="n"&gt;r&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;session&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;target_url&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;status_code&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="mi"&gt;200&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="n"&gt;response_data&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;json&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;response_data&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;access_token&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;&amp;#39;&lt;/span&gt; &lt;span class="ow"&gt;and&lt;/span&gt; &lt;span class="n"&gt;response_data&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;expires_in&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+                &lt;span class="n"&gt;new_access_token&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;expires_in&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;response_data&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;access_token&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="n"&gt;response_data&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;expires_in&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+                &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="nb"&gt;open&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;access_token_file&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;w+&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;fh&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+                    &lt;span class="n"&gt;json&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;dump&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;access_token&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;new_access_token&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;expires_in&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;str&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;int&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;expires_in&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="mi"&gt;20&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+                               &lt;span class="s"&gt;&amp;#39;update_time&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;time&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;time&lt;/span&gt;&lt;span class="p"&gt;()},&lt;/span&gt; &lt;span class="n"&gt;fh&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+                &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;new_access_token&lt;/span&gt;
+            &lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+                &lt;span class="k"&gt;raise&lt;/span&gt; &lt;span class="ne"&gt;Exception&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;u&amp;#39;响应内容不对！&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="k"&gt;raise&lt;/span&gt; &lt;span class="ne"&gt;Exception&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;u&amp;#39;非正常响应，&lt;/span&gt;&lt;span class="si"&gt;%d&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;status_code&lt;/span&gt;&lt;span class="p"&gt;,))&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;create_menu&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;content&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="n"&gt;menu_create_api&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;https://api.weixin.qq.com/cgi-bin/menu/create?access_token=&lt;/span&gt;&lt;span class="si"&gt;%s&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;&lt;/span&gt;
+        &lt;span class="n"&gt;target_url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;menu_create_api&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fetch_access_token&lt;/span&gt;&lt;span class="p"&gt;(),)&lt;/span&gt;
+        &lt;span class="k"&gt;try&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="n"&gt;r&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;session&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;post&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;target_url&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;content&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;status_code&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="mi"&gt;200&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+                &lt;span class="k"&gt;print&lt;/span&gt; &lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;json&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+            &lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+                &lt;span class="k"&gt;raise&lt;/span&gt; &lt;span class="ne"&gt;Exception&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;u&amp;#39;非正常响应, &lt;/span&gt;&lt;span class="si"&gt;%d&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;status_code&lt;/span&gt;&lt;span class="p"&gt;,))&lt;/span&gt;
+        &lt;span class="k"&gt;except&lt;/span&gt; &lt;span class="ne"&gt;Exception&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="k"&gt;print&lt;/span&gt; &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;message&lt;/span&gt;
+            &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;_remote_fetch_access_token&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+            &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;create_menu&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;content&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;fetch_menu&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="n"&gt;target_url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;https://api.weixin.qq.com/cgi-bin/menu/get?access_token=&lt;/span&gt;&lt;span class="si"&gt;%s&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fetch_access_token&lt;/span&gt;&lt;span class="p"&gt;(),)&lt;/span&gt;
+        &lt;span class="k"&gt;try&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="n"&gt;r&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;session&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;target_url&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;status_code&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="mi"&gt;200&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+                &lt;span class="k"&gt;print&lt;/span&gt; &lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;json&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+            &lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+                &lt;span class="k"&gt;raise&lt;/span&gt; &lt;span class="ne"&gt;Exception&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;u&amp;#39;非正常响应，&lt;/span&gt;&lt;span class="si"&gt;%d&lt;/span&gt;&lt;span class="s"&gt;, &lt;/span&gt;&lt;span class="si"&gt;%s&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;status_code&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;text&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+        &lt;span class="k"&gt;except&lt;/span&gt; &lt;span class="ne"&gt;Exception&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="k"&gt;print&lt;/span&gt; &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;message&lt;/span&gt;
+            &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;_remote_fetch_access_token&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+            &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fetch_menu&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;delete_menu&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="n"&gt;target_url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;https://api.weixin.qq.com/cgi-bin/menu/delete?access_token=&lt;/span&gt;&lt;span class="si"&gt;%s&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fetch_access_token&lt;/span&gt;&lt;span class="p"&gt;(),)&lt;/span&gt;
+        &lt;span class="k"&gt;try&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="n"&gt;r&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;session&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;target_url&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;status_code&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="mi"&gt;200&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+                &lt;span class="k"&gt;print&lt;/span&gt; &lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;json&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+            &lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+                &lt;span class="k"&gt;raise&lt;/span&gt; &lt;span class="ne"&gt;Exception&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;u&amp;#39;非正常响应, &lt;/span&gt;&lt;span class="si"&gt;%d&lt;/span&gt;&lt;span class="s"&gt;, &lt;/span&gt;&lt;span class="si"&gt;%s&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;status_code&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;text&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+        &lt;span class="k"&gt;except&lt;/span&gt; &lt;span class="ne"&gt;Exception&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="k"&gt;print&lt;/span&gt; &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;message&lt;/span&gt;
+            &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;_remote_fetch_access_token&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+            &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;delete_menu&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+    &lt;span class="n"&gt;wechat&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;WechatAdmin&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="c"&gt;# print wechat.fetch_access_token()&lt;/span&gt;
+
+    &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="nb"&gt;open&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;menus.json&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;fh&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="n"&gt;wechat&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;create_menu&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fh&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;read&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;
+
+    &lt;span class="n"&gt;wechat&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fetch_menu&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="c"&gt;# wechat.delete_menu()&lt;/span&gt;
+
+
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;__name__&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;__main__&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
 
 &lt;h3&gt;开发&lt;/h3&gt;
 &lt;p&gt;对于微信服务号后台程序，当然可以参照微信官方文档，从头开始实现。但可用非官方微信公众号SDK也不少。比如我使用的PHP

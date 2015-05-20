@@ -171,7 +171,7 @@ Ten seconds later: I’m leaving now.
 
 <p>如果管道不带缓冲，发送方会阻塞直到接收方从管道中接收了值。如果管道带缓冲，发送方则会阻塞直到发送的值被拷贝到缓冲区内；如果缓冲区已满，则意味着需要等待直到某个接收方获取到一个值。接收方在有值可能接收之前会一直阻塞。</p>
 <p><strong>关闭管道（Close）</strong></p>
-<p><a href="http://golang.org/ref/spec#Close">close</a> 函数标志着不会再往某个管道发送值。在调用<code>close</code>之后，并且在之前发送的值都被接收后，接收操作会返回一个零值，不会阻塞。一个多返回值的接收操作会额外返回一个布尔值用来指示返回的值是否为发送操作传递的。</p>
+<p><a href="http://golang.org/ref/spec#Close">close</a> 函数标志着不会再往某个管道发送值。在调用<code>close</code>之后，并且在之前发送的值都被接收后，接收操作会返回一个零值，不会阻塞。一个多返回值的接收操作会额外返回一个布尔值用来指示返回的值是否发送操作传递的。</p>
 <div class="highlight"><pre><span class="nx">ch</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">string</span><span class="p">)</span>
 <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">ch</span> <span class="o">&lt;-</span> <span class="s">&quot;Hello!&quot;</span>
@@ -293,7 +293,7 @@ created by addtimer
 </pre></div>
 
 
-<p>大多数情况下找出Go程序中造成死锁的愿意都比较容易，那么剩下的就是如何解决这个bug了。</p>
+<p>大多数情况下找出Go程序中造成死锁的原因都比较容易，那么剩下的就是如何解决这个bug了。</p>
 <h4>5. 数据竞争（data race）</h4>
 <p>死锁也许听起来令人挺忧伤的，但伴随并发编程真正灾难性的错误其实是数据竞争，相当常见，也可能非常难于调试。</p>
 <blockquote>
@@ -485,7 +485,7 @@ exit status 66
 </pre></div>
 
 
-<p>该工具发现一处数据竞争，包含：一个goroutine在第20行对一个变量进行写操作，跟着另一个goroutine在第22行对同一个变量进行了为同步的读操作。</p>
+<p>该工具发现一处数据竞争，包含：一个goroutine在第20行对一个变量进行写操作，跟着另一个goroutine在第22行对同一个变量进行了未同步的读操作。</p>
 <p>注意：竞争检测器只能发现在运行期确实发生的数据竞争（译注：我也不太理解这话，请指导）</p>
 <h4>8. Select语句</h4>
 <p><a href="http://golang.org/ref/spec#Select_statements">select语句</a>是Go语言并发工具集中的最后一个工具。select用于从一组可能的通讯中选择一个进一步处理。如果任意一个通讯都可以进一步处理，则从中随机选择一个，执行对应的语句。否则，如果又没有默认分支（default case），select语句则会阻塞，直到其中一个通讯完成。</p>
@@ -563,10 +563,10 @@ No one received Dave’s message.
 
 <h4>10. 并行计算</h4>
 <p><img alt="CPUs" src="http://www.nada.kth.se/~snilsson/concurrency/cpus.jpg" /></p>
-<p>并发的一个应用是将一个大的计算切分成一些工作单元，调度到不同的CPU上进行同时计算。</p>
+<p>并发的一个应用是将一个大的计算切分成一些工作单元，调度到不同的CPU上同时地计算。</p>
 <p>将计算分布到多个CPU上更多是一门艺术，而不是一门科学。以下是一些经验法则：</p>
 <ul>
-<li>每个工作单元应该花费大约100微秒到1ms的时间用于计算。如果单元粒度太小，切分问题以及调度子问题的管理开销可能就会太大。如果单元粒度太大，整个计算也许不得不等待一个慢的工作项结束。这种缓慢可能因为多种原因而产生，比如：调度、其他进程的中断或者糟糕的内存布局。（注意：工作单元的数目是不依赖于CPU的数目的）</li>
+<li>每个工作单元应该花费大约100微秒到1毫秒的时间用于计算。如果单元粒度太小，切分问题以及调度子问题的管理开销可能就会太大。如果单元粒度太大，整个计算也许不得不等待一个慢的工作项结束。这种缓慢可能因为多种原因而产生，比如：调度、其他进程的中断或者糟糕的内存布局。（注意：工作单元的数目是不依赖于CPU的数目的）</li>
 <li>尽可能减小共享的数据量。并发写操作的代价非常大，特别是如果goroutine运行在不同的CPU上。读操作之间的数据共享则通常不会是个问题。</li>
 <li>数据访问尽量利用良好的局部性。如果数据能保持在缓存中，数据加载和存储将会快得多得多，这对于写操作也格外地重要。</li>
 </ul>

@@ -86,7 +86,7 @@
 <li>并行计算</li>
 </ul>
 <p>在开始阅读本文之前，你应该知道如何编写简单的Go程序。如果你熟悉的是C/C++、Java或Python之类的语言，那么 <a href="http://tour.golang.org/welcome/1">Go语言之旅</a> 能提供所有必要的背景知识。也许你还有兴趣读一读 <a href="http://code.google.com/p/go-wiki/wiki/GoForCPPProgrammers">为C++程序员准备的Go语言教程</a> 或 <a href="http://www.nada.kth.se/~snilsson/go_for_java_programmers/">为Java程序员准备的Go语言教程</a>。</p>
-<h5>1. 运行期线程</h5>
+<h4>1. 运行期线程</h4>
 <p>Go允许使用<code>go</code>语句开启一个新的运行期线程，即 <a href="http://golang.org/ref/spec#Go_statements">goroutine</a>，以一个不同的、新创建的goroutine来执行一个函数。同一个程序中的所有goroutine共享同一个地址空间。</p>
 <p>Goroutine非常轻量，除了为之分配的栈空间，其所占用的内存空间微乎其微。并且其栈空间在开始时非常小，之后随着堆存储空间的按需分配或释放而变化。内部实现上，goroutine会在多个操作系统线程上多路复用。如果一个goroutine阻塞了一个操作系统线程，例如：等待输入，这个线程上的其他goroutine就会迁移到其他线程，这样能继续运行。开发者并不需要关心/担心这些细节。</p>
 <p>下面所示程序会输出“Hello from main goroutine”。也可能会输出“Hello from another goroutine”，具体依赖于两个goroutine哪个先结束。</p>
@@ -148,7 +148,7 @@ Ten seconds later: I’m leaving now.
 
 
 <p>一般来说，通过睡眠的方式来编排线程之间相互等待是不太可能的。下一章节会介绍Go语言中的一种同步机制 - 管道，并演示如何使用管道让一个goroutine等待另一个goroutine。</p>
-<h5>2. 管道（channel）</h5>
+<h4>2. 管道（channel）</h4>
 <p><img alt="Sushi conveyor belt" src="http://www.nada.kth.se/~snilsson/concurrency/sushi-conveyor-belt.jpg" /></p>
 <p><a href="http://golang.org/ref/spec#Channel_types">管道</a>是Go语言的一个构件，提供一种机制用于两个goroutine之间通过传递一个指定类型的值来同步运行和通讯。操作符<code>&lt;-</code>用于指定管道的方向，发送或接收。如果未指定方向，则为双向管道。</p>
 <div class="highlight"><pre><span class="kd">chan</span> <span class="nx">Sushi</span>      <span class="c1">// 可用来发送和接收Sushi类型的值</span>
@@ -206,7 +206,7 @@ Ten seconds later: I’m leaving now.
 
 
 <p><a href="http://www.nada.kth.se/~snilsson/concurrency/src/sushi.go">sushi.go</a></p>
-<h5>3. 同步</h5>
+<h4>3. 同步</h4>
 <p>下一个示例中，我们让<code>Publish</code>函数返回一个管道 - 用于在发布text变量值时广播一条消息：</p>
 <div class="highlight"><pre><span class="c1">// 在给定时间过期时，Publish函数会打印text变量值到标准输出</span>
 <span class="c1">// 在text变量值发布后，该函数会关闭管道wait</span>
@@ -243,7 +243,7 @@ The news is out, time to leave.
 </pre></div>
 
 
-<h5>4. 死锁</h5>
+<h4>4. 死锁</h4>
 <p><img alt="traffic jam" src="http://www.nada.kth.se/~snilsson/concurrency/traffic-jam.jpg" /></p>
 <p>现在我们在<code>Publish</code>函数中引入一个bug：</p>
 <div class="highlight"><pre><span class="kd">func</span> <span class="nx">Publish</span><span class="p">(</span><span class="nx">text</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">delay</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">)</span> <span class="p">(</span><span class="nx">wait</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="kd">struct</span><span class="p">{})</span> <span class="p">{</span>
@@ -294,7 +294,7 @@ created by addtimer
 
 
 <p>大多数情况下找出Go程序中造成死锁的愿意都比较容易，那么剩下的就是如何解决这个bug了。</p>
-<h5>5. 数据竞争（data race）</h5>
+<h4>5. 数据竞争（data race）</h4>
 <p>死锁也许听起来令人挺忧伤的，但伴随并发编程真正灾难性的错误其实是数据竞争，相当常见，也可能非常难于调试。</p>
 <blockquote>
 <p>当两个线程并发地访问同一个变量，并且其中至少一个访问是写操作时，数据竞争就发生了。</p>
@@ -348,7 +348,7 @@ created by addtimer
 <p><a href="http://www.nada.kth.se/~snilsson/concurrency/src/datarace.go">datarace.go</a></p>
 <p>以上代码中的管道肩负双重责任 - 从一个goroutine将数据传递到另一个goroutine，并且起到同步的作用：发送方goroutine会等待另一个goroutine接收数据，接收方goroutine也会等待另一个goroutine发送数据。</p>
 <p><a href="http://golang.org/ref/mem">Go语言内存模型</a> - 要保证一个goroutine中对一个变量的读操作得到的值正好是另一个goroutine中对同一个变量写操作产生的值，条件相当复杂，但goroutine之间只要通过管道来共享所有可变数据，那么就能远离数据竞争了。</p>
-<h5>6. 互斥锁</h5>
+<h4>6. 互斥锁</h4>
 <p><img alt="lock" src="http://www.nada.kth.se/~snilsson/concurrency/lock.jpg" /></p>
 <p>有时，通过显式加锁，而不是使用管道，来同步数据访问，可能更加便捷。Go语言标准库为这一目的提供了一个互斥锁 - <a href="http://golang.org/pkg/sync/#Mutex">sync.Mutex</a>。</p>
 <p>要想这类加锁起效的话，关键之处在于：所有对共享数据的访问，不管读写，仅当goroutine持有锁才能操作。一个goroutine出错就足以破坏掉一个程序，引入数据竞争。</p>
@@ -390,7 +390,7 @@ created by addtimer
 
 
 <p><a href="http://www.nada.kth.se/~snilsson/concurrency/src/datarace.go">datarace.go</a></p>
-<h5>7. 检测数据竞争</h5>
+<h4>7. 检测数据竞争</h4>
 <p>竞争有时非常难于检测。下例中的这个函数有一个数据竞争问题，执行这个程序时会输出<code>55555</code>。尝试一下，也许你会得到一个不同的结果。（<a href="http://golang.org/pkg/sync/#WaitGroup">sync.WaitGroup</a>是Go语言标准库的一部分；用于等待一组goroutine结束运行。）</p>
 <div class="highlight"><pre><span class="kd">func</span> <span class="nx">race</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">wg</span> <span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span>
@@ -487,7 +487,7 @@ exit status 66
 
 <p>该工具发现一处数据竞争，包含：一个goroutine在第20行对一个变量进行写操作，跟着另一个goroutine在第22行对同一个变量进行了为同步的读操作。</p>
 <p>注意：竞争检测器只能发现在运行期确实发生的数据竞争（译注：我也不太理解这话，请指导）</p>
-<h5>8. Select语句</h5>
+<h4>8. Select语句</h4>
 <p><a href="http://golang.org/ref/spec#Select_statements">select语句</a>是Go语言并发工具集中的最后一个工具。select用于从一组可能的通讯中选择一个进一步处理。如果任意一个通讯都可以进一步处理，则从中随机选择一个，执行对应的语句。否则，如果又没有默认分支（default case），select语句则会阻塞，直到其中一个通讯完成。</p>
 <p>以下是一个玩具示例，演示<code>select</code>语句如何用于实现一个随机数生成器：</p>
 <div class="highlight"><pre><span class="c1">// RandomBits函数 返回一个管道，用于产生一个比特随机序列</span>
@@ -518,7 +518,7 @@ exit status 66
 
 
 <p>函数 <a href="http://golang.org/pkg/time/#After">time.After</a> 是Go语言标准库的一部分；它会在等待指定时间后将当前的时间发送到返回的管道中。</p>
-<h5>9. 综合所有示例</h5>
+<h4>9. 综合所有示例</h4>
 <p><img alt="couples" src="http://www.nada.kth.se/~snilsson/concurrency/couples.jpg" /></p>
 <p>花点时间认真研究一下这个示例。如果你完全理解，也就对Go语言中并发的应用方式有了全面的掌握。</p>
 <p>这个程序演示了如何将管道用于被任意数量的goroutine发送和接收数据，也演示了如何将select语句用于从多个通讯中选择一个。</p>
@@ -561,7 +561,7 @@ No one received Dave’s message.
 </pre></div>
 
 
-<h5>10. 并行计算</h5>
+<h4>10. 并行计算</h4>
 <p><img alt="CPUs" src="http://www.nada.kth.se/~snilsson/concurrency/cpus.jpg" /></p>
 <p>并发的一个应用是将一个大的计算切分成一些工作单元，调度到不同的CPU上进行同时计算。</p>
 <p>将计算分布到多个CPU上更多是一门艺术，而不是一门科学。以下是一些经验法则：</p>

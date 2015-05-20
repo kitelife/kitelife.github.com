@@ -67,8 +67,8 @@
            
             </header>
             <footer class="post-info">
-              <abbr class="published" title="2012-11-29T00:00:00">
-                2012-11-29 Thu
+              <abbr class="published" title="2012-11-29T00:00:00+08:00">
+                2012-11-29 四
               </abbr>
               <address class="vcard author">
                 By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
@@ -124,7 +124,7 @@ path=/home/yongfeng/apps/website3.com/webroot/upload
 
 
 <p>给密码文件赋权:</p>
-<div class="highlight"><pre>sudo chmod 400 /etc/rsync.pass
+<div class="highlight"><pre>sudo chmod <span class="m">400</span> /etc/rsync.pass
 </pre></div>
 
 
@@ -144,7 +144,7 @@ sudo mkdir -p /home/yongfeng/apps/website3.com/webroot/upload
 
 
 <p>赋权限:</p>
-<div class="highlight"><pre>chmod 600 /etc/rsync-client.pass
+<div class="highlight"><pre>chmod <span class="m">600</span> /etc/rsync-client.pass
 </pre></div>
 
 
@@ -155,16 +155,16 @@ src<span class="o">[</span>0<span class="o">]=</span><span class="s1">&#39;/var/
 src<span class="o">[</span>1<span class="o">]=</span><span class="s1">&#39;/var/www/apps/website2.com/webroot/upload,website2&#39;</span>
 src<span class="o">[</span>2<span class="o">]=</span><span class="s1">&#39;/var/www/apps/website3.com/webroot/upload,website3&#39;</span>
 
-<span class="k">for </span>item in <span class="k">${</span><span class="nv">src</span><span class="p">[@]</span><span class="k">}</span>; <span class="k">do</span>
-<span class="k">    </span><span class="nv">fromdir</span><span class="o">=</span><span class="sb">`</span><span class="nb">echo</span> <span class="nv">$item</span> | awk -F<span class="s2">&quot;,&quot;</span> <span class="s1">&#39;{print $1}&#39;</span><span class="sb">`</span>
-    <span class="nv">module</span><span class="o">=</span><span class="sb">`</span><span class="nb">echo</span> <span class="nv">$item</span> | awk -F<span class="s2">&quot;,&quot;</span> <span class="s1">&#39;{print $2}&#39;</span><span class="sb">`</span>
+<span class="k">for</span> item in <span class="si">${</span><span class="nv">src</span><span class="p">[@]</span><span class="si">}</span><span class="p">;</span> <span class="k">do</span>
+    <span class="nv">fromdir</span><span class="o">=</span><span class="sb">`</span><span class="nb">echo</span> <span class="nv">$item</span> <span class="p">|</span> awk -F<span class="s2">&quot;,&quot;</span> <span class="s1">&#39;{print $1}&#39;</span><span class="sb">`</span>
+    <span class="nv">module</span><span class="o">=</span><span class="sb">`</span><span class="nb">echo</span> <span class="nv">$item</span> <span class="p">|</span> awk -F<span class="s2">&quot;,&quot;</span> <span class="s1">&#39;{print $2}&#39;</span><span class="sb">`</span>
 
-    /usr/bin/inotifywait -mrq --timefmt <span class="s1">&#39;%d/%m/%y %H:%M&#39;</span> --format <span class="s1">&#39;%T%w%f&#39;</span> --event modify,delete,move,create,attrib <span class="k">${</span><span class="nv">fromdir</span><span class="k">}</span> | <span class="k">while </span><span class="nb">read </span>file event
+    /usr/bin/inotifywait -mrq --timefmt <span class="s1">&#39;%d/%m/%y %H:%M&#39;</span> --format <span class="s1">&#39;%T%w%f&#39;</span> --event modify,delete,move,create,attrib <span class="si">${</span><span class="nv">fromdir</span><span class="si">}</span> <span class="p">|</span> <span class="k">while</span> <span class="nb">read </span>file event
     <span class="k">do</span>
-<span class="k">        </span><span class="nb">echo</span> <span class="nv">$event</span><span class="s1">&#39;-&#39;</span><span class="nv">$file</span>
-        rsync -avz --delete --password-file<span class="o">=</span>/etc/rsync-client.pass <span class="k">${</span><span class="nv">fromdir</span><span class="k">}</span><span class="s1">&#39;/&#39;</span> tongbu@0.0.0.0::<span class="k">${</span><span class="nv">module</span><span class="k">}</span>
+        <span class="nb">echo</span> <span class="nv">$event</span><span class="s1">&#39;-&#39;</span><span class="nv">$file</span>
+        rsync -avz --delete --password-file<span class="o">=</span>/etc/rsync-client.pass <span class="si">${</span><span class="nv">fromdir</span><span class="si">}</span><span class="s1">&#39;/&#39;</span> tongbu@0.0.0.0::<span class="si">${</span><span class="nv">module</span><span class="si">}</span>
         <span class="nb">echo</span> <span class="s2">&quot;*******************************&quot;</span>
-    <span class="k">done</span> &amp;
+    <span class="k">done</span> <span class="p">&amp;</span>
 <span class="k">done</span>
 </pre></div>
 

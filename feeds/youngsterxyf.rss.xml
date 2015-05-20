@@ -1,5 +1,563 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>黑 * 白</title><link>http://youngsterxyf.github.io/</link><description></description><atom:link href="http://youngsterxyf.github.io/feeds/youngsterxyf.rss.xml" rel="self"></atom:link><lastBuildDate>Fri, 10 Apr 2015 00:00:00 +0800</lastBuildDate><item><title>Yii源码阅读笔记 - 自定义类自动加载</title><link>http://youngsterxyf.github.io/2015/04/10/read-yii-code-9/</link><description>&lt;p&gt;前两天突然发现：之前的阅读笔记对于Yii应用中如何自动加载自定义类的问题没有解释。这里的自定义类是指非Yii框架本身的类。&lt;/p&gt;
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>黑 * 白</title><link>http://youngsterxyf.github.io/</link><description></description><atom:link href="http://youngsterxyf.github.io/feeds/youngsterxyf.rss.xml" rel="self"></atom:link><lastBuildDate>Wed, 20 May 2015 00:00:00 +0800</lastBuildDate><item><title>Go并发编程基础（译）</title><link>http://youngsterxyf.github.io/2015/05/20/fundamentals-of-concurrent-programming/</link><description>&lt;p&gt;原文：&lt;a href="http://www.nada.kth.se/~snilsson/concurrency/"&gt;Fundamentals of concurrent programming&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;译者：&lt;a href="https://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;本文是一篇并发编程方面的入门文章，以&lt;a href="http://golang.org/"&gt;Go语言&lt;/a&gt;编写示例代码，内容涵盖：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;运行期并发线程（goroutines）&lt;/li&gt;
+&lt;li&gt;基本的同步技术（管道和锁）&lt;/li&gt;
+&lt;li&gt;Go语言中基本的并发模式&lt;/li&gt;
+&lt;li&gt;死锁和数据竞争&lt;/li&gt;
+&lt;li&gt;并行计算&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;在开始阅读本文之前，你应该知道如何编写简单的Go程序。如果你熟悉的是C/C++、Java或Python之类的语言，那么 &lt;a href="http://tour.golang.org/welcome/1"&gt;Go语言之旅&lt;/a&gt; 能提供所有必要的背景知识。也许你还有兴趣读一读 &lt;a href="http://code.google.com/p/go-wiki/wiki/GoForCPPProgrammers"&gt;为C++程序员准备的Go语言教程&lt;/a&gt; 或 &lt;a href="http://www.nada.kth.se/~snilsson/go_for_java_programmers/"&gt;为Java程序员准备的Go语言教程&lt;/a&gt;。&lt;/p&gt;
+&lt;h5&gt;1. 运行期线程&lt;/h5&gt;
+&lt;p&gt;Go允许使用&lt;code&gt;go&lt;/code&gt;语句开启一个新的运行期线程，即 &lt;a href="http://golang.org/ref/spec#Go_statements"&gt;goroutine&lt;/a&gt;，以一个不同的、新创建的goroutine来执行一个函数。同一个程序中的所有goroutine共享同一个地址空间。&lt;/p&gt;
+&lt;p&gt;Goroutine非常轻量，除了为之分配的栈空间，其所占用的内存空间微乎其微。并且其栈空间在开始时非常小，之后随着堆存储空间的按需分配或释放而变化。内部实现上，goroutine会在多个操作系统线程上多路复用。如果一个goroutine阻塞了一个操作系统线程，例如：等待输入，这个线程上的其他goroutine就会迁移到其他线程，这样能继续运行。开发者并不需要关心/担心这些细节。&lt;/p&gt;
+&lt;p&gt;下面所示程序会输出“Hello from main goroutine”。也可能会输出“Hello from another goroutine”，具体依赖于两个goroutine哪个先结束。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;go&lt;/span&gt; &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Hello from another goroutine&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Hello from main goroutine&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// 至此，程序运行结束，&lt;/span&gt;
+    &lt;span class="c1"&gt;// 所有活跃的goroutine被杀死&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;a href="http://www.nada.kth.se/~snilsson/concurrency/src/goroutine1.go"&gt;goroutine1.go&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;接下来的这个程序，多数情况下，会输出“Hello from main goroutine”和“Hello from another goroutine”，输出的顺序不确定。但还有另一个可能性是：第二个goroutine运行得极其慢，在程序结束之前都没来得及输出相应的消息。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;go&lt;/span&gt; &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Hello from another goroutine&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Hello from main goroutine&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+    &lt;span class="nx"&gt;time&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Sleep&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;time&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Second&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;     &lt;span class="c1"&gt;// 等待1秒，等另一个goroutine结束&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;a href="http://www.nada.kth.se/~snilsson/concurrency/src/goroutine2.go"&gt;goroutine2.go&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;下面则是一个相对更加实际的示例，其中定义了一个函数使用并发来推迟触发一个事件。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c1"&gt;// 函数Publish在给定时间过期后打印text字符串到标准输出&lt;/span&gt;
+&lt;span class="c1"&gt;// 该函数并不会阻塞而是立即返回&lt;/span&gt;
+&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;Publish&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;text&lt;/span&gt; &lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;delay&lt;/span&gt; &lt;span class="nx"&gt;time&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Duration&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;go&lt;/span&gt; &lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nx"&gt;time&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Sleep&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;delay&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;BREAKING NEWS:&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;text&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="p"&gt;}()&lt;/span&gt; &lt;span class="c1"&gt;// 注意这里的括号。必须调用匿名函数&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;a href="http://www.nada.kth.se/~snilsson/concurrency/src/publish1.go"&gt;publish1.go&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;你可能会这样使用&lt;code&gt;Publish&lt;/code&gt;函数：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;Publish&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;A goroutine starts a new thread of execution.&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nx"&gt;time&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Second&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Let’s hope the news will published before I leave.&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// 等待发布新闻&lt;/span&gt;
+    &lt;span class="nx"&gt;time&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Sleep&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="nx"&gt;time&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Second&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+    &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Ten seconds later: I’m leaving now.&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;a href="http://www.nada.kth.se/~snilsson/concurrency/src/publish1.go"&gt;publish1.go&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;这个程序，绝大多数情况下，会输出以下三行，顺序固定，每行输出之间相隔5秒。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;$ go run publish1.go
+Let’s hope the news will published before I leave.
+BREAKING NEWS: A goroutine starts a new thread of execution.
+Ten seconds later: I’m leaving now.
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;一般来说，通过睡眠的方式来编排线程之间相互等待是不太可能的。下一章节会介绍Go语言中的一种同步机制 - 管道，并演示如何使用管道让一个goroutine等待另一个goroutine。&lt;/p&gt;
+&lt;h5&gt;2. 管道（channel）&lt;/h5&gt;
+&lt;p&gt;&lt;img alt="Sushi conveyor belt" src="http://www.nada.kth.se/~snilsson/concurrency/sushi-conveyor-belt.jpg" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href="http://golang.org/ref/spec#Channel_types"&gt;管道&lt;/a&gt;是Go语言的一个构件，提供一种机制用于两个goroutine之间通过传递一个指定类型的值来同步运行和通讯。操作符&lt;code&gt;&amp;lt;-&lt;/code&gt;用于指定管道的方向，发送或接收。如果未指定方向，则为双向管道。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;chan&lt;/span&gt; &lt;span class="nx"&gt;Sushi&lt;/span&gt;      &lt;span class="c1"&gt;// 可用来发送和接收Sushi类型的值&lt;/span&gt;
+&lt;span class="kd"&gt;chan&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;-&lt;/span&gt; &lt;span class="kt"&gt;float64&lt;/span&gt;  &lt;span class="c1"&gt;// 仅可用来发送float64类型的值&lt;/span&gt;
+&lt;span class="o"&gt;&amp;lt;-&lt;/span&gt;&lt;span class="kd"&gt;chan&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt;      &lt;span class="c1"&gt;// 仅可用来接收int类型的值&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;管道是引用类型，基于make函数来分配。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nx"&gt;ic&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nb"&gt;make&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;chan&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;    &lt;span class="c1"&gt;// 不带缓冲的int类型管道&lt;/span&gt;
+&lt;span class="nx"&gt;wc&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nb"&gt;make&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;chan&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nx"&gt;Work&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;  &lt;span class="c1"&gt;// 带缓冲的Work类型指针管道&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;如果压迫通过管道发送一个值，则将&lt;code&gt;&amp;lt;-&lt;/code&gt;作为二元操作符使用。通过管道接收一个值，则将其作为一元操作符使用：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nx"&gt;ic&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt; &lt;span class="mi"&gt;3&lt;/span&gt;     &lt;span class="c1"&gt;// 往管道发送3&lt;/span&gt;
+&lt;span class="nx"&gt;work&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt;&lt;span class="nx"&gt;wc&lt;/span&gt;    &lt;span class="c1"&gt;// 从管道接收一个指向Work类型值的指针&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;如果管道不带缓冲，发送方会阻塞直到接收方从管道中接收了值。如果管道带缓冲，发送方则会阻塞直到发送的值被拷贝到缓冲区内；如果缓冲区已满，则意味着需要等待直到某个接收方获取到一个值。接收方在有值可能接收之前会一直阻塞。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;关闭管道（Close）&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href="http://golang.org/ref/spec#Close"&gt;close&lt;/a&gt; 函数标志着不会再往某个管道发送值。在调用&lt;code&gt;close&lt;/code&gt;之后，并且在之前发送的值都被接收后，接收操作会返回一个零值，不会阻塞。一个多返回值的接收操作会额外返回一个布尔值用来指示返回的值是否为发送操作传递的。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nx"&gt;ch&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nb"&gt;make&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;chan&lt;/span&gt; &lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;go&lt;/span&gt; &lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;ch&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;Hello!&amp;quot;&lt;/span&gt;
+    &lt;span class="nb"&gt;close&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;ch&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;}()&lt;/span&gt;
+&lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;-&lt;/span&gt;&lt;span class="nx"&gt;ch&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;   &lt;span class="c1"&gt;// 输出字符串&amp;quot;Hello!&amp;quot;&lt;/span&gt;
+&lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;-&lt;/span&gt;&lt;span class="nx"&gt;ch&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;   &lt;span class="c1"&gt;// 输出零值 - 空字符串&amp;quot;&amp;quot;，不会阻塞&lt;/span&gt;
+&lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;-&lt;/span&gt;&lt;span class="nx"&gt;ch&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;   &lt;span class="c1"&gt;// 再次打印输出空字符串&amp;quot;&amp;quot;&lt;/span&gt;
+&lt;span class="nx"&gt;v&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;ok&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt;&lt;span class="nx"&gt;ch&lt;/span&gt;       &lt;span class="c1"&gt;// 变量v的值为空字符串&amp;quot;&amp;quot;，变量ok的值为false&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;一个带有&lt;code&gt;range&lt;/code&gt;子句的&lt;code&gt;for&lt;/code&gt;语句会依次读取发往管道的值，直到该管道关闭：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="c1"&gt;// 译注：要想运行该示例，需要先定义类型Sushi，如type Sushi string&lt;/span&gt;
+    &lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;ch&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt;&lt;span class="kd"&gt;chan&lt;/span&gt; &lt;span class="nx"&gt;Sushi&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;Producer&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="nx"&gt;s&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="k"&gt;range&lt;/span&gt; &lt;span class="nx"&gt;ch&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Consumed&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;s&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;Producer&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt;&lt;span class="kd"&gt;chan&lt;/span&gt; &lt;span class="nx"&gt;Sushi&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;ch&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nb"&gt;make&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;chan&lt;/span&gt; &lt;span class="nx"&gt;Sushi&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;go&lt;/span&gt; &lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="p"&gt;(){&lt;/span&gt;
+        &lt;span class="nx"&gt;ch&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt; &lt;span class="nx"&gt;Sushi&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;海老握り&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="c1"&gt;// Ebi nigiri&lt;/span&gt;
+        &lt;span class="nx"&gt;ch&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt; &lt;span class="nx"&gt;Sushi&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;鮪とろ握り&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="c1"&gt;// Toro nigiri&lt;/span&gt;
+        &lt;span class="nb"&gt;close&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;ch&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="p"&gt;}()&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;ch&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;a href="http://www.nada.kth.se/~snilsson/concurrency/src/sushi.go"&gt;sushi.go&lt;/a&gt;&lt;/p&gt;
+&lt;h5&gt;3. 同步&lt;/h5&gt;
+&lt;p&gt;下一个示例中，我们让&lt;code&gt;Publish&lt;/code&gt;函数返回一个管道 - 用于在发布text变量值时广播一条消息：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c1"&gt;// 在给定时间过期时，Publish函数会打印text变量值到标准输出&lt;/span&gt;
+&lt;span class="c1"&gt;// 在text变量值发布后，该函数会关闭管道wait&lt;/span&gt;
+&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;Publish&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;text&lt;/span&gt; &lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;delay&lt;/span&gt; &lt;span class="nx"&gt;time&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Duration&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;wait&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt;&lt;span class="kd"&gt;chan&lt;/span&gt; &lt;span class="kd"&gt;struct&lt;/span&gt;&lt;span class="p"&gt;{})&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;ch&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nb"&gt;make&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;chan&lt;/span&gt; &lt;span class="kd"&gt;struct&lt;/span&gt;&lt;span class="p"&gt;{})&lt;/span&gt;
+    &lt;span class="k"&gt;go&lt;/span&gt; &lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nx"&gt;time&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Sleep&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;delay&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;BREAKING NEWS:&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;text&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="nb"&gt;close&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;ch&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;   &lt;span class="c1"&gt;// 广播 - 一个关闭的管道都会发送一个零值&lt;/span&gt;
+    &lt;span class="p"&gt;}()&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;ch&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;a href="http://www.nada.kth.se/~snilsson/concurrency/src/publish2.go"&gt;publish2.go&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;注意：我们使用了一个空结构体的管道：&lt;code&gt;struct{}&lt;/code&gt;。这明确地指明该管道仅用于发信号，而不是传递数据。&lt;/p&gt;
+&lt;p&gt;我们可能会这样使用这个函数：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;wait&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nx"&gt;Publish&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Channels let goroutines communicate.&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nx"&gt;time&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Second&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Waiting for the news...&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt;&lt;span class="nx"&gt;wait&lt;/span&gt;
+    &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;The news is out, time to leave.&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;a href="http://www.nada.kth.se/~snilsson/concurrency/src/publish2.go"&gt;publish2.go&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;这个程序会按指定的顺序输出以下三行内容。最后一行在新闻（news）一出就会立即输出。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;$ go run publish2.go
+Waiting for the news...
+BREAKING NEWS: Channels let goroutines communicate.
+The news is out, time to leave.
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h5&gt;4. 死锁&lt;/h5&gt;
+&lt;p&gt;&lt;img alt="traffic jam" src="http://www.nada.kth.se/~snilsson/concurrency/traffic-jam.jpg" /&gt;&lt;/p&gt;
+&lt;p&gt;现在我们在&lt;code&gt;Publish&lt;/code&gt;函数中引入一个bug：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;Publish&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;text&lt;/span&gt; &lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;delay&lt;/span&gt; &lt;span class="nx"&gt;time&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Duration&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;wait&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt;&lt;span class="kd"&gt;chan&lt;/span&gt; &lt;span class="kd"&gt;struct&lt;/span&gt;&lt;span class="p"&gt;{})&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;ch&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nb"&gt;make&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;chan&lt;/span&gt; &lt;span class="kd"&gt;struct&lt;/span&gt;&lt;span class="p"&gt;{})&lt;/span&gt;
+    &lt;span class="k"&gt;go&lt;/span&gt; &lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nx"&gt;time&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Sleep&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;delay&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;BREAKING NEWS:&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;text&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="c1"&gt;// 译注：注意这里将close函数调用注释掉了&lt;/span&gt;
+        &lt;span class="c1"&gt;//close(ch)&lt;/span&gt;
+    &lt;span class="p"&gt;}()&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;ch&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;主程序还是像之前一样开始运行：输出第一行，然后等待5秒，这时&lt;code&gt;Publish&lt;/code&gt;函数开启的goroutine会输出突发新闻（breaking news），然后退出，留下主goroutine独自等待。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;wait&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nx"&gt;Publish&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Channels let goroutines communicate.&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nx"&gt;time&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Second&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Waiting for the news...&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="c1"&gt;// 译注：注意下面这一句&lt;/span&gt;
+    &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt;&lt;span class="nx"&gt;wait&lt;/span&gt;
+    &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;The news is out, time to leave.&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;此刻之后，程序无法再继续往下执行。众所周知，这种情形即为死锁。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;死锁是线程之间相互等待，其中任何一个都无法向前运行的情形。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Go语言对于运行时的死锁检测具备良好的支持。当没有任何goroutine能够往前执行的情形发生时，Go程序通常会提供详细的错误信息。以下就是我们的问题程序的输出：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;Waiting for the news...
+BREAKING NEWS: Channels let goroutines communicate.
+fatal error: all goroutines are asleep - deadlock!
+
+goroutine 1 [chan receive]:
+main.main()
+    .../goroutineStop.go:11 +0xf6
+
+goroutine 2 [syscall]:
+created by runtime.main
+    .../go/src/pkg/runtime/proc.c:225
+
+goroutine 4 [timer goroutine (idle)]:
+created by addtimer
+    .../go/src/pkg/runtime/ztime_linux_amd64.c:73
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;大多数情况下找出Go程序中造成死锁的愿意都比较容易，那么剩下的就是如何解决这个bug了。&lt;/p&gt;
+&lt;h5&gt;5. 数据竞争（data race）&lt;/h5&gt;
+&lt;p&gt;死锁也许听起来令人挺忧伤的，但伴随并发编程真正灾难性的错误其实是数据竞争，相当常见，也可能非常难于调试。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;当两个线程并发地访问同一个变量，并且其中至少一个访问是写操作时，数据竞争就发生了。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;下面的这个函数就有数据竞争问题，其行为是未定义的。例如，可能输出数值1。代码之后是一个可能性解释，试图搞清楚这一切是如何发生得。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;race&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;wait&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nb"&gt;make&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;chan&lt;/span&gt; &lt;span class="kd"&gt;struct&lt;/span&gt;&lt;span class="p"&gt;{})&lt;/span&gt;
+    &lt;span class="nx"&gt;n&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;
+    &lt;span class="k"&gt;go&lt;/span&gt; &lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="c1"&gt;// 译注：注意下面这一行&lt;/span&gt;
+        &lt;span class="nx"&gt;n&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt; &lt;span class="c1"&gt;// 一次访问: 读, 递增, 写&lt;/span&gt;
+        &lt;span class="nb"&gt;close&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;wait&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="p"&gt;}()&lt;/span&gt;
+    &lt;span class="c1"&gt;// 译注：注意下面这一行&lt;/span&gt;
+    &lt;span class="nx"&gt;n&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt; &lt;span class="c1"&gt;// 另一次冲突的访问&lt;/span&gt;
+    &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt;&lt;span class="nx"&gt;wait&lt;/span&gt;
+    &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;n&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="c1"&gt;// 输出：未指定&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;a href="http://www.nada.kth.se/~snilsson/concurrency/src/datarace.go"&gt;datarace.go&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;代码中的两个goroutine（假设命名为&lt;code&gt;g1&lt;/code&gt;和&lt;code&gt;g2&lt;/code&gt;）参与了一次竞争，我们无法获知操作会以何种顺序发生。以下是诸多可能中的一种：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;g1&lt;/code&gt; 从 &lt;code&gt;n&lt;/code&gt; 中获取值0&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;g2&lt;/code&gt; 从 &lt;code&gt;n&lt;/code&gt; 中获取值0&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;g1&lt;/code&gt; 将值从0增大到1&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;g1&lt;/code&gt; 将1写到 &lt;code&gt;n&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;g2&lt;/code&gt; 将值从0增大到1&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;g2&lt;/code&gt; 将1写到 &lt;code&gt;n&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;程序输出 n 的值，当前为1&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;“数据竞争（data race）”这名字有点误导的嫌疑。不仅操作的顺序是未定义的，其实根本没有任何保证（no guarantees whatsoever）。编译器和硬件为了得到更好的性能，经常都会对代码进行上下内外的顺序变换。如果你看到一个线程处于中间行为状态时，那么当时的场景可能就像下图所示的一样：&lt;/p&gt;
+&lt;p&gt;&lt;img alt="mid action" src="http://www.nada.kth.se/~snilsson/concurrency/mid-action.jpg" /&gt;&lt;/p&gt;
+&lt;p&gt;避免数据竞争的唯一方式是线程间同步访问所有的共享可变数据。有几种方式能够实现这一目标。Go语言中，通常是使用管道或者锁。（&lt;a href="http://golang.org/pkg/sync/"&gt;sync&lt;/a&gt;和&lt;a href="http://golang.org/pkg/sync/atomic/"&gt;sync/atomic&lt;/a&gt;包中还有更低层次的机制可供使用，但本文中不做讨论）。&lt;/p&gt;
+&lt;p&gt;Go语言中，处理并发数据访问的推荐方式是使用管道从一个goroutine中往下一个goroutine传递实际的数据。有格言说得好：“不要通过共享内存来通讯，而是通过通讯来共享内存”。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;sharingIsCaring&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;ch&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nb"&gt;make&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;chan&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;go&lt;/span&gt; &lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nx"&gt;n&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt; &lt;span class="c1"&gt;// 仅为一个goroutine可见的局部变量.&lt;/span&gt;
+        &lt;span class="nx"&gt;n&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt;
+        &lt;span class="nx"&gt;ch&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt; &lt;span class="nx"&gt;n&lt;/span&gt; &lt;span class="c1"&gt;// 数据从一个goroutine离开...&lt;/span&gt;
+    &lt;span class="p"&gt;}()&lt;/span&gt;
+    &lt;span class="nx"&gt;n&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt;&lt;span class="nx"&gt;ch&lt;/span&gt;   &lt;span class="c1"&gt;// ...然后安全到达另一个goroutine.&lt;/span&gt;
+    &lt;span class="nx"&gt;n&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt;
+    &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;n&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="c1"&gt;// 输出: 2&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;a href="http://www.nada.kth.se/~snilsson/concurrency/src/datarace.go"&gt;datarace.go&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;以上代码中的管道肩负双重责任 - 从一个goroutine将数据传递到另一个goroutine，并且起到同步的作用：发送方goroutine会等待另一个goroutine接收数据，接收方goroutine也会等待另一个goroutine发送数据。&lt;/p&gt;
+&lt;p&gt;&lt;a href="http://golang.org/ref/mem"&gt;Go语言内存模型&lt;/a&gt; - 要保证一个goroutine中对一个变量的读操作得到的值正好是另一个goroutine中对同一个变量写操作产生的值，条件相当复杂，但goroutine之间只要通过管道来共享所有可变数据，那么就能远离数据竞争了。&lt;/p&gt;
+&lt;h5&gt;6. 互斥锁&lt;/h5&gt;
+&lt;p&gt;&lt;img alt="lock" src="http://www.nada.kth.se/~snilsson/concurrency/lock.jpg" /&gt;&lt;/p&gt;
+&lt;p&gt;有时，通过显式加锁，而不是使用管道，来同步数据访问，可能更加便捷。Go语言标准库为这一目的提供了一个互斥锁 - &lt;a href="http://golang.org/pkg/sync/#Mutex"&gt;sync.Mutex&lt;/a&gt;。&lt;/p&gt;
+&lt;p&gt;要想这类加锁起效的话，关键之处在于：所有对共享数据的访问，不管读写，仅当goroutine持有锁才能操作。一个goroutine出错就足以破坏掉一个程序，引入数据竞争。&lt;/p&gt;
+&lt;p&gt;因此，应该设计一个自定义数据结构，具备明确的API，确保所有的同步都在数据结构内部完成。下例中，我们构建了一个安全、易于使用的并发数据结构，&lt;code&gt;AtomicInt&lt;/code&gt;，用于存储一个整型值。任意数量的goroutine都能通过&lt;code&gt;Add&lt;/code&gt;和&lt;code&gt;Value&lt;/code&gt;方法安全地访问这个数值。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c1"&gt;// AtomicInt是一个并发数据结构，持有一个整数值&lt;/span&gt;
+&lt;span class="c1"&gt;// 该数据结构的零值为0&lt;/span&gt;
+&lt;span class="kd"&gt;type&lt;/span&gt; &lt;span class="nx"&gt;AtomicInt&lt;/span&gt; &lt;span class="kd"&gt;struct&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;mu&lt;/span&gt; &lt;span class="nx"&gt;sync&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Mutex&lt;/span&gt; &lt;span class="c1"&gt;// 锁，一次仅能被一个goroutine持有。&lt;/span&gt;
+    &lt;span class="nx"&gt;n&lt;/span&gt;  &lt;span class="kt"&gt;int&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="c1"&gt;// Add方法作为一个原子操作将n加到AtomicInt&lt;/span&gt;
+&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;a&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nx"&gt;AtomicInt&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="nx"&gt;Add&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;n&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;a&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;mu&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Lock&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="c1"&gt;// 等待锁释放，然后持有它&lt;/span&gt;
+    &lt;span class="nx"&gt;a&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;n&lt;/span&gt; &lt;span class="o"&gt;+=&lt;/span&gt; &lt;span class="nx"&gt;n&lt;/span&gt;
+    &lt;span class="nx"&gt;a&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;mu&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Unlock&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="c1"&gt;// 释放锁&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="c1"&gt;// Value方法返回a的值&lt;/span&gt;
+&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;a&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nx"&gt;AtomicInt&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="nx"&gt;Value&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;a&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;mu&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Lock&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="nx"&gt;n&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nx"&gt;a&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;n&lt;/span&gt;
+    &lt;span class="nx"&gt;a&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;mu&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Unlock&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;n&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;lockItUp&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;wait&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nb"&gt;make&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;chan&lt;/span&gt; &lt;span class="kd"&gt;struct&lt;/span&gt;&lt;span class="p"&gt;{})&lt;/span&gt;
+    &lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;n&lt;/span&gt; &lt;span class="nx"&gt;AtomicInt&lt;/span&gt;
+    &lt;span class="k"&gt;go&lt;/span&gt; &lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nx"&gt;n&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Add&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="c1"&gt;// 一个访问&lt;/span&gt;
+        &lt;span class="nb"&gt;close&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;wait&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="p"&gt;}()&lt;/span&gt;
+    &lt;span class="nx"&gt;n&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Add&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="c1"&gt;// 另一个并发访问&lt;/span&gt;
+    &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt;&lt;span class="nx"&gt;wait&lt;/span&gt;
+    &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;n&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Value&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt; &lt;span class="c1"&gt;// 输出: 2&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;a href="http://www.nada.kth.se/~snilsson/concurrency/src/datarace.go"&gt;datarace.go&lt;/a&gt;&lt;/p&gt;
+&lt;h5&gt;7. 检测数据竞争&lt;/h5&gt;
+&lt;p&gt;竞争有时非常难于检测。下例中的这个函数有一个数据竞争问题，执行这个程序时会输出&lt;code&gt;55555&lt;/code&gt;。尝试一下，也许你会得到一个不同的结果。（&lt;a href="http://golang.org/pkg/sync/#WaitGroup"&gt;sync.WaitGroup&lt;/a&gt;是Go语言标准库的一部分；用于等待一组goroutine结束运行。）&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;race&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;wg&lt;/span&gt; &lt;span class="nx"&gt;sync&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;WaitGroup&lt;/span&gt;
+    &lt;span class="nx"&gt;wg&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Add&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="c1"&gt;// 译注：注意下面这行代码中的i++&lt;/span&gt;
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="p"&gt;&amp;lt;&lt;/span&gt; &lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;go&lt;/span&gt; &lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="c1"&gt;// 注意下一行代码会输出什么？为什么？&lt;/span&gt;
+            &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="c1"&gt;// 6个goroutine共享变量i&lt;/span&gt;
+            &lt;span class="nx"&gt;wg&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Done&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+        &lt;span class="p"&gt;}()&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="nx"&gt;wg&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Wait&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="c1"&gt;// 等待所有（5个）goroutine运行结束&lt;/span&gt;
+    &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;a href="http://www.nada.kth.se/~snilsson/concurrency/src/raceClosure.go"&gt;raceClosure.go&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;对于输出&lt;code&gt;55555&lt;/code&gt;，一个貌似合理的解释是：执行&lt;code&gt;i++&lt;/code&gt;的goroutine在其他goroutine执行打印语句之前就完成了5次&lt;code&gt;i++&lt;/code&gt;操作。实际上变量&lt;code&gt;i&lt;/code&gt;更新后的值为其他goroutine所见纯属巧合。&lt;/p&gt;
+&lt;p&gt;一个简单的解决方案是：使用一个局部变量，然后当开启新的goroutine时，将数值作为参数传递：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;correct&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;wg&lt;/span&gt; &lt;span class="nx"&gt;sync&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;WaitGroup&lt;/span&gt;
+    &lt;span class="nx"&gt;wg&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Add&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="p"&gt;&amp;lt;&lt;/span&gt; &lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;go&lt;/span&gt; &lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;n&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="c1"&gt;// 使用局部变量&lt;/span&gt;
+            &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;n&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="nx"&gt;wg&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Done&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+        &lt;span class="p"&gt;}(&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="nx"&gt;wg&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Wait&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;a href="http://www.nada.kth.se/~snilsson/concurrency/src/raceClosure.go"&gt;raceClosure.go&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;这次代码就对了，程序会输出期望的结果，如：&lt;code&gt;24031&lt;/code&gt;。注意：goroutine之间的运行顺序是不确定的。&lt;/p&gt;
+&lt;p&gt;仍旧使用闭包，但能够避免数据竞争也是可能的，必须小心翼翼地让每个goroutine使用一个独有的变量。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;alsoCorrect&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;wg&lt;/span&gt; &lt;span class="nx"&gt;sync&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;WaitGroup&lt;/span&gt;
+    &lt;span class="nx"&gt;wg&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Add&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="p"&gt;&amp;lt;&lt;/span&gt; &lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nx"&gt;n&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="c1"&gt;// 为每个闭包创建一个独有的变量&lt;/span&gt;
+        &lt;span class="k"&gt;go&lt;/span&gt; &lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;n&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="nx"&gt;wg&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Done&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+        &lt;span class="p"&gt;}()&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="nx"&gt;wg&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Wait&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;a href="http://www.nada.kth.se/~snilsson/concurrency/src/raceClosure.go"&gt;raceClosure.go&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;数据竞争自动检测&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;一般来说，不太可能能够自动检测发现所有可能的数据竞争情况，但Go（从版本1.1开始）有一个强大的&lt;a href="http://tip.golang.org/doc/articles/race_detector.html"&gt;数据竞争检测器&lt;/a&gt;。&lt;/p&gt;
+&lt;p&gt;这个工具用起来也很简单：只要在使用&lt;code&gt;go&lt;/code&gt;命令时加上&lt;code&gt;-race&lt;/code&gt;标记即可。开启检测器运行上面的程序会给出清晰且信息量大的输出：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;$ go run -race raceClosure.go
+Race:
+==================
+WARNING: DATA RACE
+Read by goroutine 2:
+  main.func·001()
+      ../raceClosure.go:22 +0x65
+
+Previous write by goroutine 0:
+  main.race()
+      ../raceClosure.go:20 +0x19b
+  main.main()
+      ../raceClosure.go:10 +0x29
+  runtime.main()
+      ../go/src/pkg/runtime/proc.c:248 +0x91
+
+Goroutine 2 (running) created at:
+  main.race()
+      ../raceClosure.go:24 +0x18b
+  main.main()
+      ../raceClosure.go:10 +0x29
+  runtime.main()
+      ../go/src/pkg/runtime/proc.c:248 +0x91
+
+==================
+55555
+Correct:
+01234
+Also correct:
+01324
+Found 1 data race(s)
+exit status 66
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;该工具发现一处数据竞争，包含：一个goroutine在第20行对一个变量进行写操作，跟着另一个goroutine在第22行对同一个变量进行了为同步的读操作。&lt;/p&gt;
+&lt;p&gt;注意：竞争检测器只能发现在运行期确实发生的数据竞争（译注：我也不太理解这话，请指导）&lt;/p&gt;
+&lt;h5&gt;8. Select语句&lt;/h5&gt;
+&lt;p&gt;&lt;a href="http://golang.org/ref/spec#Select_statements"&gt;select语句&lt;/a&gt;是Go语言并发工具集中的最后一个工具。select用于从一组可能的通讯中选择一个进一步处理。如果任意一个通讯都可以进一步处理，则从中随机选择一个，执行对应的语句。否则，如果又没有默认分支（default case），select语句则会阻塞，直到其中一个通讯完成。&lt;/p&gt;
+&lt;p&gt;以下是一个玩具示例，演示&lt;code&gt;select&lt;/code&gt;语句如何用于实现一个随机数生成器：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c1"&gt;// RandomBits函数 返回一个管道，用于产生一个比特随机序列&lt;/span&gt;
+&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;RandomBits&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt;&lt;span class="kd"&gt;chan&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;ch&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nb"&gt;make&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;chan&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;go&lt;/span&gt; &lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="k"&gt;select&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="nx"&gt;ch&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="c1"&gt;// 注意：分支没有对应的处理语句&lt;/span&gt;
+            &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="nx"&gt;ch&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="p"&gt;}&lt;/span&gt;
+        &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="p"&gt;}()&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;ch&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;a href="http://www.nada.kth.se/~snilsson/concurrency/src/randBits.go"&gt;randBits.go&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;下面是相对更加实际一点的例子：如何使用select语句为一个操作设置一个时间限制。代码会输出变量news的值或者超时消息，具体依赖于两个接收语句哪个先执行：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;select&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+&lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="nx"&gt;news&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt;&lt;span class="nx"&gt;NewsAgency&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;news&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt;&lt;span class="nx"&gt;time&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;After&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;time&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Minute&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Time out: no news in one minute.&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;函数 &lt;a href="http://golang.org/pkg/time/#After"&gt;time.After&lt;/a&gt; 是Go语言标准库的一部分；它会在等待指定时间后将当前的时间发送到返回的管道中。&lt;/p&gt;
+&lt;h5&gt;9. 综合所有示例&lt;/h5&gt;
+&lt;p&gt;&lt;img alt="couples" src="http://www.nada.kth.se/~snilsson/concurrency/couples.jpg" /&gt;&lt;/p&gt;
+&lt;p&gt;花点时间认真研究一下这个示例。如果你完全理解，也就对Go语言中并发的应用方式有了全面的掌握。&lt;/p&gt;
+&lt;p&gt;这个程序演示了如何将管道用于被任意数量的goroutine发送和接收数据，也演示了如何将select语句用于从多个通讯中选择一个。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;people&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="p"&gt;[]&lt;/span&gt;&lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Anna&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;Bob&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;Cody&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;Dave&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;Eva&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="nx"&gt;match&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nb"&gt;make&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;chan&lt;/span&gt; &lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="c1"&gt;// 为一个未匹配的发送操作提供空间&lt;/span&gt;
+    &lt;span class="nx"&gt;wg&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nb"&gt;new&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;sync&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;WaitGroup&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="nx"&gt;wg&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Add&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;people&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="nx"&gt;_&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;name&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="k"&gt;range&lt;/span&gt; &lt;span class="nx"&gt;people&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;go&lt;/span&gt; &lt;span class="nx"&gt;Seek&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;name&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;match&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;wg&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="nx"&gt;wg&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Wait&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="k"&gt;select&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="nx"&gt;name&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt;&lt;span class="nx"&gt;match&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Printf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;No one received %s’s message.\n&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;name&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;default&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="c1"&gt;// 没有待处理的发送操作&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="c1"&gt;// 函数Seek 发送一个name到match管道或从match管道接收一个peer，结束时通知wait group&lt;/span&gt;
+&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;Seek&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;name&lt;/span&gt; &lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;match&lt;/span&gt; &lt;span class="kd"&gt;chan&lt;/span&gt; &lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;wg&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nx"&gt;sync&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;WaitGroup&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;select&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="nx"&gt;peer&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt;&lt;span class="nx"&gt;match&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Printf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;%s sent a message to %s.\n&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;peer&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;name&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="nx"&gt;match&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;-&lt;/span&gt; &lt;span class="nx"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="c1"&gt;// 等待某个goroutine接收我的消息&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="nx"&gt;wg&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Done&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;a href="http://www.nada.kth.se/~snilsson/concurrency/src/matching.go"&gt;matching.go&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;示例输出：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;$ go run matching.go
+Cody sent a message to Bob.
+Anna sent a message to Eva.
+No one received Dave’s message.
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h5&gt;10. 并行计算&lt;/h5&gt;
+&lt;p&gt;&lt;img alt="CPUs" src="http://www.nada.kth.se/~snilsson/concurrency/cpus.jpg" /&gt;&lt;/p&gt;
+&lt;p&gt;并发的一个应用是将一个大的计算切分成一些工作单元，调度到不同的CPU上进行同时计算。&lt;/p&gt;
+&lt;p&gt;将计算分布到多个CPU上更多是一门艺术，而不是一门科学。以下是一些经验法则：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;每个工作单元应该花费大约100微秒到1ms的时间用于计算。如果单元粒度太小，切分问题以及调度子问题的管理开销可能就会太大。如果单元粒度太大，整个计算也许不得不等待一个慢的工作项结束。这种缓慢可能因为多种原因而产生，比如：调度、其他进程的中断或者糟糕的内存布局。（注意：工作单元的数目是不依赖于CPU的数目的）&lt;/li&gt;
+&lt;li&gt;尽可能减小共享的数据量。并发写操作的代价非常大，特别是如果goroutine运行在不同的CPU上。读操作之间的数据共享则通常不会是个问题。&lt;/li&gt;
+&lt;li&gt;数据访问尽量利用良好的局部性。如果数据能保持在缓存中，数据加载和存储将会快得多得多，这对于写操作也格外地重要。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;下面的这个示例展示如何切分一个开销很大的计算并将其分布在所有可用的CPU上进行计算。先看一下有待优化的代码：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;type&lt;/span&gt; &lt;span class="nx"&gt;Vector&lt;/span&gt; &lt;span class="p"&gt;[]&lt;/span&gt;&lt;span class="kt"&gt;float64&lt;/span&gt;
+
+&lt;span class="c1"&gt;// 函数Convolve 计算 w = u * v，其中 w[k] = Σ u[i]*v[j], i + j = k&lt;/span&gt;
+&lt;span class="c1"&gt;// 先决条件：len(u) &amp;gt; 0, len(v) &amp;gt; 0&lt;/span&gt;
+&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;Convolve&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;u&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;v&lt;/span&gt; &lt;span class="nx"&gt;Vector&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;w&lt;/span&gt; &lt;span class="nx"&gt;Vector&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;n&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;u&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;v&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;
+    &lt;span class="nx"&gt;w&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;make&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;Vector&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;n&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="nx"&gt;k&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nx"&gt;k&lt;/span&gt; &lt;span class="p"&gt;&amp;lt;&lt;/span&gt; &lt;span class="nx"&gt;n&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nx"&gt;k&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nx"&gt;w&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;k&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;mul&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;u&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;v&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;k&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="c1"&gt;// 函数mul 返回 Σ u[i]*v[j], i + j = k.&lt;/span&gt;
+&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;mul&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;u&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;v&lt;/span&gt; &lt;span class="nx"&gt;Vector&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;k&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;res&lt;/span&gt; &lt;span class="kt"&gt;float64&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;n&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nx"&gt;min&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;k&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;u&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    &lt;span class="nx"&gt;j&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nx"&gt;min&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;k&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;v&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nx"&gt;k&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="nx"&gt;j&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="p"&gt;&amp;lt;&lt;/span&gt; &lt;span class="nx"&gt;n&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;j&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;j&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nx"&gt;res&lt;/span&gt; &lt;span class="o"&gt;+=&lt;/span&gt; &lt;span class="nx"&gt;u&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="nx"&gt;v&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;j&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;想法很简单：确定合适大小的工作单元，然后在不同的goroutine中执行每个工作单元。以下是并发版本的 &lt;code&gt;Convolve&lt;/code&gt;：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;Convolve&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;u&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;v&lt;/span&gt; &lt;span class="nx"&gt;Vector&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;w&lt;/span&gt; &lt;span class="nx"&gt;Vector&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;n&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;u&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;v&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;
+    &lt;span class="nx"&gt;w&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;make&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;Vector&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;n&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// 将 w 切分成花费 ~100μs-1ms 用于计算的工作单元&lt;/span&gt;
+    &lt;span class="nx"&gt;size&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nx"&gt;max&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&amp;lt;&lt;/span&gt;&lt;span class="mi"&gt;20&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nx"&gt;n&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+    &lt;span class="nx"&gt;wg&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nb"&gt;new&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;sync&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;WaitGroup&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="nx"&gt;wg&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Add&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;n&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nx"&gt;size&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="p"&gt;&amp;lt;&lt;/span&gt; &lt;span class="nx"&gt;n&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="o"&gt;+=&lt;/span&gt; &lt;span class="nx"&gt;size&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="c1"&gt;// 整型溢出后 i &amp;lt; 0&lt;/span&gt;
+        &lt;span class="nx"&gt;j&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;size&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="nx"&gt;j&lt;/span&gt; &lt;span class="p"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nx"&gt;n&lt;/span&gt; &lt;span class="o"&gt;||&lt;/span&gt; &lt;span class="nx"&gt;j&lt;/span&gt; &lt;span class="p"&gt;&amp;lt;&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="c1"&gt;// 整型溢出后 j &amp;lt; 0&lt;/span&gt;
+            &lt;span class="nx"&gt;j&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;n&lt;/span&gt;
+        &lt;span class="p"&gt;}&lt;/span&gt;
+
+        &lt;span class="c1"&gt;// 这些goroutine共享内存，但是只读&lt;/span&gt;
+        &lt;span class="k"&gt;go&lt;/span&gt; &lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;j&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="nx"&gt;k&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nx"&gt;k&lt;/span&gt; &lt;span class="p"&gt;&amp;lt;&lt;/span&gt; &lt;span class="nx"&gt;j&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nx"&gt;k&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+                &lt;span class="nx"&gt;w&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;k&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;mul&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;u&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;v&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;k&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="p"&gt;}&lt;/span&gt;
+            &lt;span class="nx"&gt;wg&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Done&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+        &lt;span class="p"&gt;}(&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;j&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="nx"&gt;wg&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Wait&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;a href="http://www.nada.kth.se/~snilsson/concurrency/src/convolution.go"&gt;convolution.go&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;工作单元定义之后，通常情况下最好将调度工作交给运行时和操作系统。然而，对于Go 1.* 你也许需要告诉运行时希望多少个goroutine来同时地运行代码。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;init&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;numcpu&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nx"&gt;runtime&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;NumCPU&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="nx"&gt;runtime&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;GOMAXPROCS&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;numcpu&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="c1"&gt;// 尝试使用所有可用的CPU&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Wed, 20 May 2015 00:00:00 +0800</pubDate><guid>tag:youngsterxyf.github.io,2015-05-20:2015/05/20/fundamentals-of-concurrent-programming/</guid><category>翻译</category><category>Golang</category></item><item><title>Yii源码阅读笔记 - 自定义类自动加载</title><link>http://youngsterxyf.github.io/2015/04/10/read-yii-code-9/</link><description>&lt;p&gt;前两天突然发现：之前的阅读笔记对于Yii应用中如何自动加载自定义类的问题没有解释。这里的自定义类是指非Yii框架本身的类。&lt;/p&gt;
 &lt;p&gt;关于组件类的配置加载已在 &lt;a href="http://blog.xiayf.cn/2014/11/13/read-yii-code-3/"&gt;Yii源码阅读笔记 - 组件集成&lt;/a&gt; 一文中做了较为详细的说明，
 所以这里不再涉及。&lt;/p&gt;
 &lt;p&gt;本文主要解释以下两点：&lt;/p&gt;
@@ -1090,15 +1648,15 @@ Phonegap官网提供的文档与Apache Cordova文档是相同的，所以从技�
 &lt;p&gt;如果下载Android Studio，解压缩后执行&lt;code&gt;bin/android.sh&lt;/code&gt;，Android Studio启动时需要从Google的服务器上获取一些SDK相关的文件，
 由于GFW的原因，无法成功获取，也就无法顺利启动。Android Studio网络代理设置的方法（参考&lt;a href="http://stackoverflow.com/questions/27683678/android-studio-component-installation-not-working-in-proxy-security-server?lq=1"&gt;这里&lt;/a&gt;）：&lt;/p&gt;
 &lt;p&gt;在Android Studio首次启动后，可以在HOME目录下找到文件&lt;code&gt;~/.AndroidStudio/config/options/other.xml&lt;/code&gt;，在该文件中，可以找到如下几行：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;option&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;PROXY_TYPE_IS_SOCKS&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;false&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;/&amp;gt;&lt;/span&gt;
-&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;option&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;USE_HTTP_PROXY&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;false&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;/&amp;gt;&lt;/span&gt;
-&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;option&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;USE_PROXY_PAC&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;false&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;/&amp;gt;&lt;/span&gt;
-&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;option&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;PROXY_HOST&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;/&amp;gt;&lt;/span&gt;
-&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;option&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;PROXY_PORT&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;80&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;/&amp;gt;&lt;/span&gt;
-&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;option&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;PROXY_AUTHENTICATION&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;false&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;/&amp;gt;&lt;/span&gt;
-&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;option&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;PROXY_LOGIN&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;/&amp;gt;&lt;/span&gt;
-&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;option&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;PROXY_PASSWORD_CRYPT&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;/&amp;gt;&lt;/span&gt;
-&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;option&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;KEEP_PROXY_PASSWORD&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;false&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;/&amp;gt;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&amp;lt;option name=&amp;quot;PROXY_TYPE_IS_SOCKS&amp;quot; value=&amp;quot;false&amp;quot; /&amp;gt;
+&amp;lt;option name=&amp;quot;USE_HTTP_PROXY&amp;quot; value=&amp;quot;false&amp;quot; /&amp;gt;
+&amp;lt;option name=&amp;quot;USE_PROXY_PAC&amp;quot; value=&amp;quot;false&amp;quot; /&amp;gt;
+&amp;lt;option name=&amp;quot;PROXY_HOST&amp;quot; value=&amp;quot;&amp;quot; /&amp;gt;
+&amp;lt;option name=&amp;quot;PROXY_PORT&amp;quot; value=&amp;quot;80&amp;quot; /&amp;gt;
+&amp;lt;option name=&amp;quot;PROXY_AUTHENTICATION&amp;quot; value=&amp;quot;false&amp;quot; /&amp;gt;
+&amp;lt;option name=&amp;quot;PROXY_LOGIN&amp;quot; value=&amp;quot;&amp;quot; /&amp;gt;
+&amp;lt;option name=&amp;quot;PROXY_PASSWORD_CRYPT&amp;quot; value=&amp;quot;&amp;quot; /&amp;gt;
+&amp;lt;option name=&amp;quot;KEEP_PROXY_PASSWORD&amp;quot; value=&amp;quot;false&amp;quot; /&amp;gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -3037,29 +3595,29 @@ Yii提供了一个直接可用的模板引擎组件类CPradoViewRenderer（见�
 
 &lt;hr /&gt;
 &lt;p&gt;基于CActiveRecord类，如果想进行读取操作，那么子类需要重写model方法。CActiveRecord类的model方法实现如下：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cm"&gt;/**&lt;/span&gt;
-&lt;span class="cm"&gt; * Returns the static model of the specified AR class.&lt;/span&gt;
-&lt;span class="cm"&gt; * The model returned is a static instance of the AR class.&lt;/span&gt;
-&lt;span class="cm"&gt; * It is provided for invoking class-level methods (something similar to static class methods.)&lt;/span&gt;
-&lt;span class="cm"&gt; *&lt;/span&gt;
-&lt;span class="cm"&gt; * EVERY derived AR class must override this method as follows,&lt;/span&gt;
-&lt;span class="cm"&gt; * &amp;lt;pre&amp;gt;&lt;/span&gt;
-&lt;span class="cm"&gt; * public static function model($className=__CLASS__)&lt;/span&gt;
-&lt;span class="cm"&gt; * {&lt;/span&gt;
-&lt;span class="cm"&gt; *     return parent::model($className);&lt;/span&gt;
-&lt;span class="cm"&gt; * }&lt;/span&gt;
-&lt;span class="cm"&gt; * &amp;lt;/pre&amp;gt;&lt;/span&gt;
-&lt;span class="cm"&gt; *&lt;/span&gt;
-&lt;span class="cm"&gt; * @param string $className active record class name.&lt;/span&gt;
-&lt;span class="cm"&gt; * @return CActiveRecord active record model instance.&lt;/span&gt;
-&lt;span class="cm"&gt; */&lt;/span&gt;
-&lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="nf"&gt;static&lt;/span&gt; &lt;span class="nx"&gt;function&lt;/span&gt; &lt;span class="nx"&gt;model&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$className&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nx"&gt;__CLASS__&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;isset&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="nv"&gt;$_models&lt;/span&gt;&lt;span class="err"&gt;[&lt;/span&gt;&lt;span class="nv"&gt;$className&lt;/span&gt;&lt;span class="cp"&gt;]&lt;/span&gt;))
-        return self::$_models&lt;span class="cp"&gt;[&lt;/span&gt;&lt;span class="nv"&gt;$className&lt;/span&gt;&lt;span class="cp"&gt;]&lt;/span&gt;;
+&lt;div class="highlight"&gt;&lt;pre&gt;/**
+ * Returns the static model of the specified AR class.
+ * The model returned is a static instance of the AR class.
+ * It is provided for invoking class-level methods (something similar to static class methods.)
+ *
+ * EVERY derived AR class must override this method as follows,
+ * &lt;span class="nt"&gt;&amp;lt;pre&amp;gt;&lt;/span&gt;
+ * public static function model($className=__CLASS__)
+ * {
+ *     return parent::model($className);
+ * }
+ * &lt;span class="nt"&gt;&amp;lt;/pre&amp;gt;&lt;/span&gt;
+ *
+ * @param string $className active record class name.
+ * @return CActiveRecord active record model instance.
+ */
+public static function model($className=__CLASS__)
+{
+    if(isset(self::$_models[$className]))
+        return self::$_models[$className];
     else
     {
-        $model=self::$_models&lt;span class="cp"&gt;[&lt;/span&gt;&lt;span class="nv"&gt;$className&lt;/span&gt;&lt;span class="cp"&gt;]&lt;/span&gt;=new $className(null);
+        $model=self::$_models[$className]=new $className(null);
         $model-&amp;gt;attachBehaviors($model-&amp;gt;behaviors());
         return $model;
     }
@@ -5614,8 +6172,8 @@ master进程可以理解以下信号：&lt;/p&gt;
 &lt;li&gt;&lt;strong&gt;对于Nginx、php-fpm等的日志文件使用shell脚本进行切分备份时，发现Nginx、php-fpm还是往备份的老文件中，而不是往新的access.log或error.log文件中写日志，如何解决？&lt;/strong&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;shell脚本中通常使用mv + touch 或 cp + touch的方式对日志文件进行备份。由于Nginx或php-fpm进程其实只知道日志文件打开后的文件描述符，而不知道打开的是哪个文件。使用mv或cp备份文件后，应该是修改了内核中文件描述符对应的文件路径（我猜的！），但Nginx或php-fpm并不知道现在该文件描述符指向的不再是原来的日志文件。所以解决方法就是通知Nginx或php-fpm根据配置重新打开日志文件。根据前一个问题，可知可以通过kill命令给进程发送USR1信号来实现。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="n"&gt;kill&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;USR1&lt;/span&gt; &lt;span class="err"&gt;`&lt;/span&gt;&lt;span class="n"&gt;cat&lt;/span&gt; &lt;span class="n"&gt;php&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;fpm&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pid&lt;/span&gt;&lt;span class="err"&gt;`&lt;/span&gt;
-&lt;span class="n"&gt;kill&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;USR1&lt;/span&gt; &lt;span class="err"&gt;`&lt;/span&gt;&lt;span class="n"&gt;cat&lt;/span&gt; &lt;span class="n"&gt;nginx&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pid&lt;/span&gt;&lt;span class="err"&gt;`&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nb"&gt;kill&lt;/span&gt; -USR1 &lt;span class="sb"&gt;`&lt;/span&gt;cat php-fpm.pid&lt;span class="sb"&gt;`&lt;/span&gt;
+&lt;span class="nb"&gt;kill&lt;/span&gt; -USR1 &lt;span class="sb"&gt;`&lt;/span&gt;cat nginx.pid&lt;span class="sb"&gt;`&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -5832,12 +6390,12 @@ SDK是&lt;a href="https://github.com/netputer/wechat-php-sdk"&gt;这个&lt;/a&gt
 &lt;p&gt;多数情况下，你的Web服务器都不会配置为处理多种任务（比如作为Web服务器提供服务的同时也是一个打印服务器），你可以配置NGINX使用所有可用的处理器，NGINX工作进程并不是多线程的。&lt;/p&gt;
 &lt;p&gt;运行以下命令可以获知你的机器有多少个处理器：&lt;/p&gt;
 &lt;p&gt;Linux上 -&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;cat /proc/cpuinfo | grep processor
+&lt;div class="highlight"&gt;&lt;pre&gt;cat /proc/cpuinfo &lt;span class="p"&gt;|&lt;/span&gt; grep processor
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;FreeBSD上 -&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;sysctl dev .cpu | grep location
+&lt;div class="highlight"&gt;&lt;pre&gt;sysctl dev .cpu &lt;span class="p"&gt;|&lt;/span&gt; grep location
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -6795,14 +7353,14 @@ dateObj = new Date(year, month, date[, hours[, minutes[, seconds[,ms]]]])
 &lt;ul&gt;
 &lt;li&gt;
 &lt;p&gt;easy_install&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="n"&gt;easy_install&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="n"&gt;http&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="c1"&gt;//e.pypi.python.org/simple requests&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;easy_install -i http://e.pypi.python.org/simple requests
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;pip&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="n"&gt;pip&lt;/span&gt; &lt;span class="n"&gt;install&lt;/span&gt; &lt;span class="n"&gt;requests&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="n"&gt;http&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="c1"&gt;//e.pypi.python.org/simple&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;pip install requests -i http://e.pypi.python.org/simple
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -7190,13 +7748,13 @@ Local DNS向用户返回www.qq.com解析记录。&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;codelintset.go&lt;/em&gt;已更新为&lt;a href="https://gist.github.com/youngsterxyf/7093991"&gt;第二版&lt;/a&gt;，通过读取gitlab数据库中的相关数据来解决上述问题，并将原来需要配置的常量全部放到json文件，程序运行时会解析该json文件。这样，修改配置不需要重新编译源码。&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Tue, 15 Oct 2013 00:00:00 +0800</pubDate><guid>tag:youngsterxyf.github.io,2013-10-15:2013/10/15/standardization-operation-development/</guid><category>服务器</category><category>Linux</category><category>Git</category><category>Golang</category><category>Python</category></item><item><title>一项工作中涉及的几个命令</title><link>http://youngsterxyf.github.io/2013/10/14/several-command-in-one-task/</link><description>&lt;p&gt;今天写了点shell脚本，在一些CentOS服务器上进行了一些操作，涉及如下命令：&lt;/p&gt;
 &lt;h3&gt;统计特定进程个数&lt;/h3&gt;
 &lt;p&gt;如统计haproxy进程的个数&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;ps -e | grep haproxy | wc -l
+&lt;div class="highlight"&gt;&lt;pre&gt;ps -e &lt;span class="p"&gt;|&lt;/span&gt; grep haproxy &lt;span class="p"&gt;|&lt;/span&gt; wc -l
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;h3&gt;获取特定进程的pid&lt;/h3&gt;
 &lt;p&gt;如获取haproxy进程的pid&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;ps -e | grep haproxy | awk &lt;span class="s1"&gt;&amp;#39;{print $1}&amp;#39;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;ps -e &lt;span class="p"&gt;|&lt;/span&gt; grep haproxy &lt;span class="p"&gt;|&lt;/span&gt; awk &lt;span class="s1"&gt;&amp;#39;{print $1}&amp;#39;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -7292,42 +7850,42 @@ start &lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
     &lt;span class="c"&gt;#fi&lt;/span&gt;
     &lt;span class="nv"&gt;$SBIN&lt;/span&gt; -c -f &lt;span class="nv"&gt;$CONF&lt;/span&gt;
     &lt;span class="nv"&gt;$SBIN&lt;/span&gt; -f &lt;span class="nv"&gt;$CONF&lt;/span&gt;
-    &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Start haproxy Process pid:`cat $PID`&amp;quot;&lt;/span&gt;
+    &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Start haproxy Process pid:`cat &lt;/span&gt;&lt;span class="nv"&gt;$PID&lt;/span&gt;&lt;span class="s2"&gt;`&amp;quot;&lt;/span&gt;
     &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Start haproxy At `date`&amp;quot;&lt;/span&gt;&amp;gt;&amp;gt;&lt;span class="nv"&gt;$logfile&lt;/span&gt;
 &lt;span class="o"&gt;}&lt;/span&gt;
 
 stop &lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Kill haproxy Process pid:`cat $PID`&amp;quot;&lt;/span&gt;
+        &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Kill haproxy Process pid:`cat &lt;/span&gt;&lt;span class="nv"&gt;$PID&lt;/span&gt;&lt;span class="s2"&gt;`&amp;quot;&lt;/span&gt;
         &lt;span class="nb"&gt;kill&lt;/span&gt; -SIGINT &lt;span class="sb"&gt;`&lt;/span&gt;cat &lt;span class="nv"&gt;$PID&lt;/span&gt;&lt;span class="sb"&gt;`&lt;/span&gt;
         &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Stop haproxy At `date`&amp;quot;&lt;/span&gt;&amp;gt;&amp;gt;&lt;span class="nv"&gt;$logfile&lt;/span&gt;
 &lt;span class="o"&gt;}&lt;/span&gt;
 
 pid &lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
-        ps -ef|grep master|grep &lt;span class="s2"&gt;&amp;quot;$SBIN&amp;quot;&lt;/span&gt;
-        &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;haproxy Pid Is:`cat $PID`&amp;quot;&lt;/span&gt;
+        ps -ef&lt;span class="p"&gt;|&lt;/span&gt;grep master&lt;span class="p"&gt;|&lt;/span&gt;grep &lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="nv"&gt;$SBIN&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;
+        &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;haproxy Pid Is:`cat &lt;/span&gt;&lt;span class="nv"&gt;$PID&lt;/span&gt;&lt;span class="s2"&gt;`&amp;quot;&lt;/span&gt;
 &lt;span class="o"&gt;}&lt;/span&gt;
 
 &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="nv"&gt;$1&lt;/span&gt; in 
-reload|restart&lt;span class="o"&gt;)&lt;/span&gt;
+reload&lt;span class="p"&gt;|&lt;/span&gt;restart&lt;span class="o"&gt;)&lt;/span&gt;
         pid
         restart
         pid
-        ;;
+        &lt;span class="p"&gt;;;&lt;/span&gt;
 start&lt;span class="o"&gt;)&lt;/span&gt;
         start
-        ;;
+        &lt;span class="p"&gt;;;&lt;/span&gt;
 stop&lt;span class="o"&gt;)&lt;/span&gt;
         stop
-        ;;
-check|-t&lt;span class="o"&gt;)&lt;/span&gt;
+        &lt;span class="p"&gt;;;&lt;/span&gt;
+check&lt;span class="p"&gt;|&lt;/span&gt;-t&lt;span class="o"&gt;)&lt;/span&gt;
         &lt;span class="nv"&gt;$SBIN&lt;/span&gt; -c -f &lt;span class="nv"&gt;$CONF&lt;/span&gt;
-        ;;
-pid|p|-p&lt;span class="o"&gt;)&lt;/span&gt;
+        &lt;span class="p"&gt;;;&lt;/span&gt;
+pid&lt;span class="p"&gt;|&lt;/span&gt;p&lt;span class="p"&gt;|&lt;/span&gt;-p&lt;span class="o"&gt;)&lt;/span&gt;
         pid
-        ;;
+        &lt;span class="p"&gt;;;&lt;/span&gt;
 *&lt;span class="o"&gt;)&lt;/span&gt;
         &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Please Use ( restart|start|stop|check|pid ) as argument&amp;quot;&lt;/span&gt;
-        ;;
+        &lt;span class="p"&gt;;;&lt;/span&gt;
 &lt;span class="k"&gt;esac&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
@@ -12751,7 +13309,7 @@ You have entered 51, 1 times!
 &lt;h2&gt;总结&lt;/h2&gt;
 &lt;p&gt;这个可能不是很有用，且需要一些令人费解的代码（见如上 &lt;code&gt;add()&lt;/code&gt; ）。但是如果你喜欢Python，我希望这个会让你觉得有趣或者值得去理解。&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Fri, 04 Jan 2013 00:00:00 +0800</pubDate><guid>tag:youngsterxyf.github.io,2013-01-04:2013/01/04/one-line-tree-in-Python/</guid><category>Python</category><category>翻译</category></item><item><title>几个组合命令</title><link>http://youngsterxyf.github.io/2012/12/12/several-command-line/</link><description>&lt;p&gt;1.
 Debian系Linux下查找某个软件包(以indent为例)：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;apt-cache search indent | awk &lt;span class="s1"&gt;&amp;#39;{if($1~/^indent$/) print $0}&amp;#39;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;apt-cache search indent &lt;span class="p"&gt;|&lt;/span&gt; awk &lt;span class="s1"&gt;&amp;#39;{if($1~/^indent$/) print $0}&amp;#39;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -12763,7 +13321,7 @@ Debian系Linux下查找某个软件包(以indent为例)：&lt;/p&gt;
 &lt;p&gt;只不过这个输出仅有包名没有简介信息。&lt;/p&gt;
 &lt;p&gt;2.
 对当前目录下的所有C源码文件使用indent进行格式化：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;ls | grep &lt;span class="s1"&gt;&amp;#39;\.c$&amp;#39;&lt;/span&gt; | xargs indent
+&lt;div class="highlight"&gt;&lt;pre&gt;ls &lt;span class="p"&gt;|&lt;/span&gt; grep &lt;span class="s1"&gt;&amp;#39;\.c$&amp;#39;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; xargs indent
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -12926,7 +13484,7 @@ TCP与UDP的区别？UDP主要用于哪些方面？TCP连接3次握手，断开�
 &lt;p&gt;VMware的工作环境很不错，各种Mac，屏幕超大啊(这显得我很diaosi啊)，面试官也很不错，问题也比较有水平。可惜我今天的状态实在不好，各种不会，铁定跪了。唉！diaosi的命。&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Thu, 06 Dec 2012 00:00:00 +0800</pubDate><guid>tag:youngsterxyf.github.io,2012-12-06:2012/12/06/VMware-interview/</guid><category>VMware</category><category>面试</category></item><item><title>博大精深的ps命令</title><link>http://youngsterxyf.github.io/2012/12/06/profound-ps/</link><description>&lt;p&gt;Linux命令行里如何获取所有的进程号(pid)？&lt;/p&gt;
 &lt;p&gt;1.
 第一种方法是通过ps -e或者ps aux获得所有进程的信息，然后通过管道传给grep或者awk进行数据过滤，比如&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;ps -e | awk &lt;span class="s1"&gt;&amp;#39;{print $1}&amp;#39;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;ps -e &lt;span class="p"&gt;|&lt;/span&gt; awk &lt;span class="s1"&gt;&amp;#39;{print $1}&amp;#39;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -12952,13 +13510,13 @@ TCP与UDP的区别？UDP主要用于哪些方面？TCP连接3次握手，断开�
 &lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Thu, 06 Dec 2012 00:00:00 +0800</pubDate><guid>tag:youngsterxyf.github.io,2012-12-06:2012/12/06/profound-ps/</guid><category>Linux</category><category>命令行</category><category>工具</category></item><item><title>2012校招-sonicWALL的两道编程笔试题</title><link>http://youngsterxyf.github.io/2012/12/05/sonicWALL-exam/</link><description>&lt;h2&gt;求二叉树中两个结点的最近公共祖先&lt;/h2&gt;
 &lt;p&gt;比如：对于树&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;         &lt;span class="n"&gt;A&lt;/span&gt;
-       &lt;span class="o"&gt;/&lt;/span&gt;
-      &lt;span class="n"&gt;B&lt;/span&gt;
-    &lt;span class="o"&gt;/&lt;/span&gt;   \
-   &lt;span class="n"&gt;C&lt;/span&gt;     &lt;span class="n"&gt;D&lt;/span&gt;
- &lt;span class="o"&gt;/&lt;/span&gt;   \
-&lt;span class="n"&gt;E&lt;/span&gt;     &lt;span class="n"&gt;F&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;         A
+       /
+      B
+    /   \
+   C     D
+ /   \
+E     F
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -13045,7 +13603,7 @@ path=/home/yongfeng/apps/website3.com/webroot/upload
 
 
 &lt;p&gt;给密码文件赋权:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;sudo chmod 400 /etc/rsync.pass
+&lt;div class="highlight"&gt;&lt;pre&gt;sudo chmod &lt;span class="m"&gt;400&lt;/span&gt; /etc/rsync.pass
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -13065,7 +13623,7 @@ sudo mkdir -p /home/yongfeng/apps/website3.com/webroot/upload
 
 
 &lt;p&gt;赋权限:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;chmod 600 /etc/rsync-client.pass
+&lt;div class="highlight"&gt;&lt;pre&gt;chmod &lt;span class="m"&gt;600&lt;/span&gt; /etc/rsync-client.pass
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -13076,16 +13634,16 @@ src&lt;span class="o"&gt;[&lt;/span&gt;0&lt;span class="o"&gt;]=&lt;/span&gt;&lt
 src&lt;span class="o"&gt;[&lt;/span&gt;1&lt;span class="o"&gt;]=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;/var/www/apps/website2.com/webroot/upload,website2&amp;#39;&lt;/span&gt;
 src&lt;span class="o"&gt;[&lt;/span&gt;2&lt;span class="o"&gt;]=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;/var/www/apps/website3.com/webroot/upload,website3&amp;#39;&lt;/span&gt;
 
-&lt;span class="k"&gt;for &lt;/span&gt;item in &lt;span class="k"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;src&lt;/span&gt;&lt;span class="p"&gt;[@]&lt;/span&gt;&lt;span class="k"&gt;}&lt;/span&gt;; &lt;span class="k"&gt;do&lt;/span&gt;
-&lt;span class="k"&gt;    &lt;/span&gt;&lt;span class="nv"&gt;fromdir&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="sb"&gt;`&lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="nv"&gt;$item&lt;/span&gt; | awk -F&lt;span class="s2"&gt;&amp;quot;,&amp;quot;&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;{print $1}&amp;#39;&lt;/span&gt;&lt;span class="sb"&gt;`&lt;/span&gt;
-    &lt;span class="nv"&gt;module&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="sb"&gt;`&lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="nv"&gt;$item&lt;/span&gt; | awk -F&lt;span class="s2"&gt;&amp;quot;,&amp;quot;&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;{print $2}&amp;#39;&lt;/span&gt;&lt;span class="sb"&gt;`&lt;/span&gt;
+&lt;span class="k"&gt;for&lt;/span&gt; item in &lt;span class="si"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;src&lt;/span&gt;&lt;span class="p"&gt;[@]&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;do&lt;/span&gt;
+    &lt;span class="nv"&gt;fromdir&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="sb"&gt;`&lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="nv"&gt;$item&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; awk -F&lt;span class="s2"&gt;&amp;quot;,&amp;quot;&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;{print $1}&amp;#39;&lt;/span&gt;&lt;span class="sb"&gt;`&lt;/span&gt;
+    &lt;span class="nv"&gt;module&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="sb"&gt;`&lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="nv"&gt;$item&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; awk -F&lt;span class="s2"&gt;&amp;quot;,&amp;quot;&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;{print $2}&amp;#39;&lt;/span&gt;&lt;span class="sb"&gt;`&lt;/span&gt;
 
-    /usr/bin/inotifywait -mrq --timefmt &lt;span class="s1"&gt;&amp;#39;%d/%m/%y %H:%M&amp;#39;&lt;/span&gt; --format &lt;span class="s1"&gt;&amp;#39;%T%w%f&amp;#39;&lt;/span&gt; --event modify,delete,move,create,attrib &lt;span class="k"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;fromdir&lt;/span&gt;&lt;span class="k"&gt;}&lt;/span&gt; | &lt;span class="k"&gt;while &lt;/span&gt;&lt;span class="nb"&gt;read &lt;/span&gt;file event
+    /usr/bin/inotifywait -mrq --timefmt &lt;span class="s1"&gt;&amp;#39;%d/%m/%y %H:%M&amp;#39;&lt;/span&gt; --format &lt;span class="s1"&gt;&amp;#39;%T%w%f&amp;#39;&lt;/span&gt; --event modify,delete,move,create,attrib &lt;span class="si"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;fromdir&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; &lt;span class="k"&gt;while&lt;/span&gt; &lt;span class="nb"&gt;read &lt;/span&gt;file event
     &lt;span class="k"&gt;do&lt;/span&gt;
-&lt;span class="k"&gt;        &lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="nv"&gt;$event&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;-&amp;#39;&lt;/span&gt;&lt;span class="nv"&gt;$file&lt;/span&gt;
-        rsync -avz --delete --password-file&lt;span class="o"&gt;=&lt;/span&gt;/etc/rsync-client.pass &lt;span class="k"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;fromdir&lt;/span&gt;&lt;span class="k"&gt;}&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;/&amp;#39;&lt;/span&gt; tongbu@0.0.0.0::&lt;span class="k"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;module&lt;/span&gt;&lt;span class="k"&gt;}&lt;/span&gt;
+        &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="nv"&gt;$event&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;-&amp;#39;&lt;/span&gt;&lt;span class="nv"&gt;$file&lt;/span&gt;
+        rsync -avz --delete --password-file&lt;span class="o"&gt;=&lt;/span&gt;/etc/rsync-client.pass &lt;span class="si"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;fromdir&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;/&amp;#39;&lt;/span&gt; tongbu@0.0.0.0::&lt;span class="si"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;module&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;
         &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;*******************************&amp;quot;&lt;/span&gt;
-    &lt;span class="k"&gt;done&lt;/span&gt; &amp;amp;
+    &lt;span class="k"&gt;done&lt;/span&gt; &lt;span class="p"&gt;&amp;amp;&lt;/span&gt;
 &lt;span class="k"&gt;done&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
@@ -13752,7 +14310,7 @@ src&lt;span class="o"&gt;[&lt;/span&gt;2&lt;span class="o"&gt;]=&lt;/span&gt;&lt
 &lt;span class="k"&gt;using&lt;/span&gt; &lt;span class="k"&gt;namespace&lt;/span&gt; &lt;span class="n"&gt;std&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 
 &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;A&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nl"&gt;public:&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;
         &lt;span class="n"&gt;A&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;){}&lt;/span&gt;
         &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;S&lt;/span&gt;&lt;span class="p"&gt;(){&lt;/span&gt;
             &lt;span class="n"&gt;printf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;aaa%d&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
@@ -13762,7 +14320,7 @@ src&lt;span class="o"&gt;[&lt;/span&gt;2&lt;span class="o"&gt;]=&lt;/span&gt;&lt
 
 &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;B&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="n"&gt;A&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nl"&gt;public:&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;
         &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;){}&lt;/span&gt;
         &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;S&lt;/span&gt;&lt;span class="p"&gt;(){&lt;/span&gt;
             &lt;span class="n"&gt;printf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;bbb%d&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
@@ -14369,59 +14927,59 @@ mysql-client php5-mysql memcached php5-memcache php5-curl php5-gd
 &lt;span class="nv"&gt;PID_FILE&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;/var/run/php-fastcgi/php-fastcgi.pid
 &lt;span class="nv"&gt;RET_VAL&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;0
 
-&lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;$1&amp;quot;&lt;/span&gt; in
+&lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="nv"&gt;$1&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt; in
     start&lt;span class="o"&gt;)&lt;/span&gt;
         &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;[[&lt;/span&gt; ! -d &lt;span class="nv"&gt;$PID_DIR&lt;/span&gt; &lt;span class="o"&gt;]]&lt;/span&gt;
         &lt;span class="k"&gt;then&lt;/span&gt;
-&lt;span class="k"&gt;            &lt;/span&gt;mkdir &lt;span class="nv"&gt;$PID_DIR&lt;/span&gt;
+            mkdir &lt;span class="nv"&gt;$PID_DIR&lt;/span&gt;
             chown &lt;span class="nv"&gt;$FASTCGI_USER&lt;/span&gt;:&lt;span class="nv"&gt;$FASTCGI_GROUP&lt;/span&gt; &lt;span class="nv"&gt;$PID_DIR&lt;/span&gt;
-            chmod 0770 &lt;span class="nv"&gt;$PID_DIR&lt;/span&gt;
+            chmod &lt;span class="m"&gt;0770&lt;/span&gt; &lt;span class="nv"&gt;$PID_DIR&lt;/span&gt;
         &lt;span class="k"&gt;fi&lt;/span&gt;
-&lt;span class="k"&gt;        if&lt;/span&gt; &lt;span class="o"&gt;[[&lt;/span&gt; -r &lt;span class="nv"&gt;$PID_FILE&lt;/span&gt; &lt;span class="o"&gt;]]&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;[[&lt;/span&gt; -r &lt;span class="nv"&gt;$PID_FILE&lt;/span&gt; &lt;span class="o"&gt;]]&lt;/span&gt;
         &lt;span class="k"&gt;then&lt;/span&gt;
-&lt;span class="k"&gt;            &lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;php-fastcgi already running with PID `cat $PID_FILE`&amp;quot;&lt;/span&gt;
+            &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;php-fastcgi already running with PID `cat &lt;/span&gt;&lt;span class="nv"&gt;$PID_FILE&lt;/span&gt;&lt;span class="s2"&gt;`&amp;quot;&lt;/span&gt;
             &lt;span class="nv"&gt;RET_VAL&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;1
         &lt;span class="k"&gt;else&lt;/span&gt;
             &lt;span class="nv"&gt;$PHP_SCRIPT&lt;/span&gt;
             &lt;span class="nv"&gt;RET_VAL&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nv"&gt;$?&lt;/span&gt;
         &lt;span class="k"&gt;fi&lt;/span&gt;
-    ;;
+    &lt;span class="p"&gt;;;&lt;/span&gt;
     stop&lt;span class="o"&gt;)&lt;/span&gt;
         &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;[[&lt;/span&gt; -r &lt;span class="nv"&gt;$PID_FILE&lt;/span&gt; &lt;span class="o"&gt;]]&lt;/span&gt;
         &lt;span class="k"&gt;then&lt;/span&gt;
-&lt;span class="k"&gt;            &lt;/span&gt;&lt;span class="nb"&gt;kill&lt;/span&gt; &lt;span class="sb"&gt;`&lt;/span&gt;cat &lt;span class="nv"&gt;$PID_FILE&lt;/span&gt;&lt;span class="sb"&gt;`&lt;/span&gt;
+            &lt;span class="nb"&gt;kill&lt;/span&gt; &lt;span class="sb"&gt;`&lt;/span&gt;cat &lt;span class="nv"&gt;$PID_FILE&lt;/span&gt;&lt;span class="sb"&gt;`&lt;/span&gt;
             rm &lt;span class="nv"&gt;$PID_FILE&lt;/span&gt;
             &lt;span class="nv"&gt;RET_VAL&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nv"&gt;$?&lt;/span&gt;
         &lt;span class="k"&gt;else&lt;/span&gt;
-&lt;span class="k"&gt;            &lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Could not find PID file $PID_FILE&amp;quot;&lt;/span&gt;
+            &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Could not find PID file &lt;/span&gt;&lt;span class="nv"&gt;$PID_FILE&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;
             &lt;span class="nv"&gt;RET_VAL&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;1
         &lt;span class="k"&gt;fi&lt;/span&gt;
-    ;;
+    &lt;span class="p"&gt;;;&lt;/span&gt;
     restart&lt;span class="o"&gt;)&lt;/span&gt;
         &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;[[&lt;/span&gt; -r &lt;span class="nv"&gt;$PID_FILE&lt;/span&gt; &lt;span class="o"&gt;]]&lt;/span&gt;
         &lt;span class="k"&gt;then&lt;/span&gt;
-&lt;span class="k"&gt;            &lt;/span&gt;&lt;span class="nb"&gt;kill&lt;/span&gt; &lt;span class="sb"&gt;`&lt;/span&gt;cat &lt;span class="nv"&gt;$PID_FILE&lt;/span&gt;&lt;span class="sb"&gt;`&lt;/span&gt;
+            &lt;span class="nb"&gt;kill&lt;/span&gt; &lt;span class="sb"&gt;`&lt;/span&gt;cat &lt;span class="nv"&gt;$PID_FILE&lt;/span&gt;&lt;span class="sb"&gt;`&lt;/span&gt;
             rm &lt;span class="nv"&gt;$PID_FILE&lt;/span&gt;
             &lt;span class="nv"&gt;RET_VAL&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nv"&gt;$?&lt;/span&gt;
         &lt;span class="k"&gt;else&lt;/span&gt;
-&lt;span class="k"&gt;            &lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Could not find PID file $PID_FILE&amp;quot;&lt;/span&gt;
+            &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Could not find PID file &lt;/span&gt;&lt;span class="nv"&gt;$PID_FILE&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;
         &lt;span class="k"&gt;fi&lt;/span&gt;
         &lt;span class="nv"&gt;$PHP_SCRIPT&lt;/span&gt;
         &lt;span class="nv"&gt;RET_VAL&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nv"&gt;$?&lt;/span&gt;
-    ;;
+    &lt;span class="p"&gt;;;&lt;/span&gt;
     status&lt;span class="o"&gt;)&lt;/span&gt;
         &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;[[&lt;/span&gt; -r &lt;span class="nv"&gt;$PID_FILE&lt;/span&gt; &lt;span class="o"&gt;]]&lt;/span&gt;
         &lt;span class="k"&gt;then&lt;/span&gt;
-&lt;span class="k"&gt;            &lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;php-fastcgi running with PID `cat $PID_FILE`&amp;quot;&lt;/span&gt;
+            &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;php-fastcgi running with PID `cat &lt;/span&gt;&lt;span class="nv"&gt;$PID_FILE&lt;/span&gt;&lt;span class="s2"&gt;`&amp;quot;&lt;/span&gt;
             &lt;span class="nv"&gt;RET_VAL&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nv"&gt;$?&lt;/span&gt;
         &lt;span class="k"&gt;else&lt;/span&gt;
-&lt;span class="k"&gt;            &lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Could not find PID file $PID_FILE, php-fastcgi does not appear to be running&amp;quot;&lt;/span&gt;
+            &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Could not find PID file &lt;/span&gt;&lt;span class="nv"&gt;$PID_FILE&lt;/span&gt;&lt;span class="s2"&gt;, php-fastcgi does not appear to be running&amp;quot;&lt;/span&gt;
         &lt;span class="k"&gt;fi&lt;/span&gt;
-    ;;
+    &lt;span class="p"&gt;;;&lt;/span&gt;
     *&lt;span class="o"&gt;)&lt;/span&gt;
         &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Usage: php-fastcgi {start|stop|restart|status}&amp;quot;&lt;/span&gt;
         &lt;span class="nv"&gt;RET_VAL&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;1
-    ;;
+    &lt;span class="p"&gt;;;&lt;/span&gt;
 &lt;span class="k"&gt;esac&lt;/span&gt;
 &lt;span class="nb"&gt;exit&lt;/span&gt; &lt;span class="nv"&gt;$RET_VAL&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
@@ -14645,13 +15203,13 @@ A listing of all processes that you are currently running on the machine you are
 &lt;p&gt;2.
 he number of words in the file /usr/share/dict/words (*) which start with the letter a.&lt;/p&gt;
 &lt;p&gt;* Note: On some Unix/Linux systems, the dictionary has the filename /usr/dict/words&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;cat /usr/share/words | grep ^a.* | wc -l
+&lt;div class="highlight"&gt;&lt;pre&gt;cat /usr/share/words &lt;span class="p"&gt;|&lt;/span&gt; grep ^a.* &lt;span class="p"&gt;|&lt;/span&gt; wc -l
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;3.
 A "long" listing of the smallest 5 files in the /etc directory whose name contains the string ".conf", sorted by increasing file size. &lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;ls -lSrp | grep &lt;span class="o"&gt;[&lt;/span&gt;^/&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="nv"&gt;$ &lt;/span&gt;| grep &lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="se"&gt;\.&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;conf&lt;span class="nv"&gt;$ &lt;/span&gt;| head -n 5
+&lt;div class="highlight"&gt;&lt;pre&gt;ls -lSrp &lt;span class="p"&gt;|&lt;/span&gt; grep &lt;span class="o"&gt;[&lt;/span&gt;^/&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="nv"&gt;$ &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt; grep &lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="se"&gt;\.&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;conf&lt;span class="nv"&gt;$ &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt; head -n 5
 &lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Wed, 15 Feb 2012 00:00:00 +0800</pubDate><guid>tag:youngsterxyf.github.io,2012-02-15:2012/02/15/Linux-Command-Excercise/</guid><category>Linux</category></item><item><title>2011年终-回顾与展望</title><link>http://youngsterxyf.github.io/2012/01/01/2011-summary/</link><description>&lt;p&gt;昨晚实验室聚餐，和师兄们喝醉了，明年的这个时候，我也就和他们一样将要毕业。时间，总是往前看觉得很漫长，可回过头去看看，一年也就是瞬间的事情。&lt;/p&gt;
 &lt;p&gt;2011，我从研一走向研二，2012，我将从研二走向研三，继而毕业，工作。&lt;/p&gt;
 &lt;p&gt;回顾过去一年，于我自己而言，过得很平淡，也许是大学以来最平淡的一年，只能说也许，因为对于2011，我记不得太多的事情。&lt;/p&gt;
@@ -14816,7 +15374,7 @@ sudo cp YaHei.Consolas.1.11b.ttf /usr/share/fonts/yahei/
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;改变权限：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;sudo chmod 644 /usr/share/fonts/yahei/YaHei.Consolas.1.11b.ttf
+&lt;div class="highlight"&gt;&lt;pre&gt;sudo chmod &lt;span class="m"&gt;644&lt;/span&gt; /usr/share/fonts/yahei/YaHei.Consolas.1.11b.ttf
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -14893,7 +15451,7 @@ sed [-n] -f script-file ... [file ...]
 
 
 &lt;p&gt;下面的命令取出命令ls -l的输出结果中的文件权限字段:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;ls -l | cut -c 1-10
+&lt;div class="highlight"&gt;&lt;pre&gt;ls -l &lt;span class="p"&gt;|&lt;/span&gt; cut -c 1-10
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -14961,17 +15519,17 @@ sort -t: -k4n -k3n /etc/passwd   &lt;span class="c"&gt;#先以GID排序，再以
 &lt;h4&gt;二.uniq&lt;/h4&gt;
 &lt;p&gt;uniq常用于管道中，用来删除已使用sort排序完成的重复记录：sort ... | uniq | ...&lt;/p&gt;
 &lt;p&gt;范例：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;sort latin-numbers | uniq     &lt;span class="c"&gt;#显示唯一的，排序后的记录，重复则仅取唯一行。&lt;/span&gt;
-sort latin-numbers | uniq -c  &lt;span class="c"&gt;#计数唯一的，排序后的记录&lt;/span&gt;
-sort latin-numbers | uniq -d  &lt;span class="c"&gt;#仅显示重复的记录&lt;/span&gt;
-sort latin-numbers | uniq -u  &lt;span class="c"&gt;#仅显示未重复的记录&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;sort latin-numbers &lt;span class="p"&gt;|&lt;/span&gt; uniq     &lt;span class="c"&gt;#显示唯一的，排序后的记录，重复则仅取唯一行。&lt;/span&gt;
+sort latin-numbers &lt;span class="p"&gt;|&lt;/span&gt; uniq -c  &lt;span class="c"&gt;#计数唯一的，排序后的记录&lt;/span&gt;
+sort latin-numbers &lt;span class="p"&gt;|&lt;/span&gt; uniq -d  &lt;span class="c"&gt;#仅显示重复的记录&lt;/span&gt;
+sort latin-numbers &lt;span class="p"&gt;|&lt;/span&gt; uniq -u  &lt;span class="c"&gt;#仅显示未重复的记录&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;h4&gt;三.wc&lt;/h4&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nb"&gt;echo &lt;/span&gt;Testing one two three | wc -c  &lt;span class="c"&gt;#计算字节数&lt;/span&gt;
-&lt;span class="nb"&gt;echo &lt;/span&gt;Testing one two three | wc -l  &lt;span class="c"&gt;#计算行数&lt;/span&gt;
-&lt;span class="nb"&gt;echo &lt;/span&gt;Testing one two three | wc -w  &lt;span class="c"&gt;#计算字数/单词数&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nb"&gt;echo &lt;/span&gt;Testing one two three &lt;span class="p"&gt;|&lt;/span&gt; wc -c  &lt;span class="c"&gt;#计算字节数&lt;/span&gt;
+&lt;span class="nb"&gt;echo &lt;/span&gt;Testing one two three &lt;span class="p"&gt;|&lt;/span&gt; wc -l  &lt;span class="c"&gt;#计算行数&lt;/span&gt;
+&lt;span class="nb"&gt;echo &lt;/span&gt;Testing one two three &lt;span class="p"&gt;|&lt;/span&gt; wc -w  &lt;span class="c"&gt;#计算字数/单词数&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 

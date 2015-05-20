@@ -67,8 +67,8 @@
            
             </header>
             <footer class="post-info">
-              <abbr class="published" title="2013-10-14T00:00:00">
-                2013-10-14 Mon
+              <abbr class="published" title="2013-10-14T00:00:00+08:00">
+                2013-10-14 一
               </abbr>
               <address class="vcard author">
                 By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
@@ -78,13 +78,13 @@
               <p>今天写了点shell脚本，在一些CentOS服务器上进行了一些操作，涉及如下命令：</p>
 <h3>统计特定进程个数</h3>
 <p>如统计haproxy进程的个数</p>
-<div class="highlight"><pre>ps -e | grep haproxy | wc -l
+<div class="highlight"><pre>ps -e <span class="p">|</span> grep haproxy <span class="p">|</span> wc -l
 </pre></div>
 
 
 <h3>获取特定进程的pid</h3>
 <p>如获取haproxy进程的pid</p>
-<div class="highlight"><pre>ps -e | grep haproxy | awk <span class="s1">&#39;{print $1}&#39;</span>
+<div class="highlight"><pre>ps -e <span class="p">|</span> grep haproxy <span class="p">|</span> awk <span class="s1">&#39;{print $1}&#39;</span>
 </pre></div>
 
 
@@ -180,42 +180,42 @@ start <span class="o">()</span> <span class="o">{</span>
     <span class="c">#fi</span>
     <span class="nv">$SBIN</span> -c -f <span class="nv">$CONF</span>
     <span class="nv">$SBIN</span> -f <span class="nv">$CONF</span>
-    <span class="nb">echo</span> <span class="s2">&quot;Start haproxy Process pid:`cat $PID`&quot;</span>
+    <span class="nb">echo</span> <span class="s2">&quot;Start haproxy Process pid:`cat </span><span class="nv">$PID</span><span class="s2">`&quot;</span>
     <span class="nb">echo</span> <span class="s2">&quot;Start haproxy At `date`&quot;</span>&gt;&gt;<span class="nv">$logfile</span>
 <span class="o">}</span>
 
 stop <span class="o">()</span> <span class="o">{</span>
-        <span class="nb">echo</span> <span class="s2">&quot;Kill haproxy Process pid:`cat $PID`&quot;</span>
+        <span class="nb">echo</span> <span class="s2">&quot;Kill haproxy Process pid:`cat </span><span class="nv">$PID</span><span class="s2">`&quot;</span>
         <span class="nb">kill</span> -SIGINT <span class="sb">`</span>cat <span class="nv">$PID</span><span class="sb">`</span>
         <span class="nb">echo</span> <span class="s2">&quot;Stop haproxy At `date`&quot;</span>&gt;&gt;<span class="nv">$logfile</span>
 <span class="o">}</span>
 
 pid <span class="o">()</span> <span class="o">{</span>
-        ps -ef|grep master|grep <span class="s2">&quot;$SBIN&quot;</span>
-        <span class="nb">echo</span> <span class="s2">&quot;haproxy Pid Is:`cat $PID`&quot;</span>
+        ps -ef<span class="p">|</span>grep master<span class="p">|</span>grep <span class="s2">&quot;</span><span class="nv">$SBIN</span><span class="s2">&quot;</span>
+        <span class="nb">echo</span> <span class="s2">&quot;haproxy Pid Is:`cat </span><span class="nv">$PID</span><span class="s2">`&quot;</span>
 <span class="o">}</span>
 
 <span class="k">case</span> <span class="nv">$1</span> in 
-reload|restart<span class="o">)</span>
+reload<span class="p">|</span>restart<span class="o">)</span>
         pid
         restart
         pid
-        ;;
+        <span class="p">;;</span>
 start<span class="o">)</span>
         start
-        ;;
+        <span class="p">;;</span>
 stop<span class="o">)</span>
         stop
-        ;;
-check|-t<span class="o">)</span>
+        <span class="p">;;</span>
+check<span class="p">|</span>-t<span class="o">)</span>
         <span class="nv">$SBIN</span> -c -f <span class="nv">$CONF</span>
-        ;;
-pid|p|-p<span class="o">)</span>
+        <span class="p">;;</span>
+pid<span class="p">|</span>p<span class="p">|</span>-p<span class="o">)</span>
         pid
-        ;;
+        <span class="p">;;</span>
 *<span class="o">)</span>
         <span class="nb">echo</span> <span class="s2">&quot;Please Use ( restart|start|stop|check|pid ) as argument&quot;</span>
-        ;;
+        <span class="p">;;</span>
 <span class="k">esac</span>
 </pre></div>
 

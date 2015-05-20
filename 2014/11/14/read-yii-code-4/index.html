@@ -67,8 +67,8 @@
            
             </header>
             <footer class="post-info">
-              <abbr class="published" title="2014-11-14T00:00:00">
-                2014-11-14 Fri
+              <abbr class="published" title="2014-11-14T00:00:00+08:00">
+                2014-11-14 五
               </abbr>
               <address class="vcard author">
                 By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
@@ -884,29 +884,29 @@
 
 <hr />
 <p>基于CActiveRecord类，如果想进行读取操作，那么子类需要重写model方法。CActiveRecord类的model方法实现如下：</p>
-<div class="highlight"><pre><span class="cm">/**</span>
-<span class="cm"> * Returns the static model of the specified AR class.</span>
-<span class="cm"> * The model returned is a static instance of the AR class.</span>
-<span class="cm"> * It is provided for invoking class-level methods (something similar to static class methods.)</span>
-<span class="cm"> *</span>
-<span class="cm"> * EVERY derived AR class must override this method as follows,</span>
-<span class="cm"> * &lt;pre&gt;</span>
-<span class="cm"> * public static function model($className=__CLASS__)</span>
-<span class="cm"> * {</span>
-<span class="cm"> *     return parent::model($className);</span>
-<span class="cm"> * }</span>
-<span class="cm"> * &lt;/pre&gt;</span>
-<span class="cm"> *</span>
-<span class="cm"> * @param string $className active record class name.</span>
-<span class="cm"> * @return CActiveRecord active record model instance.</span>
-<span class="cm"> */</span>
-<span class="k">public</span> <span class="nf">static</span> <span class="nx">function</span> <span class="nx">model</span><span class="p">(</span><span class="nv">$className</span><span class="o">=</span><span class="nx">__CLASS__</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="k">if</span><span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="bp">self</span><span class="p">::</span><span class="nv">$_models</span><span class="err">[</span><span class="nv">$className</span><span class="cp">]</span>))
-        return self::$_models<span class="cp">[</span><span class="nv">$className</span><span class="cp">]</span>;
+<div class="highlight"><pre>/**
+ * Returns the static model of the specified AR class.
+ * The model returned is a static instance of the AR class.
+ * It is provided for invoking class-level methods (something similar to static class methods.)
+ *
+ * EVERY derived AR class must override this method as follows,
+ * <span class="nt">&lt;pre&gt;</span>
+ * public static function model($className=__CLASS__)
+ * {
+ *     return parent::model($className);
+ * }
+ * <span class="nt">&lt;/pre&gt;</span>
+ *
+ * @param string $className active record class name.
+ * @return CActiveRecord active record model instance.
+ */
+public static function model($className=__CLASS__)
+{
+    if(isset(self::$_models[$className]))
+        return self::$_models[$className];
     else
     {
-        $model=self::$_models<span class="cp">[</span><span class="nv">$className</span><span class="cp">]</span>=new $className(null);
+        $model=self::$_models[$className]=new $className(null);
         $model-&gt;attachBehaviors($model-&gt;behaviors());
         return $model;
     }

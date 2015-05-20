@@ -67,8 +67,8 @@
            
             </header>
             <footer class="post-info">
-              <abbr class="published" title="2014-06-26T00:00:00">
-                2014-06-26 Thu
+              <abbr class="published" title="2014-06-26T00:00:00+08:00">
+                2014-06-26 四
               </abbr>
               <address class="vcard author">
                 By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
@@ -105,8 +105,8 @@ master进程可以理解以下信号：</p>
 <li><strong>对于Nginx、php-fpm等的日志文件使用shell脚本进行切分备份时，发现Nginx、php-fpm还是往备份的老文件中，而不是往新的access.log或error.log文件中写日志，如何解决？</strong></li>
 </ul>
 <p>shell脚本中通常使用mv + touch 或 cp + touch的方式对日志文件进行备份。由于Nginx或php-fpm进程其实只知道日志文件打开后的文件描述符，而不知道打开的是哪个文件。使用mv或cp备份文件后，应该是修改了内核中文件描述符对应的文件路径（我猜的！），但Nginx或php-fpm并不知道现在该文件描述符指向的不再是原来的日志文件。所以解决方法就是通知Nginx或php-fpm根据配置重新打开日志文件。根据前一个问题，可知可以通过kill命令给进程发送USR1信号来实现。</p>
-<div class="highlight"><pre><span class="n">kill</span> <span class="o">-</span><span class="n">USR1</span> <span class="err">`</span><span class="n">cat</span> <span class="n">php</span><span class="o">-</span><span class="n">fpm</span><span class="p">.</span><span class="n">pid</span><span class="err">`</span>
-<span class="n">kill</span> <span class="o">-</span><span class="n">USR1</span> <span class="err">`</span><span class="n">cat</span> <span class="n">nginx</span><span class="p">.</span><span class="n">pid</span><span class="err">`</span>
+<div class="highlight"><pre><span class="nb">kill</span> -USR1 <span class="sb">`</span>cat php-fpm.pid<span class="sb">`</span>
+<span class="nb">kill</span> -USR1 <span class="sb">`</span>cat nginx.pid<span class="sb">`</span>
 </pre></div>
 
 

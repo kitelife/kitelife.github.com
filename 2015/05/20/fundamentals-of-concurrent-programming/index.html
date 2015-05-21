@@ -106,7 +106,7 @@
     <span class="k">go</span> <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Hello from another goroutine&quot;</span><span class="p">)</span>
     <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Hello from main goroutine&quot;</span><span class="p">)</span>
 
-    <span class="nx">time</span><span class="p">.</span><span class="nx">Sleep</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>     <span class="c1">// 等待1秒，等另一个goroutine结束</span>
+    <span class="nx">time</span><span class="p">.</span><span class="nx">Sleep</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>        <span class="c1">// 等待1秒，等另一个goroutine结束</span>
 <span class="p">}</span>
 </pre></div>
 
@@ -114,12 +114,12 @@
 <p><a href="http://www.nada.kth.se/~snilsson/concurrency/src/goroutine2.go">goroutine2.go</a></p>
 <p>下面则是一个相对更加实际的示例，其中定义了一个函数使用并发来推迟触发一个事件。</p>
 <div class="highlight"><pre><span class="c1">// 函数Publish在给定时间过期后打印text字符串到标准输出</span>
-<span class="c1">// 该函数并不会阻塞而是立即返回</span>
+   <span class="c1">// 该函数并不会阻塞而是立即返回</span>
 <span class="kd">func</span> <span class="nx">Publish</span><span class="p">(</span><span class="nx">text</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">delay</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
         <span class="nx">time</span><span class="p">.</span><span class="nx">Sleep</span><span class="p">(</span><span class="nx">delay</span><span class="p">)</span>
         <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;BREAKING NEWS:&quot;</span><span class="p">,</span> <span class="nx">text</span><span class="p">)</span>
-    <span class="p">}()</span> <span class="c1">// 注意这里的括号。必须调用匿名函数</span>
+    <span class="p">}()</span>    <span class="c1">// 注意这里的括号。必须调用匿名函数</span>
 <span class="p">}</span>
 </pre></div>
 
@@ -151,25 +151,25 @@ Ten seconds later: I’m leaving now.
 <h4>2. 管道（channel）</h4>
 <p><img alt="Sushi conveyor belt" src="http://www.nada.kth.se/~snilsson/concurrency/sushi-conveyor-belt.jpg" /></p>
 <p><a href="http://golang.org/ref/spec#Channel_types">管道</a>是Go语言的一个构件，提供一种机制用于两个goroutine之间通过传递一个指定类型的值来同步运行和通讯。操作符<code>&lt;-</code>用于指定管道的方向，发送或接收。如果未指定方向，则为双向管道。</p>
-<div class="highlight"><pre><span class="kd">chan</span> <span class="nx">Sushi</span>      <span class="c1">// 可用来发送和接收Sushi类型的值</span>
-<span class="kd">chan</span><span class="o">&lt;-</span> <span class="kt">float64</span>  <span class="c1">// 仅可用来发送float64类型的值</span>
-<span class="o">&lt;-</span><span class="kd">chan</span> <span class="kt">int</span>      <span class="c1">// 仅可用来接收int类型的值</span>
+<div class="highlight"><pre><span class="kd">chan</span> <span class="nx">Sushi</span>        <span class="c1">// 可用来发送和接收Sushi类型的值</span>
+<span class="kd">chan</span><span class="o">&lt;-</span> <span class="kt">float64</span>    <span class="c1">// 仅可用来发送float64类型的值</span>
+<span class="o">&lt;-</span><span class="kd">chan</span> <span class="kt">int</span>        <span class="c1">// 仅可用来接收int类型的值</span>
 </pre></div>
 
 
 <p>管道是引用类型，基于make函数来分配。</p>
 <div class="highlight"><pre><span class="nx">ic</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">int</span><span class="p">)</span>    <span class="c1">// 不带缓冲的int类型管道</span>
-<span class="nx">wc</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="o">*</span><span class="nx">Work</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>  <span class="c1">// 带缓冲的Work类型指针管道</span>
+<span class="nx">wc</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="o">*</span><span class="nx">Work</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>    <span class="c1">// 带缓冲的Work类型指针管道</span>
 </pre></div>
 
 
-<p>如果压迫通过管道发送一个值，则将<code>&lt;-</code>作为二元操作符使用。通过管道接收一个值，则将其作为一元操作符使用：</p>
-<div class="highlight"><pre><span class="nx">ic</span> <span class="o">&lt;-</span> <span class="mi">3</span>     <span class="c1">// 往管道发送3</span>
+<p>如果通过管道发送一个值，则将<code>&lt;-</code>作为二元操作符使用。通过管道接收一个值，则将其作为一元操作符使用：</p>
+<div class="highlight"><pre><span class="nx">ic</span> <span class="o">&lt;-</span> <span class="mi">3</span>        <span class="c1">// 往管道发送3</span>
 <span class="nx">work</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">wc</span>    <span class="c1">// 从管道接收一个指向Work类型值的指针</span>
 </pre></div>
 
 
-<p>如果管道不带缓冲，发送方会阻塞直到接收方从管道中接收了值。如果管道带缓冲，发送方则会阻塞直到发送的值被拷贝到缓冲区内；如果缓冲区已满，则意味着需要等待直到某个接收方获取到一个值。接收方在有值可能接收之前会一直阻塞。</p>
+<p>如果管道不带缓冲，发送方会阻塞直到接收方从管道中接收了值。如果管道带缓冲，发送方则会阻塞直到发送的值被拷贝到缓冲区内；如果缓冲区已满，则意味着需要等待直到某个接收方获取到一个值。接收方在有值可以接收之前会一直阻塞。</p>
 <p><strong>关闭管道（Close）</strong></p>
 <p><a href="http://golang.org/ref/spec#Close">close</a> 函数标志着不会再往某个管道发送值。在调用<code>close</code>之后，并且在之前发送的值都被接收后，接收操作会返回一个零值，不会阻塞。一个多返回值的接收操作会额外返回一个布尔值用来指示返回的值是否发送操作传递的。</p>
 <div class="highlight"><pre><span class="nx">ch</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">string</span><span class="p">)</span>
@@ -177,10 +177,10 @@ Ten seconds later: I’m leaving now.
     <span class="nx">ch</span> <span class="o">&lt;-</span> <span class="s">&quot;Hello!&quot;</span>
     <span class="nb">close</span><span class="p">(</span><span class="nx">ch</span><span class="p">)</span>
 <span class="p">}()</span>
-<span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="o">&lt;-</span><span class="nx">ch</span><span class="p">)</span>   <span class="c1">// 输出字符串&quot;Hello!&quot;</span>
-<span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="o">&lt;-</span><span class="nx">ch</span><span class="p">)</span>   <span class="c1">// 输出零值 - 空字符串&quot;&quot;，不会阻塞</span>
-<span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="o">&lt;-</span><span class="nx">ch</span><span class="p">)</span>   <span class="c1">// 再次打印输出空字符串&quot;&quot;</span>
-<span class="nx">v</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">ch</span>       <span class="c1">// 变量v的值为空字符串&quot;&quot;，变量ok的值为false</span>
+<span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="o">&lt;-</span><span class="nx">ch</span><span class="p">)</span>    <span class="c1">// 输出字符串&quot;Hello!&quot;</span>
+<span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="o">&lt;-</span><span class="nx">ch</span><span class="p">)</span>    <span class="c1">// 输出零值 - 空字符串&quot;&quot;，不会阻塞</span>
+<span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="o">&lt;-</span><span class="nx">ch</span><span class="p">)</span>    <span class="c1">// 再次打印输出空字符串&quot;&quot;</span>
+<span class="nx">v</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">ch</span>        <span class="c1">// 变量v的值为空字符串&quot;&quot;，变量ok的值为false</span>
 </pre></div>
 
 
@@ -196,7 +196,7 @@ Ten seconds later: I’m leaving now.
 <span class="kd">func</span> <span class="nx">Producer</span><span class="p">()</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="nx">Sushi</span> <span class="p">{</span>
     <span class="nx">ch</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="nx">Sushi</span><span class="p">)</span>
     <span class="k">go</span> <span class="kd">func</span><span class="p">(){</span>
-        <span class="nx">ch</span> <span class="o">&lt;-</span> <span class="nx">Sushi</span><span class="p">(</span><span class="s">&quot;海老握り&quot;</span><span class="p">)</span> <span class="c1">// Ebi nigiri</span>
+        <span class="nx">ch</span> <span class="o">&lt;-</span> <span class="nx">Sushi</span><span class="p">(</span><span class="s">&quot;海老握り&quot;</span><span class="p">)</span>    <span class="c1">// Ebi nigiri</span>
         <span class="nx">ch</span> <span class="o">&lt;-</span> <span class="nx">Sushi</span><span class="p">(</span><span class="s">&quot;鮪とろ握り&quot;</span><span class="p">)</span> <span class="c1">// Toro nigiri</span>
         <span class="nb">close</span><span class="p">(</span><span class="nx">ch</span><span class="p">)</span>
     <span class="p">}()</span>
@@ -215,7 +215,7 @@ Ten seconds later: I’m leaving now.
     <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
         <span class="nx">time</span><span class="p">.</span><span class="nx">Sleep</span><span class="p">(</span><span class="nx">delay</span><span class="p">)</span>
         <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;BREAKING NEWS:&quot;</span><span class="p">,</span> <span class="nx">text</span><span class="p">)</span>
-        <span class="nb">close</span><span class="p">(</span><span class="nx">ch</span><span class="p">)</span>   <span class="c1">// 广播 - 一个关闭的管道都会发送一个零值</span>
+        <span class="nb">close</span><span class="p">(</span><span class="nx">ch</span><span class="p">)</span>    <span class="c1">// 广播 - 一个关闭的管道都会发送一个零值</span>
     <span class="p">}()</span>
     <span class="k">return</span> <span class="nx">ch</span>
 <span class="p">}</span>
@@ -455,23 +455,23 @@ Race:
 ==================
 WARNING: DATA RACE
 Read by goroutine 2:
-  main.func·001()
+    main.func·001()
       ../raceClosure.go:22 +0x65
 
 Previous write by goroutine 0:
-  main.race()
-      ../raceClosure.go:20 +0x19b
-  main.main()
-      ../raceClosure.go:10 +0x29
-  runtime.main()
-      ../go/src/pkg/runtime/proc.c:248 +0x91
+    main.race()
+        ../raceClosure.go:20 +0x19b
+    main.main()
+        ../raceClosure.go:10 +0x29
+    runtime.main()
+        ../go/src/pkg/runtime/proc.c:248 +0x91
 
 Goroutine 2 (running) created at:
-  main.race()
+    main.race()
       ../raceClosure.go:24 +0x18b
-  main.main()
+    main.main()
       ../raceClosure.go:10 +0x29
-  runtime.main()
+     runtime.main()
       ../go/src/pkg/runtime/proc.c:248 +0x91
 
 ==================
@@ -488,7 +488,7 @@ exit status 66
 <p>该工具发现一处数据竞争，包含：一个goroutine在第20行对一个变量进行写操作，跟着另一个goroutine在第22行对同一个变量进行了未同步的读操作。</p>
 <p>注意：竞争检测器只能发现在运行期确实发生的数据竞争（译注：我也不太理解这话，请指导）</p>
 <h4>8. Select语句</h4>
-<p><a href="http://golang.org/ref/spec#Select_statements">select语句</a>是Go语言并发工具集中的最后一个工具。select用于从一组可能的通讯中选择一个进一步处理。如果任意一个通讯都可以进一步处理，则从中随机选择一个，执行对应的语句。否则，如果又没有默认分支（default case），select语句则会阻塞，直到其中一个通讯完成。</p>
+<p><a href="http://golang.org/ref/spec#Select_statements">select语句</a>是Go语言并发工具集中的终极工具。select用于从一组可能的通讯中选择一个进一步处理。如果任意一个通讯都可以进一步处理，则从中随机选择一个，执行对应的语句。否则，如果又没有默认分支（default case），select语句则会阻塞，直到其中一个通讯完成。</p>
 <p>以下是一个玩具示例，演示<code>select</code>语句如何用于实现一个随机数生成器：</p>
 <div class="highlight"><pre><span class="c1">// RandomBits函数 返回一个管道，用于产生一个比特随机序列</span>
 <span class="kd">func</span> <span class="nx">RandomBits</span><span class="p">()</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="kt">int</span> <span class="p">{</span>

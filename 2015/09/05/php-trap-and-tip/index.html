@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>那些Python党踩过的PHP坑</title>
+        <meta charset="utf-8" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑·白 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑·白 Full RSS Feed" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/SentyZHAO/SentyZHAO.css" />
+
+        <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+            <script>
+              var _hmt = _hmt || [];
+              (function() {
+                var hm = document.createElement("script");
+                hm.src = "//hm.baidu.com/hm.js?5c5d8c3fe75afeff117777b9236b96ec";
+                var s = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(hm, s);
+              })();
+            </script>
+</head>
+
+<body id="index" class="home">
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1 style='font-family: "SentyZHAO";'><a href="../../../..">黑·白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+
+              <ul class="columns" style='font-family: "SentyZHAO";'>
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="/archives.html">归 档</a></li>
+                <li><a href="/tags.html">标 签</a></li>
+                <li><a href="/pages/tools.html">工具集</a></li>
+                <li><a href="/pages/links.html">链 接</a></li>
+                <li><a href="/pages/tech-share.html">技术分享</a></li>
+                <li><a href="/pages/aboutme.html">关于我</a></li>
+                <li><a href="/feeds/rss.xml">RSS</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+   <div class="row">
+        <div class="columns">
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2015/09/05/php-trap-and-tip/" rel="bookmark" title="Permalink to 那些Python党踩过的PHP坑">那些Python党踩过的PHP坑</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2015-09-05T00:00:00+08:00">
+                2015-09-05 六
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>虽说题目是说“PHP坑”，但主要还是因为个人经验不足导致。</p>
+<h5>JSON反序列化 json_decode</h5>
+<p>函数 <code>json_decode</code> 默认反序列化的结果是对象。Python党在做PHP开发用到这个方法时，很可能会跳进这个坑，认为结果应该是个数组，因为Python中json.loads返回的是一个字典。 <code>json_decode</code> 的第二个参数 $assoc 可用来指定反序列化的结果为数组。</p>
+<p>文档：<a href="http://php.net/manual/zh/function.json-decode.php">http://php.net/manual/zh/function.json-decode.php</a></p>
+<hr />
+<h5>数组序列化</h5>
+<p>Python党初学PHP，可能类比于Python的列表和字典，认为PHP中明确区分索引数组和关联数组。但：</p>
+<blockquote>
+<p>PHP 实际并不区分索引数组和关联数组，都是一种有序映射。</p>
+</blockquote>
+<p>虽然很多时候索引数组和关联数组在表现上是不一样的，比如对以下两个数组进行序列化：</p>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="nv">$arrA</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">);</span>
+<span class="k">echo</span> <span class="nb">json_encode</span><span class="p">(</span><span class="nv">$arrA</span><span class="p">)</span> <span class="o">.</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+
+<span class="nv">$arrB</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span><span class="s1">&#39;a&#39;</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span> <span class="o">=&gt;</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span> <span class="o">=&gt;</span> <span class="mi">3</span><span class="p">);</span>
+<span class="k">echo</span> <span class="nb">json_encode</span><span class="p">(</span><span class="nv">$arrB</span><span class="p">)</span> <span class="o">.</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+</pre></div>
+
+
+<p>结果为：</p>
+<div class="highlight"><pre><span class="k">[&quot;a&quot;,&quot;b&quot;,&quot;c&quot;]</span>
+<span class="err">{&quot;a&quot;:1,&quot;b&quot;:2,&quot;c&quot;:3}</span>
+</pre></div>
+
+
+<p>如果把序列化的结果作为JSON输出到前端，对于JS来说，是两种不同的数据结构：数组和对象。</p>
+<p>其中 <code>$arrA</code> 的初始化值是 <code>array(0 =&gt; 'a', 1 =&gt; 'b', 2 =&gt; 'c')</code> 的简写方式。</p>
+<p>再来看另一段程序：</p>
+<div class="highlight"><pre><span class="x">$arrA = array(&#39;a&#39;, &#39;b&#39;, &#39;c&#39;);</span>
+<span class="x">echo json_encode($arrA) . &quot;\n&quot;;</span>
+
+<span class="x">$arrA = array(0 =&gt; &#39;a&#39;, 1 =&gt; &#39;b&#39;, 2 =&gt; &#39;c&#39;);</span>
+<span class="x">echo json_encode($arrA) . &quot;\n&quot;;</span>
+
+<span class="x">$arrA = array(1 =&gt; &#39;a&#39;, 2 =&gt; &#39;b&#39;, 3 =&gt; &#39;c&#39;);</span>
+<span class="x">echo json_encode($arrA) . &quot;\n&quot;;</span>
+
+<span class="x">$arrA = array(0 =&gt; &#39;a&#39;, 2 =&gt; &#39;b&#39;, 3 =&gt; &#39;c&#39;);</span>
+<span class="x">echo json_encode($arrA) . &quot;\n&quot;;</span>
+</pre></div>
+
+
+<p>输出为：</p>
+<div class="highlight"><pre><span class="k">[&quot;a&quot;,&quot;b&quot;,&quot;c&quot;]</span>
+<span class="k">[&quot;a&quot;,&quot;b&quot;,&quot;c&quot;]</span>
+<span class="err">{&quot;1&quot;:&quot;a&quot;,&quot;2&quot;:&quot;b&quot;,&quot;3&quot;:&quot;c&quot;}</span>
+<span class="err">{&quot;0&quot;:&quot;a&quot;,&quot;2&quot;:&quot;b&quot;,&quot;3&quot;:&quot;c&quot;}</span>
+</pre></div>
+
+
+<p>从输出可以知道：仅当数组的key是从0开始的整数，并且key连续不间断，对其序列化的结果才是JS中的数组，也就是通常认为的PHP索引数组。</p>
+<p>这个坑可能在某些时候不小心就掉进去了，比如我曾对一个索引数组应用array_filter函数操作，然后json_encode序列化输出到前端，认为前端反序列化出来的是一个数组，没想到却是个对象。</p>
+<p>函数<code>array_filter</code>的文档说明：</p>
+<blockquote>
+<p>array array_filter ( array $input [, callable $callback = "" ] )
+依次将 input 数组中的每个值传递到 callback 函数。如果 callback 函数返回 TRUE，则 input 数组的当前值会被包含在返回的结果数组中。数组的键名保留不变。</p>
+</blockquote>
+<p>注意是对值进行filter，结果中值原本对应的key不变，而不是使用新的key。</p>
+<p>文档：<a href="http://php.net/manual/zh/language.types.array.php">http://php.net/manual/zh/language.types.array.php</a>，<a href="http://php.net/manual/zh/function.array-filter.php">http://php.net/manual/zh/function.array-filter.php</a></p>
+<h5>引用</h5>
+<p>先来看一段代码：</p>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="k">class</span> <span class="nc">CommonUtils</span> <span class="p">{</span>
+    <span class="k">static</span> <span class="nv">$TASK_INTERVAL_SEMANTIC_INT_MAPPER</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span>
+        <span class="s1">&#39;PER_DAY&#39;</span> <span class="o">=&gt;</span> <span class="mi">86400</span><span class="p">,</span>
+        <span class="s1">&#39;TWO_DAY&#39;</span> <span class="o">=&gt;</span> <span class="mi">172800</span><span class="p">,</span>
+        <span class="s1">&#39;PER_WEEK&#39;</span> <span class="o">=&gt;</span> <span class="mi">604800</span><span class="p">,</span>
+        <span class="s1">&#39;TWO_WEEK&#39;</span> <span class="o">=&gt;</span> <span class="mi">1209600</span><span class="p">,</span>
+        <span class="s1">&#39;PER_MONTH&#39;</span> <span class="o">=&gt;</span> <span class="mi">2592000</span><span class="p">,</span>
+    <span class="p">);</span>
+<span class="p">}</span>
+<span class="nv">$ha</span> <span class="o">=</span> <span class="nb">array_pop</span><span class="p">(</span><span class="nb">array_keys</span><span class="p">(</span><span class="nx">CommonUtils</span><span class="o">::</span><span class="nv">$TASK_INTERVAL_SEMANTIC_INT_MAPPER</span><span class="p">));</span>
+<span class="nb">var_dump</span><span class="p">(</span><span class="nv">$ha</span><span class="p">);</span>
+</pre></div>
+
+
+<p>在 <code>error_reporting = E_ALL</code> 时，上面的代码会抛出一个严格模式错误：<code>Only variables should be passed by reference</code> 。这是为什么呢？</p>
+<p><a href="http://php.net/manual/zh/language.references.pass.php">PHP文档</a>中说明只有三种内容可以通过引用传递：</p>
+<ul>
+<li>变量，例如 foo($a)</li>
+<li>New 语句，例如 foo(new foobar())</li>
+<li>从函数中返回的引用，例如：</li>
+</ul>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="k">function</span> <span class="o">&amp;</span><span class="nf">bar</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="nv">$a</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nv">$a</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="nx">foo</span><span class="p">(</span><span class="nx">bar</span><span class="p">());</span>
+<span class="cp">?&gt;</span>
+</pre></div>
+
+
+<p><strong>任何其它表达式都不能通过引用传递，结果未定义。</strong></p>
+<p>上面代码中 <code>$ha = array_pop(array_keys(CommonUtils::$TASK_INTERVAL_SEMANTIC_INT_MAPPER));</code> 一行，调用了 <code>array_pop</code> 和 <code>array_keys</code>，<code>array_pop</code> 的函数签名为：<code>mixed array_pop ( array &amp;$array )</code> ，但 <code>array_keys</code> 函数调用返回的是一个array值，不属于上面列出三种内容，所以会抛错。但 <strong>这个情况下这种错误</strong> 的级别不同版本的PHP也不一样：</p>
+<ul>
+<li>自 PHP 5.0.5 起导致致命错误</li>
+<li>自 PHP 5.1.1 起导致严格模式错误</li>
+<li>自 PHP 7.0 起导致 notice 信息</li>
+</ul>
+<p>但如果直接给 <code>array_pop</code> 传递一个数组值，则会导致致命错误，如：</p>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="nb">array_pop</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">));</span>
+</pre></div>
+
+
+<p>会抛出错误：</p>
+<div class="highlight"><pre>PHP Fatal error:  Only variables can be passed by reference in /Users/xiayf/test.php on line 2
+</pre></div>
+
+
+<p>文档：<a href="http://php.net/manual/zh/language.references.php">http://php.net/manual/zh/language.references.php</a></p>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2015/09/05/php-trap-and-tip/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+        </div><!-- /.twelve.columns -->
+ </div><!-- /.row -->
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+  <script src="../../../../theme/js/main.js"></script>
+</body>
+</html>

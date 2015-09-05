@@ -1,5 +1,118 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>黑·白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/youngsterxyf.atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2015-06-02T00:00:00+08:00</updated><entry><title>编程名言集锦（译）</title><link href="http://youngsterxyf.github.io/2015/06/02/programming-quotes/" rel="alternate"></link><updated>2015-06-02T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2015-06-02:2015/06/02/programming-quotes/</id><summary type="html">&lt;p&gt;原文：&lt;a href="http://quotes.cat-v.org/programming/"&gt;Programming Quotes&lt;/a&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>黑·白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/youngsterxyf.atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2015-09-05T00:00:00+08:00</updated><entry><title>那些Python党踩过的PHP坑</title><link href="http://youngsterxyf.github.io/2015/09/05/php-trap-and-tip/" rel="alternate"></link><updated>2015-09-05T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2015-09-05:2015/09/05/php-trap-and-tip/</id><summary type="html">&lt;p&gt;虽说题目是说“PHP坑”，但主要还是因为个人经验不足导致。&lt;/p&gt;
+&lt;h5&gt;JSON反序列化 json_decode&lt;/h5&gt;
+&lt;p&gt;函数 &lt;code&gt;json_decode&lt;/code&gt; 默认反序列化的结果是对象。Python党在做PHP开发用到这个方法时，很可能会跳进这个坑，认为结果应该是个数组，因为Python中json.loads返回的是一个字典。 &lt;code&gt;json_decode&lt;/code&gt; 的第二个参数 $assoc 可用来指定反序列化的结果为数组。&lt;/p&gt;
+&lt;p&gt;文档：&lt;a href="http://php.net/manual/zh/function.json-decode.php"&gt;http://php.net/manual/zh/function.json-decode.php&lt;/a&gt;&lt;/p&gt;
+&lt;hr /&gt;
+&lt;h5&gt;数组序列化&lt;/h5&gt;
+&lt;p&gt;Python党初学PHP，可能类比于Python的列表和字典，认为PHP中明确区分索引数组和关联数组。但：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;PHP 实际并不区分索引数组和关联数组，都是一种有序映射。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;虽然很多时候索引数组和关联数组在表现上是不一样的，比如对以下两个数组进行序列化：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="nv"&gt;$arrA&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;a&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;b&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;c&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="k"&gt;echo&lt;/span&gt; &lt;span class="nb"&gt;json_encode&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$arrA&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="nv"&gt;$arrB&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;a&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;b&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;c&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="k"&gt;echo&lt;/span&gt; &lt;span class="nb"&gt;json_encode&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$arrB&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;结果为：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;[&amp;quot;a&amp;quot;,&amp;quot;b&amp;quot;,&amp;quot;c&amp;quot;]&lt;/span&gt;
+&lt;span class="err"&gt;{&amp;quot;a&amp;quot;:1,&amp;quot;b&amp;quot;:2,&amp;quot;c&amp;quot;:3}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;如果把序列化的结果作为JSON输出到前端，对于JS来说，是两种不同的数据结构：数组和对象。&lt;/p&gt;
+&lt;p&gt;其中 &lt;code&gt;$arrA&lt;/code&gt; 的初始化值是 &lt;code&gt;array(0 =&amp;gt; 'a', 1 =&amp;gt; 'b', 2 =&amp;gt; 'c')&lt;/code&gt; 的简写方式。&lt;/p&gt;
+&lt;p&gt;再来看另一段程序：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;$arrA = array(&amp;#39;a&amp;#39;, &amp;#39;b&amp;#39;, &amp;#39;c&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;echo json_encode($arrA) . &amp;quot;\n&amp;quot;;&lt;/span&gt;
+
+&lt;span class="x"&gt;$arrA = array(0 =&amp;gt; &amp;#39;a&amp;#39;, 1 =&amp;gt; &amp;#39;b&amp;#39;, 2 =&amp;gt; &amp;#39;c&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;echo json_encode($arrA) . &amp;quot;\n&amp;quot;;&lt;/span&gt;
+
+&lt;span class="x"&gt;$arrA = array(1 =&amp;gt; &amp;#39;a&amp;#39;, 2 =&amp;gt; &amp;#39;b&amp;#39;, 3 =&amp;gt; &amp;#39;c&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;echo json_encode($arrA) . &amp;quot;\n&amp;quot;;&lt;/span&gt;
+
+&lt;span class="x"&gt;$arrA = array(0 =&amp;gt; &amp;#39;a&amp;#39;, 2 =&amp;gt; &amp;#39;b&amp;#39;, 3 =&amp;gt; &amp;#39;c&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;echo json_encode($arrA) . &amp;quot;\n&amp;quot;;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;输出为：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;[&amp;quot;a&amp;quot;,&amp;quot;b&amp;quot;,&amp;quot;c&amp;quot;]&lt;/span&gt;
+&lt;span class="k"&gt;[&amp;quot;a&amp;quot;,&amp;quot;b&amp;quot;,&amp;quot;c&amp;quot;]&lt;/span&gt;
+&lt;span class="err"&gt;{&amp;quot;1&amp;quot;:&amp;quot;a&amp;quot;,&amp;quot;2&amp;quot;:&amp;quot;b&amp;quot;,&amp;quot;3&amp;quot;:&amp;quot;c&amp;quot;}&lt;/span&gt;
+&lt;span class="err"&gt;{&amp;quot;0&amp;quot;:&amp;quot;a&amp;quot;,&amp;quot;2&amp;quot;:&amp;quot;b&amp;quot;,&amp;quot;3&amp;quot;:&amp;quot;c&amp;quot;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;从输出可以知道：仅当数组的key是从0开始的整数，并且key连续不间断，对其序列化的结果才是JS中的数组，也就是通常认为的PHP索引数组。&lt;/p&gt;
+&lt;p&gt;这个坑可能在某些时候不小心就掉进去了，比如我曾对一个索引数组应用array_filter函数操作，然后json_encode序列化输出到前端，认为前端反序列化出来的是一个数组，没想到却是个对象。&lt;/p&gt;
+&lt;p&gt;函数&lt;code&gt;array_filter&lt;/code&gt;的文档说明：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;array array_filter ( array $input [, callable $callback = "" ] )
+依次将 input 数组中的每个值传递到 callback 函数。如果 callback 函数返回 TRUE，则 input 数组的当前值会被包含在返回的结果数组中。数组的键名保留不变。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;注意是对值进行filter，结果中值原本对应的key不变，而不是使用新的key。&lt;/p&gt;
+&lt;p&gt;文档：&lt;a href="http://php.net/manual/zh/language.types.array.php"&gt;http://php.net/manual/zh/language.types.array.php&lt;/a&gt;，&lt;a href="http://php.net/manual/zh/function.array-filter.php"&gt;http://php.net/manual/zh/function.array-filter.php&lt;/a&gt;&lt;/p&gt;
+&lt;h5&gt;引用&lt;/h5&gt;
+&lt;p&gt;先来看一段代码：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;CommonUtils&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;static&lt;/span&gt; &lt;span class="nv"&gt;$TASK_INTERVAL_SEMANTIC_INT_MAPPER&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+        &lt;span class="s1"&gt;&amp;#39;PER_DAY&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;86400&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="s1"&gt;&amp;#39;TWO_DAY&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;172800&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="s1"&gt;&amp;#39;PER_WEEK&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;604800&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="s1"&gt;&amp;#39;TWO_WEEK&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;1209600&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="s1"&gt;&amp;#39;PER_MONTH&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;2592000&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="nv"&gt;$ha&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;array_pop&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;array_keys&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;CommonUtils&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="nv"&gt;$TASK_INTERVAL_SEMANTIC_INT_MAPPER&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+&lt;span class="nb"&gt;var_dump&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$ha&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;在 &lt;code&gt;error_reporting = E_ALL&lt;/code&gt; 时，上面的代码会抛出一个严格模式错误：&lt;code&gt;Only variables should be passed by reference&lt;/code&gt; 。这是为什么呢？&lt;/p&gt;
+&lt;p&gt;&lt;a href="http://php.net/manual/zh/language.references.pass.php"&gt;PHP文档&lt;/a&gt;中说明只有三种内容可以通过引用传递：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;变量，例如 foo($a)&lt;/li&gt;
+&lt;li&gt;New 语句，例如 foo(new foobar())&lt;/li&gt;
+&lt;li&gt;从函数中返回的引用，例如：&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="nf"&gt;bar&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nv"&gt;$a&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$a&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="nx"&gt;foo&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;bar&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;
+&lt;span class="cp"&gt;?&amp;gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;strong&gt;任何其它表达式都不能通过引用传递，结果未定义。&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;上面代码中 &lt;code&gt;$ha = array_pop(array_keys(CommonUtils::$TASK_INTERVAL_SEMANTIC_INT_MAPPER));&lt;/code&gt; 一行，调用了 &lt;code&gt;array_pop&lt;/code&gt; 和 &lt;code&gt;array_keys&lt;/code&gt;，&lt;code&gt;array_pop&lt;/code&gt; 的函数签名为：&lt;code&gt;mixed array_pop ( array &amp;amp;$array )&lt;/code&gt; ，但 &lt;code&gt;array_keys&lt;/code&gt; 函数调用返回的是一个array值，不属于上面列出三种内容，所以会抛错。但 &lt;strong&gt;这个情况下这种错误&lt;/strong&gt; 的级别不同版本的PHP也不一样：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;自 PHP 5.0.5 起导致致命错误&lt;/li&gt;
+&lt;li&gt;自 PHP 5.1.1 起导致严格模式错误&lt;/li&gt;
+&lt;li&gt;自 PHP 7.0 起导致 notice 信息&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;但如果直接给 &lt;code&gt;array_pop&lt;/code&gt; 传递一个数组值，则会导致致命错误，如：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="nb"&gt;array_pop&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;4&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;会抛出错误：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;PHP Fatal error:  Only variables can be passed by reference in /Users/xiayf/test.php on line 2
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;文档：&lt;a href="http://php.net/manual/zh/language.references.php"&gt;http://php.net/manual/zh/language.references.php&lt;/a&gt;&lt;/p&gt;</summary><category term="PHP"></category><category term="笔记"></category></entry><entry><title>编程名言集锦（译）</title><link href="http://youngsterxyf.github.io/2015/06/02/programming-quotes/" rel="alternate"></link><updated>2015-06-02T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2015-06-02:2015/06/02/programming-quotes/</id><summary type="html">&lt;p&gt;原文：&lt;a href="http://quotes.cat-v.org/programming/"&gt;Programming Quotes&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;译者：&lt;a href="https://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;C.A.R. Hoare, The 1980 ACM Turing Award Lecture&lt;/strong&gt;&lt;/li&gt;

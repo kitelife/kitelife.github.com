@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>黑·白</title><link>http://youngsterxyf.github.io/</link><description></description><atom:link href="http://youngsterxyf.github.io/feeds/rss.xml" rel="self"></atom:link><lastBuildDate>Sat, 05 Sep 2015 00:00:00 +0800</lastBuildDate><item><title>那些Python党踩过的PHP坑</title><link>http://youngsterxyf.github.io/2015/09/05/php-trap-and-tip/</link><description>&lt;p&gt;虽说题目是说“PHP坑”，但主要还是因为个人经验不足导致。&lt;/p&gt;
-&lt;h5&gt;JSON反序列化 json_decode&lt;/h5&gt;
+&lt;h4&gt;JSON反序列化 json_decode&lt;/h4&gt;
 &lt;p&gt;函数 &lt;code&gt;json_decode&lt;/code&gt; 默认反序列化的结果是对象。Python党在做PHP开发用到这个方法时，很可能会跳进这个坑，认为结果应该是个数组，因为Python中json.loads返回的是一个字典。 &lt;code&gt;json_decode&lt;/code&gt; 的第二个参数 $assoc 可用来指定反序列化的结果为数组。&lt;/p&gt;
 &lt;p&gt;文档：&lt;a href="http://php.net/manual/zh/function.json-decode.php"&gt;http://php.net/manual/zh/function.json-decode.php&lt;/a&gt;&lt;/p&gt;
 &lt;hr /&gt;
-&lt;h5&gt;数组序列化&lt;/h5&gt;
+&lt;h4&gt;数组序列化&lt;/h4&gt;
 &lt;p&gt;Python党初学PHP，可能类比于Python的列表和字典，认为PHP中明确区分索引数组和关联数组。但：&lt;/p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;PHP 实际并不区分索引数组和关联数组，都是一种有序映射。&lt;/p&gt;
@@ -54,12 +54,12 @@
 &lt;p&gt;这个坑可能在某些时候不小心就掉进去了，比如我曾对一个索引数组应用array_filter函数操作，然后json_encode序列化输出到前端，认为前端反序列化出来的是一个数组，没想到却是个对象。&lt;/p&gt;
 &lt;p&gt;函数&lt;code&gt;array_filter&lt;/code&gt;的文档说明：&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;p&gt;array array_filter ( array $input [, callable $callback = "" ] )
-依次将 input 数组中的每个值传递到 callback 函数。如果 callback 函数返回 TRUE，则 input 数组的当前值会被包含在返回的结果数组中。数组的键名保留不变。&lt;/p&gt;
+&lt;p&gt;array array_filter ( array $input [, callable $callback = "" ] )&lt;/p&gt;
+&lt;p&gt;依次将 input 数组中的每个值传递到 callback 函数。如果 callback 函数返回 TRUE，则 input 数组的当前值会被包含在返回的结果数组中。数组的键名保留不变。&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;注意是对值进行filter，结果中值原本对应的key不变，而不是使用新的key。&lt;/p&gt;
 &lt;p&gt;文档：&lt;a href="http://php.net/manual/zh/language.types.array.php"&gt;http://php.net/manual/zh/language.types.array.php&lt;/a&gt;，&lt;a href="http://php.net/manual/zh/function.array-filter.php"&gt;http://php.net/manual/zh/function.array-filter.php&lt;/a&gt;&lt;/p&gt;
-&lt;h5&gt;引用&lt;/h5&gt;
+&lt;h4&gt;引用传递&lt;/h4&gt;
 &lt;p&gt;先来看一段代码：&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
 &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;CommonUtils&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;

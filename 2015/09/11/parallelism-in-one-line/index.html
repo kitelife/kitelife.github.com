@@ -203,7 +203,7 @@
 
 <p>奏效了，但是你看看这些代码！准备（setup）方法、一组要追踪的线程，最糟糕的是，若有任何地方易发生死锁，就会产生一堆的join状态说明。自此，一切只会更复杂！</p>
 <p>到目前为止，完成了些什么？啥都没有。上面的代码纯粹只是把所有东西像用纸糊起来一样（Just about everything in the above code is pure plumbing，如何翻译？）另一种公式化的写法，也易发生错误（嘿，在写这个代码时，我甚至忘了在队列对象上调用task_done()（我懒得去解决这个问题然后再搞个截图）），付出很多，得到的却很少。幸运的是，我们有更好的方式。</p>
-<h3>引入：Map</h3>
+<h2>引入：Map</h2>
 <p>Map是一个酷酷的小东西，也是在你的Python代码轻松引入并行的关键。对此不熟悉的人会认为map是从函数式语言（如Lisp）借鉴来的东西。map是一个函数 - 将另一个函数映射到一个序列上。例如：</p>
 <div class="highlight"><pre><span class="n">urls</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;http://www.yahoo.com&#39;</span><span class="p">,</span> <span class="s">&#39;http://www.reddit.com&#39;</span><span class="p">]</span>
 <span class="n">results</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">,</span> <span class="n">urls</span><span class="p">)</span>
@@ -312,7 +312,7 @@
 
 
 <p>真是呱呱叫啊！也说明了试验不同的池大小是有必要的。在我的机器上，池的大小大于9后会导致性能退化（译注：咦，结果不是显示13比8的性能要好么？）。</p>
-<h3>现实中的Example 2</h3>
+<h2>现实中的Example 2</h2>
 <p>为千张图片创建缩略图。</p>
 <p>来做点CPU密集型的事情！对于我，在工作中常见的任务是操作大量的图片目录。其中一种图片转换是创建缩略图。这项工作适于并行处理。</p>
 <p><strong>基本的单进程设置</strong></p>

@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>一行式并行方案</title>
+        <meta charset="utf-8" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑·白 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑·白 Full RSS Feed" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/SentyZHAO/SentyZHAO.css" />
+
+        <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+            <script>
+              var _hmt = _hmt || [];
+              (function() {
+                var hm = document.createElement("script");
+                hm.src = "//hm.baidu.com/hm.js?5c5d8c3fe75afeff117777b9236b96ec";
+                var s = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(hm, s);
+              })();
+            </script>
+</head>
+
+<body id="index" class="home">
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1 style='font-family: "SentyZHAO";'><a href="../../../..">黑·白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+
+              <ul class="columns" style='font-family: "SentyZHAO";'>
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="/archives.html">归 档</a></li>
+                <li><a href="/tags.html">标 签</a></li>
+                <li><a href="/pages/tools.html">工具集</a></li>
+                <li><a href="/pages/links.html">链 接</a></li>
+                <li><a href="/pages/tech-share.html">技术分享</a></li>
+                <li><a href="/pages/aboutme.html">关于我</a></li>
+                <li><a href="/feeds/rss.xml">RSS</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+   <div class="row">
+        <div class="columns">
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2015/09/11/parallelism-in-one-line/" rel="bookmark" title="Permalink to 一行式并行方案">一行式并行方案</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2015-09-11T00:00:00+08:00">
+                2015-09-11 五
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>原文：<a href="http://chriskiehl.com/article/parallelism-in-one-line/">Parallelism in one line</a></p>
+<p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
+<p>在并行处理能力方面，Python的声名并不太好。不考虑关于线程和GIL（多数情况下是合理的）的标准论据，我认为Python中关于并行的真正问题并不是一个技术问题，而是教学问题。围绕Python线程和多进程的常见教程，一般都写得不错，但也令人乏味 - 激烈非凡，对日常真正有用的东西却很少涉及。</p>
+<h4>沿袭的例子</h4>
+<p>在DuckDuckGo（DDG）中搜索“Python多线程教程”，简单调查一下排在前面都结果，就会发现它们给出的都是同样的基于Class + Queue的示例。</p>
+<p><em>介绍threading/multiprocessing、生产者/消费者的真实示例代码：</em></p>
+<div class="highlight"><pre><span class="c"># coding: utf-8</span>
+<span class="c"># Example.py</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">标准的多线程生产者/消费者模式</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">time</span> 
+<span class="kn">import</span> <span class="nn">threading</span> 
+<span class="kn">import</span> <span class="nn">Queue</span> 
+
+<span class="k">class</span> <span class="nc">Consumer</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">):</span> 
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">queue</span><span class="p">):</span> 
+    <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span> <span class="o">=</span> <span class="n">queue</span> 
+
+  <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span> 
+      <span class="c"># queue.get() 会阻塞当前线程，直到获取到一个数据项</span>
+      <span class="n">msg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> 
+      <span class="c"># 检查当前消息是否是个“毒药丸”</span>
+      <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">msg</span> <span class="o">==</span> <span class="s">&#39;quit&#39;</span><span class="p">:</span>
+        <span class="c"># 如果是，则退出循环</span>
+        <span class="k">break</span>
+      <span class="c"># “处理” (这里是打印)从队列中取出的数据项</span>
+      <span class="k">print</span> <span class="s">&quot;I&#39;m a thread, and I received </span><span class="si">%s</span><span class="s">!!&quot;</span> <span class="o">%</span> <span class="n">msg</span>
+    <span class="c"># 我始终是这么的友好</span>
+    <span class="k">print</span> <span class="s">&#39;Bye byes!&#39;</span>
+
+
+<span class="k">def</span> <span class="nf">Producer</span><span class="p">():</span>
+  <span class="c"># Queue用于在线程之间共享数据项</span>
+  <span class="n">queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+
+  <span class="c"># 创建一个工作实例</span>
+  <span class="n">worker</span> <span class="o">=</span> <span class="n">Consumer</span><span class="p">(</span><span class="n">queue</span><span class="p">)</span>
+  <span class="c"># start方法会调用内部的run()方法来开启线程</span>
+  <span class="n">worker</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> 
+
+  <span class="c"># 变量，用于追踪开始的时间</span>
+  <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> 
+  <span class="c"># 在5秒之内</span>
+  <span class="k">while</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span> 
+    <span class="c"># “生产”一块工作，放入队列中，由消费者来处理</span>
+    <span class="n">queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s">&#39;something at </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
+    <span class="c"># 睡眠一会儿，以避免过多的消息</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+  <span class="c"># 这是杀死线程的“毒药丸”方式</span>
+  <span class="n">queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s">&#39;quit&#39;</span><span class="p">)</span>
+  <span class="c"># 等待线程关闭</span>
+  <span class="n">worker</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+  <span class="n">Producer</span><span class="p">()</span>
+</pre></div>
+
+
+<p>嗯...闻闻，代码中一股子Java的气息。</p>
+<p>我不想让大家觉得好像我认为生产者/消费者是处理线程/多进程的错误方式 - 因为确实不是。实际上，对多种问题来说，这种方式是非常适合的。然而，我认为：对于日常的脚本程序来说，这种方式并非是最有用的。</p>
+<h4>问题（我认为的）</h4>
+<p>其一，为了做点有用的事情，你得搞一个公式化的类；其二，你得维护一个队列（Queue），用于传送对象；这些齐备之后，在队列管道的两端还得准备方法来做真正的工作（如果希望有两种方式来通信或者准备存储结果，可能还得引入另一个队列）。</p>
+<p><strong>更多的工作者，更多的问题</strong></p>
+<p>基于此，下一件你想要做的事情就是搞一个工作者类的池，来加速你的Python程序。在关于线程的IBM教程中，给出了一个示例代码，以下是其变种。这是一个常见的应用场景 - 在多个线程上分配获取网页的任务。</p>
+<div class="highlight"><pre><span class="c"># coding: utf-8</span>
+<span class="c"># Example2.py</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">一个更加实际的线程池示例</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">time</span> 
+<span class="kn">import</span> <span class="nn">threading</span> 
+<span class="kn">import</span> <span class="nn">Queue</span> 
+<span class="kn">import</span> <span class="nn">urllib2</span> 
+
+<span class="k">class</span> <span class="nc">Consumer</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">):</span> 
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">queue</span><span class="p">):</span> 
+    <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span> <span class="o">=</span> <span class="n">queue</span> 
+
+  <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span> 
+      <span class="n">content</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> 
+      <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">content</span> <span class="o">==</span> <span class="s">&#39;quit&#39;</span><span class="p">:</span>
+        <span class="k">break</span>
+      <span class="n">response</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+    <span class="k">print</span> <span class="s">&#39;Bye byes!&#39;</span>
+
+
+<span class="k">def</span> <span class="nf">Producer</span><span class="p">():</span>
+  <span class="n">urls</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&#39;http://www.python.org&#39;</span><span class="p">,</span> <span class="s">&#39;http://www.yahoo.com&#39;</span>
+    <span class="s">&#39;http://www.scala.org&#39;</span><span class="p">,</span> <span class="s">&#39;http://www.google.com&#39;</span>
+    <span class="c"># 等等... </span>
+  <span class="p">]</span>
+  <span class="n">queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+  <span class="n">worker_threads</span> <span class="o">=</span> <span class="n">build_worker_pool</span><span class="p">(</span><span class="n">queue</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+  <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+  <span class="c"># 加入待处理的URL</span>
+  <span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">urls</span><span class="p">:</span> 
+    <span class="n">queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+  <span class="c"># 加入毒药丸</span>
+  <span class="k">for</span> <span class="n">worker</span> <span class="ow">in</span> <span class="n">worker_threads</span><span class="p">:</span>
+    <span class="n">queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s">&#39;quit&#39;</span><span class="p">)</span>
+  <span class="k">for</span> <span class="n">worker</span> <span class="ow">in</span> <span class="n">worker_threads</span><span class="p">:</span>
+    <span class="n">worker</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+
+  <span class="k">print</span> <span class="s">&#39;Done! Time taken: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">build_worker_pool</span><span class="p">(</span><span class="n">queue</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+  <span class="n">workers</span> <span class="o">=</span> <span class="p">[]</span>
+  <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">):</span>
+    <span class="n">worker</span> <span class="o">=</span> <span class="n">Consumer</span><span class="p">(</span><span class="n">queue</span><span class="p">)</span>
+    <span class="n">worker</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> 
+    <span class="n">workers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">worker</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">workers</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+  <span class="n">Producer</span><span class="p">()</span>
+</pre></div>
+
+
+<p>奏效了，但是你看看这些代码！准备（setup）方法、一组要追踪的线程，最糟糕的是，若有任何地方易发生死锁，就会产生一堆的join状态说明。自此，一切只会更复杂！</p>
+<p>到目前为止，完成了些什么？啥都没有。上面的代码纯粹只是把所有东西像用纸糊起来一样（Just about everything in the above code is pure plumbing，如何翻译？）另一种公式化的写法，也易发生错误（嘿，在写这个代码时，我甚至忘了在队列对象上调用task_done()（我懒得去解决这个问题然后再搞个截图）），付出很多，得到的却很少。幸运的是，我们有更好的方式。</p>
+<h3>引入：Map</h3>
+<p>Map是一个酷酷的小东西，也是在你的Python代码轻松引入并行的关键。对此不熟悉的人会认为map是从函数式语言（如Lisp）借鉴来的东西。map是一个函数 - 将另一个函数映射到一个序列上。例如：</p>
+<div class="highlight"><pre><span class="n">urls</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;http://www.yahoo.com&#39;</span><span class="p">,</span> <span class="s">&#39;http://www.reddit.com&#39;</span><span class="p">]</span>
+<span class="n">results</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">,</span> <span class="n">urls</span><span class="p">)</span>
+</pre></div>
+
+
+<p>这段代码在传入序列的每个元素上应用方法<em>urlopen</em>，并将所有结果存入一个列表中。大致与下面这段代码的逻辑相当：</p>
+<div class="highlight"><pre><span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">urls</span><span class="p">:</span> 
+    <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">))</span>
+</pre></div>
+
+
+<p>Map会为我们处理在序列上的迭代，应用函数，最后将结果存入一个方便使用的列表。</p>
+<p>这为什么重要呢？因为利用恰当的库，map让并行处理成为小事一桩！</p>
+<p><img alt="map-function" src="/assets/uploads/pics/map-function.png" /></p>
+<p>Python标准库中<em>multiprocessing</em>模块，以及极少人知但同样出色的子模块<em>multiprocessing.dummy</em>，提供了map函数的并行版本。</p>
+<p>题外话：这是啥？你从未听说过这名为dummy的mulprocessing模块的线程克隆版本？我也是最近才知道的。在multiprocessing文档页中仅有一句提到这个子模块，而这句话基本可以归结为“哦，是的，存在这样一个东西”。完全低估了这个模块的价值！</p>
+<p>Dummy是multiprocessing模块的精确克隆，唯一的区别是：multiprocessing基于进程工作，而dummy模块是使用线程（也就带来乐常见的Python限制）。因此，任何东西可套用到一个模块，也就可以套用到另一个模块。在两个模块之间来回切换也就相当容易，当你不太确定一些框架调用时IO密集型还是CPU密集型时，想做探索性质的编程，这一点会让你觉得非常赞！</p>
+<h4>开始</h4>
+<p>为了访问map函数的并行版本，首先需要导入包含它的模块：</p>
+<div class="highlight"><pre><span class="c"># 以下两行引入其一即可</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Pool</span>
+<span class="kn">from</span> <span class="nn">multiprocessing.dummy</span> <span class="kn">import</span> <span class="n">Pool</span> <span class="k">as</span> <span class="n">ThreadPool</span>
+</pre></div>
+
+
+<p>并实例化池对象：</p>
+<div class="highlight"><pre><span class="c"># 译注：这里其实是以dummy模块为例</span>
+<span class="n">pool</span> <span class="o">=</span> <span class="n">ThreadPool</span><span class="p">()</span>
+</pre></div>
+
+
+<p>这一句代码处理了example2.py中7行的<em>build_worker_pool</em>函数完成的所有事情。如名所示，这句代码会创建一组可用的工作者，启动它们来准备工作，并将它们存入变量中，方便访问。</p>
+<p>pool对象可以有若干参数，但目前，只需关注第一个：进程/线程数量。这个参数用于设置池中的工作者数目。如果留空，默认为机器的CPU核数。</p>
+<p>一般来说，如果为CPU密集型任务使用进程池（multiprocessing pool），更多的核等于更快的速度（但有一些注意事项）。然而，当使用线程池（threading）处理网络密集型任务时，情况就很不一样了，因此最好试验一下池的最佳大小。</p>
+<div class="highlight"><pre><span class="n">pool</span> <span class="o">=</span> <span class="n">ThreadPool</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="c"># 将池的大小设置为4</span>
+</pre></div>
+
+
+<p>如果运行了过多的线程，就会浪费时间在线程切换上，而不是做有用的事情，所以可以把玩把玩直到最适合任务的线程数量。</p>
+<p>现在池对象创建好了，简单的并行也是弹指之间的事情了，那来重写example2.py吧。</p>
+<div class="highlight"><pre><span class="kn">import</span> <span class="nn">urllib2</span> 
+<span class="kn">from</span> <span class="nn">multiprocessing.dummy</span> <span class="kn">import</span> <span class="n">Pool</span> <span class="k">as</span> <span class="n">ThreadPool</span> 
+
+<span class="n">urls</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="s">&#39;http://www.python.org&#39;</span><span class="p">,</span> 
+  <span class="s">&#39;http://www.python.org/about/&#39;</span><span class="p">,</span>
+  <span class="s">&#39;http://www.onlamp.com/pub/a/python/2003/04/17/metaclasses.html&#39;</span><span class="p">,</span>
+  <span class="s">&#39;http://www.python.org/doc/&#39;</span><span class="p">,</span>
+  <span class="s">&#39;http://www.python.org/download/&#39;</span><span class="p">,</span>
+  <span class="s">&#39;http://www.python.org/getit/&#39;</span><span class="p">,</span>
+  <span class="s">&#39;http://www.python.org/community/&#39;</span><span class="p">,</span>
+  <span class="s">&#39;https://wiki.python.org/moin/&#39;</span><span class="p">,</span>
+  <span class="s">&#39;http://planet.python.org/&#39;</span><span class="p">,</span>
+  <span class="s">&#39;https://wiki.python.org/moin/LocalUserGroups&#39;</span><span class="p">,</span>
+  <span class="s">&#39;http://www.python.org/psf/&#39;</span><span class="p">,</span>
+  <span class="s">&#39;http://docs.python.org/devguide/&#39;</span><span class="p">,</span>
+  <span class="s">&#39;http://www.python.org/community/awards/&#39;</span>
+  <span class="c"># 等等...</span>
+  <span class="p">]</span>
+
+<span class="c"># 创建一个工作者线程池</span>
+<span class="n">pool</span> <span class="o">=</span> <span class="n">ThreadPool</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> 
+<span class="c"># 在各个线程中打开url，并返回结果</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">,</span> <span class="n">urls</span><span class="p">)</span>
+<span class="c">#close the pool and wait for the work to finish</span>
+<span class="c"># 关闭线程池，等待工作结束</span>
+<span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span> 
+<span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</pre></div>
+
+
+<p>看看！真正做事情的代码仅有4行，其中3行只是简单的辅助功能。<em>map</em>调用轻松搞定了之前示例40行代码做的事情！觉得好玩，我对两种方式进行了时间测量，并使用了不同的池大小。</p>
+<div class="highlight"><pre><span class="c"># 译注：我觉得与串行处理方式对比意义不大，应该和队列的方式进行性能对比</span>
+<span class="n">results</span> <span class="o">=</span> <span class="p">[]</span> 
+<span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">urls</span><span class="p">:</span>
+  <span class="n">result</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+  <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+<span class="c"># # ------- 对比 ------- # </span>
+
+
+<span class="c"># # ------- 池的大小为4 ------- # </span>
+<span class="n">pool</span> <span class="o">=</span> <span class="n">ThreadPool</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> 
+<span class="n">results</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">,</span> <span class="n">urls</span><span class="p">)</span>
+
+<span class="c"># # ------- 池的大小为8 ------- # </span>
+
+<span class="n">pool</span> <span class="o">=</span> <span class="n">ThreadPool</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span> 
+<span class="n">results</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">,</span> <span class="n">urls</span><span class="p">)</span>
+
+<span class="c"># # ------- 池的大小为13 ------- # </span>
+
+<span class="n">pool</span> <span class="o">=</span> <span class="n">ThreadPool</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span> 
+<span class="n">results</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">,</span> <span class="n">urls</span><span class="p">)</span>
+</pre></div>
+
+
+<p>结果：</p>
+<div class="highlight"><pre>单线程: 14.4 秒
+池大小为4时：3.1 秒
+池大小为8时：1.4 秒
+池大小为13时：1.3秒
+</pre></div>
+
+
+<p>真是呱呱叫啊！也说明了试验不同的池大小是有必要的。在我的机器上，池的大小大于9后会导致性能退化（译注：咦，结果不是显示13比8的性能要好么？）。</p>
+<h3>现实中的Example 2</h3>
+<p>为千张图片创建缩略图。</p>
+<p>来做点CPU密集型的事情！对于我，在工作中常见的任务是操作大量的图片目录。其中一种图片转换是创建缩略图。这项工作适于并行处理。</p>
+<p><strong>基本的单进程设置</strong></p>
+<div class="highlight"><pre><span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Pool</span> 
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+
+<span class="n">SIZE</span> <span class="o">=</span> <span class="p">(</span><span class="mi">75</span><span class="p">,</span><span class="mi">75</span><span class="p">)</span>
+<span class="n">SAVE_DIRECTORY</span> <span class="o">=</span> <span class="s">&#39;thumbs&#39;</span>
+
+<span class="k">def</span> <span class="nf">get_image_paths</span><span class="p">(</span><span class="n">folder</span><span class="p">):</span>
+  <span class="k">return</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span> 
+      <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span> 
+      <span class="k">if</span> <span class="s">&#39;jpeg&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">create_thumbnail</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span> 
+  <span class="n">im</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+  <span class="n">im</span><span class="o">.</span><span class="n">thumbnail</span><span class="p">(</span><span class="n">SIZE</span><span class="p">,</span> <span class="n">Image</span><span class="o">.</span><span class="n">ANTIALIAS</span><span class="p">)</span>
+  <span class="n">base</span><span class="p">,</span> <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> 
+  <span class="n">save_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">SAVE_DIRECTORY</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
+  <span class="n">im</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+  <span class="n">folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span>
+    <span class="s">&#39;11_18_2013_R000_IQM_Big_Sur_Mon__e10d1958e7b766c3e840&#39;</span><span class="p">)</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">SAVE_DIRECTORY</span><span class="p">))</span>
+
+  <span class="n">images</span> <span class="o">=</span> <span class="n">get_image_paths</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
+
+  <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">images</span><span class="p">:</span> 
+    <span class="n">create_thumbnail</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+</pre></div>
+
+
+<p>示例代码中用了一些技巧，但大体上是：向程序传入一个目录，从目录中获取所有图片，然后创建缩略图，并将缩略图存放到各自的目录中。</p>
+<p>在我的机器上，这个程序处理大约6000张图片，花费27.9秒。</p>
+<p>如果使用一个并行的map调用来替换<em>for</em>循环：</p>
+<div class="highlight"><pre><span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Pool</span> 
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+
+<span class="n">SIZE</span> <span class="o">=</span> <span class="p">(</span><span class="mi">75</span><span class="p">,</span><span class="mi">75</span><span class="p">)</span>
+<span class="n">SAVE_DIRECTORY</span> <span class="o">=</span> <span class="s">&#39;thumbs&#39;</span>
+
+<span class="k">def</span> <span class="nf">get_image_paths</span><span class="p">(</span><span class="n">folder</span><span class="p">):</span>
+  <span class="k">return</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span> 
+      <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span> 
+      <span class="k">if</span> <span class="s">&#39;jpeg&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">create_thumbnail</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span> 
+  <span class="n">im</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+  <span class="n">im</span><span class="o">.</span><span class="n">thumbnail</span><span class="p">(</span><span class="n">SIZE</span><span class="p">,</span> <span class="n">Image</span><span class="o">.</span><span class="n">ANTIALIAS</span><span class="p">)</span>
+  <span class="n">base</span><span class="p">,</span> <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> 
+  <span class="n">save_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">SAVE_DIRECTORY</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
+  <span class="n">im</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+  <span class="n">folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span>
+    <span class="s">&#39;11_18_2013_R000_IQM_Big_Sur_Mon__e10d1958e7b766c3e840&#39;</span><span class="p">)</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">SAVE_DIRECTORY</span><span class="p">))</span>
+
+  <span class="n">images</span> <span class="o">=</span> <span class="n">get_image_paths</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
+
+  <span class="n">pool</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">()</span>
+    <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">create_thumbnail</span><span class="p">,</span> <span class="n">images</span><span class="p">)</span>
+    <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span> 
+    <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</pre></div>
+
+
+<p><strong>5.6秒！</strong></p>
+<p>仅修改几行代码就能得到巨大的速度提升。这个程序的生产环境版本通过切分CPU密集型工作和IO密集型工作并分配到各自的进程和线程（通常是死锁代码的一个因素），获得更快的速度。然而，由于map性质清晰明确，无需手动管理线程，以干净、可靠、易于调试的方式混合匹配两者（译注：这里的“两者”是指什么？CPU密集型工作和IO密集型工作？），也是相当容易的。</p>
+<p>就是这样了。（几乎）一行式并行解决方案。</p>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2015/09/11/parallelism-in-one-line/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+        </div><!-- /.twelve.columns -->
+ </div><!-- /.row -->
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+  <script src="../../../../theme/js/main.js"></script>
+</body>
+</html>

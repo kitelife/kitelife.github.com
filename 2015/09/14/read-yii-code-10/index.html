@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 
-        <title>Yii源码阅读笔记 - 错误/异常管理</title>
+        <title>Yii源码阅读笔记 - 错误/异常处理</title>
         <meta charset="utf-8" />
         <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑·白 Full Atom Feed" />
         <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑·白 Full RSS Feed" />
@@ -60,7 +60,7 @@
         <div class="columns">
             <header>
               <h2 class="entry-title">
-                <a href="../../../../2015/09/14/read-yii-code-10/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 错误/异常管理">Yii源码阅读笔记 - 错误/异常管理</a></h2>
+                <a href="../../../../2015/09/14/read-yii-code-10/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 错误/异常处理">Yii源码阅读笔记 - 错误/异常处理</a></h2>
            
             </header>
             <footer class="post-info">
@@ -80,527 +80,541 @@
 <h3>分析</h3>
 <p>我们来看看Yii框架在哪个地方注册错误/异常处理过程？处理过程是什么样的？</p>
 <p>Yii框架在请求处理初始化过程中，在<code>CApplication</code>类（见文件<code>base/CApplication.php</code>）的构造方法中调用了：</p>
-<div class="highlight"><pre><span class="x">$this-&gt;initSystemHandlers();</span>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">initSystemHandlers</span><span class="p">();</span>
 </pre></div>
 
 
 <p><code>initSystemHandlers</code>的实现如下：</p>
-<div class="highlight"><pre><span class="x">/**</span>
-<span class="x"> * Initializes the class autoloader and error handlers.</span>
-<span class="x"> */</span>
-<span class="x">protected function initSystemHandlers()</span>
-<span class="x">{</span>
-<span class="x">    // 注：如果不想使用Yii框架注册的handleException，可以在初始化应用实例之前，定义常量YII_ENABLE_EXCEPTION_HANDLER值为false</span>
-<span class="x">    if(YII_ENABLE_EXCEPTION_HANDLER)</span>
-<span class="x">        set_exception_handler(array($this,&#39;handleException&#39;));</span>
-<span class="x">    // 注：YII_ENABLE_ERROR_HANDLER也是如此</span>
-<span class="x">    if(YII_ENABLE_ERROR_HANDLER)</span>
-<span class="x">        set_error_handler(array($this,&#39;handleError&#39;),error_reporting());</span>
-<span class="x">}</span>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="sd">/**</span>
+<span class="sd"> * Initializes the class autoloader and error handlers.</span>
+<span class="sd"> */</span>
+<span class="k">protected</span> <span class="k">function</span> <span class="nf">initSystemHandlers</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="c1">// 注：如果不想使用Yii框架注册的handleException，可以在初始化应用实例之前，定义常量YII_ENABLE_EXCEPTION_HANDLER值为false</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">YII_ENABLE_EXCEPTION_HANDLER</span><span class="p">)</span>
+        <span class="nb">set_exception_handler</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="nv">$this</span><span class="p">,</span><span class="s1">&#39;handleException&#39;</span><span class="p">));</span>
+    <span class="c1">// 注：YII_ENABLE_ERROR_HANDLER也是如此</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">YII_ENABLE_ERROR_HANDLER</span><span class="p">)</span>
+        <span class="nb">set_error_handler</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="nv">$this</span><span class="p">,</span><span class="s1">&#39;handleError&#39;</span><span class="p">),</span><span class="nb">error_reporting</span><span class="p">());</span>
+<span class="p">}</span>
 </pre></div>
 
 
 <p>其中注册的方法<code>handleException</code>和<code>handleError</code>实现分别如下：</p>
-<div class="highlight"><pre><span class="x">public function handleException($exception)</span>
-<span class="x">{</span>
-<span class="x">    // disable error capturing to avoid recursive errors</span>
-<span class="x">    // 这句注释是啥意思？</span>
-<span class="x">    restore_error_handler();</span>
-<span class="x">    restore_exception_handler();</span>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">handleException</span><span class="p">(</span><span class="nv">$exception</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// disable error capturing to avoid recursive errors</span>
+    <span class="c1">// 这句注释是啥意思？</span>
+    <span class="nb">restore_error_handler</span><span class="p">();</span>
+    <span class="nb">restore_exception_handler</span><span class="p">();</span>
 
-<span class="x">    // 生成并记录日志信息</span>
-<span class="x">    $category=&#39;exception.&#39;.get_class($exception);</span>
-<span class="x">    if($exception instanceof CHttpException)</span>
-<span class="x">        $category.=&#39;.&#39;.$exception-&gt;statusCode;</span>
-<span class="x">    // php &lt;5.2 doesn&#39;t support string conversion auto-magically</span>
-<span class="x">    $message=$exception-&gt;__toString();</span>
-<span class="x">    if(isset($_SERVER[&#39;REQUEST_URI&#39;]))</span>
-<span class="x">        $message.=&quot;\nREQUEST_URI=&quot;.$_SERVER[&#39;REQUEST_URI&#39;];</span>
-<span class="x">    if(isset($_SERVER[&#39;HTTP_REFERER&#39;]))</span>
-<span class="x">        $message.=&quot;\nHTTP_REFERER=&quot;.$_SERVER[&#39;HTTP_REFERER&#39;];</span>
-<span class="x">    $message.=&quot;\n---&quot;;</span>
-<span class="x">    Yii::log($message,CLogger::LEVEL_ERROR,$category);</span>
+    <span class="c1">// 生成并记录日志信息</span>
+    <span class="nv">$category</span><span class="o">=</span><span class="s1">&#39;exception.&#39;</span><span class="o">.</span><span class="nb">get_class</span><span class="p">(</span><span class="nv">$exception</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="nv">$exception</span> <span class="nx">instanceof</span> <span class="nx">CHttpException</span><span class="p">)</span>
+        <span class="nv">$category</span><span class="o">.=</span><span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="nv">$exception</span><span class="o">-&gt;</span><span class="na">statusCode</span><span class="p">;</span>
+    <span class="c1">// php &lt;5.2 doesn&#39;t support string conversion auto-magically</span>
+    <span class="nv">$message</span><span class="o">=</span><span class="nv">$exception</span><span class="o">-&gt;</span><span class="na">__toString</span><span class="p">();</span>
+    <span class="k">if</span><span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$_SERVER</span><span class="p">[</span><span class="s1">&#39;REQUEST_URI&#39;</span><span class="p">]))</span>
+        <span class="nv">$message</span><span class="o">.=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">REQUEST_URI=&quot;</span><span class="o">.</span><span class="nv">$_SERVER</span><span class="p">[</span><span class="s1">&#39;REQUEST_URI&#39;</span><span class="p">];</span>
+    <span class="k">if</span><span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$_SERVER</span><span class="p">[</span><span class="s1">&#39;HTTP_REFERER&#39;</span><span class="p">]))</span>
+        <span class="nv">$message</span><span class="o">.=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">HTTP_REFERER=&quot;</span><span class="o">.</span><span class="nv">$_SERVER</span><span class="p">[</span><span class="s1">&#39;HTTP_REFERER&#39;</span><span class="p">];</span>
+    <span class="nv">$message</span><span class="o">.=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">---&quot;</span><span class="p">;</span>
+    <span class="nx">Yii</span><span class="o">::</span><span class="na">log</span><span class="p">(</span><span class="nv">$message</span><span class="p">,</span><span class="nx">CLogger</span><span class="o">::</span><span class="na">LEVEL_ERROR</span><span class="p">,</span><span class="nv">$category</span><span class="p">);</span>
 
-<span class="x">    try</span>
-<span class="x">    {</span>
-<span class="x">        // 将异常封装成事件，并触发事件，从而触发监听该事件的处理过程</span>
-<span class="x">        $event=new CExceptionEvent($this,$exception);</span>
-<span class="x">        $this-&gt;onException($event);</span>
-<span class="x">        // 如果事件并没有被处理（即没有监听该事件的处理过程）或者所有处理过程都没有将事件的handled属性置为true，则还得自己处理一下</span>
-<span class="x">        if(!$event-&gt;handled)</span>
-<span class="x">        {</span>
-<span class="x">            // try an error handler</span>
-<span class="x">            if(($handler=$this-&gt;getErrorHandler())!==null)</span>
-<span class="x">                $handler-&gt;handle($event);</span>
-<span class="x">            else</span>
-<span class="x">                $this-&gt;displayException($exception);</span>
-<span class="x">        }</span>
-<span class="x">    }</span>
-<span class="x">    catch(Exception $e)</span>
-<span class="x">    {</span>
-<span class="x">        $this-&gt;displayException($e);</span>
-<span class="x">    }</span>
+    <span class="k">try</span>
+    <span class="p">{</span>
+        <span class="c1">// 将异常封装成事件，并触发事件，从而触发监听该事件的处理过程</span>
+        <span class="nv">$event</span><span class="o">=</span><span class="k">new</span> <span class="nx">CExceptionEvent</span><span class="p">(</span><span class="nv">$this</span><span class="p">,</span><span class="nv">$exception</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">onException</span><span class="p">(</span><span class="nv">$event</span><span class="p">);</span>
+        <span class="c1">// 如果事件并没有被处理（即没有监听该事件的处理过程）或者所有处理过程都没有将事件的handled属性置为true，则还得自己处理一下</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nv">$event</span><span class="o">-&gt;</span><span class="na">handled</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">// try an error handler</span>
+            <span class="k">if</span><span class="p">((</span><span class="nv">$handler</span><span class="o">=</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">getErrorHandler</span><span class="p">())</span><span class="o">!==</span><span class="k">null</span><span class="p">)</span>
+                <span class="nv">$handler</span><span class="o">-&gt;</span><span class="na">handle</span><span class="p">(</span><span class="nv">$event</span><span class="p">);</span>
+            <span class="k">else</span>
+                <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">displayException</span><span class="p">(</span><span class="nv">$exception</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">catch</span><span class="p">(</span><span class="nx">Exception</span> <span class="nv">$e</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">displayException</span><span class="p">(</span><span class="nv">$e</span><span class="p">);</span>
+    <span class="p">}</span>
 
-<span class="x">    try</span>
-<span class="x">    {</span>
-<span class="x">        // 尝试触发onEndRequest事件</span>
-<span class="x">        $this-&gt;end(1);</span>
-<span class="x">    }</span>
-<span class="x">    catch(Exception $e)</span>
-<span class="x">    {</span>
-<span class="x">        // use the most primitive way to log error</span>
-<span class="x">        $msg = get_class($e).&#39;: &#39;.$e-&gt;getMessage().&#39; (&#39;.$e-&gt;getFile().&#39;:&#39;.$e-&gt;getLine().&quot;)\n&quot;;</span>
-<span class="x">        $msg .= $e-&gt;getTraceAsString().&quot;\n&quot;;</span>
-<span class="x">        $msg .= &quot;Previous exception:\n&quot;;</span>
-<span class="x">        $msg .= get_class($exception).&#39;: &#39;.$exception-&gt;getMessage().&#39; (&#39;.$exception-&gt;getFile().&#39;:&#39;.$exception-&gt;getLine().&quot;)\n&quot;;</span>
-<span class="x">        $msg .= $exception-&gt;getTraceAsString().&quot;\n&quot;;</span>
-<span class="x">        $msg .= &#39;$_SERVER=&#39;.var_export($_SERVER,true);</span>
-<span class="x">        error_log($msg);</span>
-<span class="x">        exit(1);</span>
-<span class="x">    }</span>
-<span class="x">}</span>
+    <span class="k">try</span>
+    <span class="p">{</span>
+        <span class="c1">// 尝试触发onEndRequest事件</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">end</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">catch</span><span class="p">(</span><span class="nx">Exception</span> <span class="nv">$e</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">// use the most primitive way to log error</span>
+        <span class="nv">$msg</span> <span class="o">=</span> <span class="nb">get_class</span><span class="p">(</span><span class="nv">$e</span><span class="p">)</span><span class="o">.</span><span class="s1">&#39;: &#39;</span><span class="o">.</span><span class="nv">$e</span><span class="o">-&gt;</span><span class="na">getMessage</span><span class="p">()</span><span class="o">.</span><span class="s1">&#39; (&#39;</span><span class="o">.</span><span class="nv">$e</span><span class="o">-&gt;</span><span class="na">getFile</span><span class="p">()</span><span class="o">.</span><span class="s1">&#39;:&#39;</span><span class="o">.</span><span class="nv">$e</span><span class="o">-&gt;</span><span class="na">getLine</span><span class="p">()</span><span class="o">.</span><span class="s2">&quot;)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+        <span class="nv">$msg</span> <span class="o">.=</span> <span class="nv">$e</span><span class="o">-&gt;</span><span class="na">getTraceAsString</span><span class="p">()</span><span class="o">.</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+        <span class="nv">$msg</span> <span class="o">.=</span> <span class="s2">&quot;Previous exception:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+        <span class="nv">$msg</span> <span class="o">.=</span> <span class="nb">get_class</span><span class="p">(</span><span class="nv">$exception</span><span class="p">)</span><span class="o">.</span><span class="s1">&#39;: &#39;</span><span class="o">.</span><span class="nv">$exception</span><span class="o">-&gt;</span><span class="na">getMessage</span><span class="p">()</span><span class="o">.</span><span class="s1">&#39; (&#39;</span><span class="o">.</span><span class="nv">$exception</span><span class="o">-&gt;</span><span class="na">getFile</span><span class="p">()</span><span class="o">.</span><span class="s1">&#39;:&#39;</span><span class="o">.</span><span class="nv">$exception</span><span class="o">-&gt;</span><span class="na">getLine</span><span class="p">()</span><span class="o">.</span><span class="s2">&quot;)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+        <span class="nv">$msg</span> <span class="o">.=</span> <span class="nv">$exception</span><span class="o">-&gt;</span><span class="na">getTraceAsString</span><span class="p">()</span><span class="o">.</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+        <span class="nv">$msg</span> <span class="o">.=</span> <span class="s1">&#39;$_SERVER=&#39;</span><span class="o">.</span><span class="nb">var_export</span><span class="p">(</span><span class="nv">$_SERVER</span><span class="p">,</span><span class="k">true</span><span class="p">);</span>
+        <span class="nb">error_log</span><span class="p">(</span><span class="nv">$msg</span><span class="p">);</span>
+        <span class="k">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 </pre></div>
 
 
-<div class="highlight"><pre><span class="x">public function handleError($code,$message,$file,$line)</span>
-<span class="x">{</span>
-<span class="x">    if($code &amp; error_reporting())</span>
-<span class="x">    {</span>
-<span class="x">        // disable error capturing to avoid recursive errors</span>
-<span class="x">        restore_error_handler();</span>
-<span class="x">        restore_exception_handler();</span>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">handleError</span><span class="p">(</span><span class="nv">$code</span><span class="p">,</span><span class="nv">$message</span><span class="p">,</span><span class="nv">$file</span><span class="p">,</span><span class="nv">$line</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="nv">$code</span> <span class="o">&amp;</span> <span class="nb">error_reporting</span><span class="p">())</span>
+    <span class="p">{</span>
+        <span class="c1">// disable error capturing to avoid recursive errors</span>
+        <span class="nb">restore_error_handler</span><span class="p">();</span>
+        <span class="nb">restore_exception_handler</span><span class="p">();</span>
 
-<span class="x">        // 生成并记录日志信息</span>
-<span class="x">        $log=&quot;$message ($file:$line)\nStack trace:\n&quot;;</span>
+        <span class="c1">// 生成并记录日志信息</span>
+        <span class="nv">$log</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">$message</span><span class="s2"> (</span><span class="si">$file</span><span class="s2">:</span><span class="si">$line</span><span class="s2">)</span><span class="se">\n</span><span class="s2">Stack trace:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
 
-<span class="x">        // debug_backtrace() 产生一条 PHP 的回溯跟踪</span>
-<span class="x">        $trace=debug_backtrace();</span>
-<span class="x">        // skip the first 3 stacks as they do not tell the error position</span>
-<span class="x">        if(count($trace)&gt;3)</span>
-<span class="x">            $trace=array_slice($trace,3);</span>
-<span class="x">        foreach($trace as $i=&gt;$t)</span>
-<span class="x">        {</span>
-<span class="x">            if(!isset($t[&#39;file&#39;]))</span>
-<span class="x">                $t[&#39;file&#39;]=&#39;unknown&#39;;</span>
-<span class="x">            if(!isset($t[&#39;line&#39;]))</span>
-<span class="x">                $t[&#39;line&#39;]=0;</span>
-<span class="x">            if(!isset($t[&#39;function&#39;]))</span>
-<span class="x">                $t[&#39;function&#39;]=&#39;unknown&#39;;</span>
-<span class="x">            $log.=&quot;#$i {$t[&#39;file&#39;]}({$t[&#39;line&#39;]}): &quot;;</span>
-<span class="x">            if(isset($t[&#39;object&#39;]) &amp;&amp; is_object($t[&#39;object&#39;]))</span>
-<span class="x">                $log.=get_class($t[&#39;object&#39;]).&#39;-&gt;&#39;;</span>
-<span class="x">            $log.=&quot;{$t[&#39;function&#39;]}()\n&quot;;</span>
-<span class="x">        }</span>
-<span class="x">        if(isset($_SERVER[&#39;REQUEST_URI&#39;]))</span>
-<span class="x">            $log.=&#39;REQUEST_URI=&#39;.$_SERVER[&#39;REQUEST_URI&#39;];</span>
-<span class="x">        Yii::log($log,CLogger::LEVEL_ERROR,&#39;php&#39;);</span>
+        <span class="c1">// debug_backtrace() 产生一条 PHP 的回溯跟踪</span>
+        <span class="nv">$trace</span><span class="o">=</span><span class="nb">debug_backtrace</span><span class="p">();</span>
+        <span class="c1">// skip the first 3 stacks as they do not tell the error position</span>
+        <span class="k">if</span><span class="p">(</span><span class="nb">count</span><span class="p">(</span><span class="nv">$trace</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">3</span><span class="p">)</span>
+            <span class="nv">$trace</span><span class="o">=</span><span class="nb">array_slice</span><span class="p">(</span><span class="nv">$trace</span><span class="p">,</span><span class="mi">3</span><span class="p">);</span>
+        <span class="k">foreach</span><span class="p">(</span><span class="nv">$trace</span> <span class="k">as</span> <span class="nv">$i</span><span class="o">=&gt;</span><span class="nv">$t</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]))</span>
+                <span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;unknown&#39;</span><span class="p">;</span>
+            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;line&#39;</span><span class="p">]))</span>
+                <span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;line&#39;</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;function&#39;</span><span class="p">]))</span>
+                <span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;function&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;unknown&#39;</span><span class="p">;</span>
+            <span class="nv">$log</span><span class="o">.=</span><span class="s2">&quot;#</span><span class="si">$i</span><span class="s2"> </span><span class="si">{</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;line&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">): &quot;</span><span class="p">;</span>
+            <span class="k">if</span><span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;object&#39;</span><span class="p">])</span> <span class="o">&amp;&amp;</span> <span class="nb">is_object</span><span class="p">(</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;object&#39;</span><span class="p">]))</span>
+                <span class="nv">$log</span><span class="o">.=</span><span class="nb">get_class</span><span class="p">(</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;object&#39;</span><span class="p">])</span><span class="o">.</span><span class="s1">&#39;-&gt;&#39;</span><span class="p">;</span>
+            <span class="nv">$log</span><span class="o">.=</span><span class="s2">&quot;</span><span class="si">{</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;function&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">()</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">if</span><span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$_SERVER</span><span class="p">[</span><span class="s1">&#39;REQUEST_URI&#39;</span><span class="p">]))</span>
+            <span class="nv">$log</span><span class="o">.=</span><span class="s1">&#39;REQUEST_URI=&#39;</span><span class="o">.</span><span class="nv">$_SERVER</span><span class="p">[</span><span class="s1">&#39;REQUEST_URI&#39;</span><span class="p">];</span>
+        <span class="nx">Yii</span><span class="o">::</span><span class="na">log</span><span class="p">(</span><span class="nv">$log</span><span class="p">,</span><span class="nx">CLogger</span><span class="o">::</span><span class="na">LEVEL_ERROR</span><span class="p">,</span><span class="s1">&#39;php&#39;</span><span class="p">);</span>
 
-<span class="x">        try</span>
-<span class="x">        {</span>
-<span class="x">            // 将错误封装成事件，并触发</span>
-<span class="x">            Yii::import(&#39;CErrorEvent&#39;,true);</span>
-<span class="x">            $event=new CErrorEvent($this,$code,$message,$file,$line);</span>
-<span class="x">            $this-&gt;onError($event);</span>
-<span class="x">            // 如果错误事件未被处理</span>
-<span class="x">            if(!$event-&gt;handled)</span>
-<span class="x">            {</span>
-<span class="x">                // try an error handler</span>
-<span class="x">                if(($handler=$this-&gt;getErrorHandler())!==null)</span>
-<span class="x">                    $handler-&gt;handle($event);</span>
-<span class="x">                else</span>
-<span class="x">                    $this-&gt;displayError($code,$message,$file,$line);</span>
-<span class="x">            }</span>
-<span class="x">        }</span>
-<span class="x">        catch(Exception $e)</span>
-<span class="x">        {</span>
-<span class="x">            $this-&gt;displayException($e);</span>
-<span class="x">        }</span>
+        <span class="k">try</span>
+        <span class="p">{</span>
+            <span class="c1">// 将错误封装成事件，并触发</span>
+            <span class="nx">Yii</span><span class="o">::</span><span class="na">import</span><span class="p">(</span><span class="s1">&#39;CErrorEvent&#39;</span><span class="p">,</span><span class="k">true</span><span class="p">);</span>
+            <span class="nv">$event</span><span class="o">=</span><span class="k">new</span> <span class="nx">CErrorEvent</span><span class="p">(</span><span class="nv">$this</span><span class="p">,</span><span class="nv">$code</span><span class="p">,</span><span class="nv">$message</span><span class="p">,</span><span class="nv">$file</span><span class="p">,</span><span class="nv">$line</span><span class="p">);</span>
+            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">onError</span><span class="p">(</span><span class="nv">$event</span><span class="p">);</span>
+            <span class="c1">// 如果错误事件未被处理</span>
+            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nv">$event</span><span class="o">-&gt;</span><span class="na">handled</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="c1">// try an error handler</span>
+                <span class="k">if</span><span class="p">((</span><span class="nv">$handler</span><span class="o">=</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">getErrorHandler</span><span class="p">())</span><span class="o">!==</span><span class="k">null</span><span class="p">)</span>
+                    <span class="nv">$handler</span><span class="o">-&gt;</span><span class="na">handle</span><span class="p">(</span><span class="nv">$event</span><span class="p">);</span>
+                <span class="k">else</span>
+                    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">displayError</span><span class="p">(</span><span class="nv">$code</span><span class="p">,</span><span class="nv">$message</span><span class="p">,</span><span class="nv">$file</span><span class="p">,</span><span class="nv">$line</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="k">catch</span><span class="p">(</span><span class="nx">Exception</span> <span class="nv">$e</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">displayException</span><span class="p">(</span><span class="nv">$e</span><span class="p">);</span>
+        <span class="p">}</span>
 
-<span class="x">        try</span>
-<span class="x">        {</span>
-<span class="x">            // 尝试触发onEndRequest事件</span>
-<span class="x">            $this-&gt;end(1);</span>
-<span class="x">        }</span>
-<span class="x">        catch(Exception $e)</span>
-<span class="x">        {</span>
-<span class="x">            // use the most primitive way to log error</span>
-<span class="x">            $msg = get_class($e).&#39;: &#39;.$e-&gt;getMessage().&#39; (&#39;.$e-&gt;getFile().&#39;:&#39;.$e-&gt;getLine().&quot;)\n&quot;;</span>
-<span class="x">            $msg .= $e-&gt;getTraceAsString().&quot;\n&quot;;</span>
-<span class="x">            $msg .= &quot;Previous error:\n&quot;;</span>
-<span class="x">            $msg .= $log.&quot;\n&quot;;</span>
-<span class="x">            $msg .= &#39;$_SERVER=&#39;.var_export($_SERVER,true);</span>
-<span class="x">            error_log($msg);</span>
-<span class="x">            exit(1);</span>
-<span class="x">        }</span>
-<span class="x">    }</span>
-<span class="x">}</span>
+        <span class="k">try</span>
+        <span class="p">{</span>
+            <span class="c1">// 尝试触发onEndRequest事件</span>
+            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">end</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="k">catch</span><span class="p">(</span><span class="nx">Exception</span> <span class="nv">$e</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">// use the most primitive way to log error</span>
+            <span class="nv">$msg</span> <span class="o">=</span> <span class="nb">get_class</span><span class="p">(</span><span class="nv">$e</span><span class="p">)</span><span class="o">.</span><span class="s1">&#39;: &#39;</span><span class="o">.</span><span class="nv">$e</span><span class="o">-&gt;</span><span class="na">getMessage</span><span class="p">()</span><span class="o">.</span><span class="s1">&#39; (&#39;</span><span class="o">.</span><span class="nv">$e</span><span class="o">-&gt;</span><span class="na">getFile</span><span class="p">()</span><span class="o">.</span><span class="s1">&#39;:&#39;</span><span class="o">.</span><span class="nv">$e</span><span class="o">-&gt;</span><span class="na">getLine</span><span class="p">()</span><span class="o">.</span><span class="s2">&quot;)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+            <span class="nv">$msg</span> <span class="o">.=</span> <span class="nv">$e</span><span class="o">-&gt;</span><span class="na">getTraceAsString</span><span class="p">()</span><span class="o">.</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+            <span class="nv">$msg</span> <span class="o">.=</span> <span class="s2">&quot;Previous error:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+            <span class="nv">$msg</span> <span class="o">.=</span> <span class="nv">$log</span><span class="o">.</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+            <span class="nv">$msg</span> <span class="o">.=</span> <span class="s1">&#39;$_SERVER=&#39;</span><span class="o">.</span><span class="nb">var_export</span><span class="p">(</span><span class="nv">$_SERVER</span><span class="p">,</span><span class="k">true</span><span class="p">);</span>
+            <span class="nb">error_log</span><span class="p">(</span><span class="nv">$msg</span><span class="p">);</span>
+            <span class="k">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 </pre></div>
 
 
 <p>从上面代码可以看到，方法<code>handleException</code>的关键部分为：</p>
-<div class="highlight"><pre><span class="x">// 将异常封装成事件，并触发事件，从而触发监听该事件的处理过程</span>
-<span class="x">$event=new CExceptionEvent($this,$exception);</span>
-<span class="x">$this-&gt;onException($event);</span>
-<span class="x">// 如果事件并没有被处理（即没有监听该事件的处理过程）或者所有处理过程都没有将事件的handled属性置为true，则还得自己处理一下</span>
-<span class="x">if(!$event-&gt;handled)</span>
-<span class="x">{</span>
-<span class="x">    // try an error handler</span>
-<span class="x">    if(($handler=$this-&gt;getErrorHandler())!==null)</span>
-<span class="x">        $handler-&gt;handle($event);</span>
-<span class="x">    else</span>
-<span class="x">        $this-&gt;displayException($exception);</span>
-<span class="x">}</span>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="c1">// 将异常封装成事件，并触发事件，从而触发监听该事件的处理过程</span>
+<span class="nv">$event</span><span class="o">=</span><span class="k">new</span> <span class="nx">CExceptionEvent</span><span class="p">(</span><span class="nv">$this</span><span class="p">,</span><span class="nv">$exception</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">onException</span><span class="p">(</span><span class="nv">$event</span><span class="p">);</span>
+<span class="c1">// 如果事件并没有被处理（即没有监听该事件的处理过程）或者所有处理过程都没有将事件的handled属性置为true，则还得自己处理一下</span>
+<span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nv">$event</span><span class="o">-&gt;</span><span class="na">handled</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// try an error handler</span>
+    <span class="k">if</span><span class="p">((</span><span class="nv">$handler</span><span class="o">=</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">getErrorHandler</span><span class="p">())</span><span class="o">!==</span><span class="k">null</span><span class="p">)</span>
+        <span class="nv">$handler</span><span class="o">-&gt;</span><span class="na">handle</span><span class="p">(</span><span class="nv">$event</span><span class="p">);</span>
+    <span class="k">else</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">displayException</span><span class="p">(</span><span class="nv">$exception</span><span class="p">);</span>
+<span class="p">}</span>
 </pre></div>
 
 
 <p>其中方法<code>onException</code>的实现如下：</p>
-<div class="highlight"><pre><span class="x">public function onException($event)</span>
-<span class="x">{</span>
-<span class="x">    $this-&gt;raiseEvent(&#39;onException&#39;,$event);</span>
-<span class="x">}</span>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">onException</span><span class="p">(</span><span class="nv">$event</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">raiseEvent</span><span class="p">(</span><span class="s1">&#39;onException&#39;</span><span class="p">,</span><span class="nv">$event</span><span class="p">);</span>
+<span class="p">}</span>
 </pre></div>
 
 
 <p><code>raiseEvent</code>方法实现如下：</p>
-<div class="highlight"><pre><span class="x">public function raiseEvent($name,$event)</span>
-<span class="x">{</span>
-<span class="x">    // 根据事件名称，如onException，找到注册到该事件的处理过程，逐个触发调用。</span>
-<span class="x">    // 所有该事件注册的处理过程存放在$this-&gt;_e[$name]中</span>
-<span class="x">    $name=strtolower($name);</span>
-<span class="x">    if(isset($this-&gt;_e[$name]))</span>
-<span class="x">    {</span>
-<span class="x">        foreach($this-&gt;_e[$name] as $handler)</span>
-<span class="x">        {</span>
-<span class="x">            if(is_string($handler))</span>
-<span class="x">                call_user_func($handler,$event);</span>
-<span class="x">            elseif(is_callable($handler,true))</span>
-<span class="x">            {</span>
-<span class="x">                if(is_array($handler))</span>
-<span class="x">                {</span>
-<span class="x">                    // an array: 0 - object, 1 - method name</span>
-<span class="x">                    list($object,$method)=$handler;</span>
-<span class="x">                    if(is_string($object))  // static method call</span>
-<span class="x">                        call_user_func($handler,$event);</span>
-<span class="x">                    elseif(method_exists($object,$method))</span>
-<span class="x">                        $object-&gt;$method($event);</span>
-<span class="x">                    else</span>
-<span class="x">                        throw new CException(Yii::t(&#39;yii&#39;,&#39;Event &quot;{class}.{event}&quot; is attached with an invalid handler &quot;{handler}&quot;.&#39;,</span>
-<span class="x">                            array(&#39;{class}&#39;=&gt;get_class($this), &#39;{event}&#39;=&gt;$name, &#39;{handler}&#39;=&gt;$handler[1])));</span>
-<span class="x">                }</span>
-<span class="x">                else // PHP 5.3: anonymous function</span>
-<span class="x">                    call_user_func($handler,$event);</span>
-<span class="x">            }</span>
-<span class="x">            else</span>
-<span class="x">                throw new CException(Yii::t(&#39;yii&#39;,&#39;Event &quot;{class}.{event}&quot; is attached with an invalid handler &quot;{handler}&quot;.&#39;,</span>
-<span class="x">                    array(&#39;{class}&#39;=&gt;get_class($this), &#39;{event}&#39;=&gt;$name, &#39;{handler}&#39;=&gt;gettype($handler))));</span>
-<span class="x">            // stop further handling if param.handled is set true</span>
-<span class="x">            if(($event instanceof CEvent) &amp;&amp; $event-&gt;handled)</span>
-<span class="x">                return;</span>
-<span class="x">        }</span>
-<span class="x">    }</span>
-<span class="x">    elseif(YII_DEBUG &amp;&amp; !$this-&gt;hasEvent($name))</span>
-<span class="x">        throw new CException(Yii::t(&#39;yii&#39;,&#39;Event &quot;{class}.{event}&quot; is not defined.&#39;,</span>
-<span class="x">            array(&#39;{class}&#39;=&gt;get_class($this), &#39;{event}&#39;=&gt;$name)));</span>
-<span class="x">}</span>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">raiseEvent</span><span class="p">(</span><span class="nv">$name</span><span class="p">,</span><span class="nv">$event</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// 根据事件名称，如onException，找到注册到该事件的处理过程，逐个触发调用。</span>
+    <span class="c1">// 所有该事件注册的处理过程存放在$this-&gt;_e[$name]中</span>
+    <span class="nv">$name</span><span class="o">=</span><span class="nb">strtolower</span><span class="p">(</span><span class="nv">$name</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_e</span><span class="p">[</span><span class="nv">$name</span><span class="p">]))</span>
+    <span class="p">{</span>
+        <span class="k">foreach</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_e</span><span class="p">[</span><span class="nv">$name</span><span class="p">]</span> <span class="k">as</span> <span class="nv">$handler</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">if</span><span class="p">(</span><span class="nb">is_string</span><span class="p">(</span><span class="nv">$handler</span><span class="p">))</span>
+                <span class="nb">call_user_func</span><span class="p">(</span><span class="nv">$handler</span><span class="p">,</span><span class="nv">$event</span><span class="p">);</span>
+            <span class="k">elseif</span><span class="p">(</span><span class="nb">is_callable</span><span class="p">(</span><span class="nv">$handler</span><span class="p">,</span><span class="k">true</span><span class="p">))</span>
+            <span class="p">{</span>
+                <span class="k">if</span><span class="p">(</span><span class="nb">is_array</span><span class="p">(</span><span class="nv">$handler</span><span class="p">))</span>
+                <span class="p">{</span>
+                    <span class="c1">// an array: 0 - object, 1 - method name</span>
+                    <span class="k">list</span><span class="p">(</span><span class="nv">$object</span><span class="p">,</span><span class="nv">$method</span><span class="p">)</span><span class="o">=</span><span class="nv">$handler</span><span class="p">;</span>
+                    <span class="k">if</span><span class="p">(</span><span class="nb">is_string</span><span class="p">(</span><span class="nv">$object</span><span class="p">))</span>  <span class="c1">// static method call</span>
+                        <span class="nb">call_user_func</span><span class="p">(</span><span class="nv">$handler</span><span class="p">,</span><span class="nv">$event</span><span class="p">);</span>
+                    <span class="k">elseif</span><span class="p">(</span><span class="nb">method_exists</span><span class="p">(</span><span class="nv">$object</span><span class="p">,</span><span class="nv">$method</span><span class="p">))</span>
+                        <span class="nv">$object</span><span class="o">-&gt;</span><span class="nv">$method</span><span class="p">(</span><span class="nv">$event</span><span class="p">);</span>
+                    <span class="k">else</span>
+                        <span class="k">throw</span> <span class="k">new</span> <span class="nx">CException</span><span class="p">(</span><span class="nx">Yii</span><span class="o">::</span><span class="na">t</span><span class="p">(</span><span class="s1">&#39;yii&#39;</span><span class="p">,</span><span class="s1">&#39;Event &quot;{class}.{event}&quot; is attached with an invalid handler &quot;{handler}&quot;.&#39;</span><span class="p">,</span>
+                            <span class="k">array</span><span class="p">(</span><span class="s1">&#39;{class}&#39;</span><span class="o">=&gt;</span><span class="nb">get_class</span><span class="p">(</span><span class="nv">$this</span><span class="p">),</span> <span class="s1">&#39;{event}&#39;</span><span class="o">=&gt;</span><span class="nv">$name</span><span class="p">,</span> <span class="s1">&#39;{handler}&#39;</span><span class="o">=&gt;</span><span class="nv">$handler</span><span class="p">[</span><span class="mi">1</span><span class="p">])));</span>
+                <span class="p">}</span>
+                <span class="k">else</span> <span class="c1">// PHP 5.3: anonymous function</span>
+                    <span class="nb">call_user_func</span><span class="p">(</span><span class="nv">$handler</span><span class="p">,</span><span class="nv">$event</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="k">else</span>
+                <span class="k">throw</span> <span class="k">new</span> <span class="nx">CException</span><span class="p">(</span><span class="nx">Yii</span><span class="o">::</span><span class="na">t</span><span class="p">(</span><span class="s1">&#39;yii&#39;</span><span class="p">,</span><span class="s1">&#39;Event &quot;{class}.{event}&quot; is attached with an invalid handler &quot;{handler}&quot;.&#39;</span><span class="p">,</span>
+                    <span class="k">array</span><span class="p">(</span><span class="s1">&#39;{class}&#39;</span><span class="o">=&gt;</span><span class="nb">get_class</span><span class="p">(</span><span class="nv">$this</span><span class="p">),</span> <span class="s1">&#39;{event}&#39;</span><span class="o">=&gt;</span><span class="nv">$name</span><span class="p">,</span> <span class="s1">&#39;{handler}&#39;</span><span class="o">=&gt;</span><span class="nb">gettype</span><span class="p">(</span><span class="nv">$handler</span><span class="p">))));</span>
+            <span class="c1">// stop further handling if param.handled is set true</span>
+            <span class="k">if</span><span class="p">((</span><span class="nv">$event</span> <span class="nx">instanceof</span> <span class="nx">CEvent</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nv">$event</span><span class="o">-&gt;</span><span class="na">handled</span><span class="p">)</span>
+                <span class="k">return</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">elseif</span><span class="p">(</span><span class="nx">YII_DEBUG</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">hasEvent</span><span class="p">(</span><span class="nv">$name</span><span class="p">))</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nx">CException</span><span class="p">(</span><span class="nx">Yii</span><span class="o">::</span><span class="na">t</span><span class="p">(</span><span class="s1">&#39;yii&#39;</span><span class="p">,</span><span class="s1">&#39;Event &quot;{class}.{event}&quot; is not defined.&#39;</span><span class="p">,</span>
+            <span class="k">array</span><span class="p">(</span><span class="s1">&#39;{class}&#39;</span><span class="o">=&gt;</span><span class="nb">get_class</span><span class="p">(</span><span class="nv">$this</span><span class="p">),</span> <span class="s1">&#39;{event}&#39;</span><span class="o">=&gt;</span><span class="nv">$name</span><span class="p">)));</span>
+<span class="p">}</span>
 </pre></div>
 
 
 <p>那么是如何注册事件的处理过程的呢？</p>
 <p>在类<code>CComponent</code>（见文件<code>base/CComponent.php</code>，<code>CApplication</code>类继承间接继承自该类）中定义了一对方法：<code>attachEventHandler</code>（将处理过程绑定到某事件）和<code>detachEventHandler</code>（将处理过程从事件解绑）。</p>
 <p>方法<code>attachEventHandler</code>的实现如下：</p>
-<div class="highlight"><pre><span class="x">public function attachEventHandler($name,$handler)</span>
-<span class="x">{</span>
-<span class="x">    $this-&gt;getEventHandlers($name)-&gt;add($handler);</span>
-<span class="x">}</span>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">attachEventHandler</span><span class="p">(</span><span class="nv">$name</span><span class="p">,</span><span class="nv">$handler</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">getEventHandlers</span><span class="p">(</span><span class="nv">$name</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="nv">$handler</span><span class="p">);</span>
+<span class="p">}</span>
 </pre></div>
 
 
 <p>其中<code>getEventHandlers</code>实现如下：</p>
-<div class="highlight"><pre><span class="x">public function getEventHandlers($name)</span>
-<span class="x">{</span>
-<span class="x">    // 可以关注一下方法hasEvent</span>
-<span class="x">    // 检查是否存在$name对应的事件</span>
-<span class="x">    if($this-&gt;hasEvent($name))</span>
-<span class="x">    {</span>
-<span class="x">        $name=strtolower($name);</span>
-<span class="x">        if(!isset($this-&gt;_e[$name]))</span>
-<span class="x">            $this-&gt;_e[$name]=new CList;</span>
-<span class="x">        // 返回对应事件的处理过程列表</span>
-<span class="x">        return $this-&gt;_e[$name];</span>
-<span class="x">    }</span>
-<span class="x">    else</span>
-<span class="x">        throw new CException(Yii::t(&#39;yii&#39;,&#39;Event &quot;{class}.{event}&quot; is not defined.&#39;,</span>
-<span class="x">            array(&#39;{class}&#39;=&gt;get_class($this), &#39;{event}&#39;=&gt;$name)));</span>
-<span class="x">}</span>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">getEventHandlers</span><span class="p">(</span><span class="nv">$name</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// 可以关注一下方法hasEvent</span>
+    <span class="c1">// 检查是否存在$name对应的事件</span>
+    <span class="k">if</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">hasEvent</span><span class="p">(</span><span class="nv">$name</span><span class="p">))</span>
+    <span class="p">{</span>
+        <span class="nv">$name</span><span class="o">=</span><span class="nb">strtolower</span><span class="p">(</span><span class="nv">$name</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_e</span><span class="p">[</span><span class="nv">$name</span><span class="p">]))</span>
+            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_e</span><span class="p">[</span><span class="nv">$name</span><span class="p">]</span><span class="o">=</span><span class="k">new</span> <span class="nx">CList</span><span class="p">;</span>
+        <span class="c1">// 返回对应事件的处理过程列表</span>
+        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_e</span><span class="p">[</span><span class="nv">$name</span><span class="p">];</span>
+    <span class="p">}</span>
+    <span class="k">else</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nx">CException</span><span class="p">(</span><span class="nx">Yii</span><span class="o">::</span><span class="na">t</span><span class="p">(</span><span class="s1">&#39;yii&#39;</span><span class="p">,</span><span class="s1">&#39;Event &quot;{class}.{event}&quot; is not defined.&#39;</span><span class="p">,</span>
+            <span class="k">array</span><span class="p">(</span><span class="s1">&#39;{class}&#39;</span><span class="o">=&gt;</span><span class="nb">get_class</span><span class="p">(</span><span class="nv">$this</span><span class="p">),</span> <span class="s1">&#39;{event}&#39;</span><span class="o">=&gt;</span><span class="nv">$name</span><span class="p">)));</span>
+<span class="p">}</span>
 </pre></div>
 
 
 <p>回到“方法<code>handleException</code>的关键部分”，在事件的handled属性没有置为true的情况下，会调用方法<code>getErrorHandler</code>取到内置的一个处理过程，该方法实现如下：</p>
-<div class="highlight"><pre><span class="x">public function getErrorHandler()</span>
-<span class="x">{</span>
-<span class="x">    // 获取名为errorHandler的组件，该组件默认会在CApplication类的registerCoreComponents方法中注册，</span>
-<span class="x">    // 见http://blog.xiayf.cn/2014/11/13/read-yii-code-3/一文的说明</span>
-<span class="x">    return $this-&gt;getComponent(&#39;errorHandler&#39;);</span>
-<span class="x">}</span>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">getErrorHandler</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="c1">// 获取名为errorHandler的组件，该组件默认会在CApplication类的registerCoreComponents方法中注册，</span>
+    <span class="c1">// 见http://blog.xiayf.cn/2014/11/13/read-yii-code-3/一文的说明</span>
+    <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">getComponent</span><span class="p">(</span><span class="s1">&#39;errorHandler&#39;</span><span class="p">);</span>
+<span class="p">}</span>
 </pre></div>
 
 
 <p>名为errorHandler的组件默认为类<code>CErrorHandler</code>（见文件<code>base/CErrorHandler.php</code>），当然也可以配置覆盖默认行为。</p>
 <p><code>CErrorHandler</code>类的<code>handle</code>方法实现如下：</p>
-<div class="highlight"><pre><span class="x">public function handle($event)</span>
-<span class="x">{</span>
-<span class="x">    // set event as handled to prevent it from being handled by other event handlers</span>
-<span class="x">    $event-&gt;handled=true;</span>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">handle</span><span class="p">(</span><span class="nv">$event</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// set event as handled to prevent it from being handled by other event handlers</span>
+    <span class="nv">$event</span><span class="o">-&gt;</span><span class="na">handled</span><span class="o">=</span><span class="k">true</span><span class="p">;</span>
 
-<span class="x">    if($this-&gt;discardOutput)</span>
-<span class="x">    {</span>
-<span class="x">        $gzHandler=false;</span>
-<span class="x">        foreach(ob_list_handlers() as $h)</span>
-<span class="x">        {</span>
-<span class="x">            if(strpos($h,&#39;gzhandler&#39;)!==false)</span>
-<span class="x">                $gzHandler=true;</span>
-<span class="x">        }</span>
-<span class="x">        // the following manual level counting is to deal with zlib.output_compression set to On</span>
-<span class="x">        // for an output buffer created by zlib.output_compression set to On ob_end_clean will fail</span>
-<span class="x">        for($level=ob_get_level();$level&gt;0;--$level)</span>
-<span class="x">        {</span>
-<span class="x">            if(!@ob_end_clean())</span>
-<span class="x">                ob_clean();</span>
-<span class="x">        }</span>
-<span class="x">        // reset headers in case there was an ob_start(&quot;ob_gzhandler&quot;) before</span>
-<span class="x">        if($gzHandler &amp;&amp; !headers_sent() &amp;&amp; ob_list_handlers()===array())</span>
-<span class="x">        {</span>
-<span class="x">            if(function_exists(&#39;header_remove&#39;)) // php &gt;= 5.3</span>
-<span class="x">            {</span>
-<span class="x">                header_remove(&#39;Vary&#39;);</span>
-<span class="x">                header_remove(&#39;Content-Encoding&#39;);</span>
-<span class="x">            }</span>
-<span class="x">            else</span>
-<span class="x">            {</span>
-<span class="x">                header(&#39;Vary:&#39;);</span>
-<span class="x">                header(&#39;Content-Encoding:&#39;);</span>
-<span class="x">            }</span>
-<span class="x">        }</span>
-<span class="x">    }</span>
+    <span class="k">if</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">discardOutput</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nv">$gzHandler</span><span class="o">=</span><span class="k">false</span><span class="p">;</span>
+        <span class="k">foreach</span><span class="p">(</span><span class="nb">ob_list_handlers</span><span class="p">()</span> <span class="k">as</span> <span class="nv">$h</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">if</span><span class="p">(</span><span class="nb">strpos</span><span class="p">(</span><span class="nv">$h</span><span class="p">,</span><span class="s1">&#39;gzhandler&#39;</span><span class="p">)</span><span class="o">!==</span><span class="k">false</span><span class="p">)</span>
+                <span class="nv">$gzHandler</span><span class="o">=</span><span class="k">true</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="c1">// the following manual level counting is to deal with zlib.output_compression set to On</span>
+        <span class="c1">// for an output buffer created by zlib.output_compression set to On ob_end_clean will fail</span>
+        <span class="k">for</span><span class="p">(</span><span class="nv">$level</span><span class="o">=</span><span class="nb">ob_get_level</span><span class="p">();</span><span class="nv">$level</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">;</span><span class="o">--</span><span class="nv">$level</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">if</span><span class="p">(</span><span class="o">!@</span><span class="nb">ob_end_clean</span><span class="p">())</span>
+                <span class="nb">ob_clean</span><span class="p">();</span>
+        <span class="p">}</span>
+        <span class="c1">// reset headers in case there was an ob_start(&quot;ob_gzhandler&quot;) before</span>
+        <span class="k">if</span><span class="p">(</span><span class="nv">$gzHandler</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nb">headers_sent</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="nb">ob_list_handlers</span><span class="p">()</span><span class="o">===</span><span class="k">array</span><span class="p">())</span>
+        <span class="p">{</span>
+            <span class="k">if</span><span class="p">(</span><span class="nb">function_exists</span><span class="p">(</span><span class="s1">&#39;header_remove&#39;</span><span class="p">))</span> <span class="c1">// php &gt;= 5.3</span>
+            <span class="p">{</span>
+                <span class="nb">header_remove</span><span class="p">(</span><span class="s1">&#39;Vary&#39;</span><span class="p">);</span>
+                <span class="nb">header_remove</span><span class="p">(</span><span class="s1">&#39;Content-Encoding&#39;</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="k">else</span>
+            <span class="p">{</span>
+                <span class="nb">header</span><span class="p">(</span><span class="s1">&#39;Vary:&#39;</span><span class="p">);</span>
+                <span class="nb">header</span><span class="p">(</span><span class="s1">&#39;Content-Encoding:&#39;</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
 
-<span class="x">    // 异常和错误都可以调用handle方法</span>
-<span class="x">    if($event instanceof CExceptionEvent)</span>
-<span class="x">        $this-&gt;handleException($event-&gt;exception);</span>
-<span class="x">    else // CErrorEvent</span>
-<span class="x">        $this-&gt;handleError($event);</span>
-<span class="x">}</span>
+    <span class="c1">// 异常和错误都可以调用handle方法</span>
+    <span class="k">if</span><span class="p">(</span><span class="nv">$event</span> <span class="nx">instanceof</span> <span class="nx">CExceptionEvent</span><span class="p">)</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">handleException</span><span class="p">(</span><span class="nv">$event</span><span class="o">-&gt;</span><span class="na">exception</span><span class="p">);</span>
+    <span class="k">else</span> <span class="c1">// CErrorEvent</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">handleError</span><span class="p">(</span><span class="nv">$event</span><span class="p">);</span>
+<span class="p">}</span>
 </pre></div>
 
 
 <p>其中方法<code>handleException</code>和<code>handleError</code>实现分别如下：</p>
-<div class="highlight"><pre><span class="x">protected function handleException($exception)</span>
-<span class="x">{</span>
-<span class="x">    $app=Yii::app();</span>
-<span class="x">    // 如果是Web应用</span>
-<span class="x">    if($app instanceof CWebApplication)</span>
-<span class="x">    {</span>
-<span class="x">        if(($trace=$this-&gt;getExactTrace($exception))===null)</span>
-<span class="x">        {</span>
-<span class="x">            $fileName=$exception-&gt;getFile();</span>
-<span class="x">            $errorLine=$exception-&gt;getLine();</span>
-<span class="x">        }</span>
-<span class="x">        else</span>
-<span class="x">        {</span>
-<span class="x">            $fileName=$trace[&#39;file&#39;];</span>
-<span class="x">            $errorLine=$trace[&#39;line&#39;];</span>
-<span class="x">        }</span>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="k">protected</span> <span class="k">function</span> <span class="nf">handleException</span><span class="p">(</span><span class="nv">$exception</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="nv">$app</span><span class="o">=</span><span class="nx">Yii</span><span class="o">::</span><span class="na">app</span><span class="p">();</span>
+    <span class="c1">// 如果是Web应用</span>
+    <span class="k">if</span><span class="p">(</span><span class="nv">$app</span> <span class="nx">instanceof</span> <span class="nx">CWebApplication</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span><span class="p">((</span><span class="nv">$trace</span><span class="o">=</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">getExactTrace</span><span class="p">(</span><span class="nv">$exception</span><span class="p">))</span><span class="o">===</span><span class="k">null</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="nv">$fileName</span><span class="o">=</span><span class="nv">$exception</span><span class="o">-&gt;</span><span class="na">getFile</span><span class="p">();</span>
+            <span class="nv">$errorLine</span><span class="o">=</span><span class="nv">$exception</span><span class="o">-&gt;</span><span class="na">getLine</span><span class="p">();</span>
+        <span class="p">}</span>
+        <span class="k">else</span>
+        <span class="p">{</span>
+            <span class="nv">$fileName</span><span class="o">=</span><span class="nv">$trace</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">];</span>
+            <span class="nv">$errorLine</span><span class="o">=</span><span class="nv">$trace</span><span class="p">[</span><span class="s1">&#39;line&#39;</span><span class="p">];</span>
+        <span class="p">}</span>
 
-<span class="x">        $trace = $exception-&gt;getTrace();</span>
+        <span class="nv">$trace</span> <span class="o">=</span> <span class="nv">$exception</span><span class="o">-&gt;</span><span class="na">getTrace</span><span class="p">();</span>
 
-<span class="x">        foreach($trace as $i=&gt;$t)</span>
-<span class="x">        {</span>
-<span class="x">            if(!isset($t[&#39;file&#39;]))</span>
-<span class="x">                $trace[$i][&#39;file&#39;]=&#39;unknown&#39;;</span>
+        <span class="k">foreach</span><span class="p">(</span><span class="nv">$trace</span> <span class="k">as</span> <span class="nv">$i</span><span class="o">=&gt;</span><span class="nv">$t</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]))</span>
+                <span class="nv">$trace</span><span class="p">[</span><span class="nv">$i</span><span class="p">][</span><span class="s1">&#39;file&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;unknown&#39;</span><span class="p">;</span>
 
-<span class="x">            if(!isset($t[&#39;line&#39;]))</span>
-<span class="x">                $trace[$i][&#39;line&#39;]=0;</span>
+            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;line&#39;</span><span class="p">]))</span>
+                <span class="nv">$trace</span><span class="p">[</span><span class="nv">$i</span><span class="p">][</span><span class="s1">&#39;line&#39;</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
 
-<span class="x">            if(!isset($t[&#39;function&#39;]))</span>
-<span class="x">                $trace[$i][&#39;function&#39;]=&#39;unknown&#39;;</span>
+            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;function&#39;</span><span class="p">]))</span>
+                <span class="nv">$trace</span><span class="p">[</span><span class="nv">$i</span><span class="p">][</span><span class="s1">&#39;function&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;unknown&#39;</span><span class="p">;</span>
 
-<span class="x">            unset($trace[$i][&#39;object&#39;]);</span>
-<span class="x">        }</span>
+            <span class="nb">unset</span><span class="p">(</span><span class="nv">$trace</span><span class="p">[</span><span class="nv">$i</span><span class="p">][</span><span class="s1">&#39;object&#39;</span><span class="p">]);</span>
+        <span class="p">}</span>
 
-<span class="x">        $this-&gt;_error=$data=array(</span>
-<span class="x">            // 如果抛出的异常是CHttpException类型，使用该异常自身的statusCode作为HTTP响应码，否则HTTP响应码为500</span>
-<span class="x">            // 所以在有意让Yii框架来处理抛出的异常时，需要明确指定异常的类型！</span>
-<span class="x">            &#39;code&#39;=&gt;($exception instanceof CHttpException)?$exception-&gt;statusCode:500,</span>
-<span class="x">            &#39;type&#39;=&gt;get_class($exception),</span>
-<span class="x">            &#39;errorCode&#39;=&gt;$exception-&gt;getCode(),</span>
-<span class="x">            &#39;message&#39;=&gt;$exception-&gt;getMessage(),</span>
-<span class="x">            &#39;file&#39;=&gt;$fileName,</span>
-<span class="x">            &#39;line&#39;=&gt;$errorLine,</span>
-<span class="x">            &#39;trace&#39;=&gt;$exception-&gt;getTraceAsString(),</span>
-<span class="x">            &#39;traces&#39;=&gt;$trace,</span>
-<span class="x">        );</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_error</span><span class="o">=</span><span class="nv">$data</span><span class="o">=</span><span class="k">array</span><span class="p">(</span>
+            <span class="c1">// 如果抛出的异常是CHttpException类型，使用该异常自身的statusCode作为HTTP响应码，否则HTTP响应码为500</span>
+            <span class="c1">// 所以在有意让Yii框架来处理抛出的异常时，需要明确指定异常的类型！</span>
+            <span class="s1">&#39;code&#39;</span><span class="o">=&gt;</span><span class="p">(</span><span class="nv">$exception</span> <span class="nx">instanceof</span> <span class="nx">CHttpException</span><span class="p">)</span><span class="o">?</span><span class="nv">$exception</span><span class="o">-&gt;</span><span class="na">statusCode</span><span class="o">:</span><span class="mi">500</span><span class="p">,</span>
+            <span class="s1">&#39;type&#39;</span><span class="o">=&gt;</span><span class="nb">get_class</span><span class="p">(</span><span class="nv">$exception</span><span class="p">),</span>
+            <span class="s1">&#39;errorCode&#39;</span><span class="o">=&gt;</span><span class="nv">$exception</span><span class="o">-&gt;</span><span class="na">getCode</span><span class="p">(),</span>
+            <span class="s1">&#39;message&#39;</span><span class="o">=&gt;</span><span class="nv">$exception</span><span class="o">-&gt;</span><span class="na">getMessage</span><span class="p">(),</span>
+            <span class="s1">&#39;file&#39;</span><span class="o">=&gt;</span><span class="nv">$fileName</span><span class="p">,</span>
+            <span class="s1">&#39;line&#39;</span><span class="o">=&gt;</span><span class="nv">$errorLine</span><span class="p">,</span>
+            <span class="s1">&#39;trace&#39;</span><span class="o">=&gt;</span><span class="nv">$exception</span><span class="o">-&gt;</span><span class="na">getTraceAsString</span><span class="p">(),</span>
+            <span class="s1">&#39;traces&#39;</span><span class="o">=&gt;</span><span class="nv">$trace</span><span class="p">,</span>
+        <span class="p">);</span>
 
-<span class="x">        if(!headers_sent())</span>
-<span class="x">            header(&quot;HTTP/1.0 {$data[&#39;code&#39;]} &quot;.$this-&gt;getHttpHeader($data[&#39;code&#39;], get_class($exception)));</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nb">headers_sent</span><span class="p">())</span>
+            <span class="nb">header</span><span class="p">(</span><span class="s2">&quot;HTTP/1.0 </span><span class="si">{</span><span class="nv">$data</span><span class="p">[</span><span class="s1">&#39;code&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> &quot;</span><span class="o">.</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">getHttpHeader</span><span class="p">(</span><span class="nv">$data</span><span class="p">[</span><span class="s1">&#39;code&#39;</span><span class="p">],</span> <span class="nb">get_class</span><span class="p">(</span><span class="nv">$exception</span><span class="p">)));</span>
 
-<span class="x">        // 判断异常类型</span>
-<span class="x">        // 对于CHttpException，也按照error来处理</span>
-<span class="x">        if($exception instanceof CHttpException || !YII_DEBUG)</span>
-<span class="x">            $this-&gt;render(&#39;error&#39;,$data);</span>
-<span class="x">        else</span>
-<span class="x">        {</span>
-<span class="x">            if($this-&gt;isAjaxRequest())</span>
-<span class="x">                $app-&gt;displayException($exception);</span>
-<span class="x">            else</span>
-<span class="x">                $this-&gt;render(&#39;exception&#39;,$data);</span>
-<span class="x">        }</span>
-<span class="x">    }</span>
-<span class="x">    // 如果是终端应用（console application），则直接展示异常</span>
-<span class="x">    else</span>
-<span class="x">        $app-&gt;displayException($exception);</span>
-<span class="x">}</span>
+        <span class="c1">// 判断异常类型</span>
+        <span class="c1">// 对于CHttpException，也按照error来处理</span>
+        <span class="k">if</span><span class="p">(</span><span class="nv">$exception</span> <span class="nx">instanceof</span> <span class="nx">CHttpException</span> <span class="o">||</span> <span class="o">!</span><span class="nx">YII_DEBUG</span><span class="p">)</span>
+            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">render</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span><span class="nv">$data</span><span class="p">);</span>
+        <span class="k">else</span>
+        <span class="p">{</span>
+            <span class="k">if</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">isAjaxRequest</span><span class="p">())</span>
+                <span class="nv">$app</span><span class="o">-&gt;</span><span class="na">displayException</span><span class="p">(</span><span class="nv">$exception</span><span class="p">);</span>
+            <span class="k">else</span>
+                <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">render</span><span class="p">(</span><span class="s1">&#39;exception&#39;</span><span class="p">,</span><span class="nv">$data</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="c1">// 如果是终端应用（console application），则直接展示异常</span>
+    <span class="k">else</span>
+        <span class="nv">$app</span><span class="o">-&gt;</span><span class="na">displayException</span><span class="p">(</span><span class="nv">$exception</span><span class="p">);</span>
+<span class="p">}</span>
 </pre></div>
 
 
-<div class="highlight"><pre><span class="x">protected function handleError($event)</span>
-<span class="x">{</span>
-<span class="x">    $trace=debug_backtrace();</span>
-<span class="x">    // skip the first 3 stacks as they do not tell the error position</span>
-<span class="x">    if(count($trace)&gt;3)</span>
-<span class="x">        $trace=array_slice($trace,3);</span>
-<span class="x">    $traceString=&#39;&#39;;</span>
-<span class="x">    foreach($trace as $i=&gt;$t)</span>
-<span class="x">    {</span>
-<span class="x">        if(!isset($t[&#39;file&#39;]))</span>
-<span class="x">            $trace[$i][&#39;file&#39;]=&#39;unknown&#39;;</span>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="k">protected</span> <span class="k">function</span> <span class="nf">handleError</span><span class="p">(</span><span class="nv">$event</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="nv">$trace</span><span class="o">=</span><span class="nb">debug_backtrace</span><span class="p">();</span>
+    <span class="c1">// skip the first 3 stacks as they do not tell the error position</span>
+    <span class="k">if</span><span class="p">(</span><span class="nb">count</span><span class="p">(</span><span class="nv">$trace</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">3</span><span class="p">)</span>
+        <span class="nv">$trace</span><span class="o">=</span><span class="nb">array_slice</span><span class="p">(</span><span class="nv">$trace</span><span class="p">,</span><span class="mi">3</span><span class="p">);</span>
+    <span class="nv">$traceString</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">;</span>
+    <span class="k">foreach</span><span class="p">(</span><span class="nv">$trace</span> <span class="k">as</span> <span class="nv">$i</span><span class="o">=&gt;</span><span class="nv">$t</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]))</span>
+            <span class="nv">$trace</span><span class="p">[</span><span class="nv">$i</span><span class="p">][</span><span class="s1">&#39;file&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;unknown&#39;</span><span class="p">;</span>
 
-<span class="x">        if(!isset($t[&#39;line&#39;]))</span>
-<span class="x">            $trace[$i][&#39;line&#39;]=0;</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;line&#39;</span><span class="p">]))</span>
+            <span class="nv">$trace</span><span class="p">[</span><span class="nv">$i</span><span class="p">][</span><span class="s1">&#39;line&#39;</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
 
-<span class="x">        if(!isset($t[&#39;function&#39;]))</span>
-<span class="x">            $trace[$i][&#39;function&#39;]=&#39;unknown&#39;;</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;function&#39;</span><span class="p">]))</span>
+            <span class="nv">$trace</span><span class="p">[</span><span class="nv">$i</span><span class="p">][</span><span class="s1">&#39;function&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;unknown&#39;</span><span class="p">;</span>
 
-<span class="x">        $traceString.=&quot;#$i {$trace[$i][&#39;file&#39;]}({$trace[$i][&#39;line&#39;]}): &quot;;</span>
-<span class="x">        if(isset($t[&#39;object&#39;]) &amp;&amp; is_object($t[&#39;object&#39;]))</span>
-<span class="x">            $traceString.=get_class($t[&#39;object&#39;]).&#39;-&gt;&#39;;</span>
-<span class="x">        $traceString.=&quot;{$trace[$i][&#39;function&#39;]}()\n&quot;;</span>
+        <span class="nv">$traceString</span><span class="o">.=</span><span class="s2">&quot;#</span><span class="si">$i</span><span class="s2"> </span><span class="si">{</span><span class="nv">$trace</span><span class="p">[</span><span class="nv">$i</span><span class="p">][</span><span class="s1">&#39;file&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="nv">$trace</span><span class="p">[</span><span class="nv">$i</span><span class="p">][</span><span class="s1">&#39;line&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">): &quot;</span><span class="p">;</span>
+        <span class="k">if</span><span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;object&#39;</span><span class="p">])</span> <span class="o">&amp;&amp;</span> <span class="nb">is_object</span><span class="p">(</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;object&#39;</span><span class="p">]))</span>
+            <span class="nv">$traceString</span><span class="o">.=</span><span class="nb">get_class</span><span class="p">(</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;object&#39;</span><span class="p">])</span><span class="o">.</span><span class="s1">&#39;-&gt;&#39;</span><span class="p">;</span>
+        <span class="nv">$traceString</span><span class="o">.=</span><span class="s2">&quot;</span><span class="si">{</span><span class="nv">$trace</span><span class="p">[</span><span class="nv">$i</span><span class="p">][</span><span class="s1">&#39;function&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">()</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
 
-<span class="x">        unset($trace[$i][&#39;object&#39;]);</span>
-<span class="x">    }</span>
+        <span class="nb">unset</span><span class="p">(</span><span class="nv">$trace</span><span class="p">[</span><span class="nv">$i</span><span class="p">][</span><span class="s1">&#39;object&#39;</span><span class="p">]);</span>
+    <span class="p">}</span>
 
-<span class="x">    $app=Yii::app();</span>
-<span class="x">    // 如果是Web应用</span>
-<span class="x">    if($app instanceof CWebApplication)</span>
-<span class="x">    {</span>
-<span class="x">        // 判断错误类型</span>
-<span class="x">        switch($event-&gt;code)</span>
-<span class="x">        {</span>
-<span class="x">            case E_WARNING:</span>
-<span class="x">                $type = &#39;PHP warning&#39;;</span>
-<span class="x">                break;</span>
-<span class="x">            case E_NOTICE:</span>
-<span class="x">                $type = &#39;PHP notice&#39;;</span>
-<span class="x">                break;</span>
-<span class="x">            case E_USER_ERROR:</span>
-<span class="x">                $type = &#39;User error&#39;;</span>
-<span class="x">                break;</span>
-<span class="x">            case E_USER_WARNING:</span>
-<span class="x">                $type = &#39;User warning&#39;;</span>
-<span class="x">                break;</span>
-<span class="x">            case E_USER_NOTICE:</span>
-<span class="x">                $type = &#39;User notice&#39;;</span>
-<span class="x">                break;</span>
-<span class="x">            case E_RECOVERABLE_ERROR:</span>
-<span class="x">                $type = &#39;Recoverable error&#39;;</span>
-<span class="x">                break;</span>
-<span class="x">            default:</span>
-<span class="x">                $type = &#39;PHP error&#39;;</span>
-<span class="x">        }</span>
-<span class="x">        // HTTP响应码为500</span>
-<span class="x">        $this-&gt;_error=$data=array(</span>
-<span class="x">            &#39;code&#39;=&gt;500,</span>
-<span class="x">            &#39;type&#39;=&gt;$type,</span>
-<span class="x">            &#39;message&#39;=&gt;$event-&gt;message,</span>
-<span class="x">            &#39;file&#39;=&gt;$event-&gt;file,</span>
-<span class="x">            &#39;line&#39;=&gt;$event-&gt;line,</span>
-<span class="x">            &#39;trace&#39;=&gt;$traceString,</span>
-<span class="x">            &#39;traces&#39;=&gt;$trace,</span>
-<span class="x">        );</span>
-<span class="x">        if(!headers_sent())</span>
-<span class="x">            header(&quot;HTTP/1.0 500 Internal Server Error&quot;);</span>
-<span class="x">        if($this-&gt;isAjaxRequest())</span>
-<span class="x">            $app-&gt;displayError($event-&gt;code,$event-&gt;message,$event-&gt;file,$event-&gt;line);</span>
-<span class="x">        elseif(YII_DEBUG)</span>
-<span class="x">            // 开了debug，则作为exception来处理</span>
-<span class="x">            $this-&gt;render(&#39;exception&#39;,$data);</span>
-<span class="x">        else</span>
-<span class="x">            $this-&gt;render(&#39;error&#39;,$data);</span>
-<span class="x">    }</span>
-<span class="x">    else</span>
-<span class="x">        $app-&gt;displayError($event-&gt;code,$event-&gt;message,$event-&gt;file,$event-&gt;line);</span>
-<span class="x">}</span>
+    <span class="nv">$app</span><span class="o">=</span><span class="nx">Yii</span><span class="o">::</span><span class="na">app</span><span class="p">();</span>
+    <span class="c1">// 如果是Web应用</span>
+    <span class="k">if</span><span class="p">(</span><span class="nv">$app</span> <span class="nx">instanceof</span> <span class="nx">CWebApplication</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">// 判断错误类型</span>
+        <span class="k">switch</span><span class="p">(</span><span class="nv">$event</span><span class="o">-&gt;</span><span class="na">code</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">case</span> <span class="k">E_WARNING</span><span class="o">:</span>
+                <span class="nv">$type</span> <span class="o">=</span> <span class="s1">&#39;PHP warning&#39;</span><span class="p">;</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="k">case</span> <span class="nx">E_NOTICE</span><span class="o">:</span>
+                <span class="nv">$type</span> <span class="o">=</span> <span class="s1">&#39;PHP notice&#39;</span><span class="p">;</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="k">case</span> <span class="nx">E_USER_ERROR</span><span class="o">:</span>
+                <span class="nv">$type</span> <span class="o">=</span> <span class="s1">&#39;User error&#39;</span><span class="p">;</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="k">case</span> <span class="nx">E_USER_WARNING</span><span class="o">:</span>
+                <span class="nv">$type</span> <span class="o">=</span> <span class="s1">&#39;User warning&#39;</span><span class="p">;</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="k">case</span> <span class="nx">E_USER_NOTICE</span><span class="o">:</span>
+                <span class="nv">$type</span> <span class="o">=</span> <span class="s1">&#39;User notice&#39;</span><span class="p">;</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="k">case</span> <span class="nx">E_RECOVERABLE_ERROR</span><span class="o">:</span>
+                <span class="nv">$type</span> <span class="o">=</span> <span class="s1">&#39;Recoverable error&#39;</span><span class="p">;</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="k">default</span><span class="o">:</span>
+                <span class="nv">$type</span> <span class="o">=</span> <span class="s1">&#39;PHP error&#39;</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="c1">// HTTP响应码为500</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_error</span><span class="o">=</span><span class="nv">$data</span><span class="o">=</span><span class="k">array</span><span class="p">(</span>
+            <span class="s1">&#39;code&#39;</span><span class="o">=&gt;</span><span class="mi">500</span><span class="p">,</span>
+            <span class="s1">&#39;type&#39;</span><span class="o">=&gt;</span><span class="nv">$type</span><span class="p">,</span>
+            <span class="s1">&#39;message&#39;</span><span class="o">=&gt;</span><span class="nv">$event</span><span class="o">-&gt;</span><span class="na">message</span><span class="p">,</span>
+            <span class="s1">&#39;file&#39;</span><span class="o">=&gt;</span><span class="nv">$event</span><span class="o">-&gt;</span><span class="na">file</span><span class="p">,</span>
+            <span class="s1">&#39;line&#39;</span><span class="o">=&gt;</span><span class="nv">$event</span><span class="o">-&gt;</span><span class="na">line</span><span class="p">,</span>
+            <span class="s1">&#39;trace&#39;</span><span class="o">=&gt;</span><span class="nv">$traceString</span><span class="p">,</span>
+            <span class="s1">&#39;traces&#39;</span><span class="o">=&gt;</span><span class="nv">$trace</span><span class="p">,</span>
+        <span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nb">headers_sent</span><span class="p">())</span>
+            <span class="nb">header</span><span class="p">(</span><span class="s2">&quot;HTTP/1.0 500 Internal Server Error&quot;</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">isAjaxRequest</span><span class="p">())</span>
+            <span class="nv">$app</span><span class="o">-&gt;</span><span class="na">displayError</span><span class="p">(</span><span class="nv">$event</span><span class="o">-&gt;</span><span class="na">code</span><span class="p">,</span><span class="nv">$event</span><span class="o">-&gt;</span><span class="na">message</span><span class="p">,</span><span class="nv">$event</span><span class="o">-&gt;</span><span class="na">file</span><span class="p">,</span><span class="nv">$event</span><span class="o">-&gt;</span><span class="na">line</span><span class="p">);</span>
+        <span class="k">elseif</span><span class="p">(</span><span class="nx">YII_DEBUG</span><span class="p">)</span>
+            <span class="c1">// 开了debug，则作为exception来处理</span>
+            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">render</span><span class="p">(</span><span class="s1">&#39;exception&#39;</span><span class="p">,</span><span class="nv">$data</span><span class="p">);</span>
+        <span class="k">else</span>
+            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">render</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span><span class="nv">$data</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">else</span>
+        <span class="nv">$app</span><span class="o">-&gt;</span><span class="na">displayError</span><span class="p">(</span><span class="nv">$event</span><span class="o">-&gt;</span><span class="na">code</span><span class="p">,</span><span class="nv">$event</span><span class="o">-&gt;</span><span class="na">message</span><span class="p">,</span><span class="nv">$event</span><span class="o">-&gt;</span><span class="na">file</span><span class="p">,</span><span class="nv">$event</span><span class="o">-&gt;</span><span class="na">line</span><span class="p">);</span>
+<span class="p">}</span>
 </pre></div>
 
 
 <p>上面的代码最终显示异常/错误信息，是通过方法<code>render</code>、以及应用实例的<code>displayError</code>和<code>displayException</code>方法来完成。</p>
 <p><strong>render</strong></p>
-<div class="highlight"><pre><span class="x">protected function render($view,$data)</span>
-<span class="x">{</span>
-<span class="x">    // 注意这个地方，如果配置了errorAction，则可以指定目标controller的某个action来处理错误</span>
-<span class="x">    /*</span>
-<span class="x">     * 配置方式：</span>
-<span class="x">     * &#39;components&#39; =&gt; array(</span>
-<span class="x">     *      &#39;errorHandler&#39; =&gt; array(</span>
-<span class="x">     *          &#39;errorAction&#39;=&gt;&#39;api/index/error&#39;,</span>
-<span class="x">     *     ),</span>
-<span class="x">     *     ...</span>
-<span class="x">     */</span>
-<span class="x">    if($view===&#39;error&#39; &amp;&amp; $this-&gt;errorAction!==null)</span>
-<span class="x">        Yii::app()-&gt;runController($this-&gt;errorAction);</span>
-<span class="x">    else</span>
-<span class="x">    {</span>
-<span class="x">        // additional information to be passed to view</span>
-<span class="x">        $data[&#39;version&#39;]=$this-&gt;getVersionInfo();</span>
-<span class="x">        $data[&#39;time&#39;]=time();</span>
-<span class="x">        $data[&#39;admin&#39;]=$this-&gt;adminInfo;</span>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="k">protected</span> <span class="k">function</span> <span class="nf">render</span><span class="p">(</span><span class="nv">$view</span><span class="p">,</span><span class="nv">$data</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// 注意这个地方，如果配置了errorAction，则可以指定目标controller的某个action来处理错误</span>
+    <span class="cm">/*</span>
+<span class="cm">     * 配置方式：</span>
+<span class="cm">     * &#39;components&#39; =&gt; array(</span>
+<span class="cm">     *      &#39;errorHandler&#39; =&gt; array(</span>
+<span class="cm">     *          &#39;errorAction&#39;=&gt;&#39;api/index/error&#39;,</span>
+<span class="cm">     *     ),</span>
+<span class="cm">     *     ...</span>
+<span class="cm">     */</span>
+    <span class="k">if</span><span class="p">(</span><span class="nv">$view</span><span class="o">===</span><span class="s1">&#39;error&#39;</span> <span class="o">&amp;&amp;</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">errorAction</span><span class="o">!==</span><span class="k">null</span><span class="p">)</span>
+        <span class="nx">Yii</span><span class="o">::</span><span class="na">app</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">runController</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">errorAction</span><span class="p">);</span>
+    <span class="k">else</span>
+    <span class="p">{</span>
+        <span class="c1">// additional information to be passed to view</span>
+        <span class="nv">$data</span><span class="p">[</span><span class="s1">&#39;version&#39;</span><span class="p">]</span><span class="o">=</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">getVersionInfo</span><span class="p">();</span>
+        <span class="nv">$data</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">=</span><span class="nb">time</span><span class="p">();</span>
+        <span class="nv">$data</span><span class="p">[</span><span class="s1">&#39;admin&#39;</span><span class="p">]</span><span class="o">=</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">adminInfo</span><span class="p">;</span>
 
-<span class="x">        // 看看下面getViewFile的实现</span>
-<span class="x">        include($this-&gt;getViewFile($view,$data[&#39;code&#39;]));</span>
-<span class="x">    }</span>
-<span class="x">}</span>
+        <span class="c1">// 看看下面getViewFile的实现</span>
+        <span class="k">include</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">getViewFile</span><span class="p">(</span><span class="nv">$view</span><span class="p">,</span><span class="nv">$data</span><span class="p">[</span><span class="s1">&#39;code&#39;</span><span class="p">]));</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-<span class="x">protected function getViewFile($view,$code)</span>
-<span class="x">{</span>
-<span class="x">    $viewPaths=array(</span>
-<span class="x">        Yii::app()-&gt;getTheme()===null ? null :  Yii::app()-&gt;getTheme()-&gt;getSystemViewPath(),</span>
-<span class="x">        Yii::app() instanceof CWebApplication ? Yii::app()-&gt;getSystemViewPath() : null,</span>
-<span class="x">        YII_PATH.DIRECTORY_SEPARATOR.&#39;views&#39;,</span>
-<span class="x">    );</span>
+<span class="k">protected</span> <span class="k">function</span> <span class="nf">getViewFile</span><span class="p">(</span><span class="nv">$view</span><span class="p">,</span><span class="nv">$code</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="nv">$viewPaths</span><span class="o">=</span><span class="k">array</span><span class="p">(</span>
+        <span class="nx">Yii</span><span class="o">::</span><span class="na">app</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">getTheme</span><span class="p">()</span><span class="o">===</span><span class="k">null</span> <span class="o">?</span> <span class="k">null</span> <span class="o">:</span>  <span class="nx">Yii</span><span class="o">::</span><span class="na">app</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">getTheme</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">getSystemViewPath</span><span class="p">(),</span>
+        <span class="nx">Yii</span><span class="o">::</span><span class="na">app</span><span class="p">()</span> <span class="nx">instanceof</span> <span class="nx">CWebApplication</span> <span class="o">?</span> <span class="nx">Yii</span><span class="o">::</span><span class="na">app</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">getSystemViewPath</span><span class="p">()</span> <span class="o">:</span> <span class="k">null</span><span class="p">,</span>
+        <span class="nx">YII_PATH</span><span class="o">.</span><span class="nx">DIRECTORY_SEPARATOR</span><span class="o">.</span><span class="s1">&#39;views&#39;</span><span class="p">,</span>
+    <span class="p">);</span>
 
-<span class="x">    foreach($viewPaths as $i=&gt;$viewPath)</span>
-<span class="x">    {</span>
-<span class="x">        if($viewPath!==null)</span>
-<span class="x">        {</span>
-<span class="x">             // 看看下面getViewFileInternal的实现</span>
-<span class="x">             $viewFile=$this-&gt;getViewFileInternal($viewPath,$view,$code,$i===2?&#39;en_us&#39;:null);</span>
-<span class="x">             if(is_file($viewFile))</span>
-<span class="x">                 return $viewFile;</span>
-<span class="x">        }</span>
-<span class="x">    }</span>
-<span class="x">}</span>
+    <span class="k">foreach</span><span class="p">(</span><span class="nv">$viewPaths</span> <span class="k">as</span> <span class="nv">$i</span><span class="o">=&gt;</span><span class="nv">$viewPath</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="nv">$viewPath</span><span class="o">!==</span><span class="k">null</span><span class="p">)</span>
+        <span class="p">{</span>
+             <span class="c1">// 看看下面getViewFileInternal的实现</span>
+             <span class="nv">$viewFile</span><span class="o">=</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">getViewFileInternal</span><span class="p">(</span><span class="nv">$viewPath</span><span class="p">,</span><span class="nv">$view</span><span class="p">,</span><span class="nv">$code</span><span class="p">,</span><span class="nv">$i</span><span class="o">===</span><span class="mi">2</span><span class="o">?</span><span class="s1">&#39;en_us&#39;</span><span class="o">:</span><span class="k">null</span><span class="p">);</span>
+             <span class="k">if</span><span class="p">(</span><span class="nb">is_file</span><span class="p">(</span><span class="nv">$viewFile</span><span class="p">))</span>
+                 <span class="k">return</span> <span class="nv">$viewFile</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-<span class="x">protected function getViewFileInternal($viewPath,$view,$code,$srcLanguage=null)</span>
-<span class="x">{</span>
-<span class="x">    $app=Yii::app();</span>
-<span class="x">    if($view===&#39;error&#39;)</span>
-<span class="x">    {</span>
-<span class="x">        $viewFile=$app-&gt;findLocalizedFile($viewPath.DIRECTORY_SEPARATOR.&quot;error{$code}.php&quot;,$srcLanguage);</span>
-<span class="x">        if(!is_file($viewFile))</span>
-<span class="x">            $viewFile=$app-&gt;findLocalizedFile($viewPath.DIRECTORY_SEPARATOR.&#39;error.php&#39;,$srcLanguage);</span>
-<span class="x">    }</span>
-<span class="x">    else</span>
-<span class="x">        $viewFile=$viewPath.DIRECTORY_SEPARATOR.&quot;exception.php&quot;;</span>
-<span class="x">    return $viewFile;</span>
-<span class="x">}</span>
+<span class="k">protected</span> <span class="k">function</span> <span class="nf">getViewFileInternal</span><span class="p">(</span><span class="nv">$viewPath</span><span class="p">,</span><span class="nv">$view</span><span class="p">,</span><span class="nv">$code</span><span class="p">,</span><span class="nv">$srcLanguage</span><span class="o">=</span><span class="k">null</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="nv">$app</span><span class="o">=</span><span class="nx">Yii</span><span class="o">::</span><span class="na">app</span><span class="p">();</span>
+    <span class="k">if</span><span class="p">(</span><span class="nv">$view</span><span class="o">===</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="nv">$viewFile</span><span class="o">=</span><span class="nv">$app</span><span class="o">-&gt;</span><span class="na">findLocalizedFile</span><span class="p">(</span><span class="nv">$viewPath</span><span class="o">.</span><span class="nx">DIRECTORY_SEPARATOR</span><span class="o">.</span><span class="s2">&quot;error</span><span class="si">{</span><span class="nv">$code</span><span class="si">}</span><span class="s2">.php&quot;</span><span class="p">,</span><span class="nv">$srcLanguage</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nb">is_file</span><span class="p">(</span><span class="nv">$viewFile</span><span class="p">))</span>
+            <span class="nv">$viewFile</span><span class="o">=</span><span class="nv">$app</span><span class="o">-&gt;</span><span class="na">findLocalizedFile</span><span class="p">(</span><span class="nv">$viewPath</span><span class="o">.</span><span class="nx">DIRECTORY_SEPARATOR</span><span class="o">.</span><span class="s1">&#39;error.php&#39;</span><span class="p">,</span><span class="nv">$srcLanguage</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">else</span>
+        <span class="nv">$viewFile</span><span class="o">=</span><span class="nv">$viewPath</span><span class="o">.</span><span class="nx">DIRECTORY_SEPARATOR</span><span class="o">.</span><span class="s2">&quot;exception.php&quot;</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nv">$viewFile</span><span class="p">;</span>
+<span class="p">}</span>
 </pre></div>
 
 
@@ -614,58 +628,60 @@
 <p>对于exception类型信息，则是查找<code>exception.php</code>文件。</p>
 <p>所以如果应用开发过程需要定制4xx、5xx的错误页面，可以在<code>WebRoot/protected/views/system</code>或<code>WebRoot/themes/ThemeName/views/system</code>放置对应的错误模板页面。</p>
 <p><strong>displayError</strong></p>
-<div class="highlight"><pre><span class="x">public function displayError($code,$message,$file,$line)</span>
-<span class="x">{</span>
-<span class="x">    if(YII_DEBUG)</span>
-<span class="x">    {</span>
-<span class="x">        echo &quot;&lt;h1&gt;PHP Error [$code]&lt;/h1&gt;\n&quot;;</span>
-<span class="x">        echo &quot;&lt;p&gt;$message ($file:$line)&lt;/p&gt;\n&quot;;</span>
-<span class="x">        echo &#39;&lt;pre&gt;&#39;;</span>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">displayError</span><span class="p">(</span><span class="nv">$code</span><span class="p">,</span><span class="nv">$message</span><span class="p">,</span><span class="nv">$file</span><span class="p">,</span><span class="nv">$line</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">YII_DEBUG</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">echo</span> <span class="s2">&quot;&lt;h1&gt;PHP Error [</span><span class="si">$code</span><span class="s2">]&lt;/h1&gt;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+        <span class="k">echo</span> <span class="s2">&quot;&lt;p&gt;</span><span class="si">$message</span><span class="s2"> (</span><span class="si">$file</span><span class="s2">:</span><span class="si">$line</span><span class="s2">)&lt;/p&gt;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+        <span class="k">echo</span> <span class="s1">&#39;&lt;pre&gt;&#39;</span><span class="p">;</span>
 
-<span class="x">        $trace=debug_backtrace();</span>
-<span class="x">        // skip the first 3 stacks as they do not tell the error position</span>
-<span class="x">        if(count($trace)&gt;3)</span>
-<span class="x">            $trace=array_slice($trace,3);</span>
-<span class="x">        foreach($trace as $i=&gt;$t)</span>
-<span class="x">        {</span>
-<span class="x">            if(!isset($t[&#39;file&#39;]))</span>
-<span class="x">                $t[&#39;file&#39;]=&#39;unknown&#39;;</span>
-<span class="x">            if(!isset($t[&#39;line&#39;]))</span>
-<span class="x">                $t[&#39;line&#39;]=0;</span>
-<span class="x">            if(!isset($t[&#39;function&#39;]))</span>
-<span class="x">                $t[&#39;function&#39;]=&#39;unknown&#39;;</span>
-<span class="x">            echo &quot;#$i {$t[&#39;file&#39;]}({$t[&#39;line&#39;]}): &quot;;</span>
-<span class="x">            if(isset($t[&#39;object&#39;]) &amp;&amp; is_object($t[&#39;object&#39;]))</span>
-<span class="x">                echo get_class($t[&#39;object&#39;]).&#39;-&gt;&#39;;</span>
-<span class="x">            echo &quot;{$t[&#39;function&#39;]}()\n&quot;;</span>
-<span class="x">        }</span>
+        <span class="nv">$trace</span><span class="o">=</span><span class="nb">debug_backtrace</span><span class="p">();</span>
+        <span class="c1">// skip the first 3 stacks as they do not tell the error position</span>
+        <span class="k">if</span><span class="p">(</span><span class="nb">count</span><span class="p">(</span><span class="nv">$trace</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">3</span><span class="p">)</span>
+            <span class="nv">$trace</span><span class="o">=</span><span class="nb">array_slice</span><span class="p">(</span><span class="nv">$trace</span><span class="p">,</span><span class="mi">3</span><span class="p">);</span>
+        <span class="k">foreach</span><span class="p">(</span><span class="nv">$trace</span> <span class="k">as</span> <span class="nv">$i</span><span class="o">=&gt;</span><span class="nv">$t</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]))</span>
+                <span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;unknown&#39;</span><span class="p">;</span>
+            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;line&#39;</span><span class="p">]))</span>
+                <span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;line&#39;</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;function&#39;</span><span class="p">]))</span>
+                <span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;function&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;unknown&#39;</span><span class="p">;</span>
+            <span class="k">echo</span> <span class="s2">&quot;#</span><span class="si">$i</span><span class="s2"> </span><span class="si">{</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;line&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">): &quot;</span><span class="p">;</span>
+            <span class="k">if</span><span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;object&#39;</span><span class="p">])</span> <span class="o">&amp;&amp;</span> <span class="nb">is_object</span><span class="p">(</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;object&#39;</span><span class="p">]))</span>
+                <span class="k">echo</span> <span class="nb">get_class</span><span class="p">(</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;object&#39;</span><span class="p">])</span><span class="o">.</span><span class="s1">&#39;-&gt;&#39;</span><span class="p">;</span>
+            <span class="k">echo</span> <span class="s2">&quot;</span><span class="si">{</span><span class="nv">$t</span><span class="p">[</span><span class="s1">&#39;function&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">()</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+        <span class="p">}</span>
 
-<span class="x">        echo &#39;&lt;/pre&gt;&#39;;</span>
-<span class="x">    }</span>
-<span class="x">    else</span>
-<span class="x">    {</span>
-<span class="x">        echo &quot;&lt;h1&gt;PHP Error [$code]&lt;/h1&gt;\n&quot;;</span>
-<span class="x">        echo &quot;&lt;p&gt;$message&lt;/p&gt;\n&quot;;</span>
-<span class="x">    }</span>
-<span class="x">}</span>
+        <span class="k">echo</span> <span class="s1">&#39;&lt;/pre&gt;&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">else</span>
+    <span class="p">{</span>
+        <span class="k">echo</span> <span class="s2">&quot;&lt;h1&gt;PHP Error [</span><span class="si">$code</span><span class="s2">]&lt;/h1&gt;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+        <span class="k">echo</span> <span class="s2">&quot;&lt;p&gt;</span><span class="si">$message</span><span class="s2">&lt;/p&gt;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 </pre></div>
 
 
 <p><strong>displayException</strong></p>
-<div class="highlight"><pre><span class="x">public function displayException($exception)</span>
-<span class="x">{</span>
-<span class="x">    if(YII_DEBUG)</span>
-<span class="x">    {</span>
-<span class="x">        echo &#39;&lt;h1&gt;&#39;.get_class($exception).&quot;&lt;/h1&gt;\n&quot;;</span>
-<span class="x">        echo &#39;&lt;p&gt;&#39;.$exception-&gt;getMessage().&#39; (&#39;.$exception-&gt;getFile().&#39;:&#39;.$exception-&gt;getLine().&#39;)&lt;/p&gt;&#39;;</span>
-<span class="x">        echo &#39;&lt;pre&gt;&#39;.$exception-&gt;getTraceAsString().&#39;&lt;/pre&gt;&#39;;</span>
-<span class="x">    }</span>
-<span class="x">    else</span>
-<span class="x">    {</span>
-<span class="x">        echo &#39;&lt;h1&gt;&#39;.get_class($exception).&quot;&lt;/h1&gt;\n&quot;;</span>
-<span class="x">        echo &#39;&lt;p&gt;&#39;.$exception-&gt;getMessage().&#39;&lt;/p&gt;&#39;;</span>
-<span class="x">    }</span>
-<span class="x">}</span>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">displayException</span><span class="p">(</span><span class="nv">$exception</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">YII_DEBUG</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">echo</span> <span class="s1">&#39;&lt;h1&gt;&#39;</span><span class="o">.</span><span class="nb">get_class</span><span class="p">(</span><span class="nv">$exception</span><span class="p">)</span><span class="o">.</span><span class="s2">&quot;&lt;/h1&gt;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+        <span class="k">echo</span> <span class="s1">&#39;&lt;p&gt;&#39;</span><span class="o">.</span><span class="nv">$exception</span><span class="o">-&gt;</span><span class="na">getMessage</span><span class="p">()</span><span class="o">.</span><span class="s1">&#39; (&#39;</span><span class="o">.</span><span class="nv">$exception</span><span class="o">-&gt;</span><span class="na">getFile</span><span class="p">()</span><span class="o">.</span><span class="s1">&#39;:&#39;</span><span class="o">.</span><span class="nv">$exception</span><span class="o">-&gt;</span><span class="na">getLine</span><span class="p">()</span><span class="o">.</span><span class="s1">&#39;)&lt;/p&gt;&#39;</span><span class="p">;</span>
+        <span class="k">echo</span> <span class="s1">&#39;&lt;pre&gt;&#39;</span><span class="o">.</span><span class="nv">$exception</span><span class="o">-&gt;</span><span class="na">getTraceAsString</span><span class="p">()</span><span class="o">.</span><span class="s1">&#39;&lt;/pre&gt;&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">else</span>
+    <span class="p">{</span>
+        <span class="k">echo</span> <span class="s1">&#39;&lt;h1&gt;&#39;</span><span class="o">.</span><span class="nb">get_class</span><span class="p">(</span><span class="nv">$exception</span><span class="p">)</span><span class="o">.</span><span class="s2">&quot;&lt;/h1&gt;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+        <span class="k">echo</span> <span class="s1">&#39;&lt;p&gt;&#39;</span><span class="o">.</span><span class="nv">$exception</span><span class="o">-&gt;</span><span class="na">getMessage</span><span class="p">()</span><span class="o">.</span><span class="s1">&#39;&lt;/p&gt;&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 </pre></div>
 
 

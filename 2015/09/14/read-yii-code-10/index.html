@@ -73,10 +73,10 @@
             </footer><!-- /.post-info -->
             <div class="entry-content">
               <h3>概述</h3>
-<p>PHP区分“错误”（Error）和“异常”（Exception）。“错误”通常是由PHP内部函数抛出，表示运行时问题，当然也可以通过函数trigger_error或user_error抛出一个用户级别的error/warning/notice信息。但在引入面向对象之后，相比使用trigger_error抛出错误，使用throw抛出异常更常用。</p>
-<p>对于“错误”，PHP允许配置报告哪些级别/类型错误、是否（向用户）展示错误、是否对错误记录日志、错误日志记到哪，分别对应php.ini中的配置项：error_reporting、display_errors、log_errors、error_log。详细信息见<a href="http://php.net/manual/zh/language.errors.basics.php">这里</a>。</p>
+<p>PHP区分“错误”（Error）和“异常”（Exception）。“错误”通常是由PHP内部函数抛出，表示运行时问题，当然也可以通过函数<code>trigger_error</code>或<code>user_error</code>抛出一个用户级别的error/warning/notice信息。但在引入面向对象之后，相比使用<code>trigger_error</code>抛出错误，使用throw抛出异常更常用。</p>
+<p>对于“错误”，PHP允许配置报告哪些级别/类型错误、是否（向用户）展示错误、是否对错误记录日志、错误日志记到哪，分别对应php.ini中的配置项：<code>error_reporting</code>、<code>display_errors</code>、<code>log_errors</code>、<code>error_log</code>。详细信息见<a href="http://php.net/manual/zh/language.errors.basics.php">这里</a>。</p>
 <p>对于应用程序内层调用抛出的“异常”，一般可以在外层中使用try...catch来捕获并自定义处理过程。但对于“错误”（PHP运行时抛出或者应用程序使用trigger_error抛出的）或者对于-无法使用try...catch来捕获可能的异常/为了做到即使忘记捕获的异常也能得到自定义处理-的情况，该怎么办？对此，PHP提供了函数<code>set_error_handler</code>和<code>set_exception_handler</code>来注册错误/异常自定义处理过程。如果在程序的执行流中先后多次调用了<code>set_error_handler</code>或<code>set_exception_handler</code>，后一次注册的处理过程会覆盖前一次的，但可以通过函数<code>restore_error_handler</code>或<code>restore_exception_handler</code>来恢复前一次注册的异常处理过程。</p>
-<p><em>之所以写这篇文章，是因为最近在工作中犯了一个低级错误：应用程序中有个API对于不合法的请求参数直接抛出异常（<code>throw new Exception("xxx")</code>），却忘了try...catch捕捉，导致异常被Yii框架（我们的应用基于Yii开发）通过set_exception_handler注册的方法处理 - 响应500，之后这个API被一个扫描器拼命扫，导致出现500多的响应，触发了告警。</em></p>
+<p><em>之所以写这篇文章，是因为最近在工作中犯了一个低级错误：应用程序中有个API对于不合法的请求参数直接抛出异常（<code>throw new Exception("xxx")</code>），却忘了try...catch捕捉，导致异常被Yii框架（我们的应用基于Yii开发）通过set_exception_handler注册的方法处理 - 响应500，之后这个API被一个扫描器拼命扫，导致出现很多500响应，触发了告警。</em></p>
 <h3>分析</h3>
 <p>我们来看看Yii框架在哪个地方注册错误/异常处理过程？处理过程是什么样的？</p>
 <p>Yii框架在请求处理初始化过程中，在<code>CApplication</code>类（见文件<code>base/CApplication.php</code>）的构造方法中调用了：</p>
@@ -241,7 +241,7 @@
 </pre></div>
 
 
-<p>从上面代码可以看到，方法<code>handleException</code>的关键部分为：</p>
+<p>从上面代码可以看到，方法<code>handleException</code>的关键部分（<code>handleError</code>类似）为：</p>
 <div class="highlight"><pre><span class="cp">&lt;?php</span>
 <span class="c1">// 将异常封装成事件，并触发事件，从而触发监听该事件的处理过程</span>
 <span class="nv">$event</span><span class="o">=</span><span class="k">new</span> <span class="nx">CExceptionEvent</span><span class="p">(</span><span class="nv">$this</span><span class="p">,</span><span class="nv">$exception</span><span class="p">);</span>
@@ -313,7 +313,7 @@
 
 
 <p>那么是如何注册事件的处理过程的呢？</p>
-<p>在类<code>CComponent</code>（见文件<code>base/CComponent.php</code>，<code>CApplication</code>类继承间接继承自该类）中定义了一对方法：<code>attachEventHandler</code>（将处理过程绑定到某事件）和<code>detachEventHandler</code>（将处理过程从事件解绑）。</p>
+<p>在类<code>CComponent</code>（见文件<code>base/CComponent.php</code>，<code>CApplication</code>类间接继承自该类）中定义了一对方法：<code>attachEventHandler</code>（将处理过程绑定到某事件）和<code>detachEventHandler</code>（将处理过程从事件解绑）。</p>
 <p>方法<code>attachEventHandler</code>的实现如下：</p>
 <div class="highlight"><pre><span class="cp">&lt;?php</span>
 <span class="k">public</span> <span class="k">function</span> <span class="nf">attachEventHandler</span><span class="p">(</span><span class="nv">$name</span><span class="p">,</span><span class="nv">$handler</span><span class="p">)</span>

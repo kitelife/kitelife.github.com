@@ -130,6 +130,16 @@ make install
 
 
 &lt;p&gt;并创建相应的数据库&lt;code&gt;xhprof&lt;/code&gt;和数据表&lt;code&gt;details&lt;/code&gt;，其中创建数据表&lt;code&gt;details&lt;/code&gt;的SQL语句见文件&lt;code&gt;/path/to/xhprof-ui/xhprof_lib/utils/xhprof_runs.php&lt;/code&gt;，也可见 &lt;a href="https://github.com/toomasr/xhprof/blob/master/xhprof_lib/utils/xhprof_runs.php#L109"&gt;这里&lt;/a&gt; ，&lt;a href="https://github.com/preinheimer/xhprof"&gt;XHProf UI&lt;/a&gt; 代码的&lt;code&gt;README.markdown&lt;/code&gt;有文档说明。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;前面说过“原生”xhprof的问题之一是：“需要在应用程序中注入xhprof的函数调用，在某些情况下，这并不太合适”。那么XHProf UI是怎么解决这个问题的呢？&lt;/p&gt;
+&lt;p&gt;配置文件php.ini中有对配置项：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;auto_prepend_file&lt;/code&gt;：指定的脚本文件会在目标脚本执行&lt;strong&gt;之前&lt;/strong&gt;自动解析执行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;auto_append_file&lt;/code&gt;：指定的脚本文件会在目标脚本执行&lt;strong&gt;之后&lt;/strong&gt;自动解析执行&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;XHProf UI提供脚本&lt;code&gt;/path/to/xhprof-ui/external/header.php&lt;/code&gt;用于配置&lt;code&gt;auto_prepend_file&lt;/code&gt;，即在所有目标PHP程序运行之前自动注入xhprof性能数据收集能力。&lt;/p&gt;
+&lt;p&gt;配置&lt;code&gt;auto_prepend_file&lt;/code&gt;的方式有两种：一种是直接修改php.ini的&lt;code&gt;auto_prepend_file&lt;/code&gt;配置项，另一种是通过Nginx/Apache等HTTP服务器传送配置指令给PHP-FPM进程，如在Nginx的目标server配置块中添加一行：&lt;code&gt;fastcgi_param PHP_VALUE "auto_prepend_file=/path/to/xhprof-ui/external/header.php";&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;默认XHProf UI不会对PHP Web应用收集性能分析数据，可以在请求Web应用的任意URL时，添加GET参数&lt;code&gt;_profile=1&lt;/code&gt;来启用，&lt;code&gt;/path/to/xhprof-ui/external/header.php&lt;/code&gt;脚本会检查&lt;code&gt;_profile&lt;/code&gt;参数，并将参数值写到cookie中&lt;code&gt;setcookie('_profile', $_GET['_profile']);&lt;/code&gt;（这样就不用每次请求都带GET参数&lt;code&gt;_profile=1&lt;/code&gt;，并且cookie是针对域名的，这样也就同域名下的其他URL请求启用了性能分析），然后对目标URL去掉参数&lt;code&gt;_profile&lt;/code&gt;后发起重定向；对于不带GET参数&lt;code&gt;_profile&lt;/code&gt;的URL请求，&lt;code&gt;header.php&lt;/code&gt;会继续检查是否存在名为&lt;code&gt;_profile&lt;/code&gt;的cookie，如果存在且值为布尔真，则设置条件变量启用性能分析，否则不启用。若想要对已启用性能分析的域名禁用性能分析，则可以通过对URL请求添加GET参数&lt;code&gt;_profile=0&lt;/code&gt;来禁用，因为&lt;code&gt;header.php&lt;/code&gt;在检查cookie时发现&lt;code&gt;_profile&lt;/code&gt;值为布尔假（0），所以不会启用性能分析。&lt;/p&gt;
 &lt;h3&gt;术语&lt;/h3&gt;
 &lt;p&gt;在查看 Xhprof 或 XHProf UI 展示的性能数据时，会遇到以下几个术语，其含义对应如下：&lt;/p&gt;
 &lt;ol&gt;

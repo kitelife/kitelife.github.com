@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>黑·白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/youngsterxyf.atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2015-09-15T00:00:00+08:00</updated><entry><title>Xhprof安装与使用</title><link href="http://youngsterxyf.github.io/2015/09/15/xhprofan-zhuang-yu-shi-yong/" rel="alternate"></link><updated>2015-09-15T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2015-09-15:2015/09/15/xhprofan-zhuang-yu-shi-yong/</id><summary type="html">&lt;p&gt;Date: 2015-09-15&lt;/p&gt;
-&lt;p&gt;Author: youngsterxyf&lt;/p&gt;
-&lt;p&gt;Slug: xhprof-installation-and-usage&lt;/p&gt;
-&lt;p&gt;Tags: PHP, 笔记, Xhprof&lt;/p&gt;
-&lt;p&gt;前两天遇到一个PHP代码的bug，分析的结果是：因为要处理的数据量过大，内存分配超出了限制（&lt;code&gt;php.ini&lt;/code&gt;中配置项&lt;code&gt;memory_limit&lt;/code&gt;，默认是128M）。长期使用Python/PHP做Web开发，对于内存使用关注较少，这个事情让我重新关注起代码的内存占用问题，所以为工作中使用的测试开发环境配置Xhprof，进行性能数据收集分析（注：我们项目是用PHP开发的）。之所以选择Xhprof，是因为比较轻量，对性能影响较小，甚至可以一定方式用于生产环境，安装使用也方便。&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>黑·白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/youngsterxyf.atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2015-09-15T00:00:00+08:00</updated><entry><title>Xhprof安装与使用</title><link href="http://youngsterxyf.github.io/2015/09/15/xhprof-installation-and-usage/" rel="alternate"></link><updated>2015-09-15T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2015-09-15:2015/09/15/xhprof-installation-and-usage/</id><summary type="html">&lt;p&gt;前两天遇到一个PHP代码的bug，分析的结果是：因为要处理的数据量过大，内存分配超出了限制（&lt;code&gt;php.ini&lt;/code&gt;中配置项&lt;code&gt;memory_limit&lt;/code&gt;，默认是128M）。长期使用Python/PHP做Web开发，对于内存使用关注较少，这个事情让我重新关注起代码的内存占用问题，所以为工作中使用的测试开发环境配置Xhprof，进行性能数据收集分析（注：我们项目是用PHP开发的）。之所以选择Xhprof，是因为比较轻量，对性能影响较小，甚至可以一定方式用于生产环境，安装使用也方便。&lt;/p&gt;
 &lt;h3&gt;安装&lt;/h3&gt;
 &lt;p&gt;Xhprof是一个PHP扩展，安装方式与一般PHP扩展一致。&lt;/p&gt;
 &lt;p&gt;1.从&lt;a href="https://pecl.php.net/package/xhprof"&gt;这里&lt;/a&gt;下载最新的源码包。假设解压缩后的文件夹为xhprof&lt;/p&gt;
@@ -26,36 +22,32 @@ make install
 &lt;p&gt;4.执行&lt;code&gt;/path/to/php/bin/php -i | grep "xhprof"&lt;/code&gt;，确认xhprof扩展能成功加载&lt;/p&gt;
 &lt;p&gt;5.重启PHP-FPM&lt;/p&gt;
 &lt;p&gt;6.xhprof会将收集到的性能数据按文件（一次数据收集存放一个文件）存放在&lt;code&gt;xhprof.output_dir&lt;/code&gt;指定的目录（注意添加写权限）下，并通过&lt;code&gt;xhprof/xhprof_html&lt;/code&gt;目录下的PHP脚本程序提供网页形式的展示，所以还需配置web服务提供对该脚本程序的访问，以Nginx为例：&lt;/p&gt;
-&lt;p&gt;``` 8.另外，xhprof_html提供的Web展示功能可以提供代码调用逻辑图，但依赖于工具dot（即该逻辑图是使用dot语言写的），所以需要额外安装依赖graphviz，例如在CentOS上：yum install graphviz。
-server {
-    listen 8080;
-    server_name localhost;&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nt"&gt;root&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nt"&gt;path&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nt"&gt;to&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nt"&gt;xhprof&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nt"&gt;xhprof_html&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
-&lt;span class="nt"&gt;location&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="n"&gt;index&lt;/span&gt; &lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;html&lt;/span&gt; &lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;php&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="n"&gt;try_files&lt;/span&gt; &lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="n"&gt;uri&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;php&lt;/span&gt;&lt;span class="o"&gt;?&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="n"&gt;query_string&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;span class="nt"&gt;location&lt;/span&gt; &lt;span class="o"&gt;~&lt;/span&gt; &lt;span class="err"&gt;\&lt;/span&gt;&lt;span class="nc"&gt;.php&lt;/span&gt;&lt;span class="o"&gt;$&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="n"&gt;fastcgi_split_path_info&lt;/span&gt; &lt;span class="o"&gt;^&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;.+.&lt;/span&gt;&lt;span class="n"&gt;php&lt;/span&gt;&lt;span class="p"&gt;)(&lt;/span&gt;&lt;span class="o"&gt;/.+&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="n"&gt;fastcgi_pass&lt;/span&gt; &lt;span class="n"&gt;unix&lt;/span&gt;&lt;span class="o"&gt;:/&lt;/span&gt;&lt;span class="n"&gt;var&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;php5&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;fpm&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;sock&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="n"&gt;fastcgi_param&lt;/span&gt; &lt;span class="n"&gt;SCRIPT_FILENAME&lt;/span&gt; &lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="n"&gt;document_root&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="n"&gt;fastcgi_script_name&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="n"&gt;fastcgi_index&lt;/span&gt; &lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;php&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="n"&gt;include&lt;/span&gt; &lt;span class="n"&gt;fastcgi_params&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;p&gt;7.另外，xhprof_html提供的Web展示功能可以提供代码调用逻辑图，但依赖于工具dot（即该逻辑图是使用dot语言写的），所以需要额外安装依赖graphviz，例如在CentOS上：yum install graphviz。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nt"&gt;server&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;listen&lt;/span&gt; &lt;span class="m"&gt;8080&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="n"&gt;server_name&lt;/span&gt; &lt;span class="n"&gt;localhost&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+    &lt;span class="n"&gt;root&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;to&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;xhprof&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;xhprof_html&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="n"&gt;location&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt; &lt;span class="err"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;index&lt;/span&gt; &lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;html&lt;/span&gt; &lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;php&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="n"&gt;try_files&lt;/span&gt; &lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="n"&gt;uri&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;php&lt;/span&gt;&lt;span class="o"&gt;?&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="n"&gt;query_string&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="nt"&gt;location&lt;/span&gt; &lt;span class="o"&gt;~&lt;/span&gt; &lt;span class="err"&gt;\&lt;/span&gt;&lt;span class="nc"&gt;.php&lt;/span&gt;&lt;span class="o"&gt;$&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;fastcgi_split_path_info&lt;/span&gt; &lt;span class="o"&gt;^&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;.+.&lt;/span&gt;&lt;span class="n"&gt;php&lt;/span&gt;&lt;span class="p"&gt;)(&lt;/span&gt;&lt;span class="o"&gt;/.+&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="n"&gt;fastcgi_pass&lt;/span&gt; &lt;span class="n"&gt;unix&lt;/span&gt;&lt;span class="o"&gt;:/&lt;/span&gt;&lt;span class="n"&gt;var&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;php5&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;fpm&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;sock&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="n"&gt;fastcgi_param&lt;/span&gt; &lt;span class="n"&gt;SCRIPT_FILENAME&lt;/span&gt; &lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="n"&gt;document_root&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="n"&gt;fastcgi_script_name&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="n"&gt;fastcgi_index&lt;/span&gt; &lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;php&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="n"&gt;include&lt;/span&gt; &lt;span class="n"&gt;fastcgi_params&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="err"&gt;}&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;}&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="mi"&gt;7&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;xhprof_html提供的Web展示功能可以提供代码调用逻辑图&lt;/span&gt;&lt;span class="err"&gt;，&lt;/span&gt;&lt;span class="nx"&gt;但依赖于工具dot&lt;/span&gt;&lt;span class="err"&gt;（&lt;/span&gt;&lt;span class="nx"&gt;即该逻辑图是使用dot语言写的&lt;/span&gt;&lt;span class="err"&gt;），&lt;/span&gt;&lt;span class="nx"&gt;所以需要额外安装依赖graphviz&lt;/span&gt;&lt;span class="err"&gt;，&lt;/span&gt;&lt;span class="nx"&gt;例如在CentOS上&lt;/span&gt;&lt;span class="err"&gt;：`&lt;/span&gt;&lt;span class="nx"&gt;yum&lt;/span&gt; &lt;span class="nx"&gt;install&lt;/span&gt; &lt;span class="nx"&gt;graphviz&lt;/span&gt;&lt;span class="err"&gt;`。&lt;/span&gt;
-
-&lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;要对目标PHP程序进行性能分析&lt;/span&gt;&lt;span class="err"&gt;，&lt;/span&gt;&lt;span class="nx"&gt;需要在程序中注入xhprof提供的方法调用&lt;/span&gt;&lt;span class="err"&gt;，&lt;/span&gt;&lt;span class="nx"&gt;来收集性能数据&lt;/span&gt;&lt;span class="err"&gt;，&lt;/span&gt;&lt;span class="nx"&gt;然后通过命令行执行或HTTP请求来触发&lt;/span&gt;&lt;span class="err"&gt;。&lt;/span&gt;
-
-&lt;span class="err"&gt;###&lt;/span&gt; &lt;span class="nx"&gt;使用&lt;/span&gt;
-
-&lt;span class="nx"&gt;以Yii应用为例&lt;/span&gt;&lt;span class="err"&gt;，&lt;/span&gt;&lt;span class="nx"&gt;xhprof方法调用注入示例如下&lt;/span&gt;&lt;span class="err"&gt;：&lt;/span&gt;
-
-&lt;span class="err"&gt;```&lt;/span&gt; &lt;span class="nx"&gt;php&lt;/span&gt;
-&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;p&gt;8.xhprof_html提供的Web展示功能可以提供代码调用逻辑图，但依赖于工具dot（即该逻辑图是使用dot语言写的），所以需要额外安装依赖graphviz，例如在CentOS上：&lt;code&gt;yum install graphviz&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;9.要对目标PHP程序进行性能分析，需要在程序中注入xhprof提供的方法调用，来收集性能数据，然后通过命令行执行或HTTP请求来触发。&lt;/p&gt;
+&lt;h3&gt;使用&lt;/h3&gt;
+&lt;p&gt;以Yii应用为例，xhprof方法调用注入示例如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
 &lt;span class="c1"&gt;// 启动xhprof性能数据收集&lt;/span&gt;
 &lt;span class="nb"&gt;xhprof_enable&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;XHPROF_FLAGS_CPU&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;XHPROF_FLAGS_MEMORY&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
 
@@ -142,10 +134,9 @@ server {
 &lt;h3&gt;术语&lt;/h3&gt;
 &lt;p&gt;在查看 Xhprof 或 XHProf UI 展示的性能数据时，会遇到以下几个术语，其含义对应如下：&lt;/p&gt;
 &lt;ol&gt;
-&lt;li&gt;Calls / Call Count：函数/方法被调用的次数&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;​&lt;/p&gt;
-&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Calls / Call Count：函数/方法被调用的次数&lt;/p&gt;
+&lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;Incl. Wall Time / Wall Time：执行该函数/方法实际耗费的时间&lt;/p&gt;
 &lt;/li&gt;
@@ -158,9 +149,6 @@ server {
 &lt;li&gt;
 &lt;p&gt;Incl. CPU / CPU：执行该函数/方法，花费的CPU时间&lt;/p&gt;
 &lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;​&lt;/p&gt;
-&lt;ol&gt;
 &lt;li&gt;
 &lt;p&gt;Excl. Wall Time / Exclusive Wall Time&lt;/p&gt;
 &lt;/li&gt;
@@ -180,7 +168,7 @@ server {
 &lt;li&gt;&lt;a href="http://php.net/manual/zh/book.xhprof.php"&gt;PHP手册-层次式性能分析器&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://blog.engineyard.com/2014/profiling-with-xhprof-xhgui-part-1"&gt;Profiling PHP Part 1: Intro to Xhprof &amp;amp; Xhgui&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://blog.engineyard.com/2014/profiling-with-xhprof-xhgui-part-2"&gt;Profiling PHP Part 2: Xhgui In-Depth&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;</summary></entry><entry><title>Yii源码阅读笔记 - 错误/异常处理</title><link href="http://youngsterxyf.github.io/2015/09/14/read-yii-code-10/" rel="alternate"></link><updated>2015-09-14T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2015-09-14:2015/09/14/read-yii-code-10/</id><summary type="html">&lt;h3&gt;概述&lt;/h3&gt;
+&lt;/ul&gt;</summary><category term="PHP"></category><category term="笔记"></category><category term="Xhprof"></category></entry><entry><title>Yii源码阅读笔记 - 错误/异常处理</title><link href="http://youngsterxyf.github.io/2015/09/14/read-yii-code-10/" rel="alternate"></link><updated>2015-09-14T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2015-09-14:2015/09/14/read-yii-code-10/</id><summary type="html">&lt;h3&gt;概述&lt;/h3&gt;
 &lt;p&gt;PHP区分“错误”（Error）和“异常”（Exception）。“错误”通常是由PHP内部函数抛出，表示运行时问题，当然也可以通过函数&lt;code&gt;trigger_error&lt;/code&gt;或&lt;code&gt;user_error&lt;/code&gt;抛出一个用户级别的error/warning/notice信息。但在引入面向对象之后，相比使用&lt;code&gt;trigger_error&lt;/code&gt;抛出错误，使用throw抛出异常更常用。&lt;/p&gt;
 &lt;p&gt;对于“错误”，PHP允许配置报告哪些级别/类型错误、是否（向用户）展示错误、是否对错误记录日志、错误日志记到哪，分别对应php.ini中的配置项：&lt;code&gt;error_reporting&lt;/code&gt;、&lt;code&gt;display_errors&lt;/code&gt;、&lt;code&gt;log_errors&lt;/code&gt;、&lt;code&gt;error_log&lt;/code&gt;。详细信息见&lt;a href="http://php.net/manual/zh/language.errors.basics.php"&gt;这里&lt;/a&gt;。&lt;/p&gt;
 &lt;p&gt;对于应用程序内层调用抛出的“异常”，一般可以在外层中使用try...catch来捕获并自定义处理过程。但对于“错误”（PHP运行时抛出或者应用程序使用trigger_error抛出的）或者对于-无法使用try...catch来捕获可能的异常/为了做到即使忘记捕获的异常也能得到自定义处理-的情况，该怎么办？对此，PHP提供了函数&lt;code&gt;set_error_handler&lt;/code&gt;和&lt;code&gt;set_exception_handler&lt;/code&gt;来注册错误/异常自定义处理过程。如果在程序的执行流中先后多次调用了&lt;code&gt;set_error_handler&lt;/code&gt;或&lt;code&gt;set_exception_handler&lt;/code&gt;，后一次注册的处理过程会覆盖前一次的，但可以通过函数&lt;code&gt;restore_error_handler&lt;/code&gt;或&lt;code&gt;restore_exception_handler&lt;/code&gt;来恢复前一次注册的异常处理过程。&lt;/p&gt;

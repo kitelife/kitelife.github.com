@@ -1,5 +1,186 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>黑·白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/youngsterxyf.atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2015-09-14T00:00:00+08:00</updated><entry><title>Yii源码阅读笔记 - 错误/异常处理</title><link href="http://youngsterxyf.github.io/2015/09/14/read-yii-code-10/" rel="alternate"></link><updated>2015-09-14T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2015-09-14:2015/09/14/read-yii-code-10/</id><summary type="html">&lt;h3&gt;概述&lt;/h3&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>黑·白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/youngsterxyf.atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2015-09-15T00:00:00+08:00</updated><entry><title>Xhprof安装与使用</title><link href="http://youngsterxyf.github.io/2015/09/15/xhprofan-zhuang-yu-shi-yong/" rel="alternate"></link><updated>2015-09-15T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2015-09-15:2015/09/15/xhprofan-zhuang-yu-shi-yong/</id><summary type="html">&lt;p&gt;Date: 2015-09-15&lt;/p&gt;
+&lt;p&gt;Author: youngsterxyf&lt;/p&gt;
+&lt;p&gt;Slug: xhprof-installation-and-usage&lt;/p&gt;
+&lt;p&gt;Tags: PHP, 笔记, Xhprof&lt;/p&gt;
+&lt;p&gt;前两天遇到一个PHP代码的bug，分析的结果是：因为要处理的数据量过大，内存分配超出了限制（&lt;code&gt;php.ini&lt;/code&gt;中配置项&lt;code&gt;memory_limit&lt;/code&gt;，默认是128M）。长期使用Python/PHP做Web开发，对于内存使用关注较少，这个事情让我重新关注起代码的内存占用问题，所以为工作中使用的测试开发环境配置Xhprof，进行性能数据收集分析（注：我们项目是用PHP开发的）。之所以选择Xhprof，是因为比较轻量，对性能影响较小，甚至可以一定方式用于生产环境，安装使用也方便。&lt;/p&gt;
+&lt;h3&gt;安装&lt;/h3&gt;
+&lt;p&gt;Xhprof是一个PHP扩展，安装方式与一般PHP扩展一致。&lt;/p&gt;
+&lt;p&gt;1.从&lt;a href="https://pecl.php.net/package/xhprof"&gt;这里&lt;/a&gt;下载最新的源码包。假设解压缩后的文件夹为xhprof&lt;/p&gt;
+&lt;p&gt;2.编译安装&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nb"&gt;cd &lt;/span&gt;xhprof/extension
+/path/to/php/bin/phpize
+./configure --with-php-config&lt;span class="o"&gt;=&lt;/span&gt;/path/to/php/bin/php-config
+make
+make install
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;3.配置php.ini，添加以下几行：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;[xhprof]&lt;/span&gt;
+&lt;span class="na"&gt;extension&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;xhprof.so&lt;/span&gt;
+&lt;span class="na"&gt;xhprof.output_dir&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;/path/to/output/dir&amp;quot;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;4.执行&lt;code&gt;/path/to/php/bin/php -i | grep "xhprof"&lt;/code&gt;，确认xhprof扩展能成功加载&lt;/p&gt;
+&lt;p&gt;5.重启PHP-FPM&lt;/p&gt;
+&lt;p&gt;6.xhprof会将收集到的性能数据按文件（一次数据收集存放一个文件）存放在&lt;code&gt;xhprof.output_dir&lt;/code&gt;指定的目录（注意添加写权限）下，并通过&lt;code&gt;xhprof/xhprof_html&lt;/code&gt;目录下的PHP脚本程序提供网页形式的展示，所以还需配置web服务提供对该脚本程序的访问，以Nginx为例：&lt;/p&gt;
+&lt;p&gt;``` 8.另外，xhprof_html提供的Web展示功能可以提供代码调用逻辑图，但依赖于工具dot（即该逻辑图是使用dot语言写的），所以需要额外安装依赖graphviz，例如在CentOS上：yum install graphviz。
+server {
+    listen 8080;
+    server_name localhost;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nt"&gt;root&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nt"&gt;path&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nt"&gt;to&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nt"&gt;xhprof&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nt"&gt;xhprof_html&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="nt"&gt;location&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;index&lt;/span&gt; &lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;html&lt;/span&gt; &lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;php&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="n"&gt;try_files&lt;/span&gt; &lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="n"&gt;uri&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;php&lt;/span&gt;&lt;span class="o"&gt;?&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="n"&gt;query_string&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="nt"&gt;location&lt;/span&gt; &lt;span class="o"&gt;~&lt;/span&gt; &lt;span class="err"&gt;\&lt;/span&gt;&lt;span class="nc"&gt;.php&lt;/span&gt;&lt;span class="o"&gt;$&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;fastcgi_split_path_info&lt;/span&gt; &lt;span class="o"&gt;^&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;.+.&lt;/span&gt;&lt;span class="n"&gt;php&lt;/span&gt;&lt;span class="p"&gt;)(&lt;/span&gt;&lt;span class="o"&gt;/.+&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="n"&gt;fastcgi_pass&lt;/span&gt; &lt;span class="n"&gt;unix&lt;/span&gt;&lt;span class="o"&gt;:/&lt;/span&gt;&lt;span class="n"&gt;var&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;php5&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;fpm&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;sock&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="n"&gt;fastcgi_param&lt;/span&gt; &lt;span class="n"&gt;SCRIPT_FILENAME&lt;/span&gt; &lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="n"&gt;document_root&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="n"&gt;fastcgi_script_name&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="n"&gt;fastcgi_index&lt;/span&gt; &lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;php&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="n"&gt;include&lt;/span&gt; &lt;span class="n"&gt;fastcgi_params&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;}&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="mi"&gt;7&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;xhprof_html提供的Web展示功能可以提供代码调用逻辑图&lt;/span&gt;&lt;span class="err"&gt;，&lt;/span&gt;&lt;span class="nx"&gt;但依赖于工具dot&lt;/span&gt;&lt;span class="err"&gt;（&lt;/span&gt;&lt;span class="nx"&gt;即该逻辑图是使用dot语言写的&lt;/span&gt;&lt;span class="err"&gt;），&lt;/span&gt;&lt;span class="nx"&gt;所以需要额外安装依赖graphviz&lt;/span&gt;&lt;span class="err"&gt;，&lt;/span&gt;&lt;span class="nx"&gt;例如在CentOS上&lt;/span&gt;&lt;span class="err"&gt;：`&lt;/span&gt;&lt;span class="nx"&gt;yum&lt;/span&gt; &lt;span class="nx"&gt;install&lt;/span&gt; &lt;span class="nx"&gt;graphviz&lt;/span&gt;&lt;span class="err"&gt;`。&lt;/span&gt;
+
+&lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;要对目标PHP程序进行性能分析&lt;/span&gt;&lt;span class="err"&gt;，&lt;/span&gt;&lt;span class="nx"&gt;需要在程序中注入xhprof提供的方法调用&lt;/span&gt;&lt;span class="err"&gt;，&lt;/span&gt;&lt;span class="nx"&gt;来收集性能数据&lt;/span&gt;&lt;span class="err"&gt;，&lt;/span&gt;&lt;span class="nx"&gt;然后通过命令行执行或HTTP请求来触发&lt;/span&gt;&lt;span class="err"&gt;。&lt;/span&gt;
+
+&lt;span class="err"&gt;###&lt;/span&gt; &lt;span class="nx"&gt;使用&lt;/span&gt;
+
+&lt;span class="nx"&gt;以Yii应用为例&lt;/span&gt;&lt;span class="err"&gt;，&lt;/span&gt;&lt;span class="nx"&gt;xhprof方法调用注入示例如下&lt;/span&gt;&lt;span class="err"&gt;：&lt;/span&gt;
+
+&lt;span class="err"&gt;```&lt;/span&gt; &lt;span class="nx"&gt;php&lt;/span&gt;
+&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="c1"&gt;// 启动xhprof性能数据收集&lt;/span&gt;
+&lt;span class="nb"&gt;xhprof_enable&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;XHPROF_FLAGS_CPU&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;XHPROF_FLAGS_MEMORY&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+
+&lt;span class="c1"&gt;// 加载Yii应用代码，处理请求&lt;/span&gt;
+&lt;span class="nb"&gt;defined&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;YII_DEBUG&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;or&lt;/span&gt; &lt;span class="nb"&gt;define&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;YII_DEBUG&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="k"&gt;true&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="k"&gt;require_once&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;path/to/yii/framework/yii.php&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="nv"&gt;$configFile&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;path/to/config/file.php&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="nx"&gt;Yii&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;createWebApplication&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$configFile&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;run&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+
+
+&lt;span class="c1"&gt;// 结束收集&lt;/span&gt;
+&lt;span class="nv"&gt;$xhprof_data&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;xhprof_disable&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+
+&lt;span class="nv"&gt;$XHPROF_ROOT&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;/path/to/xhprof/&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;include_once&lt;/span&gt; &lt;span class="nv"&gt;$XHPROF_ROOT&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;/xhprof_lib/utils/xhprof_lib.php&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;include_once&lt;/span&gt; &lt;span class="nv"&gt;$XHPROF_ROOT&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;/xhprof_lib/utils/xhprof_runs.php&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="nv"&gt;$xhprof_runs&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;XHProfRuns_Default&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+&lt;span class="c1"&gt;// 将此次收集的性能数据存放到xhprof.output_dir目录&lt;/span&gt;
+&lt;span class="nv"&gt;$run_id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$xhprof_runs&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;save_run&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$xhprof_data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;xhprof_yii&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中函数&lt;code&gt;xhprof_enable&lt;/code&gt;有两个可选参数&lt;code&gt;$flags&lt;/code&gt;和&lt;code&gt;$options&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;$flags&lt;/code&gt;有3个可选值：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;XHPROF_FLAGS_NO_BUILTINS&lt;/strong&gt;：使得跳过所有内置（内部）函数&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;XHPROF_FLAGS_CPU&lt;/strong&gt;：使输出的性能数据中添加 CPU 数据&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;XHPROF_FLAGS_MEMORY&lt;/strong&gt;：使输出的性能数据中添加内存数据&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;可以组合使用三个可选值：&lt;code&gt;xhprof_enable(XHPROF_FLAGS_NO_BUILTINS | XHPROF_FLAGS_CPU | XHPROF_FLAGS_MEMORY);&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;$options&lt;/code&gt;是数组类型，可传入键为&lt;code&gt;ignored_functions&lt;/code&gt;的值，表示忽略性能分析中的某些函数，如：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nx"&gt;xhprof_enable&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+    &lt;span class="s1"&gt;&amp;#39;ignored_functions&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;  &lt;span class="nx"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+                                &lt;span class="s1"&gt;&amp;#39;call_user_func&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                                &lt;span class="s1"&gt;&amp;#39;call_user_func_array&amp;#39;&lt;/span&gt;
+                            &lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;除了&lt;code&gt;xhprof_enable&lt;/code&gt;和&lt;code&gt;xhprof_disable&lt;/code&gt;，还有另一对函数&lt;code&gt;xhprof_sample_enable&lt;/code&gt;和&lt;code&gt;xhprof_sample_disable&lt;/code&gt;，相比前一对，后者是以采样模式启动xhprof性能分析，更适合生产环境。&lt;/p&gt;
+&lt;h3&gt;问题&lt;/h3&gt;
+&lt;p&gt;“原生” xhprof 有两个小问题：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;需要在应用程序中注入xhprof的函数调用，在某些情况下，这并不太合适&lt;/li&gt;
+&lt;li&gt;每次收集到的性能数据是以单个文件的方式存储，xhprof_html提供的Web展示功能每次只能分析展示单个文件的内容，无法关联多次收集的性能数据进行分析&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;所以开源社区有一些xhprof的衍生版本，相比”原生”xhprof，区别主要在数据存储与分析。&lt;/p&gt;
+&lt;h3&gt;XHProf UI&lt;/h3&gt;
+&lt;p&gt;针对上述的两点问题，我选择 &lt;a href="https://github.com/preinheimer/xhprof"&gt;XHProf UI&lt;/a&gt; 进行额外部署，步骤如下：&lt;/p&gt;
+&lt;p&gt;1.从 GitHub 上克隆代码库：&lt;code&gt;git clone https://github.com/preinheimer/xhprof.git xhprof-ui&lt;/code&gt;（注：这里指定了克隆的目标目录为xhprof-ui，以区分原来部署的原生xhprof）&lt;/p&gt;
+&lt;p&gt;2.依照原生XHprof安装步骤的2-7操作&lt;/p&gt;
+&lt;p&gt;3.因为XHProf UI默认使用MySQL来存储性能数据，所以需要进行数据库配置。将文件&lt;code&gt;/path/to/xhprof-ui/xhprof_lib/&lt;/code&gt;目录下的&lt;code&gt;config.sample.php&lt;/code&gt;重命名为&lt;code&gt;config.php&lt;/code&gt;，然后修改如下配置项：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="o"&gt;//&lt;/span&gt; &lt;span class="nt"&gt;Change&lt;/span&gt; &lt;span class="nt"&gt;these&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;
+&lt;span class="o"&gt;$&lt;/span&gt;&lt;span class="nt"&gt;_xhprof&lt;/span&gt;&lt;span class="cp"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;dbtype&amp;#39;&lt;/span&gt;&lt;span class="cp"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;mysql&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;//&lt;/span&gt; &lt;span class="nt"&gt;Only&lt;/span&gt; &lt;span class="nt"&gt;relevant&lt;/span&gt; &lt;span class="nt"&gt;for&lt;/span&gt; &lt;span class="nt"&gt;PDO&lt;/span&gt;
+&lt;span class="o"&gt;$&lt;/span&gt;&lt;span class="nt"&gt;_xhprof&lt;/span&gt;&lt;span class="cp"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;dbhost&amp;#39;&lt;/span&gt;&lt;span class="cp"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;localhost&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="o"&gt;$&lt;/span&gt;&lt;span class="nt"&gt;_xhprof&lt;/span&gt;&lt;span class="cp"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;dbuser&amp;#39;&lt;/span&gt;&lt;span class="cp"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;root&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="o"&gt;$&lt;/span&gt;&lt;span class="nt"&gt;_xhprof&lt;/span&gt;&lt;span class="cp"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;dbpass&amp;#39;&lt;/span&gt;&lt;span class="cp"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;password&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="o"&gt;$&lt;/span&gt;&lt;span class="nt"&gt;_xhprof&lt;/span&gt;&lt;span class="cp"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;dbname&amp;#39;&lt;/span&gt;&lt;span class="cp"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;xhprof&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="o"&gt;$&lt;/span&gt;&lt;span class="nt"&gt;_xhprof&lt;/span&gt;&lt;span class="cp"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;dbadapter&amp;#39;&lt;/span&gt;&lt;span class="cp"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;Pdo&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="o"&gt;//&lt;/span&gt; &lt;span class="err"&gt;注意：这里有个坑，&lt;/span&gt;&lt;span class="o"&gt;$&lt;/span&gt;&lt;span class="nt"&gt;_xhprof&lt;/span&gt;&lt;span class="cp"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;servername&amp;#39;&lt;/span&gt;&lt;span class="cp"&gt;]&lt;/span&gt;&lt;span class="err"&gt;的值不能超过三个字符，这个配置项即对应数据表&lt;/span&gt;&lt;span class="nt"&gt;details&lt;/span&gt;&lt;span class="err"&gt;的&lt;/span&gt;&lt;span class="nt"&gt;server_id&lt;/span&gt;&lt;span class="err"&gt;字段&lt;/span&gt;
+&lt;span class="o"&gt;$&lt;/span&gt;&lt;span class="nt"&gt;_xhprof&lt;/span&gt;&lt;span class="cp"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;servername&amp;#39;&lt;/span&gt;&lt;span class="cp"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;myserver&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="o"&gt;$&lt;/span&gt;&lt;span class="nt"&gt;_xhprof&lt;/span&gt;&lt;span class="cp"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;namespace&amp;#39;&lt;/span&gt;&lt;span class="cp"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;myapp&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+&lt;span class="o"&gt;$&lt;/span&gt;&lt;span class="nt"&gt;_xhprof&lt;/span&gt;&lt;span class="cp"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;url&amp;#39;&lt;/span&gt;&lt;span class="cp"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;http://url/to/xhprof/xhprof_html&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;
+
+&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="nt"&gt;These&lt;/span&gt; &lt;span class="nt"&gt;are&lt;/span&gt; &lt;span class="nt"&gt;good&lt;/span&gt; &lt;span class="nt"&gt;for&lt;/span&gt; &lt;span class="nt"&gt;linux&lt;/span&gt; &lt;span class="nt"&gt;and&lt;/span&gt; &lt;span class="nt"&gt;its&lt;/span&gt; &lt;span class="nt"&gt;derivatives&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;
+&lt;span class="c"&gt;/*&lt;/span&gt;
+&lt;span class="c"&gt;$_xhprof&lt;/span&gt;&lt;span class="cp"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;dot_binary&amp;#39;&lt;/span&gt;&lt;span class="cp"&gt;]&lt;/span&gt;&lt;span class="c"&gt;  = &amp;#39;/usr/bin/dot&amp;#39;;&lt;/span&gt;
+&lt;span class="c"&gt;$_xhprof&lt;/span&gt;&lt;span class="cp"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;dot_tempdir&amp;#39;&lt;/span&gt;&lt;span class="cp"&gt;]&lt;/span&gt;&lt;span class="c"&gt; = &amp;#39;/tmp&amp;#39;;&lt;/span&gt;
+&lt;span class="c"&gt;$_xhprof&lt;/span&gt;&lt;span class="cp"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;dot_errfile&amp;#39;&lt;/span&gt;&lt;span class="cp"&gt;]&lt;/span&gt;&lt;span class="c"&gt; = &amp;#39;/tmp/xh_dot.err&amp;#39;;&lt;/span&gt;
+&lt;span class="c"&gt;*/&lt;/span&gt;
+
+&lt;span class="o"&gt;//&lt;/span&gt; &lt;span class="o"&gt;$&lt;/span&gt;&lt;span class="nt"&gt;controlIPs&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nt"&gt;false&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="nt"&gt;Disables&lt;/span&gt; &lt;span class="nt"&gt;access&lt;/span&gt; &lt;span class="nt"&gt;controlls&lt;/span&gt; &lt;span class="nt"&gt;completely&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt; 
+&lt;span class="o"&gt;$&lt;/span&gt;&lt;span class="nt"&gt;controlIPs&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nt"&gt;array&lt;/span&gt;&lt;span class="o"&gt;();&lt;/span&gt;
+&lt;span class="o"&gt;$&lt;/span&gt;&lt;span class="nt"&gt;controlIPs&lt;/span&gt;&lt;span class="cp"&gt;[]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;127.0.0.1&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;   &lt;span class="o"&gt;//&lt;/span&gt; &lt;span class="nt"&gt;localhost&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="nt"&gt;you&lt;/span&gt;&lt;span class="err"&gt;&amp;#39;&lt;/span&gt;&lt;span class="nt"&gt;ll&lt;/span&gt; &lt;span class="nt"&gt;want&lt;/span&gt; &lt;span class="nt"&gt;to&lt;/span&gt; &lt;span class="nt"&gt;add&lt;/span&gt; &lt;span class="nt"&gt;your&lt;/span&gt; &lt;span class="nt"&gt;own&lt;/span&gt; &lt;span class="nt"&gt;ip&lt;/span&gt; &lt;span class="nt"&gt;here&lt;/span&gt;
+&lt;span class="o"&gt;$&lt;/span&gt;&lt;span class="nt"&gt;controlIPs&lt;/span&gt;&lt;span class="cp"&gt;[]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;::1&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;;&lt;/span&gt;         &lt;span class="o"&gt;//&lt;/span&gt; &lt;span class="nt"&gt;localhost&lt;/span&gt; &lt;span class="nt"&gt;IP&lt;/span&gt; &lt;span class="nt"&gt;v6&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;并创建相应的数据库&lt;code&gt;xhprof&lt;/code&gt;和数据表&lt;code&gt;details&lt;/code&gt;，其中创建数据表&lt;code&gt;details&lt;/code&gt;的SQL语句见文件&lt;code&gt;/path/to/xhprof-ui/xhprof_lib/utils/xhprof_runs.php&lt;/code&gt;，也可见 &lt;a href="https://github.com/toomasr/xhprof/blob/master/xhprof_lib/utils/xhprof_runs.php#L109"&gt;这里&lt;/a&gt; ，&lt;a href="https://github.com/preinheimer/xhprof"&gt;XHProf UI&lt;/a&gt; 代码的&lt;code&gt;README.markdown&lt;/code&gt;有文档说明。&lt;/p&gt;
+&lt;h3&gt;术语&lt;/h3&gt;
+&lt;p&gt;在查看 Xhprof 或 XHProf UI 展示的性能数据时，会遇到以下几个术语，其含义对应如下：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Calls / Call Count：函数/方法被调用的次数&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;​&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Incl. Wall Time / Wall Time：执行该函数/方法实际耗费的时间&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Incl. MemUse / Memory Usage：该函数/方法当前占用的内存&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Incl. PeakMemUse / Peak Memory Usage：函数/方法占用内存的峰值（注：我也不知道这个峰值是怎么算的）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Incl. CPU / CPU：执行该函数/方法，花费的CPU时间&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;​&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Excl. Wall Time / Exclusive Wall Time&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Excl. MemUse / Exclusive Memory Usage&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Excl. PeakMemUse / Exclusive Peak Memory Usage&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Exclusive CPU&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;术语中的&lt;code&gt;Incl&lt;/code&gt;表示&lt;code&gt;Inclusive&lt;/code&gt;，&lt;code&gt;Excl&lt;/code&gt;表示&lt;code&gt;Exclusive&lt;/code&gt;。&lt;code&gt;Inclusive&lt;/code&gt;表示测量到的数据是&lt;strong&gt;函数/方法本身及所有调用的子函数/方法总共耗费占用的资源&lt;/strong&gt;，&lt;code&gt;Exclusive&lt;/code&gt;则表示&lt;strong&gt;不包含调用的子函数/方法耗费占用的资源&lt;/strong&gt;。另外，所有测量值都是每个函数/方法调用在次数上的叠加。&lt;/p&gt;
+&lt;h3&gt;参考资料&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="http://php.net/manual/zh/book.xhprof.php"&gt;PHP手册-层次式性能分析器&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://blog.engineyard.com/2014/profiling-with-xhprof-xhgui-part-1"&gt;Profiling PHP Part 1: Intro to Xhprof &amp;amp; Xhgui&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://blog.engineyard.com/2014/profiling-with-xhprof-xhgui-part-2"&gt;Profiling PHP Part 2: Xhgui In-Depth&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</summary></entry><entry><title>Yii源码阅读笔记 - 错误/异常处理</title><link href="http://youngsterxyf.github.io/2015/09/14/read-yii-code-10/" rel="alternate"></link><updated>2015-09-14T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2015-09-14:2015/09/14/read-yii-code-10/</id><summary type="html">&lt;h3&gt;概述&lt;/h3&gt;
 &lt;p&gt;PHP区分“错误”（Error）和“异常”（Exception）。“错误”通常是由PHP内部函数抛出，表示运行时问题，当然也可以通过函数&lt;code&gt;trigger_error&lt;/code&gt;或&lt;code&gt;user_error&lt;/code&gt;抛出一个用户级别的error/warning/notice信息。但在引入面向对象之后，相比使用&lt;code&gt;trigger_error&lt;/code&gt;抛出错误，使用throw抛出异常更常用。&lt;/p&gt;
 &lt;p&gt;对于“错误”，PHP允许配置报告哪些级别/类型错误、是否（向用户）展示错误、是否对错误记录日志、错误日志记到哪，分别对应php.ini中的配置项：&lt;code&gt;error_reporting&lt;/code&gt;、&lt;code&gt;display_errors&lt;/code&gt;、&lt;code&gt;log_errors&lt;/code&gt;、&lt;code&gt;error_log&lt;/code&gt;。详细信息见&lt;a href="http://php.net/manual/zh/language.errors.basics.php"&gt;这里&lt;/a&gt;。&lt;/p&gt;
 &lt;p&gt;对于应用程序内层调用抛出的“异常”，一般可以在外层中使用try...catch来捕获并自定义处理过程。但对于“错误”（PHP运行时抛出或者应用程序使用trigger_error抛出的）或者对于-无法使用try...catch来捕获可能的异常/为了做到即使忘记捕获的异常也能得到自定义处理-的情况，该怎么办？对此，PHP提供了函数&lt;code&gt;set_error_handler&lt;/code&gt;和&lt;code&gt;set_exception_handler&lt;/code&gt;来注册错误/异常自定义处理过程。如果在程序的执行流中先后多次调用了&lt;code&gt;set_error_handler&lt;/code&gt;或&lt;code&gt;set_exception_handler&lt;/code&gt;，后一次注册的处理过程会覆盖前一次的，但可以通过函数&lt;code&gt;restore_error_handler&lt;/code&gt;或&lt;code&gt;restore_exception_handler&lt;/code&gt;来恢复前一次注册的异常处理过程。&lt;/p&gt;
@@ -8528,7 +8709,7 @@ dateObj = new Date(year, month, date[, hours[, minutes[, seconds[,ms]]]])
 &lt;li&gt;以SQLite作为数据库来存储agent上报的所有数据；&lt;/li&gt;
 &lt;li&gt;以&lt;a href="http://bitly.github.io/nsq/"&gt;NSQ&lt;/a&gt;作为异步消息队列中间件；&lt;/li&gt;
 &lt;/ol&gt;
-&lt;p&gt;选用Golang的理由是：可以静态编译，部署简单，只需将变异好的可执行二进制程序丢到服务器上跑起来就可以了。&lt;/p&gt;
+&lt;p&gt;选用Golang的理由是：可以静态编译，部署简单，只需将编译好的可执行二进制程序丢到服务器上跑起来就可以了。&lt;/p&gt;
 &lt;p&gt;选用SQLite的理由是：不必像MySQL那样安装server程序，无需额外部署维护。当然SQLite的文件锁会大大影响数据库读写性能，我们通过尽可能拆分数据库，将不同的指标数据存储在不同的SQLite DB文件中，甚至将每台作业机器每个指标的每天的数据分别存储在不同的DB文件中，来尽可能减小文件锁的性能影响，目前看来效果还不错。&lt;/p&gt;
 &lt;p&gt;选择NSQ的理由是：Golang实现、分布式、伸缩性好、性能高、支持HTTP/TCP协议、自带web管理界面等。&lt;/p&gt;
 &lt;p&gt;详细的系统结构图如下所示：&lt;/p&gt;

@@ -63,6 +63,53 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="../2014/11/12/read-yii-code-2/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 路由解析">Yii源码阅读笔记 - 路由解析</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2014-11-12T00:00:00+08:00"> 2014-11-12 三 </abbr>
+<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <h3>概述</h3>
+<p>Yii框架的路由解析功能由核心组件urlManager来完成。路由的形式有两种：</p>
+<ul>
+<li>get：通过URL中查询字符串（query string）参数r来指定路由，如：<code>r=controllerID/actionID</code></li>
+<li>path：直接通过URL来指定，如：<code>/controllerID/actionID</code></li>
+</ul>
+<p>默认使用get路由形式。由于Yii中controller类命名和action方法都是按照规则命名的，而路由也是按照规则来匹配的，所以完全可以不用额外配置urlManager。</p>
+<p>若需要使用path方式，则可如下配置：</p>
+<div class="highlight"><pre><span class="x">&quot;components&quot; =&gt; array(</span>
+<span class="x">    &#39;urlManager&#39; =&gt; array(</span>
+<span class="x">        &#39;urlFormat&#39; =&gt; &#39;path&#39;,</span>
+<span class="x">        &#39;rules&#39; =&gt; array(</span>
+<span class="x">            ...</span>
+<span class="x">        ),</span>
+<span class="x">),</span>
+</pre></div>
+
+
+<p>进一步说明可参考<a href="http://youngsterxyf.github.io/2014/09/06/experience-about-restful-api/">RESTful API设计的一点经验</a>一文。</p>
+<h3>分析</h3>
+<p>在“请求处理基本流程”一篇可以看到Yii框架路由解析流程的入口在类CWebApplication的processRequest方法中：</p>
+<div class="highlight"><pre><span class="x">$route=$this-&gt;getUrlManager()-&gt;parseUrl($this-&gt;getRequest());</span>
+</pre></div>
+
+
+<p>其中getUrlManager方法定义于类CApplication中，作用是初始化获取URL管理组件（ID为urlManager），实现如下：</p>
+<div class="highlight"><pre><span class="x">public ...</span></pre></div> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2014/11/12/read-yii-code-2/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 路由解析">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="../tag/php.html">PHP</a>
+                    <a class="danger label" href="../tag/yii.html">Yii</a>
+                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
+                    <a class="danger label" href="../tag/zong-jie.html">总结</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="../2014/11/09/an-introduction-to-apis/" rel="bookmark" title="Permalink to 读文笔记：An Introduction to APIs">读文笔记：An Introduction to APIs</a>
                     </h2>
                 </header>
@@ -301,46 +348,6 @@
                 </div>
             </article>
             </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="../2014/02/25/read-the-art-of-capacity-planning/" rel="bookmark" title="Permalink to 读书笔记：Web容量规划的艺术">读书笔记：Web容量规划的艺术</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2014-02-25T00:00:00+08:00"> 2014-02-25 二 </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <h3>第1章 容量规划的目标、问题和过程</h3>
-<p>了解你的基础设施中每一部分何时会失败（最好不发生）对容量规划至关重要。</p>
-<p>假设你有一台数据库服务器用于响应从前端Web服务器提交过来的查询。容量规划意味着你应该知道下述问题的答案。</p>
-<ul>
-<li>考虑到特定的硬件配置，数据库服务器每秒可管理多少个查询？</li>
-<li>在性能降低到影响终端用户体验之前，它每秒可应答多少次查询？</li>
-</ul>
-<p><strong>性能与容量：两种不同的概念</strong></p>
-<p>性能调优是优化已经存在的性能。容量规划通过使用当前性能做为基线决定你的系统需要什么以及什么时候需要。</p>
-<p>当面对容量问题的时候，试着少花精力使已存在的设备运行更快，而是关注当下要解决的重点：找出你到底需要什么，什么时候需要。</p>
-<p>权衡对已有系统进行调优所花的人力时间，可能简简单单的买更多的硬件是正确的。在最优化和容量扩展方面的权衡是一个挑战，并且因环境而异。</p>
-<blockquote>
-<p>网站的架构和架构对容量方面的影响</p>
-<p>你的驾车风格会影响到你的车的里程，类似的原理能够应用于网站的架构上。在本书中一个反复出现的主题是你的网站架构对于如何使用、消耗
-和管理容量产生重大影响。在有效使用容量上，相比于调整和改变你的服务器和网络，设计能带来更大的影响。同时，随着需求的出现如何方便和灵活
-地进行增加或者减少容量，也是设计能带来的重要作用。</p>
-<p>调整架构以便更容易容量管理。保持你的架构易于分割和分段，可以帮助你处理大量的负载特性问题---即在你创建了一个需要增长什么和何时增长的准确规划之前，
-你需要解决的问题。</p>
-</blockquote>
-<p>通过开放API所提供的Web服务引入了另一个逐渐扩大的问题，因为你的应用程序数据会被更多的应用程序访问，它们也都有自己的使用和增长模式。
-这也意味着用户可以方便地滥用系统，从而将更多不确定因素放入容量公式中。API的使用情况需要监控，以观察新出现的模式。</p>
-<p>容量规划可以变得非常重要 ...</p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2014/02/25/read-the-art-of-capacity-planning/" rel="bookmark" title="Permalink to 读书笔记：Web容量规划的艺术">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
-                    <a class="danger label" href="../tag/rong-liang-gui-hua.html">容量规划</a>
-                </div>
-            </article>
-            </li>
         </ol><!-- /#posts-list -->
     </div><!-- /.eleven.columns -->
 <div class="three columns">
@@ -367,81 +374,81 @@
 
 <h4>标签</h4>
 	<ul>
-	    <li class="tag-3"><a href="../tag/mian-shi.html">面试</a></li>
-	    <li class="tag-4"><a href="../tag/template.html">template</a></li>
-	    <li class="tag-3"><a href="../tag/yue-du.html">阅读</a></li>
-	    <li class="tag-4"><a href="../tag/zhong-jian-jian.html">中间件</a></li>
-	    <li class="tag-4"><a href="../tag/vmware.html">VMware</a></li>
-	    <li class="tag-4"><a href="../tag/xiao-xi-tui-song.html">消息推送</a></li>
-	    <li class="tag-3"><a href="../tag/jia-gou.html">架构</a></li>
-	    <li class="tag-4"><a href="../tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
-	    <li class="tag-4"><a href="../tag/cordova.html">Cordova</a></li>
-	    <li class="tag-4"><a href="../tag/wei-bo.html">微博</a></li>
-	    <li class="tag-4"><a href="../tag/socketio.html">socket.io</a></li>
-	    <li class="tag-3"><a href="../tag/shi-ge.html">诗歌</a></li>
-	    <li class="tag-4"><a href="../tag/css.html">CSS</a></li>
-	    <li class="tag-4"><a href="../tag/zi-sheng.html">自省</a></li>
-	    <li class="tag-2"><a href="../tag/shell.html">Shell</a></li>
-	    <li class="tag-4"><a href="../tag/gao-ke-yong.html">高可用</a></li>
-	    <li class="tag-4"><a href="../tag/yan-jiang.html">演讲</a></li>
-	    <li class="tag-2"><a href="../tag/yii.html">Yii</a></li>
-	    <li class="tag-3"><a href="../tag/bing-xing.html">并行</a></li>
-	    <li class="tag-2"><a href="../tag/git.html">Git</a></li>
-	    <li class="tag-4"><a href="../tag/ming-ling.html">命令</a></li>
-	    <li class="tag-1"><a href="../tag/zong-jie.html">总结</a></li>
-	    <li class="tag-2"><a href="../tag/fu-wu-qi.html">服务器</a></li>
-	    <li class="tag-3"><a href="../tag/gong-zuo.html">工作</a></li>
-	    <li class="tag-4"><a href="../tag/sheng-huo.html">生活</a></li>
-	    <li class="tag-4"><a href="../tag/liu-lan-qi-jian-rong.html">浏览器兼容</a></li>
-	    <li class="tag-3"><a href="../tag/bi-shi.html">笔试</a></li>
-	    <li class="tag-4"><a href="../tag/windows.html">Windows</a></li>
-	    <li class="tag-4"><a href="../tag/github.html">github</a></li>
-	    <li class="tag-4"><a href="../tag/diao-shi.html">调试</a></li>
-	    <li class="tag-2"><a href="../tag/javascript.html">JavaScript</a></li>
-	    <li class="tag-3"><a href="../tag/suan-fa.html">算法</a></li>
-	    <li class="tag-3"><a href="../tag/keepalived.html">Keepalived</a></li>
-	    <li class="tag-4"><a href="../tag/pypi.html">PyPI</a></li>
-	    <li class="tag-0"><a href="../tag/bi-ji.html">笔记</a></li>
-	    <li class="tag-4"><a href="../tag/teng-xun.html">腾讯</a></li>
-	    <li class="tag-4"><a href="../tag/ri-zhi.html">日志</a></li>
-	    <li class="tag-4"><a href="../tag/easy_install.html">easy_install</a></li>
-	    <li class="tag-4"><a href="../tag/rong-liang-gui-hua.html">容量规划</a></li>
-	    <li class="tag-3"><a href="../tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
-	    <li class="tag-4"><a href="../tag/xhprof.html">Xhprof</a></li>
-	    <li class="tag-2"><a href="../tag/ji-zhu.html">技术</a></li>
-	    <li class="tag-1"><a href="../tag/linux.html">Linux</a></li>
-	    <li class="tag-4"><a href="../tag/pip.html">pip</a></li>
-	    <li class="tag-4"><a href="../tag/dns.html">DNS</a></li>
-	    <li class="tag-2"><a href="../tag/golang.html">Golang</a></li>
 	    <li class="tag-4"><a href="../tag/zi-ti.html">字体</a></li>
-	    <li class="tag-3"><a href="../tag/gong-ju.html">工具</a></li>
+	    <li class="tag-3"><a href="../tag/keepalived.html">Keepalived</a></li>
+	    <li class="tag-4"><a href="../tag/teng-xun.html">腾讯</a></li>
+	    <li class="tag-3"><a href="../tag/suan-fa.html">算法</a></li>
+	    <li class="tag-4"><a href="../tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
+	    <li class="tag-4"><a href="../tag/windows.html">Windows</a></li>
+	    <li class="tag-4"><a href="../tag/sheng-huo.html">生活</a></li>
+	    <li class="tag-3"><a href="../tag/bing-xing.html">并行</a></li>
+	    <li class="tag-4"><a href="../tag/liu-lan-qi-jian-rong.html">浏览器兼容</a></li>
+	    <li class="tag-4"><a href="../tag/pip.html">pip</a></li>
+	    <li class="tag-3"><a href="../tag/jia-gou.html">架构</a></li>
+	    <li class="tag-2"><a href="../tag/ji-zhu.html">技术</a></li>
 	    <li class="tag-1"><a href="../tag/fan-yi.html">翻译</a></li>
-	    <li class="tag-4"><a href="../tag/ssl.html">ssl</a></li>
-	    <li class="tag-3"><a href="../tag/ming-ling-xing.html">命令行</a></li>
-	    <li class="tag-4"><a href="../tag/restful.html">RESTful</a></li>
-	    <li class="tag-4"><a href="../tag/haproxyconsole.html">HAProxyConsole</a></li>
-	    <li class="tag-4"><a href="../tag/jekyll.html">jekyll</a></li>
-	    <li class="tag-4"><a href="../tag/python-weekly.html">python-weekly</a></li>
-	    <li class="tag-4"><a href="../tag/slim.html">slim</a></li>
-	    <li class="tag-4"><a href="../tag/cc.html">C/C++</a></li>
-	    <li class="tag-4"><a href="../tag/bind.html">BIND</a></li>
-	    <li class="tag-3"><a href="../tag/mysql.html">MySQL</a></li>
-	    <li class="tag-4"><a href="../tag/api.html">API</a></li>
-	    <li class="tag-3"><a href="../tag/gan-wu.html">感悟</a></li>
-	    <li class="tag-1"><a href="../tag/python.html">Python</a></li>
-	    <li class="tag-3"><a href="../tag/wei-xin.html">微信</a></li>
-	    <li class="tag-3"><a href="../tag/nginx.html">Nginx</a></li>
-	    <li class="tag-4"><a href="../tag/ying-yu.html">英语</a></li>
-	    <li class="tag-3"><a href="../tag/fu-zai-jun-heng.html">负载均衡</a></li>
-	    <li class="tag-3"><a href="../tag/haproxy.html">HAProxy</a></li>
-	    <li class="tag-4"><a href="../tag/shu-ju-ku.html">数据库</a></li>
-	    <li class="tag-1"><a href="../tag/php.html">PHP</a></li>
+	    <li class="tag-2"><a href="../tag/git.html">Git</a></li>
 	    <li class="tag-4"><a href="../tag/wen-zi.html">文字</a></li>
-	    <li class="tag-3"><a href="../tag/xue-xi-fang-fa.html">学习方法</a></li>
-	    <li class="tag-4"><a href="../tag/li-lun.html">理论</a></li>
-	    <li class="tag-4"><a href="../tag/ban-ben-kong-zhi.html">版本控制</a></li>
-	    <li class="tag-4"><a href="../tag/rest.html">REST</a></li>
+	    <li class="tag-2"><a href="../tag/fu-wu-qi.html">服务器</a></li>
+	    <li class="tag-3"><a href="../tag/haproxy.html">HAProxy</a></li>
+	    <li class="tag-4"><a href="../tag/socketio.html">socket.io</a></li>
+	    <li class="tag-3"><a href="../tag/gong-zuo.html">工作</a></li>
+	    <li class="tag-4"><a href="../tag/cc.html">C/C++</a></li>
+	    <li class="tag-4"><a href="../tag/pypi.html">PyPI</a></li>
+	    <li class="tag-4"><a href="../tag/yan-jiang.html">演讲</a></li>
+	    <li class="tag-4"><a href="../tag/slim.html">slim</a></li>
+	    <li class="tag-4"><a href="../tag/wei-bo.html">微博</a></li>
 	    <li class="tag-4"><a href="../tag/phonegap.html">Phonegap</a></li>
+	    <li class="tag-4"><a href="../tag/ying-yu.html">英语</a></li>
+	    <li class="tag-1"><a href="../tag/zong-jie.html">总结</a></li>
+	    <li class="tag-3"><a href="../tag/bi-shi.html">笔试</a></li>
+	    <li class="tag-4"><a href="../tag/zhong-jian-jian.html">中间件</a></li>
+	    <li class="tag-3"><a href="../tag/mian-shi.html">面试</a></li>
+	    <li class="tag-4"><a href="../tag/ssl.html">ssl</a></li>
+	    <li class="tag-4"><a href="../tag/li-lun.html">理论</a></li>
+	    <li class="tag-4"><a href="../tag/xiao-xi-tui-song.html">消息推送</a></li>
+	    <li class="tag-4"><a href="../tag/cordova.html">Cordova</a></li>
+	    <li class="tag-4"><a href="../tag/dns.html">DNS</a></li>
+	    <li class="tag-3"><a href="../tag/ming-ling-xing.html">命令行</a></li>
+	    <li class="tag-4"><a href="../tag/xhprof.html">Xhprof</a></li>
+	    <li class="tag-4"><a href="../tag/api.html">API</a></li>
+	    <li class="tag-4"><a href="../tag/gao-ke-yong.html">高可用</a></li>
+	    <li class="tag-3"><a href="../tag/xue-xi-fang-fa.html">学习方法</a></li>
+	    <li class="tag-3"><a href="../tag/gan-wu.html">感悟</a></li>
+	    <li class="tag-4"><a href="../tag/css.html">CSS</a></li>
+	    <li class="tag-4"><a href="../tag/github.html">github</a></li>
+	    <li class="tag-4"><a href="../tag/vmware.html">VMware</a></li>
+	    <li class="tag-4"><a href="../tag/rest.html">REST</a></li>
+	    <li class="tag-2"><a href="../tag/golang.html">Golang</a></li>
+	    <li class="tag-4"><a href="../tag/rong-liang-gui-hua.html">容量规划</a></li>
+	    <li class="tag-1"><a href="../tag/linux.html">Linux</a></li>
+	    <li class="tag-2"><a href="../tag/javascript.html">JavaScript</a></li>
+	    <li class="tag-3"><a href="../tag/shi-ge.html">诗歌</a></li>
+	    <li class="tag-4"><a href="../tag/easy_install.html">easy_install</a></li>
+	    <li class="tag-4"><a href="../tag/python-weekly.html">python-weekly</a></li>
+	    <li class="tag-1"><a href="../tag/python.html">Python</a></li>
+	    <li class="tag-1"><a href="../tag/bi-ji.html">笔记</a></li>
+	    <li class="tag-4"><a href="../tag/ri-zhi.html">日志</a></li>
+	    <li class="tag-4"><a href="../tag/jekyll.html">jekyll</a></li>
+	    <li class="tag-3"><a href="../tag/gong-ju.html">工具</a></li>
+	    <li class="tag-2"><a href="../tag/shell.html">Shell</a></li>
+	    <li class="tag-3"><a href="../tag/mysql.html">MySQL</a></li>
+	    <li class="tag-3"><a href="../tag/yue-du.html">阅读</a></li>
+	    <li class="tag-4"><a href="../tag/haproxyconsole.html">HAProxyConsole</a></li>
+	    <li class="tag-4"><a href="../tag/template.html">template</a></li>
+	    <li class="tag-4"><a href="../tag/zi-sheng.html">自省</a></li>
+	    <li class="tag-3"><a href="../tag/nginx.html">Nginx</a></li>
+	    <li class="tag-4"><a href="../tag/restful.html">RESTful</a></li>
+	    <li class="tag-3"><a href="../tag/fu-zai-jun-heng.html">负载均衡</a></li>
+	    <li class="tag-4"><a href="../tag/ban-ben-kong-zhi.html">版本控制</a></li>
+	    <li class="tag-3"><a href="../tag/wei-xin.html">微信</a></li>
+	    <li class="tag-4"><a href="../tag/diao-shi.html">调试</a></li>
+	    <li class="tag-4"><a href="../tag/ming-ling.html">命令</a></li>
+	    <li class="tag-4"><a href="../tag/shu-ju-ku.html">数据库</a></li>
+	    <li class="tag-4"><a href="../tag/bind.html">BIND</a></li>
+	    <li class="tag-1"><a href="../tag/php.html">PHP</a></li>
+	    <li class="tag-3"><a href="../tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
+	    <li class="tag-2"><a href="../tag/yii.html">Yii</a></li>
 </ul>
 
 <!--

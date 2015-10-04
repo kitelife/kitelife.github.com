@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>记一次系统故障</title>
+        <meta charset="utf-8" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑·白 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑·白 Full RSS Feed" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/SentyZHAO/SentyZHAO.css" />
+
+        <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+            <script>
+              var _hmt = _hmt || [];
+              (function() {
+                var hm = document.createElement("script");
+                hm.src = "//hm.baidu.com/hm.js?5c5d8c3fe75afeff117777b9236b96ec";
+                var s = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(hm, s);
+              })();
+            </script>
+</head>
+
+<body id="index" class="home">
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1 style='font-family: "SentyZHAO";'><a href="../../../..">黑·白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+
+              <ul class="columns" style='font-family: "SentyZHAO";'>
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="/archives.html">归 档</a></li>
+                <li><a href="/tags.html">标 签</a></li>
+                <li><a href="/pages/tools.html">工具集</a></li>
+                <li><a href="/pages/links.html">链 接</a></li>
+                <li><a href="/pages/tech-share.html">技术分享</a></li>
+                <li><a href="/pages/aboutme.html">关于我</a></li>
+                <li><a href="/feeds/rss.xml">RSS</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+   <div class="row">
+        <div class="columns">
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2015/10/02/note-of-a-system-fault/" rel="bookmark" title="Permalink to 记一次系统故障">记一次系统故障</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2015-10-02T00:00:00+08:00">
+                2015-10-02 五
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>前段时间，工作中遭遇一次故障，虽然不算什么“疑难杂症”，倒也花了不少时间才真正找到故障的原因，故也值得记录一下。</p>
+<p>为方便读者快速理解故障，先给出系统大致的架构图：</p>
+<p><img alt="gxt-tech-arch" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/gxt-tech-arch.jpg" /></p>
+<p>其中，</p>
+<ol>
+<li>每台Web服务器上开启12个PHP-FPM实例，并配置到Nginx的upstream，每个实例最多可以开启10个子进程</li>
+<li>“Database Proxy”的代理规则为：写操作及事务中的所有SQL操作都交给主MySQL处理，其余的读操作都交给任意一台从MySQL处理</li>
+</ol>
+<hr />
+<p>故障所表现的现象包括：</p>
+<p>1.大量请求响应为502，但每次故障发生时，错误响应一般集中在一台Web服务器，如下图所示：</p>
+<p><img alt="nginx-502-error" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/nginx-502-error.png" /></p>
+<p><img alt="nginx-502-count" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/nginx-502-count.png" /></p>
+<p>2.（一台或多台）MySQL从数据库服务器CPU使用率飙升（但并非总是一起表现故障），如下图所示：</p>
+<p><img alt="mysql-slave-server-idle" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/mysql-slave-server-idle.png" /></p>
+<hr />
+<p>故障刚开始出现时，重启/关闭出现故障现象的从MySQL，或将出现故障的Web服务器上所有PHP-FPM重启，也能解一时的问题，但治不了本，故障还是频繁出现。</p>
+<p>在故障发生时，从相关服务器上收集到的信息如下所示：</p>
+<p>1.出现故障现象的Web服务器 - CPU使用率、内存使用率等系统指标均正常，但PHP-FPM子进程数达到上限（12 x 10 = 120），并且PHP-FPM进程与数据库代理服务器之间的网络连接数量较多（与PHP-FPM子进程数大致相当）</p>
+<p>2.出现故障现象的MySQL服务器 - CPU使用率飙升，主要为MySQL进程占用；MySQL进程与数据库代理服务器之间的网络连接较多</p>
+<p>3.继而，对出现故障现象的MySQL服务器上的数据库执行命令<code>SHOW PROCESSLIST</code>（查看当前MySQL实例运行着哪些线程），结果如下所示（截图只是一部分结果）：</p>
+<p><img alt="mysql-show-processlist" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/mysql-show-processlist.png" /></p>
+<hr />
+<p>先来分析一下<code>SHOW PROCESSLIST</code>的执行结果：</p>
+<p><strong>Command</strong>字段，表示当前线程正在执行的任务类型</p>
+<p><strong>db</strong>字段，表示当前线程所执行任务涉及的数据库是哪个</p>
+<p><strong>State</strong>字段，表示当前线程所处的状态</p>
+<p><strong>Time</strong>字段，表示当前线程处于State字段持续的时间，单位为秒</p>
+<p><strong>Info</strong>字段，表示如果当前线程是在执行查询操作（Query），那么查询的语句是什么样的，如非查询操作，则该字段为NULL</p>
+<p>结果中，有两种任务线程：“Binlog Dump”和“Query”，其中“Query”数量占绝大多数（和MySQL进程与数据库代理服务器之间的网络连接数大致相当）：</p>
+<ul>
+<li>Binlog Dump：该任务线程表明当前MySQL实例为主MySQL，并且其状态表明主从同步已顺利完成</li>
+<li>Query：表明当前线程正在执行一次SQL查询操作。该SQL为<code>SELECT h.host, p.result, p.update_time FROM PIXIU p join Host h using(host_id) WHERE ...</code>，线程所处状态为“Sorting result”（正在创建排序索引），持续时间为86-99秒左右。很明显，这句SQL语句花费的时间过长，存在问题。</li>
+</ul>
+<p>综合上面所述，可以得出一个假设：由于这条SQL查询需耗费较长时间，并且被频繁执行，涉及该SQL的请求需要较长时间完成，大量SQL线程排队无响应，阻塞了大量PHP-FPM进程，在某些时候会达到PHP-FPM并发子进程数上限（更何况某个会被频繁访问的页面请求涉及该SQL，导致情况更糟），PHP-FPM无法处理新的请求，对于已有的请求也会因为超时导致Nginx响应502。</p>
+<p>那么针对该假设，可以做两个优化来解决故障：</p>
+<ul>
+<li>优化这条SQL</li>
+<li>使用缓存</li>
+</ul>
+<p>这条SQL的完整语句为： <code>SELECT h.host,p.result,p.update_time FROM Pixiu p join Host h using(host_id) WHERE result!='[]' order by update_time desc</code> ，其中字段p.result的类型为 <code>mediumtext NOT NULL</code> ，字段p.update_time的类型为 <code>timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</code> 。</p>
+<p>由于业务逻辑并不要求该SQL的结果是排序的，所以我们该SQL中的排序条件<code>order by update_time desc</code>删除，经测试发现查询时间大幅度降低到9ms左右（原来的平均查询时间为600多-700ms左右），另外，由于业务逻辑对于该条SQL涉及的数据的实时性要求不高，我们使用Memcached缓存了该SQL的查询结果。</p>
+<p>重新部署，压测，并线上运行观察，之后故障再未发生。事后回想，故障也确实是在涉及该SQL的功能模块上线之后才发生的。</p>
+<h4>参考资料</h4>
+<ul>
+<li><a href="http://dev.mysql.com/doc/refman/5.6/en/show-processlist.html">MySQL官方文档 - SHOW PROCESSLIST Syntax</a></li>
+<li><a href="http://dev.mysql.com/doc/refman/5.6/en/thread-commands.html">MySQL官方文档 - Thread Command Values</a></li>
+<li><a href="http://dev.mysql.com/doc/refman/5.6/en/master-thread-states.html">MySQL官方文档 - Replication Master Thread States</a></li>
+<li><a href="http://dev.mysql.com/doc/refman/5.6/en/general-thread-states.html">MySQL官方文档 - General Thread States</a></li>
+<li><a href="http://www.nginx.cn/102.html">nginx+php-fpm出现502 bad gateway错误解决方法</a></li>
+</ul>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2015/10/02/note-of-a-system-fault/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+        </div><!-- /.twelve.columns -->
+ </div><!-- /.row -->
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+  <script src="../../../../theme/js/main.js"></script>
+</body>
+</html>

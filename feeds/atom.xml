@@ -11,7 +11,7 @@
 &lt;p&gt;故障所表现的现象包括：&lt;/p&gt;
 &lt;p&gt;1.大量请求响应为502，但每次故障发生时，错误响应一般集中在一台Web服务器，如下图所示：&lt;/p&gt;
 &lt;p&gt;&lt;img alt="nginx-502-error" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/nginx-502-error.png" /&gt;&lt;/p&gt;
-&lt;p&gt;&lt;img alt="nginx-502-count" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/nginx-502-count.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="nginx-502-count" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/nginx-server-502-count.jpg" /&gt;&lt;/p&gt;
 &lt;p&gt;2.（一台或多台）MySQL从数据库服务器CPU使用率飙升（但并非总是一起表现故障），如下图所示：&lt;/p&gt;
 &lt;p&gt;&lt;img alt="mysql-slave-server-idle" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/mysql-slave-server-idle.png" /&gt;&lt;/p&gt;
 &lt;hr /&gt;
@@ -42,7 +42,7 @@
 &lt;p&gt;这条SQL的完整语句为： &lt;code&gt;SELECT h.host,p.result,p.update_time FROM Pixiu p join Host h using(host_id) WHERE result!='[]' order by update_time desc&lt;/code&gt; ，其中字段p.result的类型为 &lt;code&gt;mediumtext NOT NULL&lt;/code&gt; ，字段p.update_time的类型为 &lt;code&gt;timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP&lt;/code&gt; 。&lt;/p&gt;
 &lt;p&gt;由于业务逻辑并不要求该SQL的结果是排序的，所以我们该SQL中的排序条件&lt;code&gt;order by update_time desc&lt;/code&gt;删除，经测试发现查询时间大幅度降低到9ms左右（原来的平均查询时间为600多-700ms左右），另外，由于业务逻辑对于该条SQL涉及的数据的实时性要求不高，我们使用Memcached缓存了该SQL的查询结果。&lt;/p&gt;
 &lt;p&gt;重新部署，压测，并线上运行观察，之后故障再未发生。事后回想，故障也确实是在涉及该SQL的功能模块上线之后才发生的。&lt;/p&gt;
-&lt;h4&gt;参考资料&lt;/h4&gt;
+&lt;h3&gt;参考资料&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="http://dev.mysql.com/doc/refman/5.6/en/show-processlist.html"&gt;MySQL官方文档 - SHOW PROCESSLIST Syntax&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="http://dev.mysql.com/doc/refman/5.6/en/thread-commands.html"&gt;MySQL官方文档 - Thread Command Values&lt;/a&gt;&lt;/li&gt;

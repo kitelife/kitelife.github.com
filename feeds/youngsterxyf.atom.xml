@@ -40,7 +40,7 @@
 &lt;li&gt;使用缓存&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;这条SQL的完整语句为： &lt;code&gt;SELECT h.host,p.result,p.update_time FROM Pixiu p join Host h using(host_id) WHERE result!='[]' order by update_time desc&lt;/code&gt; ，其中字段p.result的类型为 &lt;code&gt;mediumtext NOT NULL&lt;/code&gt; ，字段p.update_time的类型为 &lt;code&gt;timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP&lt;/code&gt; 。&lt;/p&gt;
-&lt;p&gt;由于业务逻辑并不要求该SQL的结果是排序的，所以我们该SQL中的排序条件&lt;code&gt;order by update_time desc&lt;/code&gt;删除，经测试发现查询时间大幅度降低到9ms左右（原来的平均查询时间为600多-700ms左右），另外，由于业务逻辑对于该条SQL涉及的数据的实时性要求不高，我们使用Memcached缓存了该SQL的查询结果。&lt;/p&gt;
+&lt;p&gt;由于业务逻辑并不要求该SQL的结果是排序的，所以我们将该SQL中的排序条件&lt;code&gt;order by update_time desc&lt;/code&gt;删除，经测试发现查询时间大幅度降低到9ms左右（原来的平均查询时间为600多-700ms左右），另外，由于业务逻辑对于该条SQL涉及的数据的实时性要求不高，我们使用Memcached缓存了该SQL的查询结果。&lt;/p&gt;
 &lt;p&gt;重新部署，压测，并线上运行观察，之后故障再未发生。事后回想，故障也确实是在涉及该SQL的功能模块上线之后才发生的。&lt;/p&gt;
 &lt;h3&gt;参考资料&lt;/h3&gt;
 &lt;ul&gt;

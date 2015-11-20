@@ -1,5 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>黑·白</title><link>http://youngsterxyf.github.io/</link><description></description><atom:link href="http://youngsterxyf.github.io/feeds/rss.xml" rel="self"></atom:link><lastBuildDate>Mon, 16 Nov 2015 00:00:00 +0800</lastBuildDate><item><title>又一次系统故障</title><link>http://youngsterxyf.github.io/2015/11/16/another-system-fault/</link><description>&lt;p&gt;上周五早上9点多，我还在上班的路上，接到技术leader的电话：线上突然出故障了；接着发来一张故障信息页面截图：&lt;/p&gt;
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>黑·白</title><link>http://youngsterxyf.github.io/</link><description></description><atom:link href="http://youngsterxyf.github.io/feeds/rss.xml" rel="self"></atom:link><lastBuildDate>Fri, 20 Nov 2015 00:00:00 +0800</lastBuildDate><item><title>青云 iframe 应用开发</title><link>http://youngsterxyf.github.io/2015/11/20/qingcloud-iframe-app/</link><description>&lt;p&gt;上周的主要工作是将产品的功能集成到青云。青云提供 iframe 的方式来集成第三方服务，这是一种互利的做法，而且对于青云来说，实现的代价也非常小。&lt;/p&gt;
+&lt;p&gt;先上图，看看集成的效果：&lt;/p&gt;
+&lt;p&gt;&lt;img alt="ygc-in-qingcloud" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/ygc-in-qingcloud.png" /&gt;&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;对于青云来说，一个iframe应用就是一个URL，由应用开发者提供这个URL，当青云用户访问应用所在的页面时，页面先自动向应用服务器的URL发送数据请求，请求会携带认证信息，应用服务端需要先校验请求确实来自青云，并获取请求中的用户信息，最终响应一个HTML页面内容，青云应用页面收到响应数据后将其置于一个iframe标签中，之后青云用户在iframe页面中的操作都是直接与应用服务器交互。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="qingcloud-iframe-interaction" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/qingcloud-iframe-interaction.png" /&gt;&lt;/p&gt;
+&lt;p&gt;上图交互流程的第&lt;strong&gt;2&lt;/strong&gt;步中，青云服务器向用户响应的内容最终会生成一个包含以下内容的页面：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nt"&gt;&amp;lt;form&lt;/span&gt; &lt;span class="na"&gt;method=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;POST&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;action=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;URL&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;target=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;appframe&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;input&lt;/span&gt; &lt;span class="na"&gt;type=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;hidden&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;payload&amp;quot;&lt;/span&gt;&lt;span class="err"&gt;,&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;...&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;input&lt;/span&gt; &lt;span class="na"&gt;type=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;hidden&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;signature&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;...&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;/form&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;iframe&lt;/span&gt; &lt;span class="na"&gt;id=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;...&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;appframe&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;width=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;100%&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;height=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;100%&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;frameborder=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;0&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;/iframe&amp;gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中的&lt;code&gt;form&lt;/code&gt;表单接着会被自动提交到应用服务器的URL，应用服务器响应的页面会被置于&lt;code&gt;target&lt;/code&gt;属性所指定的标签元素中展示给用户，即之后的iframe中。&lt;/p&gt;
+&lt;p&gt;注意：这里form的target属性值与iframe的name属性值应一致；&lt;code&gt;action&lt;/code&gt;属性值即应用开发者提交给青云的URL。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;form&lt;/code&gt;表单包含两个数据项：&lt;code&gt;payload&lt;/code&gt; 和 &lt;code&gt;signature&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;payload&lt;/code&gt; 是一个JSON字符串经过base64 URL编码后的结果，JSON字符串包含user_id、access_token、action等字段，其中&lt;code&gt;user_id&lt;/code&gt;是用户在青云的唯一性ID，而 &lt;code&gt;access_token&lt;/code&gt; 则是调用青云API获取用户相关详细信息时需要的授权码，因为&lt;code&gt;payload&lt;/code&gt;并没有包含用户相关的详细信息，所以应用服务器在处理URL请求时，如果需要用户的详细信息，则需要经第&lt;strong&gt;4&lt;/strong&gt;步来获取。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;signature&lt;/code&gt; 是由base64 URL编码后的payload按HmacSHA256签名，并base64 URL编码得到。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;为了增强整个交互过程中的数据安全性，青云本身使用HTTPS协议，并且要求应用的URL也必须使用HTTPS协议。&lt;/p&gt;
+&lt;p&gt;另外，如上所述，为了防止请求伪造，form表单包含一个签名数据项&lt;code&gt;signature&lt;/code&gt;，应用服务器在处理URL请求时应先校验签名，确认请求来自青云页面。&lt;/p&gt;
+&lt;p&gt;form表单使用的编码算法和签名生成算法，见&lt;a href="https://docs.qingcloud.com/app/common/tutorial.html"&gt;青云文档&lt;/a&gt;，其PHP、Python实现如下所示：&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;PHP&lt;/strong&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;// base64 URL编码&lt;/span&gt;
+&lt;span class="x"&gt;function base64_URL_encode($data) {&lt;/span&gt;
+&lt;span class="x"&gt;  return rtrim(strtr(base64_encode($data), &amp;#39;+/&amp;#39;, &amp;#39;-_&amp;#39;), &amp;#39;=&amp;#39;);&lt;/span&gt;
+&lt;span class="x"&gt;}&lt;/span&gt;
+
+&lt;span class="x"&gt;// HmacSHA256签名&lt;/span&gt;
+&lt;span class="x"&gt;hash_hmac(&amp;#39;sha256&amp;#39;, $payload, $secret_app_key, true)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;strong&gt;Python&lt;/strong&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c"&gt;# base64 URL编码&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;base64&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;base64_URL_encode&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;base64&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;urlsafe_b64encode&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;str&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;rstrip&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;=&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="c"&gt;# HmacSHA256签名&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;hmac&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;hashlib&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;sha256&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;hmac_sha256&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secret_app_key&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="n"&gt;hmac_256&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;hmac&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;new&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;secret_app_key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;digestmod&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;sha256&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;hmac_256&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;update&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;hmac_256&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;digest&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中HmacSHA256签名算法需要参数 &lt;code&gt;secret_app_key&lt;/code&gt; ，这个参数值应该青云为你的iframe应用分配的密钥&lt;code&gt;secret_app_key&lt;/code&gt;，同时，青云会为每个iframe应用分配一个唯一性ID。&lt;/p&gt;
+&lt;p&gt;如果你的应用需要经第&lt;strong&gt;4&lt;/strong&gt;步获取用户相关详细信息，则还需从青云后台获取API密钥（包含&lt;code&gt;qy_access_key_id&lt;/code&gt; 和 &lt;code&gt;qy_secret_access_key&lt;/code&gt; 两项），API请求数据也使用了签名算法，并且算法与上述form表单数据所使用的算法相同，青云官方文档对于这一点貌似叙述有误。详细信息见 &lt;a href="https://docs.qingcloud.com/app/common/tutorial.html#api"&gt;青云文档&lt;/a&gt;。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;在开发青云 iframe 应用过程中，我们遇到了两个问题：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;用户可能会在浏览器中只刷新iframe内容，比如chrome浏览器中，在iframe内容区域右击鼠标选择“重新加载框架”。之前说过用户在iframe中的操作都是直接与应用服务器交互的，刷新iframe其实是直接向iframe应用URL发送HTTP请求，而不是提供form表单到URL，所以请求中没有携带校验信息，无法判断请求是否来自青云。&lt;/li&gt;
+&lt;li&gt;由于我们的应用服务器有多台，并且未使用集中式session管理，那么如果使用传统的session中记录用户ID的方式，当首次iframe请求之后的请求由不同的服务器来处理，就无法识别出用户。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;这两个问题我们都使用了cookie来解决。&lt;/p&gt;
+&lt;p&gt;对于第1个问题，在处理form表单请求响应结果之前，将表单的payload和signature写入cookie，cookie的路径为应用的相对URL，这样每次用户刷新iframe，这个cookie会自动被发送到应用服务器，服务器端处理请求时，先校验是否存在合法的表单字段payload和signature，如果没有，则检查cookie中是否存在这两个字段值，从而实现兼容。&lt;/p&gt;
+&lt;p&gt;对于第2个问题，在form表单请求成功处理，识别出当前用户后，将用户的基本信息经过对称加密后存入cookie，cookie的路径为&lt;code&gt;/&lt;/code&gt;，用户在iframe内容时产生的所有AJAX请求，应用服务器处理请求时都会先解密该cookie值识别出当前用户。这个过程中涉及的加密方和解密方都是应用服务器，所以虽然使用了对称加密，但并不需要网络传输密钥。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;青云用户在首次使用我们产品的iframe应用时，系统会自动为青云用户创建一个特定类型的账号X，用户在iframe中操作产生的数据都会被绑到该账号X下。可能存在某些青云用户同时已有我们产品的账号Y，为了方便这种用户，我们的iframe应用允许用户将账号X绑定到账号Y，绑定的过程只需要在iframe应用中登录一次我们产品的账号Y，而这背后的实现是识别出X和Y，将X下的数据绑定到Y，账号绑定之后，用户在iframe中操作产生的数据都是绑定到账号Y的。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;软件应用肯定需要经过测试才能发布上线（总不能让用户帮你测试吧，哈哈），那么青云iframe应用该如何测试呢？&lt;/p&gt;
+&lt;p&gt;青云iframe应用在创建之后，需要经过青云官网审核才会上线，上线之后用户才可见。在创建之后、提交审核之前，你可以修改应用的配置信息（比如URL），这一阶段应用只对你自己可见可用，所以你可以将这个阶段作为测试阶段。更重要的是，在青云后台创建应用时，青云服务器并不会检测iframe的URL是否可访问，而且对该URL的请求也是由用户浏览器发起的，这样在测试阶段完全可以配置一个局域网内可访问的URL，测试完成在应用提交审核之前再将URL改成正式的外网可访问的URL即可。&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Fri, 20 Nov 2015 00:00:00 +0800</pubDate><guid>tag:youngsterxyf.github.io,2015-11-20:2015/11/20/qingcloud-iframe-app/</guid><category>笔记</category><category>工作</category><category>总结</category></item><item><title>又一次系统故障</title><link>http://youngsterxyf.github.io/2015/11/16/another-system-fault/</link><description>&lt;p&gt;上周五早上9点多，我还在上班的路上，接到技术leader的电话：线上突然出故障了；接着发来一张故障信息页面截图：&lt;/p&gt;
 &lt;p&gt;&lt;img alt="system-fault-err-page" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/system-fault-err-page.png" /&gt;&lt;/p&gt;
 &lt;p&gt;截图包含的信息是：数据库中没找到数据表&lt;code&gt;Users&lt;/code&gt;。&lt;/p&gt;
 &lt;p&gt;但同事检查过数据库，Users数据表是存在的。&lt;/p&gt;

@@ -53,12 +53,12 @@
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;其中HmacSHA256签名算法需要参数 &lt;code&gt;secret_app_key&lt;/code&gt; ，这个参数值应该青云为你的iframe应用分配的密钥&lt;code&gt;secret_app_key&lt;/code&gt;，同时，青云会为每个iframe应用分配一个唯一性ID。&lt;/p&gt;
-&lt;p&gt;如果你的应用需要经第&lt;strong&gt;4&lt;/strong&gt;步获取用户相关详细信息，则还需从青云后台获取API密钥（包含&lt;code&gt;qy_access_key_id&lt;/code&gt; 和 &lt;code&gt;qy_secret_access_key&lt;/code&gt; 两项），API请求数据也使用了签名算法，并且算法与上述form表单数据所使用的算法相同，青云官方文档对于这一点貌似叙述有误。详细信息见 &lt;a href="https://docs.qingcloud.com/app/common/tutorial.html#api"&gt;青云文档&lt;/a&gt;。&lt;/p&gt;
+&lt;p&gt;其中HmacSHA256签名算法需要参数 &lt;code&gt;secret_app_key&lt;/code&gt; ，这个参数值应为青云为你的iframe应用分配的密钥&lt;code&gt;secret_app_key&lt;/code&gt;，同时，青云会为每个iframe应用分配一个唯一性ID。&lt;/p&gt;
+&lt;p&gt;如果你的应用需要经第&lt;strong&gt;4&lt;/strong&gt;步获取用户相关详细信息，则还需从青云后台获取API密钥（包含&lt;code&gt;qy_access_key_id&lt;/code&gt; 和 &lt;code&gt;qy_secret_access_key&lt;/code&gt; 两项），API请求数据也使用了签名算法，并且算法与上述form表单数据所使用的签名算法相同，青云官方文档对于这一点貌似叙述有误。详细信息见 &lt;a href="https://docs.qingcloud.com/app/common/tutorial.html#api"&gt;青云文档&lt;/a&gt;。&lt;/p&gt;
 &lt;hr /&gt;
 &lt;p&gt;在开发青云 iframe 应用过程中，我们遇到了两个问题：&lt;/p&gt;
 &lt;ol&gt;
-&lt;li&gt;用户可能会在浏览器中只刷新iframe内容，比如chrome浏览器中，在iframe内容区域右击鼠标选择“重新加载框架”。之前说过用户在iframe中的操作都是直接与应用服务器交互的，刷新iframe其实是直接向iframe应用URL发送HTTP请求，而不是提供form表单到URL，所以请求中没有携带校验信息，无法判断请求是否来自青云。&lt;/li&gt;
+&lt;li&gt;用户可能会在浏览器中只刷新iframe内容，比如chrome浏览器中，在iframe内容区域右击鼠标选择“重新加载框架”。之前说过用户在iframe中的操作都是直接与应用服务器交互的，刷新iframe其实是直接向iframe应用URL发送HTTP请求，而不是提交form表单到应用URL，所以请求中没有携带校验信息，无法判断请求是否来自青云。&lt;/li&gt;
 &lt;li&gt;由于我们的应用服务器有多台，并且未使用集中式session管理，那么如果使用传统的session中记录用户ID的方式，当首次iframe请求之后的请求由不同的服务器来处理，就无法识别出用户。&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;这两个问题我们都使用了cookie来解决。&lt;/p&gt;

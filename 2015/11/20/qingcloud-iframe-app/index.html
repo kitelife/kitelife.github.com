@@ -88,7 +88,7 @@
 </pre></div>
 
 
-<p>其中的<code>form</code>表单接着会被自动提交到应用服务器的URL，应用服务器响应的页面会被置于<code>target</code>属性所指定的标签元素中展示给用户，即之后的iframe中。</p>
+<p>其中<code>form</code>的<code>target</code>属性指定在何处打开<code>action</code>属性值URL。<code>form</code>表单会被自动提交到应用服务器的URL，应用服务器响应的页面内容会被置于<code>target</code>属性所指定的iframe中展示给用户。</p>
 <p>注意：这里form的target属性值与iframe的name属性值应一致；<code>action</code>属性值即应用开发者提交给青云的URL。</p>
 <p><code>form</code>表单包含两个数据项：<code>payload</code> 和 <code>signature</code>。</p>
 <p><code>payload</code> 是一个JSON字符串经过base64 URL编码后的结果，JSON字符串包含user_id、access_token、action等字段，其中<code>user_id</code>是用户在青云的唯一性ID，而 <code>access_token</code> 则是调用青云API获取用户相关详细信息时需要的授权码，因为<code>payload</code>并没有包含用户相关的详细信息，所以应用服务器在处理URL请求时，如果需要用户的详细信息，则需要经第<strong>4</strong>步来获取。</p>
@@ -136,7 +136,7 @@
 </ol>
 <p>这两个问题我们都使用了cookie来解决。</p>
 <p>对于第1个问题，在处理form表单请求响应结果之前，将表单的payload和signature写入cookie，cookie的路径为应用的相对URL，这样每次用户刷新iframe，这个cookie会自动被发送到应用服务器，服务器端处理请求时，先校验是否存在合法的表单字段payload和signature，如果没有，则检查cookie中是否存在这两个字段值，从而实现兼容。</p>
-<p>对于第2个问题，在form表单请求成功处理，识别出当前用户后，将用户的基本信息经过对称加密后存入cookie，cookie的路径为<code>/</code>，用户在iframe内容时产生的所有AJAX请求，应用服务器处理请求时都会先解密该cookie值识别出当前用户。这个过程中涉及的加密方和解密方都是应用服务器，所以虽然使用了对称加密，但并不需要网络传输密钥。</p>
+<p>对于第2个问题，在form表单请求成功处理，识别出当前用户后，将用户的基本信息经过对称加密后存入cookie，cookie的路径为<code>/</code>，用户在iframe中操作时产生的所有AJAX请求，应用服务器处理请求时都会先解密该cookie值识别出当前用户。这个过程中涉及的加密方和解密方都是应用服务器，所以虽然使用了对称加密，但并不需要网络传输密钥。</p>
 <hr />
 <p>青云用户在首次使用我们产品的iframe应用时，系统会自动为青云用户创建一个特定类型的账号X，用户在iframe中操作产生的数据都会被绑到该账号X下。可能存在某些青云用户同时已有我们产品的账号Y，为了方便这种用户，我们的iframe应用允许用户将账号X绑定到账号Y，绑定的过程只需要在iframe应用中登录一次我们产品的账号Y，而这背后的实现是识别出X和Y，将X下的数据绑定到Y，账号绑定之后，用户在iframe中操作产生的数据都是绑定到账号Y的。</p>
 <hr />

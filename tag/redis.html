@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 
-        <title>黑·白 - 腾讯</title>
+        <title>黑·白 - Redis</title>
         <meta charset="utf-8" />
         <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑·白 Full Atom Feed" />
         <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑·白 Full RSS Feed" />
@@ -63,64 +63,27 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
-                        <a href="../2013/10/23/learning-in-tencent-backend-arch-of-weixin/" rel="bookmark" title="Permalink to 学在腾讯：简而美的微信后台架构">学在腾讯：简而美的微信后台架构</a>
+                        <a href="../2015/12/01/redis-vs-memcached/" rel="bookmark" title="Permalink to 关于Redis与Memcached的一点澄清（译）">关于Redis与Memcached的一点澄清（译）</a>
                     </h2>
                 </header>
                 <footer class="post-info">
-                    <abbr class="published" title="2013-10-23T00:00:00+08:00"> 2013-10-23 三 </abbr>
+                    <abbr class="published" title="2015-12-01T00:00:00+08:00"> 2015-12-01 二 </abbr>
 <address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>注：<em>公司分享讲座的一点笔记，不保证准确性。</em></p>
-<h2>问题</h2>
-<h4>极致的业务特性</h4>
+                <div class="entry-content"> <p>原文：<a href="http://antirez.com/news/94">Clarifications about Redis and Memcached</a></p>
+<p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
+<p>如果你了解我，就会知道我并不是那种认为竞品是一件坏事的人。实际上我喜欢用户有选择的空间，因此我很少做将Redis与其他技术做对比这类事情。</p>
+<p>然而，为了选择正确的方案，用户必须获取正确的知识，这一点也是理所应当的。</p>
+<p>本文的起因是读了Mike Perham写的一篇博文，你也许知道他是Sidekiq这一流行程序库的作者，Sidekiq又恰好使用Redis做后端。因此我毫不认为Mike是一个“反对”Redis的人。但在博文（你可以在 <a href="http://www.mikeperham.com/2015/09/24/storing-data-with-redis/">http://www.mikeperham.com/2015/09/24/storing-data-with-redis/</a> 找到这篇博文）中，他陈述到：要用缓存，“你可能应该选择Memcached（而不是Redis）”。这样看来，Mike确实简单地相信Redis不适合用做缓存，在文章中他是这样论述的：</p>
 <ul>
-<li>流畅的消息收发</li>
-<li>及时的通知</li>
-<li>省电</li>
-<li>省流量</li>
-<li>瘦客户端</li>
-</ul>
-<h4>困难的后台-终端同步</h4>
-<ul>
-<li>同步多样数据：账户信息、通讯录、消息、朋友圈等</li>
-<li>及时通知与同步</li>
-<li>移动网络下的可靠同步</li>
-<li>省流量与电量</li>
-</ul>
-<h2>方案</h2>
-<h4>极简的同步协议</h4>
-<ul>
-<li>后台与终端只需要沟通一个数字，后台即可知道终端缺失的所有数据。</li>
-<li>变更序列号/版本号：<ul>
-<li>后台对用户数据的每项变更，都赋予一个单调递增的序列号，即用户的每项数据都有一个全局递增序列号。</li>
-<li>后台每次给终端发送数据都会带上所发送的所有数据的最大序列号。</li>
-<li>终端每次请求数据时都会带上已经接受到的最大序列号。</li>
-</ul>
-</li>
-</ul>
-<h4>高效的通知机制</h4>
-<ul>
-<li>ios Apple Push Network Service</li>
-<li>Android等-长连接</li>
-<li>GPRS/EDGE信令风暴优化</li>
-<li>自适应心跳间隔调节</li>
-</ul>
-<h4>三层后台架构</h4>
-<p><img alt="Arch of weixin backend" src="/assets/uploads/pics/arch-of-weixin-backend.png" /></p>
-<h4>统一的RPC框架</h4>
-<ul>
-<li>根据ProtocolBuffer定义生成服务器框架和客户端<ul>
-<li>服务器：开发人员填充接口实现</li>
-<li>客户端： 应用方本地调用客户端提供的接口函数</li>
-</ul>
-</li>
-<li>屏蔽网络细节<ul>
-<li>支持基于TCP/UDP的网络调用 ...</li></ul></li></ul> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2013/10/23/learning-in-tencent-backend-arch-of-weixin/" rel="bookmark" title="Permalink to 学在腾讯：简而美的微信后台架构">Read more <i class="icon-arrow-right"></i></a></div>
+<li>1) Memcached专为缓存而设计</li>
+<li>2) 它根本不会有磁盘I/O操作</li>
+<li>3) 它是多线程的，在多核上能线性扩展到每秒处理100 ...</li></ul> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2015/12/01/redis-vs-memcached/" rel="bookmark" title="Permalink to 关于Redis与Memcached的一点澄清（译）">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/teng-xun.html">腾讯</a>
-                    <a class="danger label" href="../tag/wei-xin.html">微信</a>
-                    <a class="danger label" href="../tag/jia-gou.html">架构</a>
+                    <a class="danger label" href="../tag/fan-yi.html">翻译</a>
+                    <a class="danger label" href="../tag/redis.html">Redis</a>
+                    <a class="danger label" href="../tag/memcached.html">Memcached</a>
                 </div>
             </article>
             </li>

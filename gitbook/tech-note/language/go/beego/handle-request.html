@@ -5,7 +5,7 @@
         
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <title>NodeJS源码阅读笔记 | Xiayf的技术笔记</title>
+        <title>请求处理 | Xiayf的技术笔记</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="generator" content="GitBook 2.3.0">
@@ -25,10 +25,10 @@
         
     
     
-    <link rel="next" href="../../../language/css.html" />
+    <link rel="next" href="../../../language/js.html" />
     
     
-    <link rel="prev" href="../../../language/js/node.html" />
+    <link rel="prev" href="../../../language/go/beego/run.html" />
     
 
         
@@ -36,7 +36,7 @@
     <body>
         
         
-    <div class="book" data-level="3.4.5.1" data-basepath="../../.." data-revision="Mon Jan 18 2016 13:29:53 GMT+0800 (CST)">
+    <div class="book" data-level="3.3.3.3" data-basepath="../../.." data-revision="Mon Jan 18 2016 13:29:53 GMT+0800 (CST)">
     
 
 <div class="book-summary">
@@ -499,7 +499,7 @@
             
         </li>
     
-        <li class="chapter " data-level="3.3.3.3" data-path="language/go/beego/handle-request.html">
+        <li class="chapter active" data-level="3.3.3.3" data-path="language/go/beego/handle-request.html">
             
                 
                     <a href="../../../language/go/beego/handle-request.html">
@@ -616,7 +616,7 @@
             <ul class="articles">
                 
     
-        <li class="chapter active" data-level="3.4.5.1" data-path="language/js/node/reading-node.html">
+        <li class="chapter " data-level="3.4.5.1" data-path="language/js/node/reading-node.html">
             
                 
                     <a href="../../../language/js/node/reading-node.html">
@@ -1315,170 +1315,514 @@
                 
                     <section class="normal" id="section-">
                     
-                        <h1 id="nodejs%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0">NodeJS&#x6E90;&#x7801;&#x9605;&#x8BFB;&#x7B14;&#x8BB0;</h1>
-<p>NodeJS&#x7684;&#x6267;&#x884C;&#x5165;&#x53E3;&#x4E3A;&#xFF1A;<code>src/node_main.cc</code>&#xFF0C;&#x5176;&#x6E90;&#x7801;&#x4E3A;&#xFF1A;</p>
-<pre><code class="lang-cpp"><span class="hljs-preprocessor">#<span class="hljs-keyword">include</span> &quot;node.h&quot;</span>
+                        <h1 id="%E8%AF%B7%E6%B1%82%E5%A4%84%E7%90%86">&#x8BF7;&#x6C42;&#x5904;&#x7406;</h1>
+<p>&#x63A5;&#x7740; <em>&#x542F;&#x52A8;&#x6D41;&#x7A0B;</em>&#xFF0C;&#x6765;&#x770B;&#x770B;&#x8BF7;&#x6C42;&#x5904;&#x7406;&#x6D41;&#x7A0B;&#x3002;</p>
+<p><code>app.Handlers</code>&#x7684;&#x7C7B;&#x578B;&#x4E3A;&#xFF1A;<code>*ControllerRegistor</code>&#xFF0C;&#x5176;<code>ServeHTTP</code>&#x65B9;&#x6CD5;&#xFF0C;&#x4E5F;&#x5373;&#x8BF7;&#x6C42;&#x5904;&#x7406;&#x7684;&#x5165;&#x53E3;&#xFF0C;&#x5B9E;&#x73B0;&#x5982;&#x4E0B;&#xFF1A;</p>
+<pre><code class="lang-go"><span class="hljs-comment">// Implement http.Handler interface.</span>
+<span class="hljs-keyword">func</span> (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+   <span class="hljs-comment">// &#x8BF7;&#x6C42;&#x5904;&#x7406;&#x5F00;&#x59CB;&#x65F6;&#x95F4;</span>
+    starttime := time.Now()
+    <span class="hljs-keyword">var</span> runrouter reflect.Type
+    <span class="hljs-keyword">var</span> findrouter <span class="hljs-typename">bool</span>
+    <span class="hljs-keyword">var</span> runMethod <span class="hljs-typename">string</span>
+    <span class="hljs-keyword">var</span> routerInfo *controllerInfo
 
-<span class="hljs-preprocessor">#ifdef _WIN32</span>
-<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">wmain</span><span class="hljs-params">(<span class="hljs-keyword">int</span> argc, wchar_t *wargv[])</span> </span>{
-  <span class="hljs-comment">// Convert argv to to UTF8</span>
-  <span class="hljs-keyword">char</span>** argv = <span class="hljs-keyword">new</span> <span class="hljs-keyword">char</span>*[argc];
-  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt; argc; i++) {
-    <span class="hljs-comment">// Compute the size of the required buffer</span>
-    DWORD size = WideCharToMultiByte(CP_UTF8,
-                                     <span class="hljs-number">0</span>,
-                                     wargv[i],
-                                     -<span class="hljs-number">1</span>,
-                                     <span class="hljs-keyword">nullptr</span>,
-                                     <span class="hljs-number">0</span>,
-                                     <span class="hljs-keyword">nullptr</span>,
-                                     <span class="hljs-keyword">nullptr</span>);
-    <span class="hljs-keyword">if</span> (size == <span class="hljs-number">0</span>) {
-      <span class="hljs-comment">// This should never happen.</span>
-      <span class="hljs-built_in">fprintf</span>(stderr, <span class="hljs-string">&quot;Could not convert arguments to utf8.&quot;</span>);
-      <span class="hljs-built_in">exit</span>(<span class="hljs-number">1</span>);
+   <span class="hljs-comment">// &#x5C06;http.ResponseWriter&#x5C01;&#x88C5;&#x6210;&#x81EA;&#x5DF1;&#x5B9A;&#x4E49;&#x7684;responseWriter&#xFF0C;&#x8FD9;&#x6837;&#x5C31;&#x53EF;&#x4EE5;&#x5E72;&#x5F88;&#x591A;&#x4E8B;&#x60C5;&#x5566;&#xFF01;</span>
+    w := &amp;responseWriter{writer: rw}
+
+   <span class="hljs-comment">// &#x5728;dev&#x6A21;&#x5F0F;&#x4E0B;&#xFF0C;&#x4F1A;&#x5728;&#x54CD;&#x5E94;&#x5934;&#x4E2D;&#x52A0;Server&#x5B57;&#x6BB5;</span>
+    <span class="hljs-keyword">if</span> RunMode == <span class="hljs-string">&quot;dev&quot;</span> {
+        w.Header().Set(<span class="hljs-string">&quot;Server&quot;</span>, BeegoServerName)
     }
-    <span class="hljs-comment">// Do the actual conversion</span>
-    argv[i] = <span class="hljs-keyword">new</span> <span class="hljs-keyword">char</span>[size];
-    DWORD result = WideCharToMultiByte(CP_UTF8,
-                                       <span class="hljs-number">0</span>,
-                                       wargv[i],
-                                       -<span class="hljs-number">1</span>,
-                                       argv[i],
-                                       size,
-                                       <span class="hljs-keyword">nullptr</span>,
-                                       <span class="hljs-keyword">nullptr</span>);
-    <span class="hljs-keyword">if</span> (result == <span class="hljs-number">0</span>) {
-      <span class="hljs-comment">// This should never happen.</span>
-      <span class="hljs-built_in">fprintf</span>(stderr, <span class="hljs-string">&quot;Could not convert arguments to utf8.&quot;</span>);
-      <span class="hljs-built_in">exit</span>(<span class="hljs-number">1</span>);
+
+   <span class="hljs-comment">// &#x8BF7;&#x6C42;&#x5904;&#x7406;&#x4E0A;&#x4E0B;&#x6587;</span>
+    <span class="hljs-comment">// init context</span>
+    context := &amp;beecontext.Context{
+        ResponseWriter: w,
+        Request:        r,
+        Input:          beecontext.NewInput(r),
+        Output:         beecontext.NewOutput(),
     }
-  }
-  <span class="hljs-comment">// Now that conversion is done, we can finally start.</span>
-  <span class="hljs-keyword">return</span> node::Start(argc, argv);
+    context.Output.Context = context
+    context.Output.EnableGzip = EnableGzip
+
+   <span class="hljs-comment">// &#x5904;&#x7406;&#x51FA;&#x9519;&#x65F6;&#xFF0C;&#x4EA4;&#x7ED9;recoverPanic&#x6765;&#x505A;&#x9519;&#x8BEF;&#x5904;&#x7406;&#xFF0C;&#x5E76;&#x54CD;&#x5E94;</span>
+   <span class="hljs-comment">// &#x8FD8;&#x8BB0;&#x5F97; **&#x542F;&#x52A8;&#x6D41;&#x7A0B;** &#x4E2D;&#x7684; registerDefaultErrorHandler() &#x5417;&#xFF1F;</span>
+    <span class="hljs-keyword">defer</span> p.recoverPanic(context)
+
+    <span class="hljs-keyword">var</span> urlPath <span class="hljs-typename">string</span>
+    <span class="hljs-comment">// &#x5982;&#x679C;&#x914D;&#x7F6E;&#x8BF7;&#x6C42;&#x8DEF;&#x5F84;&#x5927;&#x5C0F;&#x5199;&#x4E0D;&#x654F;&#x611F;&#xFF0C;&#x5219;&#x7EDF;&#x4E00;&#x8F6C;&#x6210;&#x5C0F;&#x5199;</span>
+    <span class="hljs-keyword">if</span> !RouterCaseSensitive {
+        urlPath = strings.ToLower(r.URL.Path)
+    } <span class="hljs-keyword">else</span> {
+        urlPath = r.URL.Path
+    }
+    <span class="hljs-comment">// defined filter function</span>
+    <span class="hljs-comment">// &#x7528;&#x4E8E;&#x6267;&#x884C;&#x4E0D;&#x540C;&#x9636;&#x6BB5;&#x7684;&#x8FC7;&#x6EE4;&#x5668;</span>
+    <span class="hljs-comment">// pos &#x53C2;&#x6570;&#x5C31;&#x662F;&#x6307;&#x201C;&#x9636;&#x6BB5;&#x201D;</span>
+    do_filter := <span class="hljs-keyword">func</span>(pos <span class="hljs-typename">int</span>) (started <span class="hljs-typename">bool</span>) {
+        <span class="hljs-keyword">if</span> p.enableFilter {
+            <span class="hljs-comment">// &#x53BB;&#x9664;&#x8BE5;&#x9636;&#x6BB5;&#x7684;&#x8FC7;&#x6EE4;&#x5668;&#x5217;&#x8868;</span>
+            <span class="hljs-keyword">if</span> l, ok := p.filters[pos]; ok {
+                <span class="hljs-keyword">for</span> _, filterR := <span class="hljs-keyword">range</span> l {
+                    <span class="hljs-keyword">if</span> filterR.returnOnOutput &amp;&amp; w.started {
+                        <span class="hljs-keyword">return</span> <span class="hljs-constant">true</span>
+                    }
+                    <span class="hljs-comment">// &#x53EF;&#x4EE5;&#x770B;&#x51FA;&#x8FC7;&#x6EE4;&#x5668;&#x9700;&#x8981;&#x5B9E;&#x73B0;ValidRouter</span>
+                    <span class="hljs-comment">// &#x9A8C;&#x8BC1;URL&#x8DEF;&#x5F84;&#x5E76;&#x8FD4;&#x56DE;&#x5176;&#x4E2D;&#x7684;URL&#x53C2;&#x6570;</span>
+                    <span class="hljs-keyword">if</span> ok, params := filterR.ValidRouter(urlPath); ok {
+                        <span class="hljs-keyword">for</span> k, v := <span class="hljs-keyword">range</span> params {
+                            <span class="hljs-keyword">if</span> context.Input.Params == <span class="hljs-constant">nil</span> {
+                                context.Input.Params = <span class="hljs-built_in">make</span>(<span class="hljs-keyword">map</span>[<span class="hljs-typename">string</span>]<span class="hljs-typename">string</span>)
+                            }
+                            context.Input.Params[k] = v
+                        }
+                        <span class="hljs-comment">// filterFunc</span>
+                        <span class="hljs-comment">// &#x8FD9;&#x4E2A;&#x65B9;&#x6CD5;&#x8BE5;&#x600E;&#x4E48;&#x5B9E;&#x73B0;&#x5462;&#xFF1F;</span>
+                        filterR.filterFunc(context)
+                    }
+                    <span class="hljs-comment">// &#x5982;&#x679C;&#x8FC7;&#x6EE4;&#x5668;&#x76F4;&#x63A5;&#x5C31;&#x5904;&#x7406;&#x4E86;&#x8BF7;&#x6C42;&#x5E76;&#x4F5C;&#x51FA;&#x54CD;&#x5E94;</span>
+                    <span class="hljs-keyword">if</span> filterR.returnOnOutput &amp;&amp; w.started {
+                        <span class="hljs-keyword">return</span> <span class="hljs-constant">true</span>
+                    }
+                }
+            }
+        }
+        <span class="hljs-keyword">return</span> <span class="hljs-constant">false</span>
+    }
+
+    <span class="hljs-comment">// filter wrong httpmethod</span>
+    <span class="hljs-comment">// &#x5F53;&#x524D;HTTP&#x8BF7;&#x6C42;&#x65B9;&#x6CD5;&#x662F;&#x5426;&#x652F;&#x6301;&#xFF1F;</span>
+    <span class="hljs-keyword">if</span> _, ok := HTTPMETHOD[r.Method]; !ok {
+        http.Error(w, <span class="hljs-string">&quot;Method Not Allowed&quot;</span>, <span class="hljs-number">405</span>)
+        <span class="hljs-comment">// &#x53BB;Admin&#x8BB0;&#x5F55;&#x4E00;&#x4E0B;&#x5F53;&#x524D;&#x8BF7;&#x6C42;&#x7684;&#x4FE1;&#x606F;</span>
+        <span class="hljs-keyword">goto</span> Admin
+    }
+
+    <span class="hljs-comment">// filter for static file</span>
+    <span class="hljs-comment">// &#x5728;&#x5904;&#x7406;&#x9759;&#x6001;&#x6587;&#x4EF6;&#x8BF7;&#x6C42;&#x4E4B;&#x524D;&#x6267;&#x884C;&#x8BE5;&#x9636;&#x6BB5;&#x7684;&#x8FC7;&#x6EE4;&#x5668;</span>
+    <span class="hljs-keyword">if</span> do_filter(BeforeStatic) {
+        <span class="hljs-keyword">goto</span> Admin
+    }
+
+   <span class="hljs-comment">// &#x5C1D;&#x8BD5;&#x5904;&#x7406;&#x9759;&#x6001;&#x6587;&#x4EF6;&#x8BF7;&#x6C42;</span>
+    serverStaticRouter(context)
+    <span class="hljs-comment">// &#x5F53;&#x524D;&#x8BF7;&#x6C42;&#x7684;&#x53EF;&#x80FD;&#x786E;&#x5B9E;&#x662F;&#x4E2A;&#x9759;&#x6001;&#x6587;&#x4EF6;&#xFF0C;&#x6240;&#x4EE5;&#x5728;serverStaticRouter&#x4E2D;&#x5DF2;&#x7ECF;&#x505A;&#x51FA;&#x4E86;&#x54CD;&#x5E94;</span>
+    <span class="hljs-keyword">if</span> w.started {
+        <span class="hljs-comment">// &#x90A3;&#x4E48;&#x4EE5;&#x4E0B;&#x4E5F;&#x5C31;&#x4E0D;&#x7528;&#x518D;&#x63A5;&#x7740;&#x53BB;&#x67E5;&#x627E;&#x975E;&#x9759;&#x6001;&#x6587;&#x4EF6;&#x7684;&#x8DEF;&#x7531;&#x4E86;</span>
+        findrouter = <span class="hljs-constant">true</span>
+        <span class="hljs-keyword">goto</span> Admin
+    }
+
+    <span class="hljs-comment">// session init</span>
+    <span class="hljs-comment">// &#x5F00;&#x542F;session</span>
+    <span class="hljs-keyword">if</span> SessionOn {
+        <span class="hljs-keyword">var</span> err error
+        context.Input.CruSession, err = GlobalSessions.SessionStart(w, r)
+        <span class="hljs-keyword">if</span> err != <span class="hljs-constant">nil</span> {
+            Error(err)
+            exception(<span class="hljs-string">&quot;503&quot;</span>, context)
+            <span class="hljs-keyword">return</span>
+        }
+        <span class="hljs-comment">// &#x5F97;&#x8BB0;&#x5F97;&#x91CA;&#x653E;&#x5440;</span>
+        <span class="hljs-keyword">defer</span> <span class="hljs-keyword">func</span>() {
+            context.Input.CruSession.SessionRelease(w)
+        }()
+    }
+
+    <span class="hljs-comment">// &#x89E3;&#x6790;&#x8BF7;&#x6C42;&#x4F53;</span>
+    <span class="hljs-keyword">if</span> r.Method != <span class="hljs-string">&quot;GET&quot;</span> &amp;&amp; r.Method != <span class="hljs-string">&quot;HEAD&quot;</span> {
+        <span class="hljs-keyword">if</span> CopyRequestBody &amp;&amp; !context.Input.IsUpload() {
+            context.Input.CopyBody()
+        }
+        context.Input.ParseFormOrMulitForm(MaxMemory)
+    }
+    <span class="hljs-comment">// &#x6267;&#x884C;&#x8DEF;&#x7531;&#x67E5;&#x627E;&#x524D;&#x7684;&#x8FC7;&#x6EE4;&#x5668;</span>
+    <span class="hljs-keyword">if</span> do_filter(BeforeRouter) {
+        <span class="hljs-keyword">goto</span> Admin
+    }
+
+   <span class="hljs-comment">// &#x63A5;&#x4E0B;&#x6765;&#x8981;&#x67E5;&#x627E;&#x5339;&#x914D;&#x8DEF;&#x7531;&#x4E86;</span>
+   <span class="hljs-comment">// &#x8FD9;&#x91CC;&#x4EC0;&#x4E48;&#x65F6;&#x5019;&#x6761;&#x4EF6;&#x4F1A;&#x4E3A;&#x771F;&#x5462;&#xFF1F;</span>
+    <span class="hljs-keyword">if</span> context.Input.RunController != <span class="hljs-constant">nil</span> &amp;&amp; context.Input.RunMethod != <span class="hljs-string">&quot;&quot;</span> {
+        findrouter = <span class="hljs-constant">true</span>
+        runMethod = context.Input.RunMethod
+        runrouter = context.Input.RunController
+    }
+
+    <span class="hljs-keyword">if</span> !findrouter {
+        http_method := r.Method
+
+       <span class="hljs-comment">// PUT&#x3001;DELETE &#x517C;&#x5BB9;&#x65B9;&#x6848;</span>
+        <span class="hljs-keyword">if</span> http_method == <span class="hljs-string">&quot;POST&quot;</span> &amp;&amp; context.Input.Query(<span class="hljs-string">&quot;_method&quot;</span>) == <span class="hljs-string">&quot;PUT&quot;</span> {
+            http_method = <span class="hljs-string">&quot;PUT&quot;</span>
+        }
+
+        <span class="hljs-keyword">if</span> http_method == <span class="hljs-string">&quot;POST&quot;</span> &amp;&amp; context.Input.Query(<span class="hljs-string">&quot;_method&quot;</span>) == <span class="hljs-string">&quot;DELETE&quot;</span> {
+            http_method = <span class="hljs-string">&quot;DELETE&quot;</span>
+        }
+
+       <span class="hljs-comment">//</span>
+        <span class="hljs-keyword">if</span> t, ok := p.routers[http_method]; ok {
+           <span class="hljs-comment">// &#x5982;&#x4F55;&#x5339;&#x914D;&#x7684;&#xFF1F;</span>
+            runObject, p := t.Match(urlPath)
+            <span class="hljs-comment">// &#x8FD9;&#x91CC;&#x8C8C;&#x4F3C;&#x5F88;&#x725B;&#x903C;&#x7684;&#x6837;&#x5B50;</span>
+            <span class="hljs-keyword">if</span> r, ok := runObject.(*controllerInfo); ok {
+                routerInfo = r
+                findrouter = <span class="hljs-constant">true</span>
+                <span class="hljs-keyword">if</span> splat, ok := p[<span class="hljs-string">&quot;:splat&quot;</span>]; ok {
+                    splatlist := strings.Split(splat, <span class="hljs-string">&quot;/&quot;</span>)
+                    <span class="hljs-keyword">for</span> k, v := <span class="hljs-keyword">range</span> splatlist {
+                        p[strconv.Itoa(k)] = v
+                    }
+                }
+                <span class="hljs-keyword">if</span> p != <span class="hljs-constant">nil</span> {
+                    context.Input.Params = p
+                }
+            }
+        }
+
+    }
+
+    <span class="hljs-comment">//if no matches to url, throw a not found exception</span>
+    <span class="hljs-keyword">if</span> !findrouter {
+        exception(<span class="hljs-string">&quot;404&quot;</span>, context)
+        <span class="hljs-keyword">goto</span> Admin
+    }
+
+    <span class="hljs-keyword">if</span> findrouter {
+        <span class="hljs-comment">//execute middleware filters</span>
+        <span class="hljs-keyword">if</span> do_filter(BeforeExec) {
+            <span class="hljs-keyword">goto</span> Admin
+        }
+        isRunable := <span class="hljs-constant">false</span>
+        <span class="hljs-keyword">if</span> routerInfo != <span class="hljs-constant">nil</span> {
+            <span class="hljs-comment">// RESTful&#x98CE;&#x683C;&#x7684;&#x8DEF;&#x7531;</span>
+            <span class="hljs-keyword">if</span> routerInfo.routerType == routerTypeRESTFul {
+                <span class="hljs-keyword">if</span> _, ok := routerInfo.methods[r.Method]; ok {
+                    isRunable = <span class="hljs-constant">true</span>
+                    routerInfo.runfunction(context)
+                } <span class="hljs-keyword">else</span> {
+                    exception(<span class="hljs-string">&quot;405&quot;</span>, context)
+                    <span class="hljs-keyword">goto</span> Admin
+                }
+            } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> routerInfo.routerType == routerTypeHandler {
+                <span class="hljs-comment">// &#x8FD9;&#x662F;&#x5565;&#x98CE;&#x683C;&#xFF1F;</span>
+                isRunable = <span class="hljs-constant">true</span>
+                routerInfo.handler.ServeHTTP(rw, r)
+            } <span class="hljs-keyword">else</span> {
+                runrouter = routerInfo.controllerType
+                method := r.Method
+                <span class="hljs-keyword">if</span> r.Method == <span class="hljs-string">&quot;POST&quot;</span> &amp;&amp; context.Input.Query(<span class="hljs-string">&quot;_method&quot;</span>) == <span class="hljs-string">&quot;PUT&quot;</span> {
+                    method = <span class="hljs-string">&quot;PUT&quot;</span>
+                }
+                <span class="hljs-keyword">if</span> r.Method == <span class="hljs-string">&quot;POST&quot;</span> &amp;&amp; context.Input.Query(<span class="hljs-string">&quot;_method&quot;</span>) == <span class="hljs-string">&quot;DELETE&quot;</span> {
+                    method = <span class="hljs-string">&quot;DELETE&quot;</span>
+                }
+                <span class="hljs-keyword">if</span> m, ok := routerInfo.methods[method]; ok {
+                    runMethod = m
+                } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> m, ok = routerInfo.methods[<span class="hljs-string">&quot;*&quot;</span>]; ok {
+                    runMethod = m
+                } <span class="hljs-keyword">else</span> {
+                    runMethod = method
+                }
+            }
+        }
+
+        <span class="hljs-comment">// also defined runrouter &amp; runMethod from filter</span>
+        <span class="hljs-keyword">if</span> !isRunable {
+            <span class="hljs-comment">//Invoke the request handler</span>
+            vc := reflect.New(runrouter)
+            execController, ok := vc.Interface().(ControllerInterface)
+            <span class="hljs-keyword">if</span> !ok {
+                <span class="hljs-built_in">panic</span>(<span class="hljs-string">&quot;controller is not ControllerInterface&quot;</span>)
+            }
+
+            <span class="hljs-comment">//call the controller init function</span>
+            execController.Init(context, runrouter.Name(), runMethod, vc.Interface())
+
+            <span class="hljs-comment">//call prepare function</span>
+            execController.Prepare()
+
+            <span class="hljs-comment">//if XSRF is Enable then check cookie where there has any cookie in the  request&apos;s cookie _csrf</span>
+            <span class="hljs-keyword">if</span> EnableXSRF {
+                execController.XsrfToken()
+                <span class="hljs-keyword">if</span> r.Method == <span class="hljs-string">&quot;POST&quot;</span> || r.Method == <span class="hljs-string">&quot;DELETE&quot;</span> || r.Method == <span class="hljs-string">&quot;PUT&quot;</span> ||
+                    (r.Method == <span class="hljs-string">&quot;POST&quot;</span> &amp;&amp; (context.Input.Query(<span class="hljs-string">&quot;_method&quot;</span>) == <span class="hljs-string">&quot;DELETE&quot;</span> || context.Input.Query(<span class="hljs-string">&quot;_method&quot;</span>) == <span class="hljs-string">&quot;PUT&quot;</span>)) {
+                    execController.CheckXsrfCookie()
+                }
+            }
+
+            execController.URLMapping()
+
+            <span class="hljs-keyword">if</span> !w.started {
+                <span class="hljs-comment">//exec main logic</span>
+                <span class="hljs-keyword">switch</span> runMethod {
+                <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;GET&quot;</span>:
+                    execController.Get()
+                <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;POST&quot;</span>:
+                    execController.Post()
+                <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;DELETE&quot;</span>:
+                    execController.Delete()
+                <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;PUT&quot;</span>:
+                    execController.Put()
+                <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;HEAD&quot;</span>:
+                    execController.Head()
+                <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;PATCH&quot;</span>:
+                    execController.Patch()
+                <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;OPTIONS&quot;</span>:
+                    execController.Options()
+                <span class="hljs-keyword">default</span>:
+                    <span class="hljs-keyword">if</span> !execController.HandlerFunc(runMethod) {
+                        in := <span class="hljs-built_in">make</span>([]reflect.Value, <span class="hljs-number">0</span>)
+                        method := vc.MethodByName(runMethod)
+                        method.Call(in)
+                    }
+                }
+
+                <span class="hljs-comment">//render template</span>
+                <span class="hljs-keyword">if</span> !w.started &amp;&amp; context.Output.Status == <span class="hljs-number">0</span> {
+                    <span class="hljs-comment">// AutoRender &#x9ED8;&#x8BA4;&#x4E3A; true</span>
+                    <span class="hljs-keyword">if</span> AutoRender {
+                        <span class="hljs-keyword">if</span> err := execController.Render(); err != <span class="hljs-constant">nil</span> {
+                            <span class="hljs-built_in">panic</span>(err)
+                        }
+                    }
+                }
+            }
+
+            <span class="hljs-comment">// finish all runrouter. release resource</span>
+            execController.Finish()
+        }
+
+        <span class="hljs-comment">//execute middleware filters</span>
+        <span class="hljs-keyword">if</span> do_filter(AfterExec) {
+            <span class="hljs-keyword">goto</span> Admin
+        }
+    }
+
+    do_filter(FinishRouter)
+
+Admin:
+    timeend := time.Since(starttime)
+    <span class="hljs-comment">//admin module record QPS</span>
+    <span class="hljs-keyword">if</span> EnableAdmin {
+        <span class="hljs-keyword">if</span> FilterMonitorFunc(r.Method, r.URL.Path, timeend) {
+            <span class="hljs-keyword">if</span> runrouter != <span class="hljs-constant">nil</span> {
+                <span class="hljs-keyword">go</span> toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, runrouter.Name(), timeend)
+            } <span class="hljs-keyword">else</span> {
+                <span class="hljs-keyword">go</span> toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, <span class="hljs-string">&quot;&quot;</span>, timeend)
+            }
+        }
+    }
+
+    <span class="hljs-keyword">if</span> RunMode == <span class="hljs-string">&quot;dev&quot;</span> || AccessLogs {
+        <span class="hljs-keyword">var</span> devinfo <span class="hljs-typename">string</span>
+        <span class="hljs-keyword">if</span> findrouter {
+            <span class="hljs-keyword">if</span> routerInfo != <span class="hljs-constant">nil</span> {
+                devinfo = fmt.Sprintf(<span class="hljs-string">&quot;| % -10s | % -40s | % -16s | % -10s | % -40s |&quot;</span>, r.Method, r.URL.Path, timeend.String(), <span class="hljs-string">&quot;match&quot;</span>, routerInfo.pattern)
+            } <span class="hljs-keyword">else</span> {
+                devinfo = fmt.Sprintf(<span class="hljs-string">&quot;| % -10s | % -40s | % -16s | % -10s |&quot;</span>, r.Method, r.URL.Path, timeend.String(), <span class="hljs-string">&quot;match&quot;</span>)
+            }
+        } <span class="hljs-keyword">else</span> {
+            devinfo = fmt.Sprintf(<span class="hljs-string">&quot;| % -10s | % -40s | % -16s | % -10s |&quot;</span>, r.Method, r.URL.Path, timeend.String(), <span class="hljs-string">&quot;notmatch&quot;</span>)
+        }
+        <span class="hljs-keyword">if</span> DefaultLogFilter == <span class="hljs-constant">nil</span> || !DefaultLogFilter.Filter(context) {
+            Debug(devinfo)
+        }
+    }
+
+    <span class="hljs-comment">// Call WriteHeader if status code has been set changed</span>
+    <span class="hljs-keyword">if</span> context.Output.Status != <span class="hljs-number">0</span> {
+        w.writer.WriteHeader(context.Output.Status)
+    }
 }
-<span class="hljs-preprocessor">#<span class="hljs-keyword">else</span></span>
-<span class="hljs-comment">// UNIX</span>
-<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">main</span><span class="hljs-params">(<span class="hljs-keyword">int</span> argc, <span class="hljs-keyword">char</span> *argv[])</span> </span>{
-  setvbuf(stderr, NULL, _IOLBF, <span class="hljs-number">1024</span>);
-  <span class="hljs-keyword">return</span> node::Start(argc, argv);
-}
-<span class="hljs-preprocessor">#<span class="hljs-keyword">endif</span></span>
 </code></pre>
-<p>&#x5176;&#x8C03;&#x7528;&#x7684;node::Start&#x65B9;&#x6CD5;&#x7684;&#x5B9E;&#x73B0;&#x89C1;&#x6587;&#x4EF6;<code>src/node.cc</code>&#x4E2D;&#xFF1A;</p>
-<pre><code class="lang-cpp"><span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">Start</span><span class="hljs-params">(<span class="hljs-keyword">int</span> argc, <span class="hljs-keyword">char</span>** argv)</span> </span>{
-  <span class="hljs-comment">// </span>
-  PlatformInit();
-
-  <span class="hljs-comment">// #define CHECK_GT(a, b) CHECK((a) &gt; (b))</span>
-  CHECK_GT(argc, <span class="hljs-number">0</span>);
-
-  <span class="hljs-comment">// Hack around with the argv pointer. Used for process.title = &quot;blah&quot;.</span>
-  <span class="hljs-comment">// &#x89C1; deps/uv/src/unix/proctitle.c &#x6587;&#x4EF6;&#x4E2D;</span>
-  argv = uv_setup_args(argc, argv);
-
-  <span class="hljs-comment">// This needs to run *before* V8::Initialize().  The const_cast is not</span>
-  <span class="hljs-comment">// optional, in case you&apos;re wondering.</span>
-  <span class="hljs-keyword">int</span> exec_argc;
-  <span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span>** exec_argv;
-  <span class="hljs-comment">// </span>
-  Init(&amp;argc, <span class="hljs-keyword">const_cast</span>&lt;<span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span>**&gt;(argv), &amp;exec_argc, &amp;exec_argv);
-
-<span class="hljs-preprocessor">#<span class="hljs-keyword">if</span> HAVE_OPENSSL</span>
-  <span class="hljs-comment">// V8 on Windows doesn&apos;t have a good source of entropy. Seed it from</span>
-  <span class="hljs-comment">// OpenSSL&apos;s pool.</span>
-  V8::SetEntropySource(crypto::EntropySource);
-<span class="hljs-preprocessor">#<span class="hljs-keyword">endif</span></span>
-
-  <span class="hljs-keyword">const</span> <span class="hljs-keyword">int</span> thread_pool_size = <span class="hljs-number">4</span>;
-  default_platform = v8::platform::CreateDefaultPlatform(thread_pool_size);
-  V8::InitializePlatform(default_platform);
-  V8::Initialize();
-
-  <span class="hljs-keyword">int</span> exit_code = <span class="hljs-number">1</span>;
-  {
-    <span class="hljs-function">NodeInstanceData <span class="hljs-title">instance_data</span><span class="hljs-params">(NodeInstanceType::MAIN,
-                                   uv_default_loop()</span>,
-                                   argc,
-                                   <span class="hljs-keyword">const_cast</span>&lt;<span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span>**&gt;<span class="hljs-params">(argv)</span>,
-                                   exec_argc,
-                                   exec_argv,
-                                   use_debug_agent)</span>;
-    StartNodeInstance(&amp;instance_data);
-    exit_code = instance_data.exit_code();
-  }
-  V8::Dispose();
-
-  <span class="hljs-keyword">delete</span> default_platform;
-  default_platform = <span class="hljs-keyword">nullptr</span>;
-
-  <span class="hljs-keyword">delete</span>[] exec_argv;
-  exec_argv = <span class="hljs-keyword">nullptr</span>;
-
-  <span class="hljs-keyword">return</span> exit_code;
+<hr>
+<p>&#x4E0A;&#x8FF0;&#x4EE3;&#x7801;&#x4E2D;&#x4F7F;&#x7528;&#x4E86; <code>responseWriter</code>&#xFF0C;&#x5176;&#x5B9A;&#x4E49;&#x5982;&#x4E0B;&#xFF1A;</p>
+<pre><code class="lang-go"><span class="hljs-comment">//responseWriter is a wrapper for the http.ResponseWriter</span>
+<span class="hljs-comment">//started set to true if response was written to then don&apos;t execute other handler</span>
+<span class="hljs-keyword">type</span> responseWriter <span class="hljs-keyword">struct</span> {
+    writer  http.ResponseWriter
+    started <span class="hljs-typename">bool</span>
+    status  <span class="hljs-typename">int</span>
 }
 </code></pre>
-<p>&#x5176;&#x4E2D; <code>PlatformInit()</code> &#x7684;&#x5B9E;&#x73B0;&#x5982;&#x4E0B;&#xFF1A;</p>
-<pre><code class="lang-cpp"><span class="hljs-function"><span class="hljs-keyword">inline</span> <span class="hljs-keyword">void</span> <span class="hljs-title">PlatformInit</span><span class="hljs-params">()</span> </span>{
-<span class="hljs-preprocessor">#ifdef __POSIX__</span>
-  <span class="hljs-keyword">sigset_t</span> sigmask;
-  sigemptyset(&amp;sigmask);
-  sigaddset(&amp;sigmask, SIGUSR1);
-  <span class="hljs-keyword">const</span> <span class="hljs-keyword">int</span> err = pthread_sigmask(SIG_SETMASK, &amp;sigmask, <span class="hljs-keyword">nullptr</span>);
-
-  <span class="hljs-comment">// Make sure file descriptors 0-2 are valid before we start logging anything.</span>
-  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> fd = STDIN_FILENO; fd &lt;= STDERR_FILENO; fd += <span class="hljs-number">1</span>) {
-    <span class="hljs-keyword">struct</span> stat ignored;
-    <span class="hljs-keyword">if</span> (fstat(fd, &amp;ignored) == <span class="hljs-number">0</span>)
-      <span class="hljs-keyword">continue</span>;
-    <span class="hljs-comment">// Anything but EBADF means something is seriously wrong.  We don&apos;t</span>
-    <span class="hljs-comment">// have to special-case EINTR, fstat() is not interruptible.</span>
-    <span class="hljs-keyword">if</span> (errno != EBADF)
-      ABORT();
-    <span class="hljs-keyword">if</span> (fd != open(<span class="hljs-string">&quot;/dev/null&quot;</span>, O_RDWR))
-      ABORT();
-  }
-
-  CHECK_EQ(err, <span class="hljs-number">0</span>);
-
-  <span class="hljs-comment">// Restore signal dispositions, the parent process may have changed them.</span>
-  <span class="hljs-keyword">struct</span> sigaction act;
-  <span class="hljs-built_in">memset</span>(&amp;act, <span class="hljs-number">0</span>, <span class="hljs-keyword">sizeof</span>(act));
-
-  <span class="hljs-comment">// The hard-coded upper limit is because NSIG is not very reliable; on Linux,</span>
-  <span class="hljs-comment">// it evaluates to 32, 34 or 64, depending on whether RT signals are enabled.</span>
-  <span class="hljs-comment">// Counting up to SIGRTMIN doesn&apos;t work for the same reason.</span>
-  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">unsigned</span> nr = <span class="hljs-number">1</span>; nr &lt; <span class="hljs-number">32</span>; nr += <span class="hljs-number">1</span>) {
-    <span class="hljs-keyword">if</span> (nr == SIGKILL || nr == SIGSTOP)
-      <span class="hljs-keyword">continue</span>;
-    act.sa_handler = (nr == SIGPIPE) ? SIG_IGN : SIG_DFL;
-    CHECK_EQ(<span class="hljs-number">0</span>, sigaction(nr, &amp;act, <span class="hljs-keyword">nullptr</span>));
-  }
-
-  RegisterSignalHandler(SIGINT, SignalExit, <span class="hljs-keyword">true</span>);
-  RegisterSignalHandler(SIGTERM, SignalExit, <span class="hljs-keyword">true</span>);
-
-  <span class="hljs-comment">// Raise the open file descriptor limit.</span>
-  <span class="hljs-keyword">struct</span> rlimit lim;
-  <span class="hljs-keyword">if</span> (getrlimit(RLIMIT_NOFILE, &amp;lim) == <span class="hljs-number">0</span> &amp;&amp; lim.rlim_cur != lim.rlim_max) {
-    <span class="hljs-comment">// Do a binary search for the limit.</span>
-    <span class="hljs-keyword">rlim_t</span> min = lim.rlim_cur;
-    <span class="hljs-keyword">rlim_t</span> max = <span class="hljs-number">1</span> &lt;&lt; <span class="hljs-number">20</span>;
-    <span class="hljs-comment">// But if there&apos;s a defined upper bound, don&apos;t search, just set it.</span>
-    <span class="hljs-keyword">if</span> (lim.rlim_max != RLIM_INFINITY) {
-      min = lim.rlim_max;
-      max = lim.rlim_max;
+<hr>
+<p>&#x9759;&#x6001;&#x6587;&#x4EF6;&#x8BF7;&#x6C42;&#x5904;&#x7406;&#x51FD;&#x6570; <code>serverStaticRouter</code> &#x5B9A;&#x4E49;&#x5728;&#x6587;&#x4EF6; <code>staticfile.go</code>&#x4E2D;&#xFF0C;&#x5B9E;&#x73B0;&#x5982;&#x4E0B;&#x6240;&#x793A;&#xFF1A;</p>
+<pre><code class="lang-go"><span class="hljs-keyword">func</span> serverStaticRouter(ctx *context.Context) {
+   <span class="hljs-comment">// &#x975E;GET/HEAD&#x65B9;&#x6CD5;&#x7684;&#x8BF7;&#x6C42;&#x4E0D;&#x8BA4;&#x4E3A;&#x662F;&#x9759;&#x6001;&#x6587;&#x4EF6;&#x8BF7;&#x6C42;</span>
+    <span class="hljs-keyword">if</span> ctx.Input.Method() != <span class="hljs-string">&quot;GET&quot;</span> &amp;&amp; ctx.Input.Method() != <span class="hljs-string">&quot;HEAD&quot;</span> {
+        <span class="hljs-keyword">return</span>
     }
-    <span class="hljs-keyword">do</span> {
-      lim.rlim_cur = min + (max - min) / <span class="hljs-number">2</span>;
-      <span class="hljs-keyword">if</span> (setrlimit(RLIMIT_NOFILE, &amp;lim)) {
-        max = lim.rlim_cur;
-      } <span class="hljs-keyword">else</span> {
-        min = lim.rlim_cur;
-      }
-    } <span class="hljs-keyword">while</span> (min + <span class="hljs-number">1</span> &lt; max);
-  }
-<span class="hljs-preprocessor">#<span class="hljs-keyword">endif</span>  <span class="hljs-comment">// __POSIX__</span></span>
+    <span class="hljs-comment">// &#x4E3A;&#x6BDB;&#x4E0D;&#x76F4;&#x63A5;&#x4F7F;&#x7528; ctx.Request.URL.Path?</span>
+    requestPath := path.Clean(ctx.Input.Request.URL.Path)
+    i := <span class="hljs-number">0</span>
+    <span class="hljs-comment">// &#x904D;&#x5386;&#x914D;&#x7F6E;&#x7684;&#x9759;&#x6001;&#x6587;&#x4EF6;&#x76EE;&#x5F55;&#xFF0C;prefix&#x8868;&#x793A;URL&#x524D;&#x7F00;&#xFF0C;&#x5373;&#x5728;Beego&#x4E2D;&#x53EF;&#x4EE5;&#x914D;&#x7F6E;&#x591A;&#x4E2A; prefix =&gt; staticDir &#x5BF9;</span>
+    <span class="hljs-keyword">for</span> prefix, staticDir := <span class="hljs-keyword">range</span> StaticDir {
+        <span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(prefix) == <span class="hljs-number">0</span> {
+            <span class="hljs-keyword">continue</span>
+        }
+        <span class="hljs-comment">// &#x8FD9;&#x4E24;&#x4E2A;&#x6587;&#x4EF6;&#x6BD4;&#x8F83;&#x7279;&#x6B8A;&#xFF0C;&#x6240;&#x4EE5;&#x7279;&#x6B8A;&#x5904;&#x7406;</span>
+        <span class="hljs-keyword">if</span> requestPath == <span class="hljs-string">&quot;/favicon.ico&quot;</span> || requestPath == <span class="hljs-string">&quot;/robots.txt&quot;</span> {
+            file := path.Join(staticDir, requestPath)
+            <span class="hljs-keyword">if</span> utils.FileExists(file) {
+                <span class="hljs-comment">// </span>
+                http.ServeFile(ctx.ResponseWriter, ctx.Request, file)
+                <span class="hljs-keyword">return</span>
+            } <span class="hljs-keyword">else</span> {
+                i++
+                <span class="hljs-keyword">if</span> i == <span class="hljs-built_in">len</span>(StaticDir) {
+                    http.NotFound(ctx.ResponseWriter, ctx.Request)
+                    <span class="hljs-keyword">return</span>
+                } <span class="hljs-keyword">else</span> {
+                    <span class="hljs-keyword">continue</span>
+                }
+            }
+        }
+        <span class="hljs-keyword">if</span> strings.HasPrefix(requestPath, prefix) {
+            <span class="hljs-comment">// &#x4EC5;&#x4EC5;&#x662F;&#x8DEF;&#x5F84;&#x5B57;&#x7B26;&#x4E32;&#x524D;&#x7F00;&#x8FD8;&#x662F;&#x4E0D;&#x591F;&#x7684;!</span>
+            <span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(requestPath) &gt; <span class="hljs-built_in">len</span>(prefix) &amp;&amp; requestPath[<span class="hljs-built_in">len</span>(prefix)] != <span class="hljs-string">&apos;/&apos;</span> {
+                <span class="hljs-keyword">continue</span>
+            }
+            <span class="hljs-comment">// &#x62FC;&#x63A5;&#x51FA;&#x76EE;&#x6807;&#x9759;&#x6001;&#x6587;&#x4EF6;&#x8DEF;&#x5F84;</span>
+            file := path.Join(staticDir, requestPath[<span class="hljs-built_in">len</span>(prefix):])
+            finfo, err := os.Stat(file)
+            <span class="hljs-keyword">if</span> err != <span class="hljs-constant">nil</span> {
+                <span class="hljs-keyword">if</span> RunMode == <span class="hljs-string">&quot;dev&quot;</span> {
+                    Warn(<span class="hljs-string">&quot;Can&apos;t find the file:&quot;</span>, file, err)
+                }
+                http.NotFound(ctx.ResponseWriter, ctx.Request)
+                <span class="hljs-keyword">return</span>
+            }
+            <span class="hljs-comment">//if the request is dir and DirectoryIndex is false then</span>
+            <span class="hljs-comment">// &#x5982;&#x679C;&#x662F;&#x76EE;&#x5F55;&#x7684;&#x8BDD;,&#x770B;&#x770B;&#x662F;&#x5426;&#x5141;&#x8BB8;&#x7F57;&#x5217;&#x51FA;&#x76EE;&#x5F55;&#x7684;&#x5185;&#x5BB9;</span>
+            <span class="hljs-keyword">if</span> finfo.IsDir() {
+                <span class="hljs-keyword">if</span> !DirectoryIndex {
+                    exception(<span class="hljs-string">&quot;403&quot;</span>, ctx)
+                    <span class="hljs-keyword">return</span>
+                } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> ctx.Input.Request.URL.Path[<span class="hljs-built_in">len</span>(ctx.Input.Request.URL.Path)-<span class="hljs-number">1</span>] != <span class="hljs-string">&apos;/&apos;</span> {
+                    http.Redirect(ctx.ResponseWriter, ctx.Request, ctx.Input.Request.URL.Path+<span class="hljs-string">&quot;/&quot;</span>, <span class="hljs-number">302</span>)
+                    <span class="hljs-keyword">return</span>
+                }
+            } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> strings.HasSuffix(requestPath, <span class="hljs-string">&quot;/index.html&quot;</span>) {
+                file := path.Join(staticDir, requestPath)
+                <span class="hljs-keyword">if</span> utils.FileExists(file) {
+                    http.ServeFile(ctx.ResponseWriter, ctx.Request, file)
+                    <span class="hljs-keyword">return</span>
+                }
+            }
+
+            <span class="hljs-comment">//This block obtained from (https://github.com/smithfox/beego) - it should probably get merged into astaxie/beego after a pull request</span>
+            <span class="hljs-comment">// &#x68C0;&#x6D4B;&#x5F53;&#x524D;&#x9759;&#x6001;&#x6587;&#x4EF6;&#x7C7B;&#x578B;&#x662F;&#x5426;&#x9700;&#x8981;&#x538B;&#x7F29;&#x540E;&#x4F20;&#x8F93;</span>
+            <span class="hljs-comment">// &#x4E0D;&#x8FC7;&#x6211;&#x4E0D;&#x592A;&#x559C;&#x6B22;&#x904D;&#x5386;&#x7684;&#x65B9;&#x5F0F;,&#x6211;&#x66F4;&#x559C;&#x6B22;map</span>
+            isStaticFileToCompress := <span class="hljs-constant">false</span>
+            <span class="hljs-keyword">if</span> StaticExtensionsToGzip != <span class="hljs-constant">nil</span> &amp;&amp; <span class="hljs-built_in">len</span>(StaticExtensionsToGzip) &gt; <span class="hljs-number">0</span> {
+                <span class="hljs-keyword">for</span> _, statExtension := <span class="hljs-keyword">range</span> StaticExtensionsToGzip {
+                    <span class="hljs-keyword">if</span> strings.HasSuffix(strings.ToLower(file), strings.ToLower(statExtension)) {
+                        isStaticFileToCompress = <span class="hljs-constant">true</span>
+                        <span class="hljs-keyword">break</span>
+                    }
+                }
+            }
+
+            <span class="hljs-keyword">if</span> isStaticFileToCompress {
+                <span class="hljs-keyword">var</span> contentEncoding <span class="hljs-typename">string</span>
+                <span class="hljs-keyword">if</span> EnableGzip {
+                   <span class="hljs-comment">// &#x6839;&#x636E;&#x8BF7;&#x6C42;&#x5934;Accept-Encoding&#x6765;&#x5224;&#x65AD;&#x538B;&#x7F29;&#x65B9;&#x5F0F;</span>
+                    contentEncoding = getAcceptEncodingZip(ctx.Request)
+                }
+             <span class="hljs-comment">// &#x5982;&#x679C;&#x80FD;&#x6D41;&#x5F0F;&#x5730;&#x54CD;&#x5E94;&#x5C31;&#x66F4;&#x68D2;&#x4E86;&#xFF01;</span>
+                memzipfile, err := openMemZipFile(file, contentEncoding)
+                <span class="hljs-keyword">if</span> err != <span class="hljs-constant">nil</span> {
+                    <span class="hljs-keyword">return</span>
+                }
+
+                <span class="hljs-keyword">if</span> contentEncoding == <span class="hljs-string">&quot;gzip&quot;</span> {
+                    ctx.Output.Header(<span class="hljs-string">&quot;Content-Encoding&quot;</span>, <span class="hljs-string">&quot;gzip&quot;</span>)
+                } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> contentEncoding == <span class="hljs-string">&quot;deflate&quot;</span> {
+                    ctx.Output.Header(<span class="hljs-string">&quot;Content-Encoding&quot;</span>, <span class="hljs-string">&quot;deflate&quot;</span>)
+                } <span class="hljs-keyword">else</span> {
+                    ctx.Output.Header(<span class="hljs-string">&quot;Content-Length&quot;</span>, strconv.FormatInt(finfo.Size(), <span class="hljs-number">10</span>))
+                }
+
+             <span class="hljs-comment">// http.ServeContent</span>
+                http.ServeContent(ctx.ResponseWriter, ctx.Request, file, finfo.ModTime(), memzipfile)
+
+            } <span class="hljs-keyword">else</span> {
+                http.ServeFile(ctx.ResponseWriter, ctx.Request, file)
+            }
+            <span class="hljs-keyword">return</span>
+        }
+    }
+}
+</code></pre>
+<hr>
+<p>&#x5F00;&#x542F;session&#x7684; <code>context.Input.CruSession, err = GlobalSessions.SessionStart(w, r)</code> &#x4E00;&#x884C;&#x4E2D;&#x7684; <code>GlobalSessions</code> &#x60F3;&#x5FC5;&#x8FD8;&#x8BB0;&#x5F97;&#x5427;&#xFF1F;&#x5728;<strong>&#x542F;&#x52A8;&#x6D41;&#x7A0B;</strong>&#x4E2D;&#x6709; <code>GlobalSessions, err = session.NewManager(SessionProvider, sessionConfig)</code> &#x4E00;&#x884C;&#x3002; <code>GlobalSessions.SessionStart</code> &#x65B9;&#x6CD5;&#x5B9E;&#x73B0;&#x5982;&#x4E0B;&#x6240;&#x793A;&#xFF1A;</p>
+<pre><code class="lang-go"><span class="hljs-comment">// Start session. generate or read the session id from http request.</span>
+<span class="hljs-comment">// if session id exists, return SessionStore with this id.</span>
+<span class="hljs-keyword">func</span> (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (session SessionStore, err error) {
+   <span class="hljs-comment">// &#x770B;&#x770B;&#x8BF7;&#x6C42;&#x5934;&#x4E2D;&#x662F;&#x5426;&#x6709;session id&#x7684;cookie</span>
+    cookie, errs := r.Cookie(manager.config.CookieName)
+    <span class="hljs-keyword">if</span> errs != <span class="hljs-constant">nil</span> || cookie.Value == <span class="hljs-string">&quot;&quot;</span> {
+       <span class="hljs-comment">// &#x6CA1;&#x6709;&#x5219;&#x65B0;&#x751F;&#x6210;&#x4E00;&#x4E2A;</span>
+        sid, errs := manager.sessionId(r)
+        <span class="hljs-keyword">if</span> errs != <span class="hljs-constant">nil</span> {
+            <span class="hljs-keyword">return</span> <span class="hljs-constant">nil</span>, errs
+        }
+        session, err = manager.provider.SessionRead(sid)
+        cookie = &amp;http.Cookie{
+            Name:     manager.config.CookieName,
+            Value:    url.QueryEscape(sid),
+            Path:     <span class="hljs-string">&quot;/&quot;</span>,
+            HttpOnly: <span class="hljs-constant">true</span>,
+            Secure:   manager.isSecure(r),
+            Domain:   manager.config.Domain,
+        }
+        <span class="hljs-keyword">if</span> manager.config.CookieLifeTime &gt; <span class="hljs-number">0</span> {
+            cookie.MaxAge = manager.config.CookieLifeTime
+            cookie.Expires = time.Now().Add(time.Duration(manager.config.CookieLifeTime) * time.Second)
+        }
+        <span class="hljs-keyword">if</span> manager.config.EnableSetCookie {
+            http.SetCookie(w, cookie)
+        }
+        r.AddCookie(cookie)
+    } <span class="hljs-keyword">else</span> {
+       <span class="hljs-comment">// &#x6709;&#xFF0C;&#x5219;&#x53D6;&#x51FA;&#x76EE;&#x6807;session id&#xFF0C;&#x63A5;&#x7740;&#x8BFB;&#x53D6;session&#x6570;&#x636E;</span>
+        sid, errs := url.QueryUnescape(cookie.Value)
+        <span class="hljs-keyword">if</span> errs != <span class="hljs-constant">nil</span> {
+            <span class="hljs-keyword">return</span> <span class="hljs-constant">nil</span>, errs
+        }
+        <span class="hljs-comment">// &#x4F46;&#x53EF;&#x80FD;&#x76EE;&#x6807;session&#x5DF2;&#x7ECF;&#x8FC7;&#x671F;&#xFF0C;&#x4E0D;&#x5B58;&#x5728;&#x4E86;&#xFF0C;&#x5219;&#x4E5F;&#x81EA;&#x52A8;&#x751F;&#x6210;&#x4E00;&#x4E2A;&#x65B0;&#x7684;</span>
+        <span class="hljs-keyword">if</span> manager.provider.SessionExist(sid) {
+            session, err = manager.provider.SessionRead(sid)
+        } <span class="hljs-keyword">else</span> {
+           <span class="hljs-comment">// &#x8FD9;&#x4EE3;&#x7801;&#x62F7;&#x8D1D;&#x5F97;&#x8BA9;&#x6211;&#x6709;&#x4E9B;&#x4E0D;&#x723D;&#x5440;</span>
+            sid, err = manager.sessionId(r)
+            <span class="hljs-keyword">if</span> err != <span class="hljs-constant">nil</span> {
+                <span class="hljs-keyword">return</span> <span class="hljs-constant">nil</span>, err
+            }
+            session, err = manager.provider.SessionRead(sid)
+            cookie = &amp;http.Cookie{
+                Name:     manager.config.CookieName,
+                Value:    url.QueryEscape(sid),
+                Path:     <span class="hljs-string">&quot;/&quot;</span>,
+                HttpOnly: <span class="hljs-constant">true</span>,
+                Secure:   manager.isSecure(r),
+                Domain:   manager.config.Domain,
+            }
+            <span class="hljs-keyword">if</span> manager.config.CookieLifeTime &gt; <span class="hljs-number">0</span> {
+                cookie.MaxAge = manager.config.CookieLifeTime
+                cookie.Expires = time.Now().Add(time.Duration(manager.config.CookieLifeTime) * time.Second)
+            }
+            <span class="hljs-comment">// &#x8FD9;&#x662F;&#x5565;&#x610F;&#x601D;&#xFF1F;</span>
+            <span class="hljs-keyword">if</span> manager.config.EnableSetCookie {
+                http.SetCookie(w, cookie)
+            }
+            r.AddCookie(cookie)
+        }
+    }
+    <span class="hljs-keyword">return</span>
 }
 </code></pre>
 
@@ -1491,10 +1835,10 @@
         </div>
 
         
-        <a href="../../../language/js/node.html" class="navigation navigation-prev " aria-label="Previous page: NodeJS"><i class="fa fa-angle-left"></i></a>
+        <a href="../../../language/go/beego/run.html" class="navigation navigation-prev " aria-label="Previous page: 启动流程"><i class="fa fa-angle-left"></i></a>
         
         
-        <a href="../../../language/css.html" class="navigation navigation-next " aria-label="Next page: CSS"><i class="fa fa-angle-right"></i></a>
+        <a href="../../../language/js.html" class="navigation navigation-next " aria-label="Next page: JavaScript"><i class="fa fa-angle-right"></i></a>
         
     </div>
 </div>

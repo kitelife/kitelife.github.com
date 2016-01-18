@@ -255,6 +255,26 @@ runtime包中有几个处理goroutine的函数。
 - [gopkg](https://github.com/niemeyer/gopkg)
 - [beego](https://github.com/astaxie/beego)
 - [gopkg](https://github.com/gopkg/gopkg)
+- [martini](https://github.com/go-martini/martini)
+- [gin](https://github.com/gin-gonic/gin)
+- [gopher-lua](https://github.com/yuin/gopher-lua)
+- [etcd](https://github.com/coreos/etcd)
+- [web.go](https://github.com/hoisie/web)
+- [influxdb](https://github.com/influxdata/influxdb)
+
+> Scalable datastore for metrics, events, and real-time analytics
+
+- [telegraf](https://github.com/influxdata/telegraf)
+
+> The plugin-driven server agent for collecting & reporting metrics.
+
+- [kapacitor](https://github.com/influxdata/kapacitor)
+
+> Open source framework for processing, monitoring, and alerting on time series data
+
+- [cobra](https://github.com/spf13/cobra)
+
+> A Commander for modern Go CLI interactions
 
 ## 推荐阅读
 
@@ -270,4 +290,5 @@ runtime包中有几个处理goroutine的函数。
 - [深入解析Go](https://github.com/tiancaiamao/go-internals)
 - [How to Write Go Code](https://golang.org/doc/code.html)
 - [Effective Go](https://golang.org/doc/effective_go.html)
+- [Beego in Action](https://github.com/lei-cao/beego-in-action)
 

@@ -1,5 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>黑·白</title><link>http://youngsterxyf.github.io/</link><description></description><atom:link href="http://youngsterxyf.github.io/feeds/youngsterxyf.rss.xml" rel="self"></atom:link><lastBuildDate>Sun, 24 Jan 2016 00:00:00 +0800</lastBuildDate><item><title>Base64编码原理与应用</title><link>http://youngsterxyf.github.io/2016/01/24/base64-encoding/</link><description>&lt;p&gt;2015年，我们在青云平台上实现了“百度云观测”应用。青云应用本质上是一个iframe，在向iframe服务方发送的请求中会携带一些数据，青云平台会使用&lt;code&gt;Base64 URL&lt;/code&gt;对这些数据进行编码，其提供的编码解码算法示例如下：&lt;/p&gt;
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>黑·白</title><link>http://youngsterxyf.github.io/</link><description></description><atom:link href="http://youngsterxyf.github.io/feeds/youngsterxyf.rss.xml" rel="self"></atom:link><lastBuildDate>Thu, 18 Feb 2016 00:00:00 +0800</lastBuildDate><item><title>如何杀死defunct进程</title><link>http://youngsterxyf.github.io/2016/02/18/kill-defunct/</link><description>&lt;p&gt;原文：&lt;a href="https://kenno.wordpress.com/2007/04/04/how-to-kill-defunct-process/"&gt;How to kill defunct process&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;译者：&lt;a href="https://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;defunct进程是指出错损坏的进程，父子进程之间不会再通信。有时，它们会演变成“僵尸进程”，存留在你的系统中，直到系统重启。可以尝试 “kill -9” 命令来清除，但多数时候不管用。&lt;/p&gt;
+&lt;p&gt;为了杀死这些defunct进程，你有两个选择：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;重启你的计算机&lt;/li&gt;
+&lt;li&gt;继续往下读...&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;我们先看看系统中是否存在defunct进程：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nv"&gt;$ &lt;/span&gt;ps -A &lt;span class="p"&gt;|&lt;/span&gt; grep defunct
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;假设得到的输出如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;8328 ? 00:00:00 mono &amp;lt;defunct&amp;gt;
+8522 ? 00:00:01 mono &amp;lt;defunct&amp;gt;
+13132 ? 00:00:00 mono &amp;lt;defunct&amp;gt;
+25822 ? 00:00:00 ruby &amp;lt;defunct&amp;gt;
+28383 ? 00:00:00 ruby &amp;lt;defunct&amp;gt;
+18803 ? 00:00:00 ruby &amp;lt;defunct&amp;gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;这意味着存在6个defunct进程：3个mono进程，以及3个ruby进程。这些进程之所以存在，可能是因为应用程序写得很烂或者用户做了不常见的操作，在我这，一定是我写的mono C#程序存在严重问题 :smile: 。&lt;/p&gt;
+&lt;p&gt;现在，我们来看看这些进程的ID及其父进程ID：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nv"&gt;$ &lt;/span&gt;ps -ef &lt;span class="p"&gt;|&lt;/span&gt; grep defunct &lt;span class="p"&gt;|&lt;/span&gt; more
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;以上命令的输出如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;UID PID PPID ...
+---------------------------------------------------------------
+
+kenno 8328 6757 0 Mar22 ? 00:00:00 [mono] &amp;lt;defunct&amp;gt;
+kenno 8522 6757 0 Mar22 ? 00:00:01 [mono] &amp;lt;defunct&amp;gt;
+kenno 13132 6757 0 Mar23 ? 00:00:00 [mono] &amp;lt;defunct&amp;gt;
+kenno 25822 25808 0 Mar27 ? 00:00:00 [ruby] &amp;lt;defunct&amp;gt;
+kenno 28383 28366 0 Mar27 ? 00:00:00 [ruby] &amp;lt;defunct&amp;gt;
+kenno 18803 18320 0 Apr02 ? 00:00:00 [ruby] &amp;lt;defunct&amp;gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;ul&gt;
+&lt;li&gt;UID：用户ID&lt;/li&gt;
+&lt;li&gt;PID：进程ID&lt;/li&gt;
+&lt;li&gt;PPID：父进程ID&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;如果你使用命令 “kill -9 8328” 尝试杀死ID为8328的进程，可能会没效果。要想成功杀死该进程，需要对其父进程（ID为6757）执行kill命令（&lt;code&gt;$ kill -9 6757&lt;/code&gt;）。对所有这些进程的父进程ID应用kill命令，并验证结果（&lt;strong&gt;$ps -A | grep defunct&lt;/strong&gt;）。&lt;/p&gt;
+&lt;p&gt;如果前一个命令显示无结果，那么搞定！否则，可能你需要重启一下系统。&lt;/p&gt;
+&lt;h2&gt;参考文献&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="http://wagoneers.com/UNIX/KILL/Kill.html"&gt;http://wagoneers.com/UNIX/KILL/Kill.html&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://www.cts.wustl.edu/~allen/kill-defunct-process.html"&gt;http://www.cts.wustl.edu/~allen/kill-defunct-process.html&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr /&gt;
+&lt;p&gt;&lt;strong&gt;译注&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;执行命令 &lt;code&gt;ps aux | grep defunct&lt;/code&gt;，如果进程为defunct，则其第8列为 &lt;code&gt;Z&lt;/code&gt; 。如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;work     13391  0.1  0.0      0     0 pts/0    Z    10:50   0:23 [python] &amp;lt;defunct&amp;gt;
+work     13393  0.0  0.0      0     0 pts/0    Z    10:50   0:15 [python] &amp;lt;defunct&amp;gt;
+work     13394  0.0  0.0      0     0 pts/0    Z    10:50   0:15 [python] &amp;lt;defunct&amp;gt;
+work     13395  0.1  0.0      0     0 pts/0    Z    10:50   0:28 [python] &amp;lt;defunct&amp;gt;
+work     13396  0.0  0.0      0     0 pts/0    Z    10:50   0:15 [python] &amp;lt;defunct&amp;gt;
+work     13397  0.1  0.0      0     0 pts/0    Z    10:50   0:23 [python] &amp;lt;defunct&amp;gt;
+work     13398  0.0  0.0      0     0 pts/0    Z    10:50   0:15 [python] &amp;lt;defunct&amp;gt;
+work     13399  0.1  0.0      0     0 pts/0    Z    10:50   0:22 [python] &amp;lt;defunct&amp;gt;
+work     13400  0.0  0.0      0     0 pts/0    Z    10:50   0:15 [python] &amp;lt;defunct&amp;gt;
+work     13401  0.1  0.0      0     0 pts/0    Z    10:50   0:22 [python] &amp;lt;defunct&amp;gt;
+work     13402  0.0  0.0      0     0 pts/0    Z    10:50   0:16 [python] &amp;lt;defunct&amp;gt;
+work     13403  0.0  0.0      0     0 pts/0    Z    10:50   0:14 [python] &amp;lt;defunct&amp;gt;
+work     13404  0.0  0.0      0     0 pts/0    Z    10:50   0:15 [python] &amp;lt;defunct&amp;gt;
+work     13405  0.0  0.0      0     0 pts/0    Z    10:50   0:15 [python] &amp;lt;defunct&amp;gt;
+work     13406  0.0  0.0      0     0 pts/0    Z    10:50   0:16 [python] &amp;lt;defunct&amp;gt;
+work     13407  0.0  0.0      0     0 pts/0    Z    10:50   0:02 [python] &amp;lt;defunct&amp;gt;
+work     13408  0.0  0.0      0     0 pts/0    Z    10:50   0:14 [python] &amp;lt;defunct&amp;gt;
+&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Thu, 18 Feb 2016 00:00:00 +0800</pubDate><guid>tag:youngsterxyf.github.io,2016-02-18:2016/02/18/kill-defunct/</guid><category>Linux</category></item><item><title>Base64编码原理与应用</title><link>http://youngsterxyf.github.io/2016/01/24/base64-encoding/</link><description>&lt;p&gt;2015年，我们在青云平台上实现了“百度云观测”应用。青云应用本质上是一个iframe，在向iframe服务方发送的请求中会携带一些数据，青云平台会使用&lt;code&gt;Base64 URL&lt;/code&gt;对这些数据进行编码，其提供的编码解码算法示例如下：&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;// php版本&lt;/span&gt;
 &lt;span class="x"&gt;function base64_URL_encode($data) {&lt;/span&gt;
 &lt;span class="x"&gt;  return rtrim(strtr(base64_encode($data), &amp;#39;+/&amp;#39;, &amp;#39;-_&amp;#39;), &amp;#39;=&amp;#39;);&lt;/span&gt;

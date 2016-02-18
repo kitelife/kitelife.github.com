@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>如何杀死defunct进程</title>
+        <meta charset="utf-8" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑·白 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑·白 Full RSS Feed" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/SentyZHAO/SentyZHAO.css" />
+
+        <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+            <script>
+              var _hmt = _hmt || [];
+              (function() {
+                var hm = document.createElement("script");
+                hm.src = "//hm.baidu.com/hm.js?5c5d8c3fe75afeff117777b9236b96ec";
+                var s = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(hm, s);
+              })();
+            </script>
+</head>
+
+<body id="index" class="home">
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1 style='font-family: "SentyZHAO";'><a href="../../../..">黑·白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+
+              <ul class="columns" style='font-family: "SentyZHAO";'>
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="/archives.html">归 档</a></li>
+                <li><a href="/tags.html">标 签</a></li>
+                <li><a href="/pages/tools.html">工具集</a></li>
+                <li><a href="/pages/links.html">链 接</a></li>
+                <li><a href="/pages/tech-share.html">技术分享</a></li>
+                <li><a href="/pages/aboutme.html">关于我</a></li>
+                <li><a href="/feeds/rss.xml">RSS</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+   <div class="row">
+        <div class="columns">
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2016/02/18/kill-defunct/" rel="bookmark" title="Permalink to 如何杀死defunct进程">如何杀死defunct进程</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2016-02-18T00:00:00+08:00">
+                2016-02-18 四
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>原文：<a href="https://kenno.wordpress.com/2007/04/04/how-to-kill-defunct-process/">How to kill defunct process</a></p>
+<p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
+<p>defunct进程是指出错损坏的进程，父子进程之间不会再通信。有时，它们会演变成“僵尸进程”，存留在你的系统中，直到系统重启。可以尝试 “kill -9” 命令来清除，但多数时候不管用。</p>
+<p>为了杀死这些defunct进程，你有两个选择：</p>
+<ul>
+<li>重启你的计算机</li>
+<li>继续往下读...</li>
+</ul>
+<p>我们先看看系统中是否存在defunct进程：</p>
+<div class="highlight"><pre><span class="nv">$ </span>ps -A <span class="p">|</span> grep defunct
+</pre></div>
+
+
+<p>假设得到的输出如下所示：</p>
+<div class="highlight"><pre>8328 ? 00:00:00 mono &lt;defunct&gt;
+8522 ? 00:00:01 mono &lt;defunct&gt;
+13132 ? 00:00:00 mono &lt;defunct&gt;
+25822 ? 00:00:00 ruby &lt;defunct&gt;
+28383 ? 00:00:00 ruby &lt;defunct&gt;
+18803 ? 00:00:00 ruby &lt;defunct&gt;
+</pre></div>
+
+
+<p>这意味着存在6个defunct进程：3个mono进程，以及3个ruby进程。这些进程之所以存在，可能是因为应用程序写得很烂或者用户做了不常见的操作，在我这，一定是我写的mono C#程序存在严重问题 :smile: 。</p>
+<p>现在，我们来看看这些进程的ID及其父进程ID：</p>
+<div class="highlight"><pre><span class="nv">$ </span>ps -ef <span class="p">|</span> grep defunct <span class="p">|</span> more
+</pre></div>
+
+
+<p>以上命令的输出如下：</p>
+<div class="highlight"><pre>UID PID PPID ...
+---------------------------------------------------------------
+
+kenno 8328 6757 0 Mar22 ? 00:00:00 [mono] &lt;defunct&gt;
+kenno 8522 6757 0 Mar22 ? 00:00:01 [mono] &lt;defunct&gt;
+kenno 13132 6757 0 Mar23 ? 00:00:00 [mono] &lt;defunct&gt;
+kenno 25822 25808 0 Mar27 ? 00:00:00 [ruby] &lt;defunct&gt;
+kenno 28383 28366 0 Mar27 ? 00:00:00 [ruby] &lt;defunct&gt;
+kenno 18803 18320 0 Apr02 ? 00:00:00 [ruby] &lt;defunct&gt;
+</pre></div>
+
+
+<ul>
+<li>UID：用户ID</li>
+<li>PID：进程ID</li>
+<li>PPID：父进程ID</li>
+</ul>
+<p>如果你使用命令 “kill -9 8328” 尝试杀死ID为8328的进程，可能会没效果。要想成功杀死该进程，需要对其父进程（ID为6757）执行kill命令（<code>$ kill -9 6757</code>）。对所有这些进程的父进程ID应用kill命令，并验证结果（<strong>$ps -A | grep defunct</strong>）。</p>
+<p>如果前一个命令显示无结果，那么搞定！否则，可能你需要重启一下系统。</p>
+<h2>参考文献</h2>
+<ul>
+<li><a href="http://wagoneers.com/UNIX/KILL/Kill.html">http://wagoneers.com/UNIX/KILL/Kill.html</a></li>
+<li><a href="http://www.cts.wustl.edu/~allen/kill-defunct-process.html">http://www.cts.wustl.edu/~allen/kill-defunct-process.html</a></li>
+</ul>
+<hr />
+<p><strong>译注</strong></p>
+<p>执行命令 <code>ps aux | grep defunct</code>，如果进程为defunct，则其第8列为 <code>Z</code> 。如下所示：</p>
+<div class="highlight"><pre>work     13391  0.1  0.0      0     0 pts/0    Z    10:50   0:23 [python] &lt;defunct&gt;
+work     13393  0.0  0.0      0     0 pts/0    Z    10:50   0:15 [python] &lt;defunct&gt;
+work     13394  0.0  0.0      0     0 pts/0    Z    10:50   0:15 [python] &lt;defunct&gt;
+work     13395  0.1  0.0      0     0 pts/0    Z    10:50   0:28 [python] &lt;defunct&gt;
+work     13396  0.0  0.0      0     0 pts/0    Z    10:50   0:15 [python] &lt;defunct&gt;
+work     13397  0.1  0.0      0     0 pts/0    Z    10:50   0:23 [python] &lt;defunct&gt;
+work     13398  0.0  0.0      0     0 pts/0    Z    10:50   0:15 [python] &lt;defunct&gt;
+work     13399  0.1  0.0      0     0 pts/0    Z    10:50   0:22 [python] &lt;defunct&gt;
+work     13400  0.0  0.0      0     0 pts/0    Z    10:50   0:15 [python] &lt;defunct&gt;
+work     13401  0.1  0.0      0     0 pts/0    Z    10:50   0:22 [python] &lt;defunct&gt;
+work     13402  0.0  0.0      0     0 pts/0    Z    10:50   0:16 [python] &lt;defunct&gt;
+work     13403  0.0  0.0      0     0 pts/0    Z    10:50   0:14 [python] &lt;defunct&gt;
+work     13404  0.0  0.0      0     0 pts/0    Z    10:50   0:15 [python] &lt;defunct&gt;
+work     13405  0.0  0.0      0     0 pts/0    Z    10:50   0:15 [python] &lt;defunct&gt;
+work     13406  0.0  0.0      0     0 pts/0    Z    10:50   0:16 [python] &lt;defunct&gt;
+work     13407  0.0  0.0      0     0 pts/0    Z    10:50   0:02 [python] &lt;defunct&gt;
+work     13408  0.0  0.0      0     0 pts/0    Z    10:50   0:14 [python] &lt;defunct&gt;
+</pre></div>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2016/02/18/kill-defunct/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+        </div><!-- /.twelve.columns -->
+ </div><!-- /.row -->
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+  <script src="../../../../theme/js/main.js"></script>
+</body>
+</html>

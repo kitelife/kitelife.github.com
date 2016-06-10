@@ -63,6 +63,46 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="../2015/04/10/read-yii-code-9/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 自定义类自动加载">Yii源码阅读笔记 - 自定义类自动加载</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2015-04-10T00:00:00+08:00"> 2015-04-10 五 </abbr>
+<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <p>前两天突然发现：之前的阅读笔记对于Yii应用中如何自动加载自定义类的问题没有解释。这里的自定义类是指非Yii框架本身的类。</p>
+<p>关于组件类的配置加载已在 <a href="http://blog.xiayf.cn/2014/11/13/read-yii-code-3/">Yii源码阅读笔记 - 组件集成</a> 一文中做了较为详细的说明，
+所以这里不再涉及。</p>
+<p>本文主要解释以下两点：</p>
+<ol>
+<li>Yii框架是如何找到请求对应的自定义控制器类？</li>
+<li>在自定义控制器类中使用其他类（如Model类、或其他任意目录下文件中定义的类）时，Yii框架是如何自动加载的？</li>
+</ol>
+<hr />
+<p>在 <a href="http://blog.xiayf.cn/2014/11/20/read-yii-code-7/">Yii源码阅读笔记 - 应用模块化</a> 一文中介绍类 <code>CWebApplication</code> 中的方法 <code>createController</code> ，
+该方法根据目标路由找到对应的控制器类文件并加载，方法中有行代码：</p>
+<div class="highlight"><pre><span class="x">$basePath=$owner-&gt;getControllerPath();</span>
+</pre></div>
+
+
+<p>这里的 <code>getControllerPath</code> 会返回当前应用或模块下的控制器类的存放目录，对应应用级与模块级，其实现有两处，其一是在类 <code>CWebApplication</code> 中：</p>
+<div class="highlight"><pre><span class="x">/**</span>
+<span class="x"> * @return string the directory that contains the controller classes. Defaults to &#39;protected/controllers&#39;.</span>
+<span class="x"> */</span>
+<span class="x">public function ...</span></pre></div> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2015/04/10/read-yii-code-9/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 自定义类自动加载">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="../tag/php.html">PHP</a>
+                    <a class="danger label" href="../tag/yii.html">Yii</a>
+                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
+                    <a class="danger label" href="../tag/zong-jie.html">总结</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="../2015/03/22/read-slim/" rel="bookmark" title="Permalink to Slim源码阅读笔记">Slim源码阅读笔记</a>
                     </h2>
                 </header>
@@ -279,34 +319,6 @@ Phonegap官网提供的文档与Apache Cordova文档是相同的，所以从技�
                 </div>
             </article>
             </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="../2014/11/20/read-yii-code-7/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 应用模块化">Yii源码阅读笔记 - 应用模块化</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2014-11-20T00:00:00+08:00"> 2014-11-20 四 </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <h3>概述</h3>
-<p>Yii框架有个“模块（Module）”的概念，与“应用（Application）”类似，模块必须归属于一个父模块或者一个应用，模块不能单独部署，一个应用不一定要分模块。</p>
-<p>由此可以看到，Yii的“模块”和“应用”类似于Django框架中的“应用（App）”和“项目（Project）”。</p>
-<p>当一个应用的规模大到一定的程度 - 可能涉及多个团队来开发，就应该考虑分“模块”开发。“模块”通常对应应用的一个相对独立的功能。</p>
-<p>一个模块化的Yii框架应用的工程目录结构大致示例如下：</p>
-<p><img alt="Yii-WebApp-Modules" src="/assets/uploads/pics/yii-webapp-modules.png" /></p>
-<p>上图所示项目有一个名为“forum”的模块，该模块下也有自己的<code>components</code>、<code>controllers</code>、<code>models</code>、<code>views</code>、<code>extensions</code>目录，与一个普通的/不分模块的Yii框架Web应用的项目结构非常相似。</p>
-<p>Yii框架模块化应用的所有模块默认都是放在<code>protected/modules</code>目录下，每个模块的内容又各自放在以模块ID（如<code>forum ...</code></p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2014/11/20/read-yii-code-7/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 应用模块化">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/php.html">PHP</a>
-                    <a class="danger label" href="../tag/yii.html">Yii</a>
-                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
-                    <a class="danger label" href="../tag/zong-jie.html">总结</a>
-                </div>
-            </article>
-            </li>
         </ol><!-- /#posts-list -->
     </div><!-- /.eleven.columns -->
 <div class="three columns">
@@ -332,86 +344,87 @@ Phonegap官网提供的文档与Apache Cordova文档是相同的，所以从技�
 
 <h4>标签</h4>
 	<ul>
-	    <li class="tag-4"><a href="../tag/restful.html">RESTful</a></li>
-	    <li class="tag-4"><a href="../tag/socketio.html">socket.io</a></li>
-	    <li class="tag-4"><a href="../tag/phonegap.html">Phonegap</a></li>
-	    <li class="tag-3"><a href="../tag/xue-xi-fang-fa.html">学习方法</a></li>
-	    <li class="tag-2"><a href="../tag/shell.html">Shell</a></li>
-	    <li class="tag-4"><a href="../tag/easy_install.html">easy_install</a></li>
-	    <li class="tag-2"><a href="../tag/gong-zuo.html">工作</a></li>
-	    <li class="tag-1"><a href="../tag/zong-jie.html">总结</a></li>
-	    <li class="tag-3"><a href="../tag/gong-ju.html">工具</a></li>
-	    <li class="tag-3"><a href="../tag/gan-wu.html">感悟</a></li>
-	    <li class="tag-3"><a href="../tag/haproxy.html">HAProxy</a></li>
-	    <li class="tag-4"><a href="../tag/windows.html">Windows</a></li>
-	    <li class="tag-4"><a href="../tag/yan-jiang.html">演讲</a></li>
-	    <li class="tag-4"><a href="../tag/cc.html">C/C++</a></li>
-	    <li class="tag-2"><a href="../tag/javascript.html">JavaScript</a></li>
-	    <li class="tag-4"><a href="../tag/memcached.html">Memcached</a></li>
-	    <li class="tag-4"><a href="../tag/bind.html">BIND</a></li>
-	    <li class="tag-4"><a href="../tag/xhprof.html">Xhprof</a></li>
-	    <li class="tag-4"><a href="../tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
-	    <li class="tag-3"><a href="../tag/bi-shi.html">笔试</a></li>
-	    <li class="tag-4"><a href="../tag/dns.html">DNS</a></li>
-	    <li class="tag-4"><a href="../tag/ssl.html">ssl</a></li>
-	    <li class="tag-4"><a href="../tag/cordova.html">Cordova</a></li>
-	    <li class="tag-3"><a href="../tag/mian-shi.html">面试</a></li>
-	    <li class="tag-4"><a href="../tag/ri-zhi.html">日志</a></li>
-	    <li class="tag-4"><a href="../tag/template.html">template</a></li>
-	    <li class="tag-4"><a href="../tag/ying-yu.html">英语</a></li>
-	    <li class="tag-2"><a href="../tag/ji-zhu.html">技术</a></li>
-	    <li class="tag-4"><a href="../tag/rest.html">REST</a></li>
-	    <li class="tag-3"><a href="../tag/bing-xing.html">并行</a></li>
-	    <li class="tag-4"><a href="../tag/slim.html">slim</a></li>
-	    <li class="tag-3"><a href="../tag/wei-xin.html">微信</a></li>
-	    <li class="tag-4"><a href="../tag/li-lun.html">理论</a></li>
-	    <li class="tag-3"><a href="../tag/shi-ge.html">诗歌</a></li>
-	    <li class="tag-4"><a href="../tag/zhong-jian-jian.html">中间件</a></li>
-	    <li class="tag-4"><a href="../tag/ming-ling.html">命令</a></li>
-	    <li class="tag-3"><a href="../tag/github.html">github</a></li>
-	    <li class="tag-4"><a href="../tag/ban-ben-kong-zhi.html">版本控制</a></li>
-	    <li class="tag-3"><a href="../tag/keepalived.html">Keepalived</a></li>
-	    <li class="tag-4"><a href="../tag/pip.html">pip</a></li>
-	    <li class="tag-4"><a href="../tag/vmware.html">VMware</a></li>
-	    <li class="tag-4"><a href="../tag/bian-ma.html">编码</a></li>
-	    <li class="tag-4"><a href="../tag/redis.html">Redis</a></li>
-	    <li class="tag-4"><a href="../tag/kai-yuan.html">开源</a></li>
-	    <li class="tag-3"><a href="../tag/yue-du.html">阅读</a></li>
-	    <li class="tag-4"><a href="../tag/css.html">CSS</a></li>
-	    <li class="tag-4"><a href="../tag/teng-xun.html">腾讯</a></li>
-	    <li class="tag-3"><a href="../tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
-	    <li class="tag-2"><a href="../tag/yii.html">Yii</a></li>
-	    <li class="tag-2"><a href="../tag/git.html">git</a></li>
-	    <li class="tag-3"><a href="../tag/mysql.html">MySQL</a></li>
-	    <li class="tag-4"><a href="../tag/zi-sheng.html">自省</a></li>
-	    <li class="tag-4"><a href="../tag/jekyll.html">jekyll</a></li>
-	    <li class="tag-4"><a href="../tag/rong-liang-gui-hua.html">容量规划</a></li>
-	    <li class="tag-4"><a href="../tag/gao-ke-yong.html">高可用</a></li>
-	    <li class="tag-1"><a href="../tag/php.html">PHP</a></li>
-	    <li class="tag-4"><a href="../tag/diao-shi.html">调试</a></li>
-	    <li class="tag-3"><a href="../tag/fu-zai-jun-heng.html">负载均衡</a></li>
-	    <li class="tag-4"><a href="../tag/api.html">API</a></li>
-	    <li class="tag-1"><a href="../tag/python.html">Python</a></li>
-	    <li class="tag-4"><a href="../tag/zi-ti.html">字体</a></li>
-	    <li class="tag-1"><a href="../tag/linux.html">Linux</a></li>
+	    <li class="tag-4"><a href="../tag/sql.html">SQL</a></li>
 	    <li class="tag-1"><a href="../tag/fan-yi.html">翻译</a></li>
-	    <li class="tag-4"><a href="../tag/wen-zi.html">文字</a></li>
-	    <li class="tag-2"><a href="../tag/fu-wu-qi.html">服务器</a></li>
-	    <li class="tag-3"><a href="../tag/gu-zhang.html">故障</a></li>
-	    <li class="tag-4"><a href="../tag/pypi.html">PyPI</a></li>
-	    <li class="tag-3"><a href="../tag/jia-gou.html">架构</a></li>
-	    <li class="tag-3"><a href="../tag/sheng-huo.html">生活</a></li>
-	    <li class="tag-2"><a href="../tag/golang.html">Golang</a></li>
-	    <li class="tag-4"><a href="../tag/python-weekly.html">python-weekly</a></li>
-	    <li class="tag-4"><a href="../tag/haproxyconsole.html">HAProxyConsole</a></li>
-	    <li class="tag-4"><a href="../tag/xiao-xi-tui-song.html">消息推送</a></li>
-	    <li class="tag-4"><a href="../tag/shu-ju-ku.html">数据库</a></li>
+	    <li class="tag-1"><a href="../tag/linux.html">Linux</a></li>
+	    <li class="tag-4"><a href="../tag/template.html">template</a></li>
+	    <li class="tag-4"><a href="../tag/api.html">API</a></li>
+	    <li class="tag-4"><a href="../tag/css.html">CSS</a></li>
 	    <li class="tag-4"><a href="../tag/liu-lan-qi-jian-rong.html">浏览器兼容</a></li>
-	    <li class="tag-4"><a href="../tag/wei-bo.html">微博</a></li>
-	    <li class="tag-3"><a href="../tag/suan-fa.html">算法</a></li>
-	    <li class="tag-3"><a href="../tag/ming-ling-xing.html">命令行</a></li>
+	    <li class="tag-3"><a href="../tag/yue-du.html">阅读</a></li>
+	    <li class="tag-4"><a href="../tag/gao-ke-yong.html">高可用</a></li>
+	    <li class="tag-4"><a href="../tag/ying-yu.html">英语</a></li>
+	    <li class="tag-4"><a href="../tag/ming-ling.html">命令</a></li>
+	    <li class="tag-4"><a href="../tag/python-weekly.html">python-weekly</a></li>
+	    <li class="tag-3"><a href="../tag/mian-shi.html">面试</a></li>
+	    <li class="tag-4"><a href="../tag/kai-yuan.html">开源</a></li>
+	    <li class="tag-3"><a href="../tag/xue-xi-fang-fa.html">学习方法</a></li>
+	    <li class="tag-4"><a href="../tag/ban-ben-kong-zhi.html">版本控制</a></li>
+	    <li class="tag-2"><a href="../tag/ji-zhu.html">技术</a></li>
+	    <li class="tag-4"><a href="../tag/zi-sheng.html">自省</a></li>
+	    <li class="tag-4"><a href="../tag/cc.html">C/C++</a></li>
+	    <li class="tag-3"><a href="../tag/gan-wu.html">感悟</a></li>
+	    <li class="tag-3"><a href="../tag/mysql.html">MySQL</a></li>
+	    <li class="tag-4"><a href="../tag/li-lun.html">理论</a></li>
+	    <li class="tag-4"><a href="../tag/pypi.html">PyPI</a></li>
+	    <li class="tag-2"><a href="../tag/golang.html">Golang</a></li>
+	    <li class="tag-4"><a href="../tag/bind.html">BIND</a></li>
+	    <li class="tag-3"><a href="../tag/sheng-huo.html">生活</a></li>
+	    <li class="tag-2"><a href="../tag/fu-wu-qi.html">服务器</a></li>
+	    <li class="tag-2"><a href="../tag/shell.html">Shell</a></li>
+	    <li class="tag-1"><a href="../tag/zong-jie.html">总结</a></li>
+	    <li class="tag-4"><a href="../tag/bian-ma.html">编码</a></li>
+	    <li class="tag-4"><a href="../tag/xiao-xi-tui-song.html">消息推送</a></li>
+	    <li class="tag-3"><a href="../tag/gu-zhang.html">故障</a></li>
+	    <li class="tag-4"><a href="../tag/shu-ju-ke-shi-hua.html">数据可视化</a></li>
+	    <li class="tag-3"><a href="../tag/fu-zai-jun-heng.html">负载均衡</a></li>
+	    <li class="tag-4"><a href="../tag/rong-liang-gui-hua.html">容量规划</a></li>
+	    <li class="tag-4"><a href="../tag/zhong-jian-jian.html">中间件</a></li>
+	    <li class="tag-3"><a href="../tag/haproxy.html">HAProxy</a></li>
+	    <li class="tag-4"><a href="../tag/yan-jiang.html">演讲</a></li>
+	    <li class="tag-4"><a href="../tag/phonegap.html">Phonegap</a></li>
+	    <li class="tag-1"><a href="../tag/python.html">Python</a></li>
+	    <li class="tag-3"><a href="../tag/github.html">github</a></li>
+	    <li class="tag-4"><a href="../tag/restful.html">RESTful</a></li>
+	    <li class="tag-3"><a href="../tag/gong-ju.html">工具</a></li>
 	    <li class="tag-2"><a href="../tag/nginx.html">Nginx</a></li>
 	    <li class="tag-1"><a href="../tag/bi-ji.html">笔记</a></li>
+	    <li class="tag-4"><a href="../tag/vmware.html">VMware</a></li>
+	    <li class="tag-4"><a href="../tag/wei-bo.html">微博</a></li>
+	    <li class="tag-3"><a href="../tag/bing-xing.html">并行</a></li>
+	    <li class="tag-2"><a href="../tag/yii.html">Yii</a></li>
+	    <li class="tag-4"><a href="../tag/rest.html">REST</a></li>
+	    <li class="tag-3"><a href="../tag/keepalived.html">Keepalived</a></li>
+	    <li class="tag-4"><a href="../tag/socketio.html">socket.io</a></li>
+	    <li class="tag-3"><a href="../tag/suan-fa.html">算法</a></li>
+	    <li class="tag-4"><a href="../tag/cordova.html">Cordova</a></li>
+	    <li class="tag-4"><a href="../tag/pip.html">pip</a></li>
+	    <li class="tag-3"><a href="../tag/jia-gou.html">架构</a></li>
+	    <li class="tag-2"><a href="../tag/javascript.html">JavaScript</a></li>
+	    <li class="tag-4"><a href="../tag/xhprof.html">Xhprof</a></li>
+	    <li class="tag-3"><a href="../tag/fen-bu-shi-xi-tong.html">分布式系统</a></li>
+	    <li class="tag-4"><a href="../tag/ri-zhi.html">日志</a></li>
+	    <li class="tag-4"><a href="../tag/slim.html">slim</a></li>
+	    <li class="tag-4"><a href="../tag/dns.html">DNS</a></li>
+	    <li class="tag-4"><a href="../tag/diao-shi.html">调试</a></li>
+	    <li class="tag-1"><a href="../tag/php.html">PHP</a></li>
+	    <li class="tag-4"><a href="../tag/easy_install.html">easy_install</a></li>
+	    <li class="tag-3"><a href="../tag/shi-ge.html">诗歌</a></li>
+	    <li class="tag-4"><a href="../tag/redis.html">Redis</a></li>
+	    <li class="tag-4"><a href="../tag/windows.html">Windows</a></li>
+	    <li class="tag-2"><a href="../tag/gong-zuo.html">工作</a></li>
+	    <li class="tag-3"><a href="../tag/bi-shi.html">笔试</a></li>
+	    <li class="tag-4"><a href="../tag/teng-xun.html">腾讯</a></li>
+	    <li class="tag-4"><a href="../tag/haproxyconsole.html">HAProxyConsole</a></li>
+	    <li class="tag-4"><a href="../tag/ssl.html">ssl</a></li>
+	    <li class="tag-2"><a href="../tag/git.html">git</a></li>
+	    <li class="tag-4"><a href="../tag/shu-ju-ku.html">数据库</a></li>
+	    <li class="tag-3"><a href="../tag/wei-xin.html">微信</a></li>
+	    <li class="tag-4"><a href="../tag/zi-ti.html">字体</a></li>
+	    <li class="tag-4"><a href="../tag/jekyll.html">jekyll</a></li>
+	    <li class="tag-4"><a href="../tag/wen-zi.html">文字</a></li>
+	    <li class="tag-4"><a href="../tag/memcached.html">Memcached</a></li>
+	    <li class="tag-3"><a href="../tag/ming-ling-xing.html">命令行</a></li>
 </ul>
 
 <!--

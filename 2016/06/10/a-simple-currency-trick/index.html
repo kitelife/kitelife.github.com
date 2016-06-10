@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>关于并发的一个小技巧</title>
+        <meta charset="utf-8" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑·白 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑·白 Full RSS Feed" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/SentyZHAO/SentyZHAO.css" />
+
+        <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+            <script>
+              var _hmt = _hmt || [];
+              (function() {
+                var hm = document.createElement("script");
+                hm.src = "//hm.baidu.com/hm.js?5c5d8c3fe75afeff117777b9236b96ec";
+                var s = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(hm, s);
+              })();
+            </script>
+</head>
+
+<body id="index" class="home">
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1 style='font-family: "SentyZHAO";'><a href="../../../..">黑·白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+
+              <ul class="columns" style='font-family: "SentyZHAO";'>
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="/archives.html">归 档</a></li>
+                <li><a href="/pages/tools.html">工具集</a></li>
+                <li><a href="/pages/links.html">链 接</a></li>
+                <li><a href="/pages/tech-share.html">技术分享</a></li>
+                <li><a href="/pages/aboutme.html">关于我</a></li>
+                <li><a href="/feeds/rss.xml">RSS</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+   <div class="row">
+        <div class="columns">
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2016/06/10/a-simple-currency-trick/" rel="bookmark" title="Permalink to 关于并发的一个小技巧">关于并发的一个小技巧</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2016-06-10T00:00:00+08:00">
+                2016-06-10 五
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>前段时间在参与实现一个新业务系统的Demo。该系统集成了多个已有系统的数据，涉及的数据量较大，但由于人力少，时间短，没法专门做一个数据处理子系统，所以只能写了很多数据处理的脚本。</p>
+<p><img alt="" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/a-simple-currency-trick.png" /></p>
+<p>为了复用一些代码，这些数据处理脚本和业务系统一样都是使用PHP实现。在某些数据上报API写入的数据较快较多时，脚本处理不过来（特别在脚本涉及一些网络请求时），只能搞起并发处理 - 在我们的情况下，最简单的并发方式就是多运行几个脚本实例。</p>
+<p>但一切没那么简单：脚本从数据库中取出未经处理的多行数据，逐行处理数据，并将处理后的数据更新到原来的数据行中，运行多个脚本实例时，为了避免更新冲突，只好加事务，但加事务后就会频繁发生事务回滚，数据处理速度还是上不去。</p>
+<p>那么该怎么办呢？</p>
+<p>参考哈希的思路，我对脚本做了一点调整，下面举例说明：</p>
+<ul>
+<li>假设对同一脚本运行<code>5</code>个实例，为每个实例进程分配一个ID，依次为：0、1、2、3、4</li>
+<li>对脚本实例获取数据的SQL，增加选择条件：<code>MOD(id, 5)=SID</code>（SID为当前脚本实例的ID） - 即使用数据行的<code>id</code>对实例数取模，如果结果等于实例的ID，则取出来。这样多个实例之间不会取到相同的数据行，也就不会发生冲突回滚。</li>
+</ul>
+<p>写个SHELL脚本来启动脚本的多个实例：</p>
+<div class="highlight"><pre><span class="c">#!/usr/bin/env bash</span>
+
+<span class="nv">pn</span><span class="o">=</span>5
+<span class="k">for</span> id in <span class="m">0</span> <span class="m">1</span> <span class="m">2</span> <span class="m">3</span> 4
+<span class="k">do</span>
+/path/to/bin/php /path/to/script.php <span class="nv">$pn</span> <span class="nv">$id</span> &gt; script-<span class="nv">$id</span>.log 2&gt;<span class="p">&amp;</span><span class="m">1</span> <span class="p">&amp;</span>
+<span class="k">done</span>
+</pre></div>
+
+
+<hr />
+<p>嗯，这只是一个小技巧。</p>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2016/06/10/a-simple-currency-trick/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+        </div><!-- /.twelve.columns -->
+ </div><!-- /.row -->
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+  <script src="../../../../theme/js/main.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../../../theme/emoji/css/basic/emojify.min.css" />
+  <script src="../../../../theme/emoji/js/emojify.min.js"></script>
+  <script>
+    emojify.setConfig({
+        img_dir : '../../../../theme/emoji/images/basic'
+    });
+    emojify.run();
+</script>
+</body>
+</html>

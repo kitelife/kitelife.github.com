@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>黑·白</title><link>http://youngsterxyf.github.io/</link><description></description><atom:link href="http://youngsterxyf.github.io/feeds/youngsterxyf.rss.xml" rel="self"></atom:link><lastBuildDate>Sun, 05 Jun 2016 00:00:00 +0800</lastBuildDate><item><title>API访问频率限制</title><link>http://youngsterxyf.github.io/2016/06/05/frequency-limitation/</link><description>&lt;p&gt;工作中涉及一些对外开放的无需特殊权限的API，用户会因为某些需求而通过程序来频繁访问这些API，导致系统的负载陡增，可能影响系统其它功能的正常使用。虽然做了一些优化让这种API尽可能地轻量，但仍然不够，因此需要进行访问频率的限制。&lt;/p&gt;
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>黑·白</title><link>http://youngsterxyf.github.io/</link><description></description><atom:link href="http://youngsterxyf.github.io/feeds/youngsterxyf.rss.xml" rel="self"></atom:link><lastBuildDate>Sun, 05 Jun 2016 00:00:00 +0800</lastBuildDate><item><title>关于API访问频率限制的一个问题</title><link>http://youngsterxyf.github.io/2016/06/05/frequency-limitation/</link><description>&lt;p&gt;工作中涉及一些对外开放的无需特殊权限的API，用户会因为某些需求而通过程序来频繁访问这些API，导致系统的负载陡增，可能影响系统其它功能的正常使用。虽然做了一些优化让这种API尽可能地轻量，但仍然不够，因此需要进行访问频率的限制。&lt;/p&gt;
 &lt;p&gt;由于这样的API并不多，所以我们并没有在Nginx这样的反向代理接入层中实现频率限制，而是API自己去实现，而且实现方案比较粗糙 - 基于Memcached的缓存自动过期特性。&lt;/p&gt;
 &lt;p&gt;方案的PHP示例实现如下所示：&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;// 每个IP一分钟10次&lt;/span&gt;
@@ -35,7 +35,7 @@
 &lt;p&gt;一眼就能看出图中“服务器C”的特别之处。&lt;/p&gt;
 &lt;p&gt;由于一些特殊的问题，我们把到服务器C的请求通过Nginx反向代理到另外两台服务器的Nginx进行处理。&lt;/p&gt;
 &lt;p&gt;可能有人会疑惑：为什么不直接把服务器C从负载均衡中下线？&lt;/p&gt;
-&lt;p&gt;原因是：考虑到跨网络运营商的问题，负载均衡器会把来自不同运营商网络的请求转发到与请求来源的运营商相同的服务器。在我们的配置中，C与A、B不同属于一个网络运营商。比如C属于“北联通”，如果把C下线，就意味着北方联通的网络用户无法访问我们的服务。&lt;/p&gt;
+&lt;p&gt;原因是：考虑到跨网络运营商的问题，我们配置负载均衡器把来自不同运营商网络的请求转发到与请求来源的运营商相同的服务器。C与A、B不同属于一个网络运营商，比如C属于“北联通”，如果把C下线，就意味着北方联通的网络用户无法访问我们的服务。&lt;/p&gt;
 &lt;p&gt;所以我们临时性地把到C的服务请求转发到A、B。&lt;/p&gt;
 &lt;hr /&gt;
 &lt;p&gt;那么问题来了 - 有用户反馈访问某个API时始终提示“请求太频繁，请一分钟后再试”，但自己并未频繁访问这个API。那么是用户撒谎还是系统的问题呢？&lt;/p&gt;

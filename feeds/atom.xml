@@ -1,5 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>黑·白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2016-06-10T00:00:00+08:00</updated><entry><title>关于并发的一个小技巧</title><link href="http://youngsterxyf.github.io/2016/06/10/a-simple-concurrency-trick/" rel="alternate"></link><updated>2016-06-10T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2016-06-10:2016/06/10/a-simple-concurrency-trick/</id><summary type="html">&lt;p&gt;前段时间在参与实现一个新业务系统的Demo。该系统集成了多个已有系统的数据，涉及的数据量较大，但由于人力少，时间短，没法专门做一个数据处理子系统，所以只能写了很多数据处理的脚本。&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>黑·白</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2016-06-11T00:00:00+08:00</updated><entry><title>应用MySQL InnoDB全文索引</title><link href="http://youngsterxyf.github.io/2016/06/11/mysql-fulltext-application/" rel="alternate"></link><updated>2016-06-11T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2016-06-11:2016/06/11/mysql-fulltext-application/</id><summary type="html">&lt;h2&gt;问题&lt;/h2&gt;
+&lt;p&gt;之前涉及的一项工作要求对某些数据做全文索引，并以API向其他内部系统提供搜索查询服务。&lt;/p&gt;
+&lt;p&gt;由于需要建全文索引的数据量并不大，且已有的数据都以InnoDB引擎存储，简单起见，我们选择MySQL InnoDB引擎的全文索引特性来实现。MySQL从版本5.6开始支持InnoDB引擎的全文索引，不过“从5.7.6版本开始才提供一种内建的全文索引ngram parser，支持CJK字符集（中文、日文、韩文，CJK有个共同点就是单词不像英语习惯那样根据空格进行分解的，因此传统的内建分词方式无法准确的对类似中文进行分词）”，我们使用的MySQL版本为5.6.28，并且需要建全文索引的数据部分是中文，所以这是个问题。&lt;/p&gt;
+&lt;h2&gt;方案&lt;/h2&gt;
+&lt;p&gt;我们先把这项工作按“分治”的思想拆分成几个小问题：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;由于版本5.6.28的MySQL不支持中文的全文索引，那么可以对需要建全文索引的数据进行预处理 - 分词，并以空格为间隔将分词结果拼接成一个字符串。&lt;/li&gt;
+&lt;li&gt;但经过第1步仍是不够的 - MySQL的系统变量&lt;code&gt;ft_min_word_len&lt;/code&gt;、&lt;code&gt;ft_max_word_len&lt;/code&gt;分别规定了全文检索被编入索引单词的最小长度和最大长度，默认的最小值为4个字符，默认的最大值取决于使用的MySQL版本。为了不改变这个默认值同时也是兼考虑这个值对于英文的意义，则需要通过编码（&lt;code&gt;urlencode&lt;/code&gt;、&lt;code&gt;base64&lt;/code&gt;、&lt;code&gt;汉字转拼音&lt;/code&gt;等）将中文词变长。将经过编码后的分词结果存入建全文索引的数据表字段。&lt;/li&gt;
+&lt;li&gt;API调用时，也对搜索关键词做1、2步处理，然后使用SQL的全文索引匹配语法进行查询。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;对于第1步，我们选择公司内部的分词服务，当然也可以选择一些开源的分词方案，如：结巴中文分词、SCWS分词等。&lt;/p&gt;
+&lt;p&gt;对于第2步，我们选择了urlencode编码，并过滤掉了编码后的&lt;code&gt;%&lt;/code&gt;，因为它也是分界符。&lt;/p&gt;
+&lt;h2&gt;举个栗子&lt;/h2&gt;
+&lt;p&gt;假设已有一个数据表&lt;code&gt;apps&lt;/code&gt;，其有个字段&lt;code&gt;name&lt;/code&gt;，需要对这个字段做基于全文索引的查询。&lt;/p&gt;
+&lt;p&gt;为了不变更已有数据，我们对该数据表新增一个字段&lt;code&gt;seg_name&lt;/code&gt;，使用脚本批量地对&lt;code&gt;name&lt;/code&gt;字段进行分词编码，将结果存入该字段。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;ALTER&lt;/span&gt; &lt;span class="k"&gt;TABLE&lt;/span&gt; &lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="n"&gt;apps&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt; &lt;span class="k"&gt;ADD&lt;/span&gt; &lt;span class="k"&gt;COLUMN&lt;/span&gt; &lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="n"&gt;seg_name&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt; &lt;span class="nb"&gt;VARCHAR&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1024&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;DEFAULT&lt;/span&gt; &lt;span class="k"&gt;NULL&lt;/span&gt; &lt;span class="k"&gt;COMMENT&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;name字段分词编码后的结果&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;ALTER&lt;/span&gt; &lt;span class="k"&gt;TABLE&lt;/span&gt; &lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="n"&gt;apps&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt; &lt;span class="k"&gt;ADD&lt;/span&gt; &lt;span class="n"&gt;FULLTEXT&lt;/span&gt; &lt;span class="k"&gt;INDEX&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="n"&gt;seg_name&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;API中对搜索关键词也进行分词并经编码，以下面的SQL来查询即可：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="o"&gt;#&lt;/span&gt; &lt;span class="err"&gt;其中&lt;/span&gt;&lt;span class="o"&gt;%&lt;/span&gt;&lt;span class="n"&gt;s&lt;/span&gt;&lt;span class="err"&gt;用搜索关键词分词编码后的结果进行替换&lt;/span&gt;
+&lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="n"&gt;apps&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt; &lt;span class="k"&gt;WHERE&lt;/span&gt; &lt;span class="k"&gt;MATCH&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;seg_name&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;AGAINST&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;%s&amp;#39;&lt;/span&gt; &lt;span class="k"&gt;IN&lt;/span&gt; &lt;span class="k"&gt;NATURAL&lt;/span&gt; &lt;span class="k"&gt;LANGUAGE&lt;/span&gt; &lt;span class="k"&gt;MODE&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;可以看到我们选择了“  自然语言模式（IN NATURAL LANGUAGE MODE），即通过MATCH AGAINST传递某个特定的字符串来进行检索”。&lt;/p&gt;
+&lt;h2&gt;参考资料&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="http://mysql.taobao.org/monthly/2015/10/01/"&gt;MySQL · 引擎特性 · InnoDB 全文索引简介&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://www.cnblogs.com/martinzhang/p/3220345.html"&gt;MySQL中文全文检索demoSQL&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</summary><category term="MySQL"></category><category term="笔记"></category></entry><entry><title>关于并发的一个小技巧</title><link href="http://youngsterxyf.github.io/2016/06/10/a-simple-concurrency-trick/" rel="alternate"></link><updated>2016-06-10T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2016-06-10:2016/06/10/a-simple-concurrency-trick/</id><summary type="html">&lt;p&gt;前段时间在参与实现一个新业务系统的Demo。该系统集成了多个已有系统的数据，涉及的数据量较大，但由于人力少，时间短，没法专门做一个数据处理子系统，所以只能写了很多数据处理的脚本。&lt;/p&gt;
 &lt;p&gt;&lt;img alt="" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/a-simple-concurrency-trick.png" /&gt;&lt;/p&gt;
 &lt;p&gt;为了复用一些代码，这些数据处理脚本和业务系统一样都是使用PHP实现。在某些数据上报API写入的数据较快较多时，脚本处理不过来（特别在脚本涉及一些网络请求时），只能搞起并发处理 - 在我们的情况下，最简单的并发方式就是多运行几个脚本实例。&lt;/p&gt;
 &lt;p&gt;但一切没那么简单：脚本从数据库中取出未经处理的多行数据，逐行处理数据，并将处理后的数据更新到原来的数据行中，运行多个脚本实例时，为了避免更新冲突，只好加事务，但加事务后就会频繁发生事务回滚，数据处理速度还是上不去。&lt;/p&gt;
@@ -21,7 +52,7 @@
 
 
 &lt;hr /&gt;
-&lt;p&gt;嗯，这只是一个小技巧。&lt;/p&gt;</summary><category term="总结"></category><category term="笔记"></category><category term="SQL"></category></entry><entry><title>关于API访问频率限制的一个问题</title><link href="http://youngsterxyf.github.io/2016/06/05/frequency-limitation/" rel="alternate"></link><updated>2016-06-05T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2016-06-05:2016/06/05/frequency-limitation/</id><summary type="html">&lt;p&gt;工作中涉及一些对外开放的无需特殊权限的API，用户会因为某些需求而通过程序来频繁访问这些API，导致系统的负载陡增，可能影响系统其它功能的正常使用。虽然做了一些优化让这种API尽可能地轻量，但仍然不够，因此需要进行访问频率的限制。&lt;/p&gt;
+&lt;p&gt;嗯，这只是一个小技巧。&lt;/p&gt;</summary><category term="笔记"></category><category term="SQL"></category></entry><entry><title>关于API访问频率限制的一个问题</title><link href="http://youngsterxyf.github.io/2016/06/05/frequency-limitation/" rel="alternate"></link><updated>2016-06-05T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2016-06-05:2016/06/05/frequency-limitation/</id><summary type="html">&lt;p&gt;工作中涉及一些对外开放的无需特殊权限的API，用户会因为某些需求而通过程序来频繁访问这些API，导致系统的负载陡增，可能影响系统其它功能的正常使用。虽然做了一些优化让这种API尽可能地轻量，但仍然不够，因此需要进行访问频率的限制。&lt;/p&gt;
 &lt;p&gt;由于这样的API并不多，所以我们并没有在Nginx这样的反向代理接入层中实现频率限制，而是API自己去实现，而且实现方案比较粗糙 - 基于Memcached的缓存自动过期特性。&lt;/p&gt;
 &lt;p&gt;方案的PHP示例实现如下所示：&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;// 每个IP一分钟10次&lt;/span&gt;

@@ -36,7 +36,7 @@
     <body>
         
         
-    <div class="book" data-level="4.2.1" data-basepath="../.." data-revision="Mon Apr 11 2016 13:00:08 GMT+0800 (CST)">
+    <div class="book" data-level="4.2.1" data-basepath="../.." data-revision="Fri Sep 16 2016 17:53:16 GMT+0800 (CST)">
     
 
 <div class="book-summary">
@@ -1352,10 +1352,55 @@
 <ol>
 <li>&#x4EE5;root&#x7528;&#x6237;&#x767B;&#x5F55;MySQL</li>
 <li>CREATE USER &apos;username&apos;@&apos;host&apos; IDENTIFIED BY &apos;password&apos;;</li>
-<li>GRANT privileges ON databasename.tablename TO &apos;username&apos;@&apos;host&apos;; // &#x5982;&#xFF1A;GRANT ALL ON test.* TO &apos;pig&apos;@&apos;localhost&apos;;</li>
+<li><p>GRANT privileges ON databasename.tablename TO &apos;username&apos;@&apos;host&apos;; // &#x5982;&#xFF1A;GRANT ALL ON test.* TO &apos;pig&apos;@&apos;localhost&apos;;</p>
+</li>
+<li><p>&#x67E5;&#x770B;&#x73AF;&#x5883;&#x53D8;&#x91CF;&#xFF1A;<code>SHOW VARIABLES;</code>&#x3001;<code>SHOW VARIABLES LIKE &apos;%size%&apos;;</code></p>
+</li>
+<li>&#x4FEE;&#x6539;&#x5E10;&#x53F7;&#x5BC6;&#x7801;&#xFF1A;<code>SET PASSWORD FOR &apos;user_name&apos;@&apos;where_from&apos; = PASSWORD(&apos;password&apos;);</code>&#x3002;&#x4E0D;&#x8FC7;&#x8C8C;&#x4F3C;&#x4E0D;&#x540C;&#x7248;&#x672C;&#x7684;MySQL&#x4FEE;&#x6539;&#x5E10;&#x53F7;&#x5BC6;&#x7801;&#x7684;&#x65B9;&#x5F0F;&#x4E0D;&#x4E00;&#x6837;&#x3002;</li>
+<li>&#x8BBE;&#x7F6E;binlog&#x7684;&#x4FDD;&#x6301;&#x65F6;&#x957F;&#xFF1A;<code>SET GLOBAL expire_logs_days = 3;</code></li>
+<li>&#x5F53;&#x67D0;&#x4E2A;&#x5B57;&#x6BB5;&#x7684;&#x503C;&#x4E3A;null&#xFF0C;&#x9700;&#x8981;&#x5C06;&#x5176;&#x66F4;&#x65B0;&#x4E3A;&#x7A7A;&#x5B57;&#x7B26;&#x4E32;&#xFF1A;<code>update cnvdvul set author=&quot;&quot; WHERE author is null;</code></li>
 </ol>
 <h4 id="insert-into-select-from">INSERT INTO + SELECT FROM</h4>
 <pre><code class="lang-sql"><span class="hljs-operator"><span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> Evil0day (<span class="hljs-string">`app`</span>,<span class="hljs-string">`version`</span>) <span class="hljs-keyword">SELECT</span> <span class="hljs-string">`app`</span>, <span class="hljs-string">`version`</span> <span class="hljs-keyword">FROM</span> Fingerprint <span class="hljs-keyword">WHERE</span> app=<span class="hljs-string">&quot;joomla&quot;</span> <span class="hljs-keyword">AND</span> <span class="hljs-keyword">version</span> &gt;=<span class="hljs-string">&quot;3.2.0&quot;</span> <span class="hljs-keyword">AND</span> <span class="hljs-keyword">version</span> &lt;=<span class="hljs-string">&quot;3.4.4&quot;</span> <span class="hljs-keyword">GROUP</span> <span class="hljs-keyword">BY</span> <span class="hljs-string">`version`</span>;</span>
+</code></pre>
+<pre><code class="lang-sql"><span class="hljs-operator"><span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">IGNORE</span> <span class="hljs-keyword">INTO</span> <span class="hljs-string">`BaseIndex`</span> (<span class="hljs-string">`host`</span>, <span class="hljs-string">`realtime`</span>, <span class="hljs-string">`ex_realtime`</span>,  <span class="hljs-string">`history`</span>, <span class="hljs-string">`ex_history`</span>, <span class="hljs-string">`environment`</span>, <span class="hljs-string">`ex_environment`</span>, <span class="hljs-string">`attackrisk`</span>, <span class="hljs-string">`ex_attackrisk`</span>, <span class="hljs-string">`datestamp`</span>) <span class="hljs-keyword">SELECT</span> <span class="hljs-string">`host`</span>, <span class="hljs-string">`realtime`</span>, <span class="hljs-string">`ex_realtime`</span>,  <span class="hljs-string">`history`</span>, <span class="hljs-string">`ex_history`</span>, <span class="hljs-string">`environment`</span>, <span class="hljs-string">`ex_environment`</span>, <span class="hljs-string">`attackrisk`</span>, <span class="hljs-string">`ex_attackrisk`</span>, <span class="hljs-number">20160412</span> <span class="hljs-keyword">FROM</span> <span class="hljs-string">`BaseIndex`</span> <span class="hljs-keyword">WHERE</span> <span class="hljs-string">`datestamp`</span>=<span class="hljs-number">20160411</span>;</span>
+</code></pre>
+<h4 id="%E5%A4%8D%E6%9D%82sql">&#x590D;&#x6742;SQL</h4>
+<p>&#x6765;&#x81EA;&#xFF1A;<a href="http://www.sohamkamani.com/blog/2016/07/07/a-beginners-guide-to-sql/" target="_blank">http://www.sohamkamani.com/blog/2016/07/07/a-beginners-guide-to-sql/</a></p>
+<pre><code class="lang-sql"><span class="hljs-operator"><span class="hljs-keyword">SELECT</span> members.firstname || <span class="hljs-string">&apos; &apos;</span> || members.lastname <span class="hljs-keyword">AS</span> <span class="hljs-string">&quot;Full Name&quot;</span>
+
+<span class="hljs-keyword">FROM</span> borrowings
+<span class="hljs-keyword">INNER</span> <span class="hljs-keyword">JOIN</span> members
+<span class="hljs-keyword">ON</span> members.memberid=borrowings.memberid
+<span class="hljs-keyword">INNER</span> <span class="hljs-keyword">JOIN</span> books
+<span class="hljs-keyword">ON</span> books.bookid=borrowings.bookid
+
+<span class="hljs-keyword">WHERE</span> borrowings.bookid <span class="hljs-keyword">IN</span> (<span class="hljs-keyword">SELECT</span> bookid <span class="hljs-keyword">FROM</span> books <span class="hljs-keyword">WHERE</span> stock&gt;  (<span class="hljs-keyword">SELECT</span> <span class="hljs-keyword">avg</span>(stock) <span class="hljs-keyword">FROM</span> books)  )
+
+<span class="hljs-keyword">GROUP</span> <span class="hljs-keyword">BY</span> members.firstname, members.lastname;</span>
+</code></pre>
+<pre><code class="lang-sql"><span class="hljs-operator"><span class="hljs-keyword">SELECT</span> title, bookid
+<span class="hljs-keyword">FROM</span> books
+<span class="hljs-keyword">WHERE</span> author <span class="hljs-keyword">IN</span> (<span class="hljs-keyword">SELECT</span> author
+  <span class="hljs-keyword">FROM</span> (<span class="hljs-keyword">SELECT</span> author, <span class="hljs-keyword">sum</span>(stock)
+  <span class="hljs-keyword">FROM</span> books
+  <span class="hljs-keyword">GROUP</span> <span class="hljs-keyword">BY</span> author) <span class="hljs-keyword">AS</span> results
+  <span class="hljs-keyword">WHERE</span> <span class="hljs-keyword">sum</span> &gt; <span class="hljs-number">3</span>);</span>
+</code></pre>
+<pre><code class="lang-sql"><span class="hljs-operator"><span class="hljs-keyword">SELECT</span>
+members.firstname <span class="hljs-keyword">AS</span> <span class="hljs-string">&quot;First Name&quot;</span>,
+members.lastname <span class="hljs-keyword">AS</span> <span class="hljs-string">&quot;Last Name&quot;</span>,
+<span class="hljs-keyword">count</span>(*) <span class="hljs-keyword">AS</span> <span class="hljs-string">&quot;Number of books borrowed&quot;</span>
+<span class="hljs-keyword">FROM</span> borrowings
+<span class="hljs-keyword">JOIN</span> books <span class="hljs-keyword">ON</span> borrowings.bookid=books.bookid
+<span class="hljs-keyword">JOIN</span> members <span class="hljs-keyword">ON</span> members.memberid=borrowings.memberid
+<span class="hljs-keyword">WHERE</span> books.author=<span class="hljs-string">&apos;Dan Brown&apos;</span>
+<span class="hljs-keyword">GROUP</span> <span class="hljs-keyword">BY</span> members.firstname, members.lastname;</span>
+</code></pre>
+<h3 id="outfile-infile">OUTFILE + INFILE</h3>
+<pre><code class="lang-sql"><span class="hljs-operator"><span class="hljs-keyword">SELECT</span> <span class="hljs-keyword">DISTINCT</span>(name), <span class="hljs-string">&quot;host&quot;</span> <span class="hljs-keyword">FROM</span> <span class="hljs-string">`clean_vul`</span> <span class="hljs-keyword">WHERE</span> <span class="hljs-string">`vul_class`</span>=<span class="hljs-number">28</span> <span class="hljs-keyword">AND</span> name <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">LIKE</span> <span class="hljs-string">&apos;%/%&apos;</span> <span class="hljs-keyword">INTO</span> <span class="hljs-keyword">OUTFILE</span> <span class="hljs-string">&apos;/home/work/app_names.csv&apos;</span> <span class="hljs-keyword">FIELDS</span> <span class="hljs-keyword">TERMINATED</span> <span class="hljs-keyword">BY</span> <span class="hljs-string">&apos;,&apos;</span> <span class="hljs-keyword">LINES</span> <span class="hljs-keyword">TERMINATED</span> <span class="hljs-keyword">BY</span> <span class="hljs-string">&apos;\n&apos;</span>;</span>
+
+<span class="hljs-operator"><span class="hljs-keyword">LOAD</span> <span class="hljs-keyword">DATA</span> <span class="hljs-keyword">INFILE</span> <span class="hljs-string">&apos;/home/work/app_names.csv&apos;</span> <span class="hljs-keyword">INTO</span> <span class="hljs-keyword">TABLE</span> app_name_mapper <span class="hljs-keyword">FIELDS</span> <span class="hljs-keyword">TERMINATED</span> <span class="hljs-keyword">BY</span> <span class="hljs-string">&apos;,&apos;</span> <span class="hljs-keyword">ENCLOSED</span> <span class="hljs-keyword">BY</span> <span class="hljs-string">&apos;&quot;&apos;</span> <span class="hljs-keyword">LINES</span> <span class="hljs-keyword">TERMINATED</span> <span class="hljs-keyword">BY</span> <span class="hljs-string">&apos;\n&apos;</span> (old_app_name, type);</span>
 </code></pre>
 <h3 id="%E6%B7%BB%E5%8A%A0%E7%B4%A2%E5%BC%95">&#x6DFB;&#x52A0;&#x7D22;&#x5F15;</h3>
 <pre><code>ALTER TABLE table_name
@@ -1408,6 +1453,24 @@ socket=/tmp/mysql.sock
 </ul>
 </li>
 </ul>
+<h2 id="%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86">&#x9519;&#x8BEF;&#x5904;&#x7406;</h2>
+<blockquote>
+<p>Got fatal error 1236 from master when reading data from binary log: &#x2018;binlog truncated in the middle of event; consider out of disk space on master; the first event &#x2018;mysql-bin.000525&#x2019; at 175770780, the last event read from &#x2018;/data/mysql/repl/mysql-bin.000525&#x2019; at 175770780, the last byte read from &#x2018;/data/mysql/repl/mysql-bin.000525&#x2032; at 175771648.&#x2019;</p>
+</blockquote>
+<p>The solution would be to move the slave thread to the next available binary log and initialize slave thread with the first available position on binary log as below:</p>
+<blockquote>
+<p>CHANGE MASTER TO MASTER_LOG_FILE=&apos;mysql-bin.000526&apos;, MASTER_LOG_POS=4;</p>
+</blockquote>
+<p>&#x5728;&#x4E3B;&#x6570;&#x636E;&#x5E93;&#x4E0A;&#x6267;&#x884C; <code>SHOW BINARY LOGS</code>&#xFF0C;&#x627E;&#x5230;&#x8DDD;&#x79BB;&#x9519;&#x8BEF;&#x7684;bin log&#x6587;&#x4EF6;&#x4F4D;&#x7F6E;&#x6700;&#x8FD1;&#x7684;&#x4E00;&#x4E2A;&#x65E5;&#x5FD7;&#x4F4D;&#x7F6E;&#xFF0C;&#x7136;&#x540E;&#x6267;&#x884C;&#x4E0A;&#x9762;&#x7684;&#x8FD9;&#x6761;&#x547D;&#x4EE4;&#xFF08;&#x8BB0;&#x5F97;&#x66FF;&#x6362;&#x53C2;&#x6570;MASTER_LOG_FILE&#x548C;MASTER_LOG_POS&#xFF09;&#x3002;</p>
+<hr>
+<p>&#x5F53;&#x4E3B;&#x4ECE;&#x540C;&#x6B65;&#x51FA;&#x73B0;&#x95EE;&#x9898;&#x65F6;&#xFF0C;&#x53EF;&#x4EE5;&#x5148;&#x6309;&#x7167;&#x4E0B;&#x9762;&#x7684;&#x6B65;&#x9AA4;&#x5904;&#x7406;&#xFF1A;</p>
+<ol>
+<li><code>SHOW SLAVE STATUS</code></li>
+<li><code>STOP SLAVE</code></li>
+<li><code>SET GLOBAL sql_slave_skip_counter = N</code></li>
+<li><code>START SLAVE</code></li>
+<li><code>SHOW SLAVE STATUS</code></li>
+</ol>
 <h3 id="%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5">&#x4E3B;&#x4ECE;&#x540C;&#x6B65;</h3>
 <ul>
 <li><code>mysql&gt; show slave hosts</code> -- &#x67E5;&#x770B;&#x6240;&#x6709;&#x8FDE;&#x63A5;&#x5230;Master&#x7684;Slave&#x4FE1;&#x606F;</li>
@@ -1415,7 +1478,15 @@ socket=/tmp/mysql.sock
 <li><code>mysql&gt; show slave status</code> -- &#x67E5;&#x770B;Slave&#x72B6;&#x6001;&#x4FE1;&#x606F;</li>
 <li><code>mysql&gt; show binary logs</code> -- &#x67E5;&#x770B;&#x6240;&#x6709;&#x4E8C;&#x8FDB;&#x5236;&#x65E5;&#x5FD7;</li>
 </ul>
-<h3 id="sharding">Sharding</h3>
+<h3 id="%E6%85%A2%E6%97%A5%E5%BF%97">&#x6162;&#x65E5;&#x5FD7;</h3>
+<p>&#x5728;my.cnf&#x4E2D;&#x6DFB;&#x52A0;:</p>
+<pre><code># &#x542F;&#x7528;&#x6162;&#x65E5;&#x5FD7;
+slow_query_log = 1
+# &#x8BB0;&#x5F55;&#x6267;&#x884C;&#x65F6;&#x95F4;&#x5927;&#x4E8E;&#x7B49;&#x4E8E;5&#x79D2;&#x7684;SQL
+long_query_time = 5
+# &#x6162;&#x65E5;&#x5FD7;&#x6587;&#x4EF6;&#x7684;&#x8DEF;&#x5F84;
+slow_query_log_file = /home/work/logs/mysql/mysqld.slow.log
+</code></pre><h3 id="sharding">Sharding</h3>
 <ul>
 <li><a href="http://dbanotes.net/database/database_sharding-2.html" target="_blank">&#x5F00;&#x6E90;&#x6570;&#x636E;&#x5E93; Sharding &#x6280;&#x672F; (Share Nothing)</a></li>
 <li><a href="https://code.google.com/p/shard-query/" target="_blank">Google Code: shard-query</a></li>
@@ -1429,6 +1500,8 @@ socket=/tmp/mysql.sock
 <li><a href="http://tech.meituan.com/mysql-index.html" target="_blank">MySQL&#x7D22;&#x5F15;&#x539F;&#x7406;&#x53CA;&#x6162;&#x67E5;&#x8BE2;&#x4F18;&#x5316;</a></li>
 <li><a href="http://www.redbook.io/" target="_blank">Readings in Database Systems, 5th Edition</a></li>
 <li><a href="https://github.com/rxin/db-readings" target="_blank">Readings in Databases</a></li>
+<li><a href="http://web.synametrics.com/top10performancetips.htm" target="_blank">Top 10 performance tuning tips for relational databases</a></li>
+<li><a href="http://dba.stackexchange.com/questions/41050/is-it-safe-to-delete-mysql-bin-files" target="_blank">Is it safe to delete mysql-bin files?</a></li>
 </ul>
 
                     

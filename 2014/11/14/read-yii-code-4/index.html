@@ -232,7 +232,7 @@
 </pre></div>
 
 
-<hr />
+<hr>
 <p>由于第2种方式是基于第1中方式实现的，所以我们先看看第1种方式的实现。</p>
 <p>类CDbConnection中方法createCommand的实现如下：</p>
 <div class="highlight"><pre><span class="x">public function createCommand($query=null)</span>
@@ -279,7 +279,7 @@
 </pre></div>
 
 
-<p>可以看到参数$query并不是必须提供，如果提供，则$query参数值可以是字符串也可以是数组。如果是字符串也就是一个原生的SQL语句（可能有参数需要填充），如果是数组，
+<p>可以看到参数<span class="math">\(query并不是必须提供，如果提供，则\)</span>query参数值可以是字符串也可以是数组。如果是字符串也就是一个原生的SQL语句（可能有参数需要填充），如果是数组，
 则可以为CDbCommand对象的select、distinct、from等属性赋值。</p>
 <p>方法setText实现如下：</p>
 <div class="highlight"><pre><span class="x">/**</span>
@@ -311,7 +311,7 @@
 <p>对于会对数据表结构或数据产生变更的操作，得到CDbCommand对象后，可以直接调用方法insert、update、delete、createTable等来执行操作。</p>
 </li>
 <li>
-<p>可以在得到CDbCommand对象后，调用方法setText来设置待执行的SQL语句，setText方法的$value参数类型应为字符串。如果调用setText方法前$value参数类型是关联数组，则可以先调用方法buildQuery从关联数组生成一个SQL语句字符串，再调用setText方法；或者直接调用setSelect、setFrom、setWhere等方法来设置SQL语句的各个组成部分。最后调用execute方法或query一类方法。可以看出相比传递<code>$query</code>参数，这种方式只不过是显式地设置SQL语句。通常这是不推荐的（搞这么麻烦，何必呢？呵呵）。</p>
+<p>可以在得到CDbCommand对象后，调用方法setText来设置待执行的SQL语句，setText方法的<span class="math">\(value参数类型应为字符串。如果调用setText方法前\)</span>value参数类型是关联数组，则可以先调用方法buildQuery从关联数组生成一个SQL语句字符串，再调用setText方法；或者直接调用setSelect、setFrom、setWhere等方法来设置SQL语句的各个组成部分。最后调用execute方法或query一类方法。可以看出相比传递<code>$query</code>参数，这种方式只不过是显式地设置SQL语句。通常这是不推荐的（搞这么麻烦，何必呢？呵呵）。</p>
 </li>
 </ol>
 <p>这样一看，类CDbCommand的实现稍显混乱。本意上额外的第3种方式应该是提供给类CActiveRecord使用的，所以不建议使用。</p>
@@ -467,7 +467,7 @@
 
 
 <p>得到CDbDataReader对象，即可通过它的read一类方法<strong>迭代</strong>获取查询结果。这些方法实际上是调用PDOStatement的fetch一类方法来获取结果的。</p>
-<hr />
+<hr>
 <p>再来看看Yii框架Model层的第2种使用方式。</p>
 <p>CActiveRecord的用法是，对于数据库的每个数据表，创建一个model类，如UserModel，这个类继承自CActiveRecord类。model类名可以和数据表名一致，也可以不一致，如果不一致，则需要重写CActiveRecord类的tableName方法，标明该model类对应的数据表名。方法tableName默认的实现如下：</p>
 <div class="highlight"><pre><span class="x">/**</span>
@@ -850,7 +850,7 @@
 <p>另外还有与update、delete等操作对应的方法createUpdateCommand、createDeleteCommand等。</p>
 <p>update方法与insert方法的逻辑基本是一致的。</p>
 <p>CActiveRecord中所有数据库增、删、改、查操作，在构建出目标sql语句后，都是调用CDbConnection类的方法createCommand来得到一个CDbCommand类的对象，最后调用该对象的execute、query、queryAll等方法来完成查询获取结果。</p>
-<hr />
+<hr>
 <p>对于model类实例对象的属性赋值，依赖于CActiveRecord类的方法__set，实现如下：</p>
 <div class="highlight"><pre><span class="x">public function __set($name,$value)</span>
 <span class="x">{</span>
@@ -879,7 +879,7 @@
 </pre></div>
 
 
-<hr />
+<hr>
 <p>基于CActiveRecord类，如果想进行读取操作，那么子类需要重写model方法。CActiveRecord类的model方法实现如下：</p>
 <div class="highlight"><pre>/**
  * Returns the static model of the specified AR class.
@@ -981,7 +981,7 @@ public static function model($className=__CLASS__)
 </pre></div>
 
 
-<hr />
+<hr>
 <p>对于查询操作，很多时候需要多表关联查询。那么基于CActiveRecord如何实现多表关联查询（隐式自动地）呢？</p>
 <p>CActiveRecord类有个方法relations()：</p>
 <div class="highlight"><pre><span class="x">public function relations()</span>
@@ -1002,7 +1002,7 @@ public static function model($className=__CLASS__)
 </pre></div>
 
 
-<p>那么在得到一条记录对象（$uc）时，通过调用$uc-&gt;user，即可得到与该UserContacts记录关联的Users记录。不过这条关联记录的获取可能是在调用$uc-&gt;user时才去查询数据库的。</p>
+<p>那么在得到一条记录对象（<span class="math">\(uc）时，通过调用\)</span>uc-&gt;user，即可得到与该UserContacts记录关联的Users记录。不过这条关联记录的获取可能是在调用$uc-&gt;user时才去查询数据库的。</p>
 <p>若想提前将关联记录查询出来准备好，则可以再调用find、findAll等查询方法之前先调用with方法，如<code>self::model()-&gt;with('user')-&gt;find(array('usercontact_id' =&gt; 1))</code>，或者这样调用find方法<code>self::model()-&gt;find(array('usercontact_id' =&gt; 1, 'with' =&gt; 'user'))</code>。</p>
 <p>那么在调用<code>$uc-&gt;user</code>时，如何知道user是一个关联项，而不是一个当前对象的属性？如果当前对象对应的数据表已有一个名为user的字段，是否会屏蔽掉关联项？且看CActiveRecord类的__get方法：</p>
 <div class="highlight"><pre><span class="x">public function __get($name)</span>
@@ -1023,8 +1023,63 @@ public static function model($className=__CLASS__)
 </pre></div>
 
 
-<hr />
+<hr>
 <p><em>注：本文为草稿状态</em></p>
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML';
+    mathjaxscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>
             </div><!-- /.entry-content -->
             <div class="comments">
               <h3>Comments</h3>

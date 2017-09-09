@@ -146,7 +146,7 @@ Ten seconds later: I’m leaving now.
 
 <p>一般来说，通过睡眠的方式来编排线程之间相互等待是不太可能的。下一章节会介绍Go语言中的一种同步机制 - 管道，并演示如何使用管道让一个goroutine等待另一个goroutine。</p>
 <h4>2. 管道（channel）</h4>
-<p><img alt="Sushi conveyor belt" src="http://www.nada.kth.se/~snilsson/concurrency/sushi-conveyor-belt.jpg" /></p>
+<p><img alt="Sushi conveyor belt" src="http://www.nada.kth.se/~snilsson/concurrency/sushi-conveyor-belt.jpg"></p>
 <p><a href="http://golang.org/ref/spec#Channel_types">管道</a>是Go语言的一个构件，提供一种机制用于两个goroutine之间通过传递一个指定类型的值来同步运行和通讯。操作符<code>&lt;-</code>用于指定管道的方向，发送或接收。如果未指定方向，则为双向管道。</p>
 <div class="highlight"><pre><span class="kd">chan</span> <span class="nx">Sushi</span>        <span class="c1">// 可用来发送和接收Sushi类型的值</span>
 <span class="kd">chan</span><span class="o">&lt;-</span> <span class="kt">float64</span>    <span class="c1">// 仅可用来发送float64类型的值</span>
@@ -241,7 +241,7 @@ The news is out, time to leave.
 
 
 <h4>4. 死锁</h4>
-<p><img alt="traffic jam" src="http://www.nada.kth.se/~snilsson/concurrency/traffic-jam.jpg" /></p>
+<p><img alt="traffic jam" src="http://www.nada.kth.se/~snilsson/concurrency/traffic-jam.jpg"></p>
 <p>现在我们在<code>Publish</code>函数中引入一个bug：</p>
 <div class="highlight"><pre><span class="kd">func</span> <span class="nx">Publish</span><span class="p">(</span><span class="nx">text</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">delay</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">)</span> <span class="p">(</span><span class="nx">wait</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="kd">struct</span><span class="p">{})</span> <span class="p">{</span>
     <span class="nx">ch</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kd">struct</span><span class="p">{})</span>
@@ -325,7 +325,7 @@ created by addtimer
 <li>程序输出 n 的值，当前为1</li>
 </ul>
 <p>“数据竞争（data race）”这名字有点误导的嫌疑。不仅操作的顺序是未定义的，其实根本没有任何保证（no guarantees whatsoever）。编译器和硬件为了得到更好的性能，经常都会对代码进行上下内外的顺序变换。如果你看到一个线程处于中间行为状态时，那么当时的场景可能就像下图所示的一样：</p>
-<p><img alt="mid action" src="http://www.nada.kth.se/~snilsson/concurrency/mid-action.jpg" /></p>
+<p><img alt="mid action" src="http://www.nada.kth.se/~snilsson/concurrency/mid-action.jpg"></p>
 <p>避免数据竞争的唯一方式是线程间同步访问所有的共享可变数据。有几种方式能够实现这一目标。Go语言中，通常是使用管道或者锁。（<a href="http://golang.org/pkg/sync/">sync</a>和<a href="http://golang.org/pkg/sync/atomic/">sync/atomic</a>包中还有更低层次的机制可供使用，但本文中不做讨论）。</p>
 <p>Go语言中，处理并发数据访问的推荐方式是使用管道从一个goroutine中往下一个goroutine传递实际的数据。有格言说得好：“不要通过共享内存来通讯，而是通过通讯来共享内存”。</p>
 <div class="highlight"><pre><span class="kd">func</span> <span class="nx">sharingIsCaring</span><span class="p">()</span> <span class="p">{</span>
@@ -346,7 +346,7 @@ created by addtimer
 <p>以上代码中的管道肩负双重责任 - 从一个goroutine将数据传递到另一个goroutine，并且起到同步的作用：发送方goroutine会等待另一个goroutine接收数据，接收方goroutine也会等待另一个goroutine发送数据。</p>
 <p><a href="http://golang.org/ref/mem">Go语言内存模型</a> - 要保证一个goroutine中对一个变量的读操作得到的值正好是另一个goroutine中对同一个变量写操作产生的值，条件相当复杂，但goroutine之间只要通过管道来共享所有可变数据，那么就能远离数据竞争了。</p>
 <h4>6. 互斥锁</h4>
-<p><img alt="lock" src="http://www.nada.kth.se/~snilsson/concurrency/lock.jpg" /></p>
+<p><img alt="lock" src="http://www.nada.kth.se/~snilsson/concurrency/lock.jpg"></p>
 <p>有时，通过显式加锁，而不是使用管道，来同步数据访问，可能更加便捷。Go语言标准库为这一目的提供了一个互斥锁 - <a href="http://golang.org/pkg/sync/#Mutex">sync.Mutex</a>。</p>
 <p>要想这类加锁起效的话，关键之处在于：所有对共享数据的访问，不管读写，仅当goroutine持有锁才能操作。一个goroutine出错就足以破坏掉一个程序，引入数据竞争。</p>
 <p>因此，应该设计一个自定义数据结构，具备明确的API，确保所有的同步都在数据结构内部完成。下例中，我们构建了一个安全、易于使用的并发数据结构，<code>AtomicInt</code>，用于存储一个整型值。任意数量的goroutine都能通过<code>Add</code>和<code>Value</code>方法安全地访问这个数值。</p>
@@ -516,7 +516,7 @@ exit status 66
 
 <p>函数 <a href="http://golang.org/pkg/time/#After">time.After</a> 是Go语言标准库的一部分；它会在等待指定时间后将当前的时间发送到返回的管道中。</p>
 <h4>9. 综合所有示例</h4>
-<p><img alt="couples" src="http://www.nada.kth.se/~snilsson/concurrency/couples.jpg" /></p>
+<p><img alt="couples" src="http://www.nada.kth.se/~snilsson/concurrency/couples.jpg"></p>
 <p>花点时间认真研究一下这个示例。如果你完全理解，也就对Go语言中并发的应用方式有了全面的掌握。</p>
 <p>这个程序演示了如何将管道用于被任意数量的goroutine发送和接收数据，也演示了如何将select语句用于从多个通讯中选择一个。</p>
 <div class="highlight"><pre><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
@@ -559,7 +559,7 @@ No one received Dave’s message.
 
 
 <h4>10. 并行计算</h4>
-<p><img alt="CPUs" src="http://www.nada.kth.se/~snilsson/concurrency/cpus.jpg" /></p>
+<p><img alt="CPUs" src="http://www.nada.kth.se/~snilsson/concurrency/cpus.jpg"></p>
 <p>并发的一个应用是将一个大的计算切分成一些工作单元，调度到不同的CPU上同时地计算。</p>
 <p>将计算分布到多个CPU上更多是一门艺术，而不是一门科学。以下是一些经验法则：</p>
 <ul>

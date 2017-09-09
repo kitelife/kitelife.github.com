@@ -80,11 +80,11 @@
 </ol>
 <p>但代价是学习成本 - 为了尽可能发挥Web框架的优势，需要花一些阅读文档，甚至是框架源码（特别是文档缺乏或者文档写得垃圾的），然后经过几次项目实践，一切才能了然于胸。</p>
 <p>喏，为了在工作中更好地使用、避免误用Yii框架，大致阅读了Yii框架的部分代码，然后有了这个系列的笔记。</p>
-<hr />
+<hr>
 <p>深入学习一个Web框架，首先要理解的是请求处理流程。对于PHP而言，处理流程也即包含了应用的初始化过程，如加载配置、初始化组件等。请求处理流程中最核心的应该是路由解析和分发，此外可能还有过滤器处理、事件处理等，直到请求处理进入具体的Controller和Action。响应生成、过滤等也可以关注。</p>
-<hr />
+<hr>
 <p>基于Yii框架的工程目录结构大致如下所示：</p>
-<p><img alt="Yii-Project-Structure" src="/assets/uploads/pics/yii-project-structure.png" /></p>
+<p><img alt="Yii-Project-Structure" src="/assets/uploads/pics/yii-project-structure.png"></p>
 <ul>
 <li>index.php是应用的入口</li>
 <li>protected目录是存放动态脚本的地方<ul>
@@ -197,7 +197,7 @@
 <p>方法<code>initSystemHandler</code>则是根据条件设置框架的异常和错误处理方法。</p>
 <p>方法<code>registerCoreComponents</code>则是加载框架的核心组件，当然如果有需要可以配置同名（同名指的是key相同，Yii中每个组件都是通过一个key或者说别名来注册和引用）的自定义组件来覆盖默认的核心组件，如db、urlManager。</p>
 <p>组件的注册加载细节我们会另外写一篇文章来介绍。</p>
-<hr />
+<hr>
 <p>方法<code>configure</code>定义在类<code>CModule</code>中，实现如下：</p>
 <div class="highlight"><pre><span class="x">public function configure($config)</span>
 <span class="x">{</span>
@@ -252,11 +252,11 @@
 <p>类CComponent中定义的魔术方法<code>__set</code>其逻辑是：</p>
 <ol>
 <li>查看当前对象是否有名为<code>'set'.$key</code>的方法，如果有，则以该方法来处理赋值过程</li>
-<li>否则，检查$key是否以字符串<code>on</code>开头，如果是且当前对象具有名为$key的方法，则认为这是一个事件的赋值过程，将赋值到事件列表中</li>
+<li>否则，检查<span class="math">\(key是否以字符串<code>on</code>开头，如果是且当前对象具有名为\)</span>key的方法，则认为这是一个事件的赋值过程，将赋值到事件列表中</li>
 <li>否则，则认为这是一个行为(behavior)赋值，尝试为属性<code>_m</code>对象列表中对象的属性赋值。（貌似是这样，我也还懂<code>_m</code>的作用）</li>
 </ol>
 <p>以上述规则逻辑，所以类CModule中定义了很多方法名以字符串<code>set</code>或<code>get</code>开头的方法，如setComponents、getComponents、setParams、getParams等。说到这里，你是不是领会到什么了？</p>
-<hr />
+<hr>
 <p><code>$this-&gt;attachBehaviors($this-&gt;behaviors)</code>一句中当前对象的属性behaviors的访问权限为public，默认值为空数组，可以在配置文件中配置如下一项：</p>
 <div class="highlight"><pre><span class="x">&#39;behaviors&#39; =&gt; array(</span>
 <span class="x">    &#39;behaviorName&#39;=&gt;array(</span>
@@ -270,7 +270,7 @@
 
 <p>按照上述对象属性的赋值规则，该配置项会赋值给属性behaviors。</p>
 <p>方法attachBehaviors对这些配置项逐个初始化然后存入属性<code>_m</code>中。</p>
-<hr />
+<hr>
 <p>方法<code>preloadComponents</code>定义在类CModule中，实现如下：</p>
 <div class="highlight"><pre><span class="x">/**</span>
 <span class="x"> * Loads static application components.</span>
@@ -284,7 +284,7 @@
 
 
 <p>其中属性preload访问权限为public，默认也是空数组，可以在其中配置需要预加载的组件的ID。</p>
-<hr />
+<hr>
 <p><code>$this-&gt;init()</code>一行中方法<code>init</code>定义在类CWebApplication中，实现如下：</p>
 <div class="highlight"><pre><span class="x">protected function init()</span>
 <span class="x">{</span>
@@ -296,7 +296,7 @@
 
 
 <p>其中方法<code>getRequest</code>就是预加载request组件。</p>
-<hr />
+<hr>
 <p>index.php中得到Web应用对象后继而调用其方法run，该run方法定义于类CApplication中，实现如下：</p>
 <div class="highlight"><pre><span class="x">/**</span>
 <span class="x"> * Runs the application.</span>
@@ -437,7 +437,7 @@
 
 <p>类CController中定义的beforeAction直接返回true，如果需要在目标action执行之前做一些检查过滤操作则需要在自定义的Controller类中重写beforeAction方法，该方法最后必须返回true或false。beforeAction的作用类似于简化版的过滤器。</p>
 <p>beforeAction通过后，则执行目标action。由于路由配置是类正则的，URL解析出来的一些片段值（算是放在url中的请求参数）应该传入目标action，方法getActionParams即是取到这些参数值。Yii在路由解析时将这些参数值也存放到全局变量<code>$_GET</code>中，所以getActionParams直接返回了<code>$_GET</code>。</p>
-<hr />
+<hr>
 <p>如果设置了过滤器，则需要根据controller、action、filters创建一个CFilterChain对象（过程中当然会对过滤器配置进行解析），类CFilterChain的run方法实现如下：</p>
 <div class="highlight"><pre><span class="x">public function run()</span>
 <span class="x">{</span>
@@ -463,7 +463,7 @@
 
 
 <p>这个时候你应该感到疑惑 - 既然是一个过滤器链，那么循环在哪？事实上，Yii的这个地方并没有提供循环来让过滤器逐个执行，这就意味着在自定义的过滤器中，如果过滤条件通过，则需要尾递归地显式调用过滤器链的run方法，这样直到所有的过滤器都通过，才执行目标action<code>$this-&gt;controller-&gt;runAction($this-&gt;action)</code>。</p>
-<hr />
+<hr>
 <ul>
 <li>2014-12-18 补充：</li>
 </ul>
@@ -478,6 +478,61 @@
 <p>是如何找到<code>$class</code>代表的类（CWebApplication或CConsoleApplication类）的呢？类文件<code>yii/framework/YiiBase.php</code>的倒数第二行代码为：</p>
 <p><code>spl_autoload_register(array('YiiBase','autoload'));</code></p>
 <p>当类文件<code>yii/framework/yii.php</code>中 <strong>require</strong> YiiBase类文件时就执行了这句代码。</p>
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML';
+    mathjaxscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>
             </div><!-- /.entry-content -->
             <div class="comments">
               <h3>Comments</h3>

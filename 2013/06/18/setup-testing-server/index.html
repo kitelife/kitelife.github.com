@@ -88,11 +88,11 @@
 <p>软件也可能依赖一些动态或静态链接库，其查找规则是<code>/etc/ld.so.conf</code>文件中指定的查找路径。编译过程中经常会因为未找到动态链接库而失败，如果该库已存在，可能需配置一下ld.so.conf，将依赖库的路径添加到ld.so.conf中，然后执行ldconfig。</p>
 <p>很多时候编译失败了，但你并不知道编译过程尝试过去哪些路径中查找某个依赖库。直接阅读Makefile并修改不是个好主意。这时strace神器就派上用场了。<strong>strace is a system call tracer, i.e. a debugging tool which prints out a trace of all the system calls made by a another process/program</strong>。比如：<code>strace make</code>，就会输出大量跟踪信息。当编译因未找到依赖而中止后，回溯输出的跟踪信息，看看make过程找过哪些路径，然后将依赖文件软链接到这些路径中某一个，再重新编译。</p>
 <p>从上述4个方面可以解决大多数编译过程中的依赖问题。</p>
-<hr />
+<hr>
 <p>关于编译安装路径，我个人的看法是，基础依赖库，如openssl、zlib等在configure的时候不使用--prefix选项，即使用默认的安装路径，这样其他依赖于这些基础库的软件编译过程中发生依赖缺失问题的可能性要小一些。若系统原来存在老版本的依赖库，这样的默认安装路径方式一般并不会覆盖老版本文件，所以也不用担心会导致系统中已安装的软件运行存在问题。</p>
-<hr />
+<hr>
 <p>关于mysql的编译安装过程可参考：<a href="http://www.linuxidc.com/linux/2011-08/40087.htm">Linux下源码编译MySQL 5.5 与安装过程全记录</a>，过程较为复杂。</p>
-<hr />
+<hr>
 <p>PHP源码编译默认不会产生php-fpm（PHP-FPM (FastCGI Process Manager) is an alternative PHP FastCGI implementation with some additional features useful for sites of any size, especially busier sites.），从<code>./configure --help</code>的输出中可以看到这样几行：</p>
 <div class="highlight"><pre>--enable-fpm              Enable building of the fpm SAPI executable
 --with-fpm-user=USER  Set the user for php-fpm to run as. (default: nobody)
@@ -128,11 +128,11 @@ extension=apc.so
 
 
 <p>最后可通过phpinfo()函数来确认是否成功安装扩展。</p>
-<hr />
+<hr>
 <p>关于Python源码编译，除了可能存在依赖问题外，默认的配置（Modules/Setup.dist）没有启用一些标准库模块，这些模块在实际中又非常基础常用。所以在configure之前需要编辑Modules/Setup.dist文件，启用某些必要的模块（只需去除某些行前<code>#</code>符号，稍微阅读一下该文件就知道了），但某些模块又有其他依赖，从而导致Python编译失败，这样的模块可以不启用，所以可能需要多次来回尝试。在make编译结束时的输出信息中会提示哪些必要的模块没有启用，以及哪些模块已启用但编译失败了。你可以忽略这些模块，但之后Python的使用可能会存在一些问题。</p>
-<hr />
+<hr>
 <p>由于Git可以支持HTTP、GIT、HTTPS、SSH协议，会依赖libssl、libcrypto、libcurl、libmcrypt等库，libssl、libcrypto这两个库都由openssl编译产生，libcurl由curl编译产生。如果未能成功编译ssl支持，也能通过编译，只是在之后的使用中遇到HTTPS协议可能会有问题。如果使用Git遇到HTTPS协议不能成功验证证书时，可以设置<code>git config --global http.sslVerify false</code>来避免证书验证。</p>
-<hr />
+<hr>
 <p>Gitlab是基于Ruby on Rails实现的类Github代码托管平台。其官方的安装教程见：<a href="https://github.com/gitlabhq/gitlabhq/blob/5-0-stable/doc/install/installation.md">https://github.com/gitlabhq/gitlabhq/blob/5-0-stable/doc/install/installation.md</a>，不同Gitlab版本的安装过程有些不同，链接指向的是5-0-stable版本的安装教程。官方的安装教程是针对Ubuntu/Debian的，其他Linux发行版的安装过程会略有不同。</p>
 <p><em>由于我对于Ruby以及Ruby on Rails并不了解，以下内容可能有些表述不正确的地方，请注意。</em></p>
 <p>与Python的pip和easy_install一样，Ruby使用gem来管理第三方库，并通常使用bundle来管理应用的依赖问题（Ruby on Rails就使用bundle来管理依赖），bundle其实又借助了gem。</p>
@@ -182,7 +182,7 @@ app/controllers/tree_controller.rb:17:in `show&#39;
 
 <p>查看网络资料可以知道这是由于代码高亮渲染的时候出了问题。Gitlab使用pygments.rb来高亮代码。pygments.rb是<strong>Ruby wrapper for the Python <a href="http://pygments.org/">pygments syntax highlighter</a></strong>。那么，高亮渲染失败可能有三种可能：(1)未找到合适的Python版本，pygments.rb依赖于Python 2.5+，(2)没有安装Python的pygments第三方库，(3)其他原因。很不幸，我遇到的是第三种可能。官方<a href="https://github.com/gitlabhq/gitlab-public-wiki/wiki/Trouble-Shooting-Guide">Trouble-Shooting-Guide</a>对于该问题给出<a href="https://github.com/gitlabhq/gitlabhq/issues/2214#issuecomment-11137058">解决方案</a>是针对第一种可能的。</p>
 <p>在pyments.rb gem目录<code>gitlab/vendor/bundle/ruby/1.9.1/gems/pygments.rb-0.4.2</code>的子目录<code>lib/pygments</code>中有(且仅有)一个可执行的python源码文件mentos.py，pygments.rb应该就是通过该程序文件调用Python的pygments库来高亮代码的，我尝试执行该文件，执行失败，原因是标准库json的某行代码中对象调用了encode('hex')方法失败，提示不存在hex编码。经分析查找原因，问题出在标准库模块<a href="http://docs.python.org/2/library/binascii.html">binascii</a>(The binascii module contains a number of methods to convert between binary and various ASCII-encoded binary representations)未编译安装。该模块需要编辑Modules/Setup.dist文件启用。启用后（可能还有其他相关模块，我是把其他很多模块一起启用了）重新编译Python就可以了。</p>
-<hr />
+<hr>
 <p>源码编译安装软件遇到最多的问题是依赖缺失，有时会非常繁琐。经过这次经历，我深感操作系统的软件包管理器是多么的重要，能节省我们很多很多时间和精力！</p>
             </div><!-- /.entry-content -->
             <div class="comments">

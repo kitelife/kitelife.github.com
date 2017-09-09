@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 
-        <title>黑·白 - HAProxyConsole</title>
+        <title>黑·白 - Web</title>
         <meta charset="utf-8" />
         <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑·白 Full Atom Feed" />
         <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑·白 Full RSS Feed" />
@@ -63,42 +63,44 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
-                        <a href="../2013/10/16/high-availability-load-balancer-and-dns/" rel="bookmark" title="Permalink to 搭建高可用负载均衡组件及缓存DNS">搭建高可用负载均衡组件及缓存DNS</a>
+                        <a href="../2013/10/12/url-monitoring-and-web-arch/" rel="bookmark" title="Permalink to 从URL监控问题谈网站Web架构">从URL监控问题谈网站Web架构</a>
                     </h2>
                 </header>
                 <footer class="post-info">
-                    <abbr class="published" title="2013-10-16T00:00:00+08:00"> 2013-10-16 Wed </abbr>
+                    <abbr class="published" title="2013-10-12T00:00:00+08:00"> 2013-10-12 Sat </abbr>
 <address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>该项工作，如题所示，主要分为两部分：高可用负载均衡组件、缓存DNS。</p>
-<h3>高可用负载均衡组件</h3>
-<p>需求：优化业务系统架构中某些关键环节，针对TCP层数据流量进行负载均衡，并保证服务的高可用。</p>
-<p>技术选型：HAProxy + Keepalived，这对组合比较常见成熟。</p>
-<p>另外，由于HAProxy的负载均衡任务可能比较多，靠人工修改配置来增删改任务不方便可靠，所以实现了一个简单的HAProxy管理系统，
-以后经实际使用验证和完善会开放源码。</p>
-<p><img alt="high availability load balancer" src="/assets/uploads/pics/high-availability-load-balancer.png"></p>
-<h3>缓存DNS</h3>
-<p>先以www.qq.com为例，解释一下域名解析过程：</p>
-<p><img alt="resolve qq.com" src="/assets/uploads/pics/resolve-qq-com.jpg"></p>
-<p>1.
-用户向Local DNS发起www.qq.com.查询请求；</p>
-<p>2.
-Local DNS向根服务器发起com.查询请求；</p>
-<p>3.
-根服务器向Local DNS返回com.解析记录；</p>
-<p>4.
-Local DNS向com.权威服务器发起qq.com.查询请求；</p>
-<p>5.
-com.权威服务器向Local DNS返回qq.com.解析记录 …</p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2013/10/16/high-availability-load-balancer-and-dns/" rel="bookmark" title="Permalink to 搭建高可用负载均衡组件及缓存DNS">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="entry-content"> <p>之前工作中实现了一个对站点进行URL监控的功能。原理是：</p>
+<ul>
+<li>
+<p>cron脚本定时从一台Nginx服务器上获得Nginx配置文件（包括upstream配置），在解析配置得到：<code>域名-&gt;upstream名</code>（可能有多个）、<code>upstream名-&gt;属于该upstream的服务器ip列表</code>，存入数据库；</p>
+</li>
+<li>
+<p>用户通过Web界面配置URL监控项，配置过程为：</p>
+</li>
+<li>
+<p>输入要监控的URL，如http://www.sample.com/test.php ，前端JS解析出域名部分www.sample.com，向后端发送AJAX请求，得到该域名相关的upstream；</p>
+</li>
+<li>用户选择正确的那个upstream（Nginx可以将对不同URL的请求转发到不同的upstream后端机器）；</li>
+<li>
+<p>然后填写监控告警信息接收人等其他配置信息，提交即可。</p>
+</li>
+<li>
+<p>另一个cron脚本定时地:</p>
+</li>
+<li>
+<p>从数据库中读取URL监控项数据；</p>
+</li>
+<li>根据监控项中的upstream名，从数据库中读取属于该upstream的ip列表；</li>
+<li>逐个使用ip列表中的ip替换URL的域名部分，将域名部分作为HTTP请求头的HOST字段的值；</li>
+<li>使用libcurl库或curl命令发出请求（如使用curl命令：<code>curl -H "www.sample.com" http://192.168.1.1/test.php</code>）；</li>
+<li>如果响应码非200或非3xx等 …</li></ul> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2013/10/12/url-monitoring-and-web-arch/" rel="bookmark" title="Permalink to 从URL监控问题谈网站Web架构">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/gao-ke-yong.html">高可用</a>
-                    <a class="danger label" href="../tag/fu-zai-jun-heng.html">负载均衡</a>
-                    <a class="danger label" href="../tag/haproxy.html">HAProxy</a>
-                    <a class="danger label" href="../tag/keepalived.html">Keepalived</a>
-                    <a class="danger label" href="../tag/haproxyconsole.html">HAProxyConsole</a>
-                    <a class="danger label" href="../tag/dns.html">DNS</a>
-                    <a class="danger label" href="../tag/bind.html">BIND</a>
+                    <a class="danger label" href="../tag/jian-kong.html">监控</a>
+                    <a class="danger label" href="../tag/jia-gou.html">架构</a>
+                    <a class="danger label" href="../tag/web.html">Web</a>
+                    <a class="danger label" href="../tag/gong-zuo-bi-ji.html">工作笔记</a>
                 </div>
             </article>
             </li>

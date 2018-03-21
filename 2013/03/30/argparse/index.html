@@ -81,8 +81,8 @@
 <h3>设置一个解析器</h3>
 <p>使用argparse的第一步就是创建一个解析器对象，并告诉它将会有些什么参数。那么当你的程序运行时，该解析器就可以用于处理命令行参数。</p>
 <p>解析器类是 <strong>ArgumentParser</strong> 。构造方法接收几个参数来设置用于程序帮助文本的描述信息以及其他全局的行为或设置。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
-<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s">&#39;This is a PyMOTW sample program&#39;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
+<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;This is a PyMOTW sample program&#39;</span><span class="p">)</span>
 </pre></div>
 
 
@@ -95,58 +95,58 @@
 <p><strong>parse_args()</strong> 的返回值是一个<strong>命名空间</strong>，包含传递给命令的参数。该对象将参数保存其属性，因此如果你的参数 <code>dest</code> 是 <code>"myoption"</code>，那么你就可以<code>args.myoption</code> 来访问该值。</p>
 <h3>简单示例</h3>
 <p>以下简单示例带有3个不同的选项：一个布尔选项（<code>-a</code>），一个简单的字符串选项（<code>-b</code>），以及一个整数选项（<code>-c</code>）。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 
-<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s">&#39;Short sample app&#39;</span><span class="p">)</span>
+<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;Short sample app&#39;</span><span class="p">)</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-b&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;b&quot;</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;c&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-b&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
 
-<span class="k">print</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s">&#39;-a&#39;</span><span class="p">,</span> <span class="s">&#39;-bval&#39;</span><span class="p">,</span> <span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="s">&#39;3&#39;</span><span class="p">])</span>
+<span class="k">print</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s1">&#39;-a&#39;</span><span class="p">,</span> <span class="s1">&#39;-bval&#39;</span><span class="p">,</span> <span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="s1">&#39;3&#39;</span><span class="p">])</span>
 </pre></div>
 
 
 <p>有几种方式传递值给单字符选项。以上例子使用了两种不同的形式，<code>-bval</code>和<code>-c val</code>。</p>
-<div class="highlight"><pre>$ python argparse_short.py
+<div class="highlight"><pre><span></span>$ python argparse_short.py
 Namespace(a=True, b=&#39;val&#39;, c=3)
 </pre></div>
 
 
 <p>在输出中与<code>'c'</code>关联的值是一个整数，因为程序告诉<strong>ArgumentParser</strong>在保存之前先转换该参数。</p>
 <p>“长”选项名字，即选项的名字多于一个字符，以相同的方式进行处理。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 
-<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s">&#39;Example with long option names&#39;</span><span class="p">)</span>
+<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;Example with long option names&#39;</span><span class="p">)</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--noarg&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--witharg&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;witharg&quot;</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--witharg2&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;witharg2&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--noarg&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--witharg&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;witharg&quot;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--witharg2&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;witharg2&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
 
-<span class="k">print</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s">&#39;--noarg&#39;</span><span class="p">,</span> <span class="s">&#39;--witharg&#39;</span><span class="p">,</span> <span class="s">&#39;val&#39;</span><span class="p">,</span> <span class="s">&#39;--withargs=3&#39;</span><span class="p">])</span>
+<span class="k">print</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s1">&#39;--noarg&#39;</span><span class="p">,</span> <span class="s1">&#39;--witharg&#39;</span><span class="p">,</span> <span class="s1">&#39;val&#39;</span><span class="p">,</span> <span class="s1">&#39;--withargs=3&#39;</span><span class="p">])</span>
 </pre></div>
 
 
 <p>结果也类似：</p>
-<div class="highlight"><pre>$ python argparse_long.py
+<div class="highlight"><pre><span></span>$ python argparse_long.py
 Namespace(noarg=True, witharg=&#39;val&#39;, witharg2=3)
 </pre></div>
 
 
 <p>argparse区别于optparse的一个地方是对非选项参数值的处理。optparse只进行选项解析，而argparse是一个全面的命令行参数解析工具，也处理非选项参数。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 
-<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s">&#39;Example with non-optional arguments&#39;</span><span class="p">)</span>
+<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;Example with non-optional arguments&#39;</span><span class="p">)</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;count&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;units&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;count&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;units&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">)</span>
 
 <span class="k">print</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 </pre></div>
 
 
 <p>在这个例子中，“count”参数是一个整数，“units”参数存储为一个字符串。其中任意一个参数若没有在命令行中提供，或给定的值不能被转换为正确的类型，就会报告一个错误。</p>
-<div class="highlight"><pre>$ python argparse_arguments.py 3 inches
+<div class="highlight"><pre><span></span>$ python argparse_arguments.py 3 inches
 
 Namespace(count=3, units=&#39;inches&#39;)
 
@@ -176,49 +176,49 @@ argparse_arguments.py: error: too few arguments
     将一个定义在参数规格中的值保存到一个列表中。</p>
 <p><code>version</code>
     打印关于程序的版本信息，然后退出</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 
 <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-s&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;simple_value&#39;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s">&#39;Store a simple value&#39;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-s&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;simple_value&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Store a simple value&#39;</span><span class="p">)</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store_const&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;constant_value&#39;</span><span class="p">,</span>
-        <span class="n">const</span><span class="o">=</span><span class="s">&#39;value-to-store&#39;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s">&#39;Store a constant value&#39;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_const&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;constant_value&#39;</span><span class="p">,</span>
+        <span class="n">const</span><span class="o">=</span><span class="s1">&#39;value-to-store&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Store a constant value&#39;</span><span class="p">)</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-t&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-        <span class="n">dest</span><span class="o">=</span><span class="s">&#39;boolean_switch&#39;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s">&#39;Set a switch to true&#39;</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-f&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store_false&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-        <span class="n">dest</span><span class="o">=</span><span class="s">&#39;boolean_switch&#39;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s">&#39;Set a switch to false&#39;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-t&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;boolean_switch&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Set a switch to true&#39;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-f&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_false&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;boolean_switch&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Set a switch to false&#39;</span><span class="p">)</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;append&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;collection&#39;</span><span class="p">,</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;append&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;collection&#39;</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="p">[],</span>
-        <span class="n">help</span><span class="o">=</span><span class="s">&#39;Add repeated values to a list&#39;</span><span class="p">)</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Add repeated values to a list&#39;</span><span class="p">)</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-A&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;append_const&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;const_collection&#39;</span><span class="p">,</span>
-        <span class="n">const</span><span class="o">=</span><span class="s">&#39;value-1-to-append&#39;</span><span class="p">,</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-A&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;append_const&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;const_collection&#39;</span><span class="p">,</span>
+        <span class="n">const</span><span class="o">=</span><span class="s1">&#39;value-1-to-append&#39;</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="p">[],</span>
-        <span class="n">help</span><span class="o">=</span><span class="s">&#39;Add different values to list&#39;</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-B&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;append_const&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;const_collection&#39;</span><span class="p">,</span>
-        <span class="n">const</span><span class="o">=</span><span class="s">&#39;value-2-to-append&#39;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s">&#39;Add different values to list&#39;</span><span class="p">)</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Add different values to list&#39;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-B&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;append_const&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;const_collection&#39;</span><span class="p">,</span>
+        <span class="n">const</span><span class="o">=</span><span class="s1">&#39;value-2-to-append&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Add different values to list&#39;</span><span class="p">)</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--version&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;version&#39;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%(prog)s</span><span class="s"> 1.0&#39;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--version&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;version&#39;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(prog)s</span><span class="s1"> 1.0&#39;</span><span class="p">)</span>
 
 <span class="n">results</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
-<span class="k">print</span> <span class="s">&#39;simple_value     =&#39;</span><span class="p">,</span> <span class="n">results</span><span class="o">.</span><span class="n">simple_value</span>
-<span class="k">print</span> <span class="s">&#39;constant_value   =&#39;</span><span class="p">,</span> <span class="n">results</span><span class="o">.</span><span class="n">constant_value</span>
-<span class="k">print</span> <span class="s">&#39;boolean_switch   =&#39;</span><span class="p">,</span> <span class="n">results</span><span class="o">.</span><span class="n">boolean_switch</span>
-<span class="k">print</span> <span class="s">&#39;collection       =&#39;</span><span class="p">,</span> <span class="n">results</span><span class="o">.</span><span class="n">collection</span>
-<span class="k">print</span> <span class="s">&#39;const_collection =&#39;</span><span class="p">,</span> <span class="n">results</span><span class="o">.</span><span class="n">const_collection</span>
+<span class="k">print</span> <span class="s1">&#39;simple_value     =&#39;</span><span class="p">,</span> <span class="n">results</span><span class="o">.</span><span class="n">simple_value</span>
+<span class="k">print</span> <span class="s1">&#39;constant_value   =&#39;</span><span class="p">,</span> <span class="n">results</span><span class="o">.</span><span class="n">constant_value</span>
+<span class="k">print</span> <span class="s1">&#39;boolean_switch   =&#39;</span><span class="p">,</span> <span class="n">results</span><span class="o">.</span><span class="n">boolean_switch</span>
+<span class="k">print</span> <span class="s1">&#39;collection       =&#39;</span><span class="p">,</span> <span class="n">results</span><span class="o">.</span><span class="n">collection</span>
+<span class="k">print</span> <span class="s1">&#39;const_collection =&#39;</span><span class="p">,</span> <span class="n">results</span><span class="o">.</span><span class="n">const_collection</span>
 </pre></div>
 
 
-<hr>
-<div class="highlight"><pre>$ python argparse_action.py -h
+<hr />
+<div class="highlight"><pre><span></span>$ python argparse_action.py -h
 
 usage: argparse_action.py [-h] [-s SIMPLE_VALUE] [-c] [-t] [-f]
                           [-a COLLECTION] [-A] [-B] [--version]
@@ -290,25 +290,25 @@ argparse_action.py 1.0
 
 <h3>选项前缀</h3>
 <p>argparse选项的默认语法是基于Unix约定的，使用一个“-”前缀来表示命令行开关。argparse支持其他前缀，因此你可以使得你的程序遵照本地平台的默认语法（例如，在Window上使用“/”）或者遵循不同的约定。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 
-<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s">&#39;Change the option prefix charaters&#39;</span><span class="p">,</span> 
-        <span class="n">prefix_chars</span><span class="o">=</span><span class="s">&#39;-+/&#39;</span><span class="p">)</span>
+<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;Change the option prefix charaters&#39;</span><span class="p">,</span> 
+        <span class="n">prefix_chars</span><span class="o">=</span><span class="s1">&#39;-+/&#39;</span><span class="p">)</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_false&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s">&#39;Turn A off&#39;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_false&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Turn A off&#39;</span><span class="p">)</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;+a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s">&#39;Turn A on&#39;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;+a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Turn A on&#39;</span><span class="p">)</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;//noarg&#39;</span><span class="p">,</span> <span class="s">&#39;++noarg&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;//noarg&#39;</span><span class="p">,</span> <span class="s1">&#39;++noarg&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 
 <span class="k">print</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 </pre></div>
 
 
 <p>将<strong>ArgumentParser</strong> 方法的<em>prefix_chars</em> 参数设置为一个字符串，该字符串包含所有允许用来表示选项的字符。需要理解的是虽然<em>prefix_chars</em>包含允许用于开关的字符，但单个参数定义只能使用一种给定的开关语法。这让你可以对使用不同前缀的选项是否是别名（比如独立于平台的命令行语法的情况）或替代选择（例如，使用“+”表明打开一个开发，“-”则为关闭一个开关）进行显式地控制。在上述例子中，<code>+a</code>和<code>-a</code>是不同的参数，<code>//noarg</code> 也可以 <code>++noarg</code> 提供，但不是 <code>--noarg</code>。</p>
-<div class="highlight"><pre>$ python argparse_prefix_chars.py -h
+<div class="highlight"><pre><span></span>$ python argparse_prefix_chars.py -h
 
 usage: argparse_prefix_chars.py [-h] [-a] [+a] [//noarg]
 
@@ -345,30 +345,30 @@ argparse_prefix_chars.py: error: unrecognized arguments: --noarg
 
 <h3>参数来源</h3>
 <p>目前为止所见的例子中，提供给解析器的参数列表来自于显式传递的一个列表，或隐式地从sys.argv获取的。显式传递列表在你使用argparse来处理类命令行但并不是来自命令行（比如来自一个配置文件）的指令之时比较有用。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 <span class="kn">from</span> <span class="nn">ConfigParser</span> <span class="kn">import</span> <span class="n">ConfigParser</span>
 <span class="kn">import</span> <span class="nn">shlex</span>
 
-<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s">&#39;Short sample app&#39;</span><span class="p">)</span>
+<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;Short sample app&#39;</span><span class="p">)</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-b&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;b&quot;</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;c&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-b&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
 
 <span class="n">config</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
-<span class="n">config</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s">&#39;argparse_witH_shlex.ini&#39;</span><span class="p">)</span>
-<span class="n">config_value</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;cli&#39;</span><span class="p">,</span> <span class="s">&#39;options&#39;</span><span class="p">)</span>
-<span class="k">print</span> <span class="s">&#39;Config: &#39;</span><span class="p">,</span> <span class="n">config_value</span>
+<span class="n">config</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;argparse_witH_shlex.ini&#39;</span><span class="p">)</span>
+<span class="n">config_value</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;cli&#39;</span><span class="p">,</span> <span class="s1">&#39;options&#39;</span><span class="p">)</span>
+<span class="k">print</span> <span class="s1">&#39;Config: &#39;</span><span class="p">,</span> <span class="n">config_value</span>
 
 <span class="n">argument_list</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">config_value</span><span class="p">)</span>
-<span class="k">print</span> <span class="s">&#39;Arg List:&#39;</span><span class="p">,</span> <span class="n">argument_list</span>
+<span class="k">print</span> <span class="s1">&#39;Arg List:&#39;</span><span class="p">,</span> <span class="n">argument_list</span>
 
-<span class="k">print</span> <span class="s">&#39;Results:&#39;</span><span class="p">,</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">argument_list</span><span class="p">)</span>
+<span class="k">print</span> <span class="s1">&#39;Results:&#39;</span><span class="p">,</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">argument_list</span><span class="p">)</span>
 </pre></div>
 
 
 <p>shlex使得切分存储在配置文件中的字符串非常容易。</p>
-<div class="highlight"><pre>$ python argparse_with_shlex.py
+<div class="highlight"><pre><span></span>$ python argparse_with_shlex.py
 
 Config: -a -b 2
 Arg List: [&#39;-a&#39;, &#39;-b&#39;, &#39;2&#39;]
@@ -377,31 +377,31 @@ Results: Namespace(a=True, b=&#39;2&#39;, c=None)
 
 
 <p>另一种自己处理配置文件的方法是使用<em>fromfile_prefix_chars</em>指定一个包含一组要待处理参数的输入文件来告诉argparse怎样识别参数。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 <span class="kn">from</span> <span class="nn">ConfigParser</span> <span class="kn">import</span> <span class="n">ConfigParser</span>
 <span class="kn">import</span> <span class="nn">shlex</span>
 
-<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s">&#39;Short sample app&#39;</span><span class="p">,</span>
-        <span class="n">fromfile_prefix_chars</span><span class="o">=</span><span class="s">&#39;@&#39;</span>
+<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;Short sample app&#39;</span><span class="p">,</span>
+        <span class="n">fromfile_prefix_chars</span><span class="o">=</span><span class="s1">&#39;@&#39;</span>
         <span class="p">)</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-b&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;b&quot;</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;c&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-b&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
 
-<span class="k">print</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s">&#39;@argparse_fromfile_prefix_chars.txt&#39;</span><span class="p">])</span>
+<span class="k">print</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s1">&#39;@argparse_fromfile_prefix_chars.txt&#39;</span><span class="p">])</span>
 </pre></div>
 
 
 <p>该示例代码在找到一个以<em>@</em>为前缀的参数时即停止往下读取，然后从以该参数命名的文件中查找更多的参数。例如，输入文件<code>argparse_fromfile_prefix_chars.txt</code>包含一系列参数，一行一个：</p>
-<div class="highlight"><pre>-a
+<div class="highlight"><pre><span></span>-a
 -b
 2
 </pre></div>
 
 
 <p>那么处理该文件产生的输出为：</p>
-<div class="highlight"><pre>$ python argparse_fromfile_prefix_chars.py
+<div class="highlight"><pre><span></span>$ python argparse_fromfile_prefix_chars.py
 
 Namespace(a=True, b=&#39;2&#39;, c=None)
 </pre></div>
@@ -410,33 +410,33 @@ Namespace(a=True, b=&#39;2&#39;, c=None)
 <h3>自动生成选项</h3>
 <p>经过配置argparse会自动添加选项用来生成帮助信息以及为你的应用程序显示版本信息。</p>
 <p><strong>ArgumentParser</strong>的参数<em>add_help</em> 控制帮助信息相关的选项。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 
 <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">add_help</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-b&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;b&quot;</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;c&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-b&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
 
 <span class="k">print</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 </pre></div>
 
 
 <p>帮助选项（-h和--help）默认是添加的，但可以通过将<em>add_help</em>设置为false来禁用。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 
 <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">add_help</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-b&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;b&quot;</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;c&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-b&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
 
 <span class="k">print</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 </pre></div>
 
 
 <p>虽然<code>-h</code>和<code>--help</code>是事实上的请求帮助的标准选项名称，但一些应用或argparse的使用要么不需要提供帮助要么需要将这两个选项名称用于其他目标。</p>
-<div class="highlight"><pre>$ python argparse_with_help.py -h
+<div class="highlight"><pre><span></span>$ python argparse_with_help.py -h
 
 usage: argparse_with_help.py [-h] [-a] [-b B] [-c C]
 
@@ -454,22 +454,22 @@ argparse_without_help.py: error: unrecognized arguments: -h
 
 
 <p>当在<strong>ArgumentParser</strong>构造方法设置<em>版本</em>后，就会添加版本选项（<code>-v</code>和<code>--version</code>）。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 
-<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">version</span><span class="o">=</span><span class="s">&#39;1.0&#39;</span><span class="p">)</span>
+<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">version</span><span class="o">=</span><span class="s1">&#39;1.0&#39;</span><span class="p">)</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-b&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;b&quot;</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;c&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-b&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
 
 <span class="k">print</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 
-<span class="k">print</span> <span class="s">&#39;This is not printed&#39;</span>
+<span class="k">print</span> <span class="s1">&#39;This is not printed&#39;</span>
 </pre></div>
 
 
 <p>两种形式的选项爱那个都会打印程序的版本字符串，然后立即退出程序。</p>
-<div class="highlight"><pre>$ python argparse_with_version.py -h
+<div class="highlight"><pre><span></span>$ python argparse_with_version.py -h
 
 usage: argparse_with_version.py [-h] [-v] [-a] [-b B] [-c C]
 
@@ -491,29 +491,29 @@ $ python argparse_with_version.py -v
 <p><strong>共享解析器规则</strong></p>
 <p>我们常常需要实现一套命令行程序，这些程序都带一组参数，只是在某些方面有特殊化。例如，如果所有程序都需要在用户进行任何实际的操作之前对用户进行认证，那么它们就都需要支持<code>--user</code>和<code>--password</code>选项。你可以共享的选项来定义一个“父母”解析器，然后令单个程序的解析器从该“父母”解析器继承共享选项，这样就不必显式为每个<strong>ArgumentParser</strong>添加共享选项。</p>
 <p>第一步是以共享的参数定义建立“父母”解析器。由于“父母”解析器的后代使用者会添加相同的帮助选项，从而会引发一个异常，所以在基础解析器中我们关闭自动帮助选项生成。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 
 <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">add_help</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--user&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--password&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--user&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--password&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">)</span>
 </pre></div>
 
 
 <p>接下来，以<em>父母解析器</em>集创建另一个解析器：</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 <span class="kn">import</span> <span class="nn">argparse_parent_base</span>
 
 <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="p">[</span><span class="n">argparse_parent_base</span><span class="o">.</span><span class="n">parser</span><span class="p">])</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--local-arg&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--local-arg&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 
 <span class="k">print</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 </pre></div>
 
 
 <p>得到的程序带有三个选项：</p>
-<div class="highlight"><pre>$ python argparse_uses_parent.py -h
+<div class="highlight"><pre><span></span>$ python argparse_uses_parent.py -h
 
 usage: argparse_uses_parent.py [-h] [--user USER] [--password PASSWORD]
                            [--local-arg]
@@ -528,20 +528,20 @@ optional arguments:
 
 <p><strong>冲突的选项</strong></p>
 <p>前一个例子指出以相同的参数名字为一个解析器添加两个参数处理器会引发一个异常。可以通过传递一个<em>conflict_handler</em>来改变冲突消除行为。argparse有两个内置的冲突处理器<code>error</code>（默认）和<code>resolve</code>，<code>resolve</code>会基于冲突选项的添加顺序来选择一个参数处理器。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 
-<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">conflict_handler</span><span class="o">=</span><span class="s">&#39;resolve&#39;</span><span class="p">)</span>
+<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">conflict_handler</span><span class="o">=</span><span class="s1">&#39;resolve&#39;</span><span class="p">)</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-b&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Short alone&quot;</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--long-b&#39;</span><span class="p">,</span> <span class="s">&#39;-b&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Long and short together&quot;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-b&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Short alone&quot;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--long-b&#39;</span><span class="p">,</span> <span class="s1">&#39;-b&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Long and short together&quot;</span><span class="p">)</span>
 
-<span class="k">print</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s">&#39;-h&#39;</span><span class="p">])</span>
+<span class="k">print</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s1">&#39;-h&#39;</span><span class="p">])</span>
 </pre></div>
 
 
 <p>由于最后一个处理器所给定的参数名已被使用，那么本例中独立选项<code>-b</code>将被<code>--long-b</code>的别名所覆盖。</p>
-<div class="highlight"><pre>$ python argparse_conflict_handler_resolve.py
+<div class="highlight"><pre><span></span>$ python argparse_conflict_handler_resolve.py
 
 usage: argparse_conflict_handler_resolve.py [-h] [-a A] [--long-b LONG_B]
 
@@ -554,20 +554,20 @@ optional arguments:
 
 
 <p>切换<strong>add_argument()</strong>的调用顺序就可以启用独立的选项：</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 
-<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">conflict_handler</span><span class="o">=</span><span class="s">&#39;resolve&#39;</span><span class="p">)</span>
+<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">conflict_handler</span><span class="o">=</span><span class="s1">&#39;resolve&#39;</span><span class="p">)</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--long-b&#39;</span><span class="p">,</span> <span class="s">&#39;-b&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;Long and short together&#39;</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-b&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;Short alone&#39;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--long-b&#39;</span><span class="p">,</span> <span class="s1">&#39;-b&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Long and short together&#39;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-b&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Short alone&#39;</span><span class="p">)</span>
 
 <span class="k">print</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="o">-</span><span class="n">h</span><span class="p">])</span>
 </pre></div>
 
 
 <p>现在两个选项可以一起使用了。</p>
-<div class="highlight"><pre>$ python argparse_conflict_handler_resolve2.py
+<div class="highlight"><pre><span></span>$ python argparse_conflict_handler_resolve2.py
 
 usage: argparse_conflict_handler_resolve2.py [-h] [-a A] [--long-b LONG_B] [-b B]
 
@@ -581,19 +581,19 @@ optional arguments:
 
 <p><strong>参数群组</strong></p>
 <p>argparse能将参数定义组合成“群组”。默认情况下是使用两个群组，一个是选项的群组，另一个是必须的与位置相关的参数群组。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 
-<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s">&#39;Short sample app&#39;</span><span class="p">)</span>
+<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;Short sample app&#39;</span><span class="p">)</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--optional&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;positional&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--optional&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;positional&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">)</span>
 
 <span class="k">print</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 </pre></div>
 
 
 <p>群组在输出的帮助信息中显示为分开的“与位置相关的参数”和“可选参数”两个部分：</p>
-<div class="highlight"><pre>$ python argparse_default_grouping.py
+<div class="highlight"><pre><span></span>$ python argparse_default_grouping.py
 
 usage: argparse_default_grouping.py [-h] [--optional] positional
 
@@ -610,31 +610,31 @@ optional arguments:
 
 <p>你可以调整群组来提高帮助信息中群组的逻辑性，这样相关选项或值能记录在一起。可以使用自定义群组来重写之前的共享选项的示例，如此在帮助信息中身份认证的选项就可以显示在一起。</p>
 <p>在基础解析器中使用<strong>add_argument_group()</strong>来创建一个“身份认证”群组，然后逐个添加身份认证相关的选项到该群组。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 
 <span class="n">parser</span> <span class="o">=</span> <span class="n">argparser</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">add_help</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 
-<span class="n">group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s">&#39;authentication&#39;</span><span class="p">)</span>
+<span class="n">group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s1">&#39;authentication&#39;</span><span class="p">)</span>
 
-<span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--user&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">)</span>
-<span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--password&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store&quot;</span><span class="p">)</span>
+<span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--user&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">)</span>
+<span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--password&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">)</span>
 </pre></div>
 
 
 <p>与之前一样，程序使用基于群组的父母解析器列表作为<em>parents</em>的值。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 <span class="kn">import</span> <span class="nn">argparse_parent_with_group</span>
 
 <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="p">[</span><span class="n">argparse_parent_with_group</span><span class="o">.</span><span class="n">parser</span><span class="p">])</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--local-arg&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--local-arg&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 
 <span class="k">print</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 </pre></div>
 
 
 <p>现在输出的帮助信息一起显示身份认证选项。</p>
-<div class="highlight"><pre>$ python argparse_uses_parent_with_group.py -h
+<div class="highlight"><pre><span></span>$ python argparse_uses_parent_with_group.py -h
 
 usage: argparse_uses_parent_with_group.py [-h] [--user USER] [--password PASSWORD] [--local-arg]
 
@@ -650,20 +650,20 @@ authentication:
 
 <p><strong>互斥选项</strong></p>
 <p>定义互斥的选项是选项分组特性的一个特例，使用<strong>add_mutually_exclusive_group()</strong>而不是<strong>add_argument_group()</strong>。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 
 <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
 
 <span class="n">group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_mutually_exclusive_group</span><span class="p">()</span>
-<span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store_true&#39;</span><span class="p">)</span>
-<span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-b&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">)</span>
+<span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">)</span>
+<span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-b&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">)</span>
 
 <span class="k">print</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 </pre></div>
 
 
 <p>argparse会为你强制执行互斥性，因此一次使用仅能给出该群组的选项中的一个。</p>
-<div class="highlight"><pre>$ python argparse_mutually_exclusive.py -h
+<div class="highlight"><pre><span></span>$ python argparse_mutually_exclusive.py -h
 
 usage: argparse_mutually_exclusive.py [-h] [-a | -b]
 
@@ -690,34 +690,34 @@ argparse_mutually_exclusive.py: error: argument -b: not allowed with argument -a
 <p><strong>嵌套解析器</strong></p>
 <p>上述的父母解析器方式是在相关命令之间共享选项的方式之一。另一种方式是将多个命令组合进一个程序中，使用子解析器来处理命令行的每个部分。就像<code>svn</code>，<code>hg</code>，以及其他带有多个命令行行为或子命令的程序那样。</p>
 <p>一个用于处理文件系统目录的程序可能会像这样定义命令用于创建、删除、以及列出一个目录的内容：</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 
 <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
 
-<span class="n">subparsers</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_subparsers</span><span class="p">(</span><span class="n">help</span><span class="o">=</span><span class="s">&#39;commands&#39;</span><span class="p">)</span>
+<span class="n">subparsers</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_subparsers</span><span class="p">(</span><span class="n">help</span><span class="o">=</span><span class="s1">&#39;commands&#39;</span><span class="p">)</span>
 
-<span class="c"># A list command</span>
-<span class="n">list_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s">&#39;list&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;List contents&#39;</span><span class="p">)</span>
-<span class="n">list_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;dirname&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;Directory to list&#39;</span><span class="p">)</span>
+<span class="c1"># A list command</span>
+<span class="n">list_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s1">&#39;list&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;List contents&#39;</span><span class="p">)</span>
+<span class="n">list_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;dirname&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Directory to list&#39;</span><span class="p">)</span>
 
-<span class="c"># A create command</span>
-<span class="n">create_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s">&#39;create&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;Create a directory&#39;</span><span class="p">)</span>
-<span class="n">create_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;dirname&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;New directory to create&#39;</span><span class="p">)</span>
-<span class="n">create_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--read-only&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store_true&#39;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s">&#39;Set permissions to prevent writing to the directory&#39;</span><span class="p">)</span>
+<span class="c1"># A create command</span>
+<span class="n">create_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s1">&#39;create&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Create a directory&#39;</span><span class="p">)</span>
+<span class="n">create_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;dirname&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;New directory to create&#39;</span><span class="p">)</span>
+<span class="n">create_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--read-only&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Set permissions to prevent writing to the directory&#39;</span><span class="p">)</span>
 
-<span class="c"># A delete command</span>
-<span class="n">delete_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s">&#39;delete&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;Remove a directory&#39;</span><span class="p">)</span>
-<span class="n">delete_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;dirname&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&#39;The directory to remove&#39;</span><span class="p">)</span>
-<span class="n">delete_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--recursive&#39;</span><span class="p">,</span> <span class="s">&#39;-r&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store_true&#39;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s">&#39;Remove the contents of the directory, too&#39;</span><span class="p">)</span>
+<span class="c1"># A delete command</span>
+<span class="n">delete_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s1">&#39;delete&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Remove a directory&#39;</span><span class="p">)</span>
+<span class="n">delete_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;dirname&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;The directory to remove&#39;</span><span class="p">)</span>
+<span class="n">delete_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--recursive&#39;</span><span class="p">,</span> <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Remove the contents of the directory, too&#39;</span><span class="p">)</span>
 
 <span class="k">print</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 </pre></div>
 
 
 <p>输出的帮助信息显示作为“命令”的命名子解析器能够在命令行中作为位置参数进行指定。</p>
-<div class="highlight"><pre>$ python argparse_subparsers.py -h
+<div class="highlight"><pre><span></span>$ python argparse_subparsers.py -h
 
 usage: argparse_subparsers.py [-h] {list, create, delete} ...
 
@@ -733,7 +733,7 @@ optional arguments:
 
 
 <p>每个子解析器也有自己的帮助信息，描述那个命令的参数和选项。</p>
-<div class="highlight"><pre>$ python argparse_subparsers.py create -h
+<div class="highlight"><pre><span></span>$ python argparse_subparsers.py create -h
 
 usage: argparse_subparsers.py create [-h] [--read-only] dirname
 
@@ -747,7 +747,7 @@ optional arguments:
 
 
 <p>参数被解析后，<strong>parse_args()</strong>返回的<strong>Namespace</strong>对象仅包含与指定的命令相关的值。</p>
-<div class="highlight"><pre>$ python argparse_subparsers.py delete -r foo
+<div class="highlight"><pre><span></span>$ python argparse_subparsers.py delete -r foo
 
 Namespace(dirname=&#39;foo&#39;, recursive=True)
 </pre></div>
@@ -757,7 +757,7 @@ Namespace(dirname=&#39;foo&#39;, recursive=True)
 <p>至今为止的示例展示了简单的布尔标识、字符串或数字参数选项、以及位置参数。对于变长参数列表、枚举类型数据、以及常量，argparse支持复杂的参数规格。</p>
 <p><strong>可变形参列表</strong></p>
 <p>你可以配置单个参数的定义使其能够匹配所解析的命令行的多个参数。根据需要或期望的参数个数，设置<em>nargs</em>为这些标识值之一：</p>
-<div class="highlight"><pre>值  含义
+<div class="highlight"><pre><span></span>值  含义
 N   参数的绝对个数（例如：3）
 ?   0或1个参数
 *   0或所有参数
@@ -765,22 +765,22 @@ N   参数的绝对个数（例如：3）
 </pre></div>
 
 
-<hr>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<hr />
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 
 <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--three&#39;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--optional&#39;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s">&#39;?&#39;</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--all&#39;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s">&#39;*&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;all&#39;</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--one-or-more&#39;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s">&#39;+&#39;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--three&#39;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--optional&#39;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;?&#39;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--all&#39;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--one-or-more&#39;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
 
 <span class="k">print</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 </pre></div>
 
 
 <p>解析器强制执行参数计数指令，生成一个精确的语法图作为命令帮助文本的一部分。</p>
-<div class="highlight"><pre>$ python argparse_nargs.py -h
+<div class="highlight"><pre><span></span>$ python argparse_nargs.py -h
 
 usage: argparse_nargs.py [-h] [--three THREE THREE THREE]
                      [--optional [OPTIONAL]] [--all [ALL [ALL ...]]]
@@ -839,13 +839,13 @@ argparse_nargs.py: error: argument --one-or-more: expected at least one argument
 
 <p><strong>参数类型</strong></p>
 <p>argparse将所有参数值都看作是字符串，除非你告诉它将字符串转换成另一种数据类型。<strong>add_argument()</strong>的<em>type</em>参数以一个转换函数作为值，被<strong>ArgumentParser</strong>用来将参数值从一个字符串转换成另一种数据类型。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 
 <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-i&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-f&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--file&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">file</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-i&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-f&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--file&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">file</span><span class="p">)</span>
 
 <span class="k">try</span><span class="p">:</span>
     <span class="k">print</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
@@ -855,7 +855,7 @@ argparse_nargs.py: error: argument --one-or-more: expected at least one argument
 
 
 <p>任何需要单个字符串参数的可调用对象都可以传递给<em>type</em>，包含内置类型如<strong>int()</strong>, <strong>float()</strong>, 以及<strong>file()</strong>。</p>
-<div class="highlight"><pre>$ python argparse_type.py -i 1
+<div class="highlight"><pre><span></span>$ python argparse_type.py -i 1
 
 Namespace(f=None, file=None, i=1)
 
@@ -870,7 +870,7 @@ Namespace(f=None, file=&lt;open file &#39;argparse_type.py&#39;, mode &#39;r&#39
 
 
 <p>如果类型转换失败，argparse会引发一个异常。<em>TypeError</em>和<em>ValueError</em>会被自动捕获，并为用户转换为一个简单的错误消息。其他异常，如下面一个例子中输入文件不存在，则其<em>IOError</em>必须由调用者来处理。</p>
-<div class="highlight"><pre>$ python argparse_type.py -i a
+<div class="highlight"><pre><span></span>$ python argparse_type.py -i a
 
 usage: argparse_type.py [-h] [-i I] [-f F] [--file FILE]
 argparse_type.py: error: argument -i: invalid int value: &#39;a&#39;
@@ -888,18 +888,18 @@ argparse_type.py: error: [Errno 2] No such file or directory: &#39;does_not_exis
 
 
 <p>要想将一个输入参数限制为一个预定义集中的某个值，则使用<em>choices</em>参数。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 
 <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--mode&#39;</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;read-only&#39;</span><span class="p">,</span> <span class="s">&#39;read-write&#39;</span><span class="p">))</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--mode&#39;</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;read-only&#39;</span><span class="p">,</span> <span class="s1">&#39;read-write&#39;</span><span class="p">))</span>
 
 <span class="k">print</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 </pre></div>
 
 
 <p>如果<code>--mode</code>的参数值不是所允许的值中的一个，就会产生一个错误并停止执行。</p>
-<div class="highlight"><pre>$ python argparse_choices.py -h
+<div class="highlight"><pre><span></span>$ python argparse_choices.py -h
 
 usage: argparse_choices.py [-h] [--mode {read-only,read-write}]
 
@@ -921,24 +921,24 @@ argparse_choices.py: error: argument --mode: invalid choice: &#39;invalid&#39;
 
 <p><strong>文件参数</strong></p>
 <p>虽然<strong>文件</strong>对象可以单个字符串参数值来实例化，但并不允许你指定访问模式。<strong>FileType</strong>让你能够更加灵活地指定某个参数应该是个文件，包括其访问模式和缓冲区大小。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 
 <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-i&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s">&#39;in-file&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">FileType</span><span class="p">(</span><span class="s">&#39;rt&#39;</span><span class="p">))</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-o&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s">&#39;out-file&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">FileType</span><span class="p">(</span><span class="s">&#39;wt&#39;</span><span class="p">))</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-i&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;in-file&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">FileType</span><span class="p">(</span><span class="s1">&#39;rt&#39;</span><span class="p">))</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;out-file&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">FileType</span><span class="p">(</span><span class="s1">&#39;wt&#39;</span><span class="p">))</span>
 
 <span class="k">try</span><span class="p">:</span>
     <span class="n">results</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
-    <span class="k">print</span> <span class="s">&#39;Input file:&#39;</span><span class="p">,</span> <span class="n">results</span><span class="o">.</span><span class="n">i</span>
-    <span class="k">print</span> <span class="s">&#39;Output file:&#39;</span><span class="p">,</span> <span class="n">results</span><span class="o">.</span><span class="n">o</span>
+    <span class="k">print</span> <span class="s1">&#39;Input file:&#39;</span><span class="p">,</span> <span class="n">results</span><span class="o">.</span><span class="n">i</span>
+    <span class="k">print</span> <span class="s1">&#39;Output file:&#39;</span><span class="p">,</span> <span class="n">results</span><span class="o">.</span><span class="n">o</span>
 <span class="k">except</span> <span class="ne">IOError</span><span class="p">,</span> <span class="n">msg</span><span class="p">:</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">msg</span><span class="p">))</span>
 </pre></div>
 
 
 <p>上例中与参数名关联的值是一个打开文件句柄。在使用完该文件后应自己负责关闭该文件。</p>
-<div class="highlight"><pre>$ python argparse_FileType.py -h
+<div class="highlight"><pre><span></span>$ python argparse_FileType.py -h
 
 usage: argparse_FileType.py [-h] [-i in-file] [-o out-file]
 
@@ -963,10 +963,10 @@ argparse_FileType.py: error: argument -i: can&#39;t open &#39;no_such_file.txt&#
 <p><strong>自定义动作</strong></p>
 <p>除了前面描述的内置动作之外，你也可以提供一个实现了Action API的对象来自定义动作。作为<em>action</em>传递给<strong>add_argument()</strong>的对象应接受描述所定义形参的实参，并返回一个可调用对象，作为<em>parser</em>的实参来处理形参，<em>namespace</em>存放解析的结果、参数值，以及触发动作的<em>option_string</em>。</p>
 <p>argparse提供了一个<strong>Action</strong>类作为要定义的新动作的基类。构造方法是处理参数定义的，所以你只要在子类中覆盖<strong><strong>call</strong>()</strong>。</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">argparse</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 
 <span class="k">class</span> <span class="nc">CustomAction</span><span class="p">(</span><span class="n">argparse</span><span class="o">.</span><span class="n">Action</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
             <span class="n">option_strings</span><span class="p">,</span>
             <span class="n">dest</span><span class="p">,</span>
             <span class="n">nargs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
@@ -977,7 +977,7 @@ argparse_FileType.py: error: argument -i: can&#39;t open &#39;no_such_file.txt&#
             <span class="n">required</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
             <span class="n">help</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
             <span class="n">metavar</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-        <span class="n">argparse</span><span class="o">.</span><span class="n">Action</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+        <span class="n">argparse</span><span class="o">.</span><span class="n">Action</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                 <span class="n">option_strings</span><span class="o">=</span><span class="n">option_strings</span><span class="p">,</span>
                 <span class="n">dest</span><span class="o">=</span><span class="n">dest</span><span class="p">,</span>
                 <span class="n">nargs</span><span class="o">=</span><span class="n">nargs</span><span class="p">,</span>
@@ -989,36 +989,36 @@ argparse_FileType.py: error: argument -i: can&#39;t open &#39;no_such_file.txt&#
                 <span class="n">help</span><span class="o">=</span><span class="n">help</span><span class="p">,</span>
                 <span class="n">metavar</span><span class="o">=</span><span class="n">metavar</span><span class="p">)</span>
         <span class="k">print</span>
-        <span class="k">print</span> <span class="s">&#39;Initializing CustomAction&#39;</span>
+        <span class="k">print</span> <span class="s1">&#39;Initializing CustomAction&#39;</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span><span class="n">value</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">locals</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
-            <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;self&#39;</span> <span class="ow">or</span> <span class="n">value</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;self&#39;</span> <span class="ow">or</span> <span class="n">value</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
                 <span class="k">continue</span>
-            <span class="k">print</span> <span class="s">&#39;  </span><span class="si">%s</span><span class="s"> = </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+            <span class="k">print</span> <span class="s1">&#39;  </span><span class="si">%s</span><span class="s1"> = </span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
         <span class="k">return</span>
 
-    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser</span><span class="p">,</span> <span class="n">namespace</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">option_string</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser</span><span class="p">,</span> <span class="n">namespace</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">option_string</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="k">print</span>
-        <span class="k">print</span> <span class="s">&#39;Processing CustomAction for &quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dest</span>
-        <span class="k">print</span> <span class="s">&#39;  parser = </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">id</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
-        <span class="k">print</span> <span class="s">&#39;  values = </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">values</span>
-        <span class="k">print</span> <span class="s">&#39;  option_string = </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">option_string</span>
+        <span class="k">print</span> <span class="s1">&#39;Processing CustomAction for &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dest</span>
+        <span class="k">print</span> <span class="s1">&#39;  parser = </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">id</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+        <span class="k">print</span> <span class="s1">&#39;  values = </span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">values</span>
+        <span class="k">print</span> <span class="s1">&#39;  option_string = </span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">option_string</span>
 
-        <span class="c"># Do some arbitrary processing of the input values</span>
+        <span class="c1"># Do some arbitrary processing of the input values</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="n">values</span> <span class="o">=</span> <span class="p">[</span> <span class="n">v</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span> <span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
-        <span class="c"># Save the results in the namespace using the destination</span>
-        <span class="c"># variable given to our constructor.</span>
+        <span class="c1"># Save the results in the namespace using the destination</span>
+        <span class="c1"># variable given to our constructor.</span>
         <span class="nb">setattr</span><span class="p">(</span><span class="n">namespace</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dest</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
 
 <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
 
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">CustomAction</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-m&#39;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s">&#39;*&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">CustomAction</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;positional&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">CustomAction</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-a&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">CustomAction</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-m&#39;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">CustomAction</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;positional&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">CustomAction</span><span class="p">)</span>
 
-<span class="n">results</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s">&#39;-a&#39;</span><span class="p">,</span> <span class="s">&#39;value&#39;</span><span class="p">,</span> <span class="s">&#39;-m&#39;</span> <span class="s">&#39;multi-value&#39;</span><span class="p">,</span> <span class="s">&#39;positional-value&#39;</span><span class="p">])</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s1">&#39;-a&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="s1">&#39;-m&#39;</span> <span class="s1">&#39;multi-value&#39;</span><span class="p">,</span> <span class="s1">&#39;positional-value&#39;</span><span class="p">])</span>
 <span class="k">print</span>
 <span class="k">print</span> <span class="n">results</span>
 </pre></div>
@@ -1026,7 +1026,7 @@ argparse_FileType.py: error: argument -i: can&#39;t open &#39;no_such_file.txt&#
 
 <p><em>values</em>的类型取决于<em>nargs</em>的值。如果该参数允许多个值，则<em>values</em>会是一个列表，即使其仅包含一个列表项。</p>
 <p><em>option_string</em>的值也取决于原有的参数规范。对于位置相关的、必需的参数，<em>option_string</em>始终为<strong>None</strong>。</p>
-<div class="highlight"><pre>$ python argparse_custom_action.py
+<div class="highlight"><pre><span></span>$ python argparse_custom_action.py
 
 Initializing CustomAction
     dest = &#39;a&#39;

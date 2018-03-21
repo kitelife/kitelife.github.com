@@ -75,31 +75,31 @@
               <p>之前在<a href="http://youngsterxyf.github.io/2013/11/29/inner_warehouse_monitor_system/">仓库作业机器监控系统</a>项目中使用<a href="http://www.highcharts.com/demo/line-time-series">HighCharts的时间序列数据图</a>来绘制机器CPU使用率、内存使用量、网络流量趋势变化图等，这些图在IE下却没有正常显示，IE也没有报错，按理说HighCharts的IE兼容性是较好的，不会出现这种问题，
 最后查明原因---确实不是HighCharts的问题，而是由于IE下JavaScript的Date对象缺少一种构造函数导致的。</p>
 <p>IE中JavaScript的Date对象有如下<a href="http://msdn.microsoft.com/zh-cn/library/ie/cd9w2te4.aspx">三种构造函数</a>：</p>
-<div class="highlight"><pre>dateObj = new Date()
+<div class="highlight"><pre><span></span>dateObj = new Date()
 dateObj = new Date(dateVal)
 dateObj = new Date(year, month, date[, hours[, minutes[, seconds[,ms]]]])
 </pre></div>
 
 
 <p>其他浏览器中除了这三种之外，<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date">还有一种</a>:</p>
-<div class="highlight"><pre><span class="nx">dateObj</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="nx">dateString</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><span class="nx">dateObj</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="nx">dateString</span><span class="p">);</span>
 </pre></div>
 
 
 <p>如果在IE下使用了这种构造函数，IE不会提示错误，但在调用dateObj的getMonth、getDate等等方法时返回的是<strong>NaN</strong>，从而导致了其他问题。</p>
-<hr>
+<hr />
 <p><strong>更新</strong>：</p>
 <p><em>注：感谢@yiyun指出，IE中的Date构造函数只是不支持"xxxx-xx-xx"这种格式的时间字符串</em>。<a href="http://msdn.microsoft.com/zh-cn/library/ie/cd9w2te4.aspx">文档</a>也有说明，是我阅读不仔细：</p>
-<div class="highlight"><pre>dateVal
+<div class="highlight"><pre><span></span>dateVal
     必需。如果是数值，dateVal表示指定日期与1970年1月1日午夜之间相差的协调世界时的毫秒数。   
     如果是字符串，则根据日期和时间字符串(JavaScript)中的规则分析dateVal。dateVal参数也可以是从一些ActiveX对象返回的 VT_DATE值。
 </pre></div>
 
 
 <p>其中日期和时间字符串的规则见：<a href="http://msdn.microsoft.com/zh-cn/library/ie/ff743760.aspx">http://msdn.microsoft.com/zh-cn/library/ie/ff743760.aspx</a>。</p>
-<hr>
+<hr />
 <p>在我的案例中，是需要将时间字符串“xxxx-xx-xx”（如“2013-12-03”）转换成一个Date对象，为了兼容IE，我如下实现：</p>
-<div class="highlight"><pre><span class="kd">function</span> <span class="nx">newIEDate</span><span class="p">(</span><span class="nx">dateStr</span><span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">newIEDate</span><span class="p">(</span><span class="nx">dateStr</span><span class="p">)</span> <span class="p">{</span>
     <span class="c1">// dateStr的格式：xxxx-xx-xx</span>
     <span class="kd">var</span> <span class="nx">dateParts</span> <span class="o">=</span> <span class="nx">dateStr</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">);</span>
     <span class="k">return</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="nb">parseInt</span><span class="p">(</span><span class="nx">dateParts</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">dateParts</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">dateParts</span><span class="p">[</span><span class="mi">2</span><span class="p">]));</span>

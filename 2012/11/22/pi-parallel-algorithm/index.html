@@ -27,6 +27,23 @@
                 s.parentNode.insertBefore(hm, s);
               })();
             </script>
+            
+    <script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type= "text/javascript">
+       MathJax.Hub.Config({
+           config: ["MMLorHTML.js"],
+           jax: ["input/TeX","input/MathML","output/HTML-CSS","output/NativeMML"],
+           TeX: { extensions: ["AMSmath.js","AMSsymbols.js","noErrors.js","noUndefined.js"], equationNumbers: { autoNumber: "AMS" } },
+           extensions: ["tex2jax.js","mml2jax.js","MathMenu.js","MathZoom.js"],
+           tex2jax: { 
+               inlineMath: [ ['$','$'] ],
+               displayMath: [ ['$$','$$'] ],
+               processEscapes: true },
+           "HTML-CSS": {
+               styles: { ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+           }
+       });
+    </script>
+
 </head>
 
 <body id="index" class="home">
@@ -72,9 +89,9 @@
               </address>
             </footer><!-- /.post-info -->
             <div class="entry-content">
-              <p>我们都知道圆周率pi的值是3.141592653...，那么这个值是怎么算出来的呢？一种方式是通过某种方式算出圆的面积或者周长，然后根据公式<span class="math">\( S = pi \times r^2 $(或\)</span> L = 2 \times pi \times r $)算出pi的值。但如何用计算机通过某种算法计算而得？有没有并行的算法？</p>
+              <p>我们都知道圆周率pi的值是3.141592653...，那么这个值是怎么算出来的呢？一种方式是通过某种方式算出圆的面积或者周长，然后根据公式$ S = pi \times r^2 $(或$ L = 2 \times pi \times r $)算出pi的值。但如何用计算机通过某种算法计算而得？有没有并行的算法？</p>
 <p><a href="/assets/uploads/files/mapreduce_intro.pdf">Introduction to Parallel Programming and MapReduce</a>一文中介绍了一种基于概率的并行算法---假设有个正方形，里面有个內切圆。</p>
-<p><img alt="sample pic" src="/assets/uploads/pics/inscribe.png"></p>
+<p><img alt="sample pic" src="/assets/uploads/pics/inscribe.png" /></p>
 <p>设内切圆的半径为$ r $，则</p>
 <p>正方形的面积为$ S_z = 4r^2 $</p>
 <p>内切圆的面积为$ S_y = pi \times r^2 $</p>
@@ -82,12 +99,12 @@
 <p>大量生成属于正方形里的随机点(x, y)，并统计属于内切圆范围内的点的出现次数，当次数达到一定量级之后，属于内切圆范围内的点的数目与随机点的总数目的比即为$ \frac{ S_y }{ S_z } $的近似值，再乘以4即为pi的近似值。</p>
 <p>并且由于任意两个随机数的生成是相互独立的，所以可以使用多个进程/线程/多个计算机来分别计算一定量的随机数，然后把它们计算所得属于内切圆范围的点的数目相加，再根据公式计算pi值。</p>
 <p>假设r的值为单位1，则程序实现如下：</p>
-<div class="highlight"><pre><span class="kn">import</span> <span class="nn">random</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">random</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">threading</span>
 
 <span class="k">def</span> <span class="nf">worker</span><span class="p">(</span><span class="n">taskNum</span><span class="p">):</span>
-    <span class="c"># set r = 1</span>
+    <span class="c1"># set r = 1</span>
     <span class="k">global</span> <span class="n">allcount</span><span class="p">,</span> <span class="n">mutex</span>
     <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
 
@@ -116,9 +133,9 @@
     <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">threads</span><span class="p">:</span>
         <span class="n">t</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
 
-    <span class="k">print</span> <span class="s">&#39;pi: &#39;</span><span class="p">,</span> <span class="mf">4.0</span> <span class="o">*</span> <span class="n">allcount</span> <span class="o">/</span> <span class="n">task_all_num</span>
+    <span class="k">print</span> <span class="s1">&#39;pi: &#39;</span><span class="p">,</span> <span class="mf">4.0</span> <span class="o">*</span> <span class="n">allcount</span> <span class="o">/</span> <span class="n">task_all_num</span>
 
-<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
 
     <span class="n">TASKALLNUM</span> <span class="o">=</span> <span class="mi">40000000</span>
     <span class="n">WORKERNUM</span> <span class="o">=</span> <span class="mi">40</span>
@@ -127,61 +144,6 @@
 
 
 <p>程序总共计算4千万次随机数，使用40个线程，计算得pi近似值为3.141298，由于是基于概率的，所以每次计算所得值会有差异，并且理论上来说随机数生成总次数越大，越精确。</p>
-<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
-    var align = "center",
-        indent = "0em",
-        linebreak = "false";
-
-    if (false) {
-        align = (screen.width < 768) ? "left" : align;
-        indent = (screen.width < 768) ? "0em" : indent;
-        linebreak = (screen.width < 768) ? 'true' : linebreak;
-    }
-
-    var mathjaxscript = document.createElement('script');
-    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
-    mathjaxscript.type = 'text/javascript';
-    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML';
-    mathjaxscript[(window.opera ? "innerHTML" : "text")] =
-        "MathJax.Hub.Config({" +
-        "    config: ['MMLorHTML.js']," +
-        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
-        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
-        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
-        "    displayAlign: '"+ align +"'," +
-        "    displayIndent: '"+ indent +"'," +
-        "    showMathMenu: true," +
-        "    messageStyle: 'normal'," +
-        "    tex2jax: { " +
-        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
-        "        displayMath: [ ['$$','$$'] ]," +
-        "        processEscapes: true," +
-        "        preview: 'TeX'," +
-        "    }, " +
-        "    'HTML-CSS': { " +
-        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
-        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
-        "    }, " +
-        "}); " +
-        "if ('default' !== 'default') {" +
-            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
-                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
-                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
-                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
-                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
-                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
-            "});" +
-            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
-                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
-                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
-                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
-                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
-                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
-            "});" +
-        "}";
-    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
-}
-</script>
             </div><!-- /.entry-content -->
             <div class="comments">
               <h3>Comments</h3>

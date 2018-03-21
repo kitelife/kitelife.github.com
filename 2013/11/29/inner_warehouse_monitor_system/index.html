@@ -75,7 +75,7 @@
               <p>近期在参与一个仓库作业机器监控项目。该项目的需求背景是：公司的电商业务在全国各地有多处或大或小的仓库，仓库的作业人员（没有IT技术背景）经常反馈/投诉作业机器断网、断电、连不了服务等问题。实际情况经常与反馈的不一致，但运维侧并没有数据可以证明，所以才有了这个项目的需求。</p>
 <p>该项目第一期的目标仅是<em>收集、展示作业机器某些监控指标数据，以便在快速定位解决问题，或至少有数据可查</em>。</p>
 <p>为了避免大量监控数据上报影响到生产系统的网络服务，系统采用如下结构：</p>
-<p><img alt="inner_warehouse_monitor" src="/assets/uploads/pics/inner_warehouse_monitor.png"></p>
+<p><img alt="inner_warehouse_monitor" src="/assets/uploads/pics/inner_warehouse_monitor.png" /></p>
 <ol>
 <li>实现一个agent用于在仓库作业PC或作业PDA上获取机器的监控数据；</li>
 <li>在仓库本地服务器上实现一个数据收集处理服务，提供API给agent上传监控数据；数据收集处理服务会将接收到的数据持久化到数据库，提供给仓库本地服务器上的webApp进行数据展示等；</li>
@@ -91,11 +91,11 @@
 <p>选用SQLite的理由是：不必像MySQL那样安装server程序，无需额外部署维护。当然SQLite的文件锁会大大影响数据库读写性能，我们通过尽可能拆分数据库，将不同的指标数据存储在不同的SQLite DB文件中，甚至将每台作业机器每个指标的每天的数据分别存储在不同的DB文件中，来尽可能减小文件锁的性能影响，目前看来效果还不错。</p>
 <p>选择NSQ的理由是：Golang实现、分布式、伸缩性好、性能高、支持HTTP/TCP协议、自带web管理界面等。</p>
 <p>详细的系统结构图如下所示：</p>
-<p><img alt="inner_warehouse_monitor-arch" src="/assets/uploads/pics/inner_warehouse_monitor-arch.png"></p>
+<p><img alt="inner_warehouse_monitor-arch" src="/assets/uploads/pics/inner_warehouse_monitor-arch.png" /></p>
 <p>NSQ支持多topic（不同topic的数据不同），topic又可以有多个channel（同一个topic的所有channel中的数据相同，以多播的方式实现，每个channel在client中有一个对应的处理流程来处理channel中的数据）。我们将作业机器不同的监控指标数据作为不同topic传入NSQ，多数指标数据只需持久化到数据库以备后用，所以这些topic仅需一个channel。</p>
 <p>webApp基于Beego框架实现，避免重复造轮子、工作量小。webApp中的数据展示采用HighCharts、Raphael实现，兼容性好。</p>
 <p>对于机器指标数据，其实不应该使用关系型数据库来存储，因为这种数据的特点是：写入之后只读不改、时间序列的、几乎没有关系型的读取操作、连续批量数据读取，所以开源监控系统如Cacti、Ganglia等均使用RRDtool来读写指标数据。所以如上所述，我们将指标数据的存储尽可能地拆分成多个文件以提高读写性能而不会造成其他问题。</p>
-<hr>
+<hr />
 <p>系统的工作流程如下所述：</p>
 <ol>
 <li>作业机器上的agent启动后会先向NSQ的register topic发送一个注册消息，NSQ Client根据该注册消息在register数据表中将该作业机器的状态改为“正常运行中”；</li>

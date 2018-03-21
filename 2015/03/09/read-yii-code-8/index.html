@@ -74,13 +74,13 @@
             <div class="entry-content">
               <h3>使用</h3>
 <p>Yii框架为开发者提供两个静态方法进行日志记录：</p>
-<div class="highlight"><pre><span class="x">Yii::log($message, $level, $category);</span>
+<div class="highlight"><pre><span></span><span class="x">Yii::log($message, $level, $category);</span>
 <span class="x">Yii::trace($message, $category);</span>
 </pre></div>
 
 
 <p>两者的区别在于后者依赖于应用开启调试模式，即定义常量YII_DEBUG：</p>
-<div class="highlight"><pre><span class="x">defined(&#39;YII_DEBUG&#39;) or define(&#39;YII_DEBUG&#39;, true);</span>
+<div class="highlight"><pre><span></span><span class="x">defined(&#39;YII_DEBUG&#39;) or define(&#39;YII_DEBUG&#39;, true);</span>
 </pre></div>
 
 
@@ -93,7 +93,7 @@
 <li>error：用于记录重大错误日志</li>
 </ul>
 <p>要想日志真的输出到文件、邮件、web页面等地方，还得为应用添加如下配置：</p>
-<div class="highlight"><pre><span class="x">array(</span>
+<div class="highlight"><pre><span></span><span class="x">array(</span>
 <span class="x">    ......</span>
 <span class="x">    &#39;preload&#39;=&gt;array(&#39;log&#39;),</span>
 <span class="x">    &#39;components&#39;=&gt;array(</span>
@@ -123,7 +123,7 @@
 <p>至于为什么需要对log组件进行preload，即预先实例化，后边再说。</p>
 <h3>分析</h3>
 <p>先来看看Yii::log和Yii::trace的实现：</p>
-<div class="highlight"><pre><span class="x">/**</span>
+<div class="highlight"><pre><span></span><span class="x">/**</span>
 <span class="x"> * Writes a trace message.</span>
 <span class="x"> * This method will only log a message when the application is in debug mode.</span>
 <span class="x"> * @param string $msg message to be logged</span>
@@ -174,7 +174,7 @@
 
 
 <p>CLogger类的log方法实现如下所示：</p>
-<div class="highlight"><pre><span class="x">/**</span>
+<div class="highlight"><pre><span></span><span class="x">/**</span>
 <span class="x"> * Logs a message.</span>
 <span class="x"> * Messages logged by this method may be retrieved back via {@link getLogs}.</span>
 <span class="x"> * @param string $message message to be logged</span>
@@ -199,7 +199,7 @@
 
 
 <p>CLogger类的flush方法实现如下所示：</p>
-<div class="highlight"><pre><span class="x">/**</span>
+<div class="highlight"><pre><span></span><span class="x">/**</span>
 <span class="x"> * Removes all recorded messages from the memory.</span>
 <span class="x"> * This method will raise an {@link onFlush} event.</span>
 <span class="x"> * The attached event handlers can process the log messages before they are removed.</span>
@@ -232,7 +232,7 @@
 
 
 <p>CComponent类的raiseEvent方法实现如下所示：</p>
-<div class="highlight"><pre><span class="x">/**</span>
+<div class="highlight"><pre><span></span><span class="x">/**</span>
 <span class="x"> * Raises an event.</span>
 <span class="x"> * This method represents the happening of an event. It invokes</span>
 <span class="x"> * all attached handlers for the event.</span>
@@ -283,11 +283,11 @@
 </pre></div>
 
 
-<p>看到这里，你可能会很奇怪怎么都没看到真正记录日志的代码呢？在与事件绑定的各个<span class="math">\(handler里呢，这也是log组件的routes参数配置成数组的原因，\)</span>handle就是该数组中对应类的实例化对象的日志记录方法。</p>
+<p>看到这里，你可能会很奇怪怎么都没看到真正记录日志的代码呢？在与事件绑定的各个$handler里呢，这也是log组件的routes参数配置成数组的原因，$handle就是该数组中对应类的实例化对象的日志记录方法。</p>
 <p>那么这些$handle是在哪里绑定事件的呢？</p>
 <p>既然log组件对应的是CLogRouter类，那么来看看其实现。</p>
 <p>类CLogRouter继承自类CApplicationComponent。根据<a href="http://youngsterxyf.github.io/2014/11/13/read-yii-code-3/">Yii源码阅读笔记 - 组件集成</a>一文，可知组件初始化时实例化对象会调用init方法来完成一些初始化操作，类CLogRouter的init方法实现如下所示：</p>
-<div class="highlight"><pre><span class="x">/**</span>
+<div class="highlight"><pre><span></span><span class="x">/**</span>
 <span class="x"> * Initializes this application component.</span>
 <span class="x"> * This method is required by the IApplicationComponent interface.</span>
 <span class="x"> */</span>
@@ -310,7 +310,7 @@
 
 
 <p>而类CLogRouter的方法collectLogs和processLogs实现如下所示：</p>
-<div class="highlight"><pre><span class="x">/**</span>
+<div class="highlight"><pre><span></span><span class="x">/**</span>
 <span class="x"> * Collects log messages from a logger.</span>
 <span class="x"> * This method is an event handler to the {@link CLogger::onFlush} event.</span>
 <span class="x"> * @param CEvent $event event parameter</span>
@@ -350,7 +350,7 @@
 
 
 <p>以类CWebLogRoute为例来看看日志路由类的方法collectLogs，该方法定义于类CLogRoute中，实现如下所示：</p>
-<div class="highlight"><pre><span class="x">/**</span>
+<div class="highlight"><pre><span></span><span class="x">/**</span>
 <span class="x"> * Retrieves filtered log messages from logger for further processing.</span>
 <span class="x"> * @param CLogger $logger logger instance</span>
 <span class="x"> * @param boolean $processLogs whether to process the logs after they are collected from the logger</span>
@@ -375,7 +375,7 @@
 
 
 <p>而类CWebLogRoute的processLogs方法实现如下所示：</p>
-<div class="highlight"><pre><span class="x">/**</span>
+<div class="highlight"><pre><span></span><span class="x">/**</span>
 <span class="x"> * Displays the log messages.</span>
 <span class="x"> * @param array $logs list of log messages</span>
 <span class="x"> */</span>
@@ -421,7 +421,7 @@
 
 <p>从上述代码可以知道日志路由类是将日志信息按照一定格式显示在实际请求页面内容的下方。</p>
 <p>再来看看方法init中调用的两个attachEventHandler，它们的定义是同一个，定义在类CComponent中（类CLogger直接继承自类CComponent），实现如下所示：</p>
-<div class="highlight"><pre><span class="x">public function attachEventHandler($name,$handler)</span>
+<div class="highlight"><pre><span></span><span class="x">public function attachEventHandler($name,$handler)</span>
 <span class="x">{</span>
 <span class="x">    // 将事件处理器$handler加到处理器列表中，在事件发生时会逐个处理器触发执行</span>
 <span class="x">    $this-&gt;getEventHandlers($name)-&gt;add($handler);</span>
@@ -430,7 +430,7 @@
 
 
 <p>其中方法EventHandlers的实现如下所示：</p>
-<div class="highlight"><pre><span class="x">/**</span>
+<div class="highlight"><pre><span></span><span class="x">/**</span>
 <span class="x"> * Returns the list of attached event handlers for an event.</span>
 <span class="x"> * @param string $name the event name</span>
 <span class="x"> * @return CList list of attached event handlers for the event</span>
@@ -454,68 +454,13 @@
 
 <p>从上述分析可以知道所谓事件系统，其实就是将处理函数/对象方法放到与事件ID对应的一个列表中，然后在事件触发时，逐个调用执行这些函数/对象方法。</p>
 <p>Yii框架基于事件系统，可以做到同时将日志信息写到多个目标输出中。</p>
-<hr>
+<hr />
 <p>回到之前提到的那个问题：为什么需要对log组件进行preload？</p>
 <p>这是因为：对于日志组件的使用并不是通过<code>Yii::app()-&gt;db</code>这种形式来调用的（如果基于这种形式，那么就可以在首次调用时再做组件实例化，以实现组件延迟加载），而是通过触发事件来间接调用，但这就需要在事件触发之间将相关的处理函数/对象方法绑定到事件，这个绑定操作又是在日志log组件的init方法中执行的，一般组件类实例化时才会调用其init方法，所以需要对log组件进行预加载。</p>
 <h3>参考</h3>
 <ul>
 <li><a href="http://www.yiiframework.com/doc/guide/1.1/en/topics.logging">Yii - topics - Logging</a></li>
 </ul>
-<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
-    var align = "center",
-        indent = "0em",
-        linebreak = "false";
-
-    if (false) {
-        align = (screen.width < 768) ? "left" : align;
-        indent = (screen.width < 768) ? "0em" : indent;
-        linebreak = (screen.width < 768) ? 'true' : linebreak;
-    }
-
-    var mathjaxscript = document.createElement('script');
-    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
-    mathjaxscript.type = 'text/javascript';
-    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML';
-    mathjaxscript[(window.opera ? "innerHTML" : "text")] =
-        "MathJax.Hub.Config({" +
-        "    config: ['MMLorHTML.js']," +
-        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
-        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
-        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
-        "    displayAlign: '"+ align +"'," +
-        "    displayIndent: '"+ indent +"'," +
-        "    showMathMenu: true," +
-        "    messageStyle: 'normal'," +
-        "    tex2jax: { " +
-        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
-        "        displayMath: [ ['$$','$$'] ]," +
-        "        processEscapes: true," +
-        "        preview: 'TeX'," +
-        "    }, " +
-        "    'HTML-CSS': { " +
-        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
-        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
-        "    }, " +
-        "}); " +
-        "if ('default' !== 'default') {" +
-            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
-                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
-                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
-                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
-                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
-                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
-            "});" +
-            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
-                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
-                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
-                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
-                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
-                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
-            "});" +
-        "}";
-    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
-}
-</script>
             </div><!-- /.entry-content -->
             <div class="comments">
               <h3>Comments</h3>

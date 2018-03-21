@@ -80,13 +80,13 @@
 <h3>分析</h3>
 <p>我们来看看Yii框架在哪个地方注册错误/异常处理过程？处理过程是什么样的？</p>
 <p>Yii框架在请求处理初始化过程中，在<code>CApplication</code>类（见文件<code>base/CApplication.php</code>）的构造方法中调用了：</p>
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
 <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">initSystemHandlers</span><span class="p">();</span>
 </pre></div>
 
 
 <p><code>initSystemHandlers</code>的实现如下：</p>
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
 <span class="sd">/**</span>
 <span class="sd"> * Initializes the class autoloader and error handlers.</span>
 <span class="sd"> */</span>
@@ -103,7 +103,7 @@
 
 
 <p>其中注册的方法<code>handleException</code>和<code>handleError</code>实现分别如下：</p>
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
 <span class="k">public</span> <span class="k">function</span> <span class="nf">handleException</span><span class="p">(</span><span class="nv">$exception</span><span class="p">)</span>
 <span class="p">{</span>
     <span class="c1">// disable error capturing to avoid recursive errors</span>
@@ -165,7 +165,7 @@
 </pre></div>
 
 
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
 <span class="k">public</span> <span class="k">function</span> <span class="nf">handleError</span><span class="p">(</span><span class="nv">$code</span><span class="p">,</span><span class="nv">$message</span><span class="p">,</span><span class="nv">$file</span><span class="p">,</span><span class="nv">$line</span><span class="p">)</span>
 <span class="p">{</span>
     <span class="k">if</span><span class="p">(</span><span class="nv">$code</span> <span class="o">&amp;</span> <span class="nb">error_reporting</span><span class="p">())</span>
@@ -242,7 +242,7 @@
 
 
 <p>从上面代码可以看到，方法<code>handleException</code>的关键部分（<code>handleError</code>类似）为：</p>
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
 <span class="c1">// 将异常封装成事件，并触发事件，从而触发监听该事件的处理过程</span>
 <span class="nv">$event</span><span class="o">=</span><span class="k">new</span> <span class="nx">CExceptionEvent</span><span class="p">(</span><span class="nv">$this</span><span class="p">,</span><span class="nv">$exception</span><span class="p">);</span>
 <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">onException</span><span class="p">(</span><span class="nv">$event</span><span class="p">);</span>
@@ -259,7 +259,7 @@
 
 
 <p>其中方法<code>onException</code>的实现如下：</p>
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
 <span class="k">public</span> <span class="k">function</span> <span class="nf">onException</span><span class="p">(</span><span class="nv">$event</span><span class="p">)</span>
 <span class="p">{</span>
     <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">raiseEvent</span><span class="p">(</span><span class="s1">&#39;onException&#39;</span><span class="p">,</span><span class="nv">$event</span><span class="p">);</span>
@@ -268,7 +268,7 @@
 
 
 <p><code>raiseEvent</code>方法实现如下：</p>
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
 <span class="k">public</span> <span class="k">function</span> <span class="nf">raiseEvent</span><span class="p">(</span><span class="nv">$name</span><span class="p">,</span><span class="nv">$event</span><span class="p">)</span>
 <span class="p">{</span>
     <span class="c1">// 根据事件名称，如onException，找到注册到该事件的处理过程，逐个触发调用。</span>
@@ -315,7 +315,7 @@
 <p>那么是如何注册事件的处理过程的呢？</p>
 <p>在类<code>CComponent</code>（见文件<code>base/CComponent.php</code>，<code>CApplication</code>类间接继承自该类）中定义了一对方法：<code>attachEventHandler</code>（将处理过程绑定到某事件）和<code>detachEventHandler</code>（将处理过程从事件解绑）。</p>
 <p>方法<code>attachEventHandler</code>的实现如下：</p>
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
 <span class="k">public</span> <span class="k">function</span> <span class="nf">attachEventHandler</span><span class="p">(</span><span class="nv">$name</span><span class="p">,</span><span class="nv">$handler</span><span class="p">)</span>
 <span class="p">{</span>
     <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">getEventHandlers</span><span class="p">(</span><span class="nv">$name</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="nv">$handler</span><span class="p">);</span>
@@ -324,7 +324,7 @@
 
 
 <p>其中<code>getEventHandlers</code>实现如下：</p>
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
 <span class="k">public</span> <span class="k">function</span> <span class="nf">getEventHandlers</span><span class="p">(</span><span class="nv">$name</span><span class="p">)</span>
 <span class="p">{</span>
     <span class="c1">// 可以关注一下方法hasEvent</span>
@@ -345,7 +345,7 @@
 
 
 <p>回到“方法<code>handleException</code>的关键部分”，在事件的handled属性没有置为true的情况下，会调用方法<code>getErrorHandler</code>取到内置的一个处理过程，该方法实现如下：</p>
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
 <span class="k">public</span> <span class="k">function</span> <span class="nf">getErrorHandler</span><span class="p">()</span>
 <span class="p">{</span>
     <span class="c1">// 获取名为errorHandler的组件，该组件默认会在CApplication类的registerCoreComponents方法中注册，</span>
@@ -357,7 +357,7 @@
 
 <p>名为errorHandler的组件默认为类<code>CErrorHandler</code>（见文件<code>base/CErrorHandler.php</code>），当然也可以配置覆盖默认行为。</p>
 <p><code>CErrorHandler</code>类的<code>handle</code>方法实现如下：</p>
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
 <span class="k">public</span> <span class="k">function</span> <span class="nf">handle</span><span class="p">(</span><span class="nv">$event</span><span class="p">)</span>
 <span class="p">{</span>
     <span class="c1">// set event as handled to prevent it from being handled by other event handlers</span>
@@ -404,7 +404,7 @@
 
 
 <p>其中方法<code>handleException</code>和<code>handleError</code>实现分别如下：</p>
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
 <span class="k">protected</span> <span class="k">function</span> <span class="nf">handleException</span><span class="p">(</span><span class="nv">$exception</span><span class="p">)</span>
 <span class="p">{</span>
     <span class="nv">$app</span><span class="o">=</span><span class="nx">Yii</span><span class="o">::</span><span class="na">app</span><span class="p">();</span>
@@ -473,7 +473,7 @@
 </pre></div>
 
 
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
 <span class="k">protected</span> <span class="k">function</span> <span class="nf">handleError</span><span class="p">(</span><span class="nv">$event</span><span class="p">)</span>
 <span class="p">{</span>
     <span class="nv">$trace</span><span class="o">=</span><span class="nb">debug_backtrace</span><span class="p">();</span>
@@ -556,7 +556,7 @@
 
 <p>上面的代码最终显示异常/错误信息，是通过方法<code>render</code>、以及应用实例的<code>displayError</code>和<code>displayException</code>方法来完成。</p>
 <p><strong>render</strong></p>
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
 <span class="k">protected</span> <span class="k">function</span> <span class="nf">render</span><span class="p">(</span><span class="nv">$view</span><span class="p">,</span><span class="nv">$data</span><span class="p">)</span>
 <span class="p">{</span>
     <span class="c1">// 注意这个地方，如果配置了errorAction，则可以指定目标controller的某个action来处理错误</span>
@@ -628,7 +628,7 @@
 <p>对于exception类型信息，则是查找<code>exception.php</code>文件。</p>
 <p>所以如果应用开发过程需要定制4xx、5xx的错误页面，可以在<code>WebRoot/protected/views/system</code>或<code>WebRoot/themes/ThemeName/views/system</code>放置对应的错误模板页面。</p>
 <p><strong>displayError</strong></p>
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
 <span class="k">public</span> <span class="k">function</span> <span class="nf">displayError</span><span class="p">(</span><span class="nv">$code</span><span class="p">,</span><span class="nv">$message</span><span class="p">,</span><span class="nv">$file</span><span class="p">,</span><span class="nv">$line</span><span class="p">)</span>
 <span class="p">{</span>
     <span class="k">if</span><span class="p">(</span><span class="nx">YII_DEBUG</span><span class="p">)</span>
@@ -667,7 +667,7 @@
 
 
 <p><strong>displayException</strong></p>
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
 <span class="k">public</span> <span class="k">function</span> <span class="nf">displayException</span><span class="p">(</span><span class="nv">$exception</span><span class="p">)</span>
 <span class="p">{</span>
     <span class="k">if</span><span class="p">(</span><span class="nx">YII_DEBUG</span><span class="p">)</span>

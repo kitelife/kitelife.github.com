@@ -27,6 +27,23 @@
                 s.parentNode.insertBefore(hm, s);
               })();
             </script>
+            
+    <script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type= "text/javascript">
+       MathJax.Hub.Config({
+           config: ["MMLorHTML.js"],
+           jax: ["input/TeX","input/MathML","output/HTML-CSS","output/NativeMML"],
+           TeX: { extensions: ["AMSmath.js","AMSsymbols.js","noErrors.js","noUndefined.js"], equationNumbers: { autoNumber: "AMS" } },
+           extensions: ["tex2jax.js","mml2jax.js","MathMenu.js","MathZoom.js"],
+           tex2jax: { 
+               inlineMath: [ ['$','$'] ],
+               displayMath: [ ['$$','$$'] ],
+               processEscapes: true },
+           "HTML-CSS": {
+               styles: { ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+           }
+       });
+    </script>
+
 </head>
 
 <body id="index" class="home">
@@ -76,7 +93,7 @@
 <p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
 <p>Go编程新手可能会偶然发现<a href="http://golang.org/">Go语言</a>---与一个Goroutine可用栈空间大小相关---的一个古怪特性。这通常是由于程序员
 无意间构造了一个无限递归函数调用而产生的。为了阐明这个特性，以如下代码（有点刻意设计的）为例。</p>
-<div class="highlight"><pre><span class="kn">package</span> <span class="nx">main</span>
+<div class="highlight"><pre><span></span><span class="kn">package</span> <span class="nx">main</span>
 
 <span class="kn">import</span> <span class="s">&quot;fmt&quot;</span>
 
@@ -102,8 +119,8 @@
 <p>大多数程序员应该都遇到过无限递归导致的问题，但这都只是对于他们的程序来说是致命的，对于他们的机器通常来说并不是。那么，为何Go程序会不同呢？</p>
 <p>Goroutine的主要特征之一是其开销---在内存占用初始化方面，创建一个Goroutine的开销非常小（相比于一个传统POSIX线程的1-8M字节），并且
 Goroutine的栈空间是按需扩大和缩小的。这就允许一个Goroutine以单个4096字节的栈空间开始，然后按需扩容缩容，也不用担心栈空间耗尽的风险。</p>
-<p>为了实现这一特性，链接器（5l，6l，8l）在每个函数的开头都插入一小段前导代码<span class="math">\( ^1 $，这段代码会检测该函数需要的栈空间大小是否小于当前可用的栈空间。
-若大于，则调用<code>runtime.morestack</code>分配一个新的栈页（stack page）\)</span> ^2 $，拷贝函数调用方传递来的参数，然后将控制权返回给原来要调用的函数，
+<p>为了实现这一特性，链接器（5l，6l，8l）在每个函数的开头都插入一小段前导代码$ ^1 $，这段代码会检测该函数需要的栈空间大小是否小于当前可用的栈空间。
+若大于，则调用<code>runtime.morestack</code>分配一个新的栈页（stack page）$ ^2 $，拷贝函数调用方传递来的参数，然后将控制权返回给原来要调用的函数，
 这样这个函数就可以安全运行了。当这个函数退出时，再撤销操作，将函数返回值拷贝回函数调用方的栈帧（stack frame），不再需要的栈空间也被释放。</p>
 <p>通过这个过程，栈空间就好像无限大一样，若假设不会持续地跨越两个栈的大小边界-通常称为<em>栈切分（stack splitting）</em>（译注：不太理解这句话，应该是指：<strong>程序执行
 到函数调用方，正好将近耗尽预分配的栈空间，而函数调用方中又不断地调用其他函数，这样每次函数调用就需要分配新的栈空间，函数调用结束后又需要
@@ -115,75 +132,20 @@ Goroutine的栈空间是按需扩大和缩小的。这就允许一个Goroutine�
 <p>对于Go 1.1，曾有强烈要求增大32位、64位平台上堆的最大值，但这在某种程度上恶化了这一问题，比如，你的机器不太可能有128GB$ ^3 $的物理内存。</p>
 <p>最后提一下，关于这个问题有几个未解决的issue（<a href="https://code.google.com/p/go/issues/detail?id=4692">链接</a>，<a href="https://code.google.com/p/go/issues/detail?id=2556">链接</a>）,
 目前还没找到一个解决方案能够不影响按常规编写的程序的性能。</p>
-<hr>
+<hr />
 <p><strong>注释</strong></p>
 <ol>
 <li>也适用于方法（method），虽然方法是作为第一个参数为方法接受者（the method receiver）的函数来实现的，但在讨论Go语言中分段的（segmented）栈如何工作之时，并没有实际的区别。</li>
 <li>使用单词page并不意味着仅按固定的4096字节来分配，如果需要，runtime.morestack会分配一个更大的，倍数于一个页大小的空间。</li>
 <li>由于Go 1.1发布周期中一个后来的改变，64位的Windows平台仅允许32Gb大小的堆。</li>
 </ol>
-<hr>
+<hr />
 <p><strong>译者补充相关文章</strong></p>
 <ul>
 <li><a href="http://blog.nella.org/a-trip-down-the-split-rabbithole/">A trip down the (split) rabbithole</a></li>
 <li><a href="http://runtime.diandian.com/post/2011-12-24/11488238">go语言中split stack(上)</a>，<a href="http://runtime.diandian.com/post/2011-12-26/10119542">go语言中split stack(下)</a></li>
 <li><a href="http://mikespook.com/2011/03/go%E5%9C%A8stack%E4%B8%8A%E5%B9%B2%E4%BA%86%E7%A5%9E%E9%A9%AC%EF%BC%9F/">go在stack上干了神马？</a></li>
 </ul>
-<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
-    var align = "center",
-        indent = "0em",
-        linebreak = "false";
-
-    if (false) {
-        align = (screen.width < 768) ? "left" : align;
-        indent = (screen.width < 768) ? "0em" : indent;
-        linebreak = (screen.width < 768) ? 'true' : linebreak;
-    }
-
-    var mathjaxscript = document.createElement('script');
-    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
-    mathjaxscript.type = 'text/javascript';
-    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML';
-    mathjaxscript[(window.opera ? "innerHTML" : "text")] =
-        "MathJax.Hub.Config({" +
-        "    config: ['MMLorHTML.js']," +
-        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
-        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
-        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
-        "    displayAlign: '"+ align +"'," +
-        "    displayIndent: '"+ indent +"'," +
-        "    showMathMenu: true," +
-        "    messageStyle: 'normal'," +
-        "    tex2jax: { " +
-        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
-        "        displayMath: [ ['$$','$$'] ]," +
-        "        processEscapes: true," +
-        "        preview: 'TeX'," +
-        "    }, " +
-        "    'HTML-CSS': { " +
-        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
-        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
-        "    }, " +
-        "}); " +
-        "if ('default' !== 'default') {" +
-            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
-                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
-                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
-                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
-                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
-                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
-            "});" +
-            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
-                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
-                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
-                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
-                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
-                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
-            "});" +
-        "}";
-    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
-}
-</script>
             </div><!-- /.entry-content -->
             <div class="comments">
               <h3>Comments</h3>

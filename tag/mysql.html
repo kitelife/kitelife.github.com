@@ -57,7 +57,7 @@
 
 <section id="content" class="body">
 <div class="row">
-    <div class="columns">
+    <div class="eleven columns">
         <ol id="post-list">
             <li>
             <article class="hentry">
@@ -76,7 +76,7 @@
 <p>我们先把这项工作按“分治”的思想拆分成几个小问题：</p>
 <ol>
 <li>由于版本5.6.28的MySQL不支持中文的全文索引，那么可以对需要建全文索引的数据进行预处理 - 分词，并以空格为间隔将分词结果拼接成一个字符串。</li>
-<li>但经过第1步仍是不够的 - MySQL的系统变量<code>ft_min_word_len</code>、<code>ft_max_word_len</code>分别规定了全文检索被编入索引单词的最小长度和最大长度，默认的最小值为4个字符，默认的最大值取决于使用的MySQL版本。为了不改变这个默认值同时也是兼考虑这个值对于英文的意义，则需要通过编码（<code>urlencode</code>、<code>base64</code>、<code>汉字转拼音</code>等）将中文词变长 …</li></ol> </div><!-- /.entry-content -->
+<li>但经过第1步仍是不够的 - MySQL的系统变量<code>ft_min_word_len</code>、<code>ft_max_word_len</code>分别规定了全文检索被编入索引单词的最小长度和最大长度，默认的最小值为4个字符，默认的最大值取决于使用的MySQL版本。为了不改变这个默认值同时也是兼考虑这个值对于英文的意义，则需要通过编码（<code>urlencode</code>、<code>base64</code>、<code>汉字转拼音</code>等）将中文词变长 ...</li></ol> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2016/06/11/mysql-fulltext-application/" rel="bookmark" title="Permalink to 应用MySQL InnoDB全文索引">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -98,7 +98,7 @@
                 <div class="entry-content"> <p>目前工作中开发流程还比较初级，甚至连测试服务器都没有，代码的变更都是直接先在开发人员的本地机器上简单测试一下，然后直接部署到生产服务器上，这就相当于生产服务器同时充当了测试服务器的角色，虽然开发的是面向公司内部的系统，但作为一个有理想有追求的码农，是不允许这样粗糙混乱的开发流程的，所以申请了台服务器，自己搭建个测试服务器。</p>
 <p>由于公司的服务器统一使用SUSE Linux Server操作系统，并且版本较老。与Ubuntu、Centos等Linux发行版不同，SUSE Linux没有可用的软件源（不知是否与OpenSUSE的软件源兼容？），即没法使用系统的软件包管理工具。这样问题就很多了。</p>
 <p>我选择源码编译的方式来安装所有涉及的软件。也许有人会说，为什么不在网络上查找RPM包然后安装呢？那么先想一下RPM包本质上是个什么东西呢？RPM包（以及DEB包）其实就是将编译好的一些程序以一定的规则打包在一起，然后系统的包管理工具（yum、zypper）按照相同的规则（在依赖满足的情况下）将RPM包里文件复制到指定好的目录里。如果RPM包的依赖没有解决，是无法成功安装的。即使安装好了，若程序依赖的动态链接库等不存在或版本不匹配，也是无法正确运行的，比如libc库的版本过低，但明显你不能轻易替换libc库，因为系统中已安装的很多程序都依赖于libc库。那么相比源码编译方式，RPM包方式的问题更难解决。</p>
-<p>需要安装的软件有Nginx、PHP、MySQL、Memcached、Redis、Mongodb …</p> </div><!-- /.entry-content -->
+<p>需要安装的软件有Nginx、PHP、MySQL、Memcached、Redis、Mongodb ...</p> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2013/06/18/setup-testing-server/" rel="bookmark" title="Permalink to 搭建测试服务器(源码编译方式)">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -123,7 +123,7 @@
                     <abbr class="published" title="2012-12-11T00:00:00+08:00"> 2012-12-11 Tue </abbr>
 <address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
                 <div class="entry-content"> <h2>MySQL逻辑架构</h2>
-<p><img alt="mysql-arch" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/mysql-arch.jpg"></p>
+<p><img alt="mysql-arch" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/mysql-arch.jpg" /></p>
 <p>1.
 每个客户连接在服务器进程中都拥有自己的线程，每个连接所属的查询都会在指定的某个单独线程中完成，这些线程轮流运行在某个CPU核心或CPU上。服务器负责缓存线程，因此不需要为每个新的连接重建或撤销线程。</p>
 <p>2.
@@ -132,7 +132,7 @@ MySQL会解析查询，并创建一个内部数据结构(解析树)，然后对�
 <p>不过，在解析查询之前，服务器会"询问"查询缓存，它只能保存SELECT语句和相应的结果。如果能在缓存中找到将要执行的查询，服务器就不必重新解析、优化或重新执行查询，只需直接返回已有结果即可。</p>
 <h2>并发控制</h2>
 <p>1.
-读锁(Read Lock)/写锁(Write Lock)：并发控制的概念很简单-在处理并发写或并发读时，系统会使用一套锁系统来解决问题。这种锁系统由两类锁组成，通常称之为 <strong>共享锁 …</strong></p> </div><!-- /.entry-content -->
+读锁(Read Lock)/写锁(Write Lock)：并发控制的概念很简单-在处理并发写或并发读时，系统会使用一套锁系统来解决问题。这种锁系统由两类锁组成，通常称之为 <strong>共享锁 ...</strong></p> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2012/12/11/high-performance-MySQL-1/" rel="bookmark" title="Permalink to 高性能MySQL - 1.MySQL架构">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -143,7 +143,35 @@ MySQL会解析查询，并创建一个内部数据结构(解析树)，然后对�
             </li>
         </ol><!-- /#posts-list -->
     </div><!-- /.eleven.columns -->
- </div><!-- /.row -->
+<div class="three columns">
+
+<!--
+<h4>Pages</h4>
+
+ <ul>
+      <li><a href="/archives.html">归 档</a></li>
+      <li><a href="/pages/tech-share.html">技术分享</a></li>
+      <li><a href="/pages/translation.html">技术翻译</a></li>
+      <li><a href="/pages/tools.html">工具集</a></li>
+      <li><a href="/pages/links.html">链 接</a></li>
+      <li><a href="/pages/aboutme.html">关于我</a></li>
+      <li><a href="/feeds/rss.xml">RSS</a></li>
+  </ul>
+-->
+<!--
+<h4>分类</h4>
+<ul>
+		<li><a href="../category/qi-ta.html">其他</a></li>
+</ul>
+-->
+
+<h4>标签</h4>
+	<ul>
+</ul>
+
+<!--
+-->
+</div> </div><!-- /.row -->
 <p class="paginator">
     Page 1 / 1
 </p>

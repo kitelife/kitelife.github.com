@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>配置 Maven 自动化构建 protobuf 代码依赖</title>
+        <meta charset="utf-8" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑·白 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑·白 Full RSS Feed" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/SentyZHAO/SentyZHAO.css" />
+
+        <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+            <script>
+              var _hmt = _hmt || [];
+              (function() {
+                var hm = document.createElement("script");
+                hm.src = "//hm.baidu.com/hm.js?5c5d8c3fe75afeff117777b9236b96ec";
+                var s = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(hm, s);
+              })();
+            </script>
+</head>
+
+<body id="index" class="home">
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1 style='font-family: "SentyZHAO";'><a href="../../../..">黑·白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+
+              <ul class="columns" style='font-family: "SentyZHAO";'>
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="/archives.html">归 档</a></li>
+                <li><a href="/pages/tech-share.html">技术分享</a></li>
+                <li><a href="/pages/translation.html">技术翻译</a></li>
+                <li><a href="/pages/tools.html">工具集</a></li>
+                <li><a href="/pages/links.html">链 接</a></li>
+                <li><a href="/pages/aboutme.html">关于我</a></li>
+                <li><a href="/feeds/rss.xml">RSS</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+   <div class="row">
+        <div class="columns">
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2018/05/14/maven-protobuf/" rel="bookmark" title="Permalink to 配置 Maven 自动化构建 protobuf 代码依赖">配置 Maven 自动化构建 protobuf 代码依赖</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2018-05-14T00:00:00+08:00">
+                2018-05-14 Mon
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/xiayf.html">xiayf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>1.pom.xml 中添加如下属性配置：</p>
+<div class="highlight"><pre><span></span><span class="nt">&lt;properties&gt;</span>
+    <span class="c">&lt;!-- protobuf paths --&gt;</span>
+    <span class="nt">&lt;protobuf.input.directory&gt;</span>${project.basedir}/src/main/protobuf<span class="nt">&lt;/protobuf.input.directory&gt;</span>
+    <span class="nt">&lt;protobuf.output.directory&gt;</span>${project.build.directory}/generated-sources<span class="nt">&lt;/protobuf.output.directory&gt;</span>
+    <span class="c">&lt;!-- library versions --&gt;</span>
+    <span class="nt">&lt;build-helper-maven-plugin.version&gt;</span>3.0.0<span class="nt">&lt;/build-helper-maven-plugin.version&gt;</span>
+    <span class="nt">&lt;maven-antrun-plugin.version&gt;</span>1.8<span class="nt">&lt;/maven-antrun-plugin.version&gt;</span>
+    <span class="nt">&lt;maven-dependency-plugin.version&gt;</span>3.0.2<span class="nt">&lt;/maven-dependency-plugin.version&gt;</span>
+    <span class="nt">&lt;os-maven-plugin.version&gt;</span>1.5.0.Final<span class="nt">&lt;/os-maven-plugin.version&gt;</span>
+    <span class="nt">&lt;protobuf.version&gt;</span>2.5.0<span class="nt">&lt;/protobuf.version&gt;</span>
+<span class="nt">&lt;/properties&gt;</span>
+</pre></div>
+
+
+<p>2.添加 protobuf-java 库依赖</p>
+<div class="highlight"><pre><span></span><span class="nt">&lt;dependencies&gt;</span>
+    <span class="nt">&lt;dependency&gt;</span>
+        <span class="nt">&lt;groupId&gt;</span>com.google.protobuf<span class="nt">&lt;/groupId&gt;</span>
+        <span class="nt">&lt;artifactId&gt;</span>protobuf-java<span class="nt">&lt;/artifactId&gt;</span>
+        <span class="nt">&lt;version&gt;</span>${protobuf.version}<span class="nt">&lt;/version&gt;</span>
+    <span class="nt">&lt;/dependency&gt;</span>
+<span class="nt">&lt;/dependencies&gt;</span>
+</pre></div>
+
+
+<p>3.添加 maven 扩展：</p>
+<div class="highlight"><pre><span></span><span class="nt">&lt;build&gt;</span>
+    <span class="nt">&lt;extensions&gt;</span>
+        <span class="c">&lt;!-- provides os.detected.classifier (i.e. linux-x86_64, osx-x86_64) property --&gt;</span>
+        <span class="nt">&lt;extension&gt;</span>
+            <span class="nt">&lt;groupId&gt;</span>kr.motd.maven<span class="nt">&lt;/groupId&gt;</span>
+            <span class="nt">&lt;artifactId&gt;</span>os-maven-plugin<span class="nt">&lt;/artifactId&gt;</span>
+            <span class="nt">&lt;version&gt;</span>${os-maven-plugin.version}<span class="nt">&lt;/version&gt;</span>
+        <span class="nt">&lt;/extension&gt;</span>
+    <span class="nt">&lt;/extensions&gt;</span>
+<span class="nt">&lt;/build&gt;</span>
+</pre></div>
+
+
+<p>4.配置构建插件：</p>
+<div class="highlight"><pre><span></span><span class="nt">&lt;build&gt;</span>
+    <span class="nt">&lt;plugins&gt;</span>
+        <span class="c">&lt;!-- copy protoc binary into build directory --&gt;</span>
+        <span class="nt">&lt;plugin&gt;</span>
+            <span class="nt">&lt;groupId&gt;</span>org.apache.maven.plugins<span class="nt">&lt;/groupId&gt;</span>
+            <span class="nt">&lt;artifactId&gt;</span>maven-dependency-plugin<span class="nt">&lt;/artifactId&gt;</span>
+            <span class="nt">&lt;version&gt;</span>${maven-dependency-plugin.version}<span class="nt">&lt;/version&gt;</span>
+            <span class="nt">&lt;executions&gt;</span>
+                <span class="nt">&lt;execution&gt;</span>
+                    <span class="nt">&lt;id&gt;</span>copy-protoc<span class="nt">&lt;/id&gt;</span>
+                    <span class="nt">&lt;phase&gt;</span>generate-sources<span class="nt">&lt;/phase&gt;</span>
+                    <span class="nt">&lt;goals&gt;</span>
+                        <span class="nt">&lt;goal&gt;</span>copy<span class="nt">&lt;/goal&gt;</span>
+                    <span class="nt">&lt;/goals&gt;</span>
+                    <span class="nt">&lt;configuration&gt;</span>
+                        <span class="nt">&lt;artifactItems&gt;</span>
+                            <span class="nt">&lt;artifactItem&gt;</span>
+                                <span class="nt">&lt;groupId&gt;</span>com.google.protobuf<span class="nt">&lt;/groupId&gt;</span>
+                                <span class="nt">&lt;artifactId&gt;</span>protoc<span class="nt">&lt;/artifactId&gt;</span>
+                                <span class="nt">&lt;version&gt;</span>${protobuf.version}<span class="nt">&lt;/version&gt;</span>
+                                <span class="nt">&lt;classifier&gt;</span>${os.detected.classifier}<span class="nt">&lt;/classifier&gt;</span>
+                                <span class="nt">&lt;type&gt;</span>exe<span class="nt">&lt;/type&gt;</span>
+                                <span class="nt">&lt;overWrite&gt;</span>true<span class="nt">&lt;/overWrite&gt;</span>
+                                <span class="nt">&lt;outputDirectory&gt;</span>${project.build.directory}<span class="nt">&lt;/outputDirectory&gt;</span>
+                            <span class="nt">&lt;/artifactItem&gt;</span>
+                        <span class="nt">&lt;/artifactItems&gt;</span>
+                    <span class="nt">&lt;/configuration&gt;</span>
+                <span class="nt">&lt;/execution&gt;</span>
+            <span class="nt">&lt;/executions&gt;</span>
+        <span class="nt">&lt;/plugin&gt;</span>
+        <span class="c">&lt;!-- compile proto buffer files using copied protoc binary --&gt;</span>
+        <span class="nt">&lt;plugin&gt;</span>
+            <span class="nt">&lt;groupId&gt;</span>org.apache.maven.plugins<span class="nt">&lt;/groupId&gt;</span>
+            <span class="nt">&lt;artifactId&gt;</span>maven-antrun-plugin<span class="nt">&lt;/artifactId&gt;</span>
+            <span class="nt">&lt;version&gt;</span>${maven-antrun-plugin.version}<span class="nt">&lt;/version&gt;</span>
+            <span class="nt">&lt;executions&gt;</span>
+                <span class="nt">&lt;execution&gt;</span>
+                    <span class="nt">&lt;id&gt;</span>exec-protoc<span class="nt">&lt;/id&gt;</span>
+                    <span class="nt">&lt;phase&gt;</span>generate-sources<span class="nt">&lt;/phase&gt;</span>
+                    <span class="nt">&lt;configuration&gt;</span>
+                        <span class="nt">&lt;target&gt;</span>
+                            <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;protoc.filename&quot;</span> <span class="na">value=</span><span class="s">&quot;protoc-${protobuf.version}-${os.detected.classifier}.exe&quot;</span><span class="nt">/&gt;</span>
+                            <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;protoc.filepath&quot;</span> <span class="na">value=</span><span class="s">&quot;${project.build.directory}/${protoc.filename}&quot;</span><span class="nt">/&gt;</span>
+                            <span class="nt">&lt;chmod</span> <span class="na">file=</span><span class="s">&quot;${protoc.filepath}&quot;</span> <span class="na">perm=</span><span class="s">&quot;ugo+rx&quot;</span><span class="nt">/&gt;</span>
+                            <span class="nt">&lt;mkdir</span> <span class="na">dir=</span><span class="s">&quot;${protobuf.output.directory}&quot;</span> <span class="nt">/&gt;</span>
+                            <span class="nt">&lt;path</span> <span class="na">id=</span><span class="s">&quot;protobuf.input.filepaths.path&quot;</span><span class="nt">&gt;</span>
+                                <span class="nt">&lt;fileset</span> <span class="na">dir=</span><span class="s">&quot;${protobuf.input.directory}&quot;</span><span class="nt">&gt;</span>
+                                    <span class="nt">&lt;include</span> <span class="na">name=</span><span class="s">&quot;**/*.proto&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;/fileset&gt;</span>
+                            <span class="nt">&lt;/path&gt;</span>
+                            <span class="nt">&lt;pathconvert</span> <span class="na">pathsep=</span><span class="s">&quot; &quot;</span> <span class="na">property=</span><span class="s">&quot;protobuf.input.filepaths&quot;</span> <span class="na">refid=</span><span class="s">&quot;protobuf.input.filepaths.path&quot;</span><span class="nt">/&gt;</span>
+                            <span class="nt">&lt;exec</span> <span class="na">executable=</span><span class="s">&quot;${protoc.filepath}&quot;</span> <span class="na">failonerror=</span><span class="s">&quot;true&quot;</span><span class="nt">&gt;</span>
+                                <span class="nt">&lt;arg</span> <span class="na">value=</span><span class="s">&quot;-I&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;arg</span> <span class="na">value=</span><span class="s">&quot;${protobuf.input.directory}&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;arg</span> <span class="na">value=</span><span class="s">&quot;--java_out&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;arg</span> <span class="na">value=</span><span class="s">&quot;${protobuf.output.directory}&quot;</span><span class="nt">/&gt;</span>
+                                <span class="nt">&lt;arg</span> <span class="na">line=</span><span class="s">&quot;${protobuf.input.filepaths}&quot;</span><span class="nt">/&gt;</span>
+                            <span class="nt">&lt;/exec&gt;</span>
+                        <span class="nt">&lt;/target&gt;</span>
+                    <span class="nt">&lt;/configuration&gt;</span>
+                    <span class="nt">&lt;goals&gt;</span>
+                        <span class="nt">&lt;goal&gt;</span>run<span class="nt">&lt;/goal&gt;</span>
+                    <span class="nt">&lt;/goals&gt;</span>
+                <span class="nt">&lt;/execution&gt;</span>
+            <span class="nt">&lt;/executions&gt;</span>
+        <span class="nt">&lt;/plugin&gt;</span>
+        <span class="c">&lt;!-- add generated proto buffer classes into the package --&gt;</span>
+        <span class="nt">&lt;plugin&gt;</span>
+            <span class="nt">&lt;groupId&gt;</span>org.codehaus.mojo<span class="nt">&lt;/groupId&gt;</span>
+            <span class="nt">&lt;artifactId&gt;</span>build-helper-maven-plugin<span class="nt">&lt;/artifactId&gt;</span>
+            <span class="nt">&lt;version&gt;</span>${build-helper-maven-plugin.version}<span class="nt">&lt;/version&gt;</span>
+            <span class="nt">&lt;executions&gt;</span>
+                <span class="nt">&lt;execution&gt;</span>
+                    <span class="nt">&lt;id&gt;</span>add-classes<span class="nt">&lt;/id&gt;</span>
+                    <span class="nt">&lt;phase&gt;</span>generate-sources<span class="nt">&lt;/phase&gt;</span>
+                    <span class="nt">&lt;goals&gt;</span>
+                        <span class="nt">&lt;goal&gt;</span>add-source<span class="nt">&lt;/goal&gt;</span>
+                    <span class="nt">&lt;/goals&gt;</span>
+                    <span class="nt">&lt;configuration&gt;</span>
+                        <span class="nt">&lt;sources&gt;</span>
+                            <span class="nt">&lt;source&gt;</span>${protobuf.output.directory}<span class="nt">&lt;/source&gt;</span>
+                        <span class="nt">&lt;/sources&gt;</span>
+                    <span class="nt">&lt;/configuration&gt;</span>
+                <span class="nt">&lt;/execution&gt;</span>
+            <span class="nt">&lt;/executions&gt;</span>
+        <span class="nt">&lt;/plugin&gt;</span>
+    <span class="nt">&lt;/plugins&gt;</span>
+<span class="nt">&lt;/build&gt;</span>
+</pre></div>
+
+
+<p><strong>参考资料</strong>：http://vlkan.com/blog/post/2015/11/27/maven-protobuf/</p>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2018/05/14/maven-protobuf/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+        </div><!-- /.twelve.columns -->
+ </div><!-- /.row -->
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+  <script src="../../../../theme/js/main.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../../../theme/emoji/css/basic/emojify.min.css" />
+  <script src="../../../../theme/emoji/js/emojify.min.js"></script>
+  <script>
+    emojify.setConfig({
+        img_dir : '../../../../theme/emoji/images/basic'
+    });
+    emojify.run();
+</script>
+</body>
+</html>

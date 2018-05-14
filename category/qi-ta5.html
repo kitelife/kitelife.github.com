@@ -64,6 +64,98 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="../2014/11/13/read-yii-code-3/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 组件集成">Yii源码阅读笔记 - 组件集成</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2014-11-13T00:00:00+08:00"> 2014-11-13 Thu </abbr>
+<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <h3>概述</h3>
+<p>Yii框架将各种功能封装成组件，使用时按需配置加载，从而提高应用的性能。内置的组件又分为核心组件与非核心组件，核心组件是任何Web应用和Console应用都需要的。
+此外，应用开发者还可以按照一定规则封装配置使用自己的功能组件。Yii会把应用需要的组件都加载到应用容器<code>Yii::app()</code>中，使得组件的使用方式一致方便。</p>
+<p>基于Yii框架开发应用需要理解如何配置组件、如何开发自己的组件，对应着需要理解Yii是如何注册加载组件的。</p>
+<h3>分析</h3>
+<p>从<a href="http://youngsterxyf.github.io/2014/11/04/read-yii-code-1/">Yii源码阅读笔记 - 请求处理基本流程</a>一文可知，Yii加载组件的入口为抽象类CApplication构造方法中的以下两行代码：</p>
+<div class="highlight"><pre><span></span><span class="x">$this-&gt;registerCoreComponents();</span>
+<span class="x">$this-&gt;configure($config);</span>
+</pre></div>
+
+
+<hr>
+<p><code>registerCoreComponents</code>方法定义于类CWebApplication中，用于加载Web应用的核心组件，组件列表如下：</p>
+<div class="highlight"><pre><span></span><span class="x">array(</span>
+<span class="x">    // 核心组件</span>
+<span class="x">    &#39;coreMessages&#39;=&gt;array(</span>
+<span class="x">        &#39;class&#39;=&gt;&#39;CPhpMessageSource&#39;,</span>
+<span class="x">        &#39;language&#39;=&gt;&#39;en_us&#39;,</span>
+<span class="x">        &#39;basePath&#39;=&gt;YII_PATH.DIRECTORY_SEPARATOR.&#39;messages&#39;,</span>
+<span class="x">    ),</span>
+<span class="x">    &#39;db&#39;=&gt;array(</span>
+<span class="x">        &#39;class&#39;=&gt;&#39;CDbConnection&#39;,</span>
+<span class="x">    ),</span>
+<span class="x">    &#39;messages&#39;=&gt;array(</span>
+<span class="x">        &#39;class …</span></pre></div> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2014/11/13/read-yii-code-3/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 组件集成">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="../tag/php.html">PHP</a>
+                    <a class="danger label" href="../tag/yii.html">Yii</a>
+                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
+                    <a class="danger label" href="../tag/zong-jie.html">总结</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
+                        <a href="../2014/11/12/read-yii-code-2/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 路由解析">Yii源码阅读笔记 - 路由解析</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2014-11-12T00:00:00+08:00"> 2014-11-12 Wed </abbr>
+<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <h3>概述</h3>
+<p>Yii框架的路由解析功能由核心组件urlManager来完成。路由的形式有两种：</p>
+<ul>
+<li>get：通过URL中查询字符串（query string）参数r来指定路由，如：<code>r=controllerID/actionID</code></li>
+<li>path：直接通过URL来指定，如：<code>/controllerID/actionID</code></li>
+</ul>
+<p>默认使用get路由形式。由于Yii中controller类命名和action方法都是按照规则命名的，而路由也是按照规则来匹配的，所以完全可以不用额外配置urlManager。</p>
+<p>若需要使用path方式，则可如下配置：</p>
+<div class="highlight"><pre><span></span><span class="x">&quot;components&quot; =&gt; array(</span>
+<span class="x">    &#39;urlManager&#39; =&gt; array(</span>
+<span class="x">        &#39;urlFormat&#39; =&gt; &#39;path&#39;,</span>
+<span class="x">        &#39;rules&#39; =&gt; array(</span>
+<span class="x">            ...</span>
+<span class="x">        ),</span>
+<span class="x">),</span>
+</pre></div>
+
+
+<p>进一步说明可参考<a href="http://youngsterxyf.github.io/2014/09/06/experience-about-restful-api/">RESTful API设计的一点经验</a>一文。</p>
+<h3>分析</h3>
+<p>在“请求处理基本流程”一篇可以看到Yii框架路由解析流程的入口在类CWebApplication的processRequest方法中：</p>
+<div class="highlight"><pre><span></span><span class="x">$route=$this-&gt;getUrlManager()-&gt;parseUrl($this-&gt;getRequest());</span>
+</pre></div>
+
+
+<p>其中getUrlManager方法定义于类CApplication中，作用是初始化获取URL管理组件（ID为urlManager），实现如下：</p>
+<div class="highlight"><pre><span></span><span class="x">public …</span></pre></div> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2014/11/12/read-yii-code-2/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 路由解析">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="../tag/php.html">PHP</a>
+                    <a class="danger label" href="../tag/yii.html">Yii</a>
+                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
+                    <a class="danger label" href="../tag/zong-jie.html">总结</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="../2014/11/09/an-introduction-to-apis/" rel="bookmark" title="Permalink to 读文笔记：An Introduction to APIs">读文笔记：An Introduction to APIs</a>
                     </h2>
                 </header>
@@ -72,7 +164,7 @@
 <address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
                 <div class="entry-content"> <p>原文：<a href="https://zapier.com/learn/apis/">An Introduction to APIs</a></p>
 <p><em>注：该文是入门级别的文章</em></p>
-<p><img alt="mind-mapping" src="/assets/uploads/pics/An-Introduction-to-APIs.png" /></p>
+<p><img alt="mind-mapping" src="/assets/uploads/pics/An-Introduction-to-APIs.png"></p>
 <p><a href="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/An-Introduction-to-APIs.png">高清无码大图</a></p> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2014/11/09/an-introduction-to-apis/" rel="bookmark" title="Permalink to 读文笔记：An Introduction to APIs">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
@@ -101,11 +193,11 @@
 </ol>
 <p>但代价是学习成本 - 为了尽可能发挥Web框架的优势，需要花一些阅读文档，甚至是框架源码（特别是文档缺乏或者文档写得垃圾的），然后经过几次项目实践，一切才能了然于胸。</p>
 <p>喏，为了在工作中更好地使用、避免误用Yii框架，大致阅读了Yii框架的部分代码，然后有了这个系列的笔记。</p>
-<hr />
+<hr>
 <p>深入学习一个Web框架，首先要理解的是请求处理流程。对于PHP而言，处理流程也即包含了应用的初始化过程，如加载配置、初始化组件等。请求处理流程中最核心的应该是路由解析和分发，此外可能还有过滤器处理、事件处理等，直到请求处理进入具体的Controller和Action。响应生成、过滤等也可以关注。</p>
-<hr />
+<hr>
 <p>基于Yii框架的工程目录结构大致如下所示：</p>
-<p><img alt="Yii-Project-Structure" src="/assets/uploads/pics/yii-project-structure.png" /></p>
+<p><img alt="Yii-Project-Structure" src="/assets/uploads/pics/yii-project-structure.png"></p>
 <ul>
 <li>index.php是应用的入口</li>
 <li>protected目录是存放动态脚本的地方<ul>
@@ -117,7 +209,7 @@
 <li>views存放View模板文件</li>
 </ul>
 </li>
-<li>static目录存放静态文件，如CSS、JS、图片等 ...</li></ul> </div><!-- /.entry-content -->
+<li>static目录存放静态文件，如CSS、JS、图片等 …</li></ul> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2014/11/04/read-yii-code-1/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 请求处理基本流程">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -156,7 +248,7 @@
 </ul>
 <p>“变化”导致的问题，说到底是人为造成：</p>
 <blockquote>
-<p>No matter what ...</p></blockquote> </div><!-- /.entry-content -->
+<p>No matter what …</p></blockquote> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2014/10/21/qcon-sh-2014-seen-heard/" rel="bookmark" title="Permalink to QCon上海2014大会见闻录">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -186,7 +278,7 @@
 <p>如果你正在运营一个基于web的应用，开发人员或者运维同事需要快速地访问日志数据以便对线上问题进行排错，那么就需要一个能够近乎实时监控日志文件变化的方案。
 如果使用基于日志拷贝的方式 --- 文件以固定的时间间隔拷贝到一台中心服务器上，那么仅能检查与复制操作频率相同的新增日志数据。当站点已经挂掉，而你正在等待相关日志数据的复制，
 那么一分钟一次的 rsync cron 任务也许还不够快。</p>
-<p>从另外一个角度来看，如果需要分析线下日志数据，计算各种度量指标，或者其他批量的工作 ...</p> </div><!-- /.entry-content -->
+<p>从另外一个角度来看，如果需要分析线下日志数据，计算各种度量指标，或者其他批量的工作 …</p> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2014/10/14/centralized-logging-architecture/" rel="bookmark" title="Permalink to 中心化日志记录架构（译）">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -220,14 +312,14 @@
 <li>dm-mailer这个项目无足轻重，只是我最新的个人兴趣项目。我将它与phpmetrics一起归到Backfire一节。</li>
 <li>注意：php-yaf和phalcon都是非常有意思的php框架，但多数代码是C实现的，因此没有包含进来。</li>
 </ul>
-<hr />
+<hr>
 <p>说明：阅读该报告的一点小提示：</p>
 <ul>
 <li>更多的斑点只是意味着更多的类</li>
 <li>红色意味着不可维护，黄色表示可接受，绿色则表明良好、可维护的代码。</li>
 </ul>
-<hr />
-<h3>分析结果 ...</h3> </div><!-- /.entry-content -->
+<hr>
+<h3>分析结果 …</h3> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2014/09/22/phpmetrics-of-popular-php-projects/" rel="bookmark" title="Permalink to 流行PHP项目的phpmetrics分析（译）">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -264,72 +356,12 @@
 <li>资源（resource）</li>
 </ol>
 <p>RESTful风格API的设计，最难之处，我认为就是“资源”。</p>
-<p>“资源”是什么？“资源”并不是对应数据库中一个一个数据表，“资源 ...</p> </div><!-- /.entry-content -->
+<p>“资源”是什么？“资源”并不是对应数据库中一个一个数据表，“资源 …</p> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2014/09/06/experience-about-restful-api/" rel="bookmark" title="Permalink to RESTful API设计的一点经验">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
                     <a class="danger label" href="../tag/bi-ji.html">笔记</a>
                     <a class="danger label" href="../tag/restful.html">RESTful</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="../2014/09/06/socket.io-push-server/" rel="bookmark" title="Permalink to 基于socket.io的实时消息推送">基于socket.io的实时消息推送</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2014-09-06T00:00:00+08:00"> 2014-09-06 Sat </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>用户访问Web站点的过程是基于HTTP协议的，而HTTP协议的工作模式是：请求-响应，客户端发出访问请求，服务器端以资源数据响应请求。
-也就是说，服务器端始终是被动的，即使服务器端的资源数据发生变化，如果没有来自客户端的请求，用户就不会看到这些变化。
-这种模式是不适合某些应用场景的，比如在社交网络用户需要近乎实时地知道其他用户最新的信息。对于普通站点来说，
-请求-响应模式可以满足绝大多数的功能需求，但总有某些功能我们希望能够为用户提供实时消息的体验。</p>
-<p>为解决这个问题，有两种方案可以选择：</p>
-<ol>
-<li>仍旧使用请求-响应模式，只是增大请求的频率或者使用长连接，来达到尽可能接近实时的效果，如使用polling/long-polling，但可能会极大地增加服务器的负载压力或降低服务器的吞吐量</li>
-<li>使用新的协议，在服务器端有资源数据更新时，主动推送给客户端，如WebSocket，虽然这种思路也是使用了长连接，但效率更高，且是客户端服务器端之间的全双工通信。
-问题在于目前各大浏览器并不都支持WebSocket。</li>
-</ol>
-<p>那么目前最好的方式就是结合以上两种方案，在不同的浏览器中，尽可能使用浏览器支持的最好的方案，即浏览器支持第二种方案时，优先使用第二种方案，否则使用第一种方案。socket.io就是这么做的，并且在服务器端和客户端对于不同的方案提供统一的接口。</p>
-<hr />
-<p>在我们产品的站内信功能中，希望能够给在线用户实时推送公共消息或私有消息。考虑到以后可能还有其他功能需要实现实时消息推送，所以将实时消息推送实现为一个单独的服务。这种针对不同特性的功能进行解耦也为之后针对性的优化做了铺垫。</p>
-<p>解耦之后的系统结构如下所示：</p>
-<p><img alt="socket.io-push-server" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/socket.io-push-server.png" /></p>
-<p>当站点服务器(A)监测到资源数据更新事件发生时，先将数据推送到消息推送服务器 ...</p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2014/09/06/socket.io-push-server/" rel="bookmark" title="Permalink to 基于socket.io的实时消息推送">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/socketio.html">socket.io</a>
-                    <a class="danger label" href="../tag/xiao-xi-tui-song.html">消息推送</a>
-                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="../2014/08/10/Distributed-systems-theory-for-the-distributed-systems-engineer/" rel="bookmark" title="Permalink to 面向分布式系统工程师的分布式系统理论（译）">面向分布式系统工程师的分布式系统理论（译）</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2014-08-10T00:00:00+08:00"> 2014-08-10 Sun </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>原文：<a href="http://the-paper-trail.org/blog/distributed-systems-theory-for-the-distributed-systems-engineer/">Distributed systems theory for the distributed systems engineer</a></p>
-<p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
-<p>Gwen Shapira，大腕级的解决方案架构师（SA），如今Cloudera的全职工程师，在<a href="https://twitter.com/gwenshap/status/497203248332165121">Twitter上提的一个问题</a>引起了我的思考。</p>
-<p>如果是以前，我可能会回答“嗯，这里有篇FLP论文，这里有篇Paxos论文，这里还有篇拜占庭将军问题的论文...”，我会罗列一箩筐重要的材料，如果你一头扎进去，至少花费6个月的时间才能过一遍这些材料。然而我已逐渐明白推荐大量的理论性的论文通常恰恰是着手学习分布式系统理论的错误方式（除非你在做一个PhD项目）。论文通常比较深入难懂，需要认真地研习，通常还需要<em>大量的时间投入(significant experience)</em>来理清这些论文的重要贡献，以及在整个理论体系中的位置。要求工程师具备这样的专业水平又有多大的意义呢？</p>
-<p>但是，很遗憾，对分布式系统理论方面的重大研究成果和思想进行概括、归纳、背景分析的‘导引’性质的优秀材料非常缺乏；特别是没有居高临下态度的材料。对这块空白区域的思考让我想到了另一个有趣的问题：</p>
-<p><em>一个分布式系统工程师应该知道些什么分布式系统理论？</em></p>
-<p>在这种情况下 ...</p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2014/08/10/Distributed-systems-theory-for-the-distributed-systems-engineer/" rel="bookmark" title="Permalink to 面向分布式系统工程师的分布式系统理论（译）">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/fen-bu-shi-xi-tong.html">分布式系统</a>
-                    <a class="danger label" href="../tag/fan-yi.html">翻译</a>
                 </div>
             </article>
             </li>

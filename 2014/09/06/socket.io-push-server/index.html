@@ -83,10 +83,10 @@
 问题在于目前各大浏览器并不都支持WebSocket。</li>
 </ol>
 <p>那么目前最好的方式就是结合以上两种方案，在不同的浏览器中，尽可能使用浏览器支持的最好的方案，即浏览器支持第二种方案时，优先使用第二种方案，否则使用第一种方案。socket.io就是这么做的，并且在服务器端和客户端对于不同的方案提供统一的接口。</p>
-<hr />
+<hr>
 <p>在我们产品的站内信功能中，希望能够给在线用户实时推送公共消息或私有消息。考虑到以后可能还有其他功能需要实现实时消息推送，所以将实时消息推送实现为一个单独的服务。这种针对不同特性的功能进行解耦也为之后针对性的优化做了铺垫。</p>
 <p>解耦之后的系统结构如下所示：</p>
-<p><img alt="socket.io-push-server" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/socket.io-push-server.png" /></p>
+<p><img alt="socket.io-push-server" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/socket.io-push-server.png"></p>
 <p>当站点服务器(A)监测到资源数据更新事件发生时，先将数据推送到消息推送服务器(B)，B根据消息的类型以及消息的目标接收人来决定是否推送，如何推送。</p>
 <p>由于我们的Web后端是基于Yii框架实现，那么该如何实现A与B的socket.io服务通信呢？socket.io有自己的一套协议，如果自己实现PHP库来与socket.io服务交互，还有一些工作量。最终我们选择<a href="https://github.com/oncesk/elephant.io">elephant.io这个PHP库</a>，并将elephant.io封装为Yii框架的一个组件，实现如下：</p>
 <div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
@@ -173,11 +173,11 @@
 </pre></div>
 
 
-<hr />
+<hr>
 <p>对于私有消息推送，如何判断用户当前是否在线？如何验证用户的身份？</p>
 <p>可以基于cookie来实现，socket.io提供的浏览器端JS库，在每次连接时，和普通HTTP请求一样，会携带站点域名下的cookie（我们的消息推送服务的域名为站点服务器域名的子域，所以能拿到站点域名下的所有cookie），消息推送服务器在接收到连接(connection事件)请求时，从连接中取出所有cookie，然后向站点Web后端的某个API转发这些cookie，这个API根据cookie验证用户身份，并将用户信息返回给消息推送服务器，消息推送服务器根据用户信息存储当前连接对象，之后当站点服务器向消息推送服务器发送该用户的消息时，就通过该连接对象给用户推送消息。</p>
 <p>对于公有消息，即广播消息，实现则比较简单，直接向当前所有连接推送消息即可。</p>
-<hr />
+<hr>
 <p>也许有人会问，既然在某些浏览器中socket.io会退化为使用polling/long-polling来传输消息，那么相比直接向站点服务器进行polling/long-polling，有什么优势吗？</p>
 <p>我认为优势有两点：</p>
 <ol>

@@ -103,12 +103,12 @@
 <p>这64个字符是各种字符编码（比如ASCII编码）所使用字符的子集，基本，并且可打印。唯一有点特殊的是最后两个字符，因对最后两个字符的选择不同，Base64编码又有很多变种，比如Base64 URL编码。</p>
 <p>Base64编码本质上是一种将二进制数据转成文本数据的方案。对于非二进制数据，是先将其转换成二进制形式，然后每连续6比特（2的6次方=64）计算其十进制值，根据该值在上面的索引表中找到对应的字符，最终得到一个文本字符串。</p>
 <p>假设我们要对 <code>Hello!</code> 进行Base64编码，按照ASCII表，其转换过程如下图所示：</p>
-<p><img alt="" src="media/14542967158550.jpg" /></p>
+<p><img alt="" src="media/14542967158550.jpg"></p>
 <p>可知 <code>Hello!</code> 的Base64编码结果为 <code>SGVsbG8h</code> ，原始字符串长度为6个字符，编码后长度为8个字符，每3个原始字符经Base64编码成4个字符，编码前后长度比4/3，这个长度比很重要 - 比原始字符串长度短，则需要使用更大的编码字符集，这并不我们想要的；长度比越大，则需要传输越多的字符，传输时间越长。Base64应用广泛的原因是在字符集大小与长度比之间取得一个较好的平衡，适用于各种场景。</p>
 <p>是不是觉得Base64编码原理很简单？</p>
 <p>但这里需要注意一个点：Base64编码是每3个原始字符编码成4个字符，如果原始字符串长度不能被3整除，那怎么办？使用0值来补充原始字符串。</p>
 <p>以 <code>Hello!!</code> 为例，其转换过程为：</p>
-<p><img alt="" src="media/14542966298000.jpg" /></p>
+<p><img alt="" src="media/14542966298000.jpg"></p>
 <p><em>注：图表中蓝色背景的二进制0值是额外补充的。</em></p>
 <p><code>Hello!!</code> Base64编码的结果为 <code>SGVsbG8hIQAA</code> 。最后2个零值只是为了Base64编码而补充的，在原始字符中并没有对应的字符，那么Base64编码结果中的最后两个字符 <code>AA</code> 实际不带有效信息，所以需要特殊处理，以免解码错误。</p>
 <p>标准Base64编码通常用 <code>=</code> 字符来替换最后的 <code>A</code>，即编码结果为 <code>SGVsbG8hIQ==</code>。因为 <code>=</code> 字符并不在Base64编码索引表中，其意义在于结束符号，在Base64解码时遇到 <code>=</code> 时即可知道一个Base64编码字符串结束。</p>
@@ -126,7 +126,7 @@
 <p>本文开始提到的青云应用例子只是Base64编码的应用场景之一。由于Base64编码在字符集大小与编码后数据长度之间做了较好的平衡，以及Base64编码变种形式的多样，使得Base64编码的应用场景非常广泛。下面举2个常用常见的例子。</p>
 <h3>HTML内嵌Base64编码图片</h3>
 <p>前端在实现页面时，对于一些简单图片，通常会选择将图片内容直接内嵌在页面中，避免不必要的外部资源加载，增大页面加载时间，但是图片数据是二进制数据，该怎么嵌入呢？<a href="http://caniuse.com/#search=Data%20URI">绝大多数现代浏览器</a>都支持一种名为 <code>Data URLs</code> 的特性，允许使用Base64对图片或其他文件的二进制数据进行编码，将其作为文本字符串嵌入网页中。以百度搜索首页为例，其中语音搜索的图标是个背景图片，其内容以 <code>Data URLs</code> 形式直接写在css中，这个css内容又直接嵌在HTML页面中，如下图所示：</p>
-<p><img alt="" src="media/14543011032759.jpg" /></p>
+<p><img alt="" src="media/14543011032759.jpg"></p>
 <p><code>Data URLs</code> 格式为：<code>url(data:文件类型;编码方式,编码后的文件内容)</code>。</p>
 <p>当然，也可以直接基于image标签嵌入图片，如下所示：</p>
 <div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">img</span> <span class="na">alt</span><span class="o">=</span><span class="s">&quot;Embedded Image&quot;</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIA...&quot;</span> <span class="p">/&gt;</span>

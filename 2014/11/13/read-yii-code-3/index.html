@@ -83,7 +83,7 @@
 </pre></div>
 
 
-<hr />
+<hr>
 <p><code>registerCoreComponents</code>方法定义于类CWebApplication中，用于加载Web应用的核心组件，组件列表如下：</p>
 <div class="highlight"><pre><span></span><span class="x">array(</span>
 <span class="x">    // 核心组件</span>
@@ -144,7 +144,7 @@
 
 
 <p>注册加载组件都是直接调用方法<code>setComponents</code>，间接调用方法<code>setComponent</code>来完成的。</p>
-<hr />
+<hr>
 <p><code>configure</code>方法定义于类<code>CModule</code>中，是用于加载所有配置信息的，实现如下：</p>
 <div class="highlight"><pre><span></span><span class="x">public function configure($config)</span>
 <span class="x">{</span>
@@ -261,7 +261,7 @@
 <p>注册核心组件前，应用对象的属性<code>_component</code>和<code>_componentConfig</code>都为空，所以核心组件注册最终走的都是<strong>最后一个else分支</strong>。</p>
 <p>由于可以配置与核心组件相同ID的组件，比如db，那么注册配置的组件（以configure方法为入口）走的是<strong>最后一个elseif分支或者最后一个if分支</strong>。</p>
 <p>可以看到以这两个方法为入口的组件注册都没有对组件进行初始化。那么什么时候初始化组件的呢？只能是调用组件的时候了。</p>
-<hr />
+<hr>
 <p>组件是通过应用对象容器来调用的。以db组件为例，调用方式为：<code>Yii::app()-&gt;db</code>，但实际是基于魔术方法<code>__get</code>来完成的，该魔术方法定义于类CModule中，实现如下：</p>
 <div class="highlight"><pre><span></span><span class="x">public function __get($name)</span>
 <span class="x">{</span>
@@ -311,7 +311,7 @@
 <li>组件对象调用自己的方法<code>init</code>完成一些初始化操作，即<code>$component-&gt;init()</code></li>
 </ol>
 <p>初始化结束后，将组件对象存入属性_components中。</p>
-<hr />
+<hr>
 <p>静态方法<code>createComponent</code>定义于类YiiBase中，实现如下：</p>
 <div class="highlight"><pre><span></span><span class="x">/**</span>
 <span class="x"> * Creates an object and initializes it based on the given configuration.</span>
@@ -395,7 +395,7 @@
 <li>如果非public，则应该魔术方法<code>__set</code></li>
 <li>也可以不定义该属性（我觉得还是定义一下比较好，否则不好理解）</li>
 </ol>
-<hr />
+<hr>
 <p>在静态方法createComponent返回组件对象后，接着调用组件对象自身的init方法来完成一些初始化工具。这也就意味着自定义组件需要有init方法。</p>
 <p>从核心组件的定义可以看到，组件应该继承自抽象类<code>CApplicationComponent</code>（见文件<code>yii/framework/base/CApplicationComponent.php</code>）。该类定义了方法init和getIsInitialized。
 自定义组件继承自<code>CApplicationComponent</code>，若没有额外的初始化操作，也可以不再定义自己的init方法。如果定义自己的init方法，最好也间接调用一下父类的init方法（<code>parent::init()</code>），

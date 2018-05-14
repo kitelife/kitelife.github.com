@@ -80,7 +80,7 @@
 <li>Yii框架是如何找到请求对应的自定义控制器类？</li>
 <li>在自定义控制器类中使用其他类（如Model类、或其他任意目录下文件中定义的类）时，Yii框架是如何自动加载的？</li>
 </ol>
-<hr />
+<hr>
 <p>在 <a href="http://blog.xiayf.cn/2014/11/20/read-yii-code-7/">Yii源码阅读笔记 - 应用模块化</a> 一文中介绍类 <code>CWebApplication</code> 中的方法 <code>createController</code> ，
 该方法根据目标路由找到对应的控制器类文件并加载，方法中有行代码：</p>
 <div class="highlight"><pre><span></span><span class="x">$basePath=$owner-&gt;getControllerPath();</span>
@@ -132,7 +132,7 @@
 
 
 <p>从 <code>getControllerPath</code> 和 <code>setControllerPath</code> 的命名上就能知道这两个方法是分别由魔术方法 <code>__get</code> 和 <code>__set</code> 间接调用的。由 <a href="http://blog.xiayf.cn/2014/11/04/read-yii-code-1/">Yii源码阅读笔记 - 请求处理基本流程</a> 一文内容可知，配置初始化的时候会调用类 <code>CModule</code> 的方法 <code>configure</code> ，该方法中又会触发魔术方法 <code>__set</code> 。这也就意味着可以在应用配置中添加 <code>controllerPath</code> 一项来声明自定义控制器类的存放目录。</p>
-<hr />
+<hr>
 <p>那么当自定义控制类中使用Model类或者其他辅助类时，Yii是如何自动加载的呢？</p>
 <p>以 <strong>在控制器类中IndexController调用Model类UserModel的getUserInfo方法获取用户信息</strong> 为例，Yii是怎么找到并加载UserModel类文件的呢？</p>
 <p>在 <a href="http://blog.xiayf.cn/2014/11/04/read-yii-code-1/">Yii源码阅读笔记 - 请求处理基本流程</a> 一文的最后提到 - 类文件yii/framework/YiiBase.php的倒数第二行代码为：</p>
@@ -345,7 +345,7 @@
 </pre></div>
 
 
-<hr />
+<hr>
 <p>除了通过import配置项指定autoload的查找路径，从类YiiBase的autoload方法实现可以看到，对于PHP 5.3以上版本，可以使用命名空间的方式来自动查找类，命名空间字符串会被替换成路径别名，所以命名空间字符串应以 <code>application\</code> 开始，如应这样 <code>application\models\UserModel</code> 来引用models目录下的UserModel类文件，除非额外通过 <code>Yii::setPathOfAlias</code>为models路径指定别名。</p>
 <p>另外，类YiiBase中提供了一个静态方法 <code>registerAutoloader</code> ：</p>
 <div class="highlight"><pre><span></span><span class="x">/**</span>

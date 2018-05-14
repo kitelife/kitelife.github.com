@@ -101,16 +101,16 @@
 
 <p>很明显这种方案有不少问题 --- 高并发时限制不严格，或者服务器内存不足时访问次数值尚未过期就已被剔除。</p>
 <p>但本文想详述的是另一个问题。</p>
-<hr />
+<hr>
 <p>根据访问来源IP进行频率限制，如果API中取到的来源IP是错误的，那么就瞎限制了。</p>
 <p>先来看看一张架构图：</p>
-<p><img alt="" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/api-request-limitation.png" /></p>
+<p><img alt="" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/api-request-limitation.png"></p>
 <p>一眼就能看出图中“服务器C”的特别之处。</p>
 <p>由于一些特殊的问题，我们把到服务器C的请求通过Nginx反向代理到另外两台服务器的Nginx进行处理。</p>
 <p>可能有人会疑惑：为什么不直接把服务器C从负载均衡中下线？</p>
 <p>原因是：考虑到跨网络运营商的问题，我们配置负载均衡器把来自不同运营商网络的请求转发到与请求来源的运营商相同的服务器。C与A、B不同属于一个网络运营商，比如C属于“北联通”，如果把C下线，就意味着北方联通的网络用户无法访问我们的服务。</p>
 <p>所以我们临时性地把到C的服务请求转发到A、B。</p>
-<hr />
+<hr>
 <p>那么问题来了 - 有用户反馈访问某个API时始终提示“请求太频繁，请一分钟后再试”，但自己并未频繁访问这个API。那么是用户撒谎还是系统的问题呢？</p>
 <p>经过仔细排查，最终确定问题就出在Nginx配置C的请求被转发到A、B。对于用户客户端来说，C是服务器，对于A、B来说，C则是客户端。如果不做特殊配置，从C转发到A、B的请求在处理时，A、B拿到的请求来源IP是C的IP，也就意味着到C的API访问请求，都被A、B基于C的IP进行访问频率限制。</p>
 <p>以Nginx为例，对于从C转发到A、B的请求，如果A、B要拿到请求的真实来源IP，则需要对A、B及C的Nginx做特殊配置。为解决这个问题，Nginx提供了一个额外的模块<code>ngx_http_realip_module</code>，这个模块默认没有编译在Nginx中，需以额外参数<code>--with-http_realip_module</code>进行编译。</p>

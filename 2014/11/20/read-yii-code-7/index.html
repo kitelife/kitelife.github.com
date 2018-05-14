@@ -77,7 +77,7 @@
 <p>由此可以看到，Yii的“模块”和“应用”类似于Django框架中的“应用（App）”和“项目（Project）”。</p>
 <p>当一个应用的规模大到一定的程度 - 可能涉及多个团队来开发，就应该考虑分“模块”开发。“模块”通常对应应用的一个相对独立的功能。</p>
 <p>一个模块化的Yii框架应用的工程目录结构大致示例如下：</p>
-<p><img alt="Yii-WebApp-Modules" src="/assets/uploads/pics/yii-webapp-modules.png" /></p>
+<p><img alt="Yii-WebApp-Modules" src="/assets/uploads/pics/yii-webapp-modules.png"></p>
 <p>上图所示项目有一个名为“forum”的模块，该模块下也有自己的<code>components</code>、<code>controllers</code>、<code>models</code>、<code>views</code>、<code>extensions</code>目录，与一个普通的/不分模块的Yii框架Web应用的项目结构非常相似。</p>
 <p>Yii框架模块化应用的所有模块默认都是放在<code>protected/modules</code>目录下，每个模块的内容又各自放在以模块ID（如<code>forum</code>）为名称的子目录下，并且在模块子目录下要有一个模块类文件，如<code>ForumModule.php</code>，该类文件的命名规范是：模块ID首字母大写，然后拼接上字符串Module。</p>
 <p>模块化的应用需要在配置文件中配置<code>modules</code>一项 - 指定模块列表，示例如下：</p>
@@ -101,7 +101,7 @@
 <li>自定义模块类 -&gt; <code>CWebModule</code> -&gt; <code>CModule</code> -&gt; <code>CComponent</code></li>
 </ul>
 <p>由此可以看到继承链中类<code>CModule</code>及上溯类的属性和方法，“模块”类和“应用”都有。</p>
-<hr />
+<hr>
 <p>由<a href="http://youngsterxyf.github.io/2014/11/04/read-yii-code-1/">Yii源码阅读笔记 - 请求处理基本流程</a>一文可知，应用配置的加载是抽象类CApplication的构造方法中调用方法<code>configure</code>来完成的，
 该方法定义于类<code>CModule</code>中，实现如下：</p>
 <div class="highlight"><pre><span></span><span class="x">/**</span>
@@ -174,7 +174,7 @@
 
 
 <p>可以看到模块列表配置信息加载后并未对模块类进行实例化初始化。</p>
-<hr />
+<hr>
 <p>请求处理在路由解析得到目标路由后，调用方法<code>createController</code>来做路由分发（这样表述可能不太严谨），该方法定义于类<code>CWebApplication</code>中，实现如下所示：</p>
 <div class="highlight"><pre><span></span><span class="x">public function createController($route,$owner=null)</span>
 <span class="x">{</span>
@@ -312,7 +312,7 @@
 
 <p>这个方法与Web应用类的构造方法（定义于抽象类<code>CApplication</code>中）实现非常相似。这两个构造方法是调用同一个<code>configure</code>方法来加载配置的，所以很多“应用”的配置项，“模块”也都支持。
 从上述模块的构造方法中可以看到当前模块属于哪个父模块是记录在属性<code>_parentModule</code>中的，如果该属性值为null，则表示当前模块属于当前Web应用对象。这样通过获取控制器对象的<code>_module</code>属性值，继而获取模块对象的<code>_parentModule</code>属性值，就能知道整个归属关系链。</p>
-<hr />
+<hr>
 <p>注：<em>以下部分是对<a href="http://youngsterxyf.github.io/2014/11/04/read-yii-code-2/">Yii源码阅读笔记 - 路由解析</a>一文的补充。</em></p>
 <p>前面讨论的方法<code>createController</code>中还调用了方法<code>parseActionParams</code>来解析获取Action的ID，也定义于类<code>CWebApplication</code>中，实现如下：</p>
 <div class="highlight"><pre><span></span><span class="x">/**</span>

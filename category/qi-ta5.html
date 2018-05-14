@@ -64,51 +64,6 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
-                        <a href="../2014/11/13/read-yii-code-3/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 组件集成">Yii源码阅读笔记 - 组件集成</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2014-11-13T00:00:00+08:00"> 2014-11-13 Thu </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <h3>概述</h3>
-<p>Yii框架将各种功能封装成组件，使用时按需配置加载，从而提高应用的性能。内置的组件又分为核心组件与非核心组件，核心组件是任何Web应用和Console应用都需要的。
-此外，应用开发者还可以按照一定规则封装配置使用自己的功能组件。Yii会把应用需要的组件都加载到应用容器<code>Yii::app()</code>中，使得组件的使用方式一致方便。</p>
-<p>基于Yii框架开发应用需要理解如何配置组件、如何开发自己的组件，对应着需要理解Yii是如何注册加载组件的。</p>
-<h3>分析</h3>
-<p>从<a href="http://youngsterxyf.github.io/2014/11/04/read-yii-code-1/">Yii源码阅读笔记 - 请求处理基本流程</a>一文可知，Yii加载组件的入口为抽象类CApplication构造方法中的以下两行代码：</p>
-<div class="highlight"><pre><span></span><span class="x">$this-&gt;registerCoreComponents();</span>
-<span class="x">$this-&gt;configure($config);</span>
-</pre></div>
-
-
-<hr>
-<p><code>registerCoreComponents</code>方法定义于类CWebApplication中，用于加载Web应用的核心组件，组件列表如下：</p>
-<div class="highlight"><pre><span></span><span class="x">array(</span>
-<span class="x">    // 核心组件</span>
-<span class="x">    &#39;coreMessages&#39;=&gt;array(</span>
-<span class="x">        &#39;class&#39;=&gt;&#39;CPhpMessageSource&#39;,</span>
-<span class="x">        &#39;language&#39;=&gt;&#39;en_us&#39;,</span>
-<span class="x">        &#39;basePath&#39;=&gt;YII_PATH.DIRECTORY_SEPARATOR.&#39;messages&#39;,</span>
-<span class="x">    ),</span>
-<span class="x">    &#39;db&#39;=&gt;array(</span>
-<span class="x">        &#39;class&#39;=&gt;&#39;CDbConnection&#39;,</span>
-<span class="x">    ),</span>
-<span class="x">    &#39;messages&#39;=&gt;array(</span>
-<span class="x">        &#39;class …</span></pre></div> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2014/11/13/read-yii-code-3/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 组件集成">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/php.html">PHP</a>
-                    <a class="danger label" href="../tag/yii.html">Yii</a>
-                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
-                    <a class="danger label" href="../tag/zong-jie.html">总结</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
                         <a href="../2014/11/12/read-yii-code-2/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 路由解析">Yii源码阅读笔记 - 路由解析</a>
                     </h2>
                 </header>
@@ -362,6 +317,41 @@
                     <span>Tagged as : </span>
                     <a class="danger label" href="../tag/bi-ji.html">笔记</a>
                     <a class="danger label" href="../tag/restful.html">RESTful</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
+                        <a href="../2014/09/06/socket.io-push-server/" rel="bookmark" title="Permalink to 基于socket.io的实时消息推送">基于socket.io的实时消息推送</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2014-09-06T00:00:00+08:00"> 2014-09-06 Sat </abbr>
+<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <p>用户访问Web站点的过程是基于HTTP协议的，而HTTP协议的工作模式是：请求-响应，客户端发出访问请求，服务器端以资源数据响应请求。
+也就是说，服务器端始终是被动的，即使服务器端的资源数据发生变化，如果没有来自客户端的请求，用户就不会看到这些变化。
+这种模式是不适合某些应用场景的，比如在社交网络用户需要近乎实时地知道其他用户最新的信息。对于普通站点来说，
+请求-响应模式可以满足绝大多数的功能需求，但总有某些功能我们希望能够为用户提供实时消息的体验。</p>
+<p>为解决这个问题，有两种方案可以选择：</p>
+<ol>
+<li>仍旧使用请求-响应模式，只是增大请求的频率或者使用长连接，来达到尽可能接近实时的效果，如使用polling/long-polling，但可能会极大地增加服务器的负载压力或降低服务器的吞吐量</li>
+<li>使用新的协议，在服务器端有资源数据更新时，主动推送给客户端，如WebSocket，虽然这种思路也是使用了长连接，但效率更高，且是客户端服务器端之间的全双工通信。
+问题在于目前各大浏览器并不都支持WebSocket。</li>
+</ol>
+<p>那么目前最好的方式就是结合以上两种方案，在不同的浏览器中，尽可能使用浏览器支持的最好的方案，即浏览器支持第二种方案时，优先使用第二种方案，否则使用第一种方案。socket.io就是这么做的，并且在服务器端和客户端对于不同的方案提供统一的接口。</p>
+<hr>
+<p>在我们产品的站内信功能中，希望能够给在线用户实时推送公共消息或私有消息。考虑到以后可能还有其他功能需要实现实时消息推送，所以将实时消息推送实现为一个单独的服务。这种针对不同特性的功能进行解耦也为之后针对性的优化做了铺垫。</p>
+<p>解耦之后的系统结构如下所示：</p>
+<p><img alt="socket.io-push-server" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/socket.io-push-server.png"></p>
+<p>当站点服务器(A)监测到资源数据更新事件发生时，先将数据推送到消息推送服务器 …</p> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2014/09/06/socket.io-push-server/" rel="bookmark" title="Permalink to 基于socket.io的实时消息推送">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="../tag/socketio.html">socket.io</a>
+                    <a class="danger label" href="../tag/xiao-xi-tui-song.html">消息推送</a>
+                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
                 </div>
             </article>
             </li>

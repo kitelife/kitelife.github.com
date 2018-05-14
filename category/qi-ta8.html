@@ -64,42 +64,6 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
-                        <a href="../2013/11/29/inner_warehouse_monitor_system/" rel="bookmark" title="Permalink to 仓库作业机器监控系统设计与实现">仓库作业机器监控系统设计与实现</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2013-11-29T00:00:00+08:00"> 2013-11-29 Fri </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>近期在参与一个仓库作业机器监控项目。该项目的需求背景是：公司的电商业务在全国各地有多处或大或小的仓库，仓库的作业人员（没有IT技术背景）经常反馈/投诉作业机器断网、断电、连不了服务等问题。实际情况经常与反馈的不一致，但运维侧并没有数据可以证明，所以才有了这个项目的需求。</p>
-<p>该项目第一期的目标仅是<em>收集、展示作业机器某些监控指标数据，以便在快速定位解决问题，或至少有数据可查</em>。</p>
-<p>为了避免大量监控数据上报影响到生产系统的网络服务，系统采用如下结构：</p>
-<p><img alt="inner_warehouse_monitor" src="/assets/uploads/pics/inner_warehouse_monitor.png"></p>
-<ol>
-<li>实现一个agent用于在仓库作业PC或作业PDA上获取机器的监控数据；</li>
-<li>在仓库本地服务器上实现一个数据收集处理服务，提供API给agent上传监控数据；数据收集处理服务会将接收到的数据持久化到数据库，提供给仓库本地服务器上的webApp进行数据展示等；</li>
-<li>中心服务器可以调用各个仓库本地服务器上的webApp提供的数据查询接口（数据用于定位、发现问题）；定期按需对各个仓库本地服务器上的数据进行归档。</li>
-</ol>
-<p>这样，主要的工作都集中在<strong>作业机器上的agent</strong>和<strong>数据收集处理服务、webApp</strong>。这其中最关键的又是<strong>数据收集处理服务</strong>。考虑到需要多地部署运维仓库本地服务器，而且某些大仓库作业机器的数目目前已多达800-1000，我们做了如下技术选型：</p>
-<ol>
-<li>Golang实现agent、数据收集处理服务、webApp；</li>
-<li>以SQLite作为数据库来存储agent上报的所有数据；</li>
-<li>以<a href="http://bitly.github.io/nsq/">NSQ</a>作为异步消息队列中间件；</li>
-</ol>
-<p>选用Golang的理由是：可以静态编译，部署简单，只需将编译好的可执行二进制程序丢到服务器上跑起来就可以了 …</p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2013/11/29/inner_warehouse_monitor_system/" rel="bookmark" title="Permalink to 仓库作业机器监控系统设计与实现">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/ji-zhu.html">技术</a>
-                    <a class="danger label" href="../tag/zong-jie.html">总结</a>
-                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
-                    <a class="danger label" href="../tag/golang.html">Golang</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
                         <a href="../2013/11/07/read-just_for_fun/" rel="bookmark" title="Permalink to 读书笔记：Just For Fun - The Story of an Accidental Revolutionary">读书笔记：Just For Fun - The Story of an Accidental Revolutionary</a>
                     </h2>
                 </header>
@@ -386,6 +350,51 @@ com.权威服务器向Local DNS返回qq.com.解析记录 …</p> </div><!-- /.en
                     <span>Tagged as : </span>
                     <a class="danger label" href="../tag/linux.html">Linux</a>
                     <a class="danger label" href="../tag/ming-ling-xing.html">命令行</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
+                        <a href="../2013/10/12/url-monitoring-and-web-arch/" rel="bookmark" title="Permalink to 从URL监控问题谈网站Web架构">从URL监控问题谈网站Web架构</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2013-10-12T00:00:00+08:00"> 2013-10-12 Sat </abbr>
+<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <p>之前工作中实现了一个对站点进行URL监控的功能。原理是：</p>
+<ul>
+<li>
+<p>cron脚本定时从一台Nginx服务器上获得Nginx配置文件（包括upstream配置），在解析配置得到：<code>域名-&gt;upstream名</code>（可能有多个）、<code>upstream名-&gt;属于该upstream的服务器ip列表</code>，存入数据库；</p>
+</li>
+<li>
+<p>用户通过Web界面配置URL监控项，配置过程为：</p>
+</li>
+<li>
+<p>输入要监控的URL，如http://www.sample.com/test.php ，前端JS解析出域名部分www.sample.com，向后端发送AJAX请求，得到该域名相关的upstream；</p>
+</li>
+<li>用户选择正确的那个upstream（Nginx可以将对不同URL的请求转发到不同的upstream后端机器）；</li>
+<li>
+<p>然后填写监控告警信息接收人等其他配置信息，提交即可。</p>
+</li>
+<li>
+<p>另一个cron脚本定时地:</p>
+</li>
+<li>
+<p>从数据库中读取URL监控项数据；</p>
+</li>
+<li>根据监控项中的upstream名，从数据库中读取属于该upstream的ip列表；</li>
+<li>逐个使用ip列表中的ip替换URL的域名部分，将域名部分作为HTTP请求头的HOST字段的值；</li>
+<li>使用libcurl库或curl命令发出请求（如使用curl命令：<code>curl -H "www.sample.com" http://192.168.1.1/test.php</code>）；</li>
+<li>如果响应码非200或非3xx等 …</li></ul> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2013/10/12/url-monitoring-and-web-arch/" rel="bookmark" title="Permalink to 从URL监控问题谈网站Web架构">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="../tag/jian-kong.html">监控</a>
+                    <a class="danger label" href="../tag/jia-gou.html">架构</a>
+                    <a class="danger label" href="../tag/web.html">Web</a>
+                    <a class="danger label" href="../tag/gong-zuo-bi-ji.html">工作笔记</a>
                 </div>
             </article>
             </li>

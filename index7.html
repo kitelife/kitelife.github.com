@@ -63,6 +63,42 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="./2014/01/17/golang-http-handlers-as-middleware/" rel="bookmark" title="Permalink to 如何实现Golang的http请求处理中间件（译）">如何实现Golang的http请求处理中间件（译）</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2014-01-17T00:00:00+08:00"> 2014-01-17 Fri </abbr>
+<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <p>原文：<a href="http://capotej.com/blog/2013/10/07/golang-http-handlers-as-middleware/">Golang Http Handlers as Middleware</a></p>
+<p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
+<p>大多数现代Web组件栈允许通过栈式/组件式中间件“过滤”请求，这样就能干净地从web应用中分离出横切关注点（译注：面向方面程序设计中的概念？）。
+本周我尝试在Go语言的<code>http.FileServer</code>中植入钩子，发现实现起来十分简便，让我非常惊讶。</p>
+<p>让我们从一个基本的文件服务器开始说起：</p>
+<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">http</span><span class="p">.</span><span class="nx">ListenAndServe</span><span class="p">(</span><span class="s">&quot;:8080&quot;</span><span class="p">,</span> <span class="nx">http</span><span class="p">.</span><span class="nx">FileServer</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">Dir</span><span class="p">(</span><span class="s">&quot;/tmp&quot;</span><span class="p">)))</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>这段程序会在端口8080上开启一个本地文件服务器。那么我们该如何在这其中植入钩子从而能够在文件请求处理之前执行一些代码？来看一下<code>http.ListenAndServe</code>的方法签名：</p>
+<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">ListenAndServe</span><span class="p">(</span><span class="nx">addr</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">handler</span> <span class="nx">Handler</span><span class="p">)</span> <span class="kt">error</span>
+</pre></div>
+
+
+<p>看起来<code>http.FileServer</code>返回了一个<code>Handler …</code></p> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="./2014/01/17/golang-http-handlers-as-middleware/" rel="bookmark" title="Permalink to 如何实现Golang的http请求处理中间件（译）">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="./tag/golang.html">Golang</a>
+                    <a class="danger label" href="./tag/fan-yi.html">翻译</a>
+                    <a class="danger label" href="./tag/zhong-jian-jian.html">中间件</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="./2014/01/17/goroutine-stack-infinite/" rel="bookmark" title="Permalink to 为何Goroutine的栈空间可以无限大？（译）">为何Goroutine的栈空间可以无限大？（译）</a>
                     </h2>
                 </header>
@@ -275,42 +311,6 @@ dateObj = new Date(year, month, date[, hours[, minutes[, seconds[,ms]]]])
                     <a class="danger label" href="./tag/fu-zai-jun-heng.html">负载均衡</a>
                     <a class="danger label" href="./tag/bi-ji.html">笔记</a>
                     <a class="danger label" href="./tag/zong-jie.html">总结</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="./2013/11/29/inner_warehouse_monitor_system/" rel="bookmark" title="Permalink to 仓库作业机器监控系统设计与实现">仓库作业机器监控系统设计与实现</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2013-11-29T00:00:00+08:00"> 2013-11-29 Fri </abbr>
-<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>近期在参与一个仓库作业机器监控项目。该项目的需求背景是：公司的电商业务在全国各地有多处或大或小的仓库，仓库的作业人员（没有IT技术背景）经常反馈/投诉作业机器断网、断电、连不了服务等问题。实际情况经常与反馈的不一致，但运维侧并没有数据可以证明，所以才有了这个项目的需求。</p>
-<p>该项目第一期的目标仅是<em>收集、展示作业机器某些监控指标数据，以便在快速定位解决问题，或至少有数据可查</em>。</p>
-<p>为了避免大量监控数据上报影响到生产系统的网络服务，系统采用如下结构：</p>
-<p><img alt="inner_warehouse_monitor" src="/assets/uploads/pics/inner_warehouse_monitor.png"></p>
-<ol>
-<li>实现一个agent用于在仓库作业PC或作业PDA上获取机器的监控数据；</li>
-<li>在仓库本地服务器上实现一个数据收集处理服务，提供API给agent上传监控数据；数据收集处理服务会将接收到的数据持久化到数据库，提供给仓库本地服务器上的webApp进行数据展示等；</li>
-<li>中心服务器可以调用各个仓库本地服务器上的webApp提供的数据查询接口（数据用于定位、发现问题）；定期按需对各个仓库本地服务器上的数据进行归档。</li>
-</ol>
-<p>这样，主要的工作都集中在<strong>作业机器上的agent</strong>和<strong>数据收集处理服务、webApp</strong>。这其中最关键的又是<strong>数据收集处理服务</strong>。考虑到需要多地部署运维仓库本地服务器，而且某些大仓库作业机器的数目目前已多达800-1000，我们做了如下技术选型：</p>
-<ol>
-<li>Golang实现agent、数据收集处理服务、webApp；</li>
-<li>以SQLite作为数据库来存储agent上报的所有数据；</li>
-<li>以<a href="http://bitly.github.io/nsq/">NSQ</a>作为异步消息队列中间件；</li>
-</ol>
-<p>选用Golang的理由是：可以静态编译，部署简单，只需将编译好的可执行二进制程序丢到服务器上跑起来就可以了 …</p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="./2013/11/29/inner_warehouse_monitor_system/" rel="bookmark" title="Permalink to 仓库作业机器监控系统设计与实现">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="./tag/ji-zhu.html">技术</a>
-                    <a class="danger label" href="./tag/zong-jie.html">总结</a>
-                    <a class="danger label" href="./tag/bi-ji.html">笔记</a>
-                    <a class="danger label" href="./tag/golang.html">Golang</a>
                 </div>
             </article>
             </li>

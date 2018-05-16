@@ -63,6 +63,44 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="./2016/01/24/base64-encoding/" rel="bookmark" title="Permalink to Base64编码原理与应用">Base64编码原理与应用</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2016-01-24T00:00:00+08:00"> 2016-01-24 Sun </abbr>
+<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <p>2015年，我们在青云平台上实现了“百度云观测”应用。青云应用本质上是一个iframe，在向iframe服务方发送的请求中会携带一些数据，青云平台会使用<code>Base64 URL</code>对这些数据进行编码，其提供的编码解码算法示例如下：</p>
+<div class="highlight"><pre><span></span><span class="x">// php版本</span>
+<span class="x">function base64_URL_encode($data) {</span>
+<span class="x">  return rtrim(strtr(base64_encode($data), &#39;+/&#39;, &#39;-_&#39;), &#39;=&#39;);</span>
+<span class="x">}</span>
+<span class="x">function base64_URL_decode($data) {</span>
+<span class="x">  return base64_decode(str_pad(strtr($data, &#39;-_&#39;, &#39;+/&#39;), </span>
+<span class="x">                            strlen($data) % 4, &#39;=&#39;, STR_PAD_RIGHT));</span>
+<span class="x">}</span>
+</pre></div>
+
+
+<p>可以看出，<code>Base64 URL</code> 是标准Base64编码的一个变种，分别用 <code>-</code>、<code>_</code> 替换标准Base64编码结果中的 <code>+</code> 、 <code>/</code> ，并删除结果最后的 <code>=</code> 。</p>
+<p>在实现 “百度云观测” 青云应用时，我在想：</p>
+<ul>
+<li>为什么要使用Base64编码？</li>
+<li>Base64编码算法是什么样的？</li>
+</ul>
+<p>本文是围绕这两个问题思考和实践的结果。</p>
+<p>我认为 …</p> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="./2016/01/24/base64-encoding/" rel="bookmark" title="Permalink to Base64编码原理与应用">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="./tag/bi-ji.html">笔记</a>
+                    <a class="danger label" href="./tag/bian-ma.html">编码</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="./2016/01/18/github-fork-pull-request/" rel="bookmark" title="Permalink to 基于Github的pull request流程做开源贡献">基于Github的pull request流程做开源贡献</a>
                     </h2>
                 </header>
@@ -275,43 +313,6 @@ make install …</pre></div> </div><!-- /.entry-content -->
                     <a class="danger label" href="./tag/yii.html">Yii</a>
                     <a class="danger label" href="./tag/bi-ji.html">笔记</a>
                     <a class="danger label" href="./tag/zong-jie.html">总结</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="./2015/09/11/parallelism-in-one-line/" rel="bookmark" title="Permalink to 一行式并行方案（译）">一行式并行方案（译）</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2015-09-11T00:00:00+08:00"> 2015-09-11 Fri </abbr>
-<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>原文：<a href="http://chriskiehl.com/article/parallelism-in-one-line/">Parallelism in one line</a></p>
-<p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
-<p>在并行处理能力方面，Python的声名并不太好。不考虑关于线程和GIL（多数情况下是合理的）的标准论据，我认为Python中关于并行的真正问题并不是一个技术问题，而是教学问题。围绕Python线程和多进程的常见教程，一般都写得不错，但也令人乏味 - 激烈非凡，对日常真正有用的东西却很少涉及。</p>
-<h4>沿袭的例子</h4>
-<p>在DuckDuckGo（DDG）中搜索“Python多线程教程”，简单调查一下排在前面的结果，就会发现它们给出的都是同样基于Class + Queue的示例。</p>
-<p><em>介绍threading/multiprocessing、生产者/消费者的真实示例代码：</em></p>
-<div class="highlight"><pre><span></span><span class="c1"># coding: utf-8</span>
-<span class="c1"># Example.py</span>
-<span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">标准的多线程生产者/消费者模式</span>
-<span class="sd">&#39;&#39;&#39;</span>
-
-<span class="kn">import</span> <span class="nn">time</span> 
-<span class="kn">import</span> <span class="nn">threading</span> 
-<span class="kn">import</span> <span class="nn">Queue</span> 
-
-<span class="k">class</span> <span class="nc">Consumer</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">):</span> 
-  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self …</span></pre></div> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="./2015/09/11/parallelism-in-one-line/" rel="bookmark" title="Permalink to 一行式并行方案（译）">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="./tag/php.html">PHP</a>
-                    <a class="danger label" href="./tag/fan-yi.html">翻译</a>
-                    <a class="danger label" href="./tag/bing-xing.html">并行</a>
                 </div>
             </article>
             </li>

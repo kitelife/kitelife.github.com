@@ -63,6 +63,55 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="./2018/05/16/functional-shell-code/" rel="bookmark" title="Permalink to Shell 函数式编程">Shell 函数式编程</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2018-05-16T00:00:00+08:00"> 2018-05-16 Wed </abbr>
+<address class="vcard author">By <a class="url fn" href="./author/xiayf.html">xiayf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <p>使用丑陋的编程语言也能写出漂亮的代码。</p>
+<div class="highlight"><pre><span></span>true_then_run<span class="o">()</span> <span class="o">{</span>
+    <span class="nv">condition</span><span class="o">=</span><span class="nv">$1</span>
+    <span class="nv">action</span><span class="o">=</span><span class="nv">$2</span>
+
+    <span class="o">(</span><span class="si">${</span><span class="nv">condition</span><span class="si">}</span><span class="o">)</span>
+    <span class="k">if</span> <span class="o">[</span> <span class="nv">$?</span> -eq <span class="m">0</span> <span class="o">]</span>
+    <span class="k">then</span>
+        <span class="o">(</span><span class="si">${</span><span class="nv">action</span><span class="si">}</span><span class="o">)</span>
+    <span class="k">else</span>
+        <span class="nb">echo</span> <span class="s2">&quot;&#39;</span><span class="nv">$1</span><span class="s2">&#39; is false, don&#39;t run &#39;</span><span class="nv">$2</span><span class="s2">&#39;&quot;</span>
+    <span class="k">fi</span>
+<span class="o">}</span>
+
+false_then_run<span class="o">()</span> <span class="o">{</span>
+    <span class="nv">condition</span><span class="o">=</span><span class="nv">$1</span>
+    <span class="nv">action</span><span class="o">=</span><span class="nv">$2</span>
+
+    <span class="o">(</span><span class="si">${</span><span class="nv">condition</span><span class="si">}</span><span class="o">)</span>
+    <span class="k">if</span> <span class="o">[</span> <span class="nv">$?</span> -ne <span class="m">0</span> <span class="o">]</span>
+    <span class="k">then</span>
+        <span class="o">(</span><span class="si">${</span><span class="nv">action</span><span class="si">}</span><span class="o">)</span>
+    <span class="k">else</span>
+        <span class="nb">echo</span> <span class="s2">&quot;&#39;</span><span class="nv">$1</span><span class="s2">&#39; is true, don&#39;t run &#39;</span><span class="nv">$2</span><span class="s2">&#39;&quot;</span>
+    <span class="k">fi</span>
+<span class="o">}</span>
+
+map<span class="o">()</span> <span class="o">{</span>
+    <span class="k">for</span> item in <span class="nv">$2</span>
+    <span class="k">do</span>
+        <span class="o">(</span><span class="nv">$1 …</span></pre></div> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="./2018/05/16/functional-shell-code/" rel="bookmark" title="Permalink to Shell 函数式编程">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="./tag/han-shu-shi.html">函数式</a>
+                    <a class="danger label" href="./tag/bash.html">Bash</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="./2018/05/14/maven-protobuf/" rel="bookmark" title="Permalink to 配置 Maven 自动化构建 protobuf 代码依赖">配置 Maven 自动化构建 protobuf 代码依赖</a>
                     </h2>
                 </header>
@@ -260,44 +309,6 @@
                 <div class="row tag-row">
                     <span>Tagged as : </span>
                     <a class="danger label" href="./tag/linux.html">Linux</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="./2016/01/24/base64-encoding/" rel="bookmark" title="Permalink to Base64编码原理与应用">Base64编码原理与应用</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2016-01-24T00:00:00+08:00"> 2016-01-24 Sun </abbr>
-<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>2015年，我们在青云平台上实现了“百度云观测”应用。青云应用本质上是一个iframe，在向iframe服务方发送的请求中会携带一些数据，青云平台会使用<code>Base64 URL</code>对这些数据进行编码，其提供的编码解码算法示例如下：</p>
-<div class="highlight"><pre><span></span><span class="x">// php版本</span>
-<span class="x">function base64_URL_encode($data) {</span>
-<span class="x">  return rtrim(strtr(base64_encode($data), &#39;+/&#39;, &#39;-_&#39;), &#39;=&#39;);</span>
-<span class="x">}</span>
-<span class="x">function base64_URL_decode($data) {</span>
-<span class="x">  return base64_decode(str_pad(strtr($data, &#39;-_&#39;, &#39;+/&#39;), </span>
-<span class="x">                            strlen($data) % 4, &#39;=&#39;, STR_PAD_RIGHT));</span>
-<span class="x">}</span>
-</pre></div>
-
-
-<p>可以看出，<code>Base64 URL</code> 是标准Base64编码的一个变种，分别用 <code>-</code>、<code>_</code> 替换标准Base64编码结果中的 <code>+</code> 、 <code>/</code> ，并删除结果最后的 <code>=</code> 。</p>
-<p>在实现 “百度云观测” 青云应用时，我在想：</p>
-<ul>
-<li>为什么要使用Base64编码？</li>
-<li>Base64编码算法是什么样的？</li>
-</ul>
-<p>本文是围绕这两个问题思考和实践的结果。</p>
-<p>我认为 …</p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="./2016/01/24/base64-encoding/" rel="bookmark" title="Permalink to Base64编码原理与应用">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="./tag/bi-ji.html">笔记</a>
-                    <a class="danger label" href="./tag/bian-ma.html">编码</a>
                 </div>
             </article>
             </li>

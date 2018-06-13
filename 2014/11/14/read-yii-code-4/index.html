@@ -79,7 +79,7 @@
 <li>使用ORM形式：编写model类继承自抽象类CActiveRecord</li>
 </ol>
 <p>第1种方式的示例如下：</p>
-<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
 <span class="nv">$connection</span> <span class="o">=</span> <span class="nx">Yii</span><span class="o">::</span><span class="na">app</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">db</span><span class="p">;</span>  <span class="c1">// 或者Yii::app()-&gt;getComponent(&#39;db&#39;);</span>
 <span class="nv">$queryResult</span> <span class="o">=</span> <span class="nv">$connection</span><span class="o">-&gt;</span><span class="na">createCommand</span><span class="p">(</span><span class="nv">$sql</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">queryRow</span><span class="p">();</span>
 </pre></div>
@@ -92,7 +92,7 @@
 <p>Yii框架model层的入口为CDbConnection类，该类有很多public的属性可供配置，如<code>connectionString</code>、<code>username</code>、<code>password</code>等。</p>
 <p>根据<a href="http://youngsterxyf.github.io/2014/11/13/read-yii-code-3/">Yii源码阅读笔记 - 组件集成</a>一文可知，组件初始化时会调用init方法。
 类CDbConnection的init类实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">public function init()</span>
+<div class="highlight"><pre><span class="x">public function init()</span>
 <span class="x">{</span>
 <span class="x">    parent::init();</span>
 <span class="x">    // 属性autoConnect默认为true</span>
@@ -103,7 +103,7 @@
 
 
 <p>其中调用的setActive方法实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">public function setActive($value)</span>
+<div class="highlight"><pre><span class="x">public function setActive($value)</span>
 <span class="x">{</span>
 <span class="x">    // 当$value为true，而_active为false（表示数据库连接未打开），则打开数据库连接</span>
 <span class="x">    // 当$value为false, 而_active为true（表示数据库连接已打开），则关闭数据库连接</span>
@@ -119,7 +119,7 @@
 
 
 <p>方法open实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">/**</span>
+<div class="highlight"><pre><span class="x">/**</span>
 <span class="x"> * Opens DB connection if it is currently not</span>
 <span class="x"> * @throws CException if connection fails</span>
 <span class="x"> */</span>
@@ -150,7 +150,7 @@
 
 
 <p>方法close实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">/**</span>
+<div class="highlight"><pre><span class="x">/**</span>
 <span class="x"> * Closes the currently active DB connection.</span>
 <span class="x"> * It does nothing if the connection is already closed.</span>
 <span class="x"> */</span>
@@ -165,7 +165,7 @@
 
 
 <p>open方法中调用的方法createPdoInstance实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">/**</span>
+<div class="highlight"><pre><span class="x">/**</span>
 <span class="x"> * Creates the PDO instance.</span>
 <span class="x"> * When some functionalities are missing in the pdo driver, we may use</span>
 <span class="x"> * an adapter class to provide them.</span>
@@ -203,7 +203,7 @@
 
 <p>从中可以看出，对于MySQL数据库而言，方法createPdoInstance返回的是一个PDO对象，赋值给CDbConnection对象的_pdo属性。</p>
 <p>方法initConnection的实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">/**</span>
+<div class="highlight"><pre><span class="x">/**</span>
 <span class="x"> * Initializes the open db connection.</span>
 <span class="x"> * This method is invoked right after the db connection is established.</span>
 <span class="x"> * The default implementation is to set the charset for MySQL and PostgreSQL database connections.</span>
@@ -235,7 +235,7 @@
 <hr>
 <p>由于第2种方式是基于第1中方式实现的，所以我们先看看第1种方式的实现。</p>
 <p>类CDbConnection中方法createCommand的实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">public function createCommand($query=null)</span>
+<div class="highlight"><pre><span class="x">public function createCommand($query=null)</span>
 <span class="x">{</span>
 <span class="x">    $this-&gt;setActive(true);</span>
 <span class="x">    return new CDbCommand($this,$query);</span>
@@ -244,7 +244,7 @@
 
 
 <p>其中实例化的类CDbCommand的构造方法实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">/**</span>
+<div class="highlight"><pre><span class="x">/**</span>
 <span class="x"> * Constructor.</span>
 <span class="x"> * @param CDbConnection $connection the database connection</span>
 <span class="x"> * @param mixed $query the DB query to be executed. This can be either</span>
@@ -282,7 +282,7 @@
 <p>可以看到参数$query并不是必须提供，如果提供，则$query参数值可以是字符串也可以是数组。如果是字符串也就是一个原生的SQL语句（可能有参数需要填充），如果是数组，
 则可以为CDbCommand对象的select、distinct、from等属性赋值。</p>
 <p>方法setText实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">/**</span>
+<div class="highlight"><pre><span class="x">/**</span>
 <span class="x"> * Specifies the SQL statement to be executed.</span>
 <span class="x"> * Any previous execution will be terminated or cancel.</span>
 <span class="x"> * @param string $value the SQL statement to be executed</span>
@@ -316,7 +316,7 @@
 </ol>
 <p>这样一看，类CDbCommand的实现稍显混乱。本意上额外的第3种方式应该是提供给类CActiveRecord使用的，所以不建议使用。</p>
 <p>接下来看看方法execute方法及query一类（仅以方法query、queryAll为例）方法的实现：</p>
-<div class="highlight"><pre><span></span><span class="x">/**</span>
+<div class="highlight"><pre><span class="x">/**</span>
 <span class="x"> * Executes the SQL statement.</span>
 <span class="x"> * This method is meant only for executing non-query SQL statement.</span>
 <span class="x"> * No result set will be returned.</span>
@@ -381,7 +381,7 @@
 
 
 <p>可以看到query一类方法都是间接调用方法queryInternal来完成操作的。queryInternal方法实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">private function queryInternal($method,$mode,$params=array())</span>
+<div class="highlight"><pre><span class="x">private function queryInternal($method,$mode,$params=array())</span>
 <span class="x">{</span>
 <span class="x">    $params=array_merge($this-&gt;params,$params);</span>
 
@@ -458,7 +458,7 @@
 
 
 <p>可以看到query方法调用queryInternal时，结果是通过CDbDataReader对象来获取的。类CDbDataReader的构造方法实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">public function __construct(CDbCommand $command)</span>
+<div class="highlight"><pre><span class="x">public function __construct(CDbCommand $command)</span>
 <span class="x">{</span>
 <span class="x">    $this-&gt;_statement=$command-&gt;getPdoStatement();</span>
 <span class="x">    $this-&gt;_statement-&gt;setFetchMode(PDO::FETCH_ASSOC);</span>
@@ -470,7 +470,7 @@
 <hr>
 <p>再来看看Yii框架Model层的第2种使用方式。</p>
 <p>CActiveRecord的用法是，对于数据库的每个数据表，创建一个model类，如UserModel，这个类继承自CActiveRecord类。model类名可以和数据表名一致，也可以不一致，如果不一致，则需要重写CActiveRecord类的tableName方法，标明该model类对应的数据表名。方法tableName默认的实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">/**</span>
+<div class="highlight"><pre><span class="x">/**</span>
 <span class="x">* Returns the name of the associated database table.</span>
 <span class="x">* By default this method returns the class name as the table name.</span>
 <span class="x">* You may override this method if the table is not named after this convention.</span>
@@ -484,7 +484,7 @@
 
 
 <p>假设UserModel类对应的数据表名为User，则应如下重写tableName：</p>
-<div class="highlight"><pre><span></span><span class="x">public function tableName()</span>
+<div class="highlight"><pre><span class="x">public function tableName()</span>
 <span class="x">{</span>
 <span class="x">    return &#39;User&#39;;</span>
 <span class="x">}</span>
@@ -493,7 +493,7 @@
 
 <p>使用CActiveRecord方式，若想向数据表中插入一条新纪录，则需要实例化当前model类。以UserModel类为例，若想向User表中插入一条新纪录，则需要先实例化UserModel，得到一个对象，然后对该对象的属性进行赋值指明对应数据表新记录每个字段的值。对象的属性名即数据表的字段名，赋值完毕，调用save或insert即向数据表中存入该新纪录。</p>
 <p>CActiveRecord类的构造方法如下所示：</p>
-<div class="highlight"><pre><span></span><span class="x">public function __construct($scenario=&#39;insert&#39;)</span>
+<div class="highlight"><pre><span class="x">public function __construct($scenario=&#39;insert&#39;)</span>
 <span class="x">{</span>
 <span class="x">    if($scenario===null) // internally used by populateRecord() and model()</span>
 <span class="x">        return;</span>
@@ -512,7 +512,7 @@
 
 <p>$scenario='insert'，表示新实例化的对象处于待插入数据表的状态，在调用save等方法时，会检测该状态。在新实例化的对象插入到数据表后，该状态立即会变为"update"，表示之后对该对象的数据库写入操作，属于update操作。</p>
 <p>CActiveRecord类的save方法的实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">public function save($runValidation=true,$attributes=null)</span>
+<div class="highlight"><pre><span class="x">public function save($runValidation=true,$attributes=null)</span>
 <span class="x">{</span>
 <span class="x">    // 若需要则对某些属性做校验</span>
 <span class="x">    if(!$runValidation || $this-&gt;validate($attributes))</span>
@@ -525,7 +525,7 @@
 
 
 <p>而insert、update方法的实现如下所示：</p>
-<div class="highlight"><pre><span></span><span class="x">public function insert($attributes=null)</span>
+<div class="highlight"><pre><span class="x">public function insert($attributes=null)</span>
 <span class="x">{</span>
 <span class="x">    if(!$this-&gt;getIsNewRecord())</span>
 <span class="x">        throw new CDbException(Yii::t(&#39;yii&#39;,&#39;The active record cannot be inserted to database because it is not new.&#39;));</span>
@@ -588,7 +588,7 @@
 
 
 <p>insert方法中调用的getCommandBuilder方法实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">public function getCommandBuilder()</span>
+<div class="highlight"><pre><span class="x">public function getCommandBuilder()</span>
 <span class="x">{</span>
 <span class="x">    return $this-&gt;getDbConnection()-&gt;getSchema()-&gt;getCommandBuilder();</span>
 <span class="x">}</span>
@@ -596,7 +596,7 @@
 
 
 <p>其中getDbConnection方法实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">public function getDbConnection()</span>
+<div class="highlight"><pre><span class="x">public function getDbConnection()</span>
 <span class="x">{</span>
 <span class="x">    if(self::$db!==null)</span>
 <span class="x">        return self::$db;</span>
@@ -614,7 +614,7 @@
 
 <p>Yii中默认的DB组件名为db，所以如果你使用的是默认的db数据库，那么不用重写这个方法。否则，需要重写该方法，指明需要使用的数据库连接。</p>
 <p>getDbConnection方法返回的是一个CDbConnection对象，其getSchema方法实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">public function getSchema()</span>
+<div class="highlight"><pre><span class="x">public function getSchema()</span>
 <span class="x">{</span>
 <span class="x">    if($this-&gt;_schema!==null)</span>
 <span class="x">        return $this-&gt;_schema;</span>
@@ -648,7 +648,7 @@
 
 
 <p>以mysql的CMysqlSchema为例，<code>Yii::createComponent($this-&gt;driverMap[$driver], $this)</code>一句会实例化yii/framework/db/schema/mysql/CMysqlSchema.php中定义的CMysqlSchema类。该类自身无构造方法，继承自抽象类CDbSchema，CDbSchema的构造方法实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">public function __construct($conn)</span>
+<div class="highlight"><pre><span class="x">public function __construct($conn)</span>
 <span class="x">{</span>
 <span class="x">    // 保存着当前CDbConnection数据库连接对象</span>
 <span class="x">    $this-&gt;_connection=$conn;</span>
@@ -659,7 +659,7 @@
 
 
 <p>得到CMysqlSchema对象后，调用其getCommandBuilder方法，该方法定义于类CDbSchema中，实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">public function getCommandBuilder()</span>
+<div class="highlight"><pre><span class="x">public function getCommandBuilder()</span>
 <span class="x">{</span>
 <span class="x">    if($this-&gt;_builder!==null)</span>
 <span class="x">        return $this-&gt;_builder;</span>
@@ -670,7 +670,7 @@
 
 
 <p>其中调用的方法createCommandBuilder实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">protected function createCommandBuilder()</span>
+<div class="highlight"><pre><span class="x">protected function createCommandBuilder()</span>
 <span class="x">{</span>
 <span class="x">    return new CDbCommandBuilder($this);</span>
 <span class="x">}</span>
@@ -678,7 +678,7 @@
 
 
 <p>实例化的CDbCommandBuilder类的构造方法如下所示：</p>
-<div class="highlight"><pre><span></span><span class="x">public function __construct($schema)</span>
+<div class="highlight"><pre><span class="x">public function __construct($schema)</span>
 <span class="x">{</span>
 <span class="x">    $this-&gt;_schema=$schema;</span>
 <span class="x">    $this-&gt;_connection=$schema-&gt;getDbConnection();</span>
@@ -688,7 +688,7 @@
 
 <p>这样insert方法中调用的getCommandBuilder最终返回了一个CDbCommandBuilder对象。</p>
 <p>而insert方法中<code>$table=$this-&gt;getMetaData()-&gt;tableSchema</code>一句调用的getMetaData方法实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">public function getMetaData()</span>
+<div class="highlight"><pre><span class="x">public function getMetaData()</span>
 <span class="x">{</span>
 <span class="x">    $className=get_class($this);</span>
 <span class="x">    if(!array_key_exists($className,self::$_md))</span>
@@ -702,7 +702,7 @@
 
 
 <p>其中实例化的类CActiveRecordMetaData，构造方法如下所示：</p>
-<div class="highlight"><pre><span></span><span class="x">public function __construct($model)</span>
+<div class="highlight"><pre><span class="x">public function __construct($model)</span>
 <span class="x">{</span>
 <span class="x">    // 当前model类名</span>
 <span class="x">    $this-&gt;_modelClassName=get_class($model);</span>
@@ -747,7 +747,7 @@
 
 
 <p>其中调用的getTable方法，定义于抽象类CDbSchema中，实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">public function getTable($name,$refresh=false)</span>
+<div class="highlight"><pre><span class="x">public function getTable($name,$refresh=false)</span>
 <span class="x">{</span>
 <span class="x">    if($refresh===false &amp;&amp; isset($this-&gt;_tables[$name]))</span>
 <span class="x">        return $this-&gt;_tables[$name];</span>
@@ -801,7 +801,7 @@
 </ul>
 <p>来获取数据表信息，并将信息存于一个CMysqlColumnSchema对象中（以mysql为例）。</p>
 <p>insert方法中<code>$command=$builder-&gt;createInsertCommand($table,$this-&gt;getAttributes($attributes))</code>一句createInsertCommand方法定义于CDbCommandBuilder类中，实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">public function createInsertCommand($table,$data)</span>
+<div class="highlight"><pre><span class="x">public function createInsertCommand($table,$data)</span>
 <span class="x">{</span>
 <span class="x">    $this-&gt;ensureTable($table);</span>
 <span class="x">    $fields=array();</span>
@@ -852,7 +852,7 @@
 <p>CActiveRecord中所有数据库增、删、改、查操作，在构建出目标sql语句后，都是调用CDbConnection类的方法createCommand来得到一个CDbCommand类的对象，最后调用该对象的execute、query、queryAll等方法来完成查询获取结果。</p>
 <hr>
 <p>对于model类实例对象的属性赋值，依赖于CActiveRecord类的方法__set，实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">public function __set($name,$value)</span>
+<div class="highlight"><pre><span class="x">public function __set($name,$value)</span>
 <span class="x">{</span>
 <span class="x">    if($this-&gt;setAttribute($name,$value)===false)</span>
 <span class="x">    {</span>
@@ -866,7 +866,7 @@
 
 
 <p>其中调用的setAttribute方法的实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">public function setAttribute($name,$value)</span>
+<div class="highlight"><pre><span class="x">public function setAttribute($name,$value)</span>
 <span class="x">{</span>
 <span class="x">    if(property_exists($this,$name))</span>
 <span class="x">        $this-&gt;$name=$value;</span>
@@ -881,7 +881,7 @@
 
 <hr>
 <p>基于CActiveRecord类，如果想进行读取操作，那么子类需要重写model方法。CActiveRecord类的model方法实现如下：</p>
-<div class="highlight"><pre><span></span>/**
+<div class="highlight"><pre>/**
  * Returns the static model of the specified AR class.
  * The model returned is a static instance of the AR class.
  * It is provided for invoking class-level methods (something similar to static class methods.)
@@ -912,7 +912,7 @@ public static function model($className=__CLASS__)
 
 
 <p>根据该方法的注释可知道，所有的子类必须如下重写model方法：</p>
-<div class="highlight"><pre><span></span><span class="x">public static function model($className = __CLASS__)</span>
+<div class="highlight"><pre><span class="x">public static function model($className = __CLASS__)</span>
 <span class="x">{</span>
 <span class="x">    return parent::model($className);</span>
 <span class="x">}</span>
@@ -921,7 +921,7 @@ public static function model($className=__CLASS__)
 
 <p>为什么必须重写model方法呢？因为<code>__CLASS__</code>指的并不是当前对象所属的类，而是方法定义所在的类。</p>
 <p>隔壁的哥们告诉我，在 PHP 5.3 之后，如果CActiveRecord的model方法如下实现，就可以不用这样使用需要重写了。</p>
-<div class="highlight"><pre><span></span><span class="x">public static function model()</span>
+<div class="highlight"><pre><span class="x">public static function model()</span>
 <span class="x">{</span>
 <span class="x">    $className = get_called_class();</span>
 <span class="x">    if(isset(self::$_models[$className]))</span>
@@ -937,7 +937,7 @@ public static function model($className=__CLASS__)
 
 
 <p>在得到$model后，就可以调用对象的query、find、findAll、findByPk、findAllByPk、findByAttributes、findAllByAttributes、findBySql、findAllBySql等方法来查询数据。其中find、findAll、findByPk、findAllByPk、findByAttributes、findAllByAttributes最终是通过调用query方法来实现查询的。query方法的第一个参数是一个CDbCriteria类实例对象，这就意味着调用query方法来实现查询的方法需要根据参数实例化一个CDbCriteria类对象。如find方法实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">/**</span>
+<div class="highlight"><pre><span class="x">/**</span>
 <span class="x"> * Finds a single active record with the specified condition.</span>
 <span class="x"> * @param mixed $condition query condition or criteria.</span>
 <span class="x"> * If a string, it is treated as query condition (the WHERE clause);</span>
@@ -959,7 +959,7 @@ public static function model($className=__CLASS__)
 
 
 <p>而query方法的实现如下所示：</p>
-<div class="highlight"><pre><span></span><span class="x">protected function query($criteria,$all=false)</span>
+<div class="highlight"><pre><span class="x">protected function query($criteria,$all=false)</span>
 <span class="x">{</span>
 <span class="x">    $this-&gt;beforeFind();</span>
 <span class="x">    $this-&gt;applyScopes($criteria);</span>
@@ -984,7 +984,7 @@ public static function model($className=__CLASS__)
 <hr>
 <p>对于查询操作，很多时候需要多表关联查询。那么基于CActiveRecord如何实现多表关联查询（隐式自动地）呢？</p>
 <p>CActiveRecord类有个方法relations()：</p>
-<div class="highlight"><pre><span></span><span class="x">public function relations()</span>
+<div class="highlight"><pre><span class="x">public function relations()</span>
 <span class="x">{</span>
 <span class="x">    return array();</span>
 <span class="x">}</span>
@@ -993,7 +993,7 @@ public static function model($className=__CLASS__)
 
 <p>这个方法的注释非常长，说明如何通过该方法声明当前model对应的数据表有哪些关联数据表，是何种关联关系。继承自CActiveRecord类的model类若想使用隐式的多表关联查询，则需要重写该方法。</p>
 <p>举例来说，有数据表UserContacts、Users，UserContacts中有外键字段user_id关联到Users。如果基于CActiveRecord在查询UserContacts记录时，需要便捷地获取关联Users的记录。那么可以在UserContacts数据表对应的model类中，这样重写relations方法：</p>
-<div class="highlight"><pre><span></span><span class="x">public function relations()</span>
+<div class="highlight"><pre><span class="x">public function relations()</span>
 <span class="x">{</span>
 <span class="x">    return array(</span>
 <span class="x">            &#39;user&#39; =&gt; array(self::BELONGS_TO, &#39;Users&#39;, &#39;user_id&#39;),</span>
@@ -1005,7 +1005,7 @@ public static function model($className=__CLASS__)
 <p>那么在得到一条记录对象（$uc）时，通过调用$uc-&gt;user，即可得到与该UserContacts记录关联的Users记录。不过这条关联记录的获取可能是在调用$uc-&gt;user时才去查询数据库的。</p>
 <p>若想提前将关联记录查询出来准备好，则可以再调用find、findAll等查询方法之前先调用with方法，如<code>self::model()-&gt;with('user')-&gt;find(array('usercontact_id' =&gt; 1))</code>，或者这样调用find方法<code>self::model()-&gt;find(array('usercontact_id' =&gt; 1, 'with' =&gt; 'user'))</code>。</p>
 <p>那么在调用<code>$uc-&gt;user</code>时，如何知道user是一个关联项，而不是一个当前对象的属性？如果当前对象对应的数据表已有一个名为user的字段，是否会屏蔽掉关联项？且看CActiveRecord类的__get方法：</p>
-<div class="highlight"><pre><span></span><span class="x">public function __get($name)</span>
+<div class="highlight"><pre><span class="x">public function __get($name)</span>
 <span class="x">{</span>
 <span class="x">    // 先查看当前model类对应的数据表是否有名为$name的字段</span>
 <span class="x">    if(isset($this-&gt;_attributes[$name]))</span>

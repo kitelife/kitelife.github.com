@@ -89,7 +89,7 @@
 <p><img alt="socket.io-push-server" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/socket.io-push-server.png"></p>
 <p>当站点服务器(A)监测到资源数据更新事件发生时，先将数据推送到消息推送服务器(B)，B根据消息的类型以及消息的目标接收人来决定是否推送，如何推送。</p>
 <p>由于我们的Web后端是基于Yii框架实现，那么该如何实现A与B的socket.io服务通信呢？socket.io有自己的一套协议，如果自己实现PHP库来与socket.io服务交互，还有一些工作量。最终我们选择<a href="https://github.com/oncesk/elephant.io">elephant.io这个PHP库</a>，并将elephant.io封装为Yii框架的一个组件，实现如下：</p>
-<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
 
 <span class="nv">$basePath</span> <span class="o">=</span> <span class="nx">Yii</span><span class="o">::</span><span class="na">getPathOfAlias</span><span class="p">(</span><span class="s1">&#39;application.vendor.elephantio.lib.ElephantIO&#39;</span><span class="p">);</span>
 
@@ -111,8 +111,8 @@
     <span class="p">{</span>
         <span class="k">if</span> <span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">host</span> <span class="o">===</span> <span class="k">null</span> <span class="o">||</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">port</span> <span class="o">===</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
             <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span><span class="p">(</span><span class="s1">&#39;%s: %s: %s, Please give me parameters host and port&#39;</span><span class="p">,</span> <span class="nb">basename</span><span class="p">(</span>
-                <span class="no">__FILE__</span>
-            <span class="p">),</span> <span class="no">__FUNCTION__</span><span class="p">,</span> <span class="no">__LINE__</span><span class="p">);</span>
+                <span class="k">__FILE__</span>
+            <span class="p">),</span> <span class="nx">__FUNCTION__</span><span class="p">,</span> <span class="k">__LINE__</span><span class="p">);</span>
         <span class="p">}</span>
 
     <span class="p">}</span>
@@ -134,8 +134,8 @@
                 <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">ioNameSpace</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">elephant</span><span class="o">-&gt;</span><span class="na">createFrame</span><span class="p">(</span><span class="k">null</span><span class="p">,</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">namespace</span><span class="p">);</span>
             <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
                 <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span><span class="p">(</span><span class="s1">&#39;%s: %s: %s, Please setNameSpace before sendMsg&#39;</span><span class="p">,</span> <span class="nb">basename</span><span class="p">(</span>
-                    <span class="no">__FILE__</span>
-                <span class="p">),</span> <span class="no">__FUNCTION__</span><span class="p">,</span> <span class="no">__LINE__</span><span class="p">);</span>
+                    <span class="k">__FILE__</span>
+                <span class="p">),</span> <span class="nx">__FUNCTION__</span><span class="p">,</span> <span class="k">__LINE__</span><span class="p">);</span>
             <span class="p">}</span>
         <span class="p">}</span>
         <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">ioNameSpace</span><span class="o">-&gt;</span><span class="na">emit</span><span class="p">(</span><span class="nv">$event</span><span class="p">,</span> <span class="nv">$msg</span><span class="p">);</span>
@@ -151,7 +151,7 @@
 
 
 <p>将该代码文件放在应用目录extensions下，然后为Yii添加如下配置项：</p>
-<div class="highlight"><pre><span></span><span class="x">&#39;components&#39; =&gt; array(</span>
+<div class="highlight"><pre><span class="x">&#39;components&#39; =&gt; array(</span>
 <span class="x">    &#39;ElephantIO&#39; =&gt; array(</span>
 <span class="x">        &#39;class&#39; =&gt; &#39;application.extensions.extElephantIO&#39;,</span>
 <span class="x">        &#39;host&#39; =&gt; &#39;xxx&#39;,</span>
@@ -163,7 +163,7 @@
 
 
 <p>当有资源数据变更事件产生时，如下调用向消息推送服务器发送消息：</p>
-<div class="highlight"><pre><span></span><span class="x">$elephant = Yii::app()-&gt;ElephantIO;</span>
+<div class="highlight"><pre><span class="x">$elephant = Yii::app()-&gt;ElephantIO;</span>
 <span class="x">$elephant-&gt;setNameSpace(&#39;/message_namespace&#39;);</span>
 <span class="x">$elephant-&gt;sendMsg(</span>
 <span class="x">    &#39;message_event_type&#39;,</span>

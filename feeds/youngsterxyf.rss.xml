@@ -20,7 +20,7 @@
 &lt;li&gt;对脚本实例获取数据的SQL，增加选择条件：&lt;code&gt;MOD(id, 5)=SID&lt;/code&gt;（SID为当前脚本实例的ID） - 即使用数据行的&lt;code&gt;id&lt;/code&gt;对实例数取模，如果结果等于实例的ID，则取出来 …&lt;/li&gt;&lt;/ul&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Fri, 10 Jun 2016 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2016-06-10:/2016/06/10/a-simple-concurrency-trick/</guid><category>笔记</category><category>SQL</category></item><item><title>关于API访问频率限制的一个问题</title><link>http://youngsterxyf.github.io/2016/06/05/frequency-limitation/</link><description>&lt;p&gt;工作中涉及一些对外开放的无需特殊权限的API，用户会因为某些需求而通过程序来频繁访问这些API，导致系统的负载陡增，可能影响系统其它功能的正常使用。虽然做了一些优化让这种API尽可能地轻量，但仍然不够，因此需要进行访问频率的限制。&lt;/p&gt;
 &lt;p&gt;由于这样的API并不多，所以我们并没有在Nginx这样的反向代理接入层中实现频率限制，而是API自己去实现，而且实现方案比较粗糙 - 基于Memcached的缓存自动过期特性。&lt;/p&gt;
 &lt;p&gt;方案的PHP示例实现如下所示：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="x"&gt;// 每个IP一分钟10次&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;// 每个IP一分钟10次&lt;/span&gt;
 &lt;span class="x"&gt;$limit = 10;&lt;/span&gt;
 
 &lt;span class="x"&gt;$cache = new Memcached();&lt;/span&gt;
@@ -52,16 +52,16 @@
 &lt;li&gt;继续往下读...&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;我们先看看系统中是否存在defunct进程：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ ps -A &lt;span class="p"&gt;|&lt;/span&gt; grep defunct
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nv"&gt;$ &lt;/span&gt;ps -A &lt;span class="p"&gt;|&lt;/span&gt; grep defunct
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;假设得到的输出如下所示：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;8328 ? 00:00:00 mono &amp;lt;defunct&amp;gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;8328 ? 00:00:00 mono &amp;lt;defunct&amp;gt;
 8522 ? 00:00:01 mono &amp;lt;defunct&amp;gt;
 13132 ? 00:00:00 mono &amp;lt;defunct&amp;gt;
 25822 ? 00 …&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Thu, 18 Feb 2016 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2016-02-18:/2016/02/18/kill-defunct/</guid><category>Linux</category></item><item><title>Base64编码原理与应用</title><link>http://youngsterxyf.github.io/2016/01/24/base64-encoding/</link><description>&lt;p&gt;2015年，我们在青云平台上实现了“百度云观测”应用。青云应用本质上是一个iframe，在向iframe服务方发送的请求中会携带一些数据，青云平台会使用&lt;code&gt;Base64 URL&lt;/code&gt;对这些数据进行编码，其提供的编码解码算法示例如下：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="x"&gt;// php版本&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;// php版本&lt;/span&gt;
 &lt;span class="x"&gt;function base64_URL_encode($data) {&lt;/span&gt;
 &lt;span class="x"&gt;  return rtrim(strtr(base64_encode($data), &amp;#39;+/&amp;#39;, &amp;#39;-_&amp;#39;), &amp;#39;=&amp;#39;);&lt;/span&gt;
 &lt;span class="x"&gt;}&lt;/span&gt;
@@ -101,11 +101,11 @@
 &lt;p&gt;对于青云来说，一个iframe应用就是一个URL，由应用开发者提供这个URL，当青云用户访问应用所在的页面时，页面先自动向应用服务器的URL发送数据请求，请求会携带认证信息，应用服务端需要先校验请求确实来自青云，并获取请求中的用户信息，最终响应一个HTML页面内容，青云应用页面收到响应数据后将其置于一个iframe标签中，之后青云用户在iframe页面中的操作都是直接与应用服务器交互。&lt;/p&gt;
 &lt;p&gt;&lt;img alt="qingcloud-iframe-interaction" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/qingcloud-iframe-interaction.png"&gt;&lt;/p&gt;
 &lt;p&gt;上图交互流程的第&lt;strong&gt;2&lt;/strong&gt;步中，青云服务器向用户响应的内容最终会生成一个包含以下内容的页面：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;form&lt;/span&gt; &lt;span class="na"&gt;method&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;POST&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;action&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;URL&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;target&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;appframe&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;input&lt;/span&gt; &lt;span class="na"&gt;type&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;hidden&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;payload&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;...&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;input&lt;/span&gt; &lt;span class="na"&gt;type&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;hidden&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;signature&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;...&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
-&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;form&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
-&lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;iframe&lt;/span&gt; &lt;span class="na"&gt;id&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;...&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;appframe&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;width&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;100 …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Fri, 20 Nov 2015 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2015-11-20:/2015/11/20/qingcloud-iframe-app/</guid><category>笔记</category><category>工作</category><category>总结</category></item><item><title>又一次系统故障</title><link>http://youngsterxyf.github.io/2015/11/16/another-system-fault/</link><description>&lt;p&gt;上周五早上9点多，我还在上班的路上，接到技术leader的电话：线上突然出故障了；接着发来一张故障信息页面截图：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nt"&gt;&amp;lt;form&lt;/span&gt; &lt;span class="na"&gt;method=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;POST&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;action=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;URL&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;target=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;appframe&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;input&lt;/span&gt; &lt;span class="na"&gt;type=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;hidden&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;payload&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;...&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;input&lt;/span&gt; &lt;span class="na"&gt;type=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;hidden&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;signature&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;...&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;/form&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;iframe&lt;/span&gt; &lt;span class="na"&gt;id=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;...&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;appframe&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;width=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;100 …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Fri, 20 Nov 2015 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2015-11-20:/2015/11/20/qingcloud-iframe-app/</guid><category>笔记</category><category>工作</category><category>总结</category></item><item><title>又一次系统故障</title><link>http://youngsterxyf.github.io/2015/11/16/another-system-fault/</link><description>&lt;p&gt;上周五早上9点多，我还在上班的路上，接到技术leader的电话：线上突然出故障了；接着发来一张故障信息页面截图：&lt;/p&gt;
 &lt;p&gt;&lt;img alt="system-fault-err-page" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/system-fault-err-page.png"&gt;&lt;/p&gt;
 &lt;p&gt;截图包含的信息是：数据库中没找到数据表&lt;code&gt;Users&lt;/code&gt;。&lt;/p&gt;
 &lt;p&gt;但同事检查过数据库，Users数据表是存在的。&lt;/p&gt;
@@ -151,7 +151,7 @@
 &lt;p&gt;Xhprof是一个PHP扩展，安装方式与一般PHP扩展一致。&lt;/p&gt;
 &lt;p&gt;1.从&lt;a href="https://pecl.php.net/package/xhprof"&gt;这里&lt;/a&gt;下载最新的源码包。假设解压缩后的文件夹为xhprof&lt;/p&gt;
 &lt;p&gt;2.编译安装&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nb"&gt;cd&lt;/span&gt; xhprof/extension
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nb"&gt;cd &lt;/span&gt;xhprof/extension
 /path/to/php/bin/phpize
 ./configure --with-php-config&lt;span class="o"&gt;=&lt;/span&gt;/path/to/php/bin/php-config
 make
@@ -164,8 +164,8 @@ make install …&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http
 &lt;h4&gt;沿袭的例子&lt;/h4&gt;
 &lt;p&gt;在DuckDuckGo（DDG）中搜索“Python多线程教程”，简单调查一下排在前面的结果，就会发现它们给出的都是同样基于Class + Queue的示例。&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;介绍threading/multiprocessing、生产者/消费者的真实示例代码：&lt;/em&gt;&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# coding: utf-8&lt;/span&gt;
-&lt;span class="c1"&gt;# Example.py&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c"&gt;# coding: utf-8&lt;/span&gt;
+&lt;span class="c"&gt;# Example.py&lt;/span&gt;
 &lt;span class="sd"&gt;&amp;#39;&amp;#39;&amp;#39;&lt;/span&gt;
 &lt;span class="sd"&gt;标准的多线程生产者/消费者模式&lt;/span&gt;
 &lt;span class="sd"&gt;&amp;#39;&amp;#39;&amp;#39;&lt;/span&gt;
@@ -175,7 +175,7 @@ make install …&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http
 &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;Queue&lt;/span&gt; 
 
 &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Consumer&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;threading&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Thread&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt; 
-  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="fm"&gt;__init__&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Fri, 11 Sep 2015 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2015-09-11:/2015/09/11/parallelism-in-one-line/</guid><category>PHP</category><category>翻译</category><category>并行</category></item><item><title>那些Python党踩过的PHP坑</title><link>http://youngsterxyf.github.io/2015/09/05/php-trap-and-tip/</link><description>&lt;p&gt;一看题目貌似本文要准备吐槽PHP，但遇到“坑”主要是因为个人经验不足。&lt;/p&gt;
+  &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;__init__&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Fri, 11 Sep 2015 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2015-09-11:/2015/09/11/parallelism-in-one-line/</guid><category>PHP</category><category>翻译</category><category>并行</category></item><item><title>那些Python党踩过的PHP坑</title><link>http://youngsterxyf.github.io/2015/09/05/php-trap-and-tip/</link><description>&lt;p&gt;一看题目貌似本文要准备吐槽PHP，但遇到“坑”主要是因为个人经验不足。&lt;/p&gt;
 &lt;h4&gt;JSON反序列化 json_decode&lt;/h4&gt;
 &lt;p&gt;函数 &lt;code&gt;json_decode&lt;/code&gt; 默认反序列化的结果是对象。Python党在做PHP开发用到这个方法时，很可能会跳进这个坑，认为结果应该是个数组，因为Python中json.loads返回的是一个字典。 &lt;code&gt;json_decode&lt;/code&gt; 的第二个参数 $assoc 可用来指定反序列化的结果为数组。&lt;/p&gt;
 &lt;p&gt;文档：&lt;a href="http://php.net/manual/zh/function.json-decode.php"&gt;http://php.net/manual/zh/function.json-decode.php&lt;/a&gt;&lt;/p&gt;
@@ -186,7 +186,7 @@ make install …&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http
 &lt;p&gt;PHP 实际并不区分索引数组和关联数组，都是一种有序映射。&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;虽然很多时候索引数组和关联数组在表现上是不一样的，比如对以下两个数组进行序列化：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
 &lt;span class="nv"&gt;$arrA&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;a&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;b&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;c&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
 &lt;span class="k"&gt;echo&lt;/span&gt; &lt;span class="nb"&gt;json_encode&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$arrA&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 
@@ -220,12 +220,12 @@ make install …&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http
 &lt;hr&gt;
 &lt;p&gt;在 &lt;a href="http://blog.xiayf.cn/2014/11/20/read-yii-code-7/"&gt;Yii源码阅读笔记 - 应用模块化&lt;/a&gt; 一文中介绍类 &lt;code&gt;CWebApplication&lt;/code&gt; 中的方法 &lt;code&gt;createController&lt;/code&gt; ，
 该方法根据目标路由找到对应的控制器类文件并加载，方法中有行代码：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="x"&gt;$basePath=$owner-&amp;gt;getControllerPath();&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;$basePath=$owner-&amp;gt;getControllerPath();&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;这里的 &lt;code&gt;getControllerPath&lt;/code&gt; 会返回当前应用或模块下的控制器类的存放目录，对应应用级与模块级，其实现有两处，其一是在类 &lt;code&gt;CWebApplication&lt;/code&gt; 中：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;/**&lt;/span&gt;
 &lt;span class="x"&gt; * @return string the directory that contains the controller classes. Defaults to &amp;#39;protected/controllers&amp;#39;.&lt;/span&gt;
 &lt;span class="x"&gt; */&lt;/span&gt;
 &lt;span class="x"&gt;public function …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Fri, 10 Apr 2015 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2015-04-10:/2015/04/10/read-yii-code-9/</guid><category>PHP</category><category>Yii</category><category>笔记</category><category>总结</category></item><item><title>Slim源码阅读笔记</title><link>http://youngsterxyf.github.io/2015/03/22/read-slim/</link><description>&lt;p&gt;以前读过 &lt;a href="http://www.phptherightway.com/"&gt;PHP - The Right Way&lt;/a&gt; 一文，
@@ -247,13 +247,13 @@ make install …&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http
 &lt;hr&gt;
 &lt;p&gt;推荐阅读！&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Thu, 12 Mar 2015 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2015-03-12:/2015/03/12/read-modern-php/</guid><category>笔记</category><category>PHP</category></item><item><title>Yii源码阅读笔记 - 日志组件</title><link>http://youngsterxyf.github.io/2015/03/09/read-yii-code-8/</link><description>&lt;h3&gt;使用&lt;/h3&gt;
 &lt;p&gt;Yii框架为开发者提供两个静态方法进行日志记录：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="x"&gt;Yii::log($message, $level, $category);&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;Yii::log($message, $level, $category);&lt;/span&gt;
 &lt;span class="x"&gt;Yii::trace($message, $category);&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;两者的区别在于后者依赖于应用开启调试模式，即定义常量YII_DEBUG：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="x"&gt;defined(&amp;#39;YII_DEBUG&amp;#39;) or define(&amp;#39;YII_DEBUG&amp;#39;, true);&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;defined(&amp;#39;YII_DEBUG&amp;#39;) or define(&amp;#39;YII_DEBUG&amp;#39;, true);&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -347,7 +347,7 @@ Yii提供了一个直接可用的模板引擎组件类CPradoViewRenderer（见�
 &lt;li&gt;使用ORM形式：编写model类继承自抽象类CActiveRecord&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;第1种方式的示例如下：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
 &lt;span class="nv"&gt;$connection&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;Yii&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;app&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;db&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;  &lt;span class="c1"&gt;// 或者Yii::app()-&amp;gt;getComponent(&amp;#39;db&amp;#39;);&lt;/span&gt;
 &lt;span class="nv"&gt;$queryResult&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$connection&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;createCommand&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$sql&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;queryRow&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
@@ -360,20 +360,20 @@ Yii提供了一个直接可用的模板引擎组件类CPradoViewRenderer（见�
 &lt;p&gt;Yii框架model层的入口为CDbConnection类，该类有很多public的属性可供配置，如&lt;code&gt;connectionString&lt;/code&gt;、&lt;code&gt;username&lt;/code&gt;、&lt;code&gt;password&lt;/code&gt;等。&lt;/p&gt;
 &lt;p&gt;根据&lt;a href="http://youngsterxyf.github.io/2014/11/13/read-yii-code-3/"&gt;Yii源码阅读笔记 - 组件集成&lt;/a&gt;一文可知，组件初始化时会调用init方法。
 类CDbConnection的init类实现如下：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="x"&gt;public function …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Fri, 14 Nov 2014 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2014-11-14:/2014/11/14/read-yii-code-4/</guid><category>PHP</category><category>Yii</category><category>笔记</category><category>总结</category></item><item><title>Yii源码阅读笔记 - 组件集成</title><link>http://youngsterxyf.github.io/2014/11/13/read-yii-code-3/</link><description>&lt;h3&gt;概述&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public function …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Fri, 14 Nov 2014 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2014-11-14:/2014/11/14/read-yii-code-4/</guid><category>PHP</category><category>Yii</category><category>笔记</category><category>总结</category></item><item><title>Yii源码阅读笔记 - 组件集成</title><link>http://youngsterxyf.github.io/2014/11/13/read-yii-code-3/</link><description>&lt;h3&gt;概述&lt;/h3&gt;
 &lt;p&gt;Yii框架将各种功能封装成组件，使用时按需配置加载，从而提高应用的性能。内置的组件又分为核心组件与非核心组件，核心组件是任何Web应用和Console应用都需要的。
 此外，应用开发者还可以按照一定规则封装配置使用自己的功能组件。Yii会把应用需要的组件都加载到应用容器&lt;code&gt;Yii::app()&lt;/code&gt;中，使得组件的使用方式一致方便。&lt;/p&gt;
 &lt;p&gt;基于Yii框架开发应用需要理解如何配置组件、如何开发自己的组件，对应着需要理解Yii是如何注册加载组件的。&lt;/p&gt;
 &lt;h3&gt;分析&lt;/h3&gt;
 &lt;p&gt;从&lt;a href="http://youngsterxyf.github.io/2014/11/04/read-yii-code-1/"&gt;Yii源码阅读笔记 - 请求处理基本流程&lt;/a&gt;一文可知，Yii加载组件的入口为抽象类CApplication构造方法中的以下两行代码：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="x"&gt;$this-&amp;gt;registerCoreComponents();&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;$this-&amp;gt;registerCoreComponents();&lt;/span&gt;
 &lt;span class="x"&gt;$this-&amp;gt;configure($config);&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;hr&gt;
 &lt;p&gt;&lt;code&gt;registerCoreComponents&lt;/code&gt;方法定义于类CWebApplication中，用于加载Web应用的核心组件，组件列表如下：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="x"&gt;array(&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;array(&lt;/span&gt;
 &lt;span class="x"&gt;    // 核心组件&lt;/span&gt;
 &lt;span class="x"&gt;    &amp;#39;coreMessages&amp;#39;=&amp;gt;array(&lt;/span&gt;
 &lt;span class="x"&gt;        &amp;#39;class&amp;#39;=&amp;gt;&amp;#39;CPhpMessageSource&amp;#39;,&lt;/span&gt;
@@ -392,7 +392,7 @@ Yii提供了一个直接可用的模板引擎组件类CPradoViewRenderer（见�
 &lt;/ul&gt;
 &lt;p&gt;默认使用get路由形式。由于Yii中controller类命名和action方法都是按照规则命名的，而路由也是按照规则来匹配的，所以完全可以不用额外配置urlManager。&lt;/p&gt;
 &lt;p&gt;若需要使用path方式，则可如下配置：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="x"&gt;&amp;quot;components&amp;quot; =&amp;gt; array(&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;&amp;quot;components&amp;quot; =&amp;gt; array(&lt;/span&gt;
 &lt;span class="x"&gt;    &amp;#39;urlManager&amp;#39; =&amp;gt; array(&lt;/span&gt;
 &lt;span class="x"&gt;        &amp;#39;urlFormat&amp;#39; =&amp;gt; &amp;#39;path&amp;#39;,&lt;/span&gt;
 &lt;span class="x"&gt;        &amp;#39;rules&amp;#39; =&amp;gt; array(&lt;/span&gt;
@@ -405,12 +405,12 @@ Yii提供了一个直接可用的模板引擎组件类CPradoViewRenderer（见�
 &lt;p&gt;进一步说明可参考&lt;a href="http://youngsterxyf.github.io/2014/09/06/experience-about-restful-api/"&gt;RESTful API设计的一点经验&lt;/a&gt;一文。&lt;/p&gt;
 &lt;h3&gt;分析&lt;/h3&gt;
 &lt;p&gt;在“请求处理基本流程”一篇可以看到Yii框架路由解析流程的入口在类CWebApplication的processRequest方法中：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="x"&gt;$route=$this-&amp;gt;getUrlManager()-&amp;gt;parseUrl($this-&amp;gt;getRequest());&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;$route=$this-&amp;gt;getUrlManager()-&amp;gt;parseUrl($this-&amp;gt;getRequest());&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;其中getUrlManager方法定义于类CApplication中，作用是初始化获取URL管理组件（ID为urlManager），实现如下：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="x"&gt;public …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Wed, 12 Nov 2014 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2014-11-12:/2014/11/12/read-yii-code-2/</guid><category>PHP</category><category>Yii</category><category>笔记</category><category>总结</category></item><item><title>读文笔记：An Introduction to APIs</title><link>http://youngsterxyf.github.io/2014/11/09/an-introduction-to-apis/</link><description>&lt;p&gt;原文：&lt;a href="https://zapier.com/learn/apis/"&gt;An Introduction to APIs&lt;/a&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="x"&gt;public …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Wed, 12 Nov 2014 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2014-11-12:/2014/11/12/read-yii-code-2/</guid><category>PHP</category><category>Yii</category><category>笔记</category><category>总结</category></item><item><title>读文笔记：An Introduction to APIs</title><link>http://youngsterxyf.github.io/2014/11/09/an-introduction-to-apis/</link><description>&lt;p&gt;原文：&lt;a href="https://zapier.com/learn/apis/"&gt;An Introduction to APIs&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;注：该文是入门级别的文章&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;&lt;img alt="mind-mapping" src="/assets/uploads/pics/An-Introduction-to-APIs.png"&gt;&lt;/p&gt;
 &lt;p&gt;&lt;a href="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/An-Introduction-to-APIs.png"&gt;高清无码大图&lt;/a&gt;&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Sun, 09 Nov 2014 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2014-11-09:/2014/11/09/an-introduction-to-apis/</guid><category>笔记</category><category>API</category><category>REST</category></item><item><title>Yii源码阅读笔记 - 请求处理基本流程</title><link>http://youngsterxyf.github.io/2014/11/04/read-yii-code-1/</link><description>&lt;p&gt;对于Web框架，我认为其主要有三点作用：&lt;/p&gt;
@@ -560,7 +560,7 @@ Yii提供了一个直接可用的模板引擎组件类CPradoViewRenderer（见�
 &lt;h4&gt;1. 将TCP切换为UNIX域套接字&lt;/h4&gt;
 &lt;p&gt;UNIX域套接字相比TCP套接字在loopback接口上能提供更好的性能（更少的数据拷贝和上下文切换）。&lt;/p&gt;
 &lt;p&gt;但有一点需要牢记：仅运行在同一台服务器上的程序可以访问UNIX域套接字（显然没有网络支持）。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;upstream backend
+&lt;div class="highlight"&gt;&lt;pre&gt;upstream backend
 {
     # UNIX domain sockets
     server unix:/var/run/fastcgi.sock;
@@ -580,9 +580,9 @@ Yii提供了一个直接可用的模板引擎组件类CPradoViewRenderer（见�
 右边栏去掉，这导致在Firefox等浏览器中，正文中大的图片会突破正文块的宽度，高度也得不到限制，显示效果非常差。&lt;/p&gt;
 &lt;p&gt;其原因是：Markdown的&lt;a href="http://wowubuntu.com/markdown/#img"&gt;图片区块元素&lt;/a&gt;&lt;code&gt;![Alt
 text](/path/to/img.jpg)&lt;/code&gt;渲染成HTML元素的结果为 -&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;p&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;img&lt;/span&gt; &lt;span class="na"&gt;src&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;/path/to/img.jpg&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;alt&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Alt text&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;img&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
-&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;p&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nt"&gt;&amp;lt;p&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;img&lt;/span&gt; &lt;span class="na"&gt;src=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;/path/to/img.jpg&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;alt=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Alt text&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&amp;lt;/img&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;/p&amp;gt;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -626,14 +626,14 @@ inline …&lt;/a&gt;&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.or
 &lt;p&gt;大多数现代Web组件栈允许通过栈式/组件式中间件“过滤”请求，这样就能干净地从web应用中分离出横切关注点（译注：面向方面程序设计中的概念？）。
 本周我尝试在Go语言的&lt;code&gt;http.FileServer&lt;/code&gt;中植入钩子，发现实现起来十分简便，让我非常惊讶。&lt;/p&gt;
 &lt;p&gt;让我们从一个基本的文件服务器开始说起：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
     &lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ListenAndServe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;:8080&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;FileServer&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Dir&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;/tmp&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
 &lt;span class="p"&gt;}&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;这段程序会在端口8080上开启一个本地文件服务器。那么我们该如何在这其中植入钩子从而能够在文件请求处理之前执行一些代码？来看一下&lt;code&gt;http.ListenAndServe&lt;/code&gt;的方法签名：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;ListenAndServe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;addr&lt;/span&gt; &lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;handler&lt;/span&gt; &lt;span class="nx"&gt;Handler&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="kt"&gt;error&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;ListenAndServe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;addr&lt;/span&gt; &lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;handler&lt;/span&gt; &lt;span class="nx"&gt;Handler&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="kt"&gt;error&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -641,7 +641,7 @@ inline …&lt;/a&gt;&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.or
 &lt;p&gt;译者：&lt;a href="https://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Go编程新手可能会偶然发现&lt;a href="http://golang.org/"&gt;Go语言&lt;/a&gt;---与一个Goroutine可用栈空间大小相关---的一个古怪特性。这通常是由于程序员
 无意间构造了一个无限递归函数调用而产生的。为了阐明这个特性，以如下代码（有点刻意设计的）为例。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;package&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kn"&gt;package&lt;/span&gt; &lt;span class="nx"&gt;main&lt;/span&gt;
 
 &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;fmt&amp;quot;&lt;/span&gt;
 
@@ -659,14 +659,14 @@ inline …&lt;/a&gt;&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.or
 &lt;p&gt;最近参与的一个业余项目，&lt;a href="https://github.com/ahmetalpbalkan/go-linq"&gt;go-linq&lt;/a&gt;，让我了解到Go语言的类型系统并不是为任何类面向
 对象编程而设计的。没有泛型，没有类型继承，也没有提供任何对这些特性有用的东西。&lt;/p&gt;
 &lt;p&gt;但是，提供了一个名为&lt;code&gt;interface{}&lt;/code&gt;的类型，你可以向其赋予几乎任意类型的值，不会抛出编译错误，就像.NET的&lt;code&gt;Object&lt;/code&gt;或Java的&lt;code&gt;Object&lt;/code&gt;：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;o&lt;/span&gt; &lt;span class="kd"&gt;interface&lt;/span&gt;&lt;span class="p"&gt;{}&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;o&lt;/span&gt; &lt;span class="kd"&gt;interface&lt;/span&gt;&lt;span class="p"&gt;{}&lt;/span&gt;
 &lt;span class="nx"&gt;o&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="mf"&gt;3.14&lt;/span&gt;
 &lt;span class="nx"&gt;o&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="nx"&gt;Student&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;Name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;Ahmet&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;我们假设你需要一个可以接收任意类型slices的函数，如果考虑如下这样实现：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;Method&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;in&lt;/span&gt; &lt;span class="p"&gt;[]&lt;/span&gt;&lt;span class="kd"&gt;interface&lt;/span&gt;&lt;span class="p"&gt;{}){&lt;/span&gt;&lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;func&lt;/span&gt; &lt;span class="nx"&gt;Method&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;in&lt;/span&gt; &lt;span class="p"&gt;[]&lt;/span&gt;&lt;span class="kd"&gt;interface&lt;/span&gt;&lt;span class="p"&gt;{}){&lt;/span&gt;&lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;
 &lt;span class="nx"&gt;slice&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="p"&gt;[]&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2 …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Thu, 16 Jan 2014 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2014-01-16:/2014/01/16/go-input-slices-any-type/</guid><category>Golang</category><category>翻译</category></item><item><title>回顾2013，展望2014</title><link>http://youngsterxyf.github.io/2014/01/06/review13-lookin14/</link><description>&lt;p&gt;2013已经过去了。&lt;/p&gt;
 &lt;p&gt;时间消逝得太快，以至于很多事情在记忆上相互重叠，无法明确区分事情发生的时间点。那么该如何回顾这过去的一年？&lt;/p&gt;
@@ -694,14 +694,14 @@ inline …&lt;/a&gt;&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.or
 &lt;li&gt;The Linux Programming Interface &amp;lt;- &lt;a href="http://weibo.com/533452688"&gt;@ASTA谢&lt;/a&gt; &lt;em&gt;推荐语：既 …&lt;/em&gt;&lt;/li&gt;&lt;/ul&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Sat, 28 Dec 2013 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2013-12-28:/2013/12/28/weibo_tech_resources_summary/</guid><category>微博</category><category>技术</category></item><item><title>IE下JavaScript Date对象的不同之处</title><link>http://youngsterxyf.github.io/2013/12/03/date_difference_in_ie/</link><description>&lt;p&gt;之前在&lt;a href="http://youngsterxyf.github.io/2013/11/29/inner_warehouse_monitor_system/"&gt;仓库作业机器监控系统&lt;/a&gt;项目中使用&lt;a href="http://www.highcharts.com/demo/line-time-series"&gt;HighCharts的时间序列数据图&lt;/a&gt;来绘制机器CPU使用率、内存使用量、网络流量趋势变化图等，这些图在IE下却没有正常显示，IE也没有报错，按理说HighCharts的IE兼容性是较好的，不会出现这种问题，
 最后查明原因---确实不是HighCharts的问题，而是由于IE下JavaScript的Date对象缺少一种构造函数导致的。&lt;/p&gt;
 &lt;p&gt;IE中JavaScript的Date对象有如下&lt;a href="http://msdn.microsoft.com/zh-cn/library/ie/cd9w2te4.aspx"&gt;三种构造函数&lt;/a&gt;：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;dateObj = new Date()
+&lt;div class="highlight"&gt;&lt;pre&gt;dateObj = new Date()
 dateObj = new Date(dateVal)
 dateObj = new Date(year, month, date[, hours[, minutes[, seconds[,ms]]]])
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;其他浏览器中除了这三种之外，&lt;a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date"&gt;还有一种&lt;/a&gt;:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nx"&gt;dateObj&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nb"&gt;Date&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;dateString&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nx"&gt;dateObj&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nb"&gt;Date&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;dateString&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -760,7 +760,7 @@ dateObj = new Date(year, month, date[, hours[, minutes[, seconds[,ms]]]])
 &lt;ul&gt;
 &lt;li&gt;
 &lt;p&gt;easy_install&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;easy_install -i http://e.pypi.python.org/simple requests …&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;&lt;/ul&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Fri, 01 Nov 2013 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2013-11-01:/2013/11/01/change-pypi-mirror/</guid><category>Python</category><category>PyPI</category><category>pip</category><category>easy_install</category><category>ssl</category></item><item><title>Golang中如何让html/template不转义html标签</title><link>http://youngsterxyf.github.io/2013/11/01/unescape-html-in-golang-html_template/</link><description>&lt;p&gt;近期在使用Golang的&lt;a href="http://golang.org/pkg/net/http/"&gt;net/http&lt;/a&gt;和&lt;a href="http://golang.org/pkg/html/template/"&gt;html/template&lt;/a&gt;开发一个简单的HAProxy负载均衡任务管理系统（见&lt;a href="http://youngsterxyf.github.io/2013/10/16/high-availability-load-balancer-and-dns/"&gt;搭建高可用负载均衡组件及缓存DNS&lt;/a&gt;一文说明）。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;easy_install -i http://e.pypi.python.org/simple requests …&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;&lt;/ul&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Fri, 01 Nov 2013 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2013-11-01:/2013/11/01/change-pypi-mirror/</guid><category>Python</category><category>PyPI</category><category>pip</category><category>easy_install</category><category>ssl</category></item><item><title>Golang中如何让html/template不转义html标签</title><link>http://youngsterxyf.github.io/2013/11/01/unescape-html-in-golang-html_template/</link><description>&lt;p&gt;近期在使用Golang的&lt;a href="http://golang.org/pkg/net/http/"&gt;net/http&lt;/a&gt;和&lt;a href="http://golang.org/pkg/html/template/"&gt;html/template&lt;/a&gt;开发一个简单的HAProxy负载均衡任务管理系统（见&lt;a href="http://youngsterxyf.github.io/2013/10/16/high-availability-load-balancer-and-dns/"&gt;搭建高可用负载均衡组件及缓存DNS&lt;/a&gt;一文说明）。&lt;/p&gt;
 &lt;p&gt;&lt;a href="http://golang.org/pkg/html/template/"&gt;htmp/template&lt;/a&gt;在渲染页面模板的时候默认会转义字符串中的html标签，但有时我们并不想转义html标签，以下图所示为例：&lt;/p&gt;
 &lt;p&gt;&lt;img alt="add_haproxy_balance_task" src="/assets/uploads/pics/haproxy_task_add.jpg"&gt;&lt;/p&gt;
 &lt;p&gt;&lt;img alt="list_haproxy_balance_task" src="/assets/uploads/pics/haproxy_task_list.jpg"&gt;&lt;/p&gt;
@@ -862,13 +862,13 @@ com.权威服务器向Local DNS返回qq.com.解析记录 …&lt;/p&gt;</descript
 &lt;p&gt;平时个人的代码、文档都通过Git版本控制存放在Github上 …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Tue, 15 Oct 2013 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2013-10-15:/2013/10/15/standardization-operation-development/</guid><category>服务器</category><category>Linux</category><category>Git</category><category>Golang</category><category>Python</category></item><item><title>一项工作中涉及的几个命令</title><link>http://youngsterxyf.github.io/2013/10/14/several-command-in-one-task/</link><description>&lt;p&gt;今天写了点shell脚本，在一些CentOS服务器上进行了一些操作，涉及如下命令：&lt;/p&gt;
 &lt;h3&gt;统计特定进程个数&lt;/h3&gt;
 &lt;p&gt;如统计haproxy进程的个数&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ps -e &lt;span class="p"&gt;|&lt;/span&gt; grep haproxy &lt;span class="p"&gt;|&lt;/span&gt; wc -l
+&lt;div class="highlight"&gt;&lt;pre&gt;ps -e &lt;span class="p"&gt;|&lt;/span&gt; grep haproxy &lt;span class="p"&gt;|&lt;/span&gt; wc -l
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;h3&gt;获取特定进程的pid&lt;/h3&gt;
 &lt;p&gt;如获取haproxy进程的pid&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ps -e &lt;span class="p"&gt;|&lt;/span&gt; grep haproxy &lt;span class="p"&gt;|&lt;/span&gt; awk &lt;span class="s1"&gt;&amp;#39;{print $1}&amp;#39;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;ps -e &lt;span class="p"&gt;|&lt;/span&gt; grep haproxy &lt;span class="p"&gt;|&lt;/span&gt; awk &lt;span class="s1"&gt;&amp;#39;{print $1}&amp;#39;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -877,14 +877,14 @@ com.权威服务器向Local DNS返回qq.com.解析记录 …&lt;/p&gt;</descript
 &lt;ol&gt;
 &lt;li&gt;
 &lt;p&gt;在192.168.2.1创建自己的公钥私钥：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ssh-keygen -t rsa   &lt;span class="c1"&gt;# 提示输入时，全部留空回车。&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;ssh-keygen -t rsa   &lt;span class="c"&gt;# 提示输入时，全部留空回车。&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;拷贝192.168.2.1的公钥到192.168.2.x机器上：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ssh-copy-id &lt;span class="s2"&gt;&amp;quot;-p 22 usernameB@192.168 …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;&lt;/ol&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Mon, 14 Oct 2013 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2013-10-14:/2013/10/14/several-command-in-one-task/</guid><category>Linux</category><category>命令行</category></item><item><title>从URL监控问题谈网站Web架构</title><link>http://youngsterxyf.github.io/2013/10/12/url-monitoring-and-web-arch/</link><description>&lt;p&gt;之前工作中实现了一个对站点进行URL监控的功能。原理是：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;ssh-copy-id &lt;span class="s2"&gt;&amp;quot;-p 22 usernameB@192.168 …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;&lt;/ol&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Mon, 14 Oct 2013 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2013-10-14:/2013/10/14/several-command-in-one-task/</guid><category>Linux</category><category>命令行</category></item><item><title>从URL监控问题谈网站Web架构</title><link>http://youngsterxyf.github.io/2013/10/12/url-monitoring-and-web-arch/</link><description>&lt;p&gt;之前工作中实现了一个对站点进行URL监控的功能。原理是：&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;
 &lt;p&gt;cron脚本定时从一台Nginx服务器上获得Nginx配置文件（包括upstream配置），在解析配置得到：&lt;code&gt;域名-&amp;gt;upstream名&lt;/code&gt;（可能有多个）、&lt;code&gt;upstream名-&amp;gt;属于该upstream的服务器ip列表&lt;/code&gt;，存入数据库；&lt;/p&gt;
@@ -945,34 +945,34 @@ com.权威服务器向Local DNS返回qq.com.解析记录 …&lt;/p&gt;</descript
 说是可执行的伪代码。&lt;/p&gt;
 &lt;p&gt;非常欢迎反馈！你可以通过推特&lt;a href="https://twitter.com/louiedinh"&gt;@louiedinh&lt;/a&gt;或louiedinh AT gmail联系我。&lt;/p&gt;
 &lt;p&gt;备注：本文是专门针对Python 2.7的，但应该是适用于Python 2.x的。很快我也会为Python 3写这样的一篇文章！&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# 单行注释以井字符开头&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c"&gt;# 单行注释以井字符开头&lt;/span&gt;
 &lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot; 我们可以使用三个双引号（&amp;quot;）或单引号（&amp;#39;）&lt;/span&gt;
 &lt;span class="sd"&gt;    来编写多行注释&lt;/span&gt;
 &lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
 
 
-&lt;span class="c1"&gt;##########################################################&lt;/span&gt;
-&lt;span class="c1"&gt;## 1. 基本数据类型和操作符&lt;/span&gt;
-&lt;span class="c1"&gt;##########################################################&lt;/span&gt;
+&lt;span class="c"&gt;##########################################################&lt;/span&gt;
+&lt;span class="c"&gt;## 1. 基本数据类型和操作符&lt;/span&gt;
+&lt;span class="c"&gt;##########################################################&lt;/span&gt;
 
-&lt;span class="c1"&gt;# 数字&lt;/span&gt;
-&lt;span class="mi"&gt;3&lt;/span&gt; &lt;span class="c1"&gt;#=&amp;gt; 3&lt;/span&gt;
+&lt;span class="c"&gt;# 数字&lt;/span&gt;
+&lt;span class="mi"&gt;3&lt;/span&gt; &lt;span class="c"&gt;#=&amp;gt; 3&lt;/span&gt;
 
-&lt;span class="c1"&gt;# 你预想的数学运算&lt;/span&gt;
-&lt;span class="mi"&gt;1&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt; &lt;span class="c1"&gt;#=&amp;gt; 2&lt;/span&gt;
-&lt;span class="mi"&gt;8&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt; &lt;span class="c1"&gt;#=&amp;gt; 7&lt;/span&gt;
-&lt;span class="mi"&gt;10&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt; &lt;span class="c1"&gt;#=&amp;gt; 20&lt;/span&gt;
+&lt;span class="c"&gt;# 你预想的数学运算&lt;/span&gt;
+&lt;span class="mi"&gt;1&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt; &lt;span class="c"&gt;#=&amp;gt; 2&lt;/span&gt;
+&lt;span class="mi"&gt;8&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt; &lt;span class="c"&gt;#=&amp;gt; 7&lt;/span&gt;
+&lt;span class="mi"&gt;10&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt; &lt;span class="c"&gt;#=&amp;gt; 20&lt;/span&gt;
 &lt;span class="mi"&gt;35 …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Sat, 29 Jun 2013 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2013-06-29:/2013/06/29/learn-python-in-y-minutes/</guid><category>Python</category><category>翻译</category></item><item><title>FTP是90年代的，使用Git取代它来部署代码吧！（译）</title><link>http://youngsterxyf.github.io/2013/06/24/deploy-via-git/</link><description>&lt;p&gt;原文：&lt;a href="https://coderwall.com/p/xczkaq?&amp;amp;p=1&amp;amp;q="&gt;FTP is so 90's. Let's deploy via Git instead!&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;译者：&lt;a href="https://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;首先，在你的服务器上创建一个目录，并在其中初始化一个空的git仓库。我喜欢使用&lt;code&gt;~/www/&lt;/code&gt;目录来存放网站代码，
 因此我会这么做：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;mkdir ~/www/example.com &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="nb"&gt;cd&lt;/span&gt; ~/www/example.com
+&lt;div class="highlight"&gt;&lt;pre&gt;mkdir ~/www/example.com &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="nb"&gt;cd&lt;/span&gt; ~/www/example.com
 git init
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;接着，设置你服务器上的git仓库以便很好地通过&lt;code&gt;git push&lt;/code&gt;来部署代码。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;git config core.worktree ~/www/example.com
+&lt;div class="highlight"&gt;&lt;pre&gt;git config core.worktree ~/www/example.com
 git config receive.denycurrentbranch ignore
 &lt;/pre&gt;&lt;/div&gt;
 
@@ -1027,7 +1027,7 @@ git config receive.denycurrentbranch ignore
 &lt;/ul&gt;
 &lt;p&gt;除了PHP与文件系统之间的交互，其他几种交互均为客户端-服务器模式，以Socket方式进行连接，都需要安装配置相关组件。&lt;/p&gt;
 &lt;p&gt;对于Nginx与PHP-CGI(PHP)的交互，PHP-CGI默认打开9000端口，等待Nginx转发过来的请求，所以需要在Nginx配置文件中添加类似于如下所示的虚拟主机配置：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;server {
+&lt;div class="highlight"&gt;&lt;pre&gt;server {
     listen  8000;
     server_name localhost;
 
@@ -1053,8 +1053,8 @@ git config receive.denycurrentbranch ignore
 &lt;h3&gt;设置一个解析器&lt;/h3&gt;
 &lt;p&gt;使用argparse的第一步就是创建一个解析器对象，并告诉它将会有些什么参数。那么当你的程序运行时，该解析器就可以用于处理命令行参数。&lt;/p&gt;
 &lt;p&gt;解析器类是 &lt;strong&gt;ArgumentParser&lt;/strong&gt; 。构造方法接收几个参数来设置用于程序帮助文本的描述信息以及其他全局的行为或设置。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;argparse&lt;/span&gt;
-&lt;span class="n"&gt;parser&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;argparse&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ArgumentParser&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;description&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;This is a PyMOTW sample program&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;argparse&lt;/span&gt;
+&lt;span class="n"&gt;parser&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;argparse&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ArgumentParser&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;description&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;This is a PyMOTW sample program&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -1085,18 +1085,18 @@ git config receive.denycurrentbranch ignore
 &lt;p&gt;这本书一开始非常简单易学，简直是太简单了 …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Mon, 25 Mar 2013 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2013-03-25:/2013/03/25/learning-js/</guid><category>JavaScript</category><category>翻译</category></item><item><title>pip install lxml编译失败问题解决</title><link>http://youngsterxyf.github.io/2013/03/17/pip-install-lxml-problem/</link><description>&lt;p&gt;以前在遇到这个问题时，都是偷懒使用&lt;code&gt;sudo apt-get install python-lxml&lt;/code&gt;（Debian系的Linux发行版）直接安装已打包好的deb包。但一方面这样安装的不是最新的库，另一方面我希望把所有的Python第三方库都限制在virtualenv中使用，所以希望使用&lt;code&gt;pip install lxml&lt;/code&gt;，那么这个问题就必须解决了。&lt;/p&gt;
 &lt;p&gt;Google了一把，在&lt;a href="http://stackoverflow.com/questions/5178416/pip-install-lxml-error"&gt;这里&lt;/a&gt;找到了解答。&lt;/p&gt;
 &lt;p&gt;其实在编译失败的log里，已经有提示：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;make sure the development packages of libxml2 and libxslt are installed
+&lt;div class="highlight"&gt;&lt;pre&gt;make sure the development packages of libxml2 and libxslt are installed
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;所以正确编译需先安装libxml2和libxslt这两个包。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sudo apt-get install libxml2
+&lt;div class="highlight"&gt;&lt;pre&gt;sudo apt-get install libxml2
 sudo apt-get install libxslt
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;另外，还需安装Python开发包python-dev：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sudo apt-get install python-dev
+&lt;div class="highlight"&gt;&lt;pre&gt;sudo apt-get install python-dev
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -1133,7 +1133,7 @@ sudo apt-get install libxslt
 &lt;p&gt;译者：&lt;a href="http://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
 &lt;h2&gt;比较操作符&lt;/h2&gt;
 &lt;p&gt;比较操作符往往是PHP的一个被忽视的方面，这会导致很多意想不到的结果。其中的一个问题源于严格比较（布尔值为整数的比较）。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
 &lt;span class="nv"&gt;$a&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;     &lt;span class="c1"&gt;// 5为一个整数&lt;/span&gt;
 
 &lt;span class="nb"&gt;var_dump&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$a&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;      &lt;span class="c1"&gt;// 比较值；返回true&lt;/span&gt;
@@ -1167,7 +1167,7 @@ sudo apt-get install libxslt
 &lt;h2&gt;以原型链实现继承&lt;/h2&gt;
 &lt;h3&gt;继承属性&lt;/h3&gt;
 &lt;p&gt;JavaScript对象可看作是动态地装载属性（这里指&lt;strong&gt;自有属性&lt;/strong&gt;）的"包包"，并且每个对象都有一个链指向一个原型对象。如下即为当尝试访问一个属性时发生的事情：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// 假设有个对象o，其原型链如下所示：&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c1"&gt;// 假设有个对象o，其原型链如下所示：&lt;/span&gt;
 &lt;span class="c1"&gt;// {a: 1 …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Wed, 27 Feb 2013 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2013-02-27:/2013/02/27/Inheritance-and-the-prototype-chain/</guid><category>JavaScript</category><category>翻译</category></item><item><title>Python格式字符串（译）</title><link>http://youngsterxyf.github.io/2013/01/26/python-string-format/</link><description>&lt;p&gt;原文：&lt;a href="http://mkaz.com/solog/python-string-format"&gt;Python String Format&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;译者：&lt;a href="https://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;每次使用Python的格式字符串（string formatter），2.7及以上版本的，我都会犯错，并且有生之年，我想我都理解不了它们的文档。我非常习惯于更老的
@@ -1245,18 +1245,18 @@ pages自动构建始终不成功。原以为是新提交中引入了错误，于
 &lt;p&gt;关于构建失败的原因一丁点都没有告诉我们，所以根本没法调试嘛。&lt;/p&gt;
 &lt;p&gt;在阅读github的官方帮助文档&lt;a href="https://help.github.com/articles/pages-don-t-build-unable-to-run-jekyll"&gt;Pages don't build: "Unable to run Jekyll"&lt;/a&gt;后，决定按照其中Syntax errors部分的内容做如下尝试：&lt;/p&gt;
 &lt;p&gt;首先，按照&lt;a href="https://github.com/mojombo/jekyll/wiki/install"&gt;jekyll的官方安装文档&lt;/a&gt;安装jekyll：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sudo gem install jekyll
+&lt;div class="highlight"&gt;&lt;pre&gt;sudo gem install jekyll
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;然后，在博客的根目录下，执行：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;jekyll --safe
+&lt;div class="highlight"&gt;&lt;pre&gt;jekyll --safe
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;命令会输出详细的信息，如果构建失败，则在输出的信息中查找错误原因 …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Tue, 08 Jan 2013 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2013-01-08:/2013/01/08/fix-github-pages-builds-failed/</guid><category>github</category><category>jekyll</category></item><item><title>Git操作：强制删除提交到远程版本库的数据与版本记录</title><link>http://youngsterxyf.github.io/2013/01/08/git-cancel-commits/</link><description>&lt;p&gt;今天因为某些尚不明了的问题导致，博客的Git pages始终构建失败，于是想在远程版本库中删除前几次提交。在&lt;a href="http://www.douban.com/note/189603387/"&gt;该网页&lt;/a&gt;上找到了解决方案：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;git reset --hard HEAD~2                   &lt;span class="c1"&gt;# 取消当前版本之前的两次提交&lt;/span&gt;
-git push origin HEAD --force              &lt;span class="c1"&gt;# 强制提交到远程版本库，从而删除之前的两次提交数据&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;git reset --hard HEAD~2                   &lt;span class="c"&gt;# 取消当前版本之前的两次提交&lt;/span&gt;
+git push origin HEAD --force              &lt;span class="c"&gt;# 强制提交到远程版本库，从而删除之前的两次提交数据&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Tue, 08 Jan 2013 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2013-01-08:/2013/01/08/git-cancel-commits/</guid><category>Git</category><category>版本控制</category></item><item><title>装饰器与函数式Python（译）</title><link>http://youngsterxyf.github.io/2013/01/04/Decorators-and-Functional-Python/</link><description>&lt;p&gt;原文：&lt;a href="http://www.brianholdefehr.com/decorators-and-functional-python"&gt;Decorators and Functional Python&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;译者：&lt;a href="https://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;装饰器是Python的一大特色。除了在语言中的原本用处，还帮助我们以一种有趣的方式（函数式）进行思考。&lt;/p&gt;
@@ -1272,16 +1272,16 @@ git push origin HEAD --force              &lt;span class="c1"&gt;# 强制提交�
 &lt;p&gt;现在在装饰器的定义上进行详述，先解释一些先决条件。&lt;/p&gt;
 &lt;h2&gt;函数是一等对象&lt;/h2&gt;
 &lt;p&gt;Python中，所有东西都是对象。这意味着可以通过名字引用函数，以及像其他对象那样传递。例如：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;traveling_function&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
-    &lt;span class="k"&gt;print&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Here I am!&amp;quot;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;traveling_function&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+    &lt;span class="k"&gt;print&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;Here I am!&amp;quot;&lt;/span&gt;
 
 &lt;span class="n"&gt;function_dict&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="s2"&gt;&amp;quot;func&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;traveling_function&lt;/span&gt;
+    &lt;span class="s"&gt;&amp;quot;func&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;traveling_function&lt;/span&gt;
 &lt;span class="p"&gt;}&lt;/span&gt;
 
-&lt;span class="n"&gt;trav_func&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;function_dict&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;func&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;span class="n"&gt;trav_func&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;function_dict&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;func&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
 &lt;span class="n"&gt;trav_func&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
-&lt;span class="c1"&gt;# &amp;gt;&amp;gt; Here I …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Fri, 04 Jan 2013 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2013-01-04:/2013/01/04/Decorators-and-Functional-Python/</guid><category>Python</category><category>翻译</category></item><item><title>Python：字典剧本（译）</title><link>http://youngsterxyf.github.io/2013/01/04/Python-The-Dictionary-Playbook-cn/</link><description>&lt;p&gt;原文： &lt;a href="http://blog.amir.rachum.com/post/39501813266/python-the-dictionary-playbook"&gt;Python: The Dictionary Playbook&lt;/a&gt;&lt;/p&gt;
+&lt;span class="c"&gt;# &amp;gt;&amp;gt; Here I …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Fri, 04 Jan 2013 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2013-01-04:/2013/01/04/Decorators-and-Functional-Python/</guid><category>Python</category><category>翻译</category></item><item><title>Python：字典剧本（译）</title><link>http://youngsterxyf.github.io/2013/01/04/Python-The-Dictionary-Playbook-cn/</link><description>&lt;p&gt;原文： &lt;a href="http://blog.amir.rachum.com/post/39501813266/python-the-dictionary-playbook"&gt;Python: The Dictionary Playbook&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;译者： &lt;a href="https://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;我经常碰到关于Python中字典的各种样板代码，因此我决定在此展示一些，并分享完成相同操作的更加简洁的方式。&lt;/p&gt;
 &lt;p&gt;上演： &lt;strong&gt;字典剧本&lt;/strong&gt;&lt;/p&gt;
@@ -1290,12 +1290,12 @@ git push origin HEAD --force              &lt;span class="c1"&gt;# 强制提交�
 “你在吗？”&lt;/p&gt;
 &lt;p&gt;这个相当简单，但不可错过 - 找出某个键(key)是否存在于字典中。&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;蹩脚的版本&lt;/em&gt;&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;dct&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;has_key&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="n"&gt;dct&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;has_key&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;&lt;em&gt;Pythonic的方式&lt;/em&gt;&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;dct&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="n"&gt;key&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;dct&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -1303,15 +1303,15 @@ git push origin HEAD --force              &lt;span class="c1"&gt;# 强制提交�
 “尤达测试”(译注：尤达的意思见&lt;a href="http://en.wikipedia.org/wiki/Yoda"&gt;yoda&lt;/a&gt;)&lt;/p&gt;
 &lt;p&gt;对于那些掌握了“你在吗”剧本的程序员来说，这通常是另一个简单但是令人讨厌的事情。它不仅仅可用于字典数据类型，但非常普通。&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;干这事，你必须不能这样&lt;/em&gt;&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="ow"&gt;not&lt;/span&gt; &lt;span class="n"&gt;key&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;dct&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="ow"&gt;not&lt;/span&gt; &lt;span class="n"&gt;key&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;dct&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;&lt;em&gt;英语，你会说吗？&lt;/em&gt;&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt; &lt;span class="ow"&gt;not&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;dct …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Fri, 04 Jan 2013 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2013-01-04:/2013/01/04/Python-The-Dictionary-Playbook-cn/</guid><category>Python</category><category>翻译</category></item><item><title>一行Python代码定义树（译）</title><link>http://youngsterxyf.github.io/2013/01/04/one-line-tree-in-Python/</link><description>&lt;p&gt;原文：&lt;a href="https://gist.github.com/2012250"&gt;One-line Tree in Python&lt;/a&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="n"&gt;key&lt;/span&gt; &lt;span class="ow"&gt;not&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;dct …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Fri, 04 Jan 2013 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2013-01-04:/2013/01/04/Python-The-Dictionary-Playbook-cn/</guid><category>Python</category><category>翻译</category></item><item><title>一行Python代码定义树（译）</title><link>http://youngsterxyf.github.io/2013/01/04/one-line-tree-in-Python/</link><description>&lt;p&gt;原文：&lt;a href="https://gist.github.com/2012250"&gt;One-line Tree in Python&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;译者：&lt;a href="https://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;使用Python内置的&lt;a href="http://docs.python.org/2/library/collections.html#collections.defaultdict"&gt;defaultdict&lt;/a&gt;可以轻松定义一棵树：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;tree&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;defaultdict&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tree&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;tree&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;defaultdict&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tree&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -1322,32 +1322,32 @@ git push origin HEAD --force              &lt;span class="c1"&gt;# 强制提交�
 &lt;h2&gt;示例&lt;/h2&gt;
 &lt;h3&gt;JSON形式&lt;/h3&gt;
 &lt;p&gt;现在我们可以创建JSON式的嵌套字典，而无需显式创建子级字典——当我们引用它们，就会神奇地自动产生：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;users&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;tree&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
-&lt;span class="n"&gt;users&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;harold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;][&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;username&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;hrldcpr&amp;#39;&lt;/span&gt;
-&lt;span class="n"&gt;users&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;handler&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;][&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;username&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;matthandlersux&amp;#39;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="n"&gt;users&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;tree&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="n"&gt;users&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;harold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;][&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;username&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;hrldcpr&amp;#39;&lt;/span&gt;
+&lt;span class="n"&gt;users&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;handler&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;][&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;username&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;matthandlersux&amp;#39;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;我们可以使用 …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Fri, 04 Jan 2013 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2013-01-04:/2013/01/04/one-line-tree-in-Python/</guid><category>Python</category><category>翻译</category></item><item><title>几个组合命令</title><link>http://youngsterxyf.github.io/2012/12/12/several-command-line/</link><description>&lt;p&gt;1.
 Debian系Linux下查找某个软件包(以indent为例)：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;apt-cache search indent &lt;span class="p"&gt;|&lt;/span&gt; awk &lt;span class="s1"&gt;&amp;#39;{if($1~/^indent$/) print $0}&amp;#39;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;apt-cache search indent &lt;span class="p"&gt;|&lt;/span&gt; awk &lt;span class="s1"&gt;&amp;#39;{if($1~/^indent$/) print $0}&amp;#39;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;APT包管理工具也提供了类似功能的命令选项：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;apt-cache pkgnames &lt;span class="s1"&gt;&amp;#39;indent&amp;#39;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;apt-cache pkgnames &lt;span class="s1"&gt;&amp;#39;indent&amp;#39;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;只不过这个输出仅有包名没有简介信息。&lt;/p&gt;
 &lt;p&gt;2.
 对当前目录下的所有C源码文件使用indent进行格式化：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ls &lt;span class="p"&gt;|&lt;/span&gt; grep &lt;span class="s1"&gt;&amp;#39;\.c$&amp;#39;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; xargs indent
+&lt;div class="highlight"&gt;&lt;pre&gt;ls &lt;span class="p"&gt;|&lt;/span&gt; grep &lt;span class="s1"&gt;&amp;#39;\.c$&amp;#39;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; xargs indent
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;其实如下也是可以的：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;indent *.c
+&lt;div class="highlight"&gt;&lt;pre&gt;indent *.c
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -1362,12 +1362,12 @@ MySQL会解析查询，并创建一个内部数据结构(解析树)，然后对�
 &lt;h2&gt;并发控制&lt;/h2&gt;
 &lt;p&gt;1.
 读锁(Read Lock)/写锁(Write Lock)：并发控制的概念很简单-在处理并发写或并发读时，系统会使用一套锁系统来解决问题。这种锁系统由两类锁组成，通常称之为 &lt;strong&gt;共享锁 …&lt;/strong&gt;&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Tue, 11 Dec 2012 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2012-12-11:/2012/12/11/high-performance-MySQL-1/</guid><category>数据库</category><category>MySQL</category></item><item><title>日志信息命令行实时输出</title><link>http://youngsterxyf.github.io/2012/12/10/tail-and-xtail/</link><description>&lt;p&gt;Web开发中很多时候需要边看web服务器的日志输出边调试代码。一般的做法使用tail命令输出日志文件的末尾几行日志信息。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;tail -10 /var/log/nginx/access.log  &lt;span class="c1"&gt;# 输出末尾10行&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;tail -10 /var/log/nginx/access.log  &lt;span class="c"&gt;# 输出末尾10行&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;但这样的输出是静态的。在这个命令执行之后，日志文件里新增的日志信息无法直接看到。调试的时候，一遍又一遍地使用这样的命令去查询就显得非常麻烦。那有没有办法来监听日志文件的变化，实时输出最新的日志信息呢？ &lt;strong&gt;xtail&lt;/strong&gt; 就专为这个问题而存在的。它可以监听文件或者目录(监听目录就是监听该目录下的所有文件)。比如我在写本文时，在另一个命令行窗口里执行：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;xtail ./
+&lt;div class="highlight"&gt;&lt;pre&gt;xtail ./
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -1379,7 +1379,7 @@ MySQL会解析查询，并创建一个内部数据结构(解析树)，然后对�
 &lt;p&gt;1.
 实现strcpy。函数原型：char&lt;em&gt; strcpy(char&lt;/em&gt; dest, const char* src)。&lt;/p&gt;
 &lt;p&gt;后来发现自己实现的有问题。正确的实现应该如下：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="nf"&gt;strcpy&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;dest&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;src&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="nf"&gt;strcpy&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;dest&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;src&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
     &lt;span class="n"&gt;assert&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;dest&lt;/span&gt;&lt;span class="o"&gt;!=&lt;/span&gt;&lt;span class="nb"&gt;NULL&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="n"&gt;src&lt;/span&gt;&lt;span class="o"&gt;!=&lt;/span&gt;&lt;span class="nb"&gt;NULL&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
     &lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;ret&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;dest&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
@@ -1394,36 +1394,36 @@ MySQL会解析查询，并创建一个内部数据结构(解析树)，然后对�
 给2n+1个数，其中n个数均出现了2次，有1个数只出现了1次，如何找出这个数？&lt;/p&gt;
 &lt;p&gt;如果用python的dict数据结构来实现会很简单，一次遍历统计每个数出现的次数就可以了。如果是这样的话，就不需要将题目限制为只有一个1个数只出现了一次了，所以肯定有更好的算法。&lt;/p&gt;
 &lt;p&gt;其实更好的方法是这样的：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kt"&gt;int …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Thu, 06 Dec 2012 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2012-12-06:/2012/12/06/VMware-interview/</guid><category>VMware</category><category>面试</category></item><item><title>博大精深的ps命令</title><link>http://youngsterxyf.github.io/2012/12/06/profound-ps/</link><description>&lt;p&gt;Linux命令行里如何获取所有的进程号(pid)？&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kt"&gt;int …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Thu, 06 Dec 2012 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2012-12-06:/2012/12/06/VMware-interview/</guid><category>VMware</category><category>面试</category></item><item><title>博大精深的ps命令</title><link>http://youngsterxyf.github.io/2012/12/06/profound-ps/</link><description>&lt;p&gt;Linux命令行里如何获取所有的进程号(pid)？&lt;/p&gt;
 &lt;p&gt;1.
 第一种方法是通过ps -e或者ps aux获得所有进程的信息，然后通过管道传给grep或者awk进行数据过滤，比如&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ps -e &lt;span class="p"&gt;|&lt;/span&gt; awk &lt;span class="s1"&gt;&amp;#39;{print $1}&amp;#39;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;ps -e &lt;span class="p"&gt;|&lt;/span&gt; awk &lt;span class="s1"&gt;&amp;#39;{print $1}&amp;#39;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;2.
 其实通过ps自身的选项就可以实现： &lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ps -eo pid
+&lt;div class="highlight"&gt;&lt;pre&gt;ps -eo pid
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;而且输出还是排好序的。&lt;/p&gt;
 &lt;p&gt;但ps命令在输出进程信息之前先输出一行header，比如ps -e的输出header是：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;PID TTY          TIME CMD
+&lt;div class="highlight"&gt;&lt;pre&gt;PID TTY          TIME CMD
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;如何去除这个header呢？当然用各种过滤方法可以实现，但ps自身的选项也可以实现：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ps -eo pid h
+&lt;div class="highlight"&gt;&lt;pre&gt;ps -eo pid h
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;或者&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ps -eo pid --no-headers
+&lt;div class="highlight"&gt;&lt;pre&gt;ps -eo pid --no-headers
 &lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Thu, 06 Dec 2012 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2012-12-06:/2012/12/06/profound-ps/</guid><category>Linux</category><category>命令行</category><category>工具</category></item><item><title>2012校招-sonicWALL的两道编程笔试题</title><link>http://youngsterxyf.github.io/2012/12/05/sonicWALL-exam/</link><description>&lt;h2&gt;求二叉树中两个结点的最近公共祖先&lt;/h2&gt;
 &lt;p&gt;比如：对于树&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;         A
+&lt;div class="highlight"&gt;&lt;pre&gt;         A
        /
       B
     /   \
@@ -1438,7 +1438,7 @@ E     F
 &lt;p&gt;实现：&lt;a href="https://github.com/youngsterxyf/Data-Structures-and-Algorithms/blob/master/nearest_common_ancestor.c"&gt;见源码&lt;/a&gt;&lt;/p&gt;
 &lt;h2&gt;求二进制整数部分bits求反后的值&lt;/h2&gt;
 &lt;p&gt;比如：对于整数0b1001101，将第2(begin)到第5(end)位(从右往左计数)上的bit求反，得到0b1110001。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;stdio.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;#include &amp;lt;stdio.h&amp;gt;&lt;/span&gt;
 
 &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;reverse_somebits&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;begin&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;end&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
@@ -1454,13 +1454,13 @@ E     F
 &lt;p&gt;&lt;strong&gt;配置步骤&lt;/strong&gt;：&lt;/p&gt;
 &lt;p&gt;1.
 主服务器，备份服务器上安装rsync:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sudo yum install rsync
+&lt;div class="highlight"&gt;&lt;pre&gt;sudo yum install rsync
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;2.
 主服务器上安装inotify-tools:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sudo yum install inotify-tools
+&lt;div class="highlight"&gt;&lt;pre&gt;sudo yum install inotify-tools
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -1525,19 +1525,19 @@ E     F
 &lt;p&gt;F(n)的值是多少？&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Fabonacci" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/NumberedEquation6.gif"&gt;&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;常规算法&lt;/strong&gt;：根据Fabonacci的定义，递归求值。时间复杂度$ O(2^n) $&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;fibobacci&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;fibobacci&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
     &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;=&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt; &lt;span class="ow"&gt;and&lt;/span&gt; &lt;span class="n"&gt;fibonacci&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;fibonacci&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="ow"&gt;or&lt;/span&gt; &lt;span class="n"&gt;n&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;&lt;strong&gt;迭代&lt;/strong&gt;：利用循环取代递归。时间复杂度O(n)&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;fibonacci&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;fibonacci&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
     &lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;b&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;
     &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
         &lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;b&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="n"&gt;b …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Tue, 20 Nov 2012 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2012-11-20:/2012/11/20/work-exam/</guid><category>笔试</category></item><item><title>Python装饰器入门（译）</title><link>http://youngsterxyf.github.io/2012/07/30/a-primer-on-python-decorators/</link><description>&lt;p&gt;原文: &lt;a href="http://www.thumbtack.com/engineering/a-primer-on-python-decorators/"&gt;A primer on Python decorators&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;翻译: &lt;a href="http://xiayf.blogspot.com/"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Python允许你，作为程序员，使用函数完成一些很酷的事情。在Python中，函数是&lt;a href="http://en.wikipedia.org/wiki/First-class_function"&gt;一等对象(first-class object)&lt;/a&gt;，这就意味着你可以像使用字符串，整数，或者任何其他对象一样使用函数。例如，你可以将函数赋值给变量:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&amp;gt;&amp;gt;&amp;gt; def square(n):
+&lt;div class="highlight"&gt;&lt;pre&gt;&amp;gt;&amp;gt;&amp;gt; def square(n):
 ...     return n * n;
 &amp;gt;&amp;gt;&amp;gt; square(4)
 16
@@ -1548,7 +1548,7 @@ E     F
 
 
 &lt;p&gt;然而，一等函数的真正威力在于你可以把函数传给其他函数，或者从其他函数中返回函数。Python的内置函数map利用了这种能力：给map传个函数以及一个列表，它会依次以列表中每个元素为参数调用你传给它的那个函数，从而生成一个新的列表。如下所示的例子中应用了上面的那个square函数:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&amp;gt;&amp;gt;&amp;gt; number = [1, 2, 3, 4, 5]
+&lt;div class="highlight"&gt;&lt;pre&gt;&amp;gt;&amp;gt;&amp;gt; number = [1, 2, 3, 4, 5]
 &amp;gt;&amp;gt;&amp;gt; map …&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Mon, 30 Jul 2012 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2012-07-30:/2012/07/30/a-primer-on-python-decorators/</guid><category>Python</category><category>翻译</category></item><item><title>Python FAQ：Web开发（译）</title><link>http://youngsterxyf.github.io/2012/07/30/python-faq-webdev/</link><description>&lt;p&gt;原文： &lt;a href="http://me.veekun.com/blog/2012/05/05/python-faq-webdev/"&gt;Python FAQ: Webdev&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;译者： &lt;a href="http://github.com/youngsterxyf/"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;&lt;a href="http://me.veekun.com/blog/2011/07/22/python-faq/"&gt;Python FAQ&lt;/a&gt;的一部分&lt;/p&gt;
@@ -1565,7 +1565,7 @@ E     F
 &lt;p&gt;我想，也许最好的学习方式是：先依葫芦画瓢地实践，获得一些直观感受，最好还有一些疑问。在实践完成之后，在整理自己的疑问，以及实践中涉及的知识要点，通过查阅图书或者网络资料，逐个知识点巩固，逐个解决疑问，并整理成文。这个整理总结的过程可能需要较长的时间。&lt;/p&gt;
 &lt;p&gt;这种方式的优势在于：1.能让你快速地完成事情；2.实践中用到的知识多半会在以后的实践中经常用到，掌握的就是一些最重要的东西，而不会学习一些很少使用的深奥偏门知识。&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Fri, 11 May 2012 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2012-05-11:/2012/05/11/about-method-of-learning-technology/</guid><category>技术</category><category>学习方法</category></item><item><title>ubuntu12.04+ngnix+php-fastcgi+mysql+memcached网站开发测试环境搭建</title><link>http://youngsterxyf.github.io/2012/05/10/ubuntu12.04-nginx-php-factcgi-mysql-memcached/</link><description>&lt;p&gt;1.
 安装必要的软件&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sudo apt-get install nginx php5-cli php5-cgi spawn-fcgi psmisc mysql-server &lt;span class="se"&gt;\&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;sudo apt-get install nginx php5-cli php5-cgi spawn-fcgi psmisc mysql-server &lt;span class="se"&gt;\&lt;/span&gt;
 mysql-client php5-mysql memcached php5-memcache php5-curl php5-gd
 &lt;/pre&gt;&lt;/div&gt;
 
@@ -1575,12 +1575,12 @@ mysql-client php5-mysql memcached php5-memcache php5-curl php5-gd
 （注：ngnix的配置文件目录为/etc/ngnix/，默认网站根目录为/usr/share/ngnix/www/；php配置文件目录为/etc/php5/）&lt;/p&gt;
 &lt;p&gt;3.
 编辑文件/etc/ngnix/sites-available/default，内容如下(可以先把原文件备份一下)：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;server {
+&lt;div class="highlight"&gt;&lt;pre&gt;server {
     #listen   80; ## listen for …&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Thu, 10 May 2012 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2012-05-10:/2012/05/10/ubuntu12.04-nginx-php-factcgi-mysql-memcached/</guid><category>Linux</category><category>Nginx</category><category>PHP</category></item><item><title>Python对象创建过程（译）</title><link>http://youngsterxyf.github.io/2012/04/26/python-object-creation-sequence/</link><description>&lt;p&gt;原文： &lt;a href="http://eli.thegreenplace.net/2012/04/16/python-object-creation-sequence/"&gt;Python object creation sequence&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;译者： &lt;a href="http://xiayf.blogspot.com/"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;[本文讨论的Python版本为3.x]&lt;/p&gt;
 &lt;p&gt;本文旨在探究Python中新对象的创建过程。正如我在&lt;a href="http://eli.thegreenplace.net/2012/03/23/python-internals-how-callables-work"&gt;前一篇文章&lt;/a&gt;中所解释的，对象的创建只是调用可调用对象的一种特例。考虑这样的一段Python代码：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Joe&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Joe&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
     &lt;span class="k"&gt;pass&lt;/span&gt;
 
 &lt;span class="n"&gt;j&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Joe&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
@@ -1589,7 +1589,7 @@ mysql-client php5-mysql memcached php5-memcache php5-curl php5-gd
 
 &lt;p&gt;当j = Joe()被执行时发生了什么呢？Python把它看作对可调用的Joe的一次调用，并且将它路由到内部函数 &lt;code&gt;PyObject_Call&lt;/code&gt; ，将Joe作为PyObject_Call的第一个参数。 &lt;code&gt;PyObject_Call&lt;/code&gt; 根据其第一个参数的类型抽取这个参数类型的 &lt;code&gt;tp_call&lt;/code&gt; 属性。&lt;/p&gt;
 &lt;p&gt;那么，Joe的类型是什么呢？无论何时我们定义一个新的Python类(class)，它的类型都是 &lt;code&gt;type&lt;/code&gt; ，除非我们明确地为它指定一个 &lt;a href="http://eli.thegreenplace.net/2011/08/14/python-metaclasses-by-example/"&gt;metaclass&lt;/a&gt;。因此，当 &lt;code&gt;PyObject_Call&lt;/code&gt; 试图查看Joe的类型，将得到类型 &lt;code&gt;type&lt;/code&gt; ，然后选择 &lt;code&gt;type&lt;/code&gt; 的 &lt;code&gt;tp_call&lt;/code&gt; 属性 …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Thu, 26 Apr 2012 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2012-04-26:/2012/04/26/python-object-creation-sequence/</guid><category>Python</category><category>翻译</category></item><item><title>关于指针的一道笔试题</title><link>http://youngsterxyf.github.io/2012/04/20/an-exercise-about-pointer/</link><description>&lt;p&gt;同学找实习，遇到这样一道笔试题:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;][&lt;/span&gt;&lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;][&lt;/span&gt;&lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
 &lt;span class="k"&gt;sizeof&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;?&lt;/span&gt;
 &lt;span class="k"&gt;sizeof&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;?&lt;/span&gt;
 &lt;span class="k"&gt;sizeof&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;**&lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;?&lt;/span&gt;
@@ -1602,7 +1602,7 @@ mysql-client php5-mysql memcached php5-memcache php5-curl php5-gd
 &lt;p&gt;&lt;strong&gt;a是个数组，有两个元素；元素也是数组，其有3个元素，每个元素是指向int类型的指针。&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;指针的长度固定为4个字节，C语言的int类型也是4个字节。&lt;/p&gt;
 &lt;p&gt;这样一分析，这题就简单了。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sizeof(a)意思是求a数组的长度，数组的长度=数组元素的个数*元素的长度，所以sizeof(a) = 2 * 3 * 4 = 24个字节
+&lt;div class="highlight"&gt;&lt;pre&gt;sizeof(a)意思是求a数组的长度，数组的长度=数组元素的个数*元素的长度，所以sizeof(a) = 2 * 3 * 4 = 24个字节
 sizeof(*a)中的*a是指a的第一个元素，所以sizeof(*a …&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Fri, 20 Apr 2012 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2012-04-20:/2012/04/20/an-exercise-about-pointer/</guid><category>笔试</category><category>C/C++</category></item><item><title>学习的"道"与"术"</title><link>http://youngsterxyf.github.io/2012/03/31/dao-and-shu-about-learning/</link><description>&lt;p&gt;读研以来，一直觉得自己的学习方法不够高效。试图将要学习的东西进行分类，然后以不同的方法学习之。那么该如何分类呢？我觉得以"道"与"术"区分之比较合适。&lt;/p&gt;
 &lt;p&gt;何为"道 "？汉语辞典中有两条解释：&lt;strong&gt;1.指法则、规律；2.学术或宗教的思想体系&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;何为"术"？：&lt;strong&gt;技艺&lt;/strong&gt;&lt;/p&gt;
@@ -1619,17 +1619,17 @@ A listing of all processes that you …&lt;/p&gt;</description><dc:creator xmlns
 &lt;p&gt;这一年里，我，一个技术男，比以前更宅，话也相对少了很多，直接表现为QQ空间或者校内上的文字写得很少。很少和别人谈论自己，因为我觉得纠结于那个“小我”是件很“小青年”的事情。人与人之间不可避免的隔膜导致了个人的事情不管多大在别人眼里都是微不足道的，在别人的心里掀不起半点波澜，说过了也就忘了。所以那些关于自己的，还是放在心里比较好，毋须说些没意义的。&lt;/p&gt;
 &lt;p&gt;这一年里，我想得挺多，但真正做了或者说做好的却很少。这是件严重的事情。特别在技术上，东看西看，东学西学，眼界确实开阔很多，也养成了较为良好的技术趣味。但从技术能力上来说，真不好说 …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Sun, 01 Jan 2012 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2012-01-01:/2012/01/01/2011-summary/</guid><category>总结</category></item><item><title>《Classic Shell Scripting》：ls, locate, type, find, df, du, diff, patch</title><link>http://youngsterxyf.github.io/2011/12/23/classic-shell-scripting-ls-locate-and-so-on/</link><description>&lt;h4&gt;一.ls&lt;/h4&gt;
 &lt;p&gt;语法&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ls [ options ] [ file(s) ]
+&lt;div class="highlight"&gt;&lt;pre&gt;ls [ options ] [ file(s) ]
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;用途&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;列出文件目录的内容
+&lt;div class="highlight"&gt;&lt;pre&gt;列出文件目录的内容
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;主要选项&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;-1 : 数字1.强制为单栏输出。在交互式模式下，ls一般会以适于当前窗口的最小宽度，使用多个列
+&lt;div class="highlight"&gt;&lt;pre&gt;-1 : 数字1.强制为单栏输出。在交互式模式下，ls一般会以适于当前窗口的最小宽度，使用多个列
 -a : 显示所有文件，包括隐藏文件(文件名以点号起始的文件)
 -d : 显示与目录本身相关的信息，而非它们包含的文件的信息。
 -F : 使用特殊结尾字符，标记特定的文件类型
@@ -1644,7 +1644,7 @@ A listing of all processes that you …&lt;/p&gt;</description><dc:creator xmlns
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;然后&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sudo mkdir -p /usr/share/fonts/yahei
+&lt;div class="highlight"&gt;&lt;pre&gt;sudo mkdir -p /usr/share/fonts/yahei
 sudo cp YaHei.Consolas.1.11b.ttf /usr/share/fonts/yahei/
 &lt;/pre&gt;&lt;/div&gt;
 
@@ -1652,51 +1652,51 @@ sudo cp YaHei.Consolas.1.11b.ttf /usr/share/fonts/yahei/
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;改变权限：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sudo chmod &lt;span class="m"&gt;644&lt;/span&gt; /usr/share/fonts/yahei/YaHei.Consolas.1.11b.ttf
+&lt;div class="highlight"&gt;&lt;pre&gt;sudo chmod &lt;span class="m"&gt;644&lt;/span&gt; /usr/share/fonts/yahei/YaHei.Consolas.1.11b.ttf
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;安装：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nb"&gt;cd&lt;/span&gt; /usr/share/fonts/yahei/
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nb"&gt;cd&lt;/span&gt; /usr/share/fonts/yahei/
 sudo mkfontscale
 sudo mkfontdir …&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;&lt;/ol&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Fri, 23 Dec 2011 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2011-12-23:/2011/12/23/install-Consolas-font-on-ArchLinux/</guid><category>Linux</category><category>字体</category></item><item><title>《Classic Shell Scripting》：文件描述符处理</title><link>http://youngsterxyf.github.io/2011/12/22/classic-shell-scripting-file-descriptors/</link><description>&lt;p&gt;在系统内部，UNIX是以一个小的整数数字，称为文件描述符(file descriptors)，表示每个进程打开的文件。数字由零开始，至多到系统定义的打开文件数目的限制。传统上，Shell允许你直接处理至多10个打开文件：文件描述符从0至9（POSIX标准将是否可以处理大于9的文件描述符，保留给各实现自行定义，bash可以，但ksh则否）&lt;/p&gt;
 &lt;p&gt;文件描述符0,1与2，各自对应到标准输入，标准输出以及标准错误输出。最常见的操作便是变更这三个文件描述符其中一个的位置，不过也可能处理其他的变动。首先来看的是：将程序的标准输出传送到一个文件，并将起标准错误信息传到另一个文件：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;make 1&amp;gt; results 2&amp;gt; ERRS
+&lt;div class="highlight"&gt;&lt;pre&gt;make 1&amp;gt; results 2&amp;gt; ERRS
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;上面的命令是将make的标准输出(文件描述符为1)传给results,并将标准错误输出(文件描述符为2)传给ERRS。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;make 1&amp;gt; results 2&amp;gt; /dev/null
+&lt;div class="highlight"&gt;&lt;pre&gt;make 1&amp;gt; results 2&amp;gt; /dev/null
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;&lt;code&gt;1&amp;gt; results&lt;/code&gt;里的1其实没有必要，供输出重定向的默认文件描述符是标准输出：也就是文件描述符1。下个例子会将输出与错误信息送给相同的文件：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;make &amp;gt; results 2 …&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Thu, 22 Dec 2011 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2011-12-22:/2011/12/22/classic-shell-scripting-file-descriptors/</guid><category>Linux</category><category>Shell</category></item><item><title>《Classic Shell Scripting》：sed and cut</title><link>http://youngsterxyf.github.io/2011/12/22/classic-shell-scripting-sed-and-cut/</link><description>&lt;h4&gt;一. sed&lt;/h4&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;make &amp;gt; results 2 …&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Thu, 22 Dec 2011 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2011-12-22:/2011/12/22/classic-shell-scripting-file-descriptors/</guid><category>Linux</category><category>Shell</category></item><item><title>《Classic Shell Scripting》：sed and cut</title><link>http://youngsterxyf.github.io/2011/12/22/classic-shell-scripting-sed-and-cut/</link><description>&lt;h4&gt;一. sed&lt;/h4&gt;
 &lt;p&gt;一般来说，执行文本替换的正确程序应该是sed --- 流编辑器(Stream Editor)。sed的设计就是用来以批处理的方式而不是交互的方式来编辑文件。当你知道要做好几个变更 --- 不管是对一个还是数个文件时，比较简单的方式是将这些变更部分写到一个编辑中的脚本里，再将此脚本应用到所有需要修改的文件。
 你可能会常在管道中间使用sed，以执行替换操作。做法是使用s命令 --- 要求正则表达式寻找，用替代文本替换匹配的文本：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sed &lt;span class="s1"&gt;&amp;#39;s/:.*//&amp;#39;&lt;/span&gt; /etc/passwd       &lt;span class="c1"&gt;#删除第一个冒号之后的所有东西&lt;/span&gt;
-sort -u                          &lt;span class="c1"&gt;#排序列表并删除重复部分&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;sed &lt;span class="s1"&gt;&amp;#39;s/:.*//&amp;#39;&lt;/span&gt; /etc/passwd       &lt;span class="c"&gt;#删除第一个冒号之后的所有东西&lt;/span&gt;
+sort -u                          &lt;span class="c"&gt;#排序列表并删除重复部分&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;在这里，/字符扮演定界符(delimiter)的角色，从而分隔正则表达式与替代文本。在本例中，替代文本是空的，实际上会有效地删除匹配的文本。虽然/是最常用的定界符，但任何可显示的字符都能作为定界符。在处理文件名称，通常都会以标点符号字符作为定界符(例如分号，冒号或逗点)：&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;find /home/tolstoy -type d -print    &lt;span class="c1"&gt;#寻找所有目录&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;find /home/tolstoy -type d -print    &lt;span class="c"&gt;#寻找所有目录&lt;/span&gt;
 sed &lt;span class="s1"&gt;&amp;#39;s;/home …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Thu, 22 Dec 2011 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2011-12-22:/2011/12/22/classic-shell-scripting-sed-and-cut/</guid><category>Linux</category><category>Shell</category></item><item><title>《Classic Shell Scripting》：sort, uniq, wc, head, tail</title><link>http://youngsterxyf.github.io/2011/12/22/classic-shell-scripting-sort-uniq-wc-head-tail/</link><description>&lt;h4&gt;一.sort&lt;/h4&gt;
 &lt;p&gt;就像awk,cut与join一样，sort将输入看作具有多条记录的数据流，而记录是由可变宽度的字段组成，记录是以换行符作为定界符，字段的定界符则是空白字符或是用户指定的单个字符。&lt;/p&gt;
 &lt;p&gt;语法&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sort [ options ] [ file(s)]
+&lt;div class="highlight"&gt;&lt;pre&gt;sort [ options ] [ file(s)]
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;用途&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;将输入行按照键值字段与数据类型选项以及locale排序
+&lt;div class="highlight"&gt;&lt;pre&gt;将输入行按照键值字段与数据类型选项以及locale排序
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;主要选项&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;-b : 忽略开头的空白
+&lt;div class="highlight"&gt;&lt;pre&gt;-b : 忽略开头的空白
 -c : 检查输入是否已正确地排序。如输入未经排序，但退出码(exit code)为非零值，则不会有任何输出
 -d : 字典顺序，仅文字数字与空白才有意义
 -g : 一般数值，以浮点数字类型比较字段
@@ -1707,7 +1707,7 @@ sed &lt;span class="s1"&gt;&amp;#39;s;/home …&lt;/span&gt;&lt;/pre&gt;&lt;/div
 -n : 以整数类型比较字段
 -o outfile : 将输出写到指定的文件，而非标准输出。如果该文件为输入文件之一，则sort在进行排序与写到输出文件之前 …&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Thu, 22 Dec 2011 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2011-12-22:/2011/12/22/classic-shell-scripting-sort-uniq-wc-head-tail/</guid><category>Linux</category><category>Shell</category></item><item><title>《Classic Shell Scripting》第一、二章阅读笔记</title><link>http://youngsterxyf.github.io/2011/12/09/classic-shell-scripting-1-2/</link><description>&lt;h4&gt;第一章：背景知识&lt;/h4&gt;
 &lt;p&gt;软件工具的原则&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;一次做好一件事
+&lt;div class="highlight"&gt;&lt;pre&gt;一次做好一件事
 
 处理文本行，不要处理二进制数据
 
@@ -1729,7 +1729,7 @@ sed &lt;span class="s1"&gt;&amp;#39;s;/home …&lt;/span&gt;&lt;/pre&gt;&lt;/div
 &lt;ul&gt;
 &lt;li&gt;Shell脚本最常用于系统管理工作，或是用于结合现有的程序以完成小型的，特定的工作。一旦你找出完成工作的方法 …&lt;/li&gt;&lt;/ul&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Fri, 09 Dec 2011 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2011-12-09:/2011/12/09/classic-shell-scripting-1-2/</guid><category>Linux</category><category>Shell</category></item><item><title>Linux添加定时任务</title><link>http://youngsterxyf.github.io/2011/12/07/cron-usage/</link><description>&lt;p&gt;在Linux下如果希望某个任务定时地执行，一般是使用cron服务器，将任务添加到cron任务列表中。&lt;/p&gt;
 &lt;h4&gt;启动，关闭，重启cron(需超级用户权限)&lt;/h4&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;/etc/init.d/cron start
+&lt;div class="highlight"&gt;&lt;pre&gt;/etc/init.d/cron start
 /etc/init.d/cron stop
 /etc/init.d/cron restart
 &lt;/pre&gt;&lt;/div&gt;
@@ -1737,17 +1737,17 @@ sed &lt;span class="s1"&gt;&amp;#39;s;/home …&lt;/span&gt;&lt;/pre&gt;&lt;/div
 
 &lt;p&gt;注:archlinux下为/etc/rc.d/crond start|stop|restart&lt;/p&gt;
 &lt;h4&gt;查看用户设置的定时任务列表&lt;/h4&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;crontab [-u xxx] -l       #  xxx为用户名
+&lt;div class="highlight"&gt;&lt;pre&gt;crontab [-u xxx] -l       #  xxx为用户名
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;h4&gt;编辑用户的定时任务列表(超级用户权限)&lt;/h4&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;crontab -u xxx -e
+&lt;div class="highlight"&gt;&lt;pre&gt;crontab -u xxx -e
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;h4&gt;删除用户的定时任务列表(超级用户权限)&lt;/h4&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;crontab -u xxx -r
+&lt;div class="highlight"&gt;&lt;pre&gt;crontab -u xxx -r
 &lt;/pre&gt;&lt;/div&gt;
 
 

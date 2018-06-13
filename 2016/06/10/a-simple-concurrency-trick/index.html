@@ -83,12 +83,12 @@
 <li>对脚本实例获取数据的SQL，增加选择条件：<code>MOD(id, 5)=SID</code>（SID为当前脚本实例的ID） - 即使用数据行的<code>id</code>对实例数取模，如果结果等于实例的ID，则取出来。这样多个实例之间不会取到相同的数据行，也就不会发生冲突回滚。</li>
 </ul>
 <p>写个SHELL脚本来启动脚本的多个实例：</p>
-<div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env bash</span>
+<div class="highlight"><pre><span class="c">#!/usr/bin/env bash</span>
 
-<span class="nv">pn</span><span class="o">=</span><span class="m">5</span>
-<span class="k">for</span> id in <span class="m">0</span> <span class="m">1</span> <span class="m">2</span> <span class="m">3</span> <span class="m">4</span>
+<span class="nv">pn</span><span class="o">=</span>5
+<span class="k">for</span> id in <span class="m">0</span> <span class="m">1</span> <span class="m">2</span> <span class="m">3</span> 4
 <span class="k">do</span>
-/path/to/bin/php /path/to/script.php <span class="nv">$pn</span> <span class="nv">$id</span> &gt; script-<span class="nv">$id</span>.log <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span> <span class="p">&amp;</span>
+/path/to/bin/php /path/to/script.php <span class="nv">$pn</span> <span class="nv">$id</span> &gt; script-<span class="nv">$id</span>.log 2&gt;<span class="p">&amp;</span><span class="m">1</span> <span class="p">&amp;</span>
 <span class="k">done</span>
 </pre></div>
 

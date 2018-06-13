@@ -87,7 +87,7 @@
 <p>Go允许使用<code>go</code>语句开启一个新的运行期线程，即 <a href="http://golang.org/ref/spec#Go_statements">goroutine</a>，以一个不同的、新创建的goroutine来执行一个函数。同一个程序中的所有goroutine共享同一个地址空间。</p>
 <p>Goroutine非常轻量，除了为之分配的栈空间，其所占用的内存空间微乎其微。并且其栈空间在开始时非常小，之后随着堆存储空间的按需分配或释放而变化。内部实现上，goroutine会在多个操作系统线程上多路复用。如果一个goroutine阻塞了一个操作系统线程，例如：等待输入，这个线程上的其他goroutine就会迁移到其他线程，这样能继续运行。开发者并不需要关心/担心这些细节。</p>
 <p>下面所示程序会输出“Hello from main goroutine”。也可能会输出“Hello from another goroutine”，具体依赖于两个goroutine哪个先结束。</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">go</span> <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Hello from another goroutine&quot;</span><span class="p">)</span>
     <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Hello from main goroutine&quot;</span><span class="p">)</span>
 
@@ -99,7 +99,7 @@
 
 <p><a href="http://www.nada.kth.se/~snilsson/concurrency/src/goroutine1.go">goroutine1.go</a></p>
 <p>接下来的这个程序，多数情况下，会输出“Hello from main goroutine”和“Hello from another goroutine”，输出的顺序不确定。但还有另一个可能性是：第二个goroutine运行得极其慢，在程序结束之前都没来得及输出相应的消息。</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">go</span> <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Hello from another goroutine&quot;</span><span class="p">)</span>
     <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Hello from main goroutine&quot;</span><span class="p">)</span>
 
@@ -110,7 +110,7 @@
 
 <p><a href="http://www.nada.kth.se/~snilsson/concurrency/src/goroutine2.go">goroutine2.go</a></p>
 <p>下面则是一个相对更加实际的示例，其中定义了一个函数使用并发来推迟触发一个事件。</p>
-<div class="highlight"><pre><span></span><span class="c1">// 函数Publish在给定时间过期后打印text字符串到标准输出</span>
+<div class="highlight"><pre><span class="c1">// 函数Publish在给定时间过期后打印text字符串到标准输出</span>
    <span class="c1">// 该函数并不会阻塞而是立即返回</span>
 <span class="kd">func</span> <span class="nx">Publish</span><span class="p">(</span><span class="nx">text</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">delay</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
@@ -123,7 +123,7 @@
 
 <p><a href="http://www.nada.kth.se/~snilsson/concurrency/src/publish1.go">publish1.go</a></p>
 <p>你可能会这样使用<code>Publish</code>函数：</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">Publish</span><span class="p">(</span><span class="s">&quot;A goroutine starts a new thread of execution.&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="o">*</span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
     <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Let’s hope the news will published before I leave.&quot;</span><span class="p">)</span>
 
@@ -137,7 +137,7 @@
 
 <p><a href="http://www.nada.kth.se/~snilsson/concurrency/src/publish1.go">publish1.go</a></p>
 <p>这个程序，绝大多数情况下，会输出以下三行，顺序固定，每行输出之间相隔5秒。</p>
-<div class="highlight"><pre><span></span>$ go run publish1.go
+<div class="highlight"><pre>$ go run publish1.go
 Let’s hope the news will published before I leave.
 BREAKING NEWS: A goroutine starts a new thread of execution.
 Ten seconds later: I’m leaving now.
@@ -148,20 +148,20 @@ Ten seconds later: I’m leaving now.
 <h4>2. 管道（channel）</h4>
 <p><img alt="Sushi conveyor belt" src="http://www.nada.kth.se/~snilsson/concurrency/sushi-conveyor-belt.jpg"></p>
 <p><a href="http://golang.org/ref/spec#Channel_types">管道</a>是Go语言的一个构件，提供一种机制用于两个goroutine之间通过传递一个指定类型的值来同步运行和通讯。操作符<code>&lt;-</code>用于指定管道的方向，发送或接收。如果未指定方向，则为双向管道。</p>
-<div class="highlight"><pre><span></span><span class="kd">chan</span> <span class="nx">Sushi</span>        <span class="c1">// 可用来发送和接收Sushi类型的值</span>
+<div class="highlight"><pre><span class="kd">chan</span> <span class="nx">Sushi</span>        <span class="c1">// 可用来发送和接收Sushi类型的值</span>
 <span class="kd">chan</span><span class="o">&lt;-</span> <span class="kt">float64</span>    <span class="c1">// 仅可用来发送float64类型的值</span>
 <span class="o">&lt;-</span><span class="kd">chan</span> <span class="kt">int</span>        <span class="c1">// 仅可用来接收int类型的值</span>
 </pre></div>
 
 
 <p>管道是引用类型，基于make函数来分配。</p>
-<div class="highlight"><pre><span></span><span class="nx">ic</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">int</span><span class="p">)</span>    <span class="c1">// 不带缓冲的int类型管道</span>
+<div class="highlight"><pre><span class="nx">ic</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">int</span><span class="p">)</span>    <span class="c1">// 不带缓冲的int类型管道</span>
 <span class="nx">wc</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="o">*</span><span class="nx">Work</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>    <span class="c1">// 带缓冲的Work类型指针管道</span>
 </pre></div>
 
 
 <p>如果通过管道发送一个值，则将<code>&lt;-</code>作为二元操作符使用。通过管道接收一个值，则将其作为一元操作符使用：</p>
-<div class="highlight"><pre><span></span><span class="nx">ic</span> <span class="o">&lt;-</span> <span class="mi">3</span>        <span class="c1">// 往管道发送3</span>
+<div class="highlight"><pre><span class="nx">ic</span> <span class="o">&lt;-</span> <span class="mi">3</span>        <span class="c1">// 往管道发送3</span>
 <span class="nx">work</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">wc</span>    <span class="c1">// 从管道接收一个指向Work类型值的指针</span>
 </pre></div>
 
@@ -169,7 +169,7 @@ Ten seconds later: I’m leaving now.
 <p>如果管道不带缓冲，发送方会阻塞直到接收方从管道中接收了值。如果管道带缓冲，发送方则会阻塞直到发送的值被拷贝到缓冲区内；如果缓冲区已满，则意味着需要等待直到某个接收方获取到一个值。接收方在有值可以接收之前会一直阻塞。</p>
 <p><strong>关闭管道（Close）</strong></p>
 <p><a href="http://golang.org/ref/spec#Close">close</a> 函数标志着不会再往某个管道发送值。在调用<code>close</code>之后，并且在之前发送的值都被接收后，接收操作会返回一个零值，不会阻塞。一个多返回值的接收操作会额外返回一个布尔值用来指示返回的值是否发送操作传递的。</p>
-<div class="highlight"><pre><span></span><span class="nx">ch</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">string</span><span class="p">)</span>
+<div class="highlight"><pre><span class="nx">ch</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">string</span><span class="p">)</span>
 <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">ch</span> <span class="o">&lt;-</span> <span class="s">&quot;Hello!&quot;</span>
     <span class="nb">close</span><span class="p">(</span><span class="nx">ch</span><span class="p">)</span>
@@ -182,7 +182,7 @@ Ten seconds later: I’m leaving now.
 
 
 <p>一个带有<code>range</code>子句的<code>for</code>语句会依次读取发往管道的值，直到该管道关闭：</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="c1">// 译注：要想运行该示例，需要先定义类型Sushi，如type Sushi string</span>
     <span class="kd">var</span> <span class="nx">ch</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="nx">Sushi</span> <span class="p">=</span> <span class="nx">Producer</span><span class="p">()</span>
     <span class="k">for</span> <span class="nx">s</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">ch</span> <span class="p">{</span>
@@ -205,7 +205,7 @@ Ten seconds later: I’m leaving now.
 <p><a href="http://www.nada.kth.se/~snilsson/concurrency/src/sushi.go">sushi.go</a></p>
 <h4>3. 同步</h4>
 <p>下一个示例中，我们让<code>Publish</code>函数返回一个管道 - 用于在发布text变量值时广播一条消息：</p>
-<div class="highlight"><pre><span></span><span class="c1">// 在给定时间过期时，Publish函数会打印text变量值到标准输出</span>
+<div class="highlight"><pre><span class="c1">// 在给定时间过期时，Publish函数会打印text变量值到标准输出</span>
 <span class="c1">// 在text变量值发布后，该函数会关闭管道wait</span>
 <span class="kd">func</span> <span class="nx">Publish</span><span class="p">(</span><span class="nx">text</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">delay</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">)</span> <span class="p">(</span><span class="nx">wait</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="kd">struct</span><span class="p">{})</span> <span class="p">{</span>
     <span class="nx">ch</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kd">struct</span><span class="p">{})</span>
@@ -222,7 +222,7 @@ Ten seconds later: I’m leaving now.
 <p><a href="http://www.nada.kth.se/~snilsson/concurrency/src/publish2.go">publish2.go</a></p>
 <p>注意：我们使用了一个空结构体的管道：<code>struct{}</code>。这明确地指明该管道仅用于发信号，而不是传递数据。</p>
 <p>我们可能会这样使用这个函数：</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">wait</span> <span class="o">:=</span> <span class="nx">Publish</span><span class="p">(</span><span class="s">&quot;Channels let goroutines communicate.&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="o">*</span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
     <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Waiting for the news...&quot;</span><span class="p">)</span>
     <span class="o">&lt;-</span><span class="nx">wait</span>
@@ -233,7 +233,7 @@ Ten seconds later: I’m leaving now.
 
 <p><a href="http://www.nada.kth.se/~snilsson/concurrency/src/publish2.go">publish2.go</a></p>
 <p>这个程序会按指定的顺序输出以下三行内容。最后一行在新闻（news）一出就会立即输出。</p>
-<div class="highlight"><pre><span></span>$ go run publish2.go
+<div class="highlight"><pre>$ go run publish2.go
 Waiting for the news...
 BREAKING NEWS: Channels let goroutines communicate.
 The news is out, time to leave.
@@ -243,7 +243,7 @@ The news is out, time to leave.
 <h4>4. 死锁</h4>
 <p><img alt="traffic jam" src="http://www.nada.kth.se/~snilsson/concurrency/traffic-jam.jpg"></p>
 <p>现在我们在<code>Publish</code>函数中引入一个bug：</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">Publish</span><span class="p">(</span><span class="nx">text</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">delay</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">)</span> <span class="p">(</span><span class="nx">wait</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="kd">struct</span><span class="p">{})</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">Publish</span><span class="p">(</span><span class="nx">text</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">delay</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">)</span> <span class="p">(</span><span class="nx">wait</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="kd">struct</span><span class="p">{})</span> <span class="p">{</span>
     <span class="nx">ch</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kd">struct</span><span class="p">{})</span>
     <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
         <span class="nx">time</span><span class="p">.</span><span class="nx">Sleep</span><span class="p">(</span><span class="nx">delay</span><span class="p">)</span>
@@ -257,7 +257,7 @@ The news is out, time to leave.
 
 
 <p>主程序还是像之前一样开始运行：输出第一行，然后等待5秒，这时<code>Publish</code>函数开启的goroutine会输出突发新闻（breaking news），然后退出，留下主goroutine独自等待。</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">wait</span> <span class="o">:=</span> <span class="nx">Publish</span><span class="p">(</span><span class="s">&quot;Channels let goroutines communicate.&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="o">*</span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
     <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Waiting for the news...&quot;</span><span class="p">)</span>
     <span class="c1">// 译注：注意下面这一句</span>
@@ -272,7 +272,7 @@ The news is out, time to leave.
 <p>死锁是线程之间相互等待，其中任何一个都无法向前运行的情形。</p>
 </blockquote>
 <p>Go语言对于运行时的死锁检测具备良好的支持。当没有任何goroutine能够往前执行的情形发生时，Go程序通常会提供详细的错误信息。以下就是我们的问题程序的输出：</p>
-<div class="highlight"><pre><span></span>Waiting for the news...
+<div class="highlight"><pre>Waiting for the news...
 BREAKING NEWS: Channels let goroutines communicate.
 fatal error: all goroutines are asleep - deadlock!
 
@@ -297,7 +297,7 @@ created by addtimer
 <p>当两个线程并发地访问同一个变量，并且其中至少一个访问是写操作时，数据竞争就发生了。</p>
 </blockquote>
 <p>下面的这个函数就有数据竞争问题，其行为是未定义的。例如，可能输出数值1。代码之后是一个可能性解释，试图搞清楚这一切是如何发生得。</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">race</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">race</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">wait</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kd">struct</span><span class="p">{})</span>
     <span class="nx">n</span> <span class="o">:=</span> <span class="mi">0</span>
     <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
@@ -328,7 +328,7 @@ created by addtimer
 <p><img alt="mid action" src="http://www.nada.kth.se/~snilsson/concurrency/mid-action.jpg"></p>
 <p>避免数据竞争的唯一方式是线程间同步访问所有的共享可变数据。有几种方式能够实现这一目标。Go语言中，通常是使用管道或者锁。（<a href="http://golang.org/pkg/sync/">sync</a>和<a href="http://golang.org/pkg/sync/atomic/">sync/atomic</a>包中还有更低层次的机制可供使用，但本文中不做讨论）。</p>
 <p>Go语言中，处理并发数据访问的推荐方式是使用管道从一个goroutine中往下一个goroutine传递实际的数据。有格言说得好：“不要通过共享内存来通讯，而是通过通讯来共享内存”。</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">sharingIsCaring</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">sharingIsCaring</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">ch</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">int</span><span class="p">)</span>
     <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
         <span class="nx">n</span> <span class="o">:=</span> <span class="mi">0</span> <span class="c1">// 仅为一个goroutine可见的局部变量.</span>
@@ -350,7 +350,7 @@ created by addtimer
 <p>有时，通过显式加锁，而不是使用管道，来同步数据访问，可能更加便捷。Go语言标准库为这一目的提供了一个互斥锁 - <a href="http://golang.org/pkg/sync/#Mutex">sync.Mutex</a>。</p>
 <p>要想这类加锁起效的话，关键之处在于：所有对共享数据的访问，不管读写，仅当goroutine持有锁才能操作。一个goroutine出错就足以破坏掉一个程序，引入数据竞争。</p>
 <p>因此，应该设计一个自定义数据结构，具备明确的API，确保所有的同步都在数据结构内部完成。下例中，我们构建了一个安全、易于使用的并发数据结构，<code>AtomicInt</code>，用于存储一个整型值。任意数量的goroutine都能通过<code>Add</code>和<code>Value</code>方法安全地访问这个数值。</p>
-<div class="highlight"><pre><span></span><span class="c1">// AtomicInt是一个并发数据结构，持有一个整数值</span>
+<div class="highlight"><pre><span class="c1">// AtomicInt是一个并发数据结构，持有一个整数值</span>
 <span class="c1">// 该数据结构的零值为0</span>
 <span class="kd">type</span> <span class="nx">AtomicInt</span> <span class="kd">struct</span> <span class="p">{</span>
     <span class="nx">mu</span> <span class="nx">sync</span><span class="p">.</span><span class="nx">Mutex</span> <span class="c1">// 锁，一次仅能被一个goroutine持有。</span>
@@ -389,7 +389,7 @@ created by addtimer
 <p><a href="http://www.nada.kth.se/~snilsson/concurrency/src/datarace.go">datarace.go</a></p>
 <h4>7. 检测数据竞争</h4>
 <p>竞争有时非常难于检测。下例中的这个函数有一个数据竞争问题，执行这个程序时会输出<code>55555</code>。尝试一下，也许你会得到一个不同的结果。（<a href="http://golang.org/pkg/sync/#WaitGroup">sync.WaitGroup</a>是Go语言标准库的一部分；用于等待一组goroutine结束运行。）</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">race</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">race</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">wg</span> <span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span>
     <span class="nx">wg</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
     <span class="c1">// 译注：注意下面这行代码中的i++</span>
@@ -409,7 +409,7 @@ created by addtimer
 <p><a href="http://www.nada.kth.se/~snilsson/concurrency/src/raceClosure.go">raceClosure.go</a></p>
 <p>对于输出<code>55555</code>，一个貌似合理的解释是：执行<code>i++</code>的goroutine在其他goroutine执行打印语句之前就完成了5次<code>i++</code>操作。实际上变量<code>i</code>更新后的值为其他goroutine所见纯属巧合。</p>
 <p>一个简单的解决方案是：使用一个局部变量，然后当开启新的goroutine时，将数值作为参数传递：</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">correct</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">correct</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">wg</span> <span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span>
     <span class="nx">wg</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
     <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="mi">5</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
@@ -427,7 +427,7 @@ created by addtimer
 <p><a href="http://www.nada.kth.se/~snilsson/concurrency/src/raceClosure.go">raceClosure.go</a></p>
 <p>这次代码就对了，程序会输出期望的结果，如：<code>24031</code>。注意：goroutine之间的运行顺序是不确定的。</p>
 <p>仍旧使用闭包，但能够避免数据竞争也是可能的，必须小心翼翼地让每个goroutine使用一个独有的变量。</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">alsoCorrect</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">alsoCorrect</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">wg</span> <span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span>
     <span class="nx">wg</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
     <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="mi">5</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
@@ -447,7 +447,7 @@ created by addtimer
 <p><strong>数据竞争自动检测</strong></p>
 <p>一般来说，不太可能能够自动检测发现所有可能的数据竞争情况，但Go（从版本1.1开始）有一个强大的<a href="http://tip.golang.org/doc/articles/race_detector.html">数据竞争检测器</a>。</p>
 <p>这个工具用起来也很简单：只要在使用<code>go</code>命令时加上<code>-race</code>标记即可。开启检测器运行上面的程序会给出清晰且信息量大的输出：</p>
-<div class="highlight"><pre><span></span>$ go run -race raceClosure.go
+<div class="highlight"><pre>$ go run -race raceClosure.go
 Race:
 ==================
 WARNING: DATA RACE
@@ -487,7 +487,7 @@ exit status 66
 <h4>8. Select语句</h4>
 <p><a href="http://golang.org/ref/spec#Select_statements">select语句</a>是Go语言并发工具集中的终极工具。select用于从一组可能的通讯中选择一个进一步处理。如果任意一个通讯都可以进一步处理，则从中随机选择一个，执行对应的语句。否则，如果又没有默认分支（default case），select语句则会阻塞，直到其中一个通讯完成。</p>
 <p>以下是一个玩具示例，演示<code>select</code>语句如何用于实现一个随机数生成器：</p>
-<div class="highlight"><pre><span></span><span class="c1">// RandomBits函数 返回一个管道，用于产生一个比特随机序列</span>
+<div class="highlight"><pre><span class="c1">// RandomBits函数 返回一个管道，用于产生一个比特随机序列</span>
 <span class="kd">func</span> <span class="nx">RandomBits</span><span class="p">()</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="kt">int</span> <span class="p">{</span>
     <span class="nx">ch</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">int</span><span class="p">)</span>
     <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
@@ -505,7 +505,7 @@ exit status 66
 
 <p><a href="http://www.nada.kth.se/~snilsson/concurrency/src/randBits.go">randBits.go</a></p>
 <p>下面是相对更加实际一点的例子：如何使用select语句为一个操作设置一个时间限制。代码会输出变量news的值或者超时消息，具体依赖于两个接收语句哪个先执行：</p>
-<div class="highlight"><pre><span></span><span class="k">select</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="k">select</span> <span class="p">{</span>
 <span class="k">case</span> <span class="nx">news</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">NewsAgency</span><span class="p">:</span>
     <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">news</span><span class="p">)</span>
 <span class="k">case</span> <span class="o">&lt;-</span><span class="nx">time</span><span class="p">.</span><span class="nx">After</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Minute</span><span class="p">):</span>
@@ -519,7 +519,7 @@ exit status 66
 <p><img alt="couples" src="http://www.nada.kth.se/~snilsson/concurrency/couples.jpg"></p>
 <p>花点时间认真研究一下这个示例。如果你完全理解，也就对Go语言中并发的应用方式有了全面的掌握。</p>
 <p>这个程序演示了如何将管道用于被任意数量的goroutine发送和接收数据，也演示了如何将select语句用于从多个通讯中选择一个。</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">people</span> <span class="o">:=</span> <span class="p">[]</span><span class="kt">string</span><span class="p">{</span><span class="s">&quot;Anna&quot;</span><span class="p">,</span> <span class="s">&quot;Bob&quot;</span><span class="p">,</span> <span class="s">&quot;Cody&quot;</span><span class="p">,</span> <span class="s">&quot;Dave&quot;</span><span class="p">,</span> <span class="s">&quot;Eva&quot;</span><span class="p">}</span>
     <span class="nx">match</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">string</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="c1">// 为一个未匹配的发送操作提供空间</span>
     <span class="nx">wg</span> <span class="o">:=</span> <span class="nb">new</span><span class="p">(</span><span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span><span class="p">)</span>
@@ -551,7 +551,7 @@ exit status 66
 
 <p><a href="http://www.nada.kth.se/~snilsson/concurrency/src/matching.go">matching.go</a></p>
 <p>示例输出：</p>
-<div class="highlight"><pre><span></span>$ go run matching.go
+<div class="highlight"><pre>$ go run matching.go
 Cody sent a message to Bob.
 Anna sent a message to Eva.
 No one received Dave’s message.
@@ -568,7 +568,7 @@ No one received Dave’s message.
 <li>数据访问尽量利用良好的局部性。如果数据能保持在缓存中，数据加载和存储将会快得多得多，这对于写操作也格外地重要。</li>
 </ul>
 <p>下面的这个示例展示如何切分一个开销很大的计算并将其分布在所有可用的CPU上进行计算。先看一下有待优化的代码：</p>
-<div class="highlight"><pre><span></span><span class="kd">type</span> <span class="nx">Vector</span> <span class="p">[]</span><span class="kt">float64</span>
+<div class="highlight"><pre><span class="kd">type</span> <span class="nx">Vector</span> <span class="p">[]</span><span class="kt">float64</span>
 
 <span class="c1">// 函数Convolve 计算 w = u * v，其中 w[k] = Σ u[i]*v[j], i + j = k</span>
 <span class="c1">// 先决条件：len(u) &gt; 0, len(v) &gt; 0</span>
@@ -595,7 +595,7 @@ No one received Dave’s message.
 
 
 <p>思路很简单：确定合适大小的工作单元，然后在不同的goroutine中执行每个工作单元。以下是并发版本的 <code>Convolve</code>：</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">Convolve</span><span class="p">(</span><span class="nx">u</span><span class="p">,</span> <span class="nx">v</span> <span class="nx">Vector</span><span class="p">)</span> <span class="p">(</span><span class="nx">w</span> <span class="nx">Vector</span><span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">Convolve</span><span class="p">(</span><span class="nx">u</span><span class="p">,</span> <span class="nx">v</span> <span class="nx">Vector</span><span class="p">)</span> <span class="p">(</span><span class="nx">w</span> <span class="nx">Vector</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">n</span> <span class="o">:=</span> <span class="nb">len</span><span class="p">(</span><span class="nx">u</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="nx">v</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
     <span class="nx">w</span> <span class="p">=</span> <span class="nb">make</span><span class="p">(</span><span class="nx">Vector</span><span class="p">,</span> <span class="nx">n</span><span class="p">)</span>
 
@@ -626,7 +626,7 @@ No one received Dave’s message.
 
 <p><a href="http://www.nada.kth.se/~snilsson/concurrency/src/convolution.go">convolution.go</a></p>
 <p>工作单元定义之后，通常情况下最好将调度工作交给运行时和操作系统。然而，对于Go 1.* 你也许需要告诉运行时希望多少个goroutine来同时地运行代码。</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">init</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">init</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">numcpu</span> <span class="o">:=</span> <span class="nx">runtime</span><span class="p">.</span><span class="nx">NumCPU</span><span class="p">()</span>
     <span class="nx">runtime</span><span class="p">.</span><span class="nx">GOMAXPROCS</span><span class="p">(</span><span class="nx">numcpu</span><span class="p">)</span> <span class="c1">// 尝试使用所有可用的CPU</span>
 <span class="p">}</span>

@@ -74,14 +74,14 @@
 <p>大多数现代Web组件栈允许通过栈式/组件式中间件“过滤”请求，这样就能干净地从web应用中分离出横切关注点（译注：面向方面程序设计中的概念？）。
 本周我尝试在Go语言的<code>http.FileServer</code>中植入钩子，发现实现起来十分简便，让我非常惊讶。</p>
 <p>让我们从一个基本的文件服务器开始说起：</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">http</span><span class="p">.</span><span class="nx">ListenAndServe</span><span class="p">(</span><span class="s">&quot;:8080&quot;</span><span class="p">,</span> <span class="nx">http</span><span class="p">.</span><span class="nx">FileServer</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">Dir</span><span class="p">(</span><span class="s">&quot;/tmp&quot;</span><span class="p">)))</span>
 <span class="p">}</span>
 </pre></div>
 
 
 <p>这段程序会在端口8080上开启一个本地文件服务器。那么我们该如何在这其中植入钩子从而能够在文件请求处理之前执行一些代码？来看一下<code>http.ListenAndServe</code>的方法签名：</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">ListenAndServe</span><span class="p">(</span><span class="nx">addr</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">handler</span> <span class="nx">Handler</span><span class="p">)</span> <span class="kt">error</span>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">ListenAndServe</span><span class="p">(</span><span class="nx">addr</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">handler</span> <span class="nx">Handler</span><span class="p">)</span> <span class="kt">error</span>
 </pre></div>
 
 

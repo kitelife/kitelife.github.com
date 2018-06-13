@@ -80,7 +80,7 @@
 <p>有两种方式避免<code>html/template</code>转义html标签：</p>
 <p>1.
 把字符串类型数据转换成<code>template.HTML</code>类型再传入模板进行渲染：</p>
-<div class="highlight"><pre><span></span><span class="nx">lti</span> <span class="o">:=</span> <span class="nx">listenTaskInfo</span><span class="p">{</span>
+<div class="highlight"><pre><span class="nx">lti</span> <span class="o">:=</span> <span class="nx">listenTaskInfo</span><span class="p">{</span>
     <span class="nx">Seq</span><span class="p">:</span>      <span class="nx">seq</span><span class="p">,</span>
     <span class="nx">Id</span><span class="p">:</span>       <span class="nx">row</span><span class="p">.</span><span class="nx">Id</span><span class="p">,</span>
     <span class="nx">Servers</span><span class="p">:</span>  <span class="nx">template</span><span class="p">.</span><span class="nx">HTML</span><span class="p">(</span><span class="nx">strings</span><span class="p">.</span><span class="nx">Join</span><span class="p">(</span><span class="nx">strings</span><span class="p">.</span><span class="nx">Split</span><span class="p">(</span><span class="nx">row</span><span class="p">.</span><span class="nx">Servers</span><span class="p">,</span> <span class="s">&quot;-&quot;</span><span class="p">),</span> <span class="s">&quot;&lt;br /&gt;&quot;</span><span class="p">)),</span>
@@ -95,12 +95,12 @@
 
 <p>2.
 <code>html/template</code>允许根据需要为模板变量添加一个处理函数，在模板解析的时候该函数就能对模板变量做进一步的处理，如：</p>
-<div class="highlight"><pre><span></span>&lt;a href=&quot;/search?q={{. | urlquery}}&quot;&gt;{{. | html}}&lt;/a&gt;
+<div class="highlight"><pre>&lt;a href=&quot;/search?q={{. | urlquery}}&quot;&gt;{{. | html}}&lt;/a&gt;
 </pre></div>
 
 
 <p><code>html/template</code>貌似并没有内置这样的函数让其不转义html标签，但提供了接口让我们按需自定义这类函数。那么我们可以自定义一个函数-在模板解析的时候将模板变量转换成<code>template.HTML</code>类型，如（该例子来自<a href="http://coderdave.com/view/how-to-unescape-text-in-a-golang-html-template">How To Unescape Text In A Golang Html Template</a>）：</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">unescaped</span> <span class="p">(</span><span class="nx">x</span> <span class="kt">string</span><span class="p">)</span> <span class="kd">interface</span><span class="p">{}</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">template</span><span class="p">.</span><span class="nx">HTML</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span> <span class="p">}</span>
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">unescaped</span> <span class="p">(</span><span class="nx">x</span> <span class="kt">string</span><span class="p">)</span> <span class="kd">interface</span><span class="p">{}</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">template</span><span class="p">.</span><span class="nx">HTML</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span> <span class="p">}</span>
 
 <span class="kd">func</span> <span class="nx">renderTemplate</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">tmpl</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">view</span> <span class="o">*</span><span class="nx">Page</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">t</span> <span class="o">:=</span> <span class="nx">template</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)</span>  
@@ -115,7 +115,7 @@
 
 
 <p>这段代码使得模板解析的时候可以使用unescaped函数将模板变量x转换成<code>template.HTML</code>类型，关键是如下两句：</p>
-<div class="highlight"><pre><span></span><span class="c1">// 定义函数unescaped</span>
+<div class="highlight"><pre><span class="c1">// 定义函数unescaped</span>
 <span class="kd">func</span> <span class="nx">unescaped</span> <span class="p">(</span><span class="nx">x</span> <span class="kt">string</span><span class="p">)</span> <span class="kd">interface</span><span class="p">{}</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">template</span><span class="p">.</span><span class="nx">HTML</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span> <span class="p">}</span>
 <span class="c1">// 在模板对象t中注册unescaped</span>
 <span class="nx">t</span> <span class="p">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">Funcs</span><span class="p">(</span><span class="nx">template</span><span class="p">.</span><span class="nx">FuncMap</span><span class="p">{</span><span class="s">&quot;unescaped&quot;</span><span class="p">:</span> <span class="nx">unescaped</span><span class="p">})</span>
@@ -123,7 +123,7 @@
 
 
 <p>这样，在模板中就可以使用unescaped函数了，如：</p>
-<div class="highlight"><pre><span></span><span class="p">{{</span><span class="nx">printf</span> <span class="s">&quot;%s&quot;</span> <span class="p">.</span><span class="nx">Body</span> <span class="p">|</span> <span class="nx">unescaped</span><span class="p">}}</span> <span class="c1">//[]byte</span>
+<div class="highlight"><pre><span class="p">{{</span><span class="nx">printf</span> <span class="s">&quot;%s&quot;</span> <span class="p">.</span><span class="nx">Body</span> <span class="p">|</span> <span class="nx">unescaped</span><span class="p">}}</span> <span class="c1">//[]byte</span>
 <span class="p">{{.</span><span class="nx">Body</span> <span class="p">|</span> <span class="nx">unescaped</span><span class="p">}}</span> <span class="c1">//string</span>
 </pre></div>
 

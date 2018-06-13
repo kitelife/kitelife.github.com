@@ -83,12 +83,12 @@
 <hr>
 <p>在 <a href="http://blog.xiayf.cn/2014/11/20/read-yii-code-7/">Yii源码阅读笔记 - 应用模块化</a> 一文中介绍类 <code>CWebApplication</code> 中的方法 <code>createController</code> ，
 该方法根据目标路由找到对应的控制器类文件并加载，方法中有行代码：</p>
-<div class="highlight"><pre><span></span><span class="x">$basePath=$owner-&gt;getControllerPath();</span>
+<div class="highlight"><pre><span class="x">$basePath=$owner-&gt;getControllerPath();</span>
 </pre></div>
 
 
 <p>这里的 <code>getControllerPath</code> 会返回当前应用或模块下的控制器类的存放目录，对应应用级与模块级，其实现有两处，其一是在类 <code>CWebApplication</code> 中：</p>
-<div class="highlight"><pre><span></span><span class="x">/**</span>
+<div class="highlight"><pre><span class="x">/**</span>
 <span class="x"> * @return string the directory that contains the controller classes. Defaults to &#39;protected/controllers&#39;.</span>
 <span class="x"> */</span>
 <span class="x">public function getControllerPath()</span>
@@ -102,7 +102,7 @@
 
 
 <p>另一处是在类 <code>CWebModule</code> 中：</p>
-<div class="highlight"><pre><span></span><span class="x">/**</span>
+<div class="highlight"><pre><span class="x">/**</span>
 <span class="x"> * @return string the directory that contains the controller classes. Defaults to &#39;moduleDir/controllers&#39; where</span>
 <span class="x"> * moduleDir is the directory containing the module class.</span>
 <span class="x"> */</span>
@@ -118,7 +118,7 @@
 
 <p>这两处实现的逻辑是一样的：如果属性 <code>_controllerPath</code> 未赋值，则<strong>默认</strong>以应用或模块目录下的<strong>controllers</strong>子目录作为自定义控制器类的存放目录。</p>
 <p>如果不想以该路径作为自定义控制器类的存放目录，那么就得为 <code>_controllerPath</code> 赋值 - 与 <code>getControllerPath</code> 对应的有方法 <code>setControllerPath</code> （同样有两处定义，实现一样）：</p>
-<div class="highlight"><pre><span></span><span class="x">/**</span>
+<div class="highlight"><pre><span class="x">/**</span>
 <span class="x"> * @param string $value the directory that contains the controller classes.</span>
 <span class="x"> * @throws CException if the directory is invalid</span>
 <span class="x"> */</span>
@@ -136,13 +136,13 @@
 <p>那么当自定义控制类中使用Model类或者其他辅助类时，Yii是如何自动加载的呢？</p>
 <p>以 <strong>在控制器类中IndexController调用Model类UserModel的getUserInfo方法获取用户信息</strong> 为例，Yii是怎么找到并加载UserModel类文件的呢？</p>
 <p>在 <a href="http://blog.xiayf.cn/2014/11/04/read-yii-code-1/">Yii源码阅读笔记 - 请求处理基本流程</a> 一文的最后提到 - 类文件yii/framework/YiiBase.php的倒数第二行代码为：</p>
-<div class="highlight"><pre><span></span><span class="x">spl_autoload_register(array(&#39;YiiBase&#39;,&#39;autoload&#39;));</span>
+<div class="highlight"><pre><span class="x">spl_autoload_register(array(&#39;YiiBase&#39;,&#39;autoload&#39;));</span>
 </pre></div>
 
 
 <p>在应用初始化时，类文件 <code>Yii.php</code> 中会require类文件 <code>YiiBase.php</code>，从而会执行该句代码，将YiiBase类的方法autoload注册到 <code>SPL __autoload</code> 函数队列中。</p>
 <p>而类 YiiBase 的 autoload 方法实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">/**</span>
+<div class="highlight"><pre><span class="x">/**</span>
 <span class="x"> * Class autoload loader.</span>
 <span class="x"> * This method is provided to be invoked within an __autoload() magic method.</span>
 <span class="x"> * @param string $className class name</span>
@@ -201,7 +201,7 @@
 
 <p>上述代码中涉及的 <code>self::$_coreClasses</code> 属性定义于类 YiiBase，其中罗列了Yii框架核心类的名称与相对路径。</p>
 <p>属性 <code>self::$_classMap</code> ，默认是一个空数组，在类 YiiBase 的静态方法 import 中根据条件可能被赋予元素；属性 <code>self::$_includePaths</code> 也是如此，只不过默认未赋值。静态方法 <code>import</code> 实现如下所示：</p>
-<div class="highlight"><pre><span></span><span class="x">public static function import($alias,$forceInclude=false)</span>
+<div class="highlight"><pre><span class="x">public static function import($alias,$forceInclude=false)</span>
 <span class="x">{</span>
 <span class="x">    if(isset(self::$_imports[$alias]))  // previously imported</span>
 <span class="x">        return self::$_imports[$alias];</span>
@@ -300,7 +300,7 @@
 
 
 <p>静态方法import在类CModule（CWebApplication类间接继承自该类）的方法 <code>setImport</code> 中会被调用（当然还有其他地方也会调用import方法）：</p>
-<div class="highlight"><pre><span></span><span class="x">/**</span>
+<div class="highlight"><pre><span class="x">/**</span>
 <span class="x"> * Sets the aliases that are used in the module.</span>
 <span class="x"> * @param array $aliases list of aliases to be imported</span>
 <span class="x"> */</span>
@@ -313,7 +313,7 @@
 
 
 <p>看到前缀为<code>set</code>，就知道魔术方法 <code>__set</code> 能间接调用该方法，如前所述，可以为应用提供名为 <strong>import</strong> 的配置项。例如目前我们项目中有import配置项如下所示：</p>
-<div class="highlight"><pre><span></span><span class="x">&#39;import&#39;=&gt;array(</span>
+<div class="highlight"><pre><span class="x">&#39;import&#39;=&gt;array(</span>
 <span class="x">    &#39;application.models.*&#39;,</span>
 <span class="x">    &#39;application.components.*&#39;,</span>
 <span class="x">)</span>
@@ -323,7 +323,7 @@
 <p>表示业务逻辑的代码（如自定义控制器类）中会使用到应用的子目录models和components下的类文件，需要Yii（准确地说是YiiBase类autoload方法）帮忙自动查找加载。
 这样也就能任意组织项目的目录结构（<strong>当然不要太任性！</strong>）。</p>
 <p>import配置项的值是一个路径别名数组，路径别名中的application表示应用的根目录，默认为与index.php同一级的protected目录，也可以通过配置项basePath来指定。对于basePath配置项，在类CApplication的构造方法 <code>__contruct</code> 中有如下相关代码：</p>
-<div class="highlight"><pre><span></span><span class="x">if(isset($config[&#39;basePath&#39;]))</span>
+<div class="highlight"><pre><span class="x">if(isset($config[&#39;basePath&#39;]))</span>
 <span class="x">{</span>
 <span class="x">    $this-&gt;setBasePath($config[&#39;basePath&#39;]);</span>
 <span class="x">    unset($config[&#39;basePath&#39;]);</span>
@@ -335,7 +335,7 @@
 
 
 <p>其中方法 <code>setPathAlias</code> 的实现如下所示：</p>
-<div class="highlight"><pre><span></span><span class="x">public static function setPathOfAlias($alias,$path)</span>
+<div class="highlight"><pre><span class="x">public static function setPathOfAlias($alias,$path)</span>
 <span class="x">{</span>
 <span class="x">    if(empty($path))</span>
 <span class="x">        unset(self::$_aliases[$alias]);</span>
@@ -348,7 +348,7 @@
 <hr>
 <p>除了通过import配置项指定autoload的查找路径，从类YiiBase的autoload方法实现可以看到，对于PHP 5.3以上版本，可以使用命名空间的方式来自动查找类，命名空间字符串会被替换成路径别名，所以命名空间字符串应以 <code>application\</code> 开始，如应这样 <code>application\models\UserModel</code> 来引用models目录下的UserModel类文件，除非额外通过 <code>Yii::setPathOfAlias</code>为models路径指定别名。</p>
 <p>另外，类YiiBase中提供了一个静态方法 <code>registerAutoloader</code> ：</p>
-<div class="highlight"><pre><span></span><span class="x">/**</span>
+<div class="highlight"><pre><span class="x">/**</span>
 <span class="x"> * Registers a new class autoloader.</span>
 <span class="x"> * The new autoloader will be placed before {@link autoload} and after</span>
 <span class="x"> * any other existing autoloaders.</span>

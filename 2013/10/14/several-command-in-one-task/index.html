@@ -75,13 +75,13 @@
               <p>今天写了点shell脚本，在一些CentOS服务器上进行了一些操作，涉及如下命令：</p>
 <h3>统计特定进程个数</h3>
 <p>如统计haproxy进程的个数</p>
-<div class="highlight"><pre><span></span>ps -e <span class="p">|</span> grep haproxy <span class="p">|</span> wc -l
+<div class="highlight"><pre>ps -e <span class="p">|</span> grep haproxy <span class="p">|</span> wc -l
 </pre></div>
 
 
 <h3>获取特定进程的pid</h3>
 <p>如获取haproxy进程的pid</p>
-<div class="highlight"><pre><span></span>ps -e <span class="p">|</span> grep haproxy <span class="p">|</span> awk <span class="s1">&#39;{print $1}&#39;</span>
+<div class="highlight"><pre>ps -e <span class="p">|</span> grep haproxy <span class="p">|</span> awk <span class="s1">&#39;{print $1}&#39;</span>
 </pre></div>
 
 
@@ -90,14 +90,14 @@
 <ol>
 <li>
 <p>在192.168.2.1创建自己的公钥私钥：</p>
-<div class="highlight"><pre><span></span>ssh-keygen -t rsa   <span class="c1"># 提示输入时，全部留空回车。</span>
+<div class="highlight"><pre>ssh-keygen -t rsa   <span class="c"># 提示输入时，全部留空回车。</span>
 </pre></div>
 
 
 </li>
 <li>
 <p>拷贝192.168.2.1的公钥到192.168.2.x机器上：</p>
-<div class="highlight"><pre><span></span>ssh-copy-id <span class="s2">&quot;-p 22 usernameB@192.168.2.x&quot;</span>
+<div class="highlight"><pre>ssh-copy-id <span class="s2">&quot;-p 22 usernameB@192.168.2.x&quot;</span>
 </pre></div>
 
 
@@ -109,7 +109,7 @@
 <h3>修改网卡ip</h3>
 <p>如修改网卡eth0的ip。</p>
 <p>文件/etc/sysconfig/network-scripts/ifcfg-eth0大致有如下所示内容：</p>
-<div class="highlight"><pre><span></span>DEVICE=&#39;eth0&#39;
+<div class="highlight"><pre>DEVICE=&#39;eth0&#39;
 HWADDR=&#39;&#39;
 NM_CONTROLLED=&#39;yes&#39;
 ONBOOT=&#39;yes&#39;
@@ -120,31 +120,31 @@ GATEWAY=&#39;192.168.2.1&#39;
 
 
 <p>将IPADDR的值修改为需指定的ip，保存后，执行如下命令：</p>
-<div class="highlight"><pre><span></span>service network restart
+<div class="highlight"><pre>service network restart
 </pre></div>
 
 
 <p>或</p>
-<div class="highlight"><pre><span></span>/etc/init.d/network restart
+<div class="highlight"><pre>/etc/init.d/network restart
 </pre></div>
 
 
 <h3>修改系统时间</h3>
 <p>通过命令<code>date</code>可以查看Linux服务器当前的时间，如：</p>
-<div class="highlight"><pre><span></span>$ date
+<div class="highlight"><pre>$ date
 Mon Oct 14 17:44:31 CST 2013
 </pre></div>
 
 
 <p><code>date</code>命令加<code>-s</code>参数，即可修改系统的时间，如：</p>
-<div class="highlight"><pre><span></span>$ date -s &quot;Mon Oct 14 20:44:31 CST 2013&quot;
+<div class="highlight"><pre>$ date -s &quot;Mon Oct 14 20:44:31 CST 2013&quot;
 Mon Oct 14 20:44:31 CST 2013
 </pre></div>
 
 
 <p>在系统启动时，Linux系统将时间从CMOS中读到系统时间变量中，以后修改时间通过修改系统时间实现。为了保持系统时间与CMOS时间的一致性， Linux每隔一段时间会将系统时间写入CMOS。
 由于该同步是每隔一段时间（大概是几分钟）进行的，在执行<code>date -s "xxx"</code>后，如果马上重启机器，修改时间就有可能没有被写入CMOS,这就是问题的原因。如果要确保修改生效可以执行如下命令：</p>
-<div class="highlight"><pre><span></span>clock -w
+<div class="highlight"><pre>clock -w
 </pre></div>
 
 
@@ -153,10 +153,10 @@ Mon Oct 14 20:44:31 CST 2013
 <ul>
 <li>
 <p>如为haproxy编写开机自启动shell脚本-haproxy.sh，内容如下所示：</p>
-<div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
-<span class="c1">#</span>
-<span class="c1"># chkconfig: 2345 25 9</span>
-<span class="c1"># description: haproxy is a level 4 LB</span>
+<div class="highlight"><pre><span class="c">#!/bin/bash</span>
+<span class="c">#</span>
+<span class="c"># chkconfig: 2345 25 9</span>
+<span class="c"># description: haproxy is a level 4 LB</span>
 
 . /etc/rc.d/init.d/functions
 
@@ -171,10 +171,10 @@ restart <span class="o">()</span> <span class="o">{</span>
 <span class="o">}</span>
 
 start <span class="o">()</span> <span class="o">{</span>
-    <span class="c1">#if [ -f $PID ]; then</span>
-    <span class="c1">#        echo &quot;started already&quot;</span>
-    <span class="c1">#        exit 0;</span>
-    <span class="c1">#fi</span>
+    <span class="c">#if [ -f $PID ]; then</span>
+    <span class="c">#        echo &quot;started already&quot;</span>
+    <span class="c">#        exit 0;</span>
+    <span class="c">#fi</span>
     <span class="nv">$SBIN</span> -c -f <span class="nv">$CONF</span>
     <span class="nv">$SBIN</span> -f <span class="nv">$CONF</span>
     <span class="nb">echo</span> <span class="s2">&quot;Start haproxy Process pid:`cat </span><span class="nv">$PID</span><span class="s2">`&quot;</span>

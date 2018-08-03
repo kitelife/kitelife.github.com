@@ -83,7 +83,7 @@
 <h3>分析</h3>
 <p>类<code>CMemcache</code>所在的整个继承树（<code>CMemcache</code> -&gt; <code>CCache</code> -&gt; <code>CApplicationComponent</code> -&gt; <code>CComponent</code>）上的类都没有构造方法。</p>
 <p><code>CMemcache</code>的init方法实现如下：</p>
-<div class="highlight"><pre><span class="x">public function init()</span>
+<div class="highlight"><pre><span></span><span class="x">public function init()</span>
 <span class="x">{</span>
 <span class="x">    // 调用父类CCache的init方法</span>
 <span class="x">    parent::init();</span>
@@ -113,7 +113,7 @@
 
 
 <p>其中调用的父类的init方法实现如下：</p>
-<div class="highlight"><pre><span class="x">public function init()</span>
+<div class="highlight"><pre><span></span><span class="x">public function init()</span>
 <span class="x">{</span>
 <span class="x">    parent::init();</span>
 <span class="x">    // 可以为整个应用的缓存的key加一个统一的前缀，这是为了避免在同一个缓存池中，不同应用的key冲突</span>
@@ -127,7 +127,7 @@
 
 
 <p><code>CMemcache</code>的init方法中调用的方法<code>getServers</code>和<code>getMemcache</code>，实现如下所示：</p>
-<div class="highlight"><pre><span class="x">public function getMemCache()</span>
+<div class="highlight"><pre><span></span><span class="x">public function getMemCache()</span>
 <span class="x">{</span>
 <span class="x">    // 单例</span>
 <span class="x">    if($this-&gt;_cache!==null)</span>
@@ -153,7 +153,7 @@
 
 
 <p>与<code>getServers</code>对应的有方法<code>setServers</code>，如果需要配置缓存服务器列表，则应该为缓存组件配置<code>servers</code>一项，基本形式为：</p>
-<div class="highlight"><pre><span class="x">&#39;servers&#39;=&gt;array(</span>
+<div class="highlight"><pre><span></span><span class="x">&#39;servers&#39;=&gt;array(</span>
 <span class="x">    array(</span>
 <span class="x">        &#39;host&#39;=&gt;&#39;127.0.0.1&#39;,</span>
 <span class="x">        &#39;port&#39;=&gt;11211,</span>
@@ -163,7 +163,7 @@
 
 
 <p><code>setServers</code>方法实现如下：</p>
-<div class="highlight"><pre><span class="x">public function setServers($config)</span>
+<div class="highlight"><pre><span></span><span class="x">public function setServers($config)</span>
 <span class="x">{</span>
 <span class="x">    foreach($config as $c)</span>
 <span class="x">        $this-&gt;_servers[]=new CMemCacheServerConfiguration($c);</span>
@@ -172,7 +172,7 @@
 
 
 <p>其中实例化的类<code>CMemCacheServerConfiguration</code>也定义于文件<code>yii/framework/caching/CMemCache.php</code>中，其构造方法实现如下：</p>
-<div class="highlight"><pre><span class="x">public function __construct($config)</span>
+<div class="highlight"><pre><span></span><span class="x">public function __construct($config)</span>
 <span class="x">{</span>
 <span class="x">    if(is_array($config))</span>
 <span class="x">    {</span>
@@ -188,7 +188,7 @@
 
 
 <p>从该构造方法可以看到该类的作用就是将一个Memcached缓存服务器的配置信息封装成一个配置类对象。该类有如下public的属性：</p>
-<div class="highlight"><pre><span class="x">/**</span>
+<div class="highlight"><pre><span></span><span class="x">/**</span>
 <span class="x"> * @var string memcache server hostname or IP address</span>
 <span class="x"> */</span>
 <span class="x">public $host;</span>
@@ -222,7 +222,7 @@
 <p>这些属性也即是每台缓存服务器的可配置项，当然如果用的是memcached扩展，某些配置项就用不上了。</p>
 <hr>
 <p>类<code>CCache</code>定义了访问控制类型public的方法<code>get</code>、<code>mget</code>、<code>set</code>、<code>add</code>、<code>delete</code>、<code>flush</code>，对应Yii框架缓存组件提供的几个操作，即开发者可以使用这些方法来操作缓存。</p>
-<div class="highlight"><pre><span class="x">// 根据单个key，获取对应的value</span>
+<div class="highlight"><pre><span></span><span class="x">// 根据单个key，获取对应的value</span>
 <span class="x">public function get($id)</span>
 <span class="x">{</span>
 <span class="x">    // generateUniqueKey是根据$id来生成一个唯一的key，也即真正存到缓存的key并不是get方法的$id参数值</span>
@@ -342,7 +342,7 @@
 <li>flush -&gt; flushValues</li>
 </ul>
 <p>但抽象类<code>CCache</code>中对于后面的这些方法并没有真正实现操作逻辑（除了getValues，其实现是循环调用getValue，也许并不是开发者想要的实现，<code>CMemCache</code>类重写了这个方法），需要在继承类中实现。<code>CMemCache</code>类中对这些方法实现如下：</p>
-<div class="highlight"><pre><span class="x">protected function getValue($key)</span>
+<div class="highlight"><pre><span></span><span class="x">protected function getValue($key)</span>
 <span class="x">{</span>
 <span class="x">    return $this-&gt;_cache-&gt;get($key);</span>
 <span class="x">}</span>
@@ -394,7 +394,7 @@
 <li>实际存储的value可能是经过序列化的，而且可能还包含依赖值</li>
 </ol>
 <p>关于第一点，<code>generateUniqueKey</code>方法在抽象类<code>CCache</code>中实现如下所示：</p>
-<div class="highlight"><pre><span class="x">/**</span>
+<div class="highlight"><pre><span></span><span class="x">/**</span>
 <span class="x"> * @param string $key a key identifying a value to be cached</span>
 <span class="x"> * @return string a key generated from the provided key which ensures the uniqueness across applications</span>
 <span class="x"> */</span>
@@ -414,7 +414,7 @@
 <p>以缓存依赖类<code>CDbCacheDependency</code>为例（见文件<code>yii/framework/caching/dependencies/CDbCacheDependency.php</code>），
 该类直接继承自类<code>CCacheDependency</code>。类<code>CDbCacheDependency</code>的作用就是根据一条SQL语句从数据库查询数据，然后根据查询结果来判断缓存是否有效。</p>
 <p>父类<code>CCacheDependency</code>中实现方法<code>evaluateDependency</code>和<code>getHasChanged</code>，如下所示：</p>
-<div class="highlight"><pre><span class="x">/**</span>
+<div class="highlight"><pre><span></span><span class="x">/**</span>
 <span class="x"> * Evaluates the dependency by generating and saving the data related with dependency.</span>
 <span class="x"> * This method is invoked by cache before writing data into it.</span>
 <span class="x"> */</span>
@@ -458,7 +458,7 @@
 
 
 <p>但父类<code>CCacheDependency</code>并未有效实现上述两个方法中调用的<code>generateDependentData</code>方法，在类<code>CDbCacheDependency</code>中实现如下：</p>
-<div class="highlight"><pre><span class="x">protected function generateDependentData()</span>
+<div class="highlight"><pre><span></span><span class="x">protected function generateDependentData()</span>
 <span class="x">{</span>
 <span class="x">    if($this-&gt;sql!==null)</span>
 <span class="x">    {</span>

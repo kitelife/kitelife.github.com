@@ -75,7 +75,7 @@
               <p>工作中涉及一些对外开放的无需特殊权限的API，用户会因为某些需求而通过程序来频繁访问这些API，导致系统的负载陡增，可能影响系统其它功能的正常使用。虽然做了一些优化让这种API尽可能地轻量，但仍然不够，因此需要进行访问频率的限制。</p>
 <p>由于这样的API并不多，所以我们并没有在Nginx这样的反向代理接入层中实现频率限制，而是API自己去实现，而且实现方案比较粗糙 - 基于Memcached的缓存自动过期特性。</p>
 <p>方案的PHP示例实现如下所示：</p>
-<div class="highlight"><pre><span class="x">// 每个IP一分钟10次</span>
+<div class="highlight"><pre><span></span><span class="x">// 每个IP一分钟10次</span>
 <span class="x">$limit = 10;</span>
 
 <span class="x">$cache = new Memcached();</span>
@@ -115,13 +115,13 @@
 <p>经过仔细排查，最终确定问题就出在Nginx配置C的请求被转发到A、B。对于用户客户端来说，C是服务器，对于A、B来说，C则是客户端。如果不做特殊配置，从C转发到A、B的请求在处理时，A、B拿到的请求来源IP是C的IP，也就意味着到C的API访问请求，都被A、B基于C的IP进行访问频率限制。</p>
 <p>以Nginx为例，对于从C转发到A、B的请求，如果A、B要拿到请求的真实来源IP，则需要对A、B及C的Nginx做特殊配置。为解决这个问题，Nginx提供了一个额外的模块<code>ngx_http_realip_module</code>，这个模块默认没有编译在Nginx中，需以额外参数<code>--with-http_realip_module</code>进行编译。</p>
 <p>并对C的Nginx反向代理配置（location块）添加一行：</p>
-<div class="highlight"><pre><span class="err">#</span><span class="x"> 把请求来源放在X-Real-IP请求头中</span>
-<span class="x">proxy_set_header  X-Real-IP </span><span class="p">$</span><span class="nv">remote_addr</span><span class="x">;</span>
+<div class="highlight"><pre><span></span># 把请求来源放在X-Real-IP请求头中
+proxy_set_header  X-Real-IP $remote_addr;
 </pre></div>
 
 
 <p>对A、B的Nginx（server块）添加以下配置：</p>
-<div class="highlight"><pre># 说明需要进行真实请求来源IP替换的请求来源，即C所属的IP段或者C的IP
+<div class="highlight"><pre><span></span># 说明需要进行真实请求来源IP替换的请求来源，即C所属的IP段或者C的IP
 set_real_ip_from 10.0.0.0/8;
 # 说明从哪获取真实来源IP
 real_ip_header X-Real-IP;

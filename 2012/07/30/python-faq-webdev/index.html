@@ -120,7 +120,7 @@
 <h2>路由选择(Routing)</h2>
 <p>PHP是根据URL执行一整个文件，Python web应用则倾向"拥有"一整个目录结构(或者甚至是整个域(domain))。因此，将特定的代码连接到特定的代码更加灵活，这种连接通常是由一个路由选择系统来处理。</p>
 <p>路由(routes)是包含可选占位符的URL，就像这样：</p>
-<div class="highlight"><pre>/users/{name}
+<div class="highlight"><pre><span></span>/users/{name}
 /companies/{id}/products
 /blog/{year:\d\d\d\d}/{month:\d\d}/{day:\d\d}/{title}
 </pre></div>
@@ -189,7 +189,7 @@
 </ul>
 <h2>XSS(跨站脚本攻击)</h2>
 <p>实际上，现在的每项相关技术都内建某种形式的自动HTML转义过滤器。理念是：对于这样的一个模板：</p>
-<div class="highlight"><pre>&lt;p&gt;Hello, ${name}!&lt;/p&gt;
+<div class="highlight"><pre><span></span>&lt;p&gt;Hello, ${name}!&lt;/p&gt;
 </pre></div>
 
 
@@ -198,7 +198,7 @@
 <p>那么，棘手的地方就是知道何时以及如何关闭它。如果你在Python代码中构建了某种复杂的HTML，且不想完全转义它，那么仅仅使得转义行为失效是个蹩脚的解决方案。任何转义失效的地方都可能发生注入。幸运的是，许多框架(至少有Pyramid和Flask)使用了<a href="http://pypi.python.org/pypi/MarkupSafe">markupsafe</a>库，它能智能地帮助避免这个问题。</p>
 <p>markupsafe提供一个单一的类， <code>Markup</code> ，继承自 <code>unicode</code> . <code>Markup(u'Hello!')</code> ，会产生一个行为上相当像字符串的对象。类方法 <code>Markup.escape</code> 工作方式相同，但会转义经过包裹的字符串中的任意HTML字符。</p>
 <p>这里有两个鬼祟的花招。第一：一个 <code>Markup</code> 对象不会被转义两次。请看：</p>
-<div class="highlight"><pre>&gt;&gt;&gt; s = u&#39;&lt;b&gt;oh noo xss&lt;/b&gt;&#39;
+<div class="highlight"><pre><span></span>&gt;&gt;&gt; s = u&#39;&lt;b&gt;oh noo xss&lt;/b&gt;&#39;
 &gt;&gt;&gt; Markup.escape(s)
 Markup(u&#39;&amp;lt;b&amp;gt;oh noo xss&amp;lt;/b&amp;gt;&#39;)
 &gt;&gt; Markup.escape(Markup.escape(s))
@@ -208,7 +208,7 @@ Markup(u&#39;&amp;lt;b&amp;gt;oh noo xss&amp;lt;/b&amp;gt;&#39;)
 
 <p>因此，一旦创建了一个 <code>Markup</code> 对象，就可将它用于你的模板，过滤器不会管它---即使它包含HTML。</p>
 <p>另一个把戏是， <code>Markup</code> 对象重载了所有string的方法，并且自动转义所有的参数。这意味着在Python里，你可以这么干：</p>
-<div class="highlight"><pre>&gt;&gt;&gt; user_input = u&#39;&lt;script&gt;alert(&quot;pwn&quot;);&lt;/script&gt;&#39;
+<div class="highlight"><pre><span></span>&gt;&gt;&gt; user_input = u&#39;&lt;script&gt;alert(&quot;pwn&quot;);&lt;/script&gt;&#39;
 &gt;&gt;&gt; Markup(u&#39;&lt;p&gt;Hello, %s!&lt;/p&gt;&#39;) % user_input
 Markup(u&#39;&lt;p&gt;Hello, &amp;lt;script&amp;gt;alert(&amp;#34;pwn&amp;#34;);&amp;lt;/script&amp;gt;!&lt;/p&gt;&#39;)
 </pre></div>

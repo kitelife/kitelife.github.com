@@ -74,7 +74,7 @@
             <div class="entry-content">
               <p>1.
 安装必要的软件</p>
-<div class="highlight"><pre>sudo apt-get install nginx php5-cli php5-cgi spawn-fcgi psmisc mysql-server <span class="se">\</span>
+<div class="highlight"><pre><span></span>sudo apt-get install nginx php5-cli php5-cgi spawn-fcgi psmisc mysql-server <span class="se">\</span>
 mysql-client php5-mysql memcached php5-memcache php5-curl php5-gd
 </pre></div>
 
@@ -84,7 +84,7 @@ mysql-client php5-mysql memcached php5-memcache php5-curl php5-gd
 （注：ngnix的配置文件目录为/etc/ngnix/，默认网站根目录为/usr/share/ngnix/www/；php配置文件目录为/etc/php5/）</p>
 <p>3.
 编辑文件/etc/ngnix/sites-available/default，内容如下(可以先把原文件备份一下)：</p>
-<div class="highlight"><pre>server {
+<div class="highlight"><pre><span></span>server {
     #listen   80; ## listen for ipv4; this line is default and implied
     #listen   [::]:80 default ipv6only=on; ## listen for ipv6
 
@@ -112,23 +112,23 @@ mysql-client php5-mysql memcached php5-memcache php5-curl php5-gd
 
 <p>4.
 修改文件/etc/php5/cgi/php.ini。去除</p>
-<div class="highlight"><pre>#cgi.fix_pathinfo=1
+<div class="highlight"><pre><span></span>#cgi.fix_pathinfo=1
 </pre></div>
 
 
 <p>一行前面的<code>#</code>。具体信息请看php.ini的相关注释。</p>
 <p>5.
 创建文件/usr/bin/php-fastcgi :</p>
-<div class="highlight"><pre><span class="c">#!/bin/bash</span>
+<div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
 
 <span class="nv">FASTCGI_USER</span><span class="o">=</span>www-data
 <span class="nv">FASTCGI_GROUP</span><span class="o">=</span>www-data
 
-<span class="nv">ADDRESS</span><span class="o">=</span>127.0.0.1
-<span class="nv">PORT</span><span class="o">=</span>9000
+<span class="nv">ADDRESS</span><span class="o">=</span><span class="m">127</span>.0.0.1
+<span class="nv">PORT</span><span class="o">=</span><span class="m">9000</span>
 
 <span class="nv">PIDFILE</span><span class="o">=</span>/var/run/php-fastcgi/php-fastcgi.pid
-<span class="nv">CHILDREN</span><span class="o">=</span>6
+<span class="nv">CHILDREN</span><span class="o">=</span><span class="m">6</span>
 
 <span class="nv">PHP5</span><span class="o">=</span>/usr/bin/php5-cgi
 /usr/bin/spawn-fcgi -a <span class="nv">$ADDRESS</span> -p <span class="nv">$PORT</span> -P <span class="nv">$PIDFILE</span> -C <span class="nv">$CHILDREN</span> -u <span class="nv">$FASTCGI_USER</span> -g <span class="nv">$FASTCGI_GROUP</span> -f <span class="nv">$PHP5</span>
@@ -137,13 +137,13 @@ mysql-client php5-mysql memcached php5-memcache php5-curl php5-gd
 
 <p>6.
 设置/usr/bin/php-fastcgi为可执行：</p>
-<div class="highlight"><pre>sudo chmod +x /usr/bin/php-fastcgi
+<div class="highlight"><pre><span></span>sudo chmod +x /usr/bin/php-fastcgi
 </pre></div>
 
 
 <p>7.
 创建文件/etc/init.d/php-fastcgi：</p>
-<div class="highlight"><pre><span class="c">#!/bin/bash</span>
+<div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
 
 <span class="nv">PHP_SCRIPT</span><span class="o">=</span>/usr/bin/php-fastcgi
 
@@ -152,7 +152,7 @@ mysql-client php5-mysql memcached php5-memcache php5-curl php5-gd
 
 <span class="nv">PID_DIR</span><span class="o">=</span>/var/run/php-fastcgi
 <span class="nv">PID_FILE</span><span class="o">=</span>/var/run/php-fastcgi/php-fastcgi.pid
-<span class="nv">RET_VAL</span><span class="o">=</span>0
+<span class="nv">RET_VAL</span><span class="o">=</span><span class="m">0</span>
 
 <span class="k">case</span> <span class="s2">&quot;</span><span class="nv">$1</span><span class="s2">&quot;</span> in
     start<span class="o">)</span>
@@ -165,7 +165,7 @@ mysql-client php5-mysql memcached php5-memcache php5-curl php5-gd
         <span class="k">if</span> <span class="o">[[</span> -r <span class="nv">$PID_FILE</span> <span class="o">]]</span>
         <span class="k">then</span>
             <span class="nb">echo</span> <span class="s2">&quot;php-fastcgi already running with PID `cat </span><span class="nv">$PID_FILE</span><span class="s2">`&quot;</span>
-            <span class="nv">RET_VAL</span><span class="o">=</span>1
+            <span class="nv">RET_VAL</span><span class="o">=</span><span class="m">1</span>
         <span class="k">else</span>
             <span class="nv">$PHP_SCRIPT</span>
             <span class="nv">RET_VAL</span><span class="o">=</span><span class="nv">$?</span>
@@ -179,7 +179,7 @@ mysql-client php5-mysql memcached php5-memcache php5-curl php5-gd
             <span class="nv">RET_VAL</span><span class="o">=</span><span class="nv">$?</span>
         <span class="k">else</span>
             <span class="nb">echo</span> <span class="s2">&quot;Could not find PID file </span><span class="nv">$PID_FILE</span><span class="s2">&quot;</span>
-            <span class="nv">RET_VAL</span><span class="o">=</span>1
+            <span class="nv">RET_VAL</span><span class="o">=</span><span class="m">1</span>
         <span class="k">fi</span>
     <span class="p">;;</span>
     restart<span class="o">)</span>
@@ -205,7 +205,7 @@ mysql-client php5-mysql memcached php5-memcache php5-curl php5-gd
     <span class="p">;;</span>
     *<span class="o">)</span>
         <span class="nb">echo</span> <span class="s2">&quot;Usage: php-fastcgi {start|stop|restart|status}&quot;</span>
-        <span class="nv">RET_VAL</span><span class="o">=</span>1
+        <span class="nv">RET_VAL</span><span class="o">=</span><span class="m">1</span>
     <span class="p">;;</span>
 <span class="k">esac</span>
 <span class="nb">exit</span> <span class="nv">$RET_VAL</span>
@@ -214,7 +214,7 @@ mysql-client php5-mysql memcached php5-memcache php5-curl php5-gd
 
 <p>8.
 添加可执行权限，以及设置为开机启动</p>
-<div class="highlight"><pre>sudo chmod +x /etc/init.d/php-fastcgi
+<div class="highlight"><pre><span></span>sudo chmod +x /etc/init.d/php-fastcgi
 sudo update-rc.d php-fastcgi defaults
 sudo /etc/init.d/php-fastcgi start
 sudo /etc/init.d/nginx start
@@ -223,7 +223,7 @@ sudo /etc/init.d/nginx start
 
 <p>9.
 创建文件/usr/share/nginx/www/test.php, 内容如下:</p>
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
     <span class="nb">phpinfo</span><span class="p">();</span>
 <span class="cp">?&gt;</span><span class="x"></span>
 </pre></div>

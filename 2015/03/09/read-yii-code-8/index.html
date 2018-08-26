@@ -74,13 +74,13 @@
             <div class="entry-content">
               <h3>使用</h3>
 <p>Yii框架为开发者提供两个静态方法进行日志记录：</p>
-<div class="highlight"><pre><span class="x">Yii::log($message, $level, $category);</span>
+<div class="highlight"><pre><span></span><span class="x">Yii::log($message, $level, $category);</span>
 <span class="x">Yii::trace($message, $category);</span>
 </pre></div>
 
 
 <p>两者的区别在于后者依赖于应用开启调试模式，即定义常量YII_DEBUG：</p>
-<div class="highlight"><pre><span class="x">defined(&#39;YII_DEBUG&#39;) or define(&#39;YII_DEBUG&#39;, true);</span>
+<div class="highlight"><pre><span></span><span class="x">defined(&#39;YII_DEBUG&#39;) or define(&#39;YII_DEBUG&#39;, true);</span>
 </pre></div>
 
 
@@ -93,7 +93,7 @@
 <li>error：用于记录重大错误日志</li>
 </ul>
 <p>要想日志真的输出到文件、邮件、web页面等地方，还得为应用添加如下配置：</p>
-<div class="highlight"><pre><span class="x">array(</span>
+<div class="highlight"><pre><span></span><span class="x">array(</span>
 <span class="x">    ......</span>
 <span class="x">    &#39;preload&#39;=&gt;array(&#39;log&#39;),</span>
 <span class="x">    &#39;components&#39;=&gt;array(</span>
@@ -123,7 +123,7 @@
 <p>至于为什么需要对log组件进行preload，即预先实例化，后边再说。</p>
 <h3>分析</h3>
 <p>先来看看Yii::log和Yii::trace的实现：</p>
-<div class="highlight"><pre><span class="x">/**</span>
+<div class="highlight"><pre><span></span><span class="x">/**</span>
 <span class="x"> * Writes a trace message.</span>
 <span class="x"> * This method will only log a message when the application is in debug mode.</span>
 <span class="x"> * @param string $msg message to be logged</span>
@@ -174,7 +174,7 @@
 
 
 <p>CLogger类的log方法实现如下所示：</p>
-<div class="highlight"><pre><span class="x">/**</span>
+<div class="highlight"><pre><span></span><span class="x">/**</span>
 <span class="x"> * Logs a message.</span>
 <span class="x"> * Messages logged by this method may be retrieved back via {@link getLogs}.</span>
 <span class="x"> * @param string $message message to be logged</span>
@@ -199,7 +199,7 @@
 
 
 <p>CLogger类的flush方法实现如下所示：</p>
-<div class="highlight"><pre><span class="x">/**</span>
+<div class="highlight"><pre><span></span><span class="x">/**</span>
 <span class="x"> * Removes all recorded messages from the memory.</span>
 <span class="x"> * This method will raise an {@link onFlush} event.</span>
 <span class="x"> * The attached event handlers can process the log messages before they are removed.</span>
@@ -232,7 +232,7 @@
 
 
 <p>CComponent类的raiseEvent方法实现如下所示：</p>
-<div class="highlight"><pre><span class="x">/**</span>
+<div class="highlight"><pre><span></span><span class="x">/**</span>
 <span class="x"> * Raises an event.</span>
 <span class="x"> * This method represents the happening of an event. It invokes</span>
 <span class="x"> * all attached handlers for the event.</span>
@@ -287,7 +287,7 @@
 <p>那么这些$handle是在哪里绑定事件的呢？</p>
 <p>既然log组件对应的是CLogRouter类，那么来看看其实现。</p>
 <p>类CLogRouter继承自类CApplicationComponent。根据<a href="http://youngsterxyf.github.io/2014/11/13/read-yii-code-3/">Yii源码阅读笔记 - 组件集成</a>一文，可知组件初始化时实例化对象会调用init方法来完成一些初始化操作，类CLogRouter的init方法实现如下所示：</p>
-<div class="highlight"><pre><span class="x">/**</span>
+<div class="highlight"><pre><span></span><span class="x">/**</span>
 <span class="x"> * Initializes this application component.</span>
 <span class="x"> * This method is required by the IApplicationComponent interface.</span>
 <span class="x"> */</span>
@@ -310,7 +310,7 @@
 
 
 <p>而类CLogRouter的方法collectLogs和processLogs实现如下所示：</p>
-<div class="highlight"><pre><span class="x">/**</span>
+<div class="highlight"><pre><span></span><span class="x">/**</span>
 <span class="x"> * Collects log messages from a logger.</span>
 <span class="x"> * This method is an event handler to the {@link CLogger::onFlush} event.</span>
 <span class="x"> * @param CEvent $event event parameter</span>
@@ -350,7 +350,7 @@
 
 
 <p>以类CWebLogRoute为例来看看日志路由类的方法collectLogs，该方法定义于类CLogRoute中，实现如下所示：</p>
-<div class="highlight"><pre><span class="x">/**</span>
+<div class="highlight"><pre><span></span><span class="x">/**</span>
 <span class="x"> * Retrieves filtered log messages from logger for further processing.</span>
 <span class="x"> * @param CLogger $logger logger instance</span>
 <span class="x"> * @param boolean $processLogs whether to process the logs after they are collected from the logger</span>
@@ -375,7 +375,7 @@
 
 
 <p>而类CWebLogRoute的processLogs方法实现如下所示：</p>
-<div class="highlight"><pre><span class="x">/**</span>
+<div class="highlight"><pre><span></span><span class="x">/**</span>
 <span class="x"> * Displays the log messages.</span>
 <span class="x"> * @param array $logs list of log messages</span>
 <span class="x"> */</span>
@@ -421,7 +421,7 @@
 
 <p>从上述代码可以知道日志路由类是将日志信息按照一定格式显示在实际请求页面内容的下方。</p>
 <p>再来看看方法init中调用的两个attachEventHandler，它们的定义是同一个，定义在类CComponent中（类CLogger直接继承自类CComponent），实现如下所示：</p>
-<div class="highlight"><pre><span class="x">public function attachEventHandler($name,$handler)</span>
+<div class="highlight"><pre><span></span><span class="x">public function attachEventHandler($name,$handler)</span>
 <span class="x">{</span>
 <span class="x">    // 将事件处理器$handler加到处理器列表中，在事件发生时会逐个处理器触发执行</span>
 <span class="x">    $this-&gt;getEventHandlers($name)-&gt;add($handler);</span>
@@ -430,7 +430,7 @@
 
 
 <p>其中方法EventHandlers的实现如下所示：</p>
-<div class="highlight"><pre><span class="x">/**</span>
+<div class="highlight"><pre><span></span><span class="x">/**</span>
 <span class="x"> * Returns the list of attached event handlers for an event.</span>
 <span class="x"> * @param string $name the event name</span>
 <span class="x"> * @return CList list of attached event handlers for the event</span>

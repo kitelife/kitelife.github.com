@@ -100,19 +100,19 @@
 <p>memcacheq默认打开的网络端口为22201，可通过命令<code>netstat -tlnp</code>来查看。</p>
 <hr>
 <p>若想编写PHP程序来测试使用memcacheq，需要先安装配置PHP <a href="http://cn2.php.net/memcache">memcache扩展模块</a>，可先通过<code>php -m | grep memcache</code>来查看是否已安装。测试程序如下：</p>
-<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
-<span class="nv">$memcache_obj</span> <span class="o">=</span> <span class="nx">memcache_connect</span><span class="p">(</span><span class="s1">&#39;127.0.0.1&#39;</span><span class="p">,</span> <span class="mi">22201</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><span class="x">&amp;lt;?php</span>
+<span class="x">$memcache_obj = memcache_connect(&#39;127.0.0.1&#39;, 22201);</span>
 
-<span class="c1">// push数据进入队列demoqueue1</span>
-<span class="nv">$set_rs</span> <span class="o">=</span> <span class="nx">memcache_set</span><span class="p">(</span><span class="nv">$memcache_obj</span><span class="p">,</span> <span class="s1">&#39;demoqueue1&#39;</span><span class="p">,</span> <span class="s1">&#39;message body here&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-<span class="nb">var_dump</span><span class="p">(</span><span class="nv">$set_rs</span><span class="p">);</span>
+<span class="x">// push数据进入队列demoqueue1</span>
+<span class="x">$set_rs = memcache_set($memcache_obj, &#39;demoqueue1&#39;, &#39;message body here&#39;, 0, 0);</span>
+<span class="x">var_dump($set_rs);</span>
 
-<span class="c1">// 从队列demoqueue1中pop出数据</span>
-<span class="nv">$get_rs</span> <span class="o">=</span> <span class="nx">memcache_get</span><span class="p">(</span><span class="nv">$memcache_obj</span><span class="p">,</span> <span class="s1">&#39;demoqueue1&#39;</span><span class="p">);</span>
-<span class="nb">var_dump</span><span class="p">(</span><span class="nv">$get_rs</span><span class="p">);</span>
+<span class="x">// 从队列demoqueue1中pop出数据</span>
+<span class="x">$get_rs = memcache_get($memcache_obj, &#39;demoqueue1&#39;);</span>
+<span class="x">var_dump($get_rs);</span>
 
-<span class="nx">memcache_close</span><span class="p">(</span><span class="nv">$memcache_obj</span><span class="p">);</span>
-<span class="cp">?&gt;</span><span class="x"></span>
+<span class="x">memcache_close($memcache_obj);</span>
+<span class="x">?&amp;gt;</span>
 </pre></div>
 
 

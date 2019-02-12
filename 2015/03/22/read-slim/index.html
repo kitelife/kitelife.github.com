@@ -91,7 +91,7 @@
 <p>Slim的IoC容器类为：<code>\Slim\Helper\Set</code>，以单例request为例，当调用request对象时<code>$app-&gt;request</code>，先触发Slim类的魔术方法<code>__get</code>，其实现如下所示：</p>
 <div class="highlight"><pre><span></span><span class="x">public function __get($name)</span>
 <span class="x">{</span>
-<span class="x">    return $this-&gt;container-&gt;get($name);</span>
+<span class="x">    return $this-&amp;gt;container-&amp;gt;get($name);</span>
 <span class="x">}</span>
 </pre></div>
 
@@ -105,12 +105,12 @@
 <span class="x"> */</span>
 <span class="x">public function get($key, $default = null)</span>
 <span class="x">{</span>
-<span class="x">    if ($this-&gt;has($key)) {</span>
-<span class="x">        $isInvokable = is_object($this-&gt;data[$this-&gt;normalizeKey($key)]) &amp;&amp; method_exists($this-&gt;data[$this-&gt;normalizeKey($key)], &#39;__invoke&#39;);</span>
+<span class="x">    if ($this-&amp;gt;has($key)) {</span>
+<span class="x">        $isInvokable = is_object($this-&amp;gt;data[$this-&amp;gt;normalizeKey($key)]) &amp;amp;&amp;amp; method_exists($this-&amp;gt;data[$this-&amp;gt;normalizeKey($key)], &#39;__invoke&#39;);</span>
 
 <span class="x">        // 注意这里的$this，在初始化组件时，将当前容器对象作为参数传入</span>
 <span class="x">        // 从这里可以看到，容器里可以存放普通的配置信息（如settings），也可以存放组件配置</span>
-<span class="x">        return $isInvokable ? $this-&gt;data[$this-&gt;normalizeKey($key)]($this) : $this-&gt;data[$this-&gt;normalizeKey($key)];</span>
+<span class="x">        return $isInvokable ? $this-&amp;gt;data[$this-&amp;gt;normalizeKey($key)]($this) : $this-&amp;gt;data[$this-&amp;gt;normalizeKey($key)];</span>
 <span class="x">    }</span>
 
 <span class="x">    return $default;</span>
@@ -120,7 +120,7 @@
 
 <p>我们再来看看单例组件的实现，以request为例：</p>
 <div class="highlight"><pre><span></span><span class="x">// 注册单例组件request</span>
-<span class="x">$this-&gt;container-&gt;singleton(&#39;request&#39;, function ($c) {</span>
+<span class="x">$this-&amp;gt;container-&amp;gt;singleton(&#39;request&#39;, function ($c) {</span>
 <span class="x">    // request组件的实例化依赖于environment组件，</span>
 <span class="x">    // 而environment组件包含了$_SERVER以及进程标准输入的数据</span>
 <span class="x">    return new \Slim\Http\Request($c[&#39;environment&#39;]);</span>
@@ -137,7 +137,7 @@
 <span class="x"> */</span>
 <span class="x">public function singleton($key, $value)</span>
 <span class="x">{</span>
-<span class="x">    $this-&gt;set($key, function ($c) use ($value) {</span>
+<span class="x">    $this-&amp;gt;set($key, function ($c) use ($value) {</span>
 <span class="x">        // 静态对象</span>
 <span class="x">        static $object;</span>
 
@@ -160,33 +160,33 @@
 <span class="x">public function call()</span>
 <span class="x">{</span>
 <span class="x">    // 加载session数据</span>
-<span class="x">    $this-&gt;loadSession();</span>
+<span class="x">    $this-&amp;gt;loadSession();</span>
 <span class="x">    // 调用下一个中间件</span>
-<span class="x">    $this-&gt;next-&gt;call();</span>
+<span class="x">    $this-&amp;gt;next-&amp;gt;call();</span>
 <span class="x">    // 保存session数据</span>
-<span class="x">    $this-&gt;saveSession();</span>
+<span class="x">    $this-&amp;gt;saveSession();</span>
 <span class="x">}</span>
 
 <span class="x">// 中间件MethodOverride</span>
 <span class="x">public function call()</span>
 <span class="x">{</span>
-<span class="x">    $env = $this-&gt;app-&gt;environment();</span>
+<span class="x">    $env = $this-&amp;gt;app-&amp;gt;environment();</span>
 <span class="x">    if (isset($env[&#39;HTTP_X_HTTP_METHOD_OVERRIDE&#39;])) {</span>
 <span class="x">        // Header commonly used by Backbone.js and others</span>
 <span class="x">        $env[&#39;slim.method_override.original_method&#39;] = $env[&#39;REQUEST_METHOD&#39;];</span>
 <span class="x">        $env[&#39;REQUEST_METHOD&#39;] = strtoupper($env[&#39;HTTP_X_HTTP_METHOD_OVERRIDE&#39;]);</span>
-<span class="x">    } elseif (isset($env[&#39;REQUEST_METHOD&#39;]) &amp;&amp; $env[&#39;REQUEST_METHOD&#39;] === &#39;POST&#39;) {</span>
+<span class="x">    } elseif (isset($env[&#39;REQUEST_METHOD&#39;]) &amp;amp;&amp;amp; $env[&#39;REQUEST_METHOD&#39;] === &#39;POST&#39;) {</span>
 <span class="x">        // HTML Form Override</span>
 <span class="x">        $req = new \Slim\Http\Request($env);</span>
-<span class="x">        // $this-&gt;settings[&#39;key&#39;] 默认为_METHOD</span>
-<span class="x">        $method = $req-&gt;post($this-&gt;settings[&#39;key&#39;]);</span>
+<span class="x">        // $this-&amp;gt;settings[&#39;key&#39;] 默认为_METHOD</span>
+<span class="x">        $method = $req-&amp;gt;post($this-&amp;gt;settings[&#39;key&#39;]);</span>
 <span class="x">        if ($method) {</span>
 <span class="x">            $env[&#39;slim.method_override.original_method&#39;] = $env[&#39;REQUEST_METHOD&#39;];</span>
 <span class="x">            $env[&#39;REQUEST_METHOD&#39;] = strtoupper($method);</span>
 <span class="x">        }</span>
 <span class="x">    }</span>
 <span class="x">    // 调用下一个中间件</span>
-<span class="x">    $this-&gt;next-&gt;call();</span>
+<span class="x">    $this-&amp;gt;next-&amp;gt;call();</span>
 <span class="x">}</span>
 </pre></div>
 
@@ -206,12 +206,12 @@
 <span class="x">public function dispatch()</span>
 <span class="x">{</span>
 <span class="x">    // 逐个调用绑定的路由级中间件，以当前路由对象作为参数传入</span>
-<span class="x">    foreach ($this-&gt;middleware as $mw) {</span>
+<span class="x">    foreach ($this-&amp;gt;middleware as $mw) {</span>
 <span class="x">        call_user_func_array($mw, array($this));</span>
 <span class="x">    }</span>
 
 <span class="x">    // 调用路由回调，并将通过路由模式从URL中正则匹配到的参数传入回调</span>
-<span class="x">    $return = call_user_func_array($this-&gt;getCallable(), array_values($this-&gt;getParams()));</span>
+<span class="x">    $return = call_user_func_array($this-&amp;gt;getCallable(), array_values($this-&amp;gt;getParams()));</span>
 <span class="x">    return ($return === false) ? false : true;</span>
 <span class="x">}</span>
 </pre></div>
@@ -227,21 +227,21 @@
 <span class="x">public function call()</span>
 <span class="x">{</span>
 <span class="x">    try {</span>
-<span class="x">        if (isset($this-&gt;environment[&#39;slim.flash&#39;])) {</span>
-<span class="x">            $this-&gt;view()-&gt;setData(&#39;flash&#39;, $this-&gt;environment[&#39;slim.flash&#39;]);</span>
+<span class="x">        if (isset($this-&amp;gt;environment[&#39;slim.flash&#39;])) {</span>
+<span class="x">            $this-&amp;gt;view()-&amp;gt;setData(&#39;flash&#39;, $this-&amp;gt;environment[&#39;slim.flash&#39;]);</span>
 <span class="x">        }</span>
-<span class="x">        $this-&gt;applyHook(&#39;slim.before&#39;);</span>
+<span class="x">        $this-&amp;gt;applyHook(&#39;slim.before&#39;);</span>
 <span class="x">        ob_start();</span>
-<span class="x">        $this-&gt;applyHook(&#39;slim.before.router&#39;);</span>
+<span class="x">        $this-&amp;gt;applyHook(&#39;slim.before.router&#39;);</span>
 <span class="x">        $dispatched = false;</span>
 <span class="x">        // 路由匹配</span>
-<span class="x">        $matchedRoutes = $this-&gt;router-&gt;getMatchedRoutes($this-&gt;request-&gt;getMethod(), $this-&gt;request-&gt;getResourceUri());</span>
+<span class="x">        $matchedRoutes = $this-&amp;gt;router-&amp;gt;getMatchedRoutes($this-&amp;gt;request-&amp;gt;getMethod(), $this-&amp;gt;request-&amp;gt;getResourceUri());</span>
 <span class="x">        // 逐个路由分发执行</span>
 <span class="x">        foreach ($matchedRoutes as $route) {</span>
 <span class="x">            try {</span>
-<span class="x">                $this-&gt;applyHook(&#39;slim.before.dispatch&#39;);</span>
-<span class="x">                $dispatched = $route-&gt;dispatch();</span>
-<span class="x">                $this-&gt;applyHook(&#39;slim.after.dispatch&#39;);</span>
+<span class="x">                $this-&amp;gt;applyHook(&#39;slim.before.dispatch&#39;);</span>
+<span class="x">                $dispatched = $route-&amp;gt;dispatch();</span>
+<span class="x">                $this-&amp;gt;applyHook(&#39;slim.after.dispatch&#39;);</span>
 <span class="x">                if ($dispatched) {</span>
 <span class="x">                    break;</span>
 <span class="x">                }</span>
@@ -252,19 +252,19 @@
 <span class="x">        // 当路由的回调抛出非Pass异常时，则会响应404</span>
 <span class="x">        // 这貌似不好吧？</span>
 <span class="x">        if (!$dispatched) {</span>
-<span class="x">            $this-&gt;notFound();</span>
+<span class="x">            $this-&amp;gt;notFound();</span>
 <span class="x">        }</span>
-<span class="x">        $this-&gt;applyHook(&#39;slim.after.router&#39;);</span>
-<span class="x">        $this-&gt;stop();</span>
+<span class="x">        $this-&amp;gt;applyHook(&#39;slim.after.router&#39;);</span>
+<span class="x">        $this-&amp;gt;stop();</span>
 <span class="x">    } catch (\Slim\Exception\Stop $e) {</span>
-<span class="x">        $this-&gt;response()-&gt;write(ob_get_clean());</span>
+<span class="x">        $this-&amp;gt;response()-&amp;gt;write(ob_get_clean());</span>
 <span class="x">    } catch (\Exception $e) {</span>
-<span class="x">        if ($this-&gt;config(&#39;debug&#39;)) {</span>
+<span class="x">        if ($this-&amp;gt;config(&#39;debug&#39;)) {</span>
 <span class="x">            throw $e;</span>
 <span class="x">        } else {</span>
 <span class="x">            try {</span>
-<span class="x">                $this-&gt;response()-&gt;write(ob_get_clean());</span>
-<span class="x">                $this-&gt;error($e);</span>
+<span class="x">                $this-&amp;gt;response()-&amp;gt;write(ob_get_clean());</span>
+<span class="x">                $this-&amp;gt;error($e);</span>
 <span class="x">            } catch (\Slim\Exception\Stop $e) {</span>
 <span class="x">                // Do nothing</span>
 <span class="x">            }</span>
@@ -284,22 +284,22 @@
 <span class="x"> */</span>
 <span class="x">public function getMatchedRoutes($httpMethod, $resourceUri, $reload = false)</span>
 <span class="x">{</span>
-<span class="x">    if ($reload || is_null($this-&gt;matchedRoutes)) {</span>
-<span class="x">        $this-&gt;matchedRoutes = array();</span>
-<span class="x">        foreach ($this-&gt;routes as $route) {</span>
+<span class="x">    if ($reload || is_null($this-&amp;gt;matchedRoutes)) {</span>
+<span class="x">        $this-&amp;gt;matchedRoutes = array();</span>
+<span class="x">        foreach ($this-&amp;gt;routes as $route) {</span>
 <span class="x">            // 如果当前请求的HTTP方法不被当前route支持且不是ANY，则跳过</span>
-<span class="x">            if (!$route-&gt;supportsHttpMethod($httpMethod) &amp;&amp; !$route-&gt;supportsHttpMethod(&quot;ANY&quot;)) {</span>
+<span class="x">            if (!$route-&amp;gt;supportsHttpMethod($httpMethod) &amp;amp;&amp;amp; !$route-&amp;gt;supportsHttpMethod(&quot;ANY&quot;)) {</span>
 <span class="x">                continue;</span>
 <span class="x">            }</span>
 
 <span class="x">            // 否则继续匹配环境变量PATH_INFO</span>
-<span class="x">            if ($route-&gt;matches($resourceUri)) {</span>
-<span class="x">                $this-&gt;matchedRoutes[] = $route;</span>
+<span class="x">            if ($route-&amp;gt;matches($resourceUri)) {</span>
+<span class="x">                $this-&amp;gt;matchedRoutes[] = $route;</span>
 <span class="x">            }</span>
 <span class="x">        }</span>
 <span class="x">    }</span>
 
-<span class="x">    return $this-&gt;matchedRoutes;</span>
+<span class="x">    return $this-&amp;gt;matchedRoutes;</span>
 <span class="x">}</span>
 </pre></div>
 
@@ -325,17 +325,17 @@
 <span class="x">        array($this, &#39;matchesCallback&#39;),</span>
 <span class="x">        // 括号中的部分表示可选</span>
 <span class="x">        // 如：/archive(/:year(/:month(/:day)))</span>
-<span class="x">        str_replace(&#39;)&#39;, &#39;)?&#39;, (string)$this-&gt;pattern)</span>
+<span class="x">        str_replace(&#39;)&#39;, &#39;)?&#39;, (string)$this-&amp;gt;pattern)</span>
 <span class="x">    );</span>
 <span class="x">    // 即使pattern最后有斜杠/，对于URL来说也是可选的</span>
-<span class="x">    if (substr($this-&gt;pattern, -1) === &#39;/&#39;) {</span>
+<span class="x">    if (substr($this-&amp;gt;pattern, -1) === &#39;/&#39;) {</span>
 <span class="x">        $patternAsRegex .= &#39;?&#39;;</span>
 <span class="x">    }</span>
 
 <span class="x">    $regex = &#39;#^&#39; . $patternAsRegex . &#39;$#&#39;;</span>
 
 <span class="x">    // 大小写不敏感</span>
-<span class="x">    if ($this-&gt;caseSensitive === false) {</span>
+<span class="x">    if ($this-&amp;gt;caseSensitive === false) {</span>
 <span class="x">        $regex .= &#39;i&#39;;</span>
 <span class="x">    }</span>
 
@@ -344,12 +344,12 @@
 <span class="x">    if (!preg_match($regex, $resourceUri, $paramValues)) {</span>
 <span class="x">        return false;</span>
 <span class="x">    }</span>
-<span class="x">    foreach ($this-&gt;paramNames as $name) {</span>
+<span class="x">    foreach ($this-&amp;gt;paramNames as $name) {</span>
 <span class="x">        if (isset($paramValues[$name])) {</span>
-<span class="x">            if (isset($this-&gt;paramNamesPath[$name])) {</span>
-<span class="x">                $this-&gt;params[$name] = explode(&#39;/&#39;, urldecode($paramValues[$name]));</span>
+<span class="x">            if (isset($this-&amp;gt;paramNamesPath[$name])) {</span>
+<span class="x">                $this-&amp;gt;params[$name] = explode(&#39;/&#39;, urldecode($paramValues[$name]));</span>
 <span class="x">            } else {</span>
-<span class="x">                $this-&gt;params[$name] = urldecode($paramValues[$name]);</span>
+<span class="x">                $this-&amp;gt;params[$name] = urldecode($paramValues[$name]);</span>
 <span class="x">            }</span>
 <span class="x">        }</span>
 <span class="x">    }</span>
@@ -367,17 +367,17 @@
 <span class="x"> */</span>
 <span class="x">protected function matchesCallback($m)</span>
 <span class="x">{</span>
-<span class="x">    $this-&gt;paramNames[] = $m[1];</span>
-<span class="x">    if (isset($this-&gt;conditions[$m[1]])) {</span>
-<span class="x">        return &#39;(?P&lt;&#39; . $m[1] . &#39;&gt;&#39; . $this-&gt;conditions[$m[1]] . &#39;)&#39;;</span>
+<span class="x">    $this-&amp;gt;paramNames[] = $m[1];</span>
+<span class="x">    if (isset($this-&amp;gt;conditions[$m[1]])) {</span>
+<span class="x">        return &#39;(?P&amp;lt;&#39; . $m[1] . &#39;&amp;gt;&#39; . $this-&amp;gt;conditions[$m[1]] . &#39;)&#39;;</span>
 <span class="x">    }</span>
 <span class="x">    if (substr($m[0], -1) === &#39;+&#39;) {</span>
-<span class="x">        $this-&gt;paramNamesPath[$m[1]] = 1;</span>
+<span class="x">        $this-&amp;gt;paramNamesPath[$m[1]] = 1;</span>
 
-<span class="x">        return &#39;(?P&lt;&#39; . $m[1] . &#39;&gt;.+)&#39;;</span>
+<span class="x">        return &#39;(?P&amp;lt;&#39; . $m[1] . &#39;&amp;gt;.+)&#39;;</span>
 <span class="x">    }</span>
 
-<span class="x">    return &#39;(?P&lt;&#39; . $m[1] . &#39;&gt;[^/]+)&#39;;</span>
+<span class="x">    return &#39;(?P&amp;lt;&#39; . $m[1] . &#39;&amp;gt;[^/]+)&#39;;</span>
 <span class="x">}</span>
 </pre></div>
 

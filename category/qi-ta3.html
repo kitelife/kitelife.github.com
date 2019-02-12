@@ -64,6 +64,30 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="../2015/09/14/read-yii-code-10/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 错误/异常处理">Yii源码阅读笔记 - 错误/异常处理</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2015-09-14T00:00:00+08:00"> 2015-09-14 Mon </abbr>
+<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <h3>概述</h3>
+<p>PHP区分“错误”（Error）和“异常”（Exception）。“错误”通常是由PHP内部函数抛出，表示运行时问题，当然也可以通过函数<code>trigger_error</code>或<code>user_error</code>抛出一个用户级别的error/warning/notice信息。但在引入面向对象之后，相比使用<code>trigger_error</code>抛出错误，使用throw抛出异常更常用。</p>
+<p>对于“错误”，PHP允许配置报告哪些级别/类型错误、是否（向用户）展示错误、是否对错误记录日志、错误日志记到哪，分别对应php.ini中的配置项：<code>error_reporting</code>、<code>display_errors</code>、<code>log_errors</code>、<code>error_log</code>。详细信息见<a href="http://php.net/manual/zh/language.errors.basics.php">这里</a>。</p>
+<p>对于应用程序内层调用抛出的“异常”，一般可以在外层中使用try...catch来捕获并自定义处理过程。但对于“错误”（PHP运行时抛出或者应用程序使用trigger_error抛出的）或者对于-无法使用try...catch来捕获可能的异常/为了做到即使忘记捕获的异常也能得到自定义处理-的情况，该怎么办 …</p> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2015/09/14/read-yii-code-10/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 错误/异常处理">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="../tag/php.html">PHP</a>
+                    <a class="danger label" href="../tag/yii.html">Yii</a>
+                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
+                    <a class="danger label" href="../tag/zong-jie.html">总结</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="../2015/09/11/parallelism-in-one-line/" rel="bookmark" title="Permalink to 一行式并行方案（译）">一行式并行方案（译）</a>
                     </h2>
                 </header>
@@ -209,7 +233,7 @@
 <hr>
 <p>在 <a href="http://blog.xiayf.cn/2014/11/20/read-yii-code-7/">Yii源码阅读笔记 - 应用模块化</a> 一文中介绍类 <code>CWebApplication</code> 中的方法 <code>createController</code> ，
 该方法根据目标路由找到对应的控制器类文件并加载，方法中有行代码：</p>
-<div class="highlight"><pre><span></span><span class="x">$basePath=$owner-&gt;getControllerPath();</span>
+<div class="highlight"><pre><span></span><span class="x">$basePath=$owner-&amp;gt;getControllerPath();</span>
 </pre></div>
 
 
@@ -217,7 +241,7 @@
 <div class="highlight"><pre><span></span><span class="x">/**</span>
 <span class="x"> * @return string the directory that contains the controller classes. Defaults to &#39;protected/controllers&#39;.</span>
 <span class="x"> */</span>
-<span class="x">public function …</span></pre></div> </div><!-- /.entry-content -->
+<span class="x">public …</span></pre></div> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2015/04/10/read-yii-code-9/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 自定义类自动加载">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -282,47 +306,6 @@
                     <span>Tagged as : </span>
                     <a class="danger label" href="../tag/bi-ji.html">笔记</a>
                     <a class="danger label" href="../tag/php.html">PHP</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="../2015/03/09/read-yii-code-8/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 日志组件">Yii源码阅读笔记 - 日志组件</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2015-03-09T00:00:00+08:00"> 2015-03-09 Mon </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <h3>使用</h3>
-<p>Yii框架为开发者提供两个静态方法进行日志记录：</p>
-<div class="highlight"><pre><span></span><span class="x">Yii::log($message, $level, $category);</span>
-<span class="x">Yii::trace($message, $category);</span>
-</pre></div>
-
-
-<p>两者的区别在于后者依赖于应用开启调试模式，即定义常量YII_DEBUG：</p>
-<div class="highlight"><pre><span></span><span class="x">defined(&#39;YII_DEBUG&#39;) or define(&#39;YII_DEBUG&#39;, true);</span>
-</pre></div>
-
-
-<p>Yii::log方法的调用需要指定message的level和category。category是格式为“xxx.yyy.zzz”的路径别名字符串，比如日志是在yii/framework/web/CController类中记录的，那么category为“system.web.CController”。level应为以下几种之一：</p>
-<ul>
-<li>trace：Yii::trace方法即是使用的这个level。用于跟踪执行流</li>
-<li>info：记录通用信息日志</li>
-<li>profile：用于性能分析</li>
-<li>warning：用于记录警告日志</li>
-<li>error：用于记录重大错误日志</li>
-</ul>
-<p>要想日志真的输出到文件、邮件、web页面等地方 …</p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2015/03/09/read-yii-code-8/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 日志组件">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/php.html">PHP</a>
-                    <a class="danger label" href="../tag/yii.html">Yii</a>
-                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
-                    <a class="danger label" href="../tag/zong-jie.html">总结</a>
                 </div>
             </article>
             </li>

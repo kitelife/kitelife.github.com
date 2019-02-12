@@ -95,21 +95,21 @@
 <p>要想日志真的输出到文件、邮件、web页面等地方，还得为应用添加如下配置：</p>
 <div class="highlight"><pre><span></span><span class="x">array(</span>
 <span class="x">    ......</span>
-<span class="x">    &#39;preload&#39;=&gt;array(&#39;log&#39;),</span>
-<span class="x">    &#39;components&#39;=&gt;array(</span>
+<span class="x">    &#39;preload&#39;=&amp;gt;array(&#39;log&#39;),</span>
+<span class="x">    &#39;components&#39;=&amp;gt;array(</span>
 <span class="x">        ......</span>
-<span class="x">        &#39;log&#39;=&gt;array(</span>
-<span class="x">            &#39;class&#39;=&gt;&#39;CLogRouter&#39;,</span>
-<span class="x">            &#39;routes&#39;=&gt;array(</span>
+<span class="x">        &#39;log&#39;=&amp;gt;array(</span>
+<span class="x">            &#39;class&#39;=&amp;gt;&#39;CLogRouter&#39;,</span>
+<span class="x">            &#39;routes&#39;=&amp;gt;array(</span>
 <span class="x">                array(</span>
-<span class="x">                    &#39;class&#39;=&gt;&#39;CFileLogRoute&#39;,</span>
-<span class="x">                    &#39;levels&#39;=&gt;&#39;trace, info&#39;,</span>
-<span class="x">                    &#39;categories&#39;=&gt;&#39;system.*&#39;,</span>
+<span class="x">                    &#39;class&#39;=&amp;gt;&#39;CFileLogRoute&#39;,</span>
+<span class="x">                    &#39;levels&#39;=&amp;gt;&#39;trace, info&#39;,</span>
+<span class="x">                    &#39;categories&#39;=&amp;gt;&#39;system.*&#39;,</span>
 <span class="x">                ),</span>
 <span class="x">                array(</span>
-<span class="x">                    &#39;class&#39;=&gt;&#39;CEmailLogRoute&#39;,</span>
-<span class="x">                    &#39;levels&#39;=&gt;&#39;error, warning&#39;,</span>
-<span class="x">                    &#39;emails&#39;=&gt;&#39;admin@example.com&#39;,</span>
+<span class="x">                    &#39;class&#39;=&amp;gt;&#39;CEmailLogRoute&#39;,</span>
+<span class="x">                    &#39;levels&#39;=&amp;gt;&#39;error, warning&#39;,</span>
+<span class="x">                    &#39;emails&#39;=&amp;gt;&#39;admin@example.com&#39;,</span>
 <span class="x">                ),</span>
 <span class="x">            ),</span>
 <span class="x">        ),</span>
@@ -153,22 +153,22 @@
 <span class="x">        self::$_logger=new CLogger;</span>
 <span class="x">    // 注意这里的常量YII_TRACE_LEVEL，如果想日志中含有对应文件名、对应行，那么应该定义YII_TRACE_LEVEL大于0，</span>
 <span class="x">    // 这个常量的意思应该是日志追踪的深度</span>
-<span class="x">    if(YII_DEBUG &amp;&amp; YII_TRACE_LEVEL&gt;0 &amp;&amp; $level!==CLogger::LEVEL_PROFILE)</span>
+<span class="x">    if(YII_DEBUG &amp;amp;&amp;amp; YII_TRACE_LEVEL&amp;gt;0 &amp;amp;&amp;amp; $level!==CLogger::LEVEL_PROFILE)</span>
 <span class="x">    {</span>
 <span class="x">        $traces=debug_backtrace();</span>
 <span class="x">        $count=0;</span>
 <span class="x">        foreach($traces as $trace)</span>
 <span class="x">        {</span>
-<span class="x">            if(isset($trace[&#39;file&#39;],$trace[&#39;line&#39;]) &amp;&amp; strpos($trace[&#39;file&#39;],YII_PATH)!==0)</span>
+<span class="x">            if(isset($trace[&#39;file&#39;],$trace[&#39;line&#39;]) &amp;amp;&amp;amp; strpos($trace[&#39;file&#39;],YII_PATH)!==0)</span>
 <span class="x">            {</span>
 <span class="x">                $msg.=&quot;\nin &quot;.$trace[&#39;file&#39;].&#39; (&#39;.$trace[&#39;line&#39;].&#39;)&#39;;</span>
-<span class="x">                if(++$count&gt;=YII_TRACE_LEVEL)</span>
+<span class="x">                if(++$count&amp;gt;=YII_TRACE_LEVEL)</span>
 <span class="x">                    break;</span>
 <span class="x">            }</span>
 <span class="x">        }</span>
 <span class="x">    }</span>
 <span class="x">    // 调用的是CLogger类的log方法</span>
-<span class="x">    self::$_logger-&gt;log($msg,$level,$category);</span>
+<span class="x">    self::$_logger-&amp;gt;log($msg,$level,$category);</span>
 <span class="x">}</span>
 </pre></div>
 
@@ -184,15 +184,15 @@
 <span class="x"> */</span>
 <span class="x">public function log($message,$level=&#39;info&#39;,$category=&#39;application&#39;)</span>
 <span class="x">{</span>
-<span class="x">    $this-&gt;_logs[]=array($message,$level,$category,microtime(true));</span>
-<span class="x">    $this-&gt;_logCount++;</span>
+<span class="x">    $this-&amp;gt;_logs[]=array($message,$level,$category,microtime(true));</span>
+<span class="x">    $this-&amp;gt;_logCount++;</span>
 <span class="x">    // autoFlush的默认值为10000，即只有当日志的条数达到10000（或请求处理结束时），才会flush到输出，否则一直将日志存放在内存中</span>
-<span class="x">    if($this-&gt;autoFlush&gt;0 &amp;&amp; $this-&gt;_logCount&gt;=$this-&gt;autoFlush &amp;&amp; !$this-&gt;_processing)</span>
+<span class="x">    if($this-&amp;gt;autoFlush&amp;gt;0 &amp;amp;&amp;amp; $this-&amp;gt;_logCount&amp;gt;=$this-&amp;gt;autoFlush &amp;amp;&amp;amp; !$this-&amp;gt;_processing)</span>
 <span class="x">    {</span>
-<span class="x">        $this-&gt;_processing=true;</span>
+<span class="x">        $this-&amp;gt;_processing=true;</span>
 <span class="x">        // autoDump默认为false</span>
-<span class="x">        $this-&gt;flush($this-&gt;autoDump);</span>
-<span class="x">        $this-&gt;_processing=false;</span>
+<span class="x">        $this-&amp;gt;flush($this-&amp;gt;autoDump);</span>
+<span class="x">        $this-&amp;gt;_processing=false;</span>
 <span class="x">    }</span>
 <span class="x">}</span>
 </pre></div>
@@ -211,14 +211,14 @@
 <span class="x">    // 事件对象中会带有当前的CLogger对象，作为事件的发送者</span>
 <span class="x">    // 但在类CLogRouter的方法collectLogs和processLogs中并没有使用这个CLogger对象，</span>
 <span class="x">    // 而是通过Yii::getLogger()来得到同一个CLogger对象，为什么不直接使用呢？</span>
-<span class="x">    $this-&gt;onFlush(new CEvent($this, array(&#39;dumpLogs&#39;=&gt;$dumpLogs)));</span>
+<span class="x">    $this-&amp;gt;onFlush(new CEvent($this, array(&#39;dumpLogs&#39;=&amp;gt;$dumpLogs)));</span>
 <span class="x">    // 清空重置</span>
-<span class="x">    $this-&gt;_logs=array();</span>
-<span class="x">    $this-&gt;_logCount=0;</span>
+<span class="x">    $this-&amp;gt;_logs=array();</span>
+<span class="x">    $this-&amp;gt;_logCount=0;</span>
 <span class="x">}</span>
 
 <span class="x">/**</span>
-<span class="x"> * Raises an &lt;code&gt;onFlush&lt;/code&gt; event.</span>
+<span class="x"> * Raises an &amp;lt;code&amp;gt;onFlush&amp;lt;/code&amp;gt; event.</span>
 <span class="x"> * @param CEvent $event the event parameter</span>
 <span class="x"> * @since 1.1.0</span>
 <span class="x"> */</span>
@@ -226,7 +226,7 @@
 <span class="x">{</span>
 <span class="x">    // 抛出onFlush事件</span>
 <span class="x">    // raiseEvent方法定义在CComponent类中，CLogger类继承自CComponent类</span>
-<span class="x">    $this-&gt;raiseEvent(&#39;onFlush&#39;, $event);</span>
+<span class="x">    $this-&amp;gt;raiseEvent(&#39;onFlush&#39;, $event);</span>
 <span class="x">}</span>
 </pre></div>
 
@@ -243,10 +243,10 @@
 <span class="x">public function raiseEvent($name,$event)</span>
 <span class="x">{</span>
 <span class="x">    $name=strtolower($name);</span>
-<span class="x">    if(isset($this-&gt;_e[$name]))</span>
+<span class="x">    if(isset($this-&amp;gt;_e[$name]))</span>
 <span class="x">    {</span>
 <span class="x">        // 逐个执行与事件$name绑定的$handler</span>
-<span class="x">        foreach($this-&gt;_e[$name] as $handler)</span>
+<span class="x">        foreach($this-&amp;gt;_e[$name] as $handler)</span>
 <span class="x">        {</span>
 <span class="x">            if(is_string($handler))</span>
 <span class="x">                // 会将事件对象(CEvent对象)传到$handler中</span>
@@ -260,25 +260,25 @@
 <span class="x">                    if(is_string($object))  // static method call</span>
 <span class="x">                        call_user_func($handler,$event);</span>
 <span class="x">                    elseif(method_exists($object,$method))</span>
-<span class="x">                        $object-&gt;$method($event);</span>
+<span class="x">                        $object-&amp;gt;$method($event);</span>
 <span class="x">                    else</span>
 <span class="x">                        throw new CException(Yii::t(&#39;yii&#39;,&#39;Event &quot;{class}.{event}&quot; is attached with an invalid handler &quot;{handler}&quot;.&#39;,</span>
-<span class="x">                            array(&#39;{class}&#39;=&gt;get_class($this), &#39;{event}&#39;=&gt;$name, &#39;{handler}&#39;=&gt;$handler[1])));</span>
+<span class="x">                            array(&#39;{class}&#39;=&amp;gt;get_class($this), &#39;{event}&#39;=&amp;gt;$name, &#39;{handler}&#39;=&amp;gt;$handler[1])));</span>
 <span class="x">                }</span>
 <span class="x">                else // PHP 5.3: anonymous function</span>
 <span class="x">                    call_user_func($handler,$event);</span>
 <span class="x">            }</span>
 <span class="x">            else</span>
 <span class="x">                throw new CException(Yii::t(&#39;yii&#39;,&#39;Event &quot;{class}.{event}&quot; is attached with an invalid handler &quot;{handler}&quot;.&#39;,</span>
-<span class="x">                    array(&#39;{class}&#39;=&gt;get_class($this), &#39;{event}&#39;=&gt;$name, &#39;{handler}&#39;=&gt;gettype($handler))));</span>
+<span class="x">                    array(&#39;{class}&#39;=&amp;gt;get_class($this), &#39;{event}&#39;=&amp;gt;$name, &#39;{handler}&#39;=&amp;gt;gettype($handler))));</span>
 <span class="x">            // stop further handling if param.handled is set true</span>
-<span class="x">            if(($event instanceof CEvent) &amp;&amp; $event-&gt;handled)</span>
+<span class="x">            if(($event instanceof CEvent) &amp;amp;&amp;amp; $event-&amp;gt;handled)</span>
 <span class="x">                return;</span>
 <span class="x">        }</span>
 <span class="x">    }</span>
-<span class="x">    elseif(YII_DEBUG &amp;&amp; !$this-&gt;hasEvent($name))</span>
+<span class="x">    elseif(YII_DEBUG &amp;amp;&amp;amp; !$this-&amp;gt;hasEvent($name))</span>
 <span class="x">        throw new CException(Yii::t(&#39;yii&#39;,&#39;Event &quot;{class}.{event}&quot; is not defined.&#39;,</span>
-<span class="x">            array(&#39;{class}&#39;=&gt;get_class($this), &#39;{event}&#39;=&gt;$name)));</span>
+<span class="x">            array(&#39;{class}&#39;=&amp;gt;get_class($this), &#39;{event}&#39;=&amp;gt;$name)));</span>
 <span class="x">}</span>
 </pre></div>
 
@@ -295,16 +295,16 @@
 <span class="x">{</span>
 <span class="x">    parent::init();</span>
 <span class="x">    // 实例化配置的routes参数中指定的日志路由类列表</span>
-<span class="x">    foreach($this-&gt;_routes as $name=&gt;$route)</span>
+<span class="x">    foreach($this-&amp;gt;_routes as $name=&amp;gt;$route)</span>
 <span class="x">    {</span>
 <span class="x">        $route=Yii::createComponent($route);</span>
-<span class="x">        $route-&gt;init();</span>
-<span class="x">        $this-&gt;_routes[$name]=$route;</span>
+<span class="x">        $route-&amp;gt;init();</span>
+<span class="x">        $this-&amp;gt;_routes[$name]=$route;</span>
 <span class="x">    }</span>
 <span class="x">    // 将当前对象的collectLogs方法绑定到事件onFlush</span>
-<span class="x">    Yii::getLogger()-&gt;attachEventHandler(&#39;onFlush&#39;,array($this,&#39;collectLogs&#39;));</span>
+<span class="x">    Yii::getLogger()-&amp;gt;attachEventHandler(&#39;onFlush&#39;,array($this,&#39;collectLogs&#39;));</span>
 <span class="x">    // 将当前对象的processLogs方法绑定到事件onEndRequest（表示请求处理结束？）</span>
-<span class="x">    Yii::app()-&gt;attachEventHandler(&#39;onEndRequest&#39;,array($this,&#39;processLogs&#39;));</span>
+<span class="x">    Yii::app()-&amp;gt;attachEventHandler(&#39;onEndRequest&#39;,array($this,&#39;processLogs&#39;));</span>
 <span class="x">}</span>
 </pre></div>
 
@@ -318,14 +318,14 @@
 <span class="x">public function collectLogs($event)</span>
 <span class="x">{</span>
 <span class="x">    $logger=Yii::getLogger();</span>
-<span class="x">    $dumpLogs=isset($event-&gt;params[&#39;dumpLogs&#39;]) &amp;&amp; $event-&gt;params[&#39;dumpLogs&#39;];</span>
+<span class="x">    $dumpLogs=isset($event-&amp;gt;params[&#39;dumpLogs&#39;]) &amp;amp;&amp;amp; $event-&amp;gt;params[&#39;dumpLogs&#39;];</span>
 <span class="x">    // 遍历所有日志路由对象，执行其方法collectLogs</span>
-<span class="x">    foreach($this-&gt;_routes as $route)</span>
+<span class="x">    foreach($this-&amp;gt;_routes as $route)</span>
 <span class="x">    {</span>
 <span class="x">        // 属性enabled默认值为true</span>
-<span class="x">        if($route-&gt;enabled)</span>
+<span class="x">        if($route-&amp;gt;enabled)</span>
 <span class="x">            // $dumpLogs默认为false，由事件对象传过来</span>
-<span class="x">            $route-&gt;collectLogs($logger,$dumpLogs);</span>
+<span class="x">            $route-&amp;gt;collectLogs($logger,$dumpLogs);</span>
 <span class="x">    }</span>
 <span class="x">}</span>
 
@@ -339,11 +339,11 @@
 <span class="x">{</span>
 <span class="x">    $logger=Yii::getLogger();</span>
 <span class="x">    // 遍历所有日志路由对象，执行其方法collectLogs</span>
-<span class="x">    foreach($this-&gt;_routes as $route)</span>
+<span class="x">    foreach($this-&amp;gt;_routes as $route)</span>
 <span class="x">    {</span>
-<span class="x">        if($route-&gt;enabled)</span>
+<span class="x">        if($route-&amp;gt;enabled)</span>
 <span class="x">            // 注意这里参数$dumpLogs参数值始终为true</span>
-<span class="x">            $route-&gt;collectLogs($logger,true);</span>
+<span class="x">            $route-&amp;gt;collectLogs($logger,true);</span>
 <span class="x">    }</span>
 <span class="x">}</span>
 </pre></div>
@@ -359,16 +359,16 @@
 <span class="x">public function collectLogs($logger, $processLogs=false)</span>
 <span class="x">{</span>
 <span class="x">    // 从类CLogger实例化对象的_logs属性值中过滤得到目标日志记录</span>
-<span class="x">    $logs=$logger-&gt;getLogs($this-&gt;levels,$this-&gt;categories,$this-&gt;except);</span>
-<span class="x">    $this-&gt;logs=empty($this-&gt;logs) ? $logs : array_merge($this-&gt;logs,$logs);</span>
-<span class="x">    if($processLogs &amp;&amp; !empty($this-&gt;logs))</span>
+<span class="x">    $logs=$logger-&amp;gt;getLogs($this-&amp;gt;levels,$this-&amp;gt;categories,$this-&amp;gt;except);</span>
+<span class="x">    $this-&amp;gt;logs=empty($this-&amp;gt;logs) ? $logs : array_merge($this-&amp;gt;logs,$logs);</span>
+<span class="x">    if($processLogs &amp;amp;&amp;amp; !empty($this-&amp;gt;logs))</span>
 <span class="x">    {</span>
-<span class="x">        if($this-&gt;filter!==null)</span>
-<span class="x">            Yii::createComponent($this-&gt;filter)-&gt;filter($this-&gt;logs);</span>
-<span class="x">        if($this-&gt;logs!==array())</span>
+<span class="x">        if($this-&amp;gt;filter!==null)</span>
+<span class="x">            Yii::createComponent($this-&amp;gt;filter)-&amp;gt;filter($this-&amp;gt;logs);</span>
+<span class="x">        if($this-&amp;gt;logs!==array())</span>
 <span class="x">            // 调用实际route的processLogs方法</span>
-<span class="x">            $this-&gt;processLogs($this-&gt;logs);</span>
-<span class="x">        $this-&gt;logs=array();</span>
+<span class="x">            $this-&amp;gt;processLogs($this-&amp;gt;logs);</span>
+<span class="x">        $this-&amp;gt;logs=array();</span>
 <span class="x">    }</span>
 <span class="x">}</span>
 </pre></div>
@@ -381,7 +381,7 @@
 <span class="x"> */</span>
 <span class="x">public function processLogs($logs)</span>
 <span class="x">{</span>
-<span class="x">    $this-&gt;render(&#39;log&#39;,$logs);</span>
+<span class="x">    $this-&amp;gt;render(&#39;log&#39;,$logs);</span>
 <span class="x">}</span>
 
 <span class="x">/**</span>
@@ -392,21 +392,21 @@
 <span class="x">protected function render($view,$data)</span>
 <span class="x">{</span>
 <span class="x">    $app=Yii::app();</span>
-<span class="x">    $isAjax=$app-&gt;getRequest()-&gt;getIsAjaxRequest();</span>
-<span class="x">    $isFlash=$app-&gt;getRequest()-&gt;getIsFlashRequest();</span>
+<span class="x">    $isAjax=$app-&amp;gt;getRequest()-&amp;gt;getIsAjaxRequest();</span>
+<span class="x">    $isFlash=$app-&amp;gt;getRequest()-&amp;gt;getIsFlashRequest();</span>
 
 <span class="x">    // 用firebug来显示日志信息的话？</span>
-<span class="x">    if($this-&gt;showInFireBug)</span>
+<span class="x">    if($this-&amp;gt;showInFireBug)</span>
 <span class="x">    {</span>
 <span class="x">        // do not output anything for ajax and/or flash requests if needed</span>
-<span class="x">        if($isAjax &amp;&amp; $this-&gt;ignoreAjaxInFireBug || $isFlash &amp;&amp; $this-&gt;ignoreFlashInFireBug)</span>
+<span class="x">        if($isAjax &amp;amp;&amp;amp; $this-&amp;gt;ignoreAjaxInFireBug || $isFlash &amp;amp;&amp;amp; $this-&amp;gt;ignoreFlashInFireBug)</span>
 <span class="x">            return;</span>
 <span class="x">        $view.=&#39;-firebug&#39;;</span>
-<span class="x">        if(($userAgent=$app-&gt;getRequest()-&gt;getUserAgent())!==null &amp;&amp; preg_match(&#39;/msie [5-9]/i&#39;,$userAgent))</span>
+<span class="x">        if(($userAgent=$app-&amp;gt;getRequest()-&amp;gt;getUserAgent())!==null &amp;amp;&amp;amp; preg_match(&#39;/msie [5-9]/i&#39;,$userAgent))</span>
 <span class="x">        {</span>
-<span class="x">            echo &#39;&lt;script type=&quot;text/javascript&quot;&gt;&#39;;</span>
+<span class="x">            echo &#39;&amp;lt;script type=&quot;text/javascript&quot;&amp;gt;&#39;;</span>
 <span class="x">            echo file_get_contents(dirname(__FILE__).&#39;/../vendors/console-normalizer/normalizeconsole.min.js&#39;);</span>
-<span class="x">            echo &quot;&lt;/script&gt;\n&quot;;</span>
+<span class="x">            echo &quot;&amp;lt;/script&amp;gt;\n&quot;;</span>
 <span class="x">        }</span>
 <span class="x">    }</span>
 <span class="x">    elseif(!($app instanceof CWebApplication) || $isAjax || $isFlash)</span>
@@ -414,7 +414,7 @@
 
 <span class="x">    // 渲染yii/framework/views/log.php（log-firebug.php），将结果放在实际请求页面内容的下面</span>
 <span class="x">    $viewFile=YII_PATH.DIRECTORY_SEPARATOR.&#39;views&#39;.DIRECTORY_SEPARATOR.$view.&#39;.php&#39;;</span>
-<span class="x">    include($app-&gt;findLocalizedFile($viewFile,&#39;en&#39;));</span>
+<span class="x">    include($app-&amp;gt;findLocalizedFile($viewFile,&#39;en&#39;));</span>
 <span class="x">}</span>
 </pre></div>
 
@@ -424,7 +424,7 @@
 <div class="highlight"><pre><span></span><span class="x">public function attachEventHandler($name,$handler)</span>
 <span class="x">{</span>
 <span class="x">    // 将事件处理器$handler加到处理器列表中，在事件发生时会逐个处理器触发执行</span>
-<span class="x">    $this-&gt;getEventHandlers($name)-&gt;add($handler);</span>
+<span class="x">    $this-&amp;gt;getEventHandlers($name)-&amp;gt;add($handler);</span>
 <span class="x">}</span>
 </pre></div>
 
@@ -438,16 +438,16 @@
 <span class="x"> */</span>
 <span class="x">public function getEventHandlers($name)</span>
 <span class="x">{</span>
-<span class="x">    if($this-&gt;hasEvent($name))</span>
+<span class="x">    if($this-&amp;gt;hasEvent($name))</span>
 <span class="x">    {</span>
 <span class="x">        $name=strtolower($name);</span>
-<span class="x">        if(!isset($this-&gt;_e[$name]))</span>
-<span class="x">            $this-&gt;_e[$name]=new CList;</span>
-<span class="x">        return $this-&gt;_e[$name];</span>
+<span class="x">        if(!isset($this-&amp;gt;_e[$name]))</span>
+<span class="x">            $this-&amp;gt;_e[$name]=new CList;</span>
+<span class="x">        return $this-&amp;gt;_e[$name];</span>
 <span class="x">    }</span>
 <span class="x">    else</span>
 <span class="x">        throw new CException(Yii::t(&#39;yii&#39;,&#39;Event &quot;{class}.{event}&quot; is not defined.&#39;,</span>
-<span class="x">            array(&#39;{class}&#39;=&gt;get_class($this), &#39;{event}&#39;=&gt;$name)));</span>
+<span class="x">            array(&#39;{class}&#39;=&amp;gt;get_class($this), &#39;{event}&#39;=&amp;gt;$name)));</span>
 <span class="x">}</span>
 </pre></div>
 

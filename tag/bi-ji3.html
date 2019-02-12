@@ -256,9 +256,9 @@ Yii提供了一个直接可用的模板引擎组件类CPradoViewRenderer（见�
 <li>使用ORM形式：编写model类继承自抽象类CActiveRecord</li>
 </ol>
 <p>第1种方式的示例如下：</p>
-<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
-<span class="nv">$connection</span> <span class="o">=</span> <span class="nx">Yii</span><span class="o">::</span><span class="na">app</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">db</span><span class="p">;</span>  <span class="c1">// 或者Yii::app()-&gt;getComponent(&#39;db&#39;);</span>
-<span class="nv">$queryResult</span> <span class="o">=</span> <span class="nv">$connection</span><span class="o">-&gt;</span><span class="na">createCommand</span><span class="p">(</span><span class="nv">$sql</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">queryRow</span><span class="p">();</span>
+<div class="highlight"><pre><span></span><span class="x">&amp;lt;?php</span>
+<span class="x">$connection = Yii::app()-&amp;gt;db;  // 或者Yii::app()-&amp;gt;getComponent(&#39;db&#39;);</span>
+<span class="x">$queryResult = $connection-&amp;gt;createCommand($sql)-&amp;gt;queryRow();</span>
 </pre></div>
 
 
@@ -267,9 +267,7 @@ Yii提供了一个直接可用的模板引擎组件类CPradoViewRenderer（见�
 但我个人并不喜欢这样，两种方式同时存在，会导致应用的model实现稍显混乱。</p>
 <h3>分析</h3>
 <p>Yii框架model层的入口为CDbConnection类，该类有很多public的属性可供配置，如<code>connectionString</code>、<code>username</code>、<code>password</code>等。</p>
-<p>根据<a href="http://youngsterxyf.github.io/2014/11/13/read-yii-code-3/">Yii源码阅读笔记 - 组件集成</a>一文可知，组件初始化时会调用init方法。
-类CDbConnection的init类实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">public function …</span></pre></div> </div><!-- /.entry-content -->
+<p>根据<a href="http://youngsterxyf.github.io/2014/11/13/read-yii-code-3/">Yii源码阅读笔记 - 组件集成 …</a></p> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2014/11/14/read-yii-code-4/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - Model层实现">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -296,8 +294,8 @@ Yii提供了一个直接可用的模板引擎组件类CPradoViewRenderer（见�
 <p>基于Yii框架开发应用需要理解如何配置组件、如何开发自己的组件，对应着需要理解Yii是如何注册加载组件的。</p>
 <h3>分析</h3>
 <p>从<a href="http://youngsterxyf.github.io/2014/11/04/read-yii-code-1/">Yii源码阅读笔记 - 请求处理基本流程</a>一文可知，Yii加载组件的入口为抽象类CApplication构造方法中的以下两行代码：</p>
-<div class="highlight"><pre><span></span><span class="x">$this-&gt;registerCoreComponents();</span>
-<span class="x">$this-&gt;configure($config);</span>
+<div class="highlight"><pre><span></span><span class="x">$this-&amp;gt;registerCoreComponents();</span>
+<span class="x">$this-&amp;gt;configure($config);</span>
 </pre></div>
 
 
@@ -305,16 +303,12 @@ Yii提供了一个直接可用的模板引擎组件类CPradoViewRenderer（见�
 <p><code>registerCoreComponents</code>方法定义于类CWebApplication中，用于加载Web应用的核心组件，组件列表如下：</p>
 <div class="highlight"><pre><span></span><span class="x">array(</span>
 <span class="x">    // 核心组件</span>
-<span class="x">    &#39;coreMessages&#39;=&gt;array(</span>
-<span class="x">        &#39;class&#39;=&gt;&#39;CPhpMessageSource&#39;,</span>
-<span class="x">        &#39;language&#39;=&gt;&#39;en_us&#39;,</span>
-<span class="x">        &#39;basePath&#39;=&gt;YII_PATH.DIRECTORY_SEPARATOR.&#39;messages&#39;,</span>
+<span class="x">    &#39;coreMessages&#39;=&amp;gt;array(</span>
+<span class="x">        &#39;class&#39;=&amp;gt;&#39;CPhpMessageSource&#39;,</span>
+<span class="x">        &#39;language&#39;=&amp;gt;&#39;en_us&#39;,</span>
+<span class="x">        &#39;basePath&#39;=&amp;gt;YII_PATH.DIRECTORY_SEPARATOR.&#39;messages&#39;,</span>
 <span class="x">    ),</span>
-<span class="x">    &#39;db&#39;=&gt;array(</span>
-<span class="x">        &#39;class&#39;=&gt;&#39;CDbConnection&#39;,</span>
-<span class="x">    ),</span>
-<span class="x">    &#39;messages&#39;=&gt;array(</span>
-<span class="x">        &#39;class …</span></pre></div> </div><!-- /.entry-content -->
+<span class="x">    &#39;db …</span></pre></div> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2014/11/13/read-yii-code-3/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 组件集成">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>

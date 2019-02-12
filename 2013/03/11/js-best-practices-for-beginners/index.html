@@ -134,18 +134,18 @@
 <p>记住---这条最佳实践的主要目标是尽可能快速地为用户加载页面。当加载一个脚本时，浏览器直到整个脚本文件全部加载完毕才能继续。因此，用户必须等上更长的时间才能注意到任何的进度。</p>
 <p>如果JS文件的目的仅仅是增加功能---例如，在点击某个按钮后---那么就将那些文件放在底部，body结束标签之前吧。这绝对是一个最佳实践。</p>
 <p><strong>更好的做法</strong></p>
-<div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>And now you know my favorite kinds of corn. <span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">script</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;text/javascript&quot;</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;path/to/file.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">script</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;text/javascript&quot;</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;path/to/anotherFile.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
-<span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
-<span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
+<div class="highlight"><pre><span></span><span class="ni">&amp;lt;</span>p<span class="ni">&amp;gt;</span>And now you know my favorite kinds of corn. <span class="ni">&amp;lt;</span>/p<span class="ni">&amp;gt;</span>
+<span class="ni">&amp;lt;</span>script type=&quot;text/javascript&quot; src=&quot;path/to/file.js&quot;<span class="ni">&amp;gt;&amp;lt;</span>/script<span class="ni">&amp;gt;</span>
+<span class="ni">&amp;lt;</span>script type=&quot;text/javascript&quot; src=&quot;path/to/anotherFile.js&quot;<span class="ni">&amp;gt;&amp;lt;</span>/script<span class="ni">&amp;gt;</span>
+<span class="ni">&amp;lt;</span>/body<span class="ni">&amp;gt;</span>
+<span class="ni">&amp;lt;</span>/html<span class="ni">&amp;gt;</span>
 </pre></div>
 
 
 <h3>6.在For语句之外声明变量</h3>
 <p>当执行一个冗长的"for"语句之时，仅仅让解释引擎做必须干的活吧。例如：</p>
 <p><strong>糟糕的做法</strong></p>
-<div class="highlight"><pre><span></span><span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">someArray</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span> <span class="nx">someArray</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">container</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;container&#39;</span><span class="p">);</span>
     <span class="nx">container</span><span class="p">.</span><span class="nx">innerHtml</span> <span class="o">+=</span> <span class="s1">&#39;my number: &#39;</span> <span class="o">+</span> <span class="nx">i</span><span class="p">;</span>
     <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">i</span><span class="p">);</span>
@@ -156,7 +156,7 @@
 <p>注意上面代码片段中的每次迭代都需要检查数组的长度，并且每次都要遍历DOM树找到"container"元素---效率多低啊！</p>
 <p><strong>更好的做法</strong></p>
 <div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">container</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;container&#39;</span><span class="p">);</span>
-<span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">len</span> <span class="o">=</span> <span class="nx">someArray</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">len</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+<span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">len</span> <span class="o">=</span> <span class="nx">someArray</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span> <span class="nx">len</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">container</span><span class="p">.</span><span class="nx">innerHtml</span> <span class="o">+=</span> <span class="s1">&#39;my number: &#39;</span> <span class="o">+</span> <span class="nx">i</span><span class="p">;</span>
     <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">i</span><span class="p">);</span>
 <span class="p">}</span>
@@ -167,7 +167,7 @@
 <h3>7.构建字符串的最快方式</h3>
 <p>当需要遍历一个数组或者对象之时，不要总是使用你能信手粘来的"for"语句。创造性地找个能够完成工作的最快速的方案。</p>
 <div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">arr</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;item 1&#39;</span><span class="p">,</span> <span class="s1">&#39;item 2&#39;</span><span class="p">,</span> <span class="s1">&#39;item 3&#39;</span><span class="p">,</span> <span class="p">...];</span>
-<span class="kd">var</span> <span class="nx">list</span> <span class="o">=</span> <span class="s1">&#39;&lt;ul&gt;&lt;li&gt;&#39;</span> <span class="o">+</span> <span class="nx">arr</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;&lt;/li&gt;&lt;li&gt;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;&lt;/li&gt;&lt;/ul&gt;&#39;</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">list</span> <span class="o">=</span> <span class="s1">&#39;&amp;lt;ul&amp;gt;&amp;lt;li&amp;gt;&#39;</span> <span class="o">+</span> <span class="nx">arr</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;&amp;lt;/li&amp;gt;&amp;lt;/ul&amp;gt;&#39;</span><span class="p">;</span>
 </pre></div>
 
 
@@ -204,7 +204,7 @@
 <h3>9.注释你的代码</h3>
 <p>一开始看起来似乎没有必要，但请相信我，你将会想尽可能好地注释你的代码。当你几个月后再次回到项目，会发生什么呢？发现你根本没法轻松地记起当初对每一行代码的想法。或者，如果你的某个同事需要修改你的代码，那又会怎么样呢？始终，一直记着注释你代码的重要部分吧。</p>
 <div class="highlight"><pre><span></span><span class="c1">// Cycle through array and echo out each name</span>
-<span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">len</span> <span class="o">=</span> <span class="nx">array</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">len</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+<span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">len</span> <span class="o">=</span> <span class="nx">array</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span> <span class="nx">len</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">array</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
 <span class="p">}</span>
 </pre></div>
@@ -346,7 +346,7 @@
 <p>需要一种快速简单的方法来检测一个操作花费多长时间么？使用Firebug的"timer"特性记录结果。</p>
 <div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">TimeTracker</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">console</span><span class="p">.</span><span class="nx">time</span><span class="p">(</span><span class="s2">&quot;MyTimer&quot;</span><span class="p">);</span>
-    <span class="k">for</span><span class="p">(</span><span class="nx">x</span><span class="o">=</span><span class="mi">5000</span><span class="p">;</span> <span class="nx">x</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">x</span><span class="o">--</span><span class="p">){}</span>
+    <span class="k">for</span><span class="p">(</span><span class="nx">x</span><span class="o">=</span><span class="mi">5000</span><span class="p">;</span> <span class="nx">x</span> <span class="o">&amp;</span><span class="nx">gt</span><span class="p">;</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">x</span><span class="o">--</span><span class="p">){}</span>
     <span class="nx">console</span><span class="p">.</span><span class="nx">timeEnd</span><span class="p">(</span><span class="s2">&quot;MyTimer&quot;</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
@@ -381,17 +381,17 @@
 <div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">response</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">xhr</span><span class="p">.</span><span class="nx">responseText</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">container</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;container&#39;</span><span class="p">);</span>
-<span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">len</span> <span class="o">=</span> <span class="nx">response</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">len</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">container</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">+=</span> <span class="s1">&#39;&lt;li&gt;&#39;</span> <span class="o">+</span> <span class="nx">response</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">name</span> <span class="o">+</span> <span class="s1">&#39; : &#39;</span> <span class="o">+</span> <span class="nx">response</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">email</span> <span class="o">+</span> <span class="s1">&#39;&lt;/li&gt;&#39;</span><span class="p">;</span>
+<span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">len</span> <span class="o">=</span> <span class="nx">response</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span> <span class="nx">len</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">container</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">+=</span> <span class="s1">&#39;&amp;lt;li&amp;gt;&#39;</span> <span class="o">+</span> <span class="nx">response</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">name</span> <span class="o">+</span> <span class="s1">&#39; : &#39;</span> <span class="o">+</span> <span class="nx">response</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">email</span> <span class="o">+</span> <span class="s1">&#39;&amp;lt;/li&amp;gt;&#39;</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
 
 
 <h3>24.删除"Language"</h3>
 <p>几年前，在script标签内常见有"language"属性。</p>
-<div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;text/javascript&quot;</span> <span class="na">language</span><span class="o">=</span><span class="s">&quot;javascript&quot;</span><span class="p">&gt;</span>
-<span class="p">...</span>
-<span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+<div class="highlight"><pre><span></span><span class="ni">&amp;lt;</span>script type=&quot;text/javascript&quot; language=&quot;javascript&quot;<span class="ni">&amp;gt;</span>
+...
+<span class="ni">&amp;lt;</span>/script<span class="ni">&amp;gt;</span>
 </pre></div>
 
 

@@ -80,10 +80,10 @@
 </ul>
 <p>默认使用get路由形式。由于Yii中controller类命名和action方法都是按照规则命名的，而路由也是按照规则来匹配的，所以完全可以不用额外配置urlManager。</p>
 <p>若需要使用path方式，则可如下配置：</p>
-<div class="highlight"><pre><span></span><span class="x">&quot;components&quot; =&gt; array(</span>
-<span class="x">    &#39;urlManager&#39; =&gt; array(</span>
-<span class="x">        &#39;urlFormat&#39; =&gt; &#39;path&#39;,</span>
-<span class="x">        &#39;rules&#39; =&gt; array(</span>
+<div class="highlight"><pre><span></span><span class="x">&quot;components&quot; =&amp;gt; array(</span>
+<span class="x">    &#39;urlManager&#39; =&amp;gt; array(</span>
+<span class="x">        &#39;urlFormat&#39; =&amp;gt; &#39;path&#39;,</span>
+<span class="x">        &#39;rules&#39; =&amp;gt; array(</span>
 <span class="x">            ...</span>
 <span class="x">        ),</span>
 <span class="x">),</span>
@@ -93,14 +93,14 @@
 <p>进一步说明可参考<a href="http://youngsterxyf.github.io/2014/09/06/experience-about-restful-api/">RESTful API设计的一点经验</a>一文。</p>
 <h3>分析</h3>
 <p>在“请求处理基本流程”一篇可以看到Yii框架路由解析流程的入口在类CWebApplication的processRequest方法中：</p>
-<div class="highlight"><pre><span></span><span class="x">$route=$this-&gt;getUrlManager()-&gt;parseUrl($this-&gt;getRequest());</span>
+<div class="highlight"><pre><span></span><span class="x">$route=$this-&amp;gt;getUrlManager()-&amp;gt;parseUrl($this-&amp;gt;getRequest());</span>
 </pre></div>
 
 
 <p>其中getUrlManager方法定义于类CApplication中，作用是初始化获取URL管理组件（ID为urlManager），实现如下：</p>
 <div class="highlight"><pre><span></span><span class="x">public function getUrlManager()</span>
 <span class="x">{</span>
-<span class="x">    return $this-&gt;getComponent(&#39;urlManager&#39;);</span>
+<span class="x">    return $this-&amp;gt;getComponent(&#39;urlManager&#39;);</span>
 <span class="x">}</span>
 </pre></div>
 
@@ -109,7 +109,7 @@
 <div class="highlight"><pre><span></span><span class="x">public function init()</span>
 <span class="x">{</span>
 <span class="x">    parent::init();</span>
-<span class="x">    $this-&gt;processRules();</span>
+<span class="x">    $this-&amp;gt;processRules();</span>
 <span class="x">}</span>
 </pre></div>
 
@@ -118,24 +118,24 @@
 <div class="highlight"><pre><span></span><span class="x">protected function processRules()</span>
 <span class="x">{</span>
 <span class="x">    // 如果未配置rules，或使用的路由形式是get，则根本无需解析路由规则</span>
-<span class="x">    if(empty($this-&gt;rules) || $this-&gt;getUrlFormat()===self::GET_FORMAT)</span>
+<span class="x">    if(empty($this-&amp;gt;rules) || $this-&amp;gt;getUrlFormat()===self::GET_FORMAT)</span>
 <span class="x">        return;</span>
 <span class="x">    // 否则尝试从缓存中读取解析好的路由规则</span>
-<span class="x">    if($this-&gt;cacheID!==false &amp;&amp; ($cache=Yii::app()-&gt;getComponent($this-&gt;cacheID))!==null)</span>
+<span class="x">    if($this-&amp;gt;cacheID!==false &amp;amp;&amp;amp; ($cache=Yii::app()-&amp;gt;getComponent($this-&amp;gt;cacheID))!==null)</span>
 <span class="x">    {</span>
-<span class="x">        $hash=md5(serialize($this-&gt;rules));</span>
-<span class="x">        if(($data=$cache-&gt;get(self::CACHE_KEY))!==false &amp;&amp; isset($data[1]) &amp;&amp; $data[1]===$hash)</span>
+<span class="x">        $hash=md5(serialize($this-&amp;gt;rules));</span>
+<span class="x">        if(($data=$cache-&amp;gt;get(self::CACHE_KEY))!==false &amp;amp;&amp;amp; isset($data[1]) &amp;amp;&amp;amp; $data[1]===$hash)</span>
 <span class="x">        {</span>
-<span class="x">            $this-&gt;_rules=$data[0];</span>
+<span class="x">            $this-&amp;gt;_rules=$data[0];</span>
 <span class="x">            return;</span>
 <span class="x">        }</span>
 <span class="x">    }</span>
 <span class="x">    // 否则逐条路由规则解析</span>
-<span class="x">    foreach($this-&gt;rules as $pattern=&gt;$route)</span>
-<span class="x">        $this-&gt;_rules[]=$this-&gt;createUrlRule($route,$pattern);</span>
+<span class="x">    foreach($this-&amp;gt;rules as $pattern=&amp;gt;$route)</span>
+<span class="x">        $this-&amp;gt;_rules[]=$this-&amp;gt;createUrlRule($route,$pattern);</span>
 <span class="x">    // 尝试缓存解析好的路由规则</span>
 <span class="x">    if(isset($cache))</span>
-<span class="x">        $cache-&gt;set(self::CACHE_KEY,array($this-&gt;_rules,$hash));</span>
+<span class="x">        $cache-&amp;gt;set(self::CACHE_KEY,array($this-&amp;gt;_rules,$hash));</span>
 <span class="x">}</span>
 </pre></div>
 
@@ -155,11 +155,11 @@
 <span class="x">protected function createUrlRule($route,$pattern)</span>
 <span class="x">{</span>
 <span class="x">    // 说明可以配置自定义的路由规则解析类</span>
-<span class="x">    if(is_array($route) &amp;&amp; isset($route[&#39;class&#39;]))</span>
+<span class="x">    if(is_array($route) &amp;amp;&amp;amp; isset($route[&#39;class&#39;]))</span>
 <span class="x">        return $route;</span>
 <span class="x">    else</span>
 <span class="x">    {</span>
-<span class="x">        $urlRuleClass=Yii::import($this-&gt;urlRuleClass,true);</span>
+<span class="x">        $urlRuleClass=Yii::import($this-&amp;gt;urlRuleClass,true);</span>
 <span class="x">        return new $urlRuleClass($route,$pattern);</span>
 <span class="x">    }</span>
 <span class="x">}</span>
@@ -167,9 +167,9 @@
 
 
 <p>以以下rules配置为例：</p>
-<div class="highlight"><pre><span></span><span class="x">&#39;rules&#39; =&gt; array(</span>
-<span class="x">    array(&#39;industry/index&#39;, &#39;pattern&#39; =&gt; &#39;/v1/partner/industry/&#39;, &#39;verb&#39; =&gt; &#39;GET&#39;),</span>
-<span class="x">    array(&#39;token/create&#39;, &#39;pattern&#39; =&gt; &#39;/v1/partner/token&#39;, &#39;verb&#39; =&gt; &#39;POST&#39;),</span>
+<div class="highlight"><pre><span></span><span class="x">&#39;rules&#39; =&amp;gt; array(</span>
+<span class="x">    array(&#39;industry/index&#39;, &#39;pattern&#39; =&amp;gt; &#39;/v1/partner/industry/&#39;, &#39;verb&#39; =&amp;gt; &#39;GET&#39;),</span>
+<span class="x">    array(&#39;token/create&#39;, &#39;pattern&#39; =&amp;gt; &#39;/v1/partner/token&#39;, &#39;verb&#39; =&amp;gt; &#39;POST&#39;),</span>
 <span class="x">)</span>
 </pre></div>
 
@@ -185,7 +185,7 @@
 <span class="x">        foreach(array(&#39;urlSuffix&#39;, &#39;caseSensitive&#39;, &#39;defaultParams&#39;, &#39;matchValue&#39;, &#39;verb&#39;, &#39;parsingOnly&#39;) as $name)</span>
 <span class="x">        {</span>
 <span class="x">            if(isset($route[$name]))</span>
-<span class="x">                $this-&gt;$name=$route[$name];</span>
+<span class="x">                $this-&amp;gt;$name=$route[$name];</span>
 <span class="x">        }</span>
 <span class="x">        // 如果$route中有pattern配置项，则将配置值赋值给$pattern</span>
 <span class="x">        if(isset($route[&#39;pattern&#39;]))</span>
@@ -193,57 +193,57 @@
 <span class="x">        // 而$route的第一个配置项才是真正的目标路由</span>
 <span class="x">        $route=$route[0];</span>
 <span class="x">    }</span>
-<span class="x">    $this-&gt;route=trim($route,&#39;/&#39;);</span>
+<span class="x">    $this-&amp;gt;route=trim($route,&#39;/&#39;);</span>
 
 <span class="x">    $tr2[&#39;/&#39;]=$tr[&#39;/&#39;]=&#39;\\/&#39;;</span>
 
-<span class="x">    if(strpos($route,&#39;&lt;&#39;)!==false &amp;&amp; preg_match_all(&#39;/&lt;(\w+)&gt;/&#39;,$route,$matches2))</span>
+<span class="x">    if(strpos($route,&#39;&amp;lt;&#39;)!==false &amp;amp;&amp;amp; preg_match_all(&#39;/&amp;lt;(\w+)&amp;gt;/&#39;,$route,$matches2))</span>
 <span class="x">    {</span>
 <span class="x">        foreach($matches2[1] as $name)</span>
-<span class="x">            $this-&gt;references[$name]=&quot;&lt;$name&gt;&quot;;</span>
+<span class="x">            $this-&amp;gt;references[$name]=&quot;&amp;lt;$name&amp;gt;&quot;;</span>
 <span class="x">    }</span>
 
 <span class="x">    // 是否带协议头</span>
-<span class="x">    $this-&gt;hasHostInfo=!strncasecmp($pattern,&#39;http://&#39;,7) || !strncasecmp($pattern,&#39;https://&#39;,8);</span>
+<span class="x">    $this-&amp;gt;hasHostInfo=!strncasecmp($pattern,&#39;http://&#39;,7) || !strncasecmp($pattern,&#39;https://&#39;,8);</span>
 
 <span class="x">    // 如果原$route有verb配置项</span>
 <span class="x">    // verb配置支持多个HTTP方法，以空格或逗号分隔，如：“GET,POST”</span>
-<span class="x">    if($this-&gt;verb!==null)</span>
-<span class="x">        $this-&gt;verb=preg_split(&#39;/[\s,]+/&#39;,strtoupper($this-&gt;verb),-1,PREG_SPLIT_NO_EMPTY);</span>
+<span class="x">    if($this-&amp;gt;verb!==null)</span>
+<span class="x">        $this-&amp;gt;verb=preg_split(&#39;/[\s,]+/&#39;,strtoupper($this-&amp;gt;verb),-1,PREG_SPLIT_NO_EMPTY);</span>
 
-<span class="x">    // $pattern中类正则片段支持两种形式：命名的和未命名的，如“&lt;id:\d+&gt;”和“&lt;\d+&gt;”</span>
-<span class="x">    if(preg_match_all(&#39;/&lt;(\w+):?(.*?)?&gt;/&#39;,$pattern,$matches))</span>
+<span class="x">    // $pattern中类正则片段支持两种形式：命名的和未命名的，如“&amp;lt;id:\d+&amp;gt;”和“&amp;lt;\d+&amp;gt;”</span>
+<span class="x">    if(preg_match_all(&#39;/&amp;lt;(\w+):?(.*?)?&amp;gt;/&#39;,$pattern,$matches))</span>
 <span class="x">    {</span>
 <span class="x">        $tokens=array_combine($matches[1],$matches[2]);</span>
-<span class="x">        foreach($tokens as $name=&gt;$value)</span>
+<span class="x">        foreach($tokens as $name=&amp;gt;$value)</span>
 <span class="x">        {</span>
 <span class="x">            if($value===&#39;&#39;)</span>
 <span class="x">                $value=&#39;[^\/]+&#39;;</span>
-<span class="x">            $tr[&quot;&lt;$name&gt;&quot;]=&quot;(?P&lt;$name&gt;$value)&quot;;</span>
-<span class="x">            if(isset($this-&gt;references[$name]))</span>
-<span class="x">                $tr2[&quot;&lt;$name&gt;&quot;]=$tr[&quot;&lt;$name&gt;&quot;];</span>
+<span class="x">            $tr[&quot;&amp;lt;$name&amp;gt;&quot;]=&quot;(?P&amp;lt;$name&amp;gt;$value)&quot;;</span>
+<span class="x">            if(isset($this-&amp;gt;references[$name]))</span>
+<span class="x">                $tr2[&quot;&amp;lt;$name&amp;gt;&quot;]=$tr[&quot;&amp;lt;$name&amp;gt;&quot;];</span>
 <span class="x">            else</span>
-<span class="x">                $this-&gt;params[$name]=$value;</span>
+<span class="x">                $this-&amp;gt;params[$name]=$value;</span>
 <span class="x">        }</span>
 <span class="x">    }</span>
 <span class="x">    // 好吧，之后的这段代码我还没太看懂作用</span>
 <span class="x">    // 就是为了将$pattern转换成一个真正的正则表达式？</span>
 <span class="x">    $p=rtrim($pattern,&#39;*&#39;);</span>
-<span class="x">    $this-&gt;append=$p!==$pattern;</span>
+<span class="x">    $this-&amp;gt;append=$p!==$pattern;</span>
 <span class="x">    $p=trim($p,&#39;/&#39;);</span>
-<span class="x">    $this-&gt;template=preg_replace(&#39;/&lt;(\w+):?.*?&gt;/&#39;,&#39;&lt;$1&gt;&#39;,$p);</span>
-<span class="x">    $this-&gt;pattern=&#39;/^&#39;.strtr($this-&gt;template,$tr).&#39;\/&#39;;</span>
-<span class="x">    if($this-&gt;append)</span>
-<span class="x">        $this-&gt;pattern.=&#39;/u&#39;;</span>
+<span class="x">    $this-&amp;gt;template=preg_replace(&#39;/&amp;lt;(\w+):?.*?&amp;gt;/&#39;,&#39;&amp;lt;$1&amp;gt;&#39;,$p);</span>
+<span class="x">    $this-&amp;gt;pattern=&#39;/^&#39;.strtr($this-&amp;gt;template,$tr).&#39;\/&#39;;</span>
+<span class="x">    if($this-&amp;gt;append)</span>
+<span class="x">        $this-&amp;gt;pattern.=&#39;/u&#39;;</span>
 <span class="x">    else</span>
-<span class="x">        $this-&gt;pattern.=&#39;$/u&#39;;</span>
+<span class="x">        $this-&amp;gt;pattern.=&#39;$/u&#39;;</span>
 
-<span class="x">    if($this-&gt;references!==array())</span>
-<span class="x">        $this-&gt;routePattern=&#39;/^&#39;.strtr($this-&gt;route,$tr2).&#39;$/u&#39;;</span>
+<span class="x">    if($this-&amp;gt;references!==array())</span>
+<span class="x">        $this-&amp;gt;routePattern=&#39;/^&#39;.strtr($this-&amp;gt;route,$tr2).&#39;$/u&#39;;</span>
 
-<span class="x">    if(YII_DEBUG &amp;&amp; @preg_match($this-&gt;pattern,&#39;test&#39;)===false)</span>
+<span class="x">    if(YII_DEBUG &amp;amp;&amp;amp; @preg_match($this-&amp;gt;pattern,&#39;test&#39;)===false)</span>
 <span class="x">        throw new CException(Yii::t(&#39;yii&#39;,&#39;The URL pattern &quot;{pattern}&quot; for route &quot;{route}&quot; is not a valid regular expression.&#39;,</span>
-<span class="x">            array(&#39;{route}&#39;=&gt;$route,&#39;{pattern}&#39;=&gt;$pattern)));</span>
+<span class="x">            array(&#39;{route}&#39;=&amp;gt;$route,&#39;{pattern}&#39;=&amp;gt;$pattern)));</span>
 <span class="x">}</span>
 </pre></div>
 
@@ -252,32 +252,32 @@
 <p>在得到<strong>urlManager组件对象</strong>后，调用其parseUrl方法，实现如下：</p>
 <div class="highlight"><pre><span></span><span class="x">public function parseUrl($request)</span>
 <span class="x">{</span>
-<span class="x">    if($this-&gt;getUrlFormat()===self::PATH_FORMAT)</span>
+<span class="x">    if($this-&amp;gt;getUrlFormat()===self::PATH_FORMAT)</span>
 <span class="x">    {</span>
-<span class="x">        $rawPathInfo=$request-&gt;getPathInfo();</span>
-<span class="x">        $pathInfo=$this-&gt;removeUrlSuffix($rawPathInfo,$this-&gt;urlSuffix);</span>
-<span class="x">        foreach($this-&gt;_rules as $i=&gt;$rule)</span>
+<span class="x">        $rawPathInfo=$request-&amp;gt;getPathInfo();</span>
+<span class="x">        $pathInfo=$this-&amp;gt;removeUrlSuffix($rawPathInfo,$this-&amp;gt;urlSuffix);</span>
+<span class="x">        foreach($this-&amp;gt;_rules as $i=&amp;gt;$rule)</span>
 <span class="x">        {</span>
 <span class="x">            if(is_array($rule))</span>
-<span class="x">                $this-&gt;_rules[$i]=$rule=Yii::createComponent($rule);</span>
+<span class="x">                $this-&amp;gt;_rules[$i]=$rule=Yii::createComponent($rule);</span>
 <span class="x">            // 逐个路由规则匹配</span>
-<span class="x">            if(($r=$rule-&gt;parseUrl($this,$request,$pathInfo,$rawPathInfo))!==false)</span>
+<span class="x">            if(($r=$rule-&amp;gt;parseUrl($this,$request,$pathInfo,$rawPathInfo))!==false)</span>
 <span class="x">                // 即使匹配到了路由规则，也还是得看一下URL中是否指定了路由，是的话则优先使用URL中指定的路由</span>
-<span class="x">                return isset($_GET[$this-&gt;routeVar]) ? $_GET[$this-&gt;routeVar] : $r;</span>
+<span class="x">                return isset($_GET[$this-&amp;gt;routeVar]) ? $_GET[$this-&amp;gt;routeVar] : $r;</span>
 <span class="x">        }</span>
 <span class="x">        // 如果一定要匹配到某个路由规则才行，那么执行到这里就表示未有匹配的路由规则，所以就抛404错误了。</span>
-<span class="x">        if($this-&gt;useStrictParsing)</span>
+<span class="x">        if($this-&amp;gt;useStrictParsing)</span>
 <span class="x">            throw new CHttpException(404,Yii::t(&#39;yii&#39;,&#39;Unable to resolve the request &quot;{route}&quot;.&#39;,</span>
-<span class="x">                array(&#39;{route}&#39;=&gt;$pathInfo)));</span>
+<span class="x">                array(&#39;{route}&#39;=&amp;gt;$pathInfo)));</span>
 <span class="x">        // 否则先返回请求路径作为目标路由</span>
 <span class="x">        else</span>
 <span class="x">            return $pathInfo;</span>
 <span class="x">    }</span>
 <span class="x">    // 如果使用的是get路由形式，则从GET请求的查询字符串或POST请求的请求体找目标路由</span>
-<span class="x">    elseif(isset($_GET[$this-&gt;routeVar]))</span>
-<span class="x">        return $_GET[$this-&gt;routeVar];</span>
-<span class="x">    elseif(isset($_POST[$this-&gt;routeVar]))</span>
-<span class="x">        return $_POST[$this-&gt;routeVar];</span>
+<span class="x">    elseif(isset($_GET[$this-&amp;gt;routeVar]))</span>
+<span class="x">        return $_GET[$this-&amp;gt;routeVar];</span>
+<span class="x">    elseif(isset($_POST[$this-&amp;gt;routeVar]))</span>
+<span class="x">        return $_POST[$this-&amp;gt;routeVar];</span>
 <span class="x">    else</span>
 <span class="x">        return &#39;&#39;;</span>
 <span class="x">}</span>
@@ -290,54 +290,54 @@
 <div class="highlight"><pre><span></span><span class="x">public function parseUrl($manager,$request,$pathInfo,$rawPathInfo)</span>
 <span class="x">{</span>
 <span class="x">    // 先检查HTTP谓词（verb）是否匹配</span>
-<span class="x">    if($this-&gt;verb!==null &amp;&amp; !in_array($request-&gt;getRequestType(), $this-&gt;verb, true))</span>
+<span class="x">    if($this-&amp;gt;verb!==null &amp;amp;&amp;amp; !in_array($request-&amp;gt;getRequestType(), $this-&amp;gt;verb, true))</span>
 <span class="x">        return false;</span>
 <span class="x">    // 是否关心大小写</span>
-<span class="x">    if($manager-&gt;caseSensitive &amp;&amp; $this-&gt;caseSensitive===null || $this-&gt;caseSensitive)</span>
+<span class="x">    if($manager-&amp;gt;caseSensitive &amp;amp;&amp;amp; $this-&amp;gt;caseSensitive===null || $this-&amp;gt;caseSensitive)</span>
 <span class="x">        $case=&#39;&#39;;</span>
 <span class="x">    else</span>
 <span class="x">        $case=&#39;i&#39;;</span>
 
 <span class="x">    // urlSiffix配置项是用来干嘛的？</span>
-<span class="x">    if($this-&gt;urlSuffix!==null)</span>
-<span class="x">        $pathInfo=$manager-&gt;removeUrlSuffix($rawPathInfo,$this-&gt;urlSuffix);</span>
+<span class="x">    if($this-&amp;gt;urlSuffix!==null)</span>
+<span class="x">        $pathInfo=$manager-&amp;gt;removeUrlSuffix($rawPathInfo,$this-&amp;gt;urlSuffix);</span>
 
 <span class="x">    // URL suffix required, but not found in the requested URL</span>
-<span class="x">    if($manager-&gt;useStrictParsing &amp;&amp; $pathInfo===$rawPathInfo)</span>
+<span class="x">    if($manager-&amp;gt;useStrictParsing &amp;amp;&amp;amp; $pathInfo===$rawPathInfo)</span>
 <span class="x">    {</span>
-<span class="x">        $urlSuffix=$this-&gt;urlSuffix===null ? $manager-&gt;urlSuffix : $this-&gt;urlSuffix;</span>
-<span class="x">        if($urlSuffix!=&#39;&#39; &amp;&amp; $urlSuffix!==&#39;/&#39;)</span>
+<span class="x">        $urlSuffix=$this-&amp;gt;urlSuffix===null ? $manager-&amp;gt;urlSuffix : $this-&amp;gt;urlSuffix;</span>
+<span class="x">        if($urlSuffix!=&#39;&#39; &amp;amp;&amp;amp; $urlSuffix!==&#39;/&#39;)</span>
 <span class="x">            return false;</span>
 <span class="x">    }</span>
 
-<span class="x">    if($this-&gt;hasHostInfo)</span>
-<span class="x">        $pathInfo=strtolower($request-&gt;getHostInfo()).rtrim(&#39;/&#39;.$pathInfo,&#39;/&#39;);</span>
+<span class="x">    if($this-&amp;gt;hasHostInfo)</span>
+<span class="x">        $pathInfo=strtolower($request-&amp;gt;getHostInfo()).rtrim(&#39;/&#39;.$pathInfo,&#39;/&#39;);</span>
 
 <span class="x">    $pathInfo.=&#39;/&#39;;</span>
 
 <span class="x">    // 正则匹配：用pattern来匹配路径</span>
-<span class="x">    if(preg_match($this-&gt;pattern.$case,$pathInfo,$matches))</span>
+<span class="x">    if(preg_match($this-&amp;gt;pattern.$case,$pathInfo,$matches))</span>
 <span class="x">    {</span>
 <span class="x">        // 可以配置defaultParams数组来为请求未提供的必要参数指定默认值</span>
-<span class="x">        foreach($this-&gt;defaultParams as $name=&gt;$value)</span>
+<span class="x">        foreach($this-&amp;gt;defaultParams as $name=&amp;gt;$value)</span>
 <span class="x">        {</span>
 <span class="x">            if(!isset($_GET[$name]))</span>
 <span class="x">                $_REQUEST[$name]=$_GET[$name]=$value;</span>
 <span class="x">        }</span>
 <span class="x">        $tr=array();</span>
-<span class="x">        foreach($matches as $key=&gt;$value)</span>
+<span class="x">        foreach($matches as $key=&amp;gt;$value)</span>
 <span class="x">        {</span>
-<span class="x">            if(isset($this-&gt;references[$key]))</span>
-<span class="x">                $tr[$this-&gt;references[$key]]=$value;</span>
-<span class="x">            elseif(isset($this-&gt;params[$key]))</span>
+<span class="x">            if(isset($this-&amp;gt;references[$key]))</span>
+<span class="x">                $tr[$this-&amp;gt;references[$key]]=$value;</span>
+<span class="x">            elseif(isset($this-&amp;gt;params[$key]))</span>
 <span class="x">                $_REQUEST[$key]=$_GET[$key]=$value;</span>
 <span class="x">        }</span>
 <span class="x">        if($pathInfo!==$matches[0]) // there&#39;re additional GET params</span>
-<span class="x">            $manager-&gt;parsePathInfo(ltrim(substr($pathInfo,strlen($matches[0])),&#39;/&#39;));</span>
-<span class="x">        if($this-&gt;routePattern!==null)</span>
-<span class="x">            return strtr($this-&gt;route,$tr);</span>
+<span class="x">            $manager-&amp;gt;parsePathInfo(ltrim(substr($pathInfo,strlen($matches[0])),&#39;/&#39;));</span>
+<span class="x">        if($this-&amp;gt;routePattern!==null)</span>
+<span class="x">            return strtr($this-&amp;gt;route,$tr);</span>
 <span class="x">        else</span>
-<span class="x">            return $this-&gt;route;</span>
+<span class="x">            return $this-&amp;gt;route;</span>
 <span class="x">    }</span>
 <span class="x">    else</span>
 <span class="x">        return false;</span>

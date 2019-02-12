@@ -64,6 +64,45 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="../2014/11/14/read-yii-code-4/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - Model层实现">Yii源码阅读笔记 - Model层实现</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2014-11-14T00:00:00+08:00"> 2014-11-14 Fri </abbr>
+<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <h3>概述</h3>
+<p>Yii中，对Model层的使用，有两种方式：</p>
+<ol>
+<li>通过类CDbConnection和CDbCommand来操作</li>
+<li>使用ORM形式：编写model类继承自抽象类CActiveRecord</li>
+</ol>
+<p>第1种方式的示例如下：</p>
+<div class="highlight"><pre><span></span><span class="x">&amp;lt;?php</span>
+<span class="x">$connection = Yii::app()-&amp;gt;db;  // 或者Yii::app()-&amp;gt;getComponent(&#39;db&#39;);</span>
+<span class="x">$queryResult = $connection-&amp;gt;createCommand($sql)-&amp;gt;queryRow();</span>
+</pre></div>
+
+
+<p>第2种方式中编写的model类可能需要实现方法<code>getDbConnection</code>、<code>model</code>、<code>tableName</code>。</p>
+<p>在实现上，第2种方式是基于第1种方式的，即第2种方式的抽象程度更高。Yii没有屏蔽第1种方式，这样能让开发者按需选择。
+但我个人并不喜欢这样，两种方式同时存在，会导致应用的model实现稍显混乱。</p>
+<h3>分析</h3>
+<p>Yii框架model层的入口为CDbConnection类，该类有很多public的属性可供配置，如<code>connectionString</code>、<code>username</code>、<code>password</code>等。</p>
+<p>根据<a href="http://youngsterxyf.github.io/2014/11/13/read-yii-code-3/">Yii源码阅读笔记 - 组件集成 …</a></p> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2014/11/14/read-yii-code-4/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - Model层实现">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="../tag/php.html">PHP</a>
+                    <a class="danger label" href="../tag/yii.html">Yii</a>
+                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
+                    <a class="danger label" href="../tag/zong-jie.html">总结</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="../2014/11/13/read-yii-code-3/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 组件集成">Yii源码阅读笔记 - 组件集成</a>
                     </h2>
                 </header>
@@ -76,8 +115,8 @@
 <p>基于Yii框架开发应用需要理解如何配置组件、如何开发自己的组件，对应着需要理解Yii是如何注册加载组件的。</p>
 <h3>分析</h3>
 <p>从<a href="http://youngsterxyf.github.io/2014/11/04/read-yii-code-1/">Yii源码阅读笔记 - 请求处理基本流程</a>一文可知，Yii加载组件的入口为抽象类CApplication构造方法中的以下两行代码：</p>
-<div class="highlight"><pre><span></span><span class="x">$this-&gt;registerCoreComponents();</span>
-<span class="x">$this-&gt;configure($config);</span>
+<div class="highlight"><pre><span></span><span class="x">$this-&amp;gt;registerCoreComponents();</span>
+<span class="x">$this-&amp;gt;configure($config);</span>
 </pre></div>
 
 
@@ -85,16 +124,12 @@
 <p><code>registerCoreComponents</code>方法定义于类CWebApplication中，用于加载Web应用的核心组件，组件列表如下：</p>
 <div class="highlight"><pre><span></span><span class="x">array(</span>
 <span class="x">    // 核心组件</span>
-<span class="x">    &#39;coreMessages&#39;=&gt;array(</span>
-<span class="x">        &#39;class&#39;=&gt;&#39;CPhpMessageSource&#39;,</span>
-<span class="x">        &#39;language&#39;=&gt;&#39;en_us&#39;,</span>
-<span class="x">        &#39;basePath&#39;=&gt;YII_PATH.DIRECTORY_SEPARATOR.&#39;messages&#39;,</span>
+<span class="x">    &#39;coreMessages&#39;=&amp;gt;array(</span>
+<span class="x">        &#39;class&#39;=&amp;gt;&#39;CPhpMessageSource&#39;,</span>
+<span class="x">        &#39;language&#39;=&amp;gt;&#39;en_us&#39;,</span>
+<span class="x">        &#39;basePath&#39;=&amp;gt;YII_PATH.DIRECTORY_SEPARATOR.&#39;messages&#39;,</span>
 <span class="x">    ),</span>
-<span class="x">    &#39;db&#39;=&gt;array(</span>
-<span class="x">        &#39;class&#39;=&gt;&#39;CDbConnection&#39;,</span>
-<span class="x">    ),</span>
-<span class="x">    &#39;messages&#39;=&gt;array(</span>
-<span class="x">        &#39;class …</span></pre></div> </div><!-- /.entry-content -->
+<span class="x">    &#39;db …</span></pre></div> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2014/11/13/read-yii-code-3/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 组件集成">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -123,10 +158,10 @@
 </ul>
 <p>默认使用get路由形式。由于Yii中controller类命名和action方法都是按照规则命名的，而路由也是按照规则来匹配的，所以完全可以不用额外配置urlManager。</p>
 <p>若需要使用path方式，则可如下配置：</p>
-<div class="highlight"><pre><span></span><span class="x">&quot;components&quot; =&gt; array(</span>
-<span class="x">    &#39;urlManager&#39; =&gt; array(</span>
-<span class="x">        &#39;urlFormat&#39; =&gt; &#39;path&#39;,</span>
-<span class="x">        &#39;rules&#39; =&gt; array(</span>
+<div class="highlight"><pre><span></span><span class="x">&quot;components&quot; =&amp;gt; array(</span>
+<span class="x">    &#39;urlManager&#39; =&amp;gt; array(</span>
+<span class="x">        &#39;urlFormat&#39; =&amp;gt; &#39;path&#39;,</span>
+<span class="x">        &#39;rules&#39; =&amp;gt; array(</span>
 <span class="x">            ...</span>
 <span class="x">        ),</span>
 <span class="x">),</span>
@@ -136,12 +171,7 @@
 <p>进一步说明可参考<a href="http://youngsterxyf.github.io/2014/09/06/experience-about-restful-api/">RESTful API设计的一点经验</a>一文。</p>
 <h3>分析</h3>
 <p>在“请求处理基本流程”一篇可以看到Yii框架路由解析流程的入口在类CWebApplication的processRequest方法中：</p>
-<div class="highlight"><pre><span></span><span class="x">$route=$this-&gt;getUrlManager()-&gt;parseUrl($this-&gt;getRequest());</span>
-</pre></div>
-
-
-<p>其中getUrlManager方法定义于类CApplication中，作用是初始化获取URL管理组件（ID为urlManager），实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">public …</span></pre></div> </div><!-- /.entry-content -->
+<div class="highlight"><pre><span></span><span class="x">$route=$this-&amp;gt;getUrlManager()-&amp;gt;parseUrl($this- …</span></pre></div> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2014/11/12/read-yii-code-2/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 路由解析">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -325,43 +355,6 @@
                     <span>Tagged as : </span>
                     <a class="danger label" href="../tag/fan-yi.html">翻译</a>
                     <a class="danger label" href="../tag/php.html">PHP</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="../2014/09/06/experience-about-restful-api/" rel="bookmark" title="Permalink to RESTful API设计的一点经验">RESTful API设计的一点经验</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2014-09-06T00:00:00+08:00"> 2014-09-06 Sat </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>前段时间的工作涉及产品开放API的设计与实现，整个过程大致可分为以下几个步骤：</p>
-<ol>
-<li>根据需求、原有数据库设计等，花了半天左右的工夫完成初稿；</li>
-<li>就初稿与相关同事进行讨论，确定一些细节问题，逐步完善；</li>
-<li>根据设计稿，基于Yii框架，配置路由，实现用户身份认证模块；</li>
-<li>基于步骤3，逐个实现业务相关API；</li>
-<li>对部分代码进行重构，减少不必要的代码重复。主要使用Yii控制器的beforeAction方法来实现多层过滤器。</li>
-</ol>
-<h3>设计</h3>
-<p>考虑到RESTful API简洁明了的接口表现形式，一开始我们就一致确定使用RESTful风格的API。参考以前自己使用多个开放平台API的经验，
-及<a href="https://developer.github.com/v3/">Github的开放API文档</a>，大致完成设计初稿。</p>
-<h5>资源</h5>
-<p>RESTful API主要有两个核心：</p>
-<ol>
-<li>HTTP协议的4个谓词 - GET、POST、PUT、DELETE，分别对应“查询”、“新增”、“更新”、“删除”4种操作</li>
-<li>资源（resource）</li>
-</ol>
-<p>RESTful风格API的设计，最难之处，我认为就是“资源”。</p>
-<p>“资源”是什么？“资源”并不是对应数据库中一个一个数据表，“资源 …</p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2014/09/06/experience-about-restful-api/" rel="bookmark" title="Permalink to RESTful API设计的一点经验">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
-                    <a class="danger label" href="../tag/restful.html">RESTful</a>
                 </div>
             </article>
             </li>

@@ -88,9 +88,9 @@
 <span class="x">    // 调用父类CCache的init方法</span>
 <span class="x">    parent::init();</span>
 <span class="x">    // 获取配置的Memcached服务器列表</span>
-<span class="x">    $servers=$this-&amp;gt;getServers();</span>
+<span class="x">    $servers=$this-&gt;getServers();</span>
 <span class="x">    // 获取一个Memcache或Memcached对象</span>
-<span class="x">    $cache=$this-&amp;gt;getMemCache();</span>
+<span class="x">    $cache=$this-&gt;getMemCache();</span>
 <span class="x">    if(count($servers))</span>
 <span class="x">    {</span>
 <span class="x">        // 将配置的Memcached服务器加到池中</span>
@@ -99,15 +99,15 @@
 <span class="x">            // 可选择使用memcached php扩展，但最好别这样，因为memcached扩展不支持一些有用的配置选项，从addServer方法的参数列表就可以看出</span>
 <span class="x">            // memcached扩展默认使用余数分步哈希算法，但可配置使用一致性哈希算法</span>
 <span class="x">            // 应使用memcache扩展</span>
-<span class="x">            if($this-&amp;gt;useMemcached)</span>
-<span class="x">                $cache-&amp;gt;addServer($server-&amp;gt;host,$server-&amp;gt;port,$server-&amp;gt;weight);</span>
+<span class="x">            if($this-&gt;useMemcached)</span>
+<span class="x">                $cache-&gt;addServer($server-&gt;host,$server-&gt;port,$server-&gt;weight);</span>
 <span class="x">            else</span>
-<span class="x">                $cache-&amp;gt;addServer($server-&amp;gt;host,$server-&amp;gt;port,$server-&amp;gt;persistent,$server-&amp;gt;weight,$server-&amp;gt;timeout,$server-&amp;gt;retryInterval,$server-&amp;gt;status);</span>
+<span class="x">                $cache-&gt;addServer($server-&gt;host,$server-&gt;port,$server-&gt;persistent,$server-&gt;weight,$server-&gt;timeout,$server-&gt;retryInterval,$server-&gt;status);</span>
 <span class="x">        }</span>
 <span class="x">    }</span>
 <span class="x">    // 如果没有配置服务器列表，则默认使用localhost:11211</span>
 <span class="x">    else</span>
-<span class="x">        $cache-&amp;gt;addServer(&#39;localhost&#39;,11211);</span>
+<span class="x">        $cache-&gt;addServer(&#39;localhost&#39;,11211);</span>
 <span class="x">}</span>
 </pre></div>
 
@@ -117,11 +117,11 @@
 <span class="x">{</span>
 <span class="x">    parent::init();</span>
 <span class="x">    // 可以为整个应用的缓存的key加一个统一的前缀，这是为了避免在同一个缓存池中，不同应用的key冲突</span>
-<span class="x">    if($this-&amp;gt;keyPrefix===null)</span>
-<span class="x">        // 如果没有配置keyPrefix，则以应用的id作为keyPrefix，这个key，可以配置，如果未配置，则`sprintf(&#39;%x&#39;,crc32($this-&amp;gt;getBasePath().$this-&amp;gt;name))`这样生成，</span>
+<span class="x">    if($this-&gt;keyPrefix===null)</span>
+<span class="x">        // 如果没有配置keyPrefix，则以应用的id作为keyPrefix，这个key，可以配置，如果未配置，则`sprintf(&#39;%x&#39;,crc32($this-&gt;getBasePath().$this-&gt;name))`这样生成，</span>
 <span class="x">        // 其中name表示应用的名称，可配置，默认为“My Application”</span>
 <span class="x">        // getId方法定义于抽象类CApplication中</span>
-<span class="x">        $this-&amp;gt;keyPrefix=Yii::app()-&amp;gt;getId();</span>
+<span class="x">        $this-&gt;keyPrefix=Yii::app()-&gt;getId();</span>
 <span class="x">}</span>
 </pre></div>
 
@@ -130,33 +130,33 @@
 <div class="highlight"><pre><span></span><span class="x">public function getMemCache()</span>
 <span class="x">{</span>
 <span class="x">    // 单例</span>
-<span class="x">    if($this-&amp;gt;_cache!==null)</span>
-<span class="x">        return $this-&amp;gt;_cache;</span>
+<span class="x">    if($this-&gt;_cache!==null)</span>
+<span class="x">        return $this-&gt;_cache;</span>
 <span class="x">    else</span>
 <span class="x">    {</span>
 <span class="x">        // 还是用memcache吧</span>
-<span class="x">        $extension=$this-&amp;gt;useMemcached ? &#39;memcached&#39; : &#39;memcache&#39;;</span>
+<span class="x">        $extension=$this-&gt;useMemcached ? &#39;memcached&#39; : &#39;memcache&#39;;</span>
 <span class="x">        // 检测一下是否记载了所需扩展</span>
 <span class="x">        if(!extension_loaded($extension))</span>
 <span class="x">            throw new CException(Yii::t(&#39;yii&#39;,&quot;CMemCache requires PHP {extension} extension to be loaded.&quot;,</span>
-<span class="x">                array(&#39;{extension}&#39;=&amp;gt;$extension)));</span>
+<span class="x">                array(&#39;{extension}&#39;=&gt;$extension)));</span>
 <span class="x">        // 实例化</span>
-<span class="x">        return $this-&amp;gt;_cache=$this-&amp;gt;useMemcached ? new Memcached : new Memcache;</span>
+<span class="x">        return $this-&gt;_cache=$this-&gt;useMemcached ? new Memcached : new Memcache;</span>
 <span class="x">    }</span>
 <span class="x">}</span>
 
 <span class="x">public function getServers()</span>
 <span class="x">{</span>
-<span class="x">    return $this-&amp;gt;_servers;</span>
+<span class="x">    return $this-&gt;_servers;</span>
 <span class="x">}</span>
 </pre></div>
 
 
 <p>与<code>getServers</code>对应的有方法<code>setServers</code>，如果需要配置缓存服务器列表，则应该为缓存组件配置<code>servers</code>一项，基本形式为：</p>
-<div class="highlight"><pre><span></span><span class="x">&#39;servers&#39;=&amp;gt;array(</span>
+<div class="highlight"><pre><span></span><span class="x">&#39;servers&#39;=&gt;array(</span>
 <span class="x">    array(</span>
-<span class="x">        &#39;host&#39;=&amp;gt;&#39;127.0.0.1&#39;,</span>
-<span class="x">        &#39;port&#39;=&amp;gt;11211,</span>
+<span class="x">        &#39;host&#39;=&gt;&#39;127.0.0.1&#39;,</span>
+<span class="x">        &#39;port&#39;=&gt;11211,</span>
 <span class="x">    ),</span>
 <span class="x">),</span>
 </pre></div>
@@ -166,7 +166,7 @@
 <div class="highlight"><pre><span></span><span class="x">public function setServers($config)</span>
 <span class="x">{</span>
 <span class="x">    foreach($config as $c)</span>
-<span class="x">        $this-&amp;gt;_servers[]=new CMemCacheServerConfiguration($c);</span>
+<span class="x">        $this-&gt;_servers[]=new CMemCacheServerConfiguration($c);</span>
 <span class="x">}</span>
 </pre></div>
 
@@ -176,9 +176,9 @@
 <span class="x">{</span>
 <span class="x">    if(is_array($config))</span>
 <span class="x">    {</span>
-<span class="x">        foreach($config as $key=&amp;gt;$value)</span>
-<span class="x">            $this-&amp;gt;$key=$value;</span>
-<span class="x">        if($this-&amp;gt;host===null)</span>
+<span class="x">        foreach($config as $key=&gt;$value)</span>
+<span class="x">            $this-&gt;$key=$value;</span>
+<span class="x">        if($this-&gt;host===null)</span>
 <span class="x">            throw new CException(Yii::t(&#39;yii&#39;,&#39;CMemCache server configuration must have &quot;host&quot; value.&#39;));</span>
 <span class="x">    }</span>
 <span class="x">    else</span>
@@ -226,20 +226,20 @@
 <span class="x">public function get($id)</span>
 <span class="x">{</span>
 <span class="x">    // generateUniqueKey是根据$id来生成一个唯一的key，也即真正存到缓存的key并不是get方法的$id参数值</span>
-<span class="x">    $value = $this-&amp;gt;getValue($this-&amp;gt;generateUniqueKey($id));</span>
+<span class="x">    $value = $this-&gt;getValue($this-&gt;generateUniqueKey($id));</span>
 <span class="x">    // 如果设置为不进行序列化，则直接返回取得的值</span>
-<span class="x">    if($value===false || $this-&amp;gt;serializer===false)</span>
+<span class="x">    if($value===false || $this-&gt;serializer===false)</span>
 <span class="x">        return $value;</span>
 <span class="x">    // 如果未设置serializer，则说明存储时使用的是默认的序列化方法，取到数据后对应地需要使用默认的方法进行反序列化</span>
-<span class="x">    if($this-&amp;gt;serializer===null)</span>
+<span class="x">    if($this-&gt;serializer===null)</span>
 <span class="x">        $value=unserialize($value);</span>
 <span class="x">    else</span>
 <span class="x">        // 否则，使用指定的方法进行反序列化</span>
-<span class="x">        $value=call_user_func($this-&amp;gt;serializer[1], $value);</span>
+<span class="x">        $value=call_user_func($this-&gt;serializer[1], $value);</span>
 <span class="x">    // 依赖检查，如果依赖没有变，则说明缓存有效，</span>
 <span class="x">    // 否则，返回false，表示缓存无效</span>
 <span class="x">    // 咦，不要清掉无效的缓存项么？</span>
-<span class="x">    if(is_array($value) &amp;amp;&amp;amp; (!$value[1] instanceof ICacheDependency || !$value[1]-&amp;gt;getHasChanged()))</span>
+<span class="x">    if(is_array($value) &amp;&amp; (!$value[1] instanceof ICacheDependency || !$value[1]-&gt;getHasChanged()))</span>
 <span class="x">    {</span>
 <span class="x">        Yii::trace(&#39;Serving &quot;&#39;.$id.&#39;&quot; from cache&#39;,&#39;system.caching.&#39;.get_class($this));</span>
 <span class="x">        return $value[0];</span>
@@ -253,24 +253,24 @@
 <span class="x">{</span>
 <span class="x">    $uids = array();</span>
 <span class="x">    foreach ($ids as $id)</span>
-<span class="x">        $uids[$id] = $this-&amp;gt;generateUniqueKey($id);</span>
+<span class="x">        $uids[$id] = $this-&gt;generateUniqueKey($id);</span>
 
-<span class="x">    $values = $this-&amp;gt;getValues($uids);</span>
+<span class="x">    $values = $this-&gt;getValues($uids);</span>
 <span class="x">    $results = array();</span>
-<span class="x">    if($this-&amp;gt;serializer === false)</span>
+<span class="x">    if($this-&gt;serializer === false)</span>
 <span class="x">    {</span>
-<span class="x">        foreach ($uids as $id =&amp;gt; $uid)</span>
+<span class="x">        foreach ($uids as $id =&gt; $uid)</span>
 <span class="x">            $results[$id] = isset($values[$uid]) ? $values[$uid] : false;</span>
 <span class="x">    }</span>
 <span class="x">    else</span>
 <span class="x">    {</span>
-<span class="x">        foreach($uids as $id =&amp;gt; $uid)</span>
+<span class="x">        foreach($uids as $id =&gt; $uid)</span>
 <span class="x">        {</span>
 <span class="x">            $results[$id] = false;</span>
 <span class="x">            if(isset($values[$uid]))</span>
 <span class="x">            {</span>
-<span class="x">                $value = $this-&amp;gt;serializer === null ? unserialize($values[$uid]) : call_user_func($this-&amp;gt;serializer[1], $values[$uid]);</span>
-<span class="x">                if(is_array($value) &amp;amp;&amp;amp; (!$value[1] instanceof ICacheDependency || !$value[1]-&amp;gt;getHasChanged()))</span>
+<span class="x">                $value = $this-&gt;serializer === null ? unserialize($values[$uid]) : call_user_func($this-&gt;serializer[1], $values[$uid]);</span>
+<span class="x">                if(is_array($value) &amp;&amp; (!$value[1] instanceof ICacheDependency || !$value[1]-&gt;getHasChanged()))</span>
 <span class="x">                {</span>
 <span class="x">                    Yii::trace(&#39;Serving &quot;&#39;.$id.&#39;&quot; from cache&#39;,&#39;system.caching.&#39;.get_class($this));</span>
 <span class="x">                    $results[$id] = $value[0];</span>
@@ -286,18 +286,18 @@
 <span class="x">{</span>
 <span class="x">    Yii::trace(&#39;Saving &quot;&#39;.$id.&#39;&quot; to cache&#39;,&#39;system.caching.&#39;.get_class($this));</span>
 
-<span class="x">    if ($dependency !== null &amp;amp;&amp;amp; $this-&amp;gt;serializer !== false)</span>
+<span class="x">    if ($dependency !== null &amp;&amp; $this-&gt;serializer !== false)</span>
 <span class="x">        // 获取依赖值</span>
-<span class="x">        $dependency-&amp;gt;evaluateDependency();</span>
+<span class="x">        $dependency-&gt;evaluateDependency();</span>
 
 <span class="x">    // 连同依赖一起序列化然后缓存起来</span>
 <span class="x">    // 下次获取缓存后，检查一下依赖是否发生变更，是则说明缓存已经失效</span>
-<span class="x">    if ($this-&amp;gt;serializer === null)</span>
+<span class="x">    if ($this-&gt;serializer === null)</span>
 <span class="x">        $value = serialize(array($value,$dependency));</span>
-<span class="x">    elseif ($this-&amp;gt;serializer !== false)</span>
-<span class="x">        $value = call_user_func($this-&amp;gt;serializer[0], array($value,$dependency));</span>
+<span class="x">    elseif ($this-&gt;serializer !== false)</span>
+<span class="x">        $value = call_user_func($this-&gt;serializer[0], array($value,$dependency));</span>
 
-<span class="x">    return $this-&amp;gt;setValue($this-&amp;gt;generateUniqueKey($id), $value, $expire);</span>
+<span class="x">    return $this-&gt;setValue($this-&gt;generateUniqueKey($id), $value, $expire);</span>
 <span class="x">}</span>
 
 <span class="x">// 在缓存服务器之前不存在$id时， 以id作为key存储一个变量$value到缓存服务器</span>
@@ -305,29 +305,29 @@
 <span class="x">{</span>
 <span class="x">    Yii::trace(&#39;Adding &quot;&#39;.$id.&#39;&quot; to cache&#39;,&#39;system.caching.&#39;.get_class($this));</span>
 
-<span class="x">    if ($dependency !== null &amp;amp;&amp;amp; $this-&amp;gt;serializer !== false)</span>
-<span class="x">        $dependency-&amp;gt;evaluateDependency();</span>
+<span class="x">    if ($dependency !== null &amp;&amp; $this-&gt;serializer !== false)</span>
+<span class="x">        $dependency-&gt;evaluateDependency();</span>
 
-<span class="x">    if ($this-&amp;gt;serializer === null)</span>
+<span class="x">    if ($this-&gt;serializer === null)</span>
 <span class="x">        $value = serialize(array($value,$dependency));</span>
-<span class="x">    elseif ($this-&amp;gt;serializer !== false)</span>
-<span class="x">        $value = call_user_func($this-&amp;gt;serializer[0], array($value,$dependency));</span>
+<span class="x">    elseif ($this-&gt;serializer !== false)</span>
+<span class="x">        $value = call_user_func($this-&gt;serializer[0], array($value,$dependency));</span>
 
-<span class="x">    return $this-&amp;gt;addValue($this-&amp;gt;generateUniqueKey($id), $value, $expire);</span>
+<span class="x">    return $this-&gt;addValue($this-&gt;generateUniqueKey($id), $value, $expire);</span>
 <span class="x">}</span>
 
 <span class="x">// 根据id删除缓存项</span>
 <span class="x">public function delete($id)</span>
 <span class="x">{</span>
 <span class="x">    Yii::trace(&#39;Deleting &quot;&#39;.$id.&#39;&quot; from cache&#39;,&#39;system.caching.&#39;.get_class($this));</span>
-<span class="x">    return $this-&amp;gt;deleteValue($this-&amp;gt;generateUniqueKey($id));</span>
+<span class="x">    return $this-&gt;deleteValue($this-&gt;generateUniqueKey($id));</span>
 <span class="x">}</span>
 
 <span class="x">// 清空缓存</span>
 <span class="x">public function flush()</span>
 <span class="x">{</span>
 <span class="x">    Yii::trace(&#39;Flushing cache&#39;,&#39;system.caching.&#39;.get_class($this));</span>
-<span class="x">    return $this-&amp;gt;flushValues();</span>
+<span class="x">    return $this-&gt;flushValues();</span>
 <span class="x">}</span>
 </pre></div>
 
@@ -344,12 +344,12 @@
 <p>但抽象类<code>CCache</code>中对于后面的这些方法并没有真正实现操作逻辑（除了getValues，其实现是循环调用getValue，也许并不是开发者想要的实现，<code>CMemCache</code>类重写了这个方法），需要在继承类中实现。<code>CMemCache</code>类中对这些方法实现如下：</p>
 <div class="highlight"><pre><span></span><span class="x">protected function getValue($key)</span>
 <span class="x">{</span>
-<span class="x">    return $this-&amp;gt;_cache-&amp;gt;get($key);</span>
+<span class="x">    return $this-&gt;_cache-&gt;get($key);</span>
 <span class="x">}</span>
 
 <span class="x">protected function getValues($keys)</span>
 <span class="x">{</span>
-<span class="x">    return $this-&amp;gt;useMemcached ? $this-&amp;gt;_cache-&amp;gt;getMulti($keys) : $this-&amp;gt;_cache-&amp;gt;get($keys);</span>
+<span class="x">    return $this-&gt;useMemcached ? $this-&gt;_cache-&gt;getMulti($keys) : $this-&gt;_cache-&gt;get($keys);</span>
 <span class="x">}</span>
 
 <span class="x">protected function setValue($key,$value,$expire)</span>
@@ -357,33 +357,33 @@
 <span class="x">    // 注意：这个地方对于开发者来说也许是个坑</span>
 <span class="x">    // 该方法的参数$expire并不是一个时间点，而是一个时间间隔</span>
 <span class="x">    // $expire = 0表示不会超时失效</span>
-<span class="x">    if($expire&amp;gt;0)</span>
+<span class="x">    if($expire&gt;0)</span>
 <span class="x">        $expire+=time();</span>
 <span class="x">    else</span>
 <span class="x">        $expire=0;</span>
 
 <span class="x">    // 使用memcache扩展时，add方法的那个额外参数值0，对应参数flag，表示是否对数据使用zlib进行压缩</span>
-<span class="x">    return $this-&amp;gt;useMemcached ? $this-&amp;gt;_cache-&amp;gt;set($key,$value,$expire) : $this-&amp;gt;_cache-&amp;gt;set($key,$value,0,$expire);</span>
+<span class="x">    return $this-&gt;useMemcached ? $this-&gt;_cache-&gt;set($key,$value,$expire) : $this-&gt;_cache-&gt;set($key,$value,0,$expire);</span>
 <span class="x">}</span>
 
 <span class="x">protected function addValue($key,$value,$expire)</span>
 <span class="x">{</span>
-<span class="x">    if($expire&amp;gt;0)</span>
+<span class="x">    if($expire&gt;0)</span>
 <span class="x">        $expire+=time();</span>
 <span class="x">    else</span>
 <span class="x">        $expire=0;</span>
 
-<span class="x">    return $this-&amp;gt;useMemcached ? $this-&amp;gt;_cache-&amp;gt;add($key,$value,$expire) : $this-&amp;gt;_cache-&amp;gt;add($key,$value,0,$expire);</span>
+<span class="x">    return $this-&gt;useMemcached ? $this-&gt;_cache-&gt;add($key,$value,$expire) : $this-&gt;_cache-&gt;add($key,$value,0,$expire);</span>
 <span class="x">}</span>
 
 <span class="x">protected function deleteValue($key)</span>
 <span class="x">{</span>
-<span class="x">    return $this-&amp;gt;_cache-&amp;gt;delete($key, 0);</span>
+<span class="x">    return $this-&gt;_cache-&gt;delete($key, 0);</span>
 <span class="x">}</span>
 
 <span class="x">protected function flushValues()</span>
 <span class="x">{</span>
-<span class="x">    return $this-&amp;gt;_cache-&amp;gt;flush();</span>
+<span class="x">    return $this-&gt;_cache-&gt;flush();</span>
 <span class="x">}</span>
 </pre></div>
 
@@ -400,7 +400,7 @@
 <span class="x"> */</span>
 <span class="x">protected function generateUniqueKey($key)</span>
 <span class="x">{</span>
-<span class="x">    return $this-&amp;gt;hashKey ? md5($this-&amp;gt;keyPrefix.$key) : $this-&amp;gt;keyPrefix.$key;</span>
+<span class="x">    return $this-&gt;hashKey ? md5($this-&gt;keyPrefix.$key) : $this-&gt;keyPrefix.$key;</span>
 <span class="x">}</span>
 </pre></div>
 
@@ -423,17 +423,17 @@
 <span class="x">    // 判断是否复用缓存依赖结果</span>
 <span class="x">    // 默认为false，可在实例化缓存依赖类时设置</span>
 <span class="x">    // 另外对于PHP来说，这个“复用”也只能是一次请求处理过程中的复用</span>
-<span class="x">    if ($this-&amp;gt;reuseDependentData)</span>
+<span class="x">    if ($this-&gt;reuseDependentData)</span>
 <span class="x">    {</span>
 <span class="x">        // hash方法：求当前对象序列化结果的sha1哈希值</span>
-<span class="x">        $hash=$this-&amp;gt;getHash();</span>
+<span class="x">        $hash=$this-&gt;getHash();</span>
 <span class="x">        if(!isset(self::$_reusableData[$hash][&#39;dependentData&#39;]))</span>
 <span class="x">            // 如果没有结果可复用，则得重新生成</span>
-<span class="x">            self::$_reusableData[$hash][&#39;dependentData&#39;]=$this-&amp;gt;generateDependentData();</span>
-<span class="x">        $this-&amp;gt;_data=self::$_reusableData[$hash][&#39;dependentData&#39;];</span>
+<span class="x">            self::$_reusableData[$hash][&#39;dependentData&#39;]=$this-&gt;generateDependentData();</span>
+<span class="x">        $this-&gt;_data=self::$_reusableData[$hash][&#39;dependentData&#39;];</span>
 <span class="x">    }</span>
 <span class="x">    else</span>
-<span class="x">        $this-&amp;gt;_data=$this-&amp;gt;generateDependentData();</span>
+<span class="x">        $this-&gt;_data=$this-&gt;generateDependentData();</span>
 <span class="x">}</span>
 
 <span class="x">/**</span>
@@ -443,16 +443,16 @@
 <span class="x">// 所以它的_data属性是写缓存时的缓存依赖数据</span>
 <span class="x">public function getHasChanged()</span>
 <span class="x">{</span>
-<span class="x">    if ($this-&amp;gt;reuseDependentData)</span>
+<span class="x">    if ($this-&gt;reuseDependentData)</span>
 <span class="x">    {</span>
-<span class="x">        $hash=$this-&amp;gt;getHash();</span>
+<span class="x">        $hash=$this-&gt;getHash();</span>
 <span class="x">        if(!isset(self::$_reusableData[$hash][&#39;dependentData&#39;]))</span>
-<span class="x">            self::$_reusableData[$hash][&#39;dependentData&#39;]=$this-&amp;gt;generateDependentData();</span>
+<span class="x">            self::$_reusableData[$hash][&#39;dependentData&#39;]=$this-&gt;generateDependentData();</span>
 <span class="x">        // 不相等，则说明发生了变更</span>
-<span class="x">        return self::$_reusableData[$hash][&#39;dependentData&#39;]!=$this-&amp;gt;_data;</span>
+<span class="x">        return self::$_reusableData[$hash][&#39;dependentData&#39;]!=$this-&gt;_data;</span>
 <span class="x">    }</span>
 <span class="x">    else</span>
-<span class="x">        return $this-&amp;gt;generateDependentData()!=$this-&amp;gt;_data;</span>
+<span class="x">        return $this-&gt;generateDependentData()!=$this-&gt;_data;</span>
 <span class="x">}</span>
 </pre></div>
 
@@ -460,29 +460,29 @@
 <p>但父类<code>CCacheDependency</code>并未有效实现上述两个方法中调用的<code>generateDependentData</code>方法，在类<code>CDbCacheDependency</code>中实现如下：</p>
 <div class="highlight"><pre><span></span><span class="x">protected function generateDependentData()</span>
 <span class="x">{</span>
-<span class="x">    if($this-&amp;gt;sql!==null)</span>
+<span class="x">    if($this-&gt;sql!==null)</span>
 <span class="x">    {</span>
 <span class="x">        // 获取数据库连接组件对象</span>
-<span class="x">        $db=$this-&amp;gt;getDbConnection();</span>
+<span class="x">        $db=$this-&gt;getDbConnection();</span>
 <span class="x">        // 准备SQL执行，其中sql属性在构造方法中赋值</span>
-<span class="x">        $command=$db-&amp;gt;createCommand($this-&amp;gt;sql);</span>
-<span class="x">        if(is_array($this-&amp;gt;params))</span>
+<span class="x">        $command=$db-&gt;createCommand($this-&gt;sql);</span>
+<span class="x">        if(is_array($this-&gt;params))</span>
 <span class="x">        {</span>
 <span class="x">            // 绑定参数</span>
-<span class="x">            foreach($this-&amp;gt;params as $name=&amp;gt;$value)</span>
-<span class="x">                $command-&amp;gt;bindValue($name,$value);</span>
+<span class="x">            foreach($this-&gt;params as $name=&gt;$value)</span>
+<span class="x">                $command-&gt;bindValue($name,$value);</span>
 <span class="x">        }</span>
 <span class="x">        // 避免从缓存中读取数据库查询结果</span>
-<span class="x">        if($db-&amp;gt;queryCachingDuration&amp;gt;0)</span>
+<span class="x">        if($db-&gt;queryCachingDuration&gt;0)</span>
 <span class="x">        {</span>
 <span class="x">            // temporarily disable and re-enable query caching</span>
-<span class="x">            $duration=$db-&amp;gt;queryCachingDuration;</span>
-<span class="x">            $db-&amp;gt;queryCachingDuration=0;</span>
-<span class="x">            $result=$command-&amp;gt;queryRow();</span>
-<span class="x">            $db-&amp;gt;queryCachingDuration=$duration;</span>
+<span class="x">            $duration=$db-&gt;queryCachingDuration;</span>
+<span class="x">            $db-&gt;queryCachingDuration=0;</span>
+<span class="x">            $result=$command-&gt;queryRow();</span>
+<span class="x">            $db-&gt;queryCachingDuration=$duration;</span>
 <span class="x">        }</span>
 <span class="x">        else</span>
-<span class="x">            $result=$command-&amp;gt;queryRow();</span>
+<span class="x">            $result=$command-&gt;queryRow();</span>
 <span class="x">        return $result;</span>
 <span class="x">    }</span>
 <span class="x">    else</span>

@@ -106,7 +106,7 @@
 <p>尝试从undefined的成员属性中取值将会导致TypeError异常。可以通过<code>&amp;&amp;</code>运算符来避免错误。</p>
 <div class="highlight"><pre><span></span><span class="nx">flight</span><span class="p">.</span><span class="nx">equipment</span>        <span class="c1">// undefined</span>
 <span class="nx">flight</span><span class="p">.</span><span class="nx">equipment</span><span class="p">.</span><span class="nx">model</span>      <span class="c1">// throw &quot;TypeError&quot;</span>
-<span class="nx">flight</span><span class="p">.</span><span class="nx">equipment</span> <span class="o">&amp;</span><span class="nx">amp</span><span class="p">;</span><span class="o">&amp;</span><span class="nx">amp</span><span class="p">;</span> <span class="nx">flight</span><span class="p">.</span><span class="nx">equipment</span><span class="p">.</span><span class="nx">model</span>  <span class="c1">// undefined</span>
+<span class="nx">flight</span><span class="p">.</span><span class="nx">equipment</span> <span class="o">&amp;&amp;</span> <span class="nx">flight</span><span class="p">.</span><span class="nx">equipment</span><span class="p">.</span><span class="nx">model</span>  <span class="c1">// undefined</span>
 </pre></div>
 
 
@@ -199,15 +199,15 @@
     <span class="c1">// 字符实体表。映射字符实体的名字到对应的字符。</span>
     <span class="kd">var</span> <span class="nx">entity</span> <span class="o">=</span> <span class="p">{</span>
         <span class="nx">quot</span><span class="o">:</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">,</span>
-        <span class="nx">lt</span><span class="o">:</span> <span class="s1">&#39;&amp;lt;&#39;</span><span class="p">,</span>
-        <span class="nx">gt</span><span class="o">:</span> <span class="s1">&#39;&amp;gt;&#39;</span>
+        <span class="nx">lt</span><span class="o">:</span> <span class="s1">&#39;&lt;&#39;</span><span class="p">,</span>
+        <span class="nx">gt</span><span class="o">:</span> <span class="s1">&#39;&gt;&#39;</span>
     <span class="p">};</span>
     <span class="c1">// 返回deentityify方法</span>
     <span class="k">return</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
     <span class="c1">// 这才是deentityify方法。它调用字符串的replace的方法，</span>
-    <span class="c1">// 查找‘&amp;amp;’开头和‘;’结束的子字符串。如果这些字符可以在字符实体表中找到，</span>
+    <span class="c1">// 查找‘&amp;’开头和‘;’结束的子字符串。如果这些字符可以在字符实体表中找到，</span>
     <span class="c1">// 那么就将该字符实体替换为映射表中的值。</span>
-        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/&amp;amp;([^&amp;amp;;]+);/g</span><span class="p">,</span>
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/&amp;([^&amp;;]+);/g</span><span class="p">,</span>
             <span class="kd">function</span> <span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
                 <span class="kd">var</span> <span class="nx">r</span> <span class="o">=</span> <span class="nx">entity</span><span class="p">[</span><span class="nx">b</span><span class="p">];</span>
                 <span class="k">return</span> <span class="k">typeof</span> <span class="nx">r</span> <span class="o">===</span> <span class="s1">&#39;string&#39;</span> <span class="o">?</span> <span class="nx">r</span> <span class="o">:</span> <span class="nx">a</span><span class="p">;</span>

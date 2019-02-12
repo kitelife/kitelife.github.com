@@ -143,11 +143,11 @@ API就需要提供兼容方案。我们的兼容方案是：以POST谓词来替�
 <p>Yii框架默认的路由形式为：查询字符串r=xxx/yyy，其中xxx为控制器(controller)的名称，yyy为动作方法(action)的名称，这种路由形式对应Yii内部的get路由类型，
 因为是默认形式，所以无需额外配置。
 Yii另外提供一种名为path的路由形式，即使用URL的路径(path)部分来表达路由。要这种形式的路由需要额外配置Yii框架，如下所示：</p>
-<div class="highlight"><pre><span></span><span class="x">&#39;components&#39; =&amp;gt; array(</span>
-<span class="x">    &#39;urlManager&#39; =&amp;gt; array(</span>
-<span class="x">        &#39;urlFormat&#39; =&amp;gt; &#39;path&#39;,</span>
-<span class="x">        &#39;rules&#39; =&amp;gt; array(</span>
-<span class="x">            array(&#39;aaa/bbb&#39;, &#39;pattern&#39; =&amp;gt; &#39;/xxx/yyy&#39;, &#39;verb&#39; =&amp;gt; &#39;POST&#39;),</span>
+<div class="highlight"><pre><span></span><span class="x">&#39;components&#39; =&gt; array(</span>
+<span class="x">    &#39;urlManager&#39; =&gt; array(</span>
+<span class="x">        &#39;urlFormat&#39; =&gt; &#39;path&#39;,</span>
+<span class="x">        &#39;rules&#39; =&gt; array(</span>
+<span class="x">            array(&#39;aaa/bbb&#39;, &#39;pattern&#39; =&gt; &#39;/xxx/yyy&#39;, &#39;verb&#39; =&gt; &#39;POST&#39;),</span>
 <span class="x">            ...</span>
 <span class="x">        ),</span>
 <span class="x">    ),</span>
@@ -165,20 +165,20 @@ xxx为控制器名称，yyy为动作方法名称，这里可以看出HTTP API UR
 动作方法上，代码如下所示：</p>
 <div class="highlight"><pre><span></span><span class="x">protected function beforeAction($action)</span>
 <span class="x">{</span>
-<span class="x">    $this-&amp;gt;requestMethod = Yii::app()-&amp;gt;request-&amp;gt;getRequestType();</span>
+<span class="x">    $this-&gt;requestMethod = Yii::app()-&gt;request-&gt;getRequestType();</span>
 <span class="x">    // 兼容方案</span>
 <span class="x">    // 带参数_method=DELETE的POST请求来代替DELETE请求</span>
 <span class="x">    // 带参数_method=PUT的POST请求来代替PUT请求</span>
-<span class="x">    if ($this-&amp;gt;requestMethod === &#39;POST&#39; &amp;amp;&amp;amp; isset($_POST[&#39;_method&#39;])) {</span>
+<span class="x">    if ($this-&gt;requestMethod === &#39;POST&#39; &amp;&amp; isset($_POST[&#39;_method&#39;])) {</span>
 <span class="x">        if ($_POST[&#39;_method&#39;] === &#39;DELETE&#39;) {</span>
 <span class="x">            // 避免死循环</span>
 <span class="x">            unset($_POST[&#39;_method&#39;]);</span>
-<span class="x">            $this-&amp;gt;forward($this-&amp;gt;getUniqueId() . &#39;/delete&#39;);</span>
+<span class="x">            $this-&gt;forward($this-&gt;getUniqueId() . &#39;/delete&#39;);</span>
 <span class="x">        } elseif ($_POST[&#39;_method&#39;] === &#39;PUT&#39;) {</span>
 <span class="x">            unset($_POST[&#39;_method&#39;]);</span>
-<span class="x">            $this-&amp;gt;forward($this-&amp;gt;getUniqueId() . &#39;/update&#39;);</span>
+<span class="x">            $this-&gt;forward($this-&gt;getUniqueId() . &#39;/update&#39;);</span>
 <span class="x">        } else {</span>
-<span class="x">            $this-&amp;gt;echoJson(CodeStatus::WRONG_PARAM);</span>
+<span class="x">            $this-&gt;echoJson(CodeStatus::WRONG_PARAM);</span>
 <span class="x">            return false;</span>
 <span class="x">        }</span>
 <span class="x">    }</span>
@@ -189,34 +189,34 @@ xxx为控制器名称，yyy为动作方法名称，这里可以看出HTTP API UR
 
 <h5>响应码</h5>
 <p>对于API可能用到的所有响应码及其说明，我们使用一个单独的类来集中管理，以避免API中硬编码响应码，以及避免代码重复。如下所示：</p>
-<div class="highlight"><pre><span></span><span class="x">&amp;lt;?php</span>
-<span class="x">    class CodeStatus {</span>
-<span class="x">        const OK = 200; // 成功</span>
-<span class="x">        const CREATED = 201; // 创建成功</span>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+    <span class="k">class</span> <span class="nc">CodeStatus</span> <span class="p">{</span>
+        <span class="k">const</span> <span class="no">OK</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span> <span class="c1">// 成功</span>
+        <span class="k">const</span> <span class="no">CREATED</span> <span class="o">=</span> <span class="mi">201</span><span class="p">;</span> <span class="c1">// 创建成功</span>
 
-<span class="x">        const REQUEST_WRONG = 400;</span>
-<span class="x">        const TOKEN_WRONG = 403; // token已过期或不存在</span>
-<span class="x">        const NOT_FOUND = 404; // 资源不存在</span>
-<span class="x">        const LACK_PARAM = 423; // 缺少必要的请求参数</span>
-<span class="x">        const WRONG_PARAM = 425; // 请求参数不正确</span>
-<span class="x">        const DUPLICATE_RESOURCE = 426; // 已经存在相同的资源</span>
+        <span class="k">const</span> <span class="no">REQUEST_WRONG</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span>
+        <span class="k">const</span> <span class="no">TOKEN_WRONG</span> <span class="o">=</span> <span class="mi">403</span><span class="p">;</span> <span class="c1">// token已过期或不存在</span>
+        <span class="k">const</span> <span class="no">NOT_FOUND</span> <span class="o">=</span> <span class="mi">404</span><span class="p">;</span> <span class="c1">// 资源不存在</span>
+        <span class="k">const</span> <span class="no">LACK_PARAM</span> <span class="o">=</span> <span class="mi">423</span><span class="p">;</span> <span class="c1">// 缺少必要的请求参数</span>
+        <span class="k">const</span> <span class="no">WRONG_PARAM</span> <span class="o">=</span> <span class="mi">425</span><span class="p">;</span> <span class="c1">// 请求参数不正确</span>
+        <span class="k">const</span> <span class="no">DUPLICATE_RESOURCE</span> <span class="o">=</span> <span class="mi">426</span><span class="p">;</span> <span class="c1">// 已经存在相同的资源</span>
 
-<span class="x">        const SYSTEM_ERROR = 500; // 系统异常</span>
+        <span class="k">const</span> <span class="no">SYSTEM_ERROR</span> <span class="o">=</span> <span class="mi">500</span><span class="p">;</span> <span class="c1">// 系统异常</span>
 
-<span class="x">        ...</span>
+        <span class="o">...</span>
 
-<span class="x">        public static $status_code = array(</span>
-<span class="x">            self::OK =&amp;gt; &#39;成功&#39;,</span>
-<span class="x">            self::CREATED =&amp;gt; &#39;创建成功&#39;,</span>
-<span class="x">            self::TOKEN_WRONG =&amp;gt; &#39;token已过期或不存在&#39;,</span>
-<span class="x">            self::LACK_PARAM =&amp;gt; &#39;缺少必要的请求参数&#39;,</span>
-<span class="x">            self::SYSTEM_ERROR =&amp;gt; &#39;系统异常&#39;,</span>
-<span class="x">            self::WRONG_PARAM =&amp;gt; &#39;请求参数不正确&#39;,</span>
-<span class="x">            self::DUPLICATE_RESOURCE =&amp;gt; &#39;已经存在相同的资源&#39;,</span>
-<span class="x">            self::NOT_FOUND =&amp;gt; &#39;资源不存在&#39;,</span>
-<span class="x">            ...</span>
-<span class="x">        );</span>
-<span class="x">    }</span>
+        <span class="k">public</span> <span class="k">static</span> <span class="nv">$status_code</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span>
+            <span class="nx">self</span><span class="o">::</span><span class="na">OK</span> <span class="o">=&gt;</span> <span class="s1">&#39;成功&#39;</span><span class="p">,</span>
+            <span class="nx">self</span><span class="o">::</span><span class="na">CREATED</span> <span class="o">=&gt;</span> <span class="s1">&#39;创建成功&#39;</span><span class="p">,</span>
+            <span class="nx">self</span><span class="o">::</span><span class="na">TOKEN_WRONG</span> <span class="o">=&gt;</span> <span class="s1">&#39;token已过期或不存在&#39;</span><span class="p">,</span>
+            <span class="nx">self</span><span class="o">::</span><span class="na">LACK_PARAM</span> <span class="o">=&gt;</span> <span class="s1">&#39;缺少必要的请求参数&#39;</span><span class="p">,</span>
+            <span class="nx">self</span><span class="o">::</span><span class="na">SYSTEM_ERROR</span> <span class="o">=&gt;</span> <span class="s1">&#39;系统异常&#39;</span><span class="p">,</span>
+            <span class="nx">self</span><span class="o">::</span><span class="na">WRONG_PARAM</span> <span class="o">=&gt;</span> <span class="s1">&#39;请求参数不正确&#39;</span><span class="p">,</span>
+            <span class="nx">self</span><span class="o">::</span><span class="na">DUPLICATE_RESOURCE</span> <span class="o">=&gt;</span> <span class="s1">&#39;已经存在相同的资源&#39;</span><span class="p">,</span>
+            <span class="nx">self</span><span class="o">::</span><span class="na">NOT_FOUND</span> <span class="o">=&gt;</span> <span class="s1">&#39;资源不存在&#39;</span><span class="p">,</span>
+            <span class="o">...</span>
+        <span class="p">);</span>
+    <span class="p">}</span>
 </pre></div>
 
 

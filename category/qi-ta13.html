@@ -266,7 +266,7 @@ MySQL会解析查询，并创建一个内部数据结构(解析树)，然后对�
 <p>后来发现自己实现的有问题。正确的实现应该如下：</p>
 <div class="highlight"><pre><span></span><span class="kt">char</span><span class="o">*</span> <span class="nf">strcpy</span><span class="p">(</span><span class="kt">char</span><span class="o">*</span> <span class="n">dest</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">src</span><span class="p">)</span>
 <span class="p">{</span>
-    <span class="n">assert</span><span class="p">(</span><span class="n">dest</span><span class="o">!=</span><span class="nb">NULL</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span> <span class="n">src</span><span class="o">!=</span><span class="nb">NULL</span><span class="p">);</span>
+    <span class="n">assert</span><span class="p">(</span><span class="n">dest</span><span class="o">!=</span><span class="nb">NULL</span> <span class="o">&amp;&amp;</span> <span class="n">src</span><span class="o">!=</span><span class="nb">NULL</span><span class="p">);</span>
     <span class="kt">char</span><span class="o">*</span> <span class="n">ret</span> <span class="o">=</span> <span class="n">dest</span><span class="p">;</span>
     <span class="k">while</span><span class="p">((</span><span class="o">*</span><span class="n">dest</span><span class="o">++</span> <span class="o">=</span> <span class="o">*</span><span class="n">src</span><span class="o">++</span><span class="p">)</span> <span class="o">!=</span> <span class="sc">&#39;\0&#39;</span><span class="p">);</span>
     <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
@@ -277,7 +277,9 @@ MySQL会解析查询，并创建一个内部数据结构(解析树)，然后对�
 <p>这个题目做得不好，我对自己很失望啊。</p>
 <p>2.
 给2n+1个数，其中n个数均出现了2次，有1个数只出现了1次，如何找出这个数？</p>
-<p>如果用python的dict数据结构来实现会很简单，一次遍历统计每个数出现的次数就可以了。如果是这样的话，就不需要将题目限制为只有一个1个数只出现了一次了，所以肯定有更好的算法 …</p> </div><!-- /.entry-content -->
+<p>如果用python的dict数据结构来实现会很简单，一次遍历统计每个数出现的次数就可以了。如果是这样的话，就不需要将题目限制为只有一个1个数只出现了一次了，所以肯定有更好的算法。</p>
+<p>其实更好的方法是这样的：</p>
+<div class="highlight"><pre><span></span><span class="kt">int …</span></pre></div> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2012/12/06/VMware-interview/" rel="bookmark" title="Permalink to VMware面试题目总结">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
@@ -360,11 +362,16 @@ E     F
 <p>实现：<a href="https://github.com/youngsterxyf/Data-Structures-and-Algorithms/blob/master/nearest_common_ancestor.c">见源码</a></p>
 <h2>求二进制整数部分bits求反后的值</h2>
 <p>比如：对于整数0b1001101，将第2(begin)到第5(end)位(从右往左计数)上的bit求反，得到0b1110001。</p>
-<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&amp;lt;stdio.h&amp;gt;</span><span class="cp"></span>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
 
 <span class="kt">int</span> <span class="nf">reverse_somebits</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">begin</span><span class="p">,</span> <span class="kt">int</span> <span class="n">end</span><span class="p">)</span>
 <span class="p">{</span>
-    <span class="k">return</span> <span class="n">a</span><span class="o">^</span><span class="p">((</span><span class="mi">1</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">end</span><span class="p">)</span><span class="o">|</span><span class="p">((</span><span class="mi">1</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">end</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">^</span><span class="p">((</span><span class="mi">1</span><span class="o">&amp;</span><span class="n">lt …</span></pre></div> </div><!-- /.entry-content -->
+    <span class="k">return</span> <span class="n">a</span><span class="o">^</span><span class="p">((</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="n">end</span><span class="p">)</span><span class="o">|</span><span class="p">((</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="n">end</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">^</span><span class="p">((</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="n">begin</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">ten_to_two</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">if …</span></pre></div> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2012/12/05/sonicWALL-exam/" rel="bookmark" title="Permalink to 2012校招-sonicWALL的两道编程笔试题">Read more <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>

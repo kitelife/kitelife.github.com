@@ -149,8 +149,8 @@ Ten seconds later: I’m leaving now.
 <p><img alt="Sushi conveyor belt" src="http://www.nada.kth.se/~snilsson/concurrency/sushi-conveyor-belt.jpg"></p>
 <p><a href="http://golang.org/ref/spec#Channel_types">管道</a>是Go语言的一个构件，提供一种机制用于两个goroutine之间通过传递一个指定类型的值来同步运行和通讯。操作符<code>&lt;-</code>用于指定管道的方向，发送或接收。如果未指定方向，则为双向管道。</p>
 <div class="highlight"><pre><span></span><span class="kd">chan</span> <span class="nx">Sushi</span>        <span class="c1">// 可用来发送和接收Sushi类型的值</span>
-<span class="kd">chan</span><span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span> <span class="kt">float64</span>    <span class="c1">// 仅可用来发送float64类型的值</span>
-<span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span><span class="kd">chan</span> <span class="kt">int</span>        <span class="c1">// 仅可用来接收int类型的值</span>
+<span class="kd">chan</span><span class="o">&lt;-</span> <span class="kt">float64</span>    <span class="c1">// 仅可用来发送float64类型的值</span>
+<span class="o">&lt;-</span><span class="kd">chan</span> <span class="kt">int</span>        <span class="c1">// 仅可用来接收int类型的值</span>
 </pre></div>
 
 
@@ -161,8 +161,8 @@ Ten seconds later: I’m leaving now.
 
 
 <p>如果通过管道发送一个值，则将<code>&lt;-</code>作为二元操作符使用。通过管道接收一个值，则将其作为一元操作符使用：</p>
-<div class="highlight"><pre><span></span><span class="nx">ic</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span> <span class="mi">3</span>        <span class="c1">// 往管道发送3</span>
-<span class="nx">work</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span><span class="nx">wc</span>    <span class="c1">// 从管道接收一个指向Work类型值的指针</span>
+<div class="highlight"><pre><span></span><span class="nx">ic</span> <span class="o">&lt;-</span> <span class="mi">3</span>        <span class="c1">// 往管道发送3</span>
+<span class="nx">work</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">wc</span>    <span class="c1">// 从管道接收一个指向Work类型值的指针</span>
 </pre></div>
 
 
@@ -171,30 +171,30 @@ Ten seconds later: I’m leaving now.
 <p><a href="http://golang.org/ref/spec#Close">close</a> 函数标志着不会再往某个管道发送值。在调用<code>close</code>之后，并且在之前发送的值都被接收后，接收操作会返回一个零值，不会阻塞。一个多返回值的接收操作会额外返回一个布尔值用来指示返回的值是否发送操作传递的。</p>
 <div class="highlight"><pre><span></span><span class="nx">ch</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">string</span><span class="p">)</span>
 <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">ch</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span> <span class="s">&quot;Hello!&quot;</span>
+    <span class="nx">ch</span> <span class="o">&lt;-</span> <span class="s">&quot;Hello!&quot;</span>
     <span class="nb">close</span><span class="p">(</span><span class="nx">ch</span><span class="p">)</span>
 <span class="p">}()</span>
-<span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span><span class="nx">ch</span><span class="p">)</span>    <span class="c1">// 输出字符串&quot;Hello!&quot;</span>
-<span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span><span class="nx">ch</span><span class="p">)</span>    <span class="c1">// 输出零值 - 空字符串&quot;&quot;，不会阻塞</span>
-<span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span><span class="nx">ch</span><span class="p">)</span>    <span class="c1">// 再次打印输出空字符串&quot;&quot;</span>
-<span class="nx">v</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span><span class="nx">ch</span>        <span class="c1">// 变量v的值为空字符串&quot;&quot;，变量ok的值为false</span>
+<span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="o">&lt;-</span><span class="nx">ch</span><span class="p">)</span>    <span class="c1">// 输出字符串&quot;Hello!&quot;</span>
+<span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="o">&lt;-</span><span class="nx">ch</span><span class="p">)</span>    <span class="c1">// 输出零值 - 空字符串&quot;&quot;，不会阻塞</span>
+<span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="o">&lt;-</span><span class="nx">ch</span><span class="p">)</span>    <span class="c1">// 再次打印输出空字符串&quot;&quot;</span>
+<span class="nx">v</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">ch</span>        <span class="c1">// 变量v的值为空字符串&quot;&quot;，变量ok的值为false</span>
 </pre></div>
 
 
 <p>一个带有<code>range</code>子句的<code>for</code>语句会依次读取发往管道的值，直到该管道关闭：</p>
 <div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="c1">// 译注：要想运行该示例，需要先定义类型Sushi，如type Sushi string</span>
-    <span class="kd">var</span> <span class="nx">ch</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span><span class="kd">chan</span> <span class="nx">Sushi</span> <span class="p">=</span> <span class="nx">Producer</span><span class="p">()</span>
+    <span class="kd">var</span> <span class="nx">ch</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="nx">Sushi</span> <span class="p">=</span> <span class="nx">Producer</span><span class="p">()</span>
     <span class="k">for</span> <span class="nx">s</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">ch</span> <span class="p">{</span>
         <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Consumed&quot;</span><span class="p">,</span> <span class="nx">s</span><span class="p">)</span>
     <span class="p">}</span>
 <span class="p">}</span>
 
-<span class="kd">func</span> <span class="nx">Producer</span><span class="p">()</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span><span class="kd">chan</span> <span class="nx">Sushi</span> <span class="p">{</span>
+<span class="kd">func</span> <span class="nx">Producer</span><span class="p">()</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="nx">Sushi</span> <span class="p">{</span>
     <span class="nx">ch</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="nx">Sushi</span><span class="p">)</span>
     <span class="k">go</span> <span class="kd">func</span><span class="p">(){</span>
-        <span class="nx">ch</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span> <span class="nx">Sushi</span><span class="p">(</span><span class="s">&quot;海老握り&quot;</span><span class="p">)</span>    <span class="c1">// Ebi nigiri</span>
-        <span class="nx">ch</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span> <span class="nx">Sushi</span><span class="p">(</span><span class="s">&quot;鮪とろ握り&quot;</span><span class="p">)</span> <span class="c1">// Toro nigiri</span>
+        <span class="nx">ch</span> <span class="o">&lt;-</span> <span class="nx">Sushi</span><span class="p">(</span><span class="s">&quot;海老握り&quot;</span><span class="p">)</span>    <span class="c1">// Ebi nigiri</span>
+        <span class="nx">ch</span> <span class="o">&lt;-</span> <span class="nx">Sushi</span><span class="p">(</span><span class="s">&quot;鮪とろ握り&quot;</span><span class="p">)</span> <span class="c1">// Toro nigiri</span>
         <span class="nb">close</span><span class="p">(</span><span class="nx">ch</span><span class="p">)</span>
     <span class="p">}()</span>
     <span class="k">return</span> <span class="nx">ch</span>
@@ -207,7 +207,7 @@ Ten seconds later: I’m leaving now.
 <p>下一个示例中，我们让<code>Publish</code>函数返回一个管道 - 用于在发布text变量值时广播一条消息：</p>
 <div class="highlight"><pre><span></span><span class="c1">// 在给定时间过期时，Publish函数会打印text变量值到标准输出</span>
 <span class="c1">// 在text变量值发布后，该函数会关闭管道wait</span>
-<span class="kd">func</span> <span class="nx">Publish</span><span class="p">(</span><span class="nx">text</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">delay</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">)</span> <span class="p">(</span><span class="nx">wait</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span><span class="kd">chan</span> <span class="kd">struct</span><span class="p">{})</span> <span class="p">{</span>
+<span class="kd">func</span> <span class="nx">Publish</span><span class="p">(</span><span class="nx">text</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">delay</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">)</span> <span class="p">(</span><span class="nx">wait</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="kd">struct</span><span class="p">{})</span> <span class="p">{</span>
     <span class="nx">ch</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kd">struct</span><span class="p">{})</span>
     <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
         <span class="nx">time</span><span class="p">.</span><span class="nx">Sleep</span><span class="p">(</span><span class="nx">delay</span><span class="p">)</span>
@@ -225,7 +225,7 @@ Ten seconds later: I’m leaving now.
 <div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">wait</span> <span class="o">:=</span> <span class="nx">Publish</span><span class="p">(</span><span class="s">&quot;Channels let goroutines communicate.&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="o">*</span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
     <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Waiting for the news...&quot;</span><span class="p">)</span>
-    <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span><span class="nx">wait</span>
+    <span class="o">&lt;-</span><span class="nx">wait</span>
     <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;The news is out, time to leave.&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
@@ -243,7 +243,7 @@ The news is out, time to leave.
 <h4>4. 死锁</h4>
 <p><img alt="traffic jam" src="http://www.nada.kth.se/~snilsson/concurrency/traffic-jam.jpg"></p>
 <p>现在我们在<code>Publish</code>函数中引入一个bug：</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">Publish</span><span class="p">(</span><span class="nx">text</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">delay</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">)</span> <span class="p">(</span><span class="nx">wait</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span><span class="kd">chan</span> <span class="kd">struct</span><span class="p">{})</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">Publish</span><span class="p">(</span><span class="nx">text</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">delay</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">)</span> <span class="p">(</span><span class="nx">wait</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="kd">struct</span><span class="p">{})</span> <span class="p">{</span>
     <span class="nx">ch</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kd">struct</span><span class="p">{})</span>
     <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
         <span class="nx">time</span><span class="p">.</span><span class="nx">Sleep</span><span class="p">(</span><span class="nx">delay</span><span class="p">)</span>
@@ -261,7 +261,7 @@ The news is out, time to leave.
     <span class="nx">wait</span> <span class="o">:=</span> <span class="nx">Publish</span><span class="p">(</span><span class="s">&quot;Channels let goroutines communicate.&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="o">*</span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
     <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Waiting for the news...&quot;</span><span class="p">)</span>
     <span class="c1">// 译注：注意下面这一句</span>
-    <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span><span class="nx">wait</span>
+    <span class="o">&lt;-</span><span class="nx">wait</span>
     <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;The news is out, time to leave.&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
@@ -307,7 +307,7 @@ created by addtimer
     <span class="p">}()</span>
     <span class="c1">// 译注：注意下面这一行</span>
     <span class="nx">n</span><span class="o">++</span> <span class="c1">// 另一次冲突的访问</span>
-    <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span><span class="nx">wait</span>
+    <span class="o">&lt;-</span><span class="nx">wait</span>
     <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">n</span><span class="p">)</span> <span class="c1">// 输出：未指定</span>
 <span class="p">}</span>
 </pre></div>
@@ -333,9 +333,9 @@ created by addtimer
     <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
         <span class="nx">n</span> <span class="o">:=</span> <span class="mi">0</span> <span class="c1">// 仅为一个goroutine可见的局部变量.</span>
         <span class="nx">n</span><span class="o">++</span>
-        <span class="nx">ch</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span> <span class="nx">n</span> <span class="c1">// 数据从一个goroutine离开...</span>
+        <span class="nx">ch</span> <span class="o">&lt;-</span> <span class="nx">n</span> <span class="c1">// 数据从一个goroutine离开...</span>
     <span class="p">}()</span>
-    <span class="nx">n</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span><span class="nx">ch</span>   <span class="c1">// ...然后安全到达另一个goroutine.</span>
+    <span class="nx">n</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">ch</span>   <span class="c1">// ...然后安全到达另一个goroutine.</span>
     <span class="nx">n</span><span class="o">++</span>
     <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">n</span><span class="p">)</span> <span class="c1">// 输出: 2</span>
 <span class="p">}</span>
@@ -380,7 +380,7 @@ created by addtimer
         <span class="nb">close</span><span class="p">(</span><span class="nx">wait</span><span class="p">)</span>
     <span class="p">}()</span>
     <span class="nx">n</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="c1">// 另一个并发访问</span>
-    <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span><span class="nx">wait</span>
+    <span class="o">&lt;-</span><span class="nx">wait</span>
     <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">n</span><span class="p">.</span><span class="nx">Value</span><span class="p">())</span> <span class="c1">// 输出: 2</span>
 <span class="p">}</span>
 </pre></div>
@@ -393,7 +393,7 @@ created by addtimer
     <span class="kd">var</span> <span class="nx">wg</span> <span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span>
     <span class="nx">wg</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
     <span class="c1">// 译注：注意下面这行代码中的i++</span>
-    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span> <span class="mi">5</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="mi">5</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
         <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
             <span class="c1">// 注意下一行代码会输出什么？为什么？</span>
             <span class="nx">fmt</span><span class="p">.</span><span class="nx">Print</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="c1">// 6个goroutine共享变量i</span>
@@ -412,7 +412,7 @@ created by addtimer
 <div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">correct</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">wg</span> <span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span>
     <span class="nx">wg</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
-    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span> <span class="mi">5</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="mi">5</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
         <span class="k">go</span> <span class="kd">func</span><span class="p">(</span><span class="nx">n</span> <span class="kt">int</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// 使用局部变量</span>
             <span class="nx">fmt</span><span class="p">.</span><span class="nx">Print</span><span class="p">(</span><span class="nx">n</span><span class="p">)</span>
             <span class="nx">wg</span><span class="p">.</span><span class="nx">Done</span><span class="p">()</span>
@@ -430,7 +430,7 @@ created by addtimer
 <div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">alsoCorrect</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">wg</span> <span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span>
     <span class="nx">wg</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
-    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span> <span class="mi">5</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="mi">5</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
         <span class="nx">n</span> <span class="o">:=</span> <span class="nx">i</span> <span class="c1">// 为每个闭包创建一个独有的变量</span>
         <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
             <span class="nx">fmt</span><span class="p">.</span><span class="nx">Print</span><span class="p">(</span><span class="nx">n</span><span class="p">)</span>
@@ -488,13 +488,13 @@ exit status 66
 <p><a href="http://golang.org/ref/spec#Select_statements">select语句</a>是Go语言并发工具集中的终极工具。select用于从一组可能的通讯中选择一个进一步处理。如果任意一个通讯都可以进一步处理，则从中随机选择一个，执行对应的语句。否则，如果又没有默认分支（default case），select语句则会阻塞，直到其中一个通讯完成。</p>
 <p>以下是一个玩具示例，演示<code>select</code>语句如何用于实现一个随机数生成器：</p>
 <div class="highlight"><pre><span></span><span class="c1">// RandomBits函数 返回一个管道，用于产生一个比特随机序列</span>
-<span class="kd">func</span> <span class="nx">RandomBits</span><span class="p">()</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span><span class="kd">chan</span> <span class="kt">int</span> <span class="p">{</span>
+<span class="kd">func</span> <span class="nx">RandomBits</span><span class="p">()</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="kt">int</span> <span class="p">{</span>
     <span class="nx">ch</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">int</span><span class="p">)</span>
     <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
         <span class="k">for</span> <span class="p">{</span>
             <span class="k">select</span> <span class="p">{</span>
-            <span class="k">case</span> <span class="nx">ch</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span> <span class="mi">0</span><span class="p">:</span> <span class="c1">// 注意：分支没有对应的处理语句</span>
-            <span class="k">case</span> <span class="nx">ch</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">case</span> <span class="nx">ch</span> <span class="o">&lt;-</span> <span class="mi">0</span><span class="p">:</span> <span class="c1">// 注意：分支没有对应的处理语句</span>
+            <span class="k">case</span> <span class="nx">ch</span> <span class="o">&lt;-</span> <span class="mi">1</span><span class="p">:</span>
             <span class="p">}</span>
         <span class="p">}</span>
     <span class="p">}()</span>
@@ -506,9 +506,9 @@ exit status 66
 <p><a href="http://www.nada.kth.se/~snilsson/concurrency/src/randBits.go">randBits.go</a></p>
 <p>下面是相对更加实际一点的例子：如何使用select语句为一个操作设置一个时间限制。代码会输出变量news的值或者超时消息，具体依赖于两个接收语句哪个先执行：</p>
 <div class="highlight"><pre><span></span><span class="k">select</span> <span class="p">{</span>
-<span class="k">case</span> <span class="nx">news</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span><span class="nx">NewsAgency</span><span class="p">:</span>
+<span class="k">case</span> <span class="nx">news</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">NewsAgency</span><span class="p">:</span>
     <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">news</span><span class="p">)</span>
-<span class="k">case</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span><span class="nx">time</span><span class="p">.</span><span class="nx">After</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Minute</span><span class="p">):</span>
+<span class="k">case</span> <span class="o">&lt;-</span><span class="nx">time</span><span class="p">.</span><span class="nx">After</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Minute</span><span class="p">):</span>
     <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Time out: no news in one minute.&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
@@ -529,7 +529,7 @@ exit status 66
     <span class="p">}</span>
     <span class="nx">wg</span><span class="p">.</span><span class="nx">Wait</span><span class="p">()</span>
     <span class="k">select</span> <span class="p">{</span>
-    <span class="k">case</span> <span class="nx">name</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span><span class="nx">match</span><span class="p">:</span>
+    <span class="k">case</span> <span class="nx">name</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">match</span><span class="p">:</span>
         <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;No one received %s’s message.\n&quot;</span><span class="p">,</span> <span class="nx">name</span><span class="p">)</span>
     <span class="k">default</span><span class="p">:</span>
         <span class="c1">// 没有待处理的发送操作</span>
@@ -539,9 +539,9 @@ exit status 66
 <span class="c1">// 函数Seek 发送一个name到match管道或从match管道接收一个peer，结束时通知wait group</span>
 <span class="kd">func</span> <span class="nx">Seek</span><span class="p">(</span><span class="nx">name</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">match</span> <span class="kd">chan</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">wg</span> <span class="o">*</span><span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">select</span> <span class="p">{</span>
-    <span class="k">case</span> <span class="nx">peer</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span><span class="nx">match</span><span class="p">:</span>
+    <span class="k">case</span> <span class="nx">peer</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">match</span><span class="p">:</span>
         <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;%s sent a message to %s.\n&quot;</span><span class="p">,</span> <span class="nx">peer</span><span class="p">,</span> <span class="nx">name</span><span class="p">)</span>
-    <span class="k">case</span> <span class="nx">match</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">-</span> <span class="nx">name</span><span class="p">:</span>
+    <span class="k">case</span> <span class="nx">match</span> <span class="o">&lt;-</span> <span class="nx">name</span><span class="p">:</span>
         <span class="c1">// 等待某个goroutine接收我的消息</span>
     <span class="p">}</span>
     <span class="nx">wg</span><span class="p">.</span><span class="nx">Done</span><span class="p">()</span>
@@ -571,12 +571,12 @@ No one received Dave’s message.
 <div class="highlight"><pre><span></span><span class="kd">type</span> <span class="nx">Vector</span> <span class="p">[]</span><span class="kt">float64</span>
 
 <span class="c1">// 函数Convolve 计算 w = u * v，其中 w[k] = Σ u[i]*v[j], i + j = k</span>
-<span class="c1">// 先决条件：len(u) &amp;gt; 0, len(v) &amp;gt; 0</span>
+<span class="c1">// 先决条件：len(u) &gt; 0, len(v) &gt; 0</span>
 <span class="kd">func</span> <span class="nx">Convolve</span><span class="p">(</span><span class="nx">u</span><span class="p">,</span> <span class="nx">v</span> <span class="nx">Vector</span><span class="p">)</span> <span class="p">(</span><span class="nx">w</span> <span class="nx">Vector</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">n</span> <span class="o">:=</span> <span class="nb">len</span><span class="p">(</span><span class="nx">u</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="nx">v</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
     <span class="nx">w</span> <span class="p">=</span> <span class="nb">make</span><span class="p">(</span><span class="nx">Vector</span><span class="p">,</span> <span class="nx">n</span><span class="p">)</span>
 
-    <span class="k">for</span> <span class="nx">k</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">k</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span> <span class="nx">n</span><span class="p">;</span> <span class="nx">k</span><span class="o">++</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="nx">k</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">k</span> <span class="p">&lt;</span> <span class="nx">n</span><span class="p">;</span> <span class="nx">k</span><span class="o">++</span> <span class="p">{</span>
         <span class="nx">w</span><span class="p">[</span><span class="nx">k</span><span class="p">]</span> <span class="p">=</span> <span class="nx">mul</span><span class="p">(</span><span class="nx">u</span><span class="p">,</span> <span class="nx">v</span><span class="p">,</span> <span class="nx">k</span><span class="p">)</span>
     <span class="p">}</span>
     <span class="k">return</span>
@@ -586,7 +586,7 @@ No one received Dave’s message.
 <span class="kd">func</span> <span class="nx">mul</span><span class="p">(</span><span class="nx">u</span><span class="p">,</span> <span class="nx">v</span> <span class="nx">Vector</span><span class="p">,</span> <span class="nx">k</span> <span class="kt">int</span><span class="p">)</span> <span class="p">(</span><span class="nx">res</span> <span class="kt">float64</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">n</span> <span class="o">:=</span> <span class="nx">min</span><span class="p">(</span><span class="nx">k</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">u</span><span class="p">))</span>
     <span class="nx">j</span> <span class="o">:=</span> <span class="nx">min</span><span class="p">(</span><span class="nx">k</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">v</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="nx">k</span> <span class="o">-</span> <span class="nx">j</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span> <span class="nx">n</span><span class="p">;</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">j</span> <span class="p">=</span> <span class="nx">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="nx">j</span><span class="o">-</span><span class="mi">1</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="nx">k</span> <span class="o">-</span> <span class="nx">j</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="nx">n</span><span class="p">;</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">j</span> <span class="p">=</span> <span class="nx">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="nx">j</span><span class="o">-</span><span class="mi">1</span> <span class="p">{</span>
         <span class="nx">res</span> <span class="o">+=</span> <span class="nx">u</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">*</span> <span class="nx">v</span><span class="p">[</span><span class="nx">j</span><span class="p">]</span>
     <span class="p">}</span>
     <span class="k">return</span>
@@ -600,19 +600,19 @@ No one received Dave’s message.
     <span class="nx">w</span> <span class="p">=</span> <span class="nb">make</span><span class="p">(</span><span class="nx">Vector</span><span class="p">,</span> <span class="nx">n</span><span class="p">)</span>
 
     <span class="c1">// 将 w 切分成花费 ~100μs-1ms 用于计算的工作单元</span>
-    <span class="nx">size</span> <span class="o">:=</span> <span class="nx">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span><span class="mi">20</span><span class="o">/</span><span class="nx">n</span><span class="p">)</span>
+    <span class="nx">size</span> <span class="o">:=</span> <span class="nx">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">&lt;&lt;</span><span class="mi">20</span><span class="o">/</span><span class="nx">n</span><span class="p">)</span>
 
     <span class="nx">wg</span> <span class="o">:=</span> <span class="nb">new</span><span class="p">(</span><span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span><span class="p">)</span>
     <span class="nx">wg</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="nx">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="nx">size</span><span class="p">)</span>
-    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span> <span class="nx">n</span> <span class="o">&amp;</span><span class="nx">amp</span><span class="p">;</span><span class="o">&amp;</span><span class="nx">amp</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&amp;</span><span class="nx">gt</span><span class="p">;=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">+=</span> <span class="nx">size</span> <span class="p">{</span> <span class="c1">// 整型溢出后 i &amp;lt; 0</span>
+    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="nx">n</span> <span class="o">&amp;&amp;</span> <span class="nx">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">+=</span> <span class="nx">size</span> <span class="p">{</span> <span class="c1">// 整型溢出后 i &lt; 0</span>
         <span class="nx">j</span> <span class="o">:=</span> <span class="nx">i</span> <span class="o">+</span> <span class="nx">size</span>
-        <span class="k">if</span> <span class="nx">j</span> <span class="o">&amp;</span><span class="nx">gt</span><span class="p">;</span> <span class="nx">n</span> <span class="o">||</span> <span class="nx">j</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span> <span class="mi">0</span> <span class="p">{</span> <span class="c1">// 整型溢出后 j &amp;lt; 0</span>
+        <span class="k">if</span> <span class="nx">j</span> <span class="p">&gt;</span> <span class="nx">n</span> <span class="o">||</span> <span class="nx">j</span> <span class="p">&lt;</span> <span class="mi">0</span> <span class="p">{</span> <span class="c1">// 整型溢出后 j &lt; 0</span>
             <span class="nx">j</span> <span class="p">=</span> <span class="nx">n</span>
         <span class="p">}</span>
 
         <span class="c1">// 这些goroutine共享内存，但是只读</span>
         <span class="k">go</span> <span class="kd">func</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="nx">j</span> <span class="kt">int</span><span class="p">)</span> <span class="p">{</span>
-            <span class="k">for</span> <span class="nx">k</span> <span class="o">:=</span> <span class="nx">i</span><span class="p">;</span> <span class="nx">k</span> <span class="o">&amp;</span><span class="nx">lt</span><span class="p">;</span> <span class="nx">j</span><span class="p">;</span> <span class="nx">k</span><span class="o">++</span> <span class="p">{</span>
+            <span class="k">for</span> <span class="nx">k</span> <span class="o">:=</span> <span class="nx">i</span><span class="p">;</span> <span class="nx">k</span> <span class="p">&lt;</span> <span class="nx">j</span><span class="p">;</span> <span class="nx">k</span><span class="o">++</span> <span class="p">{</span>
                 <span class="nx">w</span><span class="p">[</span><span class="nx">k</span><span class="p">]</span> <span class="p">=</span> <span class="nx">mul</span><span class="p">(</span><span class="nx">u</span><span class="p">,</span> <span class="nx">v</span><span class="p">,</span> <span class="nx">k</span><span class="p">)</span>
             <span class="p">}</span>
             <span class="nx">wg</span><span class="p">.</span><span class="nx">Done</span><span class="p">()</span>

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>Java 单测伴侣 - mockito</title>
+        <meta charset="utf-8" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑·白 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑·白 Full RSS Feed" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/SentyZHAO/SentyZHAO.css" />
+
+        <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+            <script>
+              var _hmt = _hmt || [];
+              (function() {
+                var hm = document.createElement("script");
+                hm.src = "//hm.baidu.com/hm.js?5c5d8c3fe75afeff117777b9236b96ec";
+                var s = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(hm, s);
+              })();
+            </script>
+</head>
+
+<body id="index" class="home">
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1 style='font-family: "SentyZHAO";'><a href="../../../..">黑·白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+
+              <ul class="columns" style='font-family: "SentyZHAO";'>
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="/archives.html">归 档</a></li>
+                <li><a href="/pages/tech-share.html">技术分享</a></li>
+                <li><a href="/pages/translation.html">技术翻译</a></li>
+                <li><a href="/pages/tools.html">工具集</a></li>
+                <li><a href="/pages/links.html">链 接</a></li>
+                <li><a href="/pages/aboutme.html">关于我</a></li>
+                <li><a href="/feeds/rss.xml">RSS</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+   <div class="row">
+        <div class="columns">
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2019/06/17/mockito/" rel="bookmark" title="Permalink to Java 单测伴侣 - mockito">Java 单测伴侣 - mockito</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2019-06-17T00:00:00+08:00">
+                2019-06-17 Mon
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/xiayf.html">xiayf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>其实工作以来，我很少写测试/单测代码，一方面是大部分互联网公司团队对测试的要求不高，另一方面是想写好测试代码还挺难的，挺花时间，其中最麻烦的是待测代码可能会访问外部资源（比如数据库、HTTP API），如果不能方便地进模拟访问这些外部资源，那么测试起来会非常麻烦。</p>
+<p>但，对于复杂逻辑，如果不经过严格测试，发布到生产环境，又有些不放心，没底气，或者在代码重构时，如果没有覆盖全面的测试，很难评估代码变动带来的影响。</p>
+<p>直到遇到 <a href="https://site.mockito.org/">mockito</a>，我才觉得是时候认真写写测试代码了。</p>
+<hr>
+<p><a href="https://site.mockito.org/">mockito</a> 提供两种对象模拟方式：<strong>mock</strong> 和 <strong>spy</strong>。</p>
+<p>简单来说，mock 模拟的对象是一个完全假的对象，只是具备指定类型的接口，以 <code>java.util.List</code> 为例：</p>
+<div class="highlight"><pre><span></span><span class="kn">import static</span> <span class="nn">org.mockito.Mockito.mock</span><span class="o">;</span>
+
+<span class="n">List</span> <span class="n">mockedList</span> <span class="o">=</span> <span class="n">mock</span><span class="o">(</span><span class="n">List</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</pre></div>
+
+
+<p>虽然 List 是一个 interface，也可以模拟出一个对象实例，这个 mockedList 对象具备 List 接口定义的所有方法，但所有方法都不具备实际的行为操作，对于有返回值的方法，则默认返回方法返回类型的默认值，没有返回值的方法，则纯粹是一个空方法。比如：</p>
+<div class="highlight"><pre><span></span><span class="c1">// mockedList 并不会真的把 1 存下来</span>
+<span class="n">mockedList</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+<span class="c1">// 所以，size() 返回默认值，输出 0</span>
+<span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">mockedList</span><span class="o">.</span><span class="na">size</span><span class="o">());</span>
+<span class="c1">// 输出 null</span>
+<span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">mockedList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">));</span>
+<span class="c1">// 输出 null</span>
+<span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">mockedList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">1</span><span class="o">));</span>
+</pre></div>
+
+
+<p>对于模拟出来的对象，可以任意指定其方法的返回值，比如：</p>
+<div class="highlight"><pre><span></span><span class="kn">import static</span> <span class="nn">org.mockito.Mockito.when</span><span class="o">;</span>
+
+<span class="c1">// 调用 size() 方法时，返回 10</span>
+<span class="n">when</span><span class="o">(</span><span class="n">mockedList</span><span class="o">.</span><span class="na">size</span><span class="o">()).</span><span class="na">willReturn</span><span class="o">(</span><span class="mi">10</span><span class="o">);</span>
+<span class="n">when</span><span class="o">(</span><span class="n">mockedList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">)).</span><span class="na">willReturn</span><span class="o">(</span><span class="s">&quot;Hello World!&quot;</span><span class="o">);</span>
+<span class="n">when</span><span class="o">(</span><span class="n">mockedList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">1</span><span class="o">)).</span><span class="na">thenReturn</span><span class="o">(</span><span class="s">&quot;您好！&quot;</span><span class="o">);</span>
+
+<span class="c1">// 输出 10</span>
+<span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">mockedList</span><span class="o">.</span><span class="na">size</span><span class="o">());</span>
+<span class="c1">// 输出 Hello World!</span>
+<span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">mockedList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">));</span>
+<span class="c1">// 输出 您好！</span>
+<span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">mockedList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">1</span><span class="o">));</span>
+</pre></div>
+
+
+<p>当然我们写测试代码时，并不会使用 System.out.println，然后看输出，而是使用<strong>断言</strong>：</p>
+<div class="highlight"><pre><span></span><span class="kn">import static</span> <span class="nn">org.junit.Assert.assertEquals</span><span class="o">;</span>
+
+<span class="n">assertEquals</span><span class="o">(</span><span class="mi">10</span><span class="o">,</span> <span class="n">mockedList</span><span class="o">.</span><span class="na">size</span><span class="o">());</span>
+<span class="n">assertEquals</span><span class="o">(</span><span class="s">&quot;Hello World!&quot;</span><span class="o">,</span> <span class="n">mockedList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">));</span>
+<span class="n">assertEquals</span><span class="o">(</span><span class="s">&quot;您好！&quot;</span><span class="o">,</span> <span class="n">mockedList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">1</span><span class="o">));</span>
+</pre></div>
+
+
+<p>断言方法非常多，不仅仅只是 assertEquals。</p>
+<p>对于同一个方法，可以模拟多次调用返回不同的值：</p>
+<div class="highlight"><pre><span></span><span class="c1">// 会覆盖之前 mock 的行为：when(mockedList.size()).willReturn(10);</span>
+<span class="c1">// 或者这么写：when(mockedList.size()).willReturn(0, -1, 10);</span>
+<span class="n">when</span><span class="o">(</span><span class="n">mockedList</span><span class="o">.</span><span class="na">size</span><span class="o">()).</span><span class="na">thenReturn</span><span class="o">(</span><span class="mi">0</span><span class="o">).</span><span class="na">thenReturn</span><span class="o">(-</span><span class="mi">1</span><span class="o">).</span><span class="na">thenReturn</span><span class="o">(</span><span class="mi">10</span><span class="o">);</span>
+<span class="n">assertEquals</span><span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="n">mockedList</span><span class="o">.</span><span class="na">size</span><span class="o">());</span>
+<span class="n">assertEquals</span><span class="o">(-</span><span class="mi">1</span><span class="o">,</span> <span class="n">mockedList</span><span class="o">.</span><span class="na">size</span><span class="o">());</span>
+<span class="n">assertEquals</span><span class="o">(</span><span class="mi">10</span><span class="o">,</span> <span class="n">mockedList</span><span class="o">.</span><span class="na">size</span><span class="o">());</span>
+<span class="c1">// 第 3 次之后的 mockedList.size() 调用都返回 10</span>
+<span class="n">assertEquals</span><span class="o">(</span><span class="mi">10</span><span class="o">,</span> <span class="n">mockedList</span><span class="o">.</span><span class="na">size</span><span class="o">());</span>
+
+<span class="n">Iterator</span> <span class="n">iterator</span> <span class="o">=</span> <span class="n">mock</span><span class="o">(</span><span class="n">Iterator</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+<span class="c1">// 或者这么写：when(iterator.next()).thenReturn(0, 1, 10, 1000);</span>
+<span class="n">when</span><span class="o">(</span><span class="n">iterator</span><span class="o">.</span><span class="na">next</span><span class="o">()).</span><span class="na">thenReturn</span><span class="o">(</span><span class="mi">0</span><span class="o">).</span><span class="na">thenReturn</span><span class="o">(</span><span class="mi">1</span><span class="o">).</span><span class="na">thenReturn</span><span class="o">(</span><span class="mi">10</span><span class="o">).</span><span class="na">thenReturn</span><span class="o">(</span><span class="mi">1000</span><span class="o">);</span>
+<span class="n">assertEquals</span><span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="n">iterator</span><span class="o">.</span><span class="na">next</span><span class="o">());</span>
+<span class="n">assertEquals</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="n">iterator</span><span class="o">.</span><span class="na">next</span><span class="o">());</span>
+<span class="n">assertEquals</span><span class="o">(</span><span class="mi">10</span><span class="o">,</span> <span class="n">iterator</span><span class="o">.</span><span class="na">next</span><span class="o">());</span>
+<span class="n">assertEquals</span><span class="o">(</span><span class="mi">1000</span><span class="o">,</span> <span class="n">iterator</span><span class="o">.</span><span class="na">next</span><span class="o">());</span>
+<span class="c1">// 第 4 次之后的 iterator.next() 调用都返回 1000</span>
+<span class="n">assertEquals</span><span class="o">(</span><span class="mi">1000</span><span class="o">,</span> <span class="n">iterator</span><span class="o">.</span><span class="na">next</span><span class="o">());</span>
+</pre></div>
+
+
+<p>还可以模拟异常抛出：</p>
+<div class="highlight"><pre><span></span><span class="n">List</span> <span class="n">mockedList</span> <span class="o">=</span> <span class="n">mock</span><span class="o">(</span><span class="n">List</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+
+<span class="n">when</span><span class="o">(</span><span class="n">mockedList</span><span class="o">.</span><span class="na">get</span><span class="o">(-</span><span class="mi">1000</span><span class="o">)).</span><span class="na">thenThrow</span><span class="o">(</span><span class="k">new</span> <span class="n">RuntimeException</span><span class="o">(</span><span class="s">&quot;参数异常！&quot;</span><span class="o">));</span>
+<span class="k">try</span> <span class="o">{</span>
+    <span class="n">mockedList</span><span class="o">.</span><span class="na">get</span><span class="o">(-</span><span class="mi">1000</span><span class="o">);</span>
+<span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">assertTrue</span><span class="o">(</span><span class="n">e</span> <span class="k">instanceof</span> <span class="n">RuntimeException</span><span class="o">);</span>
+    <span class="n">assertEquals</span><span class="o">(</span><span class="s">&quot;参数异常！&quot;</span><span class="o">,</span> <span class="n">e</span><span class="o">.</span><span class="na">getMessage</span><span class="o">());</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>也可以基于复杂的逻辑来构造返回值：</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">org.mockito.invocation.InvocationOnMock</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.mockito.stubbing.Answer</span><span class="o">;</span>
+
+<span class="n">List</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="n">mockedList</span> <span class="o">=</span> <span class="n">mock</span><span class="o">(</span><span class="n">List</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+<span class="n">when</span><span class="o">(</span><span class="n">mockedList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">anyInt</span><span class="o">())).</span><span class="na">thenAnswer</span><span class="o">(</span><span class="k">new</span> <span class="n">EchoAnswer</span><span class="o">());</span>
+
+<span class="n">assertTrue</span><span class="o">(</span><span class="mi">1</span> <span class="o">==</span> <span class="n">mockedList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">1</span><span class="o">));</span>
+<span class="n">assertTrue</span><span class="o">(</span><span class="mi">10</span> <span class="o">==</span> <span class="n">mockedList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">10</span><span class="o">));</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">EchoAnswer</span> <span class="kd">implements</span> <span class="n">Answer</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="n">Integer</span> <span class="nf">answer</span><span class="o">(</span><span class="n">InvocationOnMock</span> <span class="n">var</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">var</span><span class="o">.</span><span class="na">getArgument</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>除了 <code>when(...).thenReturn(...)</code> 风格的测试模拟方式，还有 BDD（Behavior Driven Development 行为驱动开发）风格的：</p>
+<div class="highlight"><pre><span></span><span class="kn">import static</span> <span class="nn">org.mockito.BDDMockito.given</span><span class="o">;</span>
+
+<span class="c1">// given</span>
+<span class="n">given</span><span class="o">(</span><span class="n">mockedList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">)).</span><span class="na">willReturn</span><span class="o">(</span><span class="mi">100</span><span class="o">);</span>
+<span class="c1">// when</span>
+<span class="kt">int</span> <span class="n">v</span> <span class="o">=</span> <span class="o">(</span><span class="kt">int</span><span class="o">)</span> <span class="n">mockedList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+<span class="c1">// then</span>
+<span class="n">assertEquals</span><span class="o">(</span><span class="mi">100</span><span class="o">,</span> <span class="n">v</span><span class="o">);</span>
+</pre></div>
+
+
+<p>如果方法没有返回值，或者其它奇葩的需求，则没法使用 when.thenReturn / willReturn 这样的模拟方法，可以使用 <code>doReturn(...).when(...)...</code>：
+</p>
+<div class="highlight"><pre><span></span><span class="kn">import static</span> <span class="nn">org.mockito.Mockito.doThrow</span><span class="o">;</span>
+<span class="kn">import static</span> <span class="nn">org.mockito.Mockito.doReturn</span><span class="o">;</span>
+
+<span class="n">ArrayList</span> <span class="n">mockedList</span> <span class="o">=</span> <span class="n">mock</span><span class="o">(</span><span class="n">ArrayList</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+<span class="c1">// clear 方法无返回值</span>
+<span class="n">doThrow</span><span class="o">(</span><span class="k">new</span> <span class="n">RuntimeException</span><span class="o">(</span><span class="s">&quot;清除失败&quot;</span><span class="o">)).</span><span class="na">when</span><span class="o">(</span><span class="n">mockedList</span><span class="o">).</span><span class="na">clear</span><span class="o">();</span>
+
+<span class="k">try</span> <span class="o">{</span>
+    <span class="n">mockedList</span><span class="o">.</span><span class="na">clear</span><span class="o">();</span>
+<span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">assertTrue</span><span class="o">(</span><span class="n">e</span> <span class="k">instanceof</span> <span class="n">RuntimeException</span><span class="o">);</span>
+    <span class="n">assertEquals</span><span class="o">(</span><span class="s">&quot;清除失败&quot;</span><span class="o">,</span> <span class="n">e</span><span class="o">.</span><span class="na">getMessage</span><span class="o">());</span>
+<span class="o">}</span>
+
+<span class="c1">// 没有意义，因为没法使用 断言 来验证，实际运行时会抛异常</span>
+<span class="n">doReturn</span><span class="o">(</span><span class="mi">10</span><span class="o">).</span><span class="na">when</span><span class="o">(</span><span class="n">mockedList</span><span class="o">).</span><span class="na">clear</span><span class="o">();</span>
+</pre></div>
+
+
+<p>从示例代码可以看出，<code>doReturn(...).when(...)....</code> 不会做类型校验，mockedList.clear() 返回值类型为 void，但我们模拟让其返回 10；所以，正常情况应该尽可能使用 <code>when(...).thenReturn(...)</code> 或 <code>given(...).willReturn(...)</code>。</p>
+<hr>
+<p>前述代码示例中，模拟方法的参数都做了硬编码，实际情况通常都不是这么测试，而是模拟方法的参数符合一定的要求即可，比如：在某个范围之内、符合类型的任何值：</p>
+<div class="highlight"><pre><span></span><span class="kn">import static</span> <span class="nn">org.mockito.Mockito.anyInt</span><span class="o">;</span>
+
+<span class="cm">/*</span>
+<span class="cm">以任何 int 类型的参数调用 mockedList.get 方法，都返回 100</span>
+
+<span class="cm">如果写成 when(mockedList.get(0)).thenReturn(100)，则只有以 0 为参数调用 mockedList.get 方法，才会返回100，其他参数值，返回的都是默认值 0</span>
+<span class="cm">*/</span>
+<span class="n">when</span><span class="o">(</span><span class="n">mockedList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">anyInt</span><span class="o">())).</span><span class="na">thenReturn</span><span class="o">(</span><span class="mi">100</span><span class="o">);</span>
+
+<span class="n">assertEquals</span><span class="o">(</span><span class="mi">100</span><span class="o">,</span> <span class="n">mockedList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">));</span>
+<span class="n">assertEquals</span><span class="o">(</span><span class="mi">100</span><span class="o">,</span> <span class="n">mockedList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">1000</span><span class="o">));</span>
+</pre></div>
+
+
+<p>可用的参数匹配器，见 org.mockito.ArgumentMatchers 类的静态方法列表，也可以自己实现 ArgumentMatcher 接口：</p>
+<div class="highlight"><pre><span></span><span class="kn">package</span> <span class="nn">org.mockito</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">interface</span> <span class="nc">ArgumentMatcher</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="o">{</span>
+    <span class="kt">boolean</span> <span class="nf">matches</span><span class="o">(</span><span class="n">T</span> <span class="n">var1</span><span class="o">);</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">org.mockito.ArgumentMatcher</span><span class="o">;</span>
+<span class="kn">import static</span> <span class="nn">org.mockito.Mockito.intThat</span><span class="o">;</span>
+
+<span class="n">when</span><span class="o">(</span><span class="n">mockedList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">intThat</span><span class="o">(</span><span class="k">new</span> <span class="n">LimitedInt</span><span class="o">()))).</span><span class="na">thenReturn</span><span class="o">(</span><span class="mi">10</span><span class="o">);</span>
+
+<span class="n">assertEquals</span><span class="o">(</span><span class="kc">null</span><span class="o">,</span> <span class="n">mockedList</span><span class="o">.</span><span class="na">get</span><span class="o">(-</span><span class="mi">1</span><span class="o">));</span>
+<span class="n">assertEquals</span><span class="o">(</span><span class="mi">10</span><span class="o">,</span> <span class="n">mockedList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">1</span><span class="o">));</span>
+<span class="n">assertEquals</span><span class="o">(</span><span class="mi">10</span><span class="o">,</span> <span class="n">mockedList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">99</span><span class="o">));</span>
+<span class="n">assertEquals</span><span class="o">(</span><span class="kc">null</span><span class="o">,</span> <span class="n">mockedList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">100</span><span class="o">));</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">LimitedInt</span> <span class="kd">implements</span> <span class="n">ArgumentMatcher</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">matches</span><span class="o">(</span><span class="n">Integer</span> <span class="n">var</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">var</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">var</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>如果被模拟的方法包含多个参数，那么这些参数要么全部使用匹配器，要么全部不使用。</p>
+<hr>
+<p>模拟某些类（A）的方法，通常会将 mock 出来的对象注入到依赖该类实例的其他类（B）中，来替代真实的依赖，这种方式的目的是为了测试类 B 的行为是否符合预期。</p>
+<p>另一个测试需求是，测试某个类 A' 在某个上下文环境中的行为是否符合预期，比如： A' 的某个方法是否被调用过、调用过几次、调用参数是否符合预期、几个方法之间的调用次序是否符合预期、方法调用耗时是否符合预期等等。</p>
+<div class="highlight"><pre><span></span><span class="kn">import static</span> <span class="nn">org.mockito.Mockito.verify</span><span class="o">;</span>
+<span class="kn">import static</span> <span class="nn">org.mockito.Mockito.times</span><span class="o">;</span>
+<span class="kn">import static</span> <span class="nn">org.mockito.Mockito.never</span><span class="o">;</span>
+<span class="kn">import static</span> <span class="nn">org.mockito.Mockito.verifyZeroInteractions</span><span class="o">;</span>
+
+<span class="n">List</span> <span class="n">mocked</span> <span class="o">=</span> <span class="n">mock</span><span class="o">(</span><span class="n">List</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+
+<span class="n">Caller</span> <span class="n">caller</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Caller</span><span class="o">();</span>
+<span class="n">caller</span><span class="o">.</span><span class="na">setList</span><span class="o">(</span><span class="n">mocked</span><span class="o">);</span>
+
+<span class="c1">// 调用 0 次</span>
+<span class="n">caller</span><span class="o">.</span><span class="na">run</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+<span class="c1">// 验证是否从来没调用过 mocked.size()</span>
+<span class="n">verify</span><span class="o">(</span><span class="n">mocked</span><span class="o">,</span> <span class="n">never</span><span class="o">()).</span><span class="na">size</span><span class="o">();</span>
+<span class="c1">// 验证 没有和 mocked 产生过任何交互</span>
+<span class="c1">// 因为 Caller.run 中调用了 list.isEmpty()，实际产生了交互，所以这行测试会失败</span>
+<span class="n">verifyZeroInteractions</span><span class="o">(</span><span class="n">mocked</span><span class="o">);</span>
+
+<span class="c1">// 调用 10 次</span>
+<span class="n">caller</span><span class="o">.</span><span class="na">run</span><span class="o">(</span><span class="mi">10</span><span class="o">);</span>
+<span class="c1">// 验证是否调用 mocked.size() 10 次</span>
+<span class="n">verify</span><span class="o">(</span><span class="n">mocked</span><span class="o">,</span> <span class="n">times</span><span class="o">(</span><span class="mi">10</span><span class="o">)).</span><span class="na">size</span><span class="o">();</span>
+
+<span class="c1">// 再调用一次</span>
+<span class="n">caller</span><span class="o">.</span><span class="na">run</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+<span class="c1">// 所以是 11 次了</span>
+<span class="n">verify</span><span class="o">(</span><span class="n">mocked</span><span class="o">,</span> <span class="n">times</span><span class="o">(</span><span class="mi">11</span><span class="o">)).</span><span class="na">size</span><span class="o">();</span>
+
+<span class="nd">@Data</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Caller</span> <span class="o">{</span>
+    <span class="n">List</span> <span class="n">list</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">run</span><span class="o">(</span><span class="kt">int</span> <span class="n">count</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">idx</span><span class="o">=</span><span class="mi">0</span><span class="o">;</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="n">count</span><span class="o">;</span> <span class="n">idx</span><span class="o">++)</span> <span class="o">{</span>
+            <span class="n">list</span><span class="o">.</span><span class="na">size</span><span class="o">();</span>
+        <span class="o">}</span>
+        <span class="c1">//</span>
+        <span class="n">list</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">List</span> <span class="n">mocked</span> <span class="o">=</span> <span class="n">mock</span><span class="o">(</span><span class="n">List</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+
+<span class="n">mocked</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+<span class="n">mocked</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="mi">2</span><span class="o">);</span>
+
+<span class="n">verify</span><span class="o">(</span><span class="n">mocked</span><span class="o">).</span><span class="na">add</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+
+<span class="c1">// 是否有其他交互没有验证过？因为 mocked 还调用过 mocked.add(2)，所以这句测试会失败</span>
+<span class="n">verifyNoMoreInteractions</span><span class="o">(</span><span class="n">mocked</span><span class="o">);</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">org.mockito.InOrder</span><span class="o">;</span>
+
+<span class="c1">// 也可以验证调用次序</span>
+<span class="n">List</span> <span class="n">mocked1</span> <span class="o">=</span> <span class="n">mock</span><span class="o">(</span><span class="n">List</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+<span class="n">List</span> <span class="n">mocked2</span> <span class="o">=</span> <span class="n">mock</span><span class="o">(</span><span class="n">List</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+
+<span class="n">mocked1</span><span class="o">.</span><span class="na">size</span><span class="o">();</span>
+<span class="n">mocked1</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">();</span>
+<span class="n">mocked2</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">();</span>
+
+<span class="c1">// 会记录 mocked1、mocked2 中方法的调用/交互次序，要求：与 mocked1 的交互先于 mocked2</span>
+<span class="n">InOrder</span> <span class="n">inOrder</span> <span class="o">=</span> <span class="n">inOrder</span><span class="o">(</span><span class="n">mocked1</span><span class="o">,</span> <span class="n">mocked2</span><span class="o">);</span>
+<span class="c1">// mocked1、mocked2 的交互顺序必须和 inOrder.verify 之间的顺序一致</span>
+<span class="n">inOrder</span><span class="o">.</span><span class="na">verify</span><span class="o">(</span><span class="n">mocked1</span><span class="o">).</span><span class="na">size</span><span class="o">();</span>
+<span class="n">inOrder</span><span class="o">.</span><span class="na">verify</span><span class="o">(</span><span class="n">mocked1</span><span class="o">).</span><span class="na">isEmpty</span><span class="o">();</span>
+<span class="n">inOrder</span><span class="o">.</span><span class="na">verify</span><span class="o">(</span><span class="n">mocked2</span><span class="o">).</span><span class="na">isEmpty</span><span class="o">();</span>
+</pre></div>
+
+
+<hr>
+<p>也可以验证某个方法被调用时所使用的参数是否符合预期：</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">org.mockito.ArgumentCaptor</span><span class="o">;</span>
+
+<span class="n">List</span> <span class="n">mockedlist</span> <span class="o">=</span> <span class="n">mock</span><span class="o">(</span><span class="n">List</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+
+<span class="n">Caller</span> <span class="n">caller</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Caller</span><span class="o">();</span>
+<span class="n">caller</span><span class="o">.</span><span class="na">setList</span><span class="o">(</span><span class="n">mockedlist</span><span class="o">);</span>
+<span class="n">caller</span><span class="o">.</span><span class="na">run</span><span class="o">();</span>
+
+<span class="c1">// 捕获 mockedList.add 的调用参数</span>
+<span class="n">ArgumentCaptor</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="n">argumentCaptor</span> <span class="o">=</span> <span class="n">ArgumentCaptor</span><span class="o">.</span><span class="na">forClass</span><span class="o">(</span><span class="n">Integer</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+<span class="n">verify</span><span class="o">(</span><span class="n">mockedlist</span><span class="o">).</span><span class="na">add</span><span class="o">(</span><span class="n">argumentCaptor</span><span class="o">.</span><span class="na">capture</span><span class="o">());</span>
+<span class="n">assertTrue</span><span class="o">(</span><span class="mi">100</span> <span class="o">==</span> <span class="n">argumentCaptor</span><span class="o">.</span><span class="na">getValue</span><span class="o">());</span>
+
+<span class="nd">@Data</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Caller</span> <span class="o">{</span>
+    <span class="n">List</span> <span class="n">list</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">run</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">list</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="mi">100</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<hr>
+<p>前面的内容都是以 mock 为例，我们再来说说 spy，与 mock 的区别：</p>
+<p>mock 出来的对象是一个完全假的对象，但 spy 通常是基于一个具体的类或类实例，对其篡改某些方法，对于被篡改方法之外的方法，其行为都和调用真实对象的方法一样，不过并没有调用真实对象的方法，也不会对真实对象产生影响：</p>
+<div class="highlight"><pre><span></span><span class="c1">// 基于一个实际的类实例</span>
+<span class="n">List</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="n">realList</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;&gt;(</span><span class="mi">10</span><span class="o">);</span>
+<span class="n">List</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="n">spy</span> <span class="o">=</span> <span class="n">spy</span><span class="o">(</span><span class="n">realList</span><span class="o">);</span>
+
+<span class="n">spy</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+
+<span class="c1">// 被窃听的对象并没有发生变化</span>
+<span class="n">assertEquals</span><span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="n">realList</span><span class="o">.</span><span class="na">size</span><span class="o">());</span>
+<span class="c1">// 间谍对象确实将 1 存了下来</span>
+<span class="n">assertEquals</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="n">spy</span><span class="o">.</span><span class="na">size</span><span class="o">());</span>
+<span class="c1">// 这句会抛出 java.lang.IndexOutOfBoundsException，因为 realList 还是为空</span>
+<span class="n">assertTrue</span><span class="o">(</span><span class="mi">1</span> <span class="o">==</span> <span class="n">realList</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">));</span>
+<span class="n">assertTrue</span><span class="o">(</span><span class="mi">1</span> <span class="o">==</span> <span class="n">spy</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">));</span>
+</pre></div>
+
+
+<p>也可以基于一个具体的类来构造 spy，但这样无法使用带参数的构造方法，也无法指定类型参数：</p>
+<div class="highlight"><pre><span></span><span class="n">List</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="o">=</span> <span class="n">spy</span><span class="o">(</span><span class="n">ArrayList</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+<span class="n">assertEquals</span><span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="n">spy</span><span class="o">.</span><span class="na">size</span><span class="o">());</span>
+<span class="n">spy</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="mi">100</span><span class="o">);</span>
+<span class="n">assertEquals</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="n">spy</span><span class="o">.</span><span class="na">size</span><span class="o">());</span>
+<span class="n">assertTrue</span><span class="o">(</span><span class="mi">100</span> <span class="o">==</span> <span class="n">spy</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">));</span>
+
+<span class="c1">// 篡改方法</span>
+<span class="n">when</span><span class="o">(</span><span class="n">spy</span><span class="o">.</span><span class="na">size</span><span class="o">()).</span><span class="na">thenReturn</span><span class="o">(-</span><span class="mi">1</span><span class="o">);</span>
+<span class="n">assertEquals</span><span class="o">(-</span><span class="mi">1</span><span class="o">,</span> <span class="n">spy</span><span class="o">.</span><span class="na">size</span><span class="o">());</span>
+</pre></div>
+
+
+<p>实际上，mock 也可以基于具体的类来构造，这时可以指定某些方法实际调用具体类的方法。</p>
+<hr>
+<p>除了使用 mock、spy 方法来构造模拟对象，还可以通过注解来构造，但这样的话得指定 JUnit 的 Runner 为 <code>org.mockito.junit.MockitoJUnitRunner</code>：</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">org.junit.Test</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.junit.runner.RunWith</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.mockito.Mock</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.mockito.Spy</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.mockito.junit.MockitoJUnitRunner</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">java.util.ArrayList</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.List</span><span class="o">;</span>
+
+<span class="kn">import static</span> <span class="nn">org.mockito.Mockito.when</span><span class="o">;</span>
+<span class="kn">import static</span> <span class="nn">org.junit.Assert.assertTrue</span><span class="o">;</span>
+
+<span class="nd">@RunWith</span><span class="o">(</span><span class="n">MockitoJUnitRunner</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">testTester</span> <span class="o">{</span>
+
+    <span class="nd">@Mock</span>
+    <span class="kd">private</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="n">mocked</span><span class="o">;</span>
+
+    <span class="nd">@Spy</span>
+    <span class="kd">private</span> <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="n">spyed</span><span class="o">;</span>
+
+    <span class="nd">@Test</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">test</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">when</span><span class="o">(</span><span class="n">mocked</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">()).</span><span class="na">thenReturn</span><span class="o">(</span><span class="kc">false</span><span class="o">);</span>
+        <span class="n">when</span><span class="o">(</span><span class="n">spyed</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">()).</span><span class="na">thenReturn</span><span class="o">(</span><span class="kc">false</span><span class="o">);</span>
+
+        <span class="n">assertTrue</span><span class="o">(!</span><span class="n">mocked</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">());</span>
+        <span class="n">assertTrue</span><span class="o">(!</span><span class="n">spyed</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">());</span>
+
+        <span class="n">mocked</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+        <span class="n">spyed</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+
+        <span class="n">assertTrue</span><span class="o">(</span><span class="mi">0</span> <span class="o">==</span> <span class="n">mocked</span><span class="o">.</span><span class="na">size</span><span class="o">());</span>
+        <span class="n">assertTrue</span><span class="o">(</span><span class="mi">1</span> <span class="o">==</span> <span class="n">spyed</span><span class="o">.</span><span class="na">size</span><span class="o">());</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2019/06/17/mockito/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+        </div><!-- /.twelve.columns -->
+ </div><!-- /.row -->
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+  <script src="../../../../theme/js/main.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../../../theme/emoji/css/basic/emojify.min.css" />
+  <script src="../../../../theme/emoji/js/emojify.min.js"></script>
+  <script>
+    emojify.setConfig({
+        img_dir : '../../../../theme/emoji/images/basic'
+    });
+    emojify.run();
+</script>
+</body>
+</html>

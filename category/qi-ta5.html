@@ -64,6 +64,40 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="../2014/11/18/read-yii-code-5/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 模板引擎集成">Yii源码阅读笔记 - 模板引擎集成</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2014-11-18T00:00:00+08:00"> 2014-11-18 Tue </abbr>
+<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <h3>概述</h3>
+<p>通常我们会使用模板引擎来渲染HTML页面，而不是使用HTML代码中插入PHP代码的方式来编写动态页面。Yii框架中模板引擎也是作为组件引入的，默认ID为viewRenderer，
+但从<a href="http://youngsterxyf.github.io/2014/11/13/read-yii-code-3/">Yii源码阅读笔记 - 组件集成</a>可以看到Yii Web应用加载的核心组件中并没有viewRenderer，所以需要自己配置。
+Yii提供了一个直接可用的模板引擎组件类CPradoViewRenderer（见文件<code>yii/framework/web/renderers/CPradoViewRenderer.php</code>），该模板引擎类让开发者可以使用类Prado框架的模板语法。</p>
+<p>如果你想使用Smarty这种第三方模板引擎，有两种方式将模板引擎引入Yii中使用（以Smarty为例）：</p>
+<ol>
+<li>将Smarty封装成一个Yii的普通组件，然后配置加载到Yii::app()。假设组件ID为smarty，那么就可以通过<code>Yii::app()-&gt;smarty</code>来调用组件。</li>
+<li>参考CPradoViewRenderer类的实现，将Smarty封装成一个模板引擎组件，并以ID为viewRenderer进行配置加载。</li>
+</ol>
+<p>相比而言，第二种方式更好。原因是：第一种方式由于每种第三方模板引擎的接口不一样，如果应用要替换模板引擎，就需要修改控制器类中的代码。而第二种方式由于第三方组件统一封装成Yii框架定义的模板引擎接口形式，
+所以如果要替换模板引擎，只需修改自定义模板引擎组件类的接口实现就可以了。这样调用模板引擎的代码逻辑就只依赖接口形式，而不是依赖于接口实现，从而实现解耦。</p>
+<p>本文主要分析第二种方式的实现。</p>
+<h3>分析</h3>
+<p>Yii中对页面模板进行渲染可以调用 …</p> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2014/11/18/read-yii-code-5/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 模板引擎集成">Read more <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="../tag/php.html">PHP</a>
+                    <a class="danger label" href="../tag/yii.html">Yii</a>
+                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
+                    <a class="danger label" href="../tag/zong-jie.html">总结</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="../2014/11/14/read-yii-code-4/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - Model层实现">Yii源码阅读笔记 - Model层实现</a>
                     </h2>
                 </header>
@@ -329,52 +363,12 @@
                 </div>
             </article>
             </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="../2014/09/22/phpmetrics-of-popular-php-projects/" rel="bookmark" title="Permalink to 流行PHP项目的phpmetrics分析（译）">流行PHP项目的phpmetrics分析（译）</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2014-09-22T00:00:00+08:00"> 2014-09-22 Mon </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>原文：<a href="https://peteraba.com/blog/phpmetrics-of-popular-projects/">phpmetrics of popular php projects</a></p>
-<p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
-<p>之前我偶然发现一个名为<a href="http://www.phpmetrics.org/">phpmetrics</a>的新工具，可用于计算及展示php的度量指标。我当时立马喜欢上了这个工具，并决定用它分析我认为重要的一些php项目。
-我知道这个项目列表还远远不够完善，但应该仍然值得一看。我特别喜欢其中的“可维护性”报告，我发现视觉上那些红色的斑点就和丑陋的代码一样令人厌恶。</p>
-<p>这个工具貌似还有点小bug，我会尽力尽快修复这个工具项目的这些小问题。</p>
-<p><strong>一些重要的说明</strong></p>
-<ul>
-<li>目前我还无法得到Cakephp和Typo3的分析报告，之后我会尽快调查一下这个问题。</li>
-<li>我是在完整的代码库或下载的源码包上执行这个工具的，这意味着某些情况下还分析了项目的外部依赖库。之后我可能会调整，但目前不在计划之内。</li>
-<li>有些项目包含很多代码库，所以我无法确保测试的都是正确的那个代码库。<em>Joomla</em>尤其可能这样。</li>
-<li>某些项目并非非常知名，但在github上呈现关注度上升趋势。</li>
-<li>dm-mailer这个项目无足轻重，只是我最新的个人兴趣项目。我将它与phpmetrics一起归到Backfire一节。</li>
-<li>注意：php-yaf和phalcon都是非常有意思的php框架，但多数代码是C实现的，因此没有包含进来。</li>
-</ul>
-<hr>
-<p>说明：阅读该报告的一点小提示：</p>
-<ul>
-<li>更多的斑点只是意味着更多的类</li>
-<li>红色意味着不可维护，黄色表示可接受，绿色则表明良好、可维护的代码。</li>
-</ul>
-<hr>
-<h3>分析结果 …</h3> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2014/09/22/phpmetrics-of-popular-php-projects/" rel="bookmark" title="Permalink to 流行PHP项目的phpmetrics分析（译）">Read more <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/fan-yi.html">翻译</a>
-                    <a class="danger label" href="../tag/php.html">PHP</a>
-                </div>
-            </article>
-            </li>
         </ol><!-- /#posts-list -->
     </div><!-- /.eleven.columns -->
  </div><!-- /.row -->
 <p class="paginator">
             <a href="../category/qi-ta4.html"><i class="icon-arrow-left"></i></a>
-    Page 5 / 16
+    Page 5 / 17
         <a href="../category/qi-ta6.html"><i class="icon-arrow-right"></i></a>
 </p>
 </section><!-- /#content -->

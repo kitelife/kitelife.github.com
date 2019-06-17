@@ -94,23 +94,23 @@ make install
 
 <p>4.执行<code>/path/to/php/bin/php -i | grep "xhprof"</code>，确认xhprof扩展能成功加载</p>
 <p>5.xhprof会将收集到的性能数据按文件（一次数据收集存放一个文件）存放在<code>xhprof.output_dir</code>指定的目录（注意添加写权限）下，并通过<code>xhprof/xhprof_html</code>目录下的PHP脚本程序提供网页形式的展示，所以还需配置web服务提供对该脚本程序的访问，以Nginx为例：</p>
-<div class="highlight"><pre><span></span><span class="nt">server</span> <span class="p">{</span>
-    <span class="err">listen</span> <span class="err">8080</span><span class="p">;</span>
-    <span class="err">server_name</span> <span class="err">localhost</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><span class="nv">server</span> {
+    <span class="nv">listen</span> <span class="mi">8080</span><span class="c1">;</span>
+    <span class="nv">server_name</span> <span class="nv">localhost</span><span class="c1">;</span>
 
-    <span class="err">root</span> <span class="err">/path/to/xhprof/xhprof_html</span><span class="p">;</span>
-    <span class="err">location</span> <span class="err">/</span> <span class="err">{</span>
-        <span class="err">index</span> <span class="err">index.html</span> <span class="err">index.php</span><span class="p">;</span>
-        <span class="err">try_files</span> <span class="err">$uri</span> <span class="err">/index.php?$query_string</span><span class="p">;</span>
-    <span class="p">}</span>
-    <span class="nt">location</span> <span class="o">~</span> <span class="err">\</span><span class="p">.</span><span class="nc">php</span><span class="o">$</span> <span class="p">{</span>
-        <span class="err">fastcgi_split_path_info</span> <span class="err">^(.+.php)(/.+)$</span><span class="p">;</span>
-        <span class="err">fastcgi_pass</span> <span class="n">unix</span><span class="p">:</span><span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">run</span><span class="o">/</span><span class="n">php5-fpm</span><span class="o">.</span><span class="n">sock</span><span class="p">;</span>
-        <span class="err">fastcgi_param</span> <span class="err">SCRIPT_FILENAME</span> <span class="err">$document_root$fastcgi_script_name</span><span class="p">;</span>
-        <span class="err">fastcgi_index</span> <span class="err">index.php</span><span class="p">;</span>
-        <span class="err">include</span> <span class="err">fastcgi_params</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="err">}</span>
+    <span class="nv">root</span> <span class="o">/</span><span class="nv">path</span><span class="o">/</span><span class="nv">to</span><span class="o">/</span><span class="nv">xhprof</span><span class="o">/</span><span class="nv">xhprof_html</span><span class="c1">;</span>
+    <span class="nv">location</span> <span class="o">/</span> {
+        <span class="nv">index</span> <span class="nv">index</span>.<span class="nv">html</span> <span class="nv">index</span>.<span class="nv">php</span><span class="c1">;</span>
+        <span class="nv">try_files</span> $<span class="nv">uri</span> <span class="o">/</span><span class="nv">index</span>.<span class="nv">php</span>?$<span class="nv">query_string</span><span class="c1">;</span>
+    }
+    <span class="nv">location</span> <span class="o">~</span> \.<span class="nv">php</span>$ {
+        <span class="nv">fastcgi_split_path_info</span> <span class="o">^</span><span class="ss">(</span>.<span class="o">+</span>.<span class="nv">php</span><span class="ss">)(</span><span class="o">/</span>.<span class="o">+</span><span class="ss">)</span>$<span class="c1">;</span>
+        <span class="nv">fastcgi_pass</span> <span class="nv">unix</span>:<span class="o">/</span><span class="nv">var</span><span class="o">/</span><span class="nv">run</span><span class="o">/</span><span class="nv">php5</span><span class="o">-</span><span class="nv">fpm</span>.<span class="nv">sock</span><span class="c1">;</span>
+        <span class="nv">fastcgi_param</span> <span class="nv">SCRIPT_FILENAME</span> <span class="mh">$d</span><span class="nv">ocument_root</span><span class="mh">$fa</span><span class="nv">stcgi_script_name</span><span class="c1">;</span>
+        <span class="nv">fastcgi_index</span> <span class="nv">index</span>.<span class="nv">php</span><span class="c1">;</span>
+        <span class="k">include</span> <span class="nv">fastcgi_params</span><span class="c1">;</span>
+    }
+}
 </pre></div>
 
 
@@ -153,13 +153,13 @@ make install
 </ol>
 <p>可以组合使用三个可选值：<code>xhprof_enable(XHPROF_FLAGS_NO_BUILTINS | XHPROF_FLAGS_CPU | XHPROF_FLAGS_MEMORY);</code>。</p>
 <p><code>$options</code>是数组类型，可传入键为<code>ignored_functions</code>的值，表示忽略性能分析中的某些函数，如：</p>
-<div class="highlight"><pre><span></span>xhprof_enable(0, array(
-    &#39;ignored_functions&#39; =&gt;  array(
-                                &#39;call_user_func&#39;,
-                                &#39;call_user_func_array&#39;
-                            )
-    )
-);
+<div class="highlight"><pre><span></span><span class="n">xhprof_enable</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">array</span><span class="p">(</span>
+    <span class="s1">&#39;ignored_functions&#39;</span> <span class="o">=&gt;</span>  <span class="nb">array</span><span class="p">(</span>
+                                <span class="s1">&#39;call_user_func&#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;call_user_func_array&#39;</span>
+                            <span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">);</span>
 </pre></div>
 
 
@@ -176,29 +176,29 @@ make install
 <p>1.从 GitHub 上克隆代码库：<code>git clone https://github.com/preinheimer/xhprof.git xhprof-ui</code>（注：这里指定了克隆的目标目录为xhprof-ui，以区分原来部署的原生xhprof）</p>
 <p>2.依照原生XHprof安装步骤的2-7操作</p>
 <p>3.因为XHProf UI默认使用MySQL来存储性能数据，所以需要进行数据库配置。将文件<code>/path/to/xhprof-ui/xhprof_lib/</code>目录下的<code>config.sample.php</code>重命名为<code>config.php</code>，然后修改如下配置项：</p>
-<div class="highlight"><pre><span></span><span class="o">//</span> <span class="nt">Change</span> <span class="nt">these</span><span class="o">:</span>
-<span class="o">$</span><span class="nt">_xhprof</span><span class="cp">[</span><span class="s1">&#39;dbtype&#39;</span><span class="cp">]</span> <span class="o">=</span> <span class="s1">&#39;mysql&#39;</span><span class="o">;</span> <span class="o">//</span> <span class="nt">Only</span> <span class="nt">relevant</span> <span class="nt">for</span> <span class="nt">PDO</span>
-<span class="o">$</span><span class="nt">_xhprof</span><span class="cp">[</span><span class="s1">&#39;dbhost&#39;</span><span class="cp">]</span> <span class="o">=</span> <span class="s1">&#39;localhost&#39;</span><span class="o">;</span>
-<span class="o">$</span><span class="nt">_xhprof</span><span class="cp">[</span><span class="s1">&#39;dbuser&#39;</span><span class="cp">]</span> <span class="o">=</span> <span class="s1">&#39;root&#39;</span><span class="o">;</span>
-<span class="o">$</span><span class="nt">_xhprof</span><span class="cp">[</span><span class="s1">&#39;dbpass&#39;</span><span class="cp">]</span> <span class="o">=</span> <span class="s1">&#39;password&#39;</span><span class="o">;</span>
-<span class="o">$</span><span class="nt">_xhprof</span><span class="cp">[</span><span class="s1">&#39;dbname&#39;</span><span class="cp">]</span> <span class="o">=</span> <span class="s1">&#39;xhprof&#39;</span><span class="o">;</span>
-<span class="o">$</span><span class="nt">_xhprof</span><span class="cp">[</span><span class="s1">&#39;dbadapter&#39;</span><span class="cp">]</span> <span class="o">=</span> <span class="s1">&#39;Pdo&#39;</span><span class="o">;</span>
-<span class="o">//</span> <span class="err">注意：这里有个坑，</span><span class="o">$</span><span class="nt">_xhprof</span><span class="cp">[</span><span class="s1">&#39;servername&#39;</span><span class="cp">]</span><span class="err">的值不能超过三个字符，这个配置项即对应数据表</span><span class="nt">details</span><span class="err">的</span><span class="nt">server_id</span><span class="err">字段</span>
-<span class="o">$</span><span class="nt">_xhprof</span><span class="cp">[</span><span class="s1">&#39;servername&#39;</span><span class="cp">]</span> <span class="o">=</span> <span class="s1">&#39;myserver&#39;</span><span class="o">;</span>
-<span class="o">$</span><span class="nt">_xhprof</span><span class="cp">[</span><span class="s1">&#39;namespace&#39;</span><span class="cp">]</span> <span class="o">=</span> <span class="s1">&#39;myapp&#39;</span><span class="o">;</span>
-<span class="o">$</span><span class="nt">_xhprof</span><span class="cp">[</span><span class="s1">&#39;url&#39;</span><span class="cp">]</span> <span class="o">=</span> <span class="s1">&#39;http://url/to/xhprof/xhprof_html&#39;</span><span class="o">;</span>
+<div class="highlight"><pre><span></span><span class="o">//</span> <span class="nv">Change</span> <span class="nv">these</span>:
+$<span class="nv">_xhprof</span>[<span class="s1">&#39;</span><span class="s">dbtype</span><span class="s1">&#39;</span>] <span class="o">=</span> <span class="s1">&#39;</span><span class="s">mysql</span><span class="s1">&#39;</span><span class="c1">; // Only relevant for PDO</span>
+$<span class="nv">_xhprof</span>[<span class="s1">&#39;</span><span class="s">dbhost</span><span class="s1">&#39;</span>] <span class="o">=</span> <span class="s1">&#39;</span><span class="s">localhost</span><span class="s1">&#39;</span><span class="c1">;</span>
+$<span class="nv">_xhprof</span>[<span class="s1">&#39;</span><span class="s">dbuser</span><span class="s1">&#39;</span>] <span class="o">=</span> <span class="s1">&#39;</span><span class="s">root</span><span class="s1">&#39;</span><span class="c1">;</span>
+$<span class="nv">_xhprof</span>[<span class="s1">&#39;</span><span class="s">dbpass</span><span class="s1">&#39;</span>] <span class="o">=</span> <span class="s1">&#39;</span><span class="s">password</span><span class="s1">&#39;</span><span class="c1">;</span>
+$<span class="nv">_xhprof</span>[<span class="s1">&#39;</span><span class="s">dbname</span><span class="s1">&#39;</span>] <span class="o">=</span> <span class="s1">&#39;</span><span class="s">xhprof</span><span class="s1">&#39;</span><span class="c1">;</span>
+$<span class="nv">_xhprof</span>[<span class="s1">&#39;</span><span class="s">dbadapter</span><span class="s1">&#39;</span>] <span class="o">=</span> <span class="s1">&#39;</span><span class="s">Pdo</span><span class="s1">&#39;</span><span class="c1">;</span>
+<span class="o">//</span> 注意：这里有个坑，$<span class="nv">_xhprof</span>[<span class="s1">&#39;</span><span class="s">servername</span><span class="s1">&#39;</span>]的值不能超过三个字符，这个配置项即对应数据表<span class="nv">details</span>的<span class="nv">server_id</span>字段
+$<span class="nv">_xhprof</span>[<span class="s1">&#39;</span><span class="s">servername</span><span class="s1">&#39;</span>] <span class="o">=</span> <span class="s1">&#39;</span><span class="s">myserver</span><span class="s1">&#39;</span><span class="c1">;</span>
+$<span class="nv">_xhprof</span>[<span class="s1">&#39;</span><span class="s">namespace</span><span class="s1">&#39;</span>] <span class="o">=</span> <span class="s1">&#39;</span><span class="s">myapp</span><span class="s1">&#39;</span><span class="c1">;</span>
+$<span class="nv">_xhprof</span>[<span class="s1">&#39;</span><span class="s">url</span><span class="s1">&#39;</span>] <span class="o">=</span> <span class="s1">&#39;</span><span class="s">http://url/to/xhprof/xhprof_html</span><span class="s1">&#39;</span><span class="c1">;</span>
 
-<span class="o">//</span><span class="nt">These</span> <span class="nt">are</span> <span class="nt">good</span> <span class="nt">for</span> <span class="nt">linux</span> <span class="nt">and</span> <span class="nt">its</span> <span class="nt">derivatives</span><span class="o">.</span>
-<span class="c">/*</span>
-<span class="c">$_xhprof</span><span class="cp">[</span><span class="s1">&#39;dot_binary&#39;</span><span class="cp">]</span><span class="c">  = &#39;/usr/bin/dot&#39;;</span>
-<span class="c">$_xhprof</span><span class="cp">[</span><span class="s1">&#39;dot_tempdir&#39;</span><span class="cp">]</span><span class="c"> = &#39;/tmp&#39;;</span>
-<span class="c">$_xhprof</span><span class="cp">[</span><span class="s1">&#39;dot_errfile&#39;</span><span class="cp">]</span><span class="c"> = &#39;/tmp/xh_dot.err&#39;;</span>
-<span class="c">*/</span>
+<span class="o">//</span><span class="nv">These</span> <span class="nv">are</span> <span class="nv">good</span> <span class="k">for</span> <span class="nv">linux</span> <span class="nv">and</span> <span class="nv">its</span> <span class="nv">derivatives</span>.
+<span class="cm">/*</span>
+<span class="cm">$_xhprof[&#39;dot_binary&#39;]  = &#39;/usr/bin/dot&#39;;</span>
+<span class="cm">$_xhprof[&#39;dot_tempdir&#39;] = &#39;/tmp&#39;;</span>
+<span class="cm">$_xhprof[&#39;dot_errfile&#39;] = &#39;/tmp/xh_dot.err&#39;;</span>
+<span class="cm">*/</span>
 
-<span class="o">//</span> <span class="o">$</span><span class="nt">controlIPs</span> <span class="o">=</span> <span class="nt">false</span><span class="o">;</span> <span class="o">//</span><span class="nt">Disables</span> <span class="nt">access</span> <span class="nt">controlls</span> <span class="nt">completely</span><span class="o">.</span> 
-<span class="o">$</span><span class="nt">controlIPs</span> <span class="o">=</span> <span class="nt">array</span><span class="o">();</span>
-<span class="o">$</span><span class="nt">controlIPs</span><span class="cp">[]</span> <span class="o">=</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="o">;</span>   <span class="o">//</span> <span class="nt">localhost</span><span class="o">,</span> <span class="nt">you</span><span class="err">&#39;</span><span class="nt">ll</span> <span class="nt">want</span> <span class="nt">to</span> <span class="nt">add</span> <span class="nt">your</span> <span class="nt">own</span> <span class="nt">ip</span> <span class="nt">here</span>
-<span class="o">$</span><span class="nt">controlIPs</span><span class="cp">[]</span> <span class="o">=</span> <span class="s2">&quot;::1&quot;</span><span class="o">;</span>         <span class="o">//</span> <span class="nt">localhost</span> <span class="nt">IP</span> <span class="nt">v6</span>
+<span class="o">//</span> <span class="mh">$c</span><span class="nv">ontrolIPs</span> <span class="o">=</span> <span class="nv">false</span><span class="c1">; //Disables access controlls completely. </span>
+<span class="mh">$c</span><span class="nv">ontrolIPs</span> <span class="o">=</span> <span class="nv">array</span><span class="ss">()</span><span class="c1">;</span>
+<span class="mh">$c</span><span class="nv">ontrolIPs</span>[] <span class="o">=</span> <span class="s2">&quot;</span><span class="s">127.0.0.1</span><span class="s2">&quot;</span><span class="c1">;   // localhost, you&#39;ll want to add your own ip here</span>
+<span class="mh">$c</span><span class="nv">ontrolIPs</span>[] <span class="o">=</span> <span class="s2">&quot;</span><span class="s">::1</span><span class="s2">&quot;</span><span class="c1">;         // localhost IP v6</span>
 </pre></div>
 
 

@@ -65,7 +65,7 @@
             </header>
             <footer class="post-info">
               <abbr class="published" title="2014-06-14T00:00:00+08:00">
-                2014-06-14 Sat
+                2014-06-14 六
               </abbr>
               <address class="vcard author">
                 By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
@@ -99,106 +99,106 @@ access_token需要通过API向微信服务器获取。成功启用服务号的�
 <p>当成功获取access_token后就可以通过API创建、删除、查询服务号的自定义菜单了。</p>
 <p>自定义菜单相关文档见<a href="http://mp.weixin.qq.com/wiki/index.php?title=%E8%87%AA%E5%AE%9A%E4%B9%89%E8%8F%9C%E5%8D%95%E5%88%9B%E5%BB%BA%E6%8E%A5%E5%8F%A3">这里</a>。</p>
 <p>以下Python代码是对自定义菜单API的简单封装：</p>
-<div class="highlight"><pre><span></span><span class="c1">#coding: utf-8</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #008000">#coding: utf-8</span>
 
-<span class="kn">import</span> <span class="nn">requests</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">import</span> <span class="nn">time</span>
-
-
-<span class="k">class</span> <span class="nc">WechatAdmin</span><span class="p">:</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">app_id</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">app_secret</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">access_token_file</span> <span class="o">=</span> <span class="s1">&#39;access_token.json&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">access_token</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-
-    <span class="k">def</span> <span class="nf">fetch_access_token</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">access_token</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">access_token</span>
-        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">access_token_file</span><span class="p">):</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">access_token_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
-                <span class="n">origin_content</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fh</span><span class="p">)</span>
-                <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">origin_content</span><span class="p">[</span><span class="s1">&#39;update_time&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">origin_content</span><span class="p">[</span><span class="s1">&#39;expires_in&#39;</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">():</span>
-                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remote_fetch_access_token</span><span class="p">()</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="n">origin_content</span><span class="p">[</span><span class="s1">&#39;access_token&#39;</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remote_fetch_access_token</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="nf">_remote_fetch_access_token</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">target_url</span> <span class="o">=</span> <span class="s1">&#39;https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&amp;appid=</span><span class="si">%s</span><span class="s1">&amp;secret=</span><span class="si">%s</span><span class="s1">&#39;</span> \
-                     <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_secret</span><span class="p">)</span>
-        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">target_url</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
-            <span class="n">response_data</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">response_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;access_token&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span> <span class="ow">and</span> <span class="n">response_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;expires_in&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
-                <span class="n">new_access_token</span><span class="p">,</span> <span class="n">expires_in</span> <span class="o">=</span> <span class="n">response_data</span><span class="p">[</span><span class="s1">&#39;access_token&#39;</span><span class="p">],</span> <span class="n">response_data</span><span class="p">[</span><span class="s1">&#39;expires_in&#39;</span><span class="p">]</span>
-                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">access_token_file</span><span class="p">,</span> <span class="s1">&#39;w+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
-                    <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">({</span><span class="s1">&#39;access_token&#39;</span><span class="p">:</span> <span class="n">new_access_token</span><span class="p">,</span> <span class="s1">&#39;expires_in&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">expires_in</span><span class="p">)</span> <span class="o">-</span> <span class="mi">20</span><span class="p">),</span>
-                               <span class="s1">&#39;update_time&#39;</span><span class="p">:</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()},</span> <span class="n">fh</span><span class="p">)</span>
-                <span class="k">return</span> <span class="n">new_access_token</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">u</span><span class="s1">&#39;响应内容不对！&#39;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">u</span><span class="s1">&#39;非正常响应，</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="p">,))</span>
-
-    <span class="k">def</span> <span class="nf">create_menu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content</span><span class="p">):</span>
-        <span class="n">menu_create_api</span> <span class="o">=</span> <span class="s1">&#39;https://api.weixin.qq.com/cgi-bin/menu/create?access_token=</span><span class="si">%s</span><span class="s1">&#39;</span>
-        <span class="n">target_url</span> <span class="o">=</span> <span class="n">menu_create_api</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fetch_access_token</span><span class="p">(),)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">target_url</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">content</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
-                <span class="k">print</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">u</span><span class="s1">&#39;非正常响应, </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="p">,))</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">print</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_remote_fetch_access_token</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">create_menu</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">fetch_menu</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">target_url</span> <span class="o">=</span> <span class="s1">&#39;https://api.weixin.qq.com/cgi-bin/menu/get?access_token=</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fetch_access_token</span><span class="p">(),)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">target_url</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
-                <span class="k">print</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">u</span><span class="s1">&#39;非正常响应，</span><span class="si">%d</span><span class="s1">, </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">text</span><span class="p">))</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">print</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_remote_fetch_access_token</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fetch_menu</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="nf">delete_menu</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">target_url</span> <span class="o">=</span> <span class="s1">&#39;https://api.weixin.qq.com/cgi-bin/menu/delete?access_token=</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fetch_access_token</span><span class="p">(),)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">target_url</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
-                <span class="k">print</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">u</span><span class="s1">&#39;非正常响应, </span><span class="si">%d</span><span class="s1">, </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">text</span><span class="p">))</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">print</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_remote_fetch_access_token</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">delete_menu</span><span class="p">()</span>
+<span style="color: #0000ff">import</span> requests
+<span style="color: #0000ff">import</span> os
+<span style="color: #0000ff">import</span> json
+<span style="color: #0000ff">import</span> time
 
 
-<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-    <span class="n">wechat</span> <span class="o">=</span> <span class="n">WechatAdmin</span><span class="p">()</span>
-    <span class="c1"># print wechat.fetch_access_token()</span>
+<span style="color: #0000ff">class</span> <span style="color: #2b91af">WechatAdmin</span>:
+    <span style="color: #0000ff">def</span> __init__(self):
+        self.app_id = <span style="color: #a31515">&#39;&#39;</span>
+        self.app_secret = <span style="color: #a31515">&#39;&#39;</span>
+        self.session = requests.session()
+        self.access_token_file = <span style="color: #a31515">&#39;access_token.json&#39;</span>
+        self.access_token = <span style="color: #a31515">&#39;&#39;</span>
 
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;menus.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
-        <span class="n">wechat</span><span class="o">.</span><span class="n">create_menu</span><span class="p">(</span><span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+    <span style="color: #0000ff">def</span> fetch_access_token(self):
+        <span style="color: #0000ff">if</span> self.access_token != <span style="color: #a31515">&#39;&#39;</span>:
+            <span style="color: #0000ff">return</span> self.access_token
+        <span style="color: #0000ff">if</span> os.path.exists(self.access_token_file):
+            <span style="color: #0000ff">with</span> open(self.access_token_file) <span style="color: #0000ff">as</span> fh:
+                origin_content = json.load(fh)
+                <span style="color: #0000ff">if</span> float(origin_content[<span style="color: #a31515">&#39;update_time&#39;</span>]) + float(origin_content[<span style="color: #a31515">&#39;expires_in&#39;</span>]) &lt; time.time():
+                    <span style="color: #0000ff">return</span> self._remote_fetch_access_token()
+                <span style="color: #0000ff">else</span>:
+                    <span style="color: #0000ff">return</span> origin_content[<span style="color: #a31515">&#39;access_token&#39;</span>]
+        <span style="color: #0000ff">else</span>:
+            <span style="color: #0000ff">return</span> self._remote_fetch_access_token()
 
-    <span class="n">wechat</span><span class="o">.</span><span class="n">fetch_menu</span><span class="p">()</span>
-    <span class="c1"># wechat.delete_menu()</span>
+    <span style="color: #0000ff">def</span> _remote_fetch_access_token(self):
+        target_url = <span style="color: #a31515">&#39;https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&amp;appid=%s&amp;secret=%s&#39;</span> \
+                     % (self.app_id, self.app_secret)
+        r = self.session.get(target_url)
+        <span style="color: #0000ff">if</span> r.status_code == 200:
+            response_data = r.json()
+            <span style="color: #0000ff">if</span> response_data.get(<span style="color: #a31515">&#39;access_token&#39;</span>, <span style="color: #a31515">&#39;&#39;</span>) != <span style="color: #a31515">&#39;&#39;</span> <span style="color: #0000ff">and</span> response_data.get(<span style="color: #a31515">&#39;expires_in&#39;</span>, <span style="color: #a31515">&#39;&#39;</span>) != <span style="color: #a31515">&#39;&#39;</span>:
+                new_access_token, expires_in = response_data[<span style="color: #a31515">&#39;access_token&#39;</span>], response_data[<span style="color: #a31515">&#39;expires_in&#39;</span>]
+                <span style="color: #0000ff">with</span> open(self.access_token_file, <span style="color: #a31515">&#39;w+&#39;</span>) <span style="color: #0000ff">as</span> fh:
+                    json.dump({<span style="color: #a31515">&#39;access_token&#39;</span>: new_access_token, <span style="color: #a31515">&#39;expires_in&#39;</span>: str(int(expires_in) - 20),
+                               <span style="color: #a31515">&#39;update_time&#39;</span>: time.time()}, fh)
+                <span style="color: #0000ff">return</span> new_access_token
+            <span style="color: #0000ff">else</span>:
+                <span style="color: #0000ff">raise</span> Exception(<span style="color: #a31515">u&#39;响应内容不对！&#39;</span>)
+        <span style="color: #0000ff">else</span>:
+            <span style="color: #0000ff">raise</span> Exception(<span style="color: #a31515">u&#39;非正常响应，%d&#39;</span> % (r.status_code,))
+
+    <span style="color: #0000ff">def</span> create_menu(self, content):
+        menu_create_api = <span style="color: #a31515">&#39;https://api.weixin.qq.com/cgi-bin/menu/create?access_token=%s&#39;</span>
+        target_url = menu_create_api % (self.fetch_access_token(),)
+        <span style="color: #0000ff">try</span>:
+            r = self.session.post(target_url, data=content)
+            <span style="color: #0000ff">if</span> r.status_code == 200:
+                <span style="color: #0000ff">print</span> r.json()
+            <span style="color: #0000ff">else</span>:
+                <span style="color: #0000ff">raise</span> Exception(<span style="color: #a31515">u&#39;非正常响应, %d&#39;</span> % (r.status_code,))
+        <span style="color: #0000ff">except</span> Exception <span style="color: #0000ff">as</span> e:
+            <span style="color: #0000ff">print</span> e.message
+            self._remote_fetch_access_token()
+            self.create_menu(content)
+
+    <span style="color: #0000ff">def</span> fetch_menu(self):
+        target_url = <span style="color: #a31515">&#39;https://api.weixin.qq.com/cgi-bin/menu/get?access_token=%s&#39;</span> % (self.fetch_access_token(),)
+        <span style="color: #0000ff">try</span>:
+            r = self.session.get(target_url)
+            <span style="color: #0000ff">if</span> r.status_code == 200:
+                <span style="color: #0000ff">print</span> r.json()
+            <span style="color: #0000ff">else</span>:
+                <span style="color: #0000ff">raise</span> Exception(<span style="color: #a31515">u&#39;非正常响应，%d, %s&#39;</span> % (r.status_code, r.text))
+        <span style="color: #0000ff">except</span> Exception <span style="color: #0000ff">as</span> e:
+            <span style="color: #0000ff">print</span> e.message
+            self._remote_fetch_access_token()
+            self.fetch_menu()
+
+    <span style="color: #0000ff">def</span> delete_menu(self):
+        target_url = <span style="color: #a31515">&#39;https://api.weixin.qq.com/cgi-bin/menu/delete?access_token=%s&#39;</span> % (self.fetch_access_token(),)
+        <span style="color: #0000ff">try</span>:
+            r = self.session.get(target_url)
+            <span style="color: #0000ff">if</span> r.status_code == 200:
+                <span style="color: #0000ff">print</span> r.json()
+            <span style="color: #0000ff">else</span>:
+                <span style="color: #0000ff">raise</span> Exception(<span style="color: #a31515">u&#39;非正常响应, %d, %s&#39;</span> % (r.status_code, r.text))
+        <span style="color: #0000ff">except</span> Exception <span style="color: #0000ff">as</span> e:
+            <span style="color: #0000ff">print</span> e.message
+            self._remote_fetch_access_token()
+            self.delete_menu()
 
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="n">main</span><span class="p">()</span>
+<span style="color: #0000ff">def</span> main():
+    wechat = WechatAdmin()
+    <span style="color: #008000"># print wechat.fetch_access_token()</span>
+
+    <span style="color: #0000ff">with</span> open(<span style="color: #a31515">&#39;menus.json&#39;</span>) <span style="color: #0000ff">as</span> fh:
+        wechat.create_menu(fh.read())
+
+    wechat.fetch_menu()
+    <span style="color: #008000"># wechat.delete_menu()</span>
+
+
+<span style="color: #0000ff">if</span> __name__ == <span style="color: #a31515">&#39;__main__&#39;</span>:
+    main()
 </pre></div>
 
 

@@ -65,7 +65,7 @@
             </header>
             <footer class="post-info">
               <abbr class="published" title="2014-01-16T00:00:00+08:00">
-                2014-01-16 Thu
+                2014-01-16 四
               </abbr>
               <address class="vcard author">
                 By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
@@ -77,29 +77,29 @@
 <p>最近参与的一个业余项目，<a href="https://github.com/ahmetalpbalkan/go-linq">go-linq</a>，让我了解到Go语言的类型系统并不是为任何类面向
 对象编程而设计的。没有泛型，没有类型继承，也没有提供任何对这些特性有用的东西。</p>
 <p>但是，提供了一个名为<code>interface{}</code>的类型，你可以向其赋予几乎任意类型的值，不会抛出编译错误，就像.NET的<code>Object</code>或Java的<code>Object</code>：</p>
-<div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">o</span> <span class="kd">interface</span><span class="p">{}</span>
-<span class="nx">o</span> <span class="o">:=</span> <span class="mf">3.14</span>
-<span class="nx">o</span> <span class="o">:=</span> <span class="nx">Student</span><span class="p">{</span><span class="nx">Name</span><span class="p">:</span> <span class="s">&quot;Ahmet&quot;</span><span class="p">}</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">var</span> o <span style="color: #0000ff">interface</span>{}
+o := 3.14
+o := Student{Name: <span style="color: #a31515">&quot;Ahmet&quot;</span>}
 </pre></div>
 
 
 <p>我们假设你需要一个可以接收任意类型slices的函数，如果考虑如下这样实现：</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">Method</span><span class="p">(</span><span class="nx">in</span> <span class="p">[]</span><span class="kd">interface</span><span class="p">{}){</span><span class="o">...</span><span class="p">}</span>
-<span class="o">...</span>
-<span class="nx">slice</span> <span class="o">:=</span> <span class="p">[]</span><span class="kt">int</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">}</span>
-<span class="nx">Method</span><span class="p">(</span><span class="nx">slice</span><span class="p">)</span>   <span class="c1">// 抛出错误</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">func</span> Method(in []<span style="color: #0000ff">interface</span>{}){...}
+...
+slice := []<span style="color: #2b91af">int</span>{1, 2, 3}
+Method(slice)   <span style="color: #008000">// 抛出错误</span>
 </pre></div>
 
 
 <p>这样的代码会抛出编译错误，因为<code>[]int</code>不是<code>[]interface{}</code>。那么该如何解决这个问题呢？你可以要求<code>Method</code>的使用者先把slices
 转换为<code>[]interface{}</code>类型。也就是说他们必须借助于如下类似函数将他们的<code>[]AnyType</code>类型参数转换为<code>[]interface{}</code>类型：</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">conv</span><span class="p">(</span><span class="nx">in</span> <span class="p">[]</span><span class="nx">AnyType</span><span class="p">)</span> <span class="p">(</span><span class="nx">out</span> <span class="p">[]</span><span class="kd">interface</span><span class="p">{})</span> <span class="p">{</span>
-    <span class="nx">out</span> <span class="p">=</span> <span class="nb">make</span><span class="p">([]</span><span class="kd">interface</span><span class="p">{},</span> <span class="nb">len</span><span class="p">(</span><span class="nx">in</span><span class="p">))</span>
-    <span class="k">for</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">v</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">in</span> <span class="p">{</span>
-        <span class="nx">out</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="p">=</span> <span class="nx">v</span>
-    <span class="p">}</span>
-    <span class="k">return</span>
-<span class="p">}</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">func</span> conv(in []AnyType) (out []<span style="color: #0000ff">interface</span>{}) {
+    out = make([]<span style="color: #0000ff">interface</span>{}, len(in))
+    <span style="color: #0000ff">for</span> i, v := <span style="color: #0000ff">range</span> in {
+        out[i] = v
+    }
+    <span style="color: #0000ff">return</span>
+}
 </pre></div>
 
 
@@ -107,27 +107,27 @@
 那么他们就必须编写N个<code>conv</code>函数。</p>
 <p>对此，我们该怎么办呢？使用<strong>reflection</strong>（反射）呀！实现一个函数以<code>interface{}</code>（可以赋任意类型的值）为输入参数类型，在函数内部
 将这个输入参数转换为一个slice，然后用于我们<code>Method</code>函数。如下所示：</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">takeSliceArg</span><span class="p">(</span><span class="nx">arg</span> <span class="kd">interface</span><span class="p">{})</span> <span class="p">(</span><span class="nx">out</span> <span class="p">[]</span><span class="kd">interface</span><span class="p">{},</span> <span class="nx">ok</span> <span class="kt">bool</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">slice</span><span class="p">,</span> <span class="nx">success</span> <span class="o">:=</span> <span class="nx">takeArg</span><span class="p">(</span><span class="nx">arg</span><span class="p">,</span> <span class="nx">reflect</span><span class="p">.</span><span class="nx">Slice</span><span class="p">)</span>
-    <span class="k">if</span> <span class="p">!</span><span class="nx">success</span> <span class="p">{</span>
-        <span class="nx">ok</span> <span class="p">=</span> <span class="kc">false</span>
-        <span class="k">return</span>
-    <span class="p">}</span>
-    <span class="nx">c</span> <span class="o">:=</span> <span class="nx">slice</span><span class="p">.</span><span class="nx">Len</span><span class="p">()</span>
-    <span class="nx">out</span> <span class="p">=</span> <span class="nb">make</span><span class="p">([]</span><span class="kd">interface</span><span class="p">{},</span> <span class="nx">c</span><span class="p">)</span>
-    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="nx">c</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
-        <span class="nx">out</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="p">=</span> <span class="nx">slice</span><span class="p">.</span><span class="nx">Index</span><span class="p">(</span><span class="nx">i</span><span class="p">).</span><span class="nx">Interface</span><span class="p">()</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="nx">out</span><span class="p">,</span> <span class="kc">true</span>
-<span class="p">}</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">func</span> takeSliceArg(arg <span style="color: #0000ff">interface</span>{}) (out []<span style="color: #0000ff">interface</span>{}, ok <span style="color: #2b91af">bool</span>) {
+    slice, success := takeArg(arg, reflect.Slice)
+    <span style="color: #0000ff">if</span> !success {
+        ok = <span style="color: #0000ff">false</span>
+        <span style="color: #0000ff">return</span>
+    }
+    c := slice.Len()
+    out = make([]<span style="color: #0000ff">interface</span>{}, c)
+    <span style="color: #0000ff">for</span> i := 0; i &lt; c; i++ {
+        out[i] = slice.Index(i).Interface()
+    }
+    <span style="color: #0000ff">return</span> out, <span style="color: #0000ff">true</span>
+}
 
-<span class="kd">func</span> <span class="nx">takeArg</span><span class="p">(</span><span class="nx">arg</span> <span class="kd">interface</span><span class="p">{},</span> <span class="nx">kind</span> <span class="nx">reflect</span><span class="p">.</span><span class="nx">Kind</span><span class="p">)</span> <span class="p">(</span><span class="nx">val</span> <span class="nx">reflect</span><span class="p">.</span><span class="nx">Value</span><span class="p">,</span> <span class="nx">ok</span> <span class="kt">bool</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">val</span> <span class="p">=</span> <span class="nx">reflect</span><span class="p">.</span><span class="nx">ValueOf</span><span class="p">(</span><span class="nx">arg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nx">val</span><span class="p">.</span><span class="nx">Kind</span><span class="p">()</span> <span class="o">==</span> <span class="nx">kind</span> <span class="p">{</span>
-        <span class="nx">ok</span> <span class="p">=</span> <span class="kc">true</span>
-    <span class="p">}</span>
-    <span class="k">return</span>
-<span class="p">}</span>
+<span style="color: #0000ff">func</span> takeArg(arg <span style="color: #0000ff">interface</span>{}, kind reflect.Kind) (val reflect.Value, ok <span style="color: #2b91af">bool</span>) {
+    val = reflect.ValueOf(arg)
+    <span style="color: #0000ff">if</span> val.Kind() == kind {
+        ok = <span style="color: #0000ff">true</span>
+    }
+    <span style="color: #0000ff">return</span>
+}
 </pre></div>
 
 

@@ -65,7 +65,7 @@
             </header>
             <footer class="post-info">
               <abbr class="published" title="2016-06-11T00:00:00+08:00">
-                2016-06-11 Sat
+                2016-06-11 六
               </abbr>
               <address class="vcard author">
                 By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
@@ -87,14 +87,14 @@
 <h2>举个栗子</h2>
 <p>假设已有一个数据表<code>apps</code>，其有个字段<code>name</code>，需要对这个字段做基于全文索引的查询。</p>
 <p>为了不变更已有数据，我们对该数据表新增一个字段<code>seg_name</code>，使用脚本批量地对<code>name</code>字段进行分词编码，将结果存入该字段。</p>
-<div class="highlight"><pre><span></span><span class="k">ALTER</span> <span class="k">TABLE</span> <span class="o">`</span><span class="n">apps</span><span class="o">`</span> <span class="k">ADD</span> <span class="k">COLUMN</span> <span class="o">`</span><span class="n">seg_name</span><span class="o">`</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span> <span class="k">DEFAULT</span> <span class="k">NULL</span> <span class="k">COMMENT</span> <span class="s1">&#39;name字段分词编码后的结果&#39;</span><span class="p">;</span>
-<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="o">`</span><span class="n">apps</span><span class="o">`</span> <span class="k">ADD</span> <span class="n">FULLTEXT</span> <span class="k">INDEX</span> <span class="p">(</span><span class="o">`</span><span class="n">seg_name</span><span class="o">`</span><span class="p">);</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">ALTER</span> <span style="color: #0000ff">TABLE</span> `apps` <span style="color: #0000ff">ADD</span> <span style="color: #0000ff">COLUMN</span> `seg_name` VARCHAR(1024) <span style="color: #0000ff">DEFAULT</span> <span style="color: #0000ff">NULL</span> <span style="color: #0000ff">COMMENT</span> <span style="color: #a31515">&#39;name字段分词编码后的结果&#39;</span>;
+<span style="color: #0000ff">ALTER</span> <span style="color: #0000ff">TABLE</span> `apps` <span style="color: #0000ff">ADD</span> FULLTEXT <span style="color: #0000ff">INDEX</span> (`seg_name`);
 </pre></div>
 
 
 <p>API中对搜索关键词也进行分词并经编码，以下面的SQL来查询即可：</p>
-<div class="highlight"><pre><span></span><span class="o">#</span> <span class="err">其中</span><span class="o">%</span><span class="n">s</span><span class="err">用搜索关键词分词编码后的结果进行替换</span>
-<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="o">`</span><span class="n">apps</span><span class="o">`</span> <span class="k">WHERE</span> <span class="k">MATCH</span> <span class="p">(</span><span class="n">seg_name</span><span class="p">)</span> <span class="n">AGAINST</span> <span class="p">(</span><span class="s1">&#39;%s&#39;</span> <span class="k">IN</span> <span class="k">NATURAL</span> <span class="k">LANGUAGE</span> <span class="k">MODE</span><span class="p">);</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span># <span style="border: 1px solid #FF0000">其中</span>%s<span style="border: 1px solid #FF0000">用搜索关键词分词编码后的结果进行替换</span>
+<span style="color: #0000ff">SELECT</span> * <span style="color: #0000ff">FROM</span> `apps` <span style="color: #0000ff">WHERE</span> <span style="color: #0000ff">MATCH</span> (seg_name) AGAINST (<span style="color: #a31515">&#39;%s&#39;</span> <span style="color: #0000ff">IN</span> <span style="color: #0000ff">NATURAL</span> <span style="color: #0000ff">LANGUAGE</span> <span style="color: #0000ff">MODE</span>);
 </pre></div>
 
 

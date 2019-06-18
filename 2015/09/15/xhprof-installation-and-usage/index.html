@@ -65,7 +65,7 @@
             </header>
             <footer class="post-info">
               <abbr class="published" title="2015-09-15T00:00:00+08:00">
-                2015-09-15 Tue
+                2015-09-15 二
               </abbr>
               <address class="vcard author">
                 By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
@@ -77,38 +77,38 @@
 <p>Xhprof是一个PHP扩展，安装方式与一般PHP扩展一致。</p>
 <p>1.从<a href="https://pecl.php.net/package/xhprof">这里</a>下载最新的源码包。假设解压缩后的文件夹为xhprof</p>
 <p>2.编译安装</p>
-<div class="highlight"><pre><span></span><span class="nb">cd</span> xhprof/extension
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>cd xhprof/extension
 /path/to/php/bin/phpize
-./configure --with-php-config<span class="o">=</span>/path/to/php/bin/php-config
+./configure --with-php-config=/path/to/php/bin/php-config
 make
 make install
 </pre></div>
 
 
 <p>3.配置php.ini，添加以下几行：</p>
-<div class="highlight"><pre><span></span><span class="k">[xhprof]</span>
-<span class="na">extension</span><span class="o">=</span><span class="s">xhprof.so</span>
-<span class="na">xhprof.output_dir</span><span class="o">=</span><span class="s">&quot;/path/to/output/dir&quot;</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">[xhprof]</span>
+extension=<span style="color: #a31515">xhprof.so</span>
+xhprof.output_dir=<span style="color: #a31515">&quot;/path/to/output/dir&quot;</span>
 </pre></div>
 
 
 <p>4.执行<code>/path/to/php/bin/php -i | grep "xhprof"</code>，确认xhprof扩展能成功加载</p>
 <p>5.xhprof会将收集到的性能数据按文件（一次数据收集存放一个文件）存放在<code>xhprof.output_dir</code>指定的目录（注意添加写权限）下，并通过<code>xhprof/xhprof_html</code>目录下的PHP脚本程序提供网页形式的展示，所以还需配置web服务提供对该脚本程序的访问，以Nginx为例：</p>
-<div class="highlight"><pre><span></span><span class="nv">server</span> {
-    <span class="nv">listen</span> <span class="mi">8080</span><span class="c1">;</span>
-    <span class="nv">server_name</span> <span class="nv">localhost</span><span class="c1">;</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>server {
+    listen 8080<span style="color: #008000">;</span>
+    server_name localhost<span style="color: #008000">;</span>
 
-    <span class="nv">root</span> <span class="o">/</span><span class="nv">path</span><span class="o">/</span><span class="nv">to</span><span class="o">/</span><span class="nv">xhprof</span><span class="o">/</span><span class="nv">xhprof_html</span><span class="c1">;</span>
-    <span class="nv">location</span> <span class="o">/</span> {
-        <span class="nv">index</span> <span class="nv">index</span>.<span class="nv">html</span> <span class="nv">index</span>.<span class="nv">php</span><span class="c1">;</span>
-        <span class="nv">try_files</span> $<span class="nv">uri</span> <span class="o">/</span><span class="nv">index</span>.<span class="nv">php</span>?$<span class="nv">query_string</span><span class="c1">;</span>
+    root /path/to/xhprof/xhprof_html<span style="color: #008000">;</span>
+    location / {
+        index index.html index.php<span style="color: #008000">;</span>
+        try_files $uri /index.php?$query_string<span style="color: #008000">;</span>
     }
-    <span class="nv">location</span> <span class="o">~</span> \.<span class="nv">php</span>$ {
-        <span class="nv">fastcgi_split_path_info</span> <span class="o">^</span><span class="ss">(</span>.<span class="o">+</span>.<span class="nv">php</span><span class="ss">)(</span><span class="o">/</span>.<span class="o">+</span><span class="ss">)</span>$<span class="c1">;</span>
-        <span class="nv">fastcgi_pass</span> <span class="nv">unix</span>:<span class="o">/</span><span class="nv">var</span><span class="o">/</span><span class="nv">run</span><span class="o">/</span><span class="nv">php5</span><span class="o">-</span><span class="nv">fpm</span>.<span class="nv">sock</span><span class="c1">;</span>
-        <span class="nv">fastcgi_param</span> <span class="nv">SCRIPT_FILENAME</span> <span class="mh">$d</span><span class="nv">ocument_root</span><span class="mh">$fa</span><span class="nv">stcgi_script_name</span><span class="c1">;</span>
-        <span class="nv">fastcgi_index</span> <span class="nv">index</span>.<span class="nv">php</span><span class="c1">;</span>
-        <span class="k">include</span> <span class="nv">fastcgi_params</span><span class="c1">;</span>
+    location ~ \.php$ {
+        fastcgi_split_path_info ^<span style="color: #a31515">(</span>.+.php<span style="color: #a31515">)(</span>/.+<span style="color: #a31515">)</span>$<span style="color: #008000">;</span>
+        fastcgi_pass unix:/var/run/php5-fpm.sock<span style="color: #008000">;</span>
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name<span style="color: #008000">;</span>
+        fastcgi_index index.php<span style="color: #008000">;</span>
+        <span style="color: #0000ff">include</span> fastcgi_params<span style="color: #008000">;</span>
     }
 }
 </pre></div>
@@ -119,28 +119,28 @@ make install
 <p>8.要对目标PHP程序进行性能分析，需要在程序中注入xhprof提供的方法调用，来收集性能数据，然后通过命令行执行或HTTP请求来触发</p>
 <h3>使用</h3>
 <p>以Yii应用为例，xhprof方法调用注入示例如下：</p>
-<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
-<span class="c1">// 启动xhprof性能数据收集</span>
-<span class="nb">xhprof_enable</span><span class="p">(</span><span class="nx">XHPROF_FLAGS_CPU</span> <span class="o">+</span> <span class="nx">XHPROF_FLAGS_MEMORY</span><span class="p">);</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">&lt;?php</span>
+<span style="color: #008000">// 启动xhprof性能数据收集</span>
+xhprof_enable(XHPROF_FLAGS_CPU + XHPROF_FLAGS_MEMORY);
 
 
-<span class="c1">// 加载Yii应用代码，处理请求</span>
-<span class="nb">defined</span><span class="p">(</span><span class="s1">&#39;YII_DEBUG&#39;</span><span class="p">)</span> <span class="k">or</span> <span class="nb">define</span><span class="p">(</span><span class="s1">&#39;YII_DEBUG&#39;</span><span class="p">,</span><span class="k">true</span><span class="p">);</span>
-<span class="k">require_once</span><span class="p">(</span><span class="s1">&#39;path/to/yii/framework/yii.php&#39;</span><span class="p">);</span>
-<span class="nv">$configFile</span><span class="o">=</span><span class="s1">&#39;path/to/config/file.php&#39;</span><span class="p">;</span>
-<span class="nx">Yii</span><span class="o">::</span><span class="na">createWebApplication</span><span class="p">(</span><span class="nv">$configFile</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">run</span><span class="p">();</span>
+<span style="color: #008000">// 加载Yii应用代码，处理请求</span>
+defined(<span style="color: #a31515">&#39;YII_DEBUG&#39;</span>) <span style="color: #0000ff">or</span> define(<span style="color: #a31515">&#39;YII_DEBUG&#39;</span>,<span style="color: #0000ff">true</span>);
+<span style="color: #0000ff">require_once</span>(<span style="color: #a31515">&#39;path/to/yii/framework/yii.php&#39;</span>);
+$configFile=<span style="color: #a31515">&#39;path/to/config/file.php&#39;</span>;
+Yii::createWebApplication($configFile)-&gt;run();
 
 
-<span class="c1">// 结束收集</span>
-<span class="nv">$xhprof_data</span> <span class="o">=</span> <span class="nb">xhprof_disable</span><span class="p">();</span>
+<span style="color: #008000">// 结束收集</span>
+$xhprof_data = xhprof_disable();
 
-<span class="nv">$XHPROF_ROOT</span> <span class="o">=</span> <span class="s2">&quot;/path/to/xhprof/&quot;</span><span class="p">;</span>
-<span class="k">include_once</span> <span class="nv">$XHPROF_ROOT</span> <span class="o">.</span> <span class="s2">&quot;/xhprof_lib/utils/xhprof_lib.php&quot;</span><span class="p">;</span>
-<span class="k">include_once</span> <span class="nv">$XHPROF_ROOT</span> <span class="o">.</span> <span class="s2">&quot;/xhprof_lib/utils/xhprof_runs.php&quot;</span><span class="p">;</span>
+$XHPROF_ROOT = <span style="color: #a31515">&quot;/path/to/xhprof/&quot;</span>;
+<span style="color: #0000ff">include_once</span> $XHPROF_ROOT . <span style="color: #a31515">&quot;/xhprof_lib/utils/xhprof_lib.php&quot;</span>;
+<span style="color: #0000ff">include_once</span> $XHPROF_ROOT . <span style="color: #a31515">&quot;/xhprof_lib/utils/xhprof_runs.php&quot;</span>;
 
-<span class="nv">$xhprof_runs</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">XHProfRuns_Default</span><span class="p">();</span>
-<span class="c1">// 将此次收集的性能数据存放到xhprof.output_dir目录</span>
-<span class="nv">$run_id</span> <span class="o">=</span> <span class="nv">$xhprof_runs</span><span class="o">-&gt;</span><span class="na">save_run</span><span class="p">(</span><span class="nv">$xhprof_data</span><span class="p">,</span> <span class="s2">&quot;xhprof_yii&quot;</span><span class="p">);</span>
+$xhprof_runs = <span style="color: #0000ff">new</span> XHProfRuns_Default();
+<span style="color: #008000">// 将此次收集的性能数据存放到xhprof.output_dir目录</span>
+$run_id = $xhprof_runs-&gt;save_run($xhprof_data, <span style="color: #a31515">&quot;xhprof_yii&quot;</span>);
 </pre></div>
 
 
@@ -153,13 +153,13 @@ make install
 </ol>
 <p>可以组合使用三个可选值：<code>xhprof_enable(XHPROF_FLAGS_NO_BUILTINS | XHPROF_FLAGS_CPU | XHPROF_FLAGS_MEMORY);</code>。</p>
 <p><code>$options</code>是数组类型，可传入键为<code>ignored_functions</code>的值，表示忽略性能分析中的某些函数，如：</p>
-<div class="highlight"><pre><span></span><span class="n">xhprof_enable</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">array</span><span class="p">(</span>
-    <span class="s1">&#39;ignored_functions&#39;</span> <span class="o">=&gt;</span>  <span class="nb">array</span><span class="p">(</span>
-                                <span class="s1">&#39;call_user_func&#39;</span><span class="p">,</span>
-                                <span class="s1">&#39;call_user_func_array&#39;</span>
-                            <span class="p">)</span>
-    <span class="p">)</span>
-<span class="p">);</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>xhprof_enable(0, array(
+    <span style="color: #a31515">&#39;ignored_functions&#39;</span> =&gt;  array(
+                                <span style="color: #a31515">&#39;call_user_func&#39;</span>,
+                                <span style="color: #a31515">&#39;call_user_func_array&#39;</span>
+                            )
+    )
+);
 </pre></div>
 
 
@@ -176,29 +176,29 @@ make install
 <p>1.从 GitHub 上克隆代码库：<code>git clone https://github.com/preinheimer/xhprof.git xhprof-ui</code>（注：这里指定了克隆的目标目录为xhprof-ui，以区分原来部署的原生xhprof）</p>
 <p>2.依照原生XHprof安装步骤的2-7操作</p>
 <p>3.因为XHProf UI默认使用MySQL来存储性能数据，所以需要进行数据库配置。将文件<code>/path/to/xhprof-ui/xhprof_lib/</code>目录下的<code>config.sample.php</code>重命名为<code>config.php</code>，然后修改如下配置项：</p>
-<div class="highlight"><pre><span></span><span class="o">//</span> <span class="nv">Change</span> <span class="nv">these</span>:
-$<span class="nv">_xhprof</span>[<span class="s1">&#39;</span><span class="s">dbtype</span><span class="s1">&#39;</span>] <span class="o">=</span> <span class="s1">&#39;</span><span class="s">mysql</span><span class="s1">&#39;</span><span class="c1">; // Only relevant for PDO</span>
-$<span class="nv">_xhprof</span>[<span class="s1">&#39;</span><span class="s">dbhost</span><span class="s1">&#39;</span>] <span class="o">=</span> <span class="s1">&#39;</span><span class="s">localhost</span><span class="s1">&#39;</span><span class="c1">;</span>
-$<span class="nv">_xhprof</span>[<span class="s1">&#39;</span><span class="s">dbuser</span><span class="s1">&#39;</span>] <span class="o">=</span> <span class="s1">&#39;</span><span class="s">root</span><span class="s1">&#39;</span><span class="c1">;</span>
-$<span class="nv">_xhprof</span>[<span class="s1">&#39;</span><span class="s">dbpass</span><span class="s1">&#39;</span>] <span class="o">=</span> <span class="s1">&#39;</span><span class="s">password</span><span class="s1">&#39;</span><span class="c1">;</span>
-$<span class="nv">_xhprof</span>[<span class="s1">&#39;</span><span class="s">dbname</span><span class="s1">&#39;</span>] <span class="o">=</span> <span class="s1">&#39;</span><span class="s">xhprof</span><span class="s1">&#39;</span><span class="c1">;</span>
-$<span class="nv">_xhprof</span>[<span class="s1">&#39;</span><span class="s">dbadapter</span><span class="s1">&#39;</span>] <span class="o">=</span> <span class="s1">&#39;</span><span class="s">Pdo</span><span class="s1">&#39;</span><span class="c1">;</span>
-<span class="o">//</span> 注意：这里有个坑，$<span class="nv">_xhprof</span>[<span class="s1">&#39;</span><span class="s">servername</span><span class="s1">&#39;</span>]的值不能超过三个字符，这个配置项即对应数据表<span class="nv">details</span>的<span class="nv">server_id</span>字段
-$<span class="nv">_xhprof</span>[<span class="s1">&#39;</span><span class="s">servername</span><span class="s1">&#39;</span>] <span class="o">=</span> <span class="s1">&#39;</span><span class="s">myserver</span><span class="s1">&#39;</span><span class="c1">;</span>
-$<span class="nv">_xhprof</span>[<span class="s1">&#39;</span><span class="s">namespace</span><span class="s1">&#39;</span>] <span class="o">=</span> <span class="s1">&#39;</span><span class="s">myapp</span><span class="s1">&#39;</span><span class="c1">;</span>
-$<span class="nv">_xhprof</span>[<span class="s1">&#39;</span><span class="s">url</span><span class="s1">&#39;</span>] <span class="o">=</span> <span class="s1">&#39;</span><span class="s">http://url/to/xhprof/xhprof_html</span><span class="s1">&#39;</span><span class="c1">;</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>// Change these:
+$_xhprof[<span style="color: #a31515">&#39;dbtype&#39;</span>] = <span style="color: #a31515">&#39;mysql&#39;</span><span style="color: #008000">; // Only relevant for PDO</span>
+$_xhprof[<span style="color: #a31515">&#39;dbhost&#39;</span>] = <span style="color: #a31515">&#39;localhost&#39;</span><span style="color: #008000">;</span>
+$_xhprof[<span style="color: #a31515">&#39;dbuser&#39;</span>] = <span style="color: #a31515">&#39;root&#39;</span><span style="color: #008000">;</span>
+$_xhprof[<span style="color: #a31515">&#39;dbpass&#39;</span>] = <span style="color: #a31515">&#39;password&#39;</span><span style="color: #008000">;</span>
+$_xhprof[<span style="color: #a31515">&#39;dbname&#39;</span>] = <span style="color: #a31515">&#39;xhprof&#39;</span><span style="color: #008000">;</span>
+$_xhprof[<span style="color: #a31515">&#39;dbadapter&#39;</span>] = <span style="color: #a31515">&#39;Pdo&#39;</span><span style="color: #008000">;</span>
+// 注意：这里有个坑，$_xhprof[<span style="color: #a31515">&#39;servername&#39;</span>]的值不能超过三个字符，这个配置项即对应数据表details的server_id字段
+$_xhprof[<span style="color: #a31515">&#39;servername&#39;</span>] = <span style="color: #a31515">&#39;myserver&#39;</span><span style="color: #008000">;</span>
+$_xhprof[<span style="color: #a31515">&#39;namespace&#39;</span>] = <span style="color: #a31515">&#39;myapp&#39;</span><span style="color: #008000">;</span>
+$_xhprof[<span style="color: #a31515">&#39;url&#39;</span>] = <span style="color: #a31515">&#39;http://url/to/xhprof/xhprof_html&#39;</span><span style="color: #008000">;</span>
 
-<span class="o">//</span><span class="nv">These</span> <span class="nv">are</span> <span class="nv">good</span> <span class="k">for</span> <span class="nv">linux</span> <span class="nv">and</span> <span class="nv">its</span> <span class="nv">derivatives</span>.
-<span class="cm">/*</span>
-<span class="cm">$_xhprof[&#39;dot_binary&#39;]  = &#39;/usr/bin/dot&#39;;</span>
-<span class="cm">$_xhprof[&#39;dot_tempdir&#39;] = &#39;/tmp&#39;;</span>
-<span class="cm">$_xhprof[&#39;dot_errfile&#39;] = &#39;/tmp/xh_dot.err&#39;;</span>
-<span class="cm">*/</span>
+//These are good <span style="color: #0000ff">for</span> linux and its derivatives.
+<span style="color: #008000">/*</span>
+<span style="color: #008000">$_xhprof[&#39;dot_binary&#39;]  = &#39;/usr/bin/dot&#39;;</span>
+<span style="color: #008000">$_xhprof[&#39;dot_tempdir&#39;] = &#39;/tmp&#39;;</span>
+<span style="color: #008000">$_xhprof[&#39;dot_errfile&#39;] = &#39;/tmp/xh_dot.err&#39;;</span>
+<span style="color: #008000">*/</span>
 
-<span class="o">//</span> <span class="mh">$c</span><span class="nv">ontrolIPs</span> <span class="o">=</span> <span class="nv">false</span><span class="c1">; //Disables access controlls completely. </span>
-<span class="mh">$c</span><span class="nv">ontrolIPs</span> <span class="o">=</span> <span class="nv">array</span><span class="ss">()</span><span class="c1">;</span>
-<span class="mh">$c</span><span class="nv">ontrolIPs</span>[] <span class="o">=</span> <span class="s2">&quot;</span><span class="s">127.0.0.1</span><span class="s2">&quot;</span><span class="c1">;   // localhost, you&#39;ll want to add your own ip here</span>
-<span class="mh">$c</span><span class="nv">ontrolIPs</span>[] <span class="o">=</span> <span class="s2">&quot;</span><span class="s">::1</span><span class="s2">&quot;</span><span class="c1">;         // localhost IP v6</span>
+// $controlIPs = false<span style="color: #008000">; //Disables access controlls completely. </span>
+$controlIPs = array<span style="color: #a31515">()</span><span style="color: #008000">;</span>
+$controlIPs[] = <span style="color: #a31515">&quot;127.0.0.1&quot;</span><span style="color: #008000">;   // localhost, you&#39;ll want to add your own ip here</span>
+$controlIPs[] = <span style="color: #a31515">&quot;::1&quot;</span><span style="color: #008000">;         // localhost IP v6</span>
 </pre></div>
 
 

@@ -65,7 +65,7 @@
             </header>
             <footer class="post-info">
               <abbr class="published" title="2018-05-14T00:00:00+08:00">
-                2018-05-14 Mon
+                2018-05-14 一
               </abbr>
               <address class="vcard author">
                 By <a class="url fn" href="../../../../author/xiayf.html">xiayf</a>
@@ -73,134 +73,134 @@
             </footer><!-- /.post-info -->
             <div class="entry-content">
               <p>1.pom.xml 中添加如下属性配置：</p>
-<div class="highlight"><pre><span></span><span class="nt">&lt;properties&gt;</span>
-    <span class="c">&lt;!-- protobuf paths --&gt;</span>
-    <span class="nt">&lt;protobuf.input.directory&gt;</span>${project.basedir}/src/main/protobuf<span class="nt">&lt;/protobuf.input.directory&gt;</span>
-    <span class="nt">&lt;protobuf.output.directory&gt;</span>${project.build.directory}/generated-sources<span class="nt">&lt;/protobuf.output.directory&gt;</span>
-    <span class="c">&lt;!-- library versions --&gt;</span>
-    <span class="nt">&lt;build-helper-maven-plugin.version&gt;</span>3.0.0<span class="nt">&lt;/build-helper-maven-plugin.version&gt;</span>
-    <span class="nt">&lt;maven-antrun-plugin.version&gt;</span>1.8<span class="nt">&lt;/maven-antrun-plugin.version&gt;</span>
-    <span class="nt">&lt;maven-dependency-plugin.version&gt;</span>3.0.2<span class="nt">&lt;/maven-dependency-plugin.version&gt;</span>
-    <span class="nt">&lt;os-maven-plugin.version&gt;</span>1.5.0.Final<span class="nt">&lt;/os-maven-plugin.version&gt;</span>
-    <span class="nt">&lt;protobuf.version&gt;</span>2.5.0<span class="nt">&lt;/protobuf.version&gt;</span>
-<span class="nt">&lt;/properties&gt;</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>&lt;properties&gt;
+    <span style="color: #008000">&lt;!-- protobuf paths --&gt;</span>
+    &lt;protobuf.input.directory&gt;${project.basedir}/src/main/protobuf&lt;/protobuf.input.directory&gt;
+    &lt;protobuf.output.directory&gt;${project.build.directory}/generated-sources&lt;/protobuf.output.directory&gt;
+    <span style="color: #008000">&lt;!-- library versions --&gt;</span>
+    &lt;build-helper-maven-plugin.version&gt;3.0.0&lt;/build-helper-maven-plugin.version&gt;
+    &lt;maven-antrun-plugin.version&gt;1.8&lt;/maven-antrun-plugin.version&gt;
+    &lt;maven-dependency-plugin.version&gt;3.0.2&lt;/maven-dependency-plugin.version&gt;
+    &lt;os-maven-plugin.version&gt;1.5.0.Final&lt;/os-maven-plugin.version&gt;
+    &lt;protobuf.version&gt;2.5.0&lt;/protobuf.version&gt;
+&lt;/properties&gt;
 </pre></div>
 
 
 <p>2.添加 protobuf-java 库依赖</p>
-<div class="highlight"><pre><span></span><span class="nt">&lt;dependencies&gt;</span>
-    <span class="nt">&lt;dependency&gt;</span>
-        <span class="nt">&lt;groupId&gt;</span>com.google.protobuf<span class="nt">&lt;/groupId&gt;</span>
-        <span class="nt">&lt;artifactId&gt;</span>protobuf-java<span class="nt">&lt;/artifactId&gt;</span>
-        <span class="nt">&lt;version&gt;</span>${protobuf.version}<span class="nt">&lt;/version&gt;</span>
-    <span class="nt">&lt;/dependency&gt;</span>
-<span class="nt">&lt;/dependencies&gt;</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>&lt;dependencies&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;com.google.protobuf&lt;/groupId&gt;
+        &lt;artifactId&gt;protobuf-java&lt;/artifactId&gt;
+        &lt;version&gt;${protobuf.version}&lt;/version&gt;
+    &lt;/dependency&gt;
+&lt;/dependencies&gt;
 </pre></div>
 
 
 <p>3.添加 maven 扩展：</p>
-<div class="highlight"><pre><span></span><span class="nt">&lt;build&gt;</span>
-    <span class="nt">&lt;extensions&gt;</span>
-        <span class="c">&lt;!-- provides os.detected.classifier (i.e. linux-x86_64, osx-x86_64) property --&gt;</span>
-        <span class="nt">&lt;extension&gt;</span>
-            <span class="nt">&lt;groupId&gt;</span>kr.motd.maven<span class="nt">&lt;/groupId&gt;</span>
-            <span class="nt">&lt;artifactId&gt;</span>os-maven-plugin<span class="nt">&lt;/artifactId&gt;</span>
-            <span class="nt">&lt;version&gt;</span>${os-maven-plugin.version}<span class="nt">&lt;/version&gt;</span>
-        <span class="nt">&lt;/extension&gt;</span>
-    <span class="nt">&lt;/extensions&gt;</span>
-<span class="nt">&lt;/build&gt;</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>&lt;build&gt;
+    &lt;extensions&gt;
+        <span style="color: #008000">&lt;!-- provides os.detected.classifier (i.e. linux-x86_64, osx-x86_64) property --&gt;</span>
+        &lt;extension&gt;
+            &lt;groupId&gt;kr.motd.maven&lt;/groupId&gt;
+            &lt;artifactId&gt;os-maven-plugin&lt;/artifactId&gt;
+            &lt;version&gt;${os-maven-plugin.version}&lt;/version&gt;
+        &lt;/extension&gt;
+    &lt;/extensions&gt;
+&lt;/build&gt;
 </pre></div>
 
 
 <p>4.配置构建插件：</p>
-<div class="highlight"><pre><span></span><span class="nt">&lt;build&gt;</span>
-    <span class="nt">&lt;plugins&gt;</span>
-        <span class="c">&lt;!-- copy protoc binary into build directory --&gt;</span>
-        <span class="nt">&lt;plugin&gt;</span>
-            <span class="nt">&lt;groupId&gt;</span>org.apache.maven.plugins<span class="nt">&lt;/groupId&gt;</span>
-            <span class="nt">&lt;artifactId&gt;</span>maven-dependency-plugin<span class="nt">&lt;/artifactId&gt;</span>
-            <span class="nt">&lt;version&gt;</span>${maven-dependency-plugin.version}<span class="nt">&lt;/version&gt;</span>
-            <span class="nt">&lt;executions&gt;</span>
-                <span class="nt">&lt;execution&gt;</span>
-                    <span class="nt">&lt;id&gt;</span>copy-protoc<span class="nt">&lt;/id&gt;</span>
-                    <span class="nt">&lt;phase&gt;</span>generate-sources<span class="nt">&lt;/phase&gt;</span>
-                    <span class="nt">&lt;goals&gt;</span>
-                        <span class="nt">&lt;goal&gt;</span>copy<span class="nt">&lt;/goal&gt;</span>
-                    <span class="nt">&lt;/goals&gt;</span>
-                    <span class="nt">&lt;configuration&gt;</span>
-                        <span class="nt">&lt;artifactItems&gt;</span>
-                            <span class="nt">&lt;artifactItem&gt;</span>
-                                <span class="nt">&lt;groupId&gt;</span>com.google.protobuf<span class="nt">&lt;/groupId&gt;</span>
-                                <span class="nt">&lt;artifactId&gt;</span>protoc<span class="nt">&lt;/artifactId&gt;</span>
-                                <span class="nt">&lt;version&gt;</span>${protobuf.version}<span class="nt">&lt;/version&gt;</span>
-                                <span class="nt">&lt;classifier&gt;</span>${os.detected.classifier}<span class="nt">&lt;/classifier&gt;</span>
-                                <span class="nt">&lt;type&gt;</span>exe<span class="nt">&lt;/type&gt;</span>
-                                <span class="nt">&lt;overWrite&gt;</span>true<span class="nt">&lt;/overWrite&gt;</span>
-                                <span class="nt">&lt;outputDirectory&gt;</span>${project.build.directory}<span class="nt">&lt;/outputDirectory&gt;</span>
-                            <span class="nt">&lt;/artifactItem&gt;</span>
-                        <span class="nt">&lt;/artifactItems&gt;</span>
-                    <span class="nt">&lt;/configuration&gt;</span>
-                <span class="nt">&lt;/execution&gt;</span>
-            <span class="nt">&lt;/executions&gt;</span>
-        <span class="nt">&lt;/plugin&gt;</span>
-        <span class="c">&lt;!-- compile proto buffer files using copied protoc binary --&gt;</span>
-        <span class="nt">&lt;plugin&gt;</span>
-            <span class="nt">&lt;groupId&gt;</span>org.apache.maven.plugins<span class="nt">&lt;/groupId&gt;</span>
-            <span class="nt">&lt;artifactId&gt;</span>maven-antrun-plugin<span class="nt">&lt;/artifactId&gt;</span>
-            <span class="nt">&lt;version&gt;</span>${maven-antrun-plugin.version}<span class="nt">&lt;/version&gt;</span>
-            <span class="nt">&lt;executions&gt;</span>
-                <span class="nt">&lt;execution&gt;</span>
-                    <span class="nt">&lt;id&gt;</span>exec-protoc<span class="nt">&lt;/id&gt;</span>
-                    <span class="nt">&lt;phase&gt;</span>generate-sources<span class="nt">&lt;/phase&gt;</span>
-                    <span class="nt">&lt;configuration&gt;</span>
-                        <span class="nt">&lt;target&gt;</span>
-                            <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;protoc.filename&quot;</span> <span class="na">value=</span><span class="s">&quot;protoc-${protobuf.version}-${os.detected.classifier}.exe&quot;</span><span class="nt">/&gt;</span>
-                            <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">&quot;protoc.filepath&quot;</span> <span class="na">value=</span><span class="s">&quot;${project.build.directory}/${protoc.filename}&quot;</span><span class="nt">/&gt;</span>
-                            <span class="nt">&lt;chmod</span> <span class="na">file=</span><span class="s">&quot;${protoc.filepath}&quot;</span> <span class="na">perm=</span><span class="s">&quot;ugo+rx&quot;</span><span class="nt">/&gt;</span>
-                            <span class="nt">&lt;mkdir</span> <span class="na">dir=</span><span class="s">&quot;${protobuf.output.directory}&quot;</span> <span class="nt">/&gt;</span>
-                            <span class="nt">&lt;path</span> <span class="na">id=</span><span class="s">&quot;protobuf.input.filepaths.path&quot;</span><span class="nt">&gt;</span>
-                                <span class="nt">&lt;fileset</span> <span class="na">dir=</span><span class="s">&quot;${protobuf.input.directory}&quot;</span><span class="nt">&gt;</span>
-                                    <span class="nt">&lt;include</span> <span class="na">name=</span><span class="s">&quot;**/*.proto&quot;</span><span class="nt">/&gt;</span>
-                                <span class="nt">&lt;/fileset&gt;</span>
-                            <span class="nt">&lt;/path&gt;</span>
-                            <span class="nt">&lt;pathconvert</span> <span class="na">pathsep=</span><span class="s">&quot; &quot;</span> <span class="na">property=</span><span class="s">&quot;protobuf.input.filepaths&quot;</span> <span class="na">refid=</span><span class="s">&quot;protobuf.input.filepaths.path&quot;</span><span class="nt">/&gt;</span>
-                            <span class="nt">&lt;exec</span> <span class="na">executable=</span><span class="s">&quot;${protoc.filepath}&quot;</span> <span class="na">failonerror=</span><span class="s">&quot;true&quot;</span><span class="nt">&gt;</span>
-                                <span class="nt">&lt;arg</span> <span class="na">value=</span><span class="s">&quot;-I&quot;</span><span class="nt">/&gt;</span>
-                                <span class="nt">&lt;arg</span> <span class="na">value=</span><span class="s">&quot;${protobuf.input.directory}&quot;</span><span class="nt">/&gt;</span>
-                                <span class="nt">&lt;arg</span> <span class="na">value=</span><span class="s">&quot;--java_out&quot;</span><span class="nt">/&gt;</span>
-                                <span class="nt">&lt;arg</span> <span class="na">value=</span><span class="s">&quot;${protobuf.output.directory}&quot;</span><span class="nt">/&gt;</span>
-                                <span class="nt">&lt;arg</span> <span class="na">line=</span><span class="s">&quot;${protobuf.input.filepaths}&quot;</span><span class="nt">/&gt;</span>
-                            <span class="nt">&lt;/exec&gt;</span>
-                        <span class="nt">&lt;/target&gt;</span>
-                    <span class="nt">&lt;/configuration&gt;</span>
-                    <span class="nt">&lt;goals&gt;</span>
-                        <span class="nt">&lt;goal&gt;</span>run<span class="nt">&lt;/goal&gt;</span>
-                    <span class="nt">&lt;/goals&gt;</span>
-                <span class="nt">&lt;/execution&gt;</span>
-            <span class="nt">&lt;/executions&gt;</span>
-        <span class="nt">&lt;/plugin&gt;</span>
-        <span class="c">&lt;!-- add generated proto buffer classes into the package --&gt;</span>
-        <span class="nt">&lt;plugin&gt;</span>
-            <span class="nt">&lt;groupId&gt;</span>org.codehaus.mojo<span class="nt">&lt;/groupId&gt;</span>
-            <span class="nt">&lt;artifactId&gt;</span>build-helper-maven-plugin<span class="nt">&lt;/artifactId&gt;</span>
-            <span class="nt">&lt;version&gt;</span>${build-helper-maven-plugin.version}<span class="nt">&lt;/version&gt;</span>
-            <span class="nt">&lt;executions&gt;</span>
-                <span class="nt">&lt;execution&gt;</span>
-                    <span class="nt">&lt;id&gt;</span>add-classes<span class="nt">&lt;/id&gt;</span>
-                    <span class="nt">&lt;phase&gt;</span>generate-sources<span class="nt">&lt;/phase&gt;</span>
-                    <span class="nt">&lt;goals&gt;</span>
-                        <span class="nt">&lt;goal&gt;</span>add-source<span class="nt">&lt;/goal&gt;</span>
-                    <span class="nt">&lt;/goals&gt;</span>
-                    <span class="nt">&lt;configuration&gt;</span>
-                        <span class="nt">&lt;sources&gt;</span>
-                            <span class="nt">&lt;source&gt;</span>${protobuf.output.directory}<span class="nt">&lt;/source&gt;</span>
-                        <span class="nt">&lt;/sources&gt;</span>
-                    <span class="nt">&lt;/configuration&gt;</span>
-                <span class="nt">&lt;/execution&gt;</span>
-            <span class="nt">&lt;/executions&gt;</span>
-        <span class="nt">&lt;/plugin&gt;</span>
-    <span class="nt">&lt;/plugins&gt;</span>
-<span class="nt">&lt;/build&gt;</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>&lt;build&gt;
+    &lt;plugins&gt;
+        <span style="color: #008000">&lt;!-- copy protoc binary into build directory --&gt;</span>
+        &lt;plugin&gt;
+            &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+            &lt;artifactId&gt;maven-dependency-plugin&lt;/artifactId&gt;
+            &lt;version&gt;${maven-dependency-plugin.version}&lt;/version&gt;
+            &lt;executions&gt;
+                &lt;execution&gt;
+                    &lt;id&gt;copy-protoc&lt;/id&gt;
+                    &lt;phase&gt;generate-sources&lt;/phase&gt;
+                    &lt;goals&gt;
+                        &lt;goal&gt;copy&lt;/goal&gt;
+                    &lt;/goals&gt;
+                    &lt;configuration&gt;
+                        &lt;artifactItems&gt;
+                            &lt;artifactItem&gt;
+                                &lt;groupId&gt;com.google.protobuf&lt;/groupId&gt;
+                                &lt;artifactId&gt;protoc&lt;/artifactId&gt;
+                                &lt;version&gt;${protobuf.version}&lt;/version&gt;
+                                &lt;classifier&gt;${os.detected.classifier}&lt;/classifier&gt;
+                                &lt;type&gt;exe&lt;/type&gt;
+                                &lt;overWrite&gt;true&lt;/overWrite&gt;
+                                &lt;outputDirectory&gt;${project.build.directory}&lt;/outputDirectory&gt;
+                            &lt;/artifactItem&gt;
+                        &lt;/artifactItems&gt;
+                    &lt;/configuration&gt;
+                &lt;/execution&gt;
+            &lt;/executions&gt;
+        &lt;/plugin&gt;
+        <span style="color: #008000">&lt;!-- compile proto buffer files using copied protoc binary --&gt;</span>
+        &lt;plugin&gt;
+            &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+            &lt;artifactId&gt;maven-antrun-plugin&lt;/artifactId&gt;
+            &lt;version&gt;${maven-antrun-plugin.version}&lt;/version&gt;
+            &lt;executions&gt;
+                &lt;execution&gt;
+                    &lt;id&gt;exec-protoc&lt;/id&gt;
+                    &lt;phase&gt;generate-sources&lt;/phase&gt;
+                    &lt;configuration&gt;
+                        &lt;target&gt;
+                            &lt;property name=<span style="color: #a31515">&quot;protoc.filename&quot;</span> value=<span style="color: #a31515">&quot;protoc-${protobuf.version}-${os.detected.classifier}.exe&quot;</span>/&gt;
+                            &lt;property name=<span style="color: #a31515">&quot;protoc.filepath&quot;</span> value=<span style="color: #a31515">&quot;${project.build.directory}/${protoc.filename}&quot;</span>/&gt;
+                            &lt;chmod file=<span style="color: #a31515">&quot;${protoc.filepath}&quot;</span> perm=<span style="color: #a31515">&quot;ugo+rx&quot;</span>/&gt;
+                            &lt;mkdir dir=<span style="color: #a31515">&quot;${protobuf.output.directory}&quot;</span> /&gt;
+                            &lt;path id=<span style="color: #a31515">&quot;protobuf.input.filepaths.path&quot;</span>&gt;
+                                &lt;fileset dir=<span style="color: #a31515">&quot;${protobuf.input.directory}&quot;</span>&gt;
+                                    &lt;include name=<span style="color: #a31515">&quot;**/*.proto&quot;</span>/&gt;
+                                &lt;/fileset&gt;
+                            &lt;/path&gt;
+                            &lt;pathconvert pathsep=<span style="color: #a31515">&quot; &quot;</span> property=<span style="color: #a31515">&quot;protobuf.input.filepaths&quot;</span> refid=<span style="color: #a31515">&quot;protobuf.input.filepaths.path&quot;</span>/&gt;
+                            &lt;exec executable=<span style="color: #a31515">&quot;${protoc.filepath}&quot;</span> failonerror=<span style="color: #a31515">&quot;true&quot;</span>&gt;
+                                &lt;arg value=<span style="color: #a31515">&quot;-I&quot;</span>/&gt;
+                                &lt;arg value=<span style="color: #a31515">&quot;${protobuf.input.directory}&quot;</span>/&gt;
+                                &lt;arg value=<span style="color: #a31515">&quot;--java_out&quot;</span>/&gt;
+                                &lt;arg value=<span style="color: #a31515">&quot;${protobuf.output.directory}&quot;</span>/&gt;
+                                &lt;arg line=<span style="color: #a31515">&quot;${protobuf.input.filepaths}&quot;</span>/&gt;
+                            &lt;/exec&gt;
+                        &lt;/target&gt;
+                    &lt;/configuration&gt;
+                    &lt;goals&gt;
+                        &lt;goal&gt;run&lt;/goal&gt;
+                    &lt;/goals&gt;
+                &lt;/execution&gt;
+            &lt;/executions&gt;
+        &lt;/plugin&gt;
+        <span style="color: #008000">&lt;!-- add generated proto buffer classes into the package --&gt;</span>
+        &lt;plugin&gt;
+            &lt;groupId&gt;org.codehaus.mojo&lt;/groupId&gt;
+            &lt;artifactId&gt;build-helper-maven-plugin&lt;/artifactId&gt;
+            &lt;version&gt;${build-helper-maven-plugin.version}&lt;/version&gt;
+            &lt;executions&gt;
+                &lt;execution&gt;
+                    &lt;id&gt;add-classes&lt;/id&gt;
+                    &lt;phase&gt;generate-sources&lt;/phase&gt;
+                    &lt;goals&gt;
+                        &lt;goal&gt;add-source&lt;/goal&gt;
+                    &lt;/goals&gt;
+                    &lt;configuration&gt;
+                        &lt;sources&gt;
+                            &lt;source&gt;${protobuf.output.directory}&lt;/source&gt;
+                        &lt;/sources&gt;
+                    &lt;/configuration&gt;
+                &lt;/execution&gt;
+            &lt;/executions&gt;
+        &lt;/plugin&gt;
+    &lt;/plugins&gt;
+&lt;/build&gt;
 </pre></div>
 
 

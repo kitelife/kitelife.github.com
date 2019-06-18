@@ -65,7 +65,7 @@
             </header>
             <footer class="post-info">
               <abbr class="published" title="2015-03-22T00:00:00+08:00">
-                2015-03-22 Sun
+                2015-03-22 日
               </abbr>
               <address class="vcard author">
                 By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
@@ -89,65 +89,65 @@
 当系统/应用需要使用某个依赖组件时，容器根据配置信息构建一个组件对象返回给系统/应用。</p>
 <p>对于Web框架来说，基于Ioc容器可以将框架的功能拆解成多个组件，按需配置调用。</p>
 <p>Slim的IoC容器类为：<code>\Slim\Helper\Set</code>，以单例request为例，当调用request对象时<code>$app-&gt;request</code>，先触发Slim类的魔术方法<code>__get</code>，其实现如下所示：</p>
-<div class="highlight"><pre><span></span><span class="x">public function __get($name)</span>
-<span class="x">{</span>
-<span class="x">    return $this-&gt;container-&gt;get($name);</span>
-<span class="x">}</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>public function __get($name)
+{
+    return $this-&gt;container-&gt;get($name);
+}
 </pre></div>
 
 
 <p>而容器类Set的get方法实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">/**</span>
-<span class="x"> * Get data value with key</span>
-<span class="x"> * @param  string $key     The data key</span>
-<span class="x"> * @param  mixed  $default The value to return if data key does not exist</span>
-<span class="x"> * @return mixed           The data value, or the default value</span>
-<span class="x"> */</span>
-<span class="x">public function get($key, $default = null)</span>
-<span class="x">{</span>
-<span class="x">    if ($this-&gt;has($key)) {</span>
-<span class="x">        $isInvokable = is_object($this-&gt;data[$this-&gt;normalizeKey($key)]) &amp;&amp; method_exists($this-&gt;data[$this-&gt;normalizeKey($key)], &#39;__invoke&#39;);</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>/**
+ * Get data value with key
+ * @param  string $key     The data key
+ * @param  mixed  $default The value to return if data key does not exist
+ * @return mixed           The data value, or the default value
+ */
+public function get($key, $default = null)
+{
+    if ($this-&gt;has($key)) {
+        $isInvokable = is_object($this-&gt;data[$this-&gt;normalizeKey($key)]) &amp;&amp; method_exists($this-&gt;data[$this-&gt;normalizeKey($key)], &#39;__invoke&#39;);
 
-<span class="x">        // 注意这里的$this，在初始化组件时，将当前容器对象作为参数传入</span>
-<span class="x">        // 从这里可以看到，容器里可以存放普通的配置信息（如settings），也可以存放组件配置</span>
-<span class="x">        return $isInvokable ? $this-&gt;data[$this-&gt;normalizeKey($key)]($this) : $this-&gt;data[$this-&gt;normalizeKey($key)];</span>
-<span class="x">    }</span>
+        // 注意这里的$this，在初始化组件时，将当前容器对象作为参数传入
+        // 从这里可以看到，容器里可以存放普通的配置信息（如settings），也可以存放组件配置
+        return $isInvokable ? $this-&gt;data[$this-&gt;normalizeKey($key)]($this) : $this-&gt;data[$this-&gt;normalizeKey($key)];
+    }
 
-<span class="x">    return $default;</span>
-<span class="x">}</span>
+    return $default;
+}
 </pre></div>
 
 
 <p>我们再来看看单例组件的实现，以request为例：</p>
-<div class="highlight"><pre><span></span><span class="x">// 注册单例组件request</span>
-<span class="x">$this-&gt;container-&gt;singleton(&#39;request&#39;, function ($c) {</span>
-<span class="x">    // request组件的实例化依赖于environment组件，</span>
-<span class="x">    // 而environment组件包含了$_SERVER以及进程标准输入的数据</span>
-<span class="x">    return new \Slim\Http\Request($c[&#39;environment&#39;]);</span>
-<span class="x">});</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>// 注册单例组件request
+$this-&gt;container-&gt;singleton(&#39;request&#39;, function ($c) {
+    // request组件的实例化依赖于environment组件，
+    // 而environment组件包含了$_SERVER以及进程标准输入的数据
+    return new \Slim\Http\Request($c[&#39;environment&#39;]);
+});
 </pre></div>
 
 
 <p>其中<code>singleton</code>方法的实现如下所示：</p>
-<div class="highlight"><pre><span></span><span class="x">/**</span>
-<span class="x"> * Ensure a value or object will remain globally unique</span>
-<span class="x"> * @param  string   $key   The value or object name</span>
-<span class="x"> * @param  \Closure $value The closure that defines the object</span>
-<span class="x"> * @return mixed</span>
-<span class="x"> */</span>
-<span class="x">public function singleton($key, $value)</span>
-<span class="x">{</span>
-<span class="x">    $this-&gt;set($key, function ($c) use ($value) {</span>
-<span class="x">        // 静态对象</span>
-<span class="x">        static $object;</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>/**
+ * Ensure a value or object will remain globally unique
+ * @param  string   $key   The value or object name
+ * @param  \Closure $value The closure that defines the object
+ * @return mixed
+ */
+public function singleton($key, $value)
+{
+    $this-&gt;set($key, function ($c) use ($value) {
+        // 静态对象
+        static $object;
 
-<span class="x">        if (null === $object) {</span>
-<span class="x">            $object = $value($c);</span>
-<span class="x">        }</span>
+        if (null === $object) {
+            $object = $value($c);
+        }
 
-<span class="x">        return $object;</span>
-<span class="x">    });</span>
-<span class="x">}</span>
+        return $object;
+    });
+}
 </pre></div>
 
 
@@ -156,229 +156,229 @@
 <p>应用中间件基于Rack协议实现，可以在应用对象调用之前或之后检查、分析、或修改应用环境变量、请求对象、响应对象。</p>
 <p>每个中间件类都继承自抽象类Middleware，且需要实现其抽象方法call。所有注册的中间件组成一个中间件栈，其结构类似于一个洋葱，先注册的中间件在里层，后注册的在外层，最里层的是应用对象自身，请求从外到里逐层进行处理，任何一层都可以根据条件直接响应请求或递归调用往里一层/下一个中间件。</p>
 <p>以中间件SessionCookie与MethodOverride为例，其call方法实现如下所示：</p>
-<div class="highlight"><pre><span></span><span class="x">// 中间件SessionCookie</span>
-<span class="x">public function call()</span>
-<span class="x">{</span>
-<span class="x">    // 加载session数据</span>
-<span class="x">    $this-&gt;loadSession();</span>
-<span class="x">    // 调用下一个中间件</span>
-<span class="x">    $this-&gt;next-&gt;call();</span>
-<span class="x">    // 保存session数据</span>
-<span class="x">    $this-&gt;saveSession();</span>
-<span class="x">}</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>// 中间件SessionCookie
+public function call()
+{
+    // 加载session数据
+    $this-&gt;loadSession();
+    // 调用下一个中间件
+    $this-&gt;next-&gt;call();
+    // 保存session数据
+    $this-&gt;saveSession();
+}
 
-<span class="x">// 中间件MethodOverride</span>
-<span class="x">public function call()</span>
-<span class="x">{</span>
-<span class="x">    $env = $this-&gt;app-&gt;environment();</span>
-<span class="x">    if (isset($env[&#39;HTTP_X_HTTP_METHOD_OVERRIDE&#39;])) {</span>
-<span class="x">        // Header commonly used by Backbone.js and others</span>
-<span class="x">        $env[&#39;slim.method_override.original_method&#39;] = $env[&#39;REQUEST_METHOD&#39;];</span>
-<span class="x">        $env[&#39;REQUEST_METHOD&#39;] = strtoupper($env[&#39;HTTP_X_HTTP_METHOD_OVERRIDE&#39;]);</span>
-<span class="x">    } elseif (isset($env[&#39;REQUEST_METHOD&#39;]) &amp;&amp; $env[&#39;REQUEST_METHOD&#39;] === &#39;POST&#39;) {</span>
-<span class="x">        // HTML Form Override</span>
-<span class="x">        $req = new \Slim\Http\Request($env);</span>
-<span class="x">        // $this-&gt;settings[&#39;key&#39;] 默认为_METHOD</span>
-<span class="x">        $method = $req-&gt;post($this-&gt;settings[&#39;key&#39;]);</span>
-<span class="x">        if ($method) {</span>
-<span class="x">            $env[&#39;slim.method_override.original_method&#39;] = $env[&#39;REQUEST_METHOD&#39;];</span>
-<span class="x">            $env[&#39;REQUEST_METHOD&#39;] = strtoupper($method);</span>
-<span class="x">        }</span>
-<span class="x">    }</span>
-<span class="x">    // 调用下一个中间件</span>
-<span class="x">    $this-&gt;next-&gt;call();</span>
-<span class="x">}</span>
+// 中间件MethodOverride
+public function call()
+{
+    $env = $this-&gt;app-&gt;environment();
+    if (isset($env[&#39;HTTP_X_HTTP_METHOD_OVERRIDE&#39;])) {
+        // Header commonly used by Backbone.js and others
+        $env[&#39;slim.method_override.original_method&#39;] = $env[&#39;REQUEST_METHOD&#39;];
+        $env[&#39;REQUEST_METHOD&#39;] = strtoupper($env[&#39;HTTP_X_HTTP_METHOD_OVERRIDE&#39;]);
+    } elseif (isset($env[&#39;REQUEST_METHOD&#39;]) &amp;&amp; $env[&#39;REQUEST_METHOD&#39;] === &#39;POST&#39;) {
+        // HTML Form Override
+        $req = new \Slim\Http\Request($env);
+        // $this-&gt;settings[&#39;key&#39;] 默认为_METHOD
+        $method = $req-&gt;post($this-&gt;settings[&#39;key&#39;]);
+        if ($method) {
+            $env[&#39;slim.method_override.original_method&#39;] = $env[&#39;REQUEST_METHOD&#39;];
+            $env[&#39;REQUEST_METHOD&#39;] = strtoupper($method);
+        }
+    }
+    // 调用下一个中间件
+    $this-&gt;next-&gt;call();
+}
 </pre></div>
 
 
 <hr>
 <p>路由级中间件可以是任何可被调用的东西（<code>is_callable</code>返回<code>true</code>）。在相关路由的回调触发之前，会逐个调用绑定到这个路由的所有路由级中间件，代码实现如下所示：</p>
-<div class="highlight"><pre><span></span><span class="x">// 路由类Route的dispatch方法：</span>
-<span class="x">/**</span>
-<span class="x"> * Dispatch route</span>
-<span class="x"> *</span>
-<span class="x"> * This method invokes the route object&#39;s callable. If middleware is</span>
-<span class="x"> * registered for the route, each callable middleware is invoked in</span>
-<span class="x"> * the order specified.</span>
-<span class="x"> *</span>
-<span class="x"> * @return bool</span>
-<span class="x"> */</span>
-<span class="x">public function dispatch()</span>
-<span class="x">{</span>
-<span class="x">    // 逐个调用绑定的路由级中间件，以当前路由对象作为参数传入</span>
-<span class="x">    foreach ($this-&gt;middleware as $mw) {</span>
-<span class="x">        call_user_func_array($mw, array($this));</span>
-<span class="x">    }</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>// 路由类Route的dispatch方法：
+/**
+ * Dispatch route
+ *
+ * This method invokes the route object&#39;s callable. If middleware is
+ * registered for the route, each callable middleware is invoked in
+ * the order specified.
+ *
+ * @return bool
+ */
+public function dispatch()
+{
+    // 逐个调用绑定的路由级中间件，以当前路由对象作为参数传入
+    foreach ($this-&gt;middleware as $mw) {
+        call_user_func_array($mw, array($this));
+    }
 
-<span class="x">    // 调用路由回调，并将通过路由模式从URL中正则匹配到的参数传入回调</span>
-<span class="x">    $return = call_user_func_array($this-&gt;getCallable(), array_values($this-&gt;getParams()));</span>
-<span class="x">    return ($return === false) ? false : true;</span>
-<span class="x">}</span>
+    // 调用路由回调，并将通过路由模式从URL中正则匹配到的参数传入回调
+    $return = call_user_func_array($this-&gt;getCallable(), array_values($this-&gt;getParams()));
+    return ($return === false) ? false : true;
+}
 </pre></div>
 
 
 <h4>路由匹配</h4>
 <p>先来看看Slim应用对象的call方法：</p>
-<div class="highlight"><pre><span></span><span class="x">/**</span>
-<span class="x"> * Call</span>
-<span class="x"> *</span>
-<span class="x"> * This method finds and iterates all route objects that match the current request URI.</span>
-<span class="x"> */</span>
-<span class="x">public function call()</span>
-<span class="x">{</span>
-<span class="x">    try {</span>
-<span class="x">        if (isset($this-&gt;environment[&#39;slim.flash&#39;])) {</span>
-<span class="x">            $this-&gt;view()-&gt;setData(&#39;flash&#39;, $this-&gt;environment[&#39;slim.flash&#39;]);</span>
-<span class="x">        }</span>
-<span class="x">        $this-&gt;applyHook(&#39;slim.before&#39;);</span>
-<span class="x">        ob_start();</span>
-<span class="x">        $this-&gt;applyHook(&#39;slim.before.router&#39;);</span>
-<span class="x">        $dispatched = false;</span>
-<span class="x">        // 路由匹配</span>
-<span class="x">        $matchedRoutes = $this-&gt;router-&gt;getMatchedRoutes($this-&gt;request-&gt;getMethod(), $this-&gt;request-&gt;getResourceUri());</span>
-<span class="x">        // 逐个路由分发执行</span>
-<span class="x">        foreach ($matchedRoutes as $route) {</span>
-<span class="x">            try {</span>
-<span class="x">                $this-&gt;applyHook(&#39;slim.before.dispatch&#39;);</span>
-<span class="x">                $dispatched = $route-&gt;dispatch();</span>
-<span class="x">                $this-&gt;applyHook(&#39;slim.after.dispatch&#39;);</span>
-<span class="x">                if ($dispatched) {</span>
-<span class="x">                    break;</span>
-<span class="x">                }</span>
-<span class="x">            } catch (\Slim\Exception\Pass $e) {</span>
-<span class="x">                continue;</span>
-<span class="x">            }</span>
-<span class="x">        }</span>
-<span class="x">        // 当路由的回调抛出非Pass异常时，则会响应404</span>
-<span class="x">        // 这貌似不好吧？</span>
-<span class="x">        if (!$dispatched) {</span>
-<span class="x">            $this-&gt;notFound();</span>
-<span class="x">        }</span>
-<span class="x">        $this-&gt;applyHook(&#39;slim.after.router&#39;);</span>
-<span class="x">        $this-&gt;stop();</span>
-<span class="x">    } catch (\Slim\Exception\Stop $e) {</span>
-<span class="x">        $this-&gt;response()-&gt;write(ob_get_clean());</span>
-<span class="x">    } catch (\Exception $e) {</span>
-<span class="x">        if ($this-&gt;config(&#39;debug&#39;)) {</span>
-<span class="x">            throw $e;</span>
-<span class="x">        } else {</span>
-<span class="x">            try {</span>
-<span class="x">                $this-&gt;response()-&gt;write(ob_get_clean());</span>
-<span class="x">                $this-&gt;error($e);</span>
-<span class="x">            } catch (\Slim\Exception\Stop $e) {</span>
-<span class="x">                // Do nothing</span>
-<span class="x">            }</span>
-<span class="x">        }</span>
-<span class="x">    }</span>
-<span class="x">}</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>/**
+ * Call
+ *
+ * This method finds and iterates all route objects that match the current request URI.
+ */
+public function call()
+{
+    try {
+        if (isset($this-&gt;environment[&#39;slim.flash&#39;])) {
+            $this-&gt;view()-&gt;setData(&#39;flash&#39;, $this-&gt;environment[&#39;slim.flash&#39;]);
+        }
+        $this-&gt;applyHook(&#39;slim.before&#39;);
+        ob_start();
+        $this-&gt;applyHook(&#39;slim.before.router&#39;);
+        $dispatched = false;
+        // 路由匹配
+        $matchedRoutes = $this-&gt;router-&gt;getMatchedRoutes($this-&gt;request-&gt;getMethod(), $this-&gt;request-&gt;getResourceUri());
+        // 逐个路由分发执行
+        foreach ($matchedRoutes as $route) {
+            try {
+                $this-&gt;applyHook(&#39;slim.before.dispatch&#39;);
+                $dispatched = $route-&gt;dispatch();
+                $this-&gt;applyHook(&#39;slim.after.dispatch&#39;);
+                if ($dispatched) {
+                    break;
+                }
+            } catch (\Slim\Exception\Pass $e) {
+                continue;
+            }
+        }
+        // 当路由的回调抛出非Pass异常时，则会响应404
+        // 这貌似不好吧？
+        if (!$dispatched) {
+            $this-&gt;notFound();
+        }
+        $this-&gt;applyHook(&#39;slim.after.router&#39;);
+        $this-&gt;stop();
+    } catch (\Slim\Exception\Stop $e) {
+        $this-&gt;response()-&gt;write(ob_get_clean());
+    } catch (\Exception $e) {
+        if ($this-&gt;config(&#39;debug&#39;)) {
+            throw $e;
+        } else {
+            try {
+                $this-&gt;response()-&gt;write(ob_get_clean());
+                $this-&gt;error($e);
+            } catch (\Slim\Exception\Stop $e) {
+                // Do nothing
+            }
+        }
+    }
+}
 </pre></div>
 
 
 <p>其中用于路由匹配的Router类的getMatchedRoutes方法实现如下所示：</p>
-<div class="highlight"><pre><span></span><span class="x">/**</span>
-<span class="x"> * Return route objects that match the given HTTP method and URI</span>
-<span class="x"> * @param  string               $httpMethod   The HTTP method to match against</span>
-<span class="x"> * @param  string               $resourceUri  The resource URI to match against</span>
-<span class="x"> * @param  bool                 $reload       Should matching routes be re-parsed?</span>
-<span class="x"> * @return array[\Slim\Route]</span>
-<span class="x"> */</span>
-<span class="x">public function getMatchedRoutes($httpMethod, $resourceUri, $reload = false)</span>
-<span class="x">{</span>
-<span class="x">    if ($reload || is_null($this-&gt;matchedRoutes)) {</span>
-<span class="x">        $this-&gt;matchedRoutes = array();</span>
-<span class="x">        foreach ($this-&gt;routes as $route) {</span>
-<span class="x">            // 如果当前请求的HTTP方法不被当前route支持且不是ANY，则跳过</span>
-<span class="x">            if (!$route-&gt;supportsHttpMethod($httpMethod) &amp;&amp; !$route-&gt;supportsHttpMethod(&quot;ANY&quot;)) {</span>
-<span class="x">                continue;</span>
-<span class="x">            }</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>/**
+ * Return route objects that match the given HTTP method and URI
+ * @param  string               $httpMethod   The HTTP method to match against
+ * @param  string               $resourceUri  The resource URI to match against
+ * @param  bool                 $reload       Should matching routes be re-parsed?
+ * @return array[\Slim\Route]
+ */
+public function getMatchedRoutes($httpMethod, $resourceUri, $reload = false)
+{
+    if ($reload || is_null($this-&gt;matchedRoutes)) {
+        $this-&gt;matchedRoutes = array();
+        foreach ($this-&gt;routes as $route) {
+            // 如果当前请求的HTTP方法不被当前route支持且不是ANY，则跳过
+            if (!$route-&gt;supportsHttpMethod($httpMethod) &amp;&amp; !$route-&gt;supportsHttpMethod(&quot;ANY&quot;)) {
+                continue;
+            }
 
-<span class="x">            // 否则继续匹配环境变量PATH_INFO</span>
-<span class="x">            if ($route-&gt;matches($resourceUri)) {</span>
-<span class="x">                $this-&gt;matchedRoutes[] = $route;</span>
-<span class="x">            }</span>
-<span class="x">        }</span>
-<span class="x">    }</span>
+            // 否则继续匹配环境变量PATH_INFO
+            if ($route-&gt;matches($resourceUri)) {
+                $this-&gt;matchedRoutes[] = $route;
+            }
+        }
+    }
 
-<span class="x">    return $this-&gt;matchedRoutes;</span>
-<span class="x">}</span>
+    return $this-&gt;matchedRoutes;
+}
 </pre></div>
 
 
 <p>其中用于PATH_INFO匹配的Route类的matches方法实现如下所示：</p>
-<div class="highlight"><pre><span></span><span class="x">/**</span>
-<span class="x"> * Matches URI?</span>
-<span class="x"> *</span>
-<span class="x"> * Parse this route&#39;s pattern, and then compare it to an HTTP resource URI</span>
-<span class="x"> * This method was modeled after the techniques demonstrated by Dan Sosedoff at:</span>
-<span class="x"> *</span>
-<span class="x"> * http://blog.sosedoff.com/2009/09/20/rails-like-php-url-router/</span>
-<span class="x"> *</span>
-<span class="x"> * @param  string $resourceUri A Request URI</span>
-<span class="x"> * @return bool</span>
-<span class="x"> */</span>
-<span class="x">public function matches($resourceUri)</span>
-<span class="x">{</span>
-<span class="x">    //Convert URL params into regex patterns, construct a regex for this route, init params</span>
-<span class="x">    // preg_replace_callback — 执行一个正则表达式搜索并且使用一个回调进行替换</span>
-<span class="x">    $patternAsRegex = preg_replace_callback(</span>
-<span class="x">        &#39;#:([\w]+)\+?#&#39;,</span>
-<span class="x">        array($this, &#39;matchesCallback&#39;),</span>
-<span class="x">        // 括号中的部分表示可选</span>
-<span class="x">        // 如：/archive(/:year(/:month(/:day)))</span>
-<span class="x">        str_replace(&#39;)&#39;, &#39;)?&#39;, (string)$this-&gt;pattern)</span>
-<span class="x">    );</span>
-<span class="x">    // 即使pattern最后有斜杠/，对于URL来说也是可选的</span>
-<span class="x">    if (substr($this-&gt;pattern, -1) === &#39;/&#39;) {</span>
-<span class="x">        $patternAsRegex .= &#39;?&#39;;</span>
-<span class="x">    }</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>/**
+ * Matches URI?
+ *
+ * Parse this route&#39;s pattern, and then compare it to an HTTP resource URI
+ * This method was modeled after the techniques demonstrated by Dan Sosedoff at:
+ *
+ * http://blog.sosedoff.com/2009/09/20/rails-like-php-url-router/
+ *
+ * @param  string $resourceUri A Request URI
+ * @return bool
+ */
+public function matches($resourceUri)
+{
+    //Convert URL params into regex patterns, construct a regex for this route, init params
+    // preg_replace_callback — 执行一个正则表达式搜索并且使用一个回调进行替换
+    $patternAsRegex = preg_replace_callback(
+        &#39;#:([\w]+)\+?#&#39;,
+        array($this, &#39;matchesCallback&#39;),
+        // 括号中的部分表示可选
+        // 如：/archive(/:year(/:month(/:day)))
+        str_replace(&#39;)&#39;, &#39;)?&#39;, (string)$this-&gt;pattern)
+    );
+    // 即使pattern最后有斜杠/，对于URL来说也是可选的
+    if (substr($this-&gt;pattern, -1) === &#39;/&#39;) {
+        $patternAsRegex .= &#39;?&#39;;
+    }
 
-<span class="x">    $regex = &#39;#^&#39; . $patternAsRegex . &#39;$#&#39;;</span>
+    $regex = &#39;#^&#39; . $patternAsRegex . &#39;$#&#39;;
 
-<span class="x">    // 大小写不敏感</span>
-<span class="x">    if ($this-&gt;caseSensitive === false) {</span>
-<span class="x">        $regex .= &#39;i&#39;;</span>
-<span class="x">    }</span>
+    // 大小写不敏感
+    if ($this-&gt;caseSensitive === false) {
+        $regex .= &#39;i&#39;;
+    }
 
-<span class="x">    //Cache URL params&#39; names and values if this route matches the current HTTP request</span>
-<span class="x">    // 正则匹配</span>
-<span class="x">    if (!preg_match($regex, $resourceUri, $paramValues)) {</span>
-<span class="x">        return false;</span>
-<span class="x">    }</span>
-<span class="x">    foreach ($this-&gt;paramNames as $name) {</span>
-<span class="x">        if (isset($paramValues[$name])) {</span>
-<span class="x">            if (isset($this-&gt;paramNamesPath[$name])) {</span>
-<span class="x">                $this-&gt;params[$name] = explode(&#39;/&#39;, urldecode($paramValues[$name]));</span>
-<span class="x">            } else {</span>
-<span class="x">                $this-&gt;params[$name] = urldecode($paramValues[$name]);</span>
-<span class="x">            }</span>
-<span class="x">        }</span>
-<span class="x">    }</span>
+    //Cache URL params&#39; names and values if this route matches the current HTTP request
+    // 正则匹配
+    if (!preg_match($regex, $resourceUri, $paramValues)) {
+        return false;
+    }
+    foreach ($this-&gt;paramNames as $name) {
+        if (isset($paramValues[$name])) {
+            if (isset($this-&gt;paramNamesPath[$name])) {
+                $this-&gt;params[$name] = explode(&#39;/&#39;, urldecode($paramValues[$name]));
+            } else {
+                $this-&gt;params[$name] = urldecode($paramValues[$name]);
+            }
+        }
+    }
 
-<span class="x">    return true;</span>
-<span class="x">}</span>
+    return true;
+}
 </pre></div>
 
 
 <p>其中正则搜索替换的回调方法matchesCallback的实现如下所示：</p>
-<div class="highlight"><pre><span></span><span class="x">/**</span>
-<span class="x"> * Convert a URL parameter (e.g. &quot;:id&quot;, &quot;:id+&quot;) into a regular expression</span>
-<span class="x"> * @param  array $m URL parameters</span>
-<span class="x"> * @return string       Regular expression for URL parameter</span>
-<span class="x"> */</span>
-<span class="x">protected function matchesCallback($m)</span>
-<span class="x">{</span>
-<span class="x">    $this-&gt;paramNames[] = $m[1];</span>
-<span class="x">    if (isset($this-&gt;conditions[$m[1]])) {</span>
-<span class="x">        return &#39;(?P&lt;&#39; . $m[1] . &#39;&gt;&#39; . $this-&gt;conditions[$m[1]] . &#39;)&#39;;</span>
-<span class="x">    }</span>
-<span class="x">    if (substr($m[0], -1) === &#39;+&#39;) {</span>
-<span class="x">        $this-&gt;paramNamesPath[$m[1]] = 1;</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>/**
+ * Convert a URL parameter (e.g. &quot;:id&quot;, &quot;:id+&quot;) into a regular expression
+ * @param  array $m URL parameters
+ * @return string       Regular expression for URL parameter
+ */
+protected function matchesCallback($m)
+{
+    $this-&gt;paramNames[] = $m[1];
+    if (isset($this-&gt;conditions[$m[1]])) {
+        return &#39;(?P&lt;&#39; . $m[1] . &#39;&gt;&#39; . $this-&gt;conditions[$m[1]] . &#39;)&#39;;
+    }
+    if (substr($m[0], -1) === &#39;+&#39;) {
+        $this-&gt;paramNamesPath[$m[1]] = 1;
 
-<span class="x">        return &#39;(?P&lt;&#39; . $m[1] . &#39;&gt;.+)&#39;;</span>
-<span class="x">    }</span>
+        return &#39;(?P&lt;&#39; . $m[1] . &#39;&gt;.+)&#39;;
+    }
 
-<span class="x">    return &#39;(?P&lt;&#39; . $m[1] . &#39;&gt;[^/]+)&#39;;</span>
-<span class="x">}</span>
+    return &#39;(?P&lt;&#39; . $m[1] . &#39;&gt;[^/]+)&#39;;
+}
 </pre></div>
 
 

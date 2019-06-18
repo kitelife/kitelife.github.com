@@ -65,7 +65,7 @@
             </header>
             <footer class="post-info">
               <abbr class="published" title="2013-04-27T00:00:00+08:00">
-                2013-04-27 Sat
+                2013-04-27 六
               </abbr>
               <address class="vcard author">
                 By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
@@ -88,7 +88,7 @@
 <p>然后执行 1) <code>./configure -prefix=/usr/local/memcacheq -enable-threads</code>（<code>-prefix</code>选项指定将memcacheq安装到/usr/local/memcacheq目录下），2) <code>make</code> , 3) <code>sudo make install</code> 。</p>
 <p>4.
 在Linux上，memcacheq启动时要想成功动态链接BerkeleyDB和libevent的库文件，得先手动配置动态链接库查找路径：编辑文件<code>/etc/ld.so.conf</code>，在末尾添加两行：</p>
-<div class="highlight"><pre><span></span>/usr/local/lib
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>/usr/local/lib
 /usr/local/BerkeleyDB.5.0/lib
 </pre></div>
 
@@ -100,19 +100,19 @@
 <p>memcacheq默认打开的网络端口为22201，可通过命令<code>netstat -tlnp</code>来查看。</p>
 <hr>
 <p>若想编写PHP程序来测试使用memcacheq，需要先安装配置PHP <a href="http://cn2.php.net/memcache">memcache扩展模块</a>，可先通过<code>php -m | grep memcache</code>来查看是否已安装。测试程序如下：</p>
-<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
-<span class="nv">$memcache_obj</span> <span class="o">=</span> <span class="nx">memcache_connect</span><span class="p">(</span><span class="s1">&#39;127.0.0.1&#39;</span><span class="p">,</span> <span class="mi">22201</span><span class="p">);</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">&lt;?php</span>
+$memcache_obj = memcache_connect(<span style="color: #a31515">&#39;127.0.0.1&#39;</span>, 22201);
 
-<span class="c1">// push数据进入队列demoqueue1</span>
-<span class="nv">$set_rs</span> <span class="o">=</span> <span class="nx">memcache_set</span><span class="p">(</span><span class="nv">$memcache_obj</span><span class="p">,</span> <span class="s1">&#39;demoqueue1&#39;</span><span class="p">,</span> <span class="s1">&#39;message body here&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-<span class="nb">var_dump</span><span class="p">(</span><span class="nv">$set_rs</span><span class="p">);</span>
+<span style="color: #008000">// push数据进入队列demoqueue1</span>
+$set_rs = memcache_set($memcache_obj, <span style="color: #a31515">&#39;demoqueue1&#39;</span>, <span style="color: #a31515">&#39;message body here&#39;</span>, 0, 0);
+var_dump($set_rs);
 
-<span class="c1">// 从队列demoqueue1中pop出数据</span>
-<span class="nv">$get_rs</span> <span class="o">=</span> <span class="nx">memcache_get</span><span class="p">(</span><span class="nv">$memcache_obj</span><span class="p">,</span> <span class="s1">&#39;demoqueue1&#39;</span><span class="p">);</span>
-<span class="nb">var_dump</span><span class="p">(</span><span class="nv">$get_rs</span><span class="p">);</span>
+<span style="color: #008000">// 从队列demoqueue1中pop出数据</span>
+$get_rs = memcache_get($memcache_obj, <span style="color: #a31515">&#39;demoqueue1&#39;</span>);
+var_dump($get_rs);
 
-<span class="nx">memcache_close</span><span class="p">(</span><span class="nv">$memcache_obj</span><span class="p">);</span>
-<span class="cp">?&gt;</span><span class="x"></span>
+memcache_close($memcache_obj);
+<span style="color: #0000ff">?&gt;</span>
 </pre></div>
 
 

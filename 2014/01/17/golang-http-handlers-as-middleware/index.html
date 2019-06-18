@@ -65,7 +65,7 @@
             </header>
             <footer class="post-info">
               <abbr class="published" title="2014-01-17T00:00:00+08:00">
-                2014-01-17 Fri
+                2014-01-17 五
               </abbr>
               <address class="vcard author">
                 By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
@@ -77,43 +77,43 @@
 <p>大多数现代Web组件栈允许通过栈式/组件式中间件“过滤”请求，这样就能干净地从web应用中分离出横切关注点（译注：面向方面程序设计中的概念？）。
 本周我尝试在Go语言的<code>http.FileServer</code>中植入钩子，发现实现起来十分简便，让我非常惊讶。</p>
 <p>让我们从一个基本的文件服务器开始说起：</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">http</span><span class="p">.</span><span class="nx">ListenAndServe</span><span class="p">(</span><span class="s">&quot;:8080&quot;</span><span class="p">,</span> <span class="nx">http</span><span class="p">.</span><span class="nx">FileServer</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">Dir</span><span class="p">(</span><span class="s">&quot;/tmp&quot;</span><span class="p">)))</span>
-<span class="p">}</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">func</span> main() {
+    http.ListenAndServe(<span style="color: #a31515">&quot;:8080&quot;</span>, http.FileServer(http.Dir(<span style="color: #a31515">&quot;/tmp&quot;</span>)))
+}
 </pre></div>
 
 
 <p>这段程序会在端口8080上开启一个本地文件服务器。那么我们该如何在这其中植入钩子从而能够在文件请求处理之前执行一些代码？来看一下<code>http.ListenAndServe</code>的方法签名：</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">ListenAndServe</span><span class="p">(</span><span class="nx">addr</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">handler</span> <span class="nx">Handler</span><span class="p">)</span> <span class="kt">error</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">func</span> ListenAndServe(addr <span style="color: #2b91af">string</span>, handler Handler) <span style="color: #2b91af">error</span>
 </pre></div>
 
 
 <p>看起来<code>http.FileServer</code>返回了一个<code>Handler</code>---给定一个根目录就能知道如何处理文件请求。那我们来看看<code>Handler</code>接口：</p>
-<div class="highlight"><pre><span></span><span class="kd">type</span> <span class="nx">Handler</span> <span class="kd">interface</span> <span class="p">{</span>
-    <span class="nx">ServeHTTP</span><span class="p">(</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="o">*</span><span class="nx">Request</span><span class="p">)</span>
-<span class="p">}</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">type</span> Handler <span style="color: #0000ff">interface</span> {
+    ServeHTTP(ResponseWriter, *Request)
+}
 </pre></div>
 
 
 <p>根据Go语言的接口原理，任何对象只要实现了<code>ServeHTTP</code>就是一个<code>Handler</code>。那么似乎我们需要做的事情就是构造一个自己的<code>Handler</code>---封装<code>http.FileServer</code>的处理流程。
 Go语言的net/http标准库模块内置了一个帮助函数<code>http.HandlerFunc</code>，用于将普通函数转变为请求处理函数（handler）：</p>
-<div class="highlight"><pre><span></span><span class="kd">type</span> <span class="nx">HandlerFunc</span> <span class="kd">func</span><span class="p">(</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="o">*</span><span class="nx">Request</span><span class="p">)</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">type</span> HandlerFunc <span style="color: #0000ff">func</span>(ResponseWriter, *Request)
 </pre></div>
 
 
 <p>那么我们这样封装<code>http.FileServer</code>就可以了：</p>
-<div class="highlight"><pre><span></span><span class="kd">func</span> <span class="nx">OurLoggingHandler</span><span class="p">(</span><span class="nx">h</span> <span class="nx">http</span><span class="p">.</span><span class="nx">Handler</span><span class="p">)</span> <span class="nx">http</span><span class="p">.</span><span class="nx">Handler</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="nx">http</span><span class="p">.</span><span class="nx">HandlerFunc</span><span class="p">(</span><span class="kd">func</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">))</span> <span class="p">{</span>
-        <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="o">*</span><span class="nx">r</span><span class="p">.</span><span class="nx">URL</span><span class="p">)</span>
-        <span class="nx">h</span><span class="p">.</span><span class="nx">ServeHTTP</span><span class="p">(</span><span class="nx">w</span> <span class="p">,</span><span class="nx">r</span><span class="p">)</span>
-    <span class="p">})</span>
-<span class="p">}</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">func</span> OurLoggingHandler(h http.Handler) http.Handler {
+    <span style="color: #0000ff">return</span> http.HandlerFunc(<span style="color: #0000ff">func</span>(w http.ResponseWriter, r *http.Request)) {
+        fmt.Println(*r.URL)
+        h.ServeHTTP(w ,r)
+    })
+}
 
-<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">fileHandler</span> <span class="o">:=</span> <span class="nx">http</span><span class="p">.</span><span class="nx">FileServer</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">Dir</span><span class="p">(</span><span class="s">&quot;/tmp&quot;</span><span class="p">))</span>
-    <span class="nx">wrappedHandler</span> <span class="o">:=</span> <span class="nx">OurLoggingHandler</span><span class="p">(</span><span class="nx">fileHandler</span><span class="p">)</span>
-    <span class="nx">http</span><span class="p">.</span><span class="nx">ListenAndServe</span><span class="p">(</span><span class="s">&quot;:8080&quot;</span><span class="p">,</span> <span class="nx">wrappedHandler</span><span class="p">)</span>
-<span class="p">}</span>
+<span style="color: #0000ff">func</span> main() {
+    fileHandler := http.FileServer(http.Dir(<span style="color: #a31515">&quot;/tmp&quot;</span>))
+    wrappedHandler := OurLoggingHandler(fileHandler)
+    http.ListenAndServe(<span style="color: #a31515">&quot;:8080&quot;</span>, wrappedHandler)
+}
 </pre></div>
 
 

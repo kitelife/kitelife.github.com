@@ -65,7 +65,7 @@
             </header>
             <footer class="post-info">
               <abbr class="published" title="2014-09-06T00:00:00+08:00">
-                2014-09-06 Sat
+                2014-09-06 六
               </abbr>
               <address class="vcard author">
                 By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
@@ -101,7 +101,7 @@
 得出县一级的天气预报数据。</p>
 <p>如果仅通过一个API来提供全国所有县一级的天气数据，那么可以想象，这个API返回的数据有多大多复杂。并且用户可能需要更灵活的数据查询方式，如仅查询某个省份
 所有县一级的天气预报数据。那么可以将这个API拆分成以下几个API：</p>
-<div class="highlight"><pre><span></span>GET /province/
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>GET /province/
 GET /province/{province_name_or_id}/county/
 GET /province/{province_name_or_id}/county/{county_id_or_name}/weather/
 </pre></div>
@@ -109,12 +109,12 @@ GET /province/{province_name_or_id}/county/{county_id_or_name}/weather/
 
 <p>拆分之后，可能需要多次调用API才能获取到需要的数据，但每个API的定义都简单而明确。</p>
 <p>对于<code>GET /province/{province_name_or_id}/county/{county_id_or_name}/weather/</code>这个URL，可能有人觉得它过长了，可以缩短设计为：</p>
-<div class="highlight"><pre><span></span>GET /county/{county_id_or_name}/weather/
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>GET /county/{county_id_or_name}/weather/
 </pre></div>
 
 
 <p>甚至</p>
-<div class="highlight"><pre><span></span>GET /{county_id_or_name}/weather/
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>GET /{county_id_or_name}/weather/
 </pre></div>
 
 
@@ -143,16 +143,16 @@ API就需要提供兼容方案。我们的兼容方案是：以POST谓词来替�
 <p>Yii框架默认的路由形式为：查询字符串r=xxx/yyy，其中xxx为控制器(controller)的名称，yyy为动作方法(action)的名称，这种路由形式对应Yii内部的get路由类型，
 因为是默认形式，所以无需额外配置。
 Yii另外提供一种名为path的路由形式，即使用URL的路径(path)部分来表达路由。要这种形式的路由需要额外配置Yii框架，如下所示：</p>
-<div class="highlight"><pre><span></span><span class="x">&#39;components&#39; =&gt; array(</span>
-<span class="x">    &#39;urlManager&#39; =&gt; array(</span>
-<span class="x">        &#39;urlFormat&#39; =&gt; &#39;path&#39;,</span>
-<span class="x">        &#39;rules&#39; =&gt; array(</span>
-<span class="x">            array(&#39;aaa/bbb&#39;, &#39;pattern&#39; =&gt; &#39;/xxx/yyy&#39;, &#39;verb&#39; =&gt; &#39;POST&#39;),</span>
-<span class="x">            ...</span>
-<span class="x">        ),</span>
-<span class="x">    ),</span>
-<span class="x">    ...</span>
-<span class="x">),</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>&#39;components&#39; =&gt; array(
+    &#39;urlManager&#39; =&gt; array(
+        &#39;urlFormat&#39; =&gt; &#39;path&#39;,
+        &#39;rules&#39; =&gt; array(
+            array(&#39;aaa/bbb&#39;, &#39;pattern&#39; =&gt; &#39;/xxx/yyy&#39;, &#39;verb&#39; =&gt; &#39;POST&#39;),
+            ...
+        ),
+    ),
+    ...
+),
 </pre></div>
 
 
@@ -163,60 +163,60 @@ xxx为控制器名称，yyy为动作方法名称，这里可以看出HTTP API UR
 <h5>兼容方案</h5>
 <p>对于兼容方案，POST谓词原本是用来“新增”资源，那么对于相同的URL，POST谓词可能已经被占用，也即意味着谓词“DELETE”或“PUT”的“POST”兼容方案的API请求，也会被Yii框架路由到“新增”资源的处理逻辑，那么需要在“新增”资源的控制器类的beforeAction方法中，通过检查查询字符串参数_method，重新将请求路由到正确的
 动作方法上，代码如下所示：</p>
-<div class="highlight"><pre><span></span><span class="x">protected function beforeAction($action)</span>
-<span class="x">{</span>
-<span class="x">    $this-&gt;requestMethod = Yii::app()-&gt;request-&gt;getRequestType();</span>
-<span class="x">    // 兼容方案</span>
-<span class="x">    // 带参数_method=DELETE的POST请求来代替DELETE请求</span>
-<span class="x">    // 带参数_method=PUT的POST请求来代替PUT请求</span>
-<span class="x">    if ($this-&gt;requestMethod === &#39;POST&#39; &amp;&amp; isset($_POST[&#39;_method&#39;])) {</span>
-<span class="x">        if ($_POST[&#39;_method&#39;] === &#39;DELETE&#39;) {</span>
-<span class="x">            // 避免死循环</span>
-<span class="x">            unset($_POST[&#39;_method&#39;]);</span>
-<span class="x">            $this-&gt;forward($this-&gt;getUniqueId() . &#39;/delete&#39;);</span>
-<span class="x">        } elseif ($_POST[&#39;_method&#39;] === &#39;PUT&#39;) {</span>
-<span class="x">            unset($_POST[&#39;_method&#39;]);</span>
-<span class="x">            $this-&gt;forward($this-&gt;getUniqueId() . &#39;/update&#39;);</span>
-<span class="x">        } else {</span>
-<span class="x">            $this-&gt;echoJson(CodeStatus::WRONG_PARAM);</span>
-<span class="x">            return false;</span>
-<span class="x">        }</span>
-<span class="x">    }</span>
-<span class="x">    ...</span>
-<span class="x">}</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>protected function beforeAction($action)
+{
+    $this-&gt;requestMethod = Yii::app()-&gt;request-&gt;getRequestType();
+    // 兼容方案
+    // 带参数_method=DELETE的POST请求来代替DELETE请求
+    // 带参数_method=PUT的POST请求来代替PUT请求
+    if ($this-&gt;requestMethod === &#39;POST&#39; &amp;&amp; isset($_POST[&#39;_method&#39;])) {
+        if ($_POST[&#39;_method&#39;] === &#39;DELETE&#39;) {
+            // 避免死循环
+            unset($_POST[&#39;_method&#39;]);
+            $this-&gt;forward($this-&gt;getUniqueId() . &#39;/delete&#39;);
+        } elseif ($_POST[&#39;_method&#39;] === &#39;PUT&#39;) {
+            unset($_POST[&#39;_method&#39;]);
+            $this-&gt;forward($this-&gt;getUniqueId() . &#39;/update&#39;);
+        } else {
+            $this-&gt;echoJson(CodeStatus::WRONG_PARAM);
+            return false;
+        }
+    }
+    ...
+}
 </pre></div>
 
 
 <h5>响应码</h5>
 <p>对于API可能用到的所有响应码及其说明，我们使用一个单独的类来集中管理，以避免API中硬编码响应码，以及避免代码重复。如下所示：</p>
-<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
-    <span class="k">class</span> <span class="nc">CodeStatus</span> <span class="p">{</span>
-        <span class="k">const</span> <span class="no">OK</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span> <span class="c1">// 成功</span>
-        <span class="k">const</span> <span class="no">CREATED</span> <span class="o">=</span> <span class="mi">201</span><span class="p">;</span> <span class="c1">// 创建成功</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">&lt;?php</span>
+    <span style="color: #0000ff">class</span> <span style="color: #2b91af">CodeStatus</span> {
+        <span style="color: #0000ff">const</span> OK = 200; <span style="color: #008000">// 成功</span>
+        <span style="color: #0000ff">const</span> CREATED = 201; <span style="color: #008000">// 创建成功</span>
 
-        <span class="k">const</span> <span class="no">REQUEST_WRONG</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span>
-        <span class="k">const</span> <span class="no">TOKEN_WRONG</span> <span class="o">=</span> <span class="mi">403</span><span class="p">;</span> <span class="c1">// token已过期或不存在</span>
-        <span class="k">const</span> <span class="no">NOT_FOUND</span> <span class="o">=</span> <span class="mi">404</span><span class="p">;</span> <span class="c1">// 资源不存在</span>
-        <span class="k">const</span> <span class="no">LACK_PARAM</span> <span class="o">=</span> <span class="mi">423</span><span class="p">;</span> <span class="c1">// 缺少必要的请求参数</span>
-        <span class="k">const</span> <span class="no">WRONG_PARAM</span> <span class="o">=</span> <span class="mi">425</span><span class="p">;</span> <span class="c1">// 请求参数不正确</span>
-        <span class="k">const</span> <span class="no">DUPLICATE_RESOURCE</span> <span class="o">=</span> <span class="mi">426</span><span class="p">;</span> <span class="c1">// 已经存在相同的资源</span>
+        <span style="color: #0000ff">const</span> REQUEST_WRONG = 400;
+        <span style="color: #0000ff">const</span> TOKEN_WRONG = 403; <span style="color: #008000">// token已过期或不存在</span>
+        <span style="color: #0000ff">const</span> NOT_FOUND = 404; <span style="color: #008000">// 资源不存在</span>
+        <span style="color: #0000ff">const</span> LACK_PARAM = 423; <span style="color: #008000">// 缺少必要的请求参数</span>
+        <span style="color: #0000ff">const</span> WRONG_PARAM = 425; <span style="color: #008000">// 请求参数不正确</span>
+        <span style="color: #0000ff">const</span> DUPLICATE_RESOURCE = 426; <span style="color: #008000">// 已经存在相同的资源</span>
 
-        <span class="k">const</span> <span class="no">SYSTEM_ERROR</span> <span class="o">=</span> <span class="mi">500</span><span class="p">;</span> <span class="c1">// 系统异常</span>
+        <span style="color: #0000ff">const</span> SYSTEM_ERROR = 500; <span style="color: #008000">// 系统异常</span>
 
-        <span class="o">...</span>
+        ...
 
-        <span class="k">public</span> <span class="k">static</span> <span class="nv">$status_code</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span>
-            <span class="nx">self</span><span class="o">::</span><span class="na">OK</span> <span class="o">=&gt;</span> <span class="s1">&#39;成功&#39;</span><span class="p">,</span>
-            <span class="nx">self</span><span class="o">::</span><span class="na">CREATED</span> <span class="o">=&gt;</span> <span class="s1">&#39;创建成功&#39;</span><span class="p">,</span>
-            <span class="nx">self</span><span class="o">::</span><span class="na">TOKEN_WRONG</span> <span class="o">=&gt;</span> <span class="s1">&#39;token已过期或不存在&#39;</span><span class="p">,</span>
-            <span class="nx">self</span><span class="o">::</span><span class="na">LACK_PARAM</span> <span class="o">=&gt;</span> <span class="s1">&#39;缺少必要的请求参数&#39;</span><span class="p">,</span>
-            <span class="nx">self</span><span class="o">::</span><span class="na">SYSTEM_ERROR</span> <span class="o">=&gt;</span> <span class="s1">&#39;系统异常&#39;</span><span class="p">,</span>
-            <span class="nx">self</span><span class="o">::</span><span class="na">WRONG_PARAM</span> <span class="o">=&gt;</span> <span class="s1">&#39;请求参数不正确&#39;</span><span class="p">,</span>
-            <span class="nx">self</span><span class="o">::</span><span class="na">DUPLICATE_RESOURCE</span> <span class="o">=&gt;</span> <span class="s1">&#39;已经存在相同的资源&#39;</span><span class="p">,</span>
-            <span class="nx">self</span><span class="o">::</span><span class="na">NOT_FOUND</span> <span class="o">=&gt;</span> <span class="s1">&#39;资源不存在&#39;</span><span class="p">,</span>
-            <span class="o">...</span>
-        <span class="p">);</span>
-    <span class="p">}</span>
+        <span style="color: #0000ff">public</span> <span style="color: #0000ff">static</span> $status_code = <span style="color: #0000ff">array</span>(
+            self::OK =&gt; <span style="color: #a31515">&#39;成功&#39;</span>,
+            self::CREATED =&gt; <span style="color: #a31515">&#39;创建成功&#39;</span>,
+            self::TOKEN_WRONG =&gt; <span style="color: #a31515">&#39;token已过期或不存在&#39;</span>,
+            self::LACK_PARAM =&gt; <span style="color: #a31515">&#39;缺少必要的请求参数&#39;</span>,
+            self::SYSTEM_ERROR =&gt; <span style="color: #a31515">&#39;系统异常&#39;</span>,
+            self::WRONG_PARAM =&gt; <span style="color: #a31515">&#39;请求参数不正确&#39;</span>,
+            self::DUPLICATE_RESOURCE =&gt; <span style="color: #a31515">&#39;已经存在相同的资源&#39;</span>,
+            self::NOT_FOUND =&gt; <span style="color: #a31515">&#39;资源不存在&#39;</span>,
+            ...
+        );
+    }
 </pre></div>
 
 

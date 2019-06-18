@@ -65,7 +65,7 @@
             </header>
             <footer class="post-info">
               <abbr class="published" title="2014-04-28T00:00:00+08:00">
-                2014-04-28 Mon
+                2014-04-28 一
               </abbr>
               <address class="vcard author">
                 By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
@@ -77,9 +77,9 @@
 右边栏去掉，这导致在Firefox等浏览器中，正文中大的图片会突破正文块的宽度，高度也得不到限制，显示效果非常差。</p>
 <p>其原因是：Markdown的<a href="http://wowubuntu.com/markdown/#img">图片区块元素</a><code>![Alt
 text](/path/to/img.jpg)</code>渲染成HTML元素的结果为 -</p>
-<div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">img</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;/path/to/img.jpg&quot;</span> <span class="na">alt</span><span class="o">=</span><span class="s">&quot;Alt text&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">img</span><span class="p">&gt;</span>
-<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>&lt;p&gt;
+    &lt;img src=<span style="color: #a31515">&quot;/path/to/img.jpg&quot;</span> alt=<span style="color: #a31515">&quot;Alt text&quot;</span>&gt;&lt;/img&gt;
+&lt;/p&gt;
 </pre></div>
 
 
@@ -94,15 +94,15 @@ groups)</a>，所以造成了显示问题。</p>
 <p>我的想法是：既然使用CSS不能解决这个问题，那就尝试使用Javascript。当图片加载完毕后，将图片宽度与正文宽度做比较，如果
 图片宽度大于正文宽度，则为该图片设置<code>width: 100%</code>。唯一不完美的地方是某些大图片加载完毕之前的宽度很大，比较难看。</p>
 <p>代码如下所示：</p>
-<div class="highlight"><pre><span></span><span class="nx">$</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">entryContentWidth</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;.row&#39;</span><span class="p">).</span><span class="nx">width</span><span class="p">();</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$(<span style="color: #0000ff">function</span>() {
+    <span style="color: #0000ff">var</span> entryContentWidth = $(<span style="color: #a31515">&#39;.row&#39;</span>).width();
 
-    <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;.entry-content img&#39;</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;load&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
-        <span class="k">if</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">width</span><span class="p">()</span> <span class="o">&gt;</span> <span class="nx">entryContentWidth</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">width</span><span class="p">(</span><span class="s1">&#39;100%&#39;</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">});</span>
-<span class="p">});</span>
+    $(<span style="color: #a31515">&#39;.entry-content img&#39;</span>).on(<span style="color: #a31515">&#39;load&#39;</span>, <span style="color: #0000ff">function</span>(){
+        <span style="color: #0000ff">if</span>($(<span style="color: #0000ff">this</span>).width() &gt; entryContentWidth) {
+            $(<span style="color: #0000ff">this</span>).width(<span style="color: #a31515">&#39;100%&#39;</span>);
+        }
+    });
+});
 </pre></div>
 
 

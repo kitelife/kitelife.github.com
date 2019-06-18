@@ -65,7 +65,7 @@
             </header>
             <footer class="post-info">
               <abbr class="published" title="2016-06-05T00:00:00+08:00">
-                2016-06-05 Sun
+                2016-06-05 日
               </abbr>
               <address class="vcard author">
                 By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
@@ -75,27 +75,27 @@
               <p>工作中涉及一些对外开放的无需特殊权限的API，用户会因为某些需求而通过程序来频繁访问这些API，导致系统的负载陡增，可能影响系统其它功能的正常使用。虽然做了一些优化让这种API尽可能地轻量，但仍然不够，因此需要进行访问频率的限制。</p>
 <p>由于这样的API并不多，所以我们并没有在Nginx这样的反向代理接入层中实现频率限制，而是API自己去实现，而且实现方案比较粗糙 - 基于Memcached的缓存自动过期特性。</p>
 <p>方案的PHP示例实现如下所示：</p>
-<div class="highlight"><pre><span></span><span class="x">// 每个IP一分钟10次</span>
-<span class="x">$limit = 10;</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>// 每个IP一分钟10次
+$limit = 10;
 
-<span class="x">$cache = new Memcached();</span>
-<span class="x">$cache-&gt;addServer(&#39;127.0.0.1&#39;, 11211);</span>
+$cache = new Memcached();
+$cache-&gt;addServer(&#39;127.0.0.1&#39;, 11211);
 
-<span class="x">$key = __FUNCTION__.$_SERVER[&#39;REMOTE_ADDR&#39;];</span>
-<span class="x">$requestNum = $cache-&gt;get($key);</span>
+$key = __FUNCTION__.$_SERVER[&#39;REMOTE_ADDR&#39;];
+$requestNum = $cache-&gt;get($key);
 
-<span class="x">if ($requestNum !== FALSE &amp;&amp; $requestNum &gt; 10) {</span>
-<span class="x">    echo json_encode(array(</span>
-<span class="x">        &#39;code&#39; =&gt; 403,</span>
-<span class="x">        &#39;message&#39; =&gt; &#39;请求太频繁，请一分钟后再试&#39;,</span>
-<span class="x">    ));</span>
-<span class="x">    return;</span>
-<span class="x">}</span>
+if ($requestNum !== FALSE &amp;&amp; $requestNum &gt; 10) {
+    echo json_encode(array(
+        &#39;code&#39; =&gt; 403,
+        &#39;message&#39; =&gt; &#39;请求太频繁，请一分钟后再试&#39;,
+    ));
+    return;
+}
 
-<span class="x">$cache-&gt;add($key, 0, time()+60);</span>
-<span class="x">$cache-&gt;increment($key, 1);</span>
+$cache-&gt;add($key, 0, time()+60);
+$cache-&gt;increment($key, 1);
 
-<span class="x">// ...</span>
+// ...
 </pre></div>
 
 
@@ -115,17 +115,17 @@
 <p>经过仔细排查，最终确定问题就出在Nginx配置C的请求被转发到A、B。对于用户客户端来说，C是服务器，对于A、B来说，C则是客户端。如果不做特殊配置，从C转发到A、B的请求在处理时，A、B拿到的请求来源IP是C的IP，也就意味着到C的API访问请求，都被A、B基于C的IP进行访问频率限制。</p>
 <p>以Nginx为例，对于从C转发到A、B的请求，如果A、B要拿到请求的真实来源IP，则需要对A、B及C的Nginx做特殊配置。为解决这个问题，Nginx提供了一个额外的模块<code>ngx_http_realip_module</code>，这个模块默认没有编译在Nginx中，需以额外参数<code>--with-http_realip_module</code>进行编译。</p>
 <p>并对C的Nginx反向代理配置（location块）添加一行：</p>
-<div class="highlight"><pre><span></span><span class="o">#</span> <span class="err">把请求来源放在</span><span class="n">X</span><span class="o">-</span><span class="nb">Real</span><span class="o">-</span><span class="n">IP</span><span class="err">请求头中</span>
-<span class="n">proxy_set_header</span>  <span class="n">X</span><span class="o">-</span><span class="nb">Real</span><span class="o">-</span><span class="n">IP</span> <span class="err">$</span><span class="n">remote_addr</span><span class="p">;</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span># <span style="border: 1px solid #FF0000">把请求来源放在</span>X-Real-IP<span style="border: 1px solid #FF0000">请求头中</span>
+proxy_set_header  X-Real-IP <span style="border: 1px solid #FF0000">$</span>remote_addr;
 </pre></div>
 
 
 <p>对A、B的Nginx（server块）添加以下配置：</p>
-<div class="highlight"><pre><span></span><span class="o">#</span> <span class="err">说明需要进行真实请求来源</span><span class="n">IP</span><span class="err">替换的请求来源，即</span><span class="k">C</span><span class="err">所属的</span><span class="n">IP</span><span class="err">段或者</span><span class="k">C</span><span class="err">的</span><span class="n">IP</span>
-<span class="n">set_real_ip_from</span> <span class="mi">10</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="o">/</span><span class="mi">8</span><span class="p">;</span>
-<span class="o">#</span> <span class="err">说明从哪获取真实来源</span><span class="n">IP</span>
-<span class="n">real_ip_header</span> <span class="n">X</span><span class="o">-</span><span class="nb">Real</span><span class="o">-</span><span class="n">IP</span><span class="p">;</span>
-<span class="n">real_ip_recursive</span> <span class="k">on</span><span class="p">;</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span># <span style="border: 1px solid #FF0000">说明需要进行真实请求来源</span>IP<span style="border: 1px solid #FF0000">替换的请求来源，即</span><span style="color: #0000ff">C</span><span style="border: 1px solid #FF0000">所属的</span>IP<span style="border: 1px solid #FF0000">段或者</span><span style="color: #0000ff">C</span><span style="border: 1px solid #FF0000">的</span>IP
+set_real_ip_from 10.0.0.0/8;
+# <span style="border: 1px solid #FF0000">说明从哪获取真实来源</span>IP
+real_ip_header X-Real-IP;
+real_ip_recursive <span style="color: #0000ff">on</span>;
 </pre></div>
 
 

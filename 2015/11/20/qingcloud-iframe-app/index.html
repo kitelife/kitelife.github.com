@@ -65,7 +65,7 @@
             </header>
             <footer class="post-info">
               <abbr class="published" title="2015-11-20T00:00:00+08:00">
-                2015-11-20 Fri
+                2015-11-20 五
               </abbr>
               <address class="vcard author">
                 By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
@@ -79,12 +79,12 @@
 <p>对于青云来说，一个iframe应用就是一个URL，由应用开发者提供这个URL，当青云用户访问应用所在的页面时，页面先自动向应用服务器的URL发送数据请求，请求会携带认证信息，应用服务端需要先校验请求确实来自青云，并获取请求中的用户信息，最终响应一个HTML页面内容，青云应用页面收到响应数据后将其置于一个iframe标签中，之后青云用户在iframe页面中的操作都是直接与应用服务器交互。</p>
 <p><img alt="qingcloud-iframe-interaction" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/qingcloud-iframe-interaction.png"></p>
 <p>上图交互流程的第<strong>2</strong>步中，青云服务器向用户响应的内容最终会生成一个包含以下内容的页面：</p>
-<div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">form</span> <span class="na">method</span><span class="o">=</span><span class="s">&quot;POST&quot;</span> <span class="na">action</span><span class="o">=</span><span class="s">&quot;URL&quot;</span> <span class="na">target</span><span class="o">=</span><span class="s">&quot;appframe&quot;</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">input</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;hidden&quot;</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;payload&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;...&quot;</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">input</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;hidden&quot;</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;signature&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;...&quot;</span><span class="p">&gt;</span>
-<span class="p">&lt;/</span><span class="nt">form</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">iframe</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;...&quot;</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;appframe&quot;</span> <span class="na">width</span><span class="o">=</span><span class="s">&quot;100%&quot;</span> <span class="na">height</span><span class="o">=</span><span class="s">&quot;100%&quot;</span> <span class="na">frameborder</span><span class="o">=</span><span class="s">&quot;0&quot;</span><span class="p">&gt;</span>
-<span class="p">&lt;/</span><span class="nt">iframe</span><span class="p">&gt;</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>&lt;form method=<span style="color: #a31515">&quot;POST&quot;</span> action=<span style="color: #a31515">&quot;URL&quot;</span> target=<span style="color: #a31515">&quot;appframe&quot;</span>&gt;
+    &lt;input type=<span style="color: #a31515">&quot;hidden&quot;</span> name=<span style="color: #a31515">&quot;payload&quot;</span> value=<span style="color: #a31515">&quot;...&quot;</span>&gt;
+    &lt;input type=<span style="color: #a31515">&quot;hidden&quot;</span> name=<span style="color: #a31515">&quot;signature&quot;</span> value=<span style="color: #a31515">&quot;...&quot;</span>&gt;
+&lt;/form&gt;
+&lt;iframe id=<span style="color: #a31515">&quot;...&quot;</span> name=<span style="color: #a31515">&quot;appframe&quot;</span> width=<span style="color: #a31515">&quot;100%&quot;</span> height=<span style="color: #a31515">&quot;100%&quot;</span> frameborder=<span style="color: #a31515">&quot;0&quot;</span>&gt;
+&lt;/iframe&gt;
 </pre></div>
 
 
@@ -98,31 +98,31 @@
 <p>另外，如上所述，为了防止请求伪造，form表单包含一个签名数据项<code>signature</code>，应用服务器在处理URL请求时应先校验签名，确认请求来自青云页面。</p>
 <p>form表单使用的编码算法和签名生成算法，见<a href="https://docs.qingcloud.com/app/common/tutorial.html">青云文档</a>，其PHP、Python实现如下所示：</p>
 <p><strong>PHP</strong>:</p>
-<div class="highlight"><pre><span></span><span class="x">// base64 URL编码</span>
-<span class="x">function base64_URL_encode($data) {</span>
-<span class="x">  return rtrim(strtr(base64_encode($data), &#39;+/&#39;, &#39;-_&#39;), &#39;=&#39;);</span>
-<span class="x">}</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>// base64 URL编码
+function base64_URL_encode($data) {
+  return rtrim(strtr(base64_encode($data), &#39;+/&#39;, &#39;-_&#39;), &#39;=&#39;);
+}
 
-<span class="x">// HmacSHA256签名</span>
-<span class="x">hash_hmac(&#39;sha256&#39;, $payload, $secret_app_key, true)</span>
+// HmacSHA256签名
+hash_hmac(&#39;sha256&#39;, $payload, $secret_app_key, true)
 </pre></div>
 
 
 <p><strong>Python</strong>:</p>
-<div class="highlight"><pre><span></span><span class="c1"># base64 URL编码</span>
-<span class="kn">import</span> <span class="nn">base64</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #008000"># base64 URL编码</span>
+<span style="color: #0000ff">import</span> base64
 
-<span class="k">def</span> <span class="nf">base64_URL_encode</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">base64</span><span class="o">.</span><span class="n">urlsafe_b64encode</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="p">))</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span>
+<span style="color: #0000ff">def</span> base64_URL_encode(data):
+    <span style="color: #0000ff">return</span> base64.urlsafe_b64encode(str(data)).rstrip(<span style="color: #a31515">&#39;=&#39;</span>)
 
-<span class="c1"># HmacSHA256签名</span>
-<span class="kn">import</span> <span class="nn">hmac</span>
-<span class="kn">from</span> <span class="nn">hashlib</span> <span class="kn">import</span> <span class="n">sha256</span>
+<span style="color: #008000"># HmacSHA256签名</span>
+<span style="color: #0000ff">import</span> hmac
+<span style="color: #0000ff">from</span> hashlib <span style="color: #0000ff">import</span> sha256
 
-<span class="k">def</span> <span class="nf">hmac_sha256</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">secret_app_key</span><span class="p">):</span>
-    <span class="n">hmac_256</span> <span class="o">=</span> <span class="n">hmac</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">secret_app_key</span><span class="p">,</span> <span class="n">digestmod</span><span class="o">=</span><span class="n">sha256</span><span class="p">)</span>
-    <span class="n">hmac_256</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">hmac_256</span><span class="o">.</span><span class="n">digest</span><span class="p">()</span>
+<span style="color: #0000ff">def</span> hmac_sha256(data, secret_app_key):
+    hmac_256 = hmac.new(secret_app_key, digestmod=sha256)
+    hmac_256.update(data)
+    <span style="color: #0000ff">return</span> hmac_256.digest()
 </pre></div>
 
 

@@ -65,7 +65,7 @@
             </header>
             <footer class="post-info">
               <abbr class="published" title="2014-11-18T00:00:00+08:00">
-                2014-11-18 Tue
+                2014-11-18 二
               </abbr>
               <address class="vcard author">
                 By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
@@ -86,282 +86,282 @@ Yii提供了一个直接可用的模板引擎组件类CPradoViewRenderer（见�
 <p>本文主要分析第二种方式的实现。</p>
 <h3>分析</h3>
 <p>Yii中对页面模板进行渲染可以调用<code>CController</code>类（见文件<code>yii/framework/web/CController.php</code>）的方法<code>render</code>，实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">/**</span>
-<span class="x"> * Renders a view with a layout.</span>
-<span class="x"> *</span>
-<span class="x"> * This method first calls {@link renderPartial} to render the view (called content view).</span>
-<span class="x"> * It then renders the layout view which may embed the content view at appropriate place.</span>
-<span class="x"> * In the layout view, the content view rendering result can be accessed via variable</span>
-<span class="x"> * &lt;code&gt;$content&lt;/code&gt;. At the end, it calls {@link processOutput} to insert scripts</span>
-<span class="x"> * and dynamic contents if they are available.</span>
-<span class="x"> *</span>
-<span class="x"> * By default, the layout view script is &quot;protected/views/layouts/main.php&quot;.</span>
-<span class="x"> * This may be customized by changing {@link layout}.</span>
-<span class="x"> *</span>
-<span class="x"> * @param string $view name of the view to be rendered. See {@link getViewFile} for details</span>
-<span class="x"> * about how the view script is resolved.</span>
-<span class="x"> * @param array $data data to be extracted into PHP variables and made available to the view script</span>
-<span class="x"> * @param boolean $return whether the rendering result should be returned instead of being displayed to end users.</span>
-<span class="x"> * @return string the rendering result. Null if the rendering result is not required.</span>
-<span class="x"> * @see renderPartial</span>
-<span class="x"> * @see getLayoutFile</span>
-<span class="x"> */</span>
-<span class="x">public function render($view,$data=null,$return=false)</span>
-<span class="x">{</span>
-<span class="x">    // beforeRender默认返回true，</span>
-<span class="x">    // 可以在自定义controller类中重写该方法，实现渲染之前的预处理</span>
-<span class="x">    // 但和beforeAction一样，应该要返回true或false</span>
-<span class="x">    if($this-&gt;beforeRender($view))</span>
-<span class="x">    {</span>
-<span class="x">        // 渲染真正的内容部分</span>
-<span class="x">        $output=$this-&gt;renderPartial($view,$data,true);</span>
-<span class="x">        // 获取布局文件</span>
-<span class="x">        if(($layoutFile=$this-&gt;getLayoutFile($this-&gt;layout))!==false)</span>
-<span class="x">            // 渲染整个页面</span>
-<span class="x">            $output=$this-&gt;renderFile($layoutFile,array(&#39;content&#39;=&gt;$output),true);</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>/**
+ * Renders a view with a layout.
+ *
+ * This method first calls {@link renderPartial} to render the view (called content view).
+ * It then renders the layout view which may embed the content view at appropriate place.
+ * In the layout view, the content view rendering result can be accessed via variable
+ * &lt;code&gt;$content&lt;/code&gt;. At the end, it calls {@link processOutput} to insert scripts
+ * and dynamic contents if they are available.
+ *
+ * By default, the layout view script is &quot;protected/views/layouts/main.php&quot;.
+ * This may be customized by changing {@link layout}.
+ *
+ * @param string $view name of the view to be rendered. See {@link getViewFile} for details
+ * about how the view script is resolved.
+ * @param array $data data to be extracted into PHP variables and made available to the view script
+ * @param boolean $return whether the rendering result should be returned instead of being displayed to end users.
+ * @return string the rendering result. Null if the rendering result is not required.
+ * @see renderPartial
+ * @see getLayoutFile
+ */
+public function render($view,$data=null,$return=false)
+{
+    // beforeRender默认返回true，
+    // 可以在自定义controller类中重写该方法，实现渲染之前的预处理
+    // 但和beforeAction一样，应该要返回true或false
+    if($this-&gt;beforeRender($view))
+    {
+        // 渲染真正的内容部分
+        $output=$this-&gt;renderPartial($view,$data,true);
+        // 获取布局文件
+        if(($layoutFile=$this-&gt;getLayoutFile($this-&gt;layout))!==false)
+            // 渲染整个页面
+            $output=$this-&gt;renderFile($layoutFile,array(&#39;content&#39;=&gt;$output),true);
 
-<span class="x">        // 渲染的后处理，默认为空，在processOutput之前调用</span>
-<span class="x">        $this-&gt;afterRender($view,$output);</span>
+        // 渲染的后处理，默认为空，在processOutput之前调用
+        $this-&gt;afterRender($view,$output);
 
-<span class="x">        // 对渲染结果进行处理</span>
-<span class="x">        $output=$this-&gt;processOutput($output);</span>
+        // 对渲染结果进行处理
+        $output=$this-&gt;processOutput($output);
 
-<span class="x">        // 可以将渲染结果作为方法的返回值返回，或者直接输出到用户浏览器</span>
-<span class="x">        if($return)</span>
-<span class="x">            return $output;</span>
-<span class="x">        else</span>
-<span class="x">            echo $output;</span>
-<span class="x">    }</span>
-<span class="x">}</span>
+        // 可以将渲染结果作为方法的返回值返回，或者直接输出到用户浏览器
+        if($return)
+            return $output;
+        else
+            echo $output;
+    }
+}
 </pre></div>
 
 
 <p>其中方法renderPartial的实现如下所示：</p>
-<div class="highlight"><pre><span></span><span class="x">/**</span>
-<span class="x"> * Renders a view.</span>
-<span class="x"> *</span>
-<span class="x"> * The named view refers to a PHP script (resolved via {@link getViewFile})</span>
-<span class="x"> * that is included by this method. If $data is an associative array,</span>
-<span class="x"> * it will be extracted as PHP variables and made available to the script.</span>
-<span class="x"> *</span>
-<span class="x"> * This method differs from {@link render()} in that it does not</span>
-<span class="x"> * apply a layout to the rendered result. It is thus mostly used</span>
-<span class="x"> * in rendering a partial view, or an AJAX response.</span>
-<span class="x"> *</span>
-<span class="x"> * @param string $view name of the view to be rendered. See {@link getViewFile} for details</span>
-<span class="x"> * about how the view script is resolved.</span>
-<span class="x"> * @param array $data data to be extracted into PHP variables and made available to the view script</span>
-<span class="x"> * @param boolean $return whether the rendering result should be returned instead of being displayed to end users</span>
-<span class="x"> * @param boolean $processOutput whether the rendering result should be postprocessed using {@link processOutput}.</span>
-<span class="x"> * @return string the rendering result. Null if the rendering result is not required.</span>
-<span class="x"> * @throws CException if the view does not exist</span>
-<span class="x"> * @see getViewFile</span>
-<span class="x"> * @see processOutput</span>
-<span class="x"> * @see render</span>
-<span class="x"> */</span>
-<span class="x">public function renderPartial($view,$data=null,$return=false,$processOutput=false)</span>
-<span class="x">{</span>
-<span class="x">    // 获取目标模板文件</span>
-<span class="x">    $viewFile=$this-&gt;getViewFile($view);</span>
-<span class="x">    echo (basename(__FILE__).&#39;:&#39;.__LINE__.&#39;:&#39;.__FUNCTION__.&#39;() $viewFile &#39;. var_export($viewFile, true));</span>
-<span class="x">    if(($viewFile)!==false)</span>
-<span class="x">    {</span>
-<span class="x">        // 渲染</span>
-<span class="x">        $output=$this-&gt;renderFile($viewFile,$data,true);</span>
-<span class="x">        // 如果$processOutput为真，则也会对结果进行后处理</span>
-<span class="x">        if($processOutput)</span>
-<span class="x">            $output=$this-&gt;processOutput($output);</span>
-<span class="x">        if($return)</span>
-<span class="x">            return $output;</span>
-<span class="x">        else</span>
-<span class="x">            echo $output;</span>
-<span class="x">    }</span>
-<span class="x">    else</span>
-<span class="x">        throw new CException(Yii::t(&#39;yii&#39;,&#39;{controller} cannot find the requested view &quot;{view}&quot;.&#39;,</span>
-<span class="x">            array(&#39;{controller}&#39;=&gt;get_class($this), &#39;{view}&#39;=&gt;$view)));</span>
-<span class="x">}</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>/**
+ * Renders a view.
+ *
+ * The named view refers to a PHP script (resolved via {@link getViewFile})
+ * that is included by this method. If $data is an associative array,
+ * it will be extracted as PHP variables and made available to the script.
+ *
+ * This method differs from {@link render()} in that it does not
+ * apply a layout to the rendered result. It is thus mostly used
+ * in rendering a partial view, or an AJAX response.
+ *
+ * @param string $view name of the view to be rendered. See {@link getViewFile} for details
+ * about how the view script is resolved.
+ * @param array $data data to be extracted into PHP variables and made available to the view script
+ * @param boolean $return whether the rendering result should be returned instead of being displayed to end users
+ * @param boolean $processOutput whether the rendering result should be postprocessed using {@link processOutput}.
+ * @return string the rendering result. Null if the rendering result is not required.
+ * @throws CException if the view does not exist
+ * @see getViewFile
+ * @see processOutput
+ * @see render
+ */
+public function renderPartial($view,$data=null,$return=false,$processOutput=false)
+{
+    // 获取目标模板文件
+    $viewFile=$this-&gt;getViewFile($view);
+    echo (basename(__FILE__).&#39;:&#39;.__LINE__.&#39;:&#39;.__FUNCTION__.&#39;() $viewFile &#39;. var_export($viewFile, true));
+    if(($viewFile)!==false)
+    {
+        // 渲染
+        $output=$this-&gt;renderFile($viewFile,$data,true);
+        // 如果$processOutput为真，则也会对结果进行后处理
+        if($processOutput)
+            $output=$this-&gt;processOutput($output);
+        if($return)
+            return $output;
+        else
+            echo $output;
+    }
+    else
+        throw new CException(Yii::t(&#39;yii&#39;,&#39;{controller} cannot find the requested view &quot;{view}&quot;.&#39;,
+            array(&#39;{controller}&#39;=&gt;get_class($this), &#39;{view}&#39;=&gt;$view)));
+}
 </pre></div>
 
 
 <p><code>renderPartial</code>方法并不会渲染出一个完整的页面，只是渲染页面的一部分，通常是主体部分，或者为AJAX请求渲染出响应结果。
 其中调用的getViewFile方法实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">public function getViewFile($viewName)</span>
-<span class="x">{</span>
-<span class="x">    // 如果未配置theme项，即表示不使用theme，那么getTheme方法返回null</span>
-<span class="x">    if(($theme=Yii::app()-&gt;getTheme())!==null &amp;&amp; ($viewFile=$theme-&gt;getViewFile($this,$viewName))!==false)</span>
-<span class="x">        return $viewFile;</span>
-<span class="x">    // viewPath默认为views，可配置</span>
-<span class="x">    $moduleViewPath=$basePath=Yii::app()-&gt;getViewPath();</span>
-<span class="x">    echo (basename(__FILE__).&#39;:&#39;.__LINE__.&#39;:&#39;.__FUNCTION__.&#39;() $moduleViewPath &#39;. var_export($moduleViewPath, true)),&quot;\n&quot;;</span>
-<span class="x">    // 模块化，如果没有，则getModule返回null</span>
-<span class="x">    if(($module=$this-&gt;getModule())!==null)</span>
-<span class="x">        $moduleViewPath=$module-&gt;getViewPath();</span>
-<span class="x">    // $this-&gt;getViewPath()得到的路径相比$moduleViewPath就是多了controller的ID一级</span>
-<span class="x">    return $this-&gt;resolveViewFile($viewName,$this-&gt;getViewPath(),$basePath,$moduleViewPath);</span>
-<span class="x">}</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>public function getViewFile($viewName)
+{
+    // 如果未配置theme项，即表示不使用theme，那么getTheme方法返回null
+    if(($theme=Yii::app()-&gt;getTheme())!==null &amp;&amp; ($viewFile=$theme-&gt;getViewFile($this,$viewName))!==false)
+        return $viewFile;
+    // viewPath默认为views，可配置
+    $moduleViewPath=$basePath=Yii::app()-&gt;getViewPath();
+    echo (basename(__FILE__).&#39;:&#39;.__LINE__.&#39;:&#39;.__FUNCTION__.&#39;() $moduleViewPath &#39;. var_export($moduleViewPath, true)),&quot;\n&quot;;
+    // 模块化，如果没有，则getModule返回null
+    if(($module=$this-&gt;getModule())!==null)
+        $moduleViewPath=$module-&gt;getViewPath();
+    // $this-&gt;getViewPath()得到的路径相比$moduleViewPath就是多了controller的ID一级
+    return $this-&gt;resolveViewFile($viewName,$this-&gt;getViewPath(),$basePath,$moduleViewPath);
+}
 </pre></div>
 
 
 <p>代码中<code>$this-&gt;getViewPath()</code>方法的实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">public function getViewPath()</span>
-<span class="x">{</span>
-<span class="x">    if(($module=$this-&gt;getModule())===null)</span>
-<span class="x">        $module=Yii::app();</span>
-<span class="x">    // $this-&gt;getId()是得到当前controller的ID，这个ID是在controller实例化时构造方法中赋值给属性_id的。</span>
-<span class="x">    // 这也就意味着页面模板文件需要按照controller的ID分目录存放</span>
-<span class="x">    return $module-&gt;getViewPath().DIRECTORY_SEPARATOR.$this-&gt;getId();</span>
-<span class="x">}</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>public function getViewPath()
+{
+    if(($module=$this-&gt;getModule())===null)
+        $module=Yii::app();
+    // $this-&gt;getId()是得到当前controller的ID，这个ID是在controller实例化时构造方法中赋值给属性_id的。
+    // 这也就意味着页面模板文件需要按照controller的ID分目录存放
+    return $module-&gt;getViewPath().DIRECTORY_SEPARATOR.$this-&gt;getId();
+}
 </pre></div>
 
 
 <p><code>getViewFile</code>中最后调用的方法<code>resolveViewFile</code>实现如下所示：</p>
-<div class="highlight"><pre><span></span><span class="x">public function resolveViewFile($viewName,$viewPath,$basePath,$moduleViewPath=null)</span>
-<span class="x">{</span>
-<span class="x">    // 连模板文件名都不给，还玩个屁啊</span>
-<span class="x">    if(empty($viewName))</span>
-<span class="x">        return false;</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>public function resolveViewFile($viewName,$viewPath,$basePath,$moduleViewPath=null)
+{
+    // 连模板文件名都不给，还玩个屁啊
+    if(empty($viewName))
+        return false;
 
-<span class="x">    // 若$moduleViewPath未设置，则在应用的页面模板的根目录下找</span>
-<span class="x">    if($moduleViewPath===null)</span>
-<span class="x">        $moduleViewPath=$basePath;</span>
+    // 若$moduleViewPath未设置，则在应用的页面模板的根目录下找
+    if($moduleViewPath===null)
+        $moduleViewPath=$basePath;
 
-<span class="x">    // 获取设置的模板渲染引擎，其实就是加载ID为viewRenderer的组件</span>
-<span class="x">    if(($renderer=Yii::app()-&gt;getViewRenderer())!==null)</span>
-<span class="x">        // 模板文件的扩展类型默认为&#39;.php&#39;，可配置</span>
-<span class="x">        $extension=$renderer-&gt;fileExtension;</span>
-<span class="x">    else</span>
-<span class="x">        $extension=&#39;.php&#39;;</span>
-<span class="x">    echo (basename(__FILE__).&#39;:&#39;.__LINE__.&#39;:&#39;.__FUNCTION__.&#39;() $extension &#39;. var_export($extension, true)),&quot;\n&quot;;</span>
-<span class="x">    // 如果指定的模板文件名以/开始</span>
-<span class="x">    if($viewName[0]===&#39;/&#39;)</span>
-<span class="x">    {</span>
-<span class="x">        // 如果指定的模板文件名以//开始，则表示在模板的根目录下查找</span>
-<span class="x">        if(strncmp($viewName,&#39;//&#39;,2)===0)</span>
-<span class="x">            $viewFile=$basePath.$viewName;</span>
-<span class="x">        // 否则（以单个/开始）在模块的模板目录下查找</span>
-<span class="x">        else</span>
-<span class="x">            $viewFile=$moduleViewPath.$viewName;</span>
-<span class="x">    }</span>
-<span class="x">    // 如果模板文件名中存在.且.不出现在第一个位置，则认为这是一个路径别名，需要转换真正的路径</span>
-<span class="x">    elseif(strpos($viewName,&#39;.&#39;))</span>
-<span class="x">        $viewFile=Yii::getPathOfAlias($viewName);</span>
-<span class="x">    else</span>
-<span class="x">        // 否则在当前controller的模板目录下找</span>
-<span class="x">        $viewFile=$viewPath.DIRECTORY_SEPARATOR.$viewName;</span>
+    // 获取设置的模板渲染引擎，其实就是加载ID为viewRenderer的组件
+    if(($renderer=Yii::app()-&gt;getViewRenderer())!==null)
+        // 模板文件的扩展类型默认为&#39;.php&#39;，可配置
+        $extension=$renderer-&gt;fileExtension;
+    else
+        $extension=&#39;.php&#39;;
+    echo (basename(__FILE__).&#39;:&#39;.__LINE__.&#39;:&#39;.__FUNCTION__.&#39;() $extension &#39;. var_export($extension, true)),&quot;\n&quot;;
+    // 如果指定的模板文件名以/开始
+    if($viewName[0]===&#39;/&#39;)
+    {
+        // 如果指定的模板文件名以//开始，则表示在模板的根目录下查找
+        if(strncmp($viewName,&#39;//&#39;,2)===0)
+            $viewFile=$basePath.$viewName;
+        // 否则（以单个/开始）在模块的模板目录下查找
+        else
+            $viewFile=$moduleViewPath.$viewName;
+    }
+    // 如果模板文件名中存在.且.不出现在第一个位置，则认为这是一个路径别名，需要转换真正的路径
+    elseif(strpos($viewName,&#39;.&#39;))
+        $viewFile=Yii::getPathOfAlias($viewName);
+    else
+        // 否则在当前controller的模板目录下找
+        $viewFile=$viewPath.DIRECTORY_SEPARATOR.$viewName;
 
-<span class="x">    // 可能站点是需要国际化的</span>
-<span class="x">    // 所以在找到默认的模板文件后，尝试找一下对应用户目标语言的模板文件</span>
-<span class="x">    if(is_file($viewFile.$extension))</span>
-<span class="x">        return Yii::app()-&gt;findLocalizedFile($viewFile.$extension);</span>
-<span class="x">    // 如果不存在指定扩展类型的模板文件，且扩展类型不为&#39;.php&#39;，则看一下&#39;.php&#39;类型的模板文件是否存在</span>
-<span class="x">    elseif($extension!==&#39;.php&#39; &amp;&amp; is_file($viewFile.&#39;.php&#39;))</span>
-<span class="x">        return Yii::app()-&gt;findLocalizedFile($viewFile.&#39;.php&#39;);</span>
-<span class="x">    else</span>
-<span class="x">        return false;</span>
-<span class="x">}</span>
+    // 可能站点是需要国际化的
+    // 所以在找到默认的模板文件后，尝试找一下对应用户目标语言的模板文件
+    if(is_file($viewFile.$extension))
+        return Yii::app()-&gt;findLocalizedFile($viewFile.$extension);
+    // 如果不存在指定扩展类型的模板文件，且扩展类型不为&#39;.php&#39;，则看一下&#39;.php&#39;类型的模板文件是否存在
+    elseif($extension!==&#39;.php&#39; &amp;&amp; is_file($viewFile.&#39;.php&#39;))
+        return Yii::app()-&gt;findLocalizedFile($viewFile.&#39;.php&#39;);
+    else
+        return false;
+}
 </pre></div>
 
 
 <p>方法<code>resolveViewFile</code>中最后调用的方法<code>findLocalizedFile</code>，定义于抽象类CApplication中，实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">public function findLocalizedFile($srcFile,$srcLanguage=null,$language=null)</span>
-<span class="x">{</span>
-<span class="x">    if($srcLanguage===null)</span>
-<span class="x">        // sourceLanguage为public的属性，可配置，默认为en_us</span>
-<span class="x">        $srcLanguage=$this-&gt;sourceLanguage;</span>
-<span class="x">    if($language===null)</span>
-<span class="x">        // getLanguage的实现：$this-&gt;_language===null ? $this-&gt;sourceLanguage : $this-&gt;_language</span>
-<span class="x">        // 默认_language为未赋值，即null，所以取到的还是sourceLanguage属性值。</span>
-<span class="x">        // 但因为__set，所以也是可赋值的，这个赋值不应该是配置造成的，应该是根据用户的cookie中指定的语言选项，在请求处理时设置的，表示用户的目标语言</span>
-<span class="x">        $language=$this-&gt;getLanguage();</span>
-<span class="x">    // 如果用户的目标语言（或者用户选择的是默认语言），则直接返回默认模板文件的路径</span>
-<span class="x">    if($language===$srcLanguage)</span>
-<span class="x">        return $srcFile;</span>
-<span class="x">    // 否则取到对应目标语言的模板文件</span>
-<span class="x">    $desiredFile=dirname($srcFile).DIRECTORY_SEPARATOR.$language.DIRECTORY_SEPARATOR.basename($srcFile);</span>
-<span class="x">    // 如果对应目标语言的模板文件不存在，则还是返回默认的模板文件</span>
-<span class="x">    return is_file($desiredFile) ? $desiredFile : $srcFile;</span>
-<span class="x">}</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>public function findLocalizedFile($srcFile,$srcLanguage=null,$language=null)
+{
+    if($srcLanguage===null)
+        // sourceLanguage为public的属性，可配置，默认为en_us
+        $srcLanguage=$this-&gt;sourceLanguage;
+    if($language===null)
+        // getLanguage的实现：$this-&gt;_language===null ? $this-&gt;sourceLanguage : $this-&gt;_language
+        // 默认_language为未赋值，即null，所以取到的还是sourceLanguage属性值。
+        // 但因为__set，所以也是可赋值的，这个赋值不应该是配置造成的，应该是根据用户的cookie中指定的语言选项，在请求处理时设置的，表示用户的目标语言
+        $language=$this-&gt;getLanguage();
+    // 如果用户的目标语言（或者用户选择的是默认语言），则直接返回默认模板文件的路径
+    if($language===$srcLanguage)
+        return $srcFile;
+    // 否则取到对应目标语言的模板文件
+    $desiredFile=dirname($srcFile).DIRECTORY_SEPARATOR.$language.DIRECTORY_SEPARATOR.basename($srcFile);
+    // 如果对应目标语言的模板文件不存在，则还是返回默认的模板文件
+    return is_file($desiredFile) ? $desiredFile : $srcFile;
+}
 </pre></div>
 
 
 <p>从上述模板文件的寻找过程可以看到，最后返回的目标模板文件的路径是一个相对路径，以动态脚本根目录（默认为protected）开始。</p>
 <p>方法<code>renderPartial</code>中在得到目标模板文件相对路径后，即调用renderFile方法（定义于CBaseController类中）来渲染模板，该方法的实现如下：</p>
-<div class="highlight"><pre><span></span><span class="x">public function renderFile($viewFile,$data=null,$return=false)</span>
-<span class="x">{</span>
-<span class="x">    $widgetCount=count($this-&gt;_widgetStack);</span>
-<span class="x">    // Yii::app()-&gt;getViewRenderer() 获取模板引擎组件</span>
-<span class="x">    if(($renderer=Yii::app()-&gt;getViewRenderer())!==null &amp;&amp; $renderer-&gt;fileExtension===&#39;.&#39;.CFileHelper::getExtension($viewFile))</span>
-<span class="x">        $content=$renderer-&gt;renderFile($this,$viewFile,$data,$return);</span>
-<span class="x">    else</span>
-<span class="x">        // 如果没法用模板引擎来渲染（可能不是模板引擎的目标模板，也可能是没设置模板引擎组件），则当前普通的PHP文件（HTML代码中夹杂着PHP代码）来渲染</span>
-<span class="x">        $content=$this-&gt;renderInternal($viewFile,$data,$return);</span>
-<span class="x">    if(count($this-&gt;_widgetStack)===$widgetCount)</span>
-<span class="x">        return $content;</span>
-<span class="x">    else</span>
-<span class="x">    {</span>
-<span class="x">        $widget=end($this-&gt;_widgetStack);</span>
-<span class="x">        throw new CException(Yii::t(&#39;yii&#39;,&#39;{controller} contains improperly nested widget tags in its view &quot;{view}&quot;. A {widget} widget does not have an endWidget() call.&#39;,</span>
-<span class="x">            array(&#39;{controller}&#39;=&gt;get_class($this), &#39;{view}&#39;=&gt;$viewFile, &#39;{widget}&#39;=&gt;get_class($widget))));</span>
-<span class="x">    }</span>
-<span class="x">}</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>public function renderFile($viewFile,$data=null,$return=false)
+{
+    $widgetCount=count($this-&gt;_widgetStack);
+    // Yii::app()-&gt;getViewRenderer() 获取模板引擎组件
+    if(($renderer=Yii::app()-&gt;getViewRenderer())!==null &amp;&amp; $renderer-&gt;fileExtension===&#39;.&#39;.CFileHelper::getExtension($viewFile))
+        $content=$renderer-&gt;renderFile($this,$viewFile,$data,$return);
+    else
+        // 如果没法用模板引擎来渲染（可能不是模板引擎的目标模板，也可能是没设置模板引擎组件），则当前普通的PHP文件（HTML代码中夹杂着PHP代码）来渲染
+        $content=$this-&gt;renderInternal($viewFile,$data,$return);
+    if(count($this-&gt;_widgetStack)===$widgetCount)
+        return $content;
+    else
+    {
+        $widget=end($this-&gt;_widgetStack);
+        throw new CException(Yii::t(&#39;yii&#39;,&#39;{controller} contains improperly nested widget tags in its view &quot;{view}&quot;. A {widget} widget does not have an endWidget() call.&#39;,
+            array(&#39;{controller}&#39;=&gt;get_class($this), &#39;{view}&#39;=&gt;$viewFile, &#39;{widget}&#39;=&gt;get_class($widget))));
+    }
+}
 </pre></div>
 
 
 <p><code>renderFile</code>中<code>$content=$renderer-&gt;renderFile($this,$viewFile,$data,$return);</code>一行调用的renderFile方法，在抽象类CViewRenderer中定义如下：</p>
-<div class="highlight"><pre><span></span><span class="x">public function renderFile($context,$sourceFile,$data,$return)</span>
-<span class="x">{</span>
-<span class="x">    if(!is_file($sourceFile) || ($file=realpath($sourceFile))===false)</span>
-<span class="x">        throw new CException(Yii::t(&#39;yii&#39;,&#39;View file &quot;{file}&quot; does not exist.&#39;,array(&#39;{file}&#39;=&gt;$sourceFile)));</span>
-<span class="x">    // 尝试从runtime目录中获取已编译好的模板，如果编译好的模板不是同一存放在runtime目录下，则默认和未编译的模板文件在同一个目录下，并且文件名多一个&quot;c&quot;后缀</span>
-<span class="x">    // 得到$viewFile可能并不存在，第一次请求该模板</span>
-<span class="x">    $viewFile=$this-&gt;getViewFile($sourceFile);</span>
-<span class="x">    // 如果相比已编译好的模板文件，未编译的模板已发生变更，则需要重新编译</span>
-<span class="x">    // 如果已编译好的模板文件不存在，则@filemtime($viewFile)返回的是false，这个条件也是返回true</span>
-<span class="x">    if(@filemtime($sourceFile)&gt;@filemtime($viewFile))</span>
-<span class="x">    {</span>
-<span class="x">        // 抽象类CViewRenderer中generateViewFile方法并未实现，所以自己封装模板引擎组件时需要实现该方法</span>
-<span class="x">        $this-&gt;generateViewFile($sourceFile,$viewFile);</span>
-<span class="x">        // 设置编译好的模板文件的访问权限，默认是0755 (owner rwx, group rx and others rx)</span>
-<span class="x">        @chmod($viewFile,$this-&gt;filePermission);</span>
-<span class="x">    }</span>
-<span class="x">    // 编译好的模板文件其实就是一个PHP脚本（HTML代码中夹杂PHP代码），所以还需要渲染一下</span>
-<span class="x">    return $context-&gt;renderInternal($viewFile,$data,$return);</span>
-<span class="x">}</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>public function renderFile($context,$sourceFile,$data,$return)
+{
+    if(!is_file($sourceFile) || ($file=realpath($sourceFile))===false)
+        throw new CException(Yii::t(&#39;yii&#39;,&#39;View file &quot;{file}&quot; does not exist.&#39;,array(&#39;{file}&#39;=&gt;$sourceFile)));
+    // 尝试从runtime目录中获取已编译好的模板，如果编译好的模板不是同一存放在runtime目录下，则默认和未编译的模板文件在同一个目录下，并且文件名多一个&quot;c&quot;后缀
+    // 得到$viewFile可能并不存在，第一次请求该模板
+    $viewFile=$this-&gt;getViewFile($sourceFile);
+    // 如果相比已编译好的模板文件，未编译的模板已发生变更，则需要重新编译
+    // 如果已编译好的模板文件不存在，则@filemtime($viewFile)返回的是false，这个条件也是返回true
+    if(@filemtime($sourceFile)&gt;@filemtime($viewFile))
+    {
+        // 抽象类CViewRenderer中generateViewFile方法并未实现，所以自己封装模板引擎组件时需要实现该方法
+        $this-&gt;generateViewFile($sourceFile,$viewFile);
+        // 设置编译好的模板文件的访问权限，默认是0755 (owner rwx, group rx and others rx)
+        @chmod($viewFile,$this-&gt;filePermission);
+    }
+    // 编译好的模板文件其实就是一个PHP脚本（HTML代码中夹杂PHP代码），所以还需要渲染一下
+    return $context-&gt;renderInternal($viewFile,$data,$return);
+}
 </pre></div>
 
 
 <p>类<code>CController</code>的<code>render</code>方法在调用<code>renderPartial</code>得到渲染结果后，取得页面布局模板文件，然后将<code>renderPartial</code>的渲染结果作为数据渲染布局模板，从而得到一个完整HTML页面。
 获取布局模板文件路径的方法<code>getLayoutFile</code>实现如下所示（定义于类CController中）：</p>
-<div class="highlight"><pre><span></span><span class="x">public function getLayoutFile($layoutName)</span>
-<span class="x">{</span>
-<span class="x">    if($layoutName===false)</span>
-<span class="x">        return false;</span>
-<span class="x">    if(($theme=Yii::app()-&gt;getTheme())!==null &amp;&amp; ($layoutFile=$theme-&gt;getLayoutFile($this,$layoutName))!==false)</span>
-<span class="x">        return $layoutFile;</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>public function getLayoutFile($layoutName)
+{
+    if($layoutName===false)
+        return false;
+    if(($theme=Yii::app()-&gt;getTheme())!==null &amp;&amp; ($layoutFile=$theme-&gt;getLayoutFile($this,$layoutName))!==false)
+        return $layoutFile;
 
-<span class="x">    if(empty($layoutName))</span>
-<span class="x">    {</span>
-<span class="x">        $module=$this-&gt;getModule();</span>
-<span class="x">        // 递归向父级模板查找布局文件</span>
-<span class="x">        while($module!==null)</span>
-<span class="x">        {</span>
-<span class="x">            if($module-&gt;layout===false)</span>
-<span class="x">                return false;</span>
-<span class="x">            if(!empty($module-&gt;layout))</span>
-<span class="x">                break;</span>
-<span class="x">            $module=$module-&gt;getParentModule();</span>
-<span class="x">        }</span>
-<span class="x">        // 如果当前controller不属于某个module</span>
-<span class="x">        if($module===null)</span>
-<span class="x">            $module=Yii::app();</span>
-<span class="x">        // 默认为main，可配置</span>
-<span class="x">        $layoutName=$module-&gt;layout;</span>
-<span class="x">    }</span>
-<span class="x">    elseif(($module=$this-&gt;getModule())===null)</span>
-<span class="x">        $module=Yii::app();</span>
+    if(empty($layoutName))
+    {
+        $module=$this-&gt;getModule();
+        // 递归向父级模板查找布局文件
+        while($module!==null)
+        {
+            if($module-&gt;layout===false)
+                return false;
+            if(!empty($module-&gt;layout))
+                break;
+            $module=$module-&gt;getParentModule();
+        }
+        // 如果当前controller不属于某个module
+        if($module===null)
+            $module=Yii::app();
+        // 默认为main，可配置
+        $layoutName=$module-&gt;layout;
+    }
+    elseif(($module=$this-&gt;getModule())===null)
+        $module=Yii::app();
 
-<span class="x">    return $this-&gt;resolveViewFile($layoutName,$module-&gt;getLayoutPath(),Yii::app()-&gt;getViewPath(),$module-&gt;getViewPath());</span>
-<span class="x">}</span>
+    return $this-&gt;resolveViewFile($layoutName,$module-&gt;getLayoutPath(),Yii::app()-&gt;getViewPath(),$module-&gt;getViewPath());
+}
 </pre></div>
 
 

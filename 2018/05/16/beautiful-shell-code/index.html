@@ -65,7 +65,7 @@
             </header>
             <footer class="post-info">
               <abbr class="published" title="2018-05-16T00:00:00+08:00">
-                2018-05-16 Wed
+                2018-05-16 三
               </abbr>
               <address class="vcard author">
                 By <a class="url fn" href="../../../../author/xiayf.html">xiayf</a>
@@ -73,80 +73,80 @@
             </footer><!-- /.post-info -->
             <div class="entry-content">
               <p>使用丑陋的编程语言也能写出漂亮的代码。</p>
-<div class="highlight"><pre><span></span>true_then_run<span class="o">()</span> <span class="o">{</span>
-    <span class="nv">condition</span><span class="o">=</span><span class="nv">$1</span>
-    <span class="nv">action</span><span class="o">=</span><span class="nv">$2</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>true_then_run() {
+    condition=$1
+    action=$2
 
-    <span class="o">(</span><span class="si">${</span><span class="nv">condition</span><span class="si">}</span><span class="o">)</span>
-    <span class="k">if</span> <span class="o">[</span> <span class="nv">$?</span> -eq <span class="m">0</span> <span class="o">]</span>
-    <span class="k">then</span>
-        <span class="o">(</span><span class="si">${</span><span class="nv">action</span><span class="si">}</span><span class="o">)</span>
-    <span class="k">else</span>
-        <span class="nb">echo</span> <span class="s2">&quot;&#39;</span><span class="nv">$1</span><span class="s2">&#39; is false, don&#39;t run &#39;</span><span class="nv">$2</span><span class="s2">&#39;&quot;</span>
-    <span class="k">fi</span>
-<span class="o">}</span>
+    (<span style="color: #a31515">${</span>condition<span style="color: #a31515">}</span>)
+    <span style="color: #0000ff">if</span> [ $? -eq 0 ]
+    <span style="color: #0000ff">then</span>
+        (<span style="color: #a31515">${</span>action<span style="color: #a31515">}</span>)
+    <span style="color: #0000ff">else</span>
+        echo <span style="color: #a31515">&quot;&#39;</span>$1<span style="color: #a31515">&#39; is false, don&#39;t run &#39;</span>$2<span style="color: #a31515">&#39;&quot;</span>
+    <span style="color: #0000ff">fi</span>
+}
 
-false_then_run<span class="o">()</span> <span class="o">{</span>
-    <span class="nv">condition</span><span class="o">=</span><span class="nv">$1</span>
-    <span class="nv">action</span><span class="o">=</span><span class="nv">$2</span>
+false_then_run() {
+    condition=$1
+    action=$2
 
-    <span class="o">(</span><span class="si">${</span><span class="nv">condition</span><span class="si">}</span><span class="o">)</span>
-    <span class="k">if</span> <span class="o">[</span> <span class="nv">$?</span> -ne <span class="m">0</span> <span class="o">]</span>
-    <span class="k">then</span>
-        <span class="o">(</span><span class="si">${</span><span class="nv">action</span><span class="si">}</span><span class="o">)</span>
-    <span class="k">else</span>
-        <span class="nb">echo</span> <span class="s2">&quot;&#39;</span><span class="nv">$1</span><span class="s2">&#39; is true, don&#39;t run &#39;</span><span class="nv">$2</span><span class="s2">&#39;&quot;</span>
-    <span class="k">fi</span>
-<span class="o">}</span>
+    (<span style="color: #a31515">${</span>condition<span style="color: #a31515">}</span>)
+    <span style="color: #0000ff">if</span> [ $? -ne 0 ]
+    <span style="color: #0000ff">then</span>
+        (<span style="color: #a31515">${</span>action<span style="color: #a31515">}</span>)
+    <span style="color: #0000ff">else</span>
+        echo <span style="color: #a31515">&quot;&#39;</span>$1<span style="color: #a31515">&#39; is true, don&#39;t run &#39;</span>$2<span style="color: #a31515">&#39;&quot;</span>
+    <span style="color: #0000ff">fi</span>
+}
 
-map<span class="o">()</span> <span class="o">{</span>
-    <span class="k">for</span> item in <span class="nv">$2</span>
-    <span class="k">do</span>
-        <span class="o">(</span><span class="nv">$1</span> <span class="si">${</span><span class="nv">item</span><span class="si">}</span><span class="o">)</span>
-    <span class="k">done</span>
-<span class="o">}</span>
+map() {
+    <span style="color: #0000ff">for</span> item in $2
+    <span style="color: #0000ff">do</span>
+        ($1 <span style="color: #a31515">${</span>item<span style="color: #a31515">}</span>)
+    <span style="color: #0000ff">done</span>
+}
 
-reduce<span class="o">()</span> <span class="o">{</span>
-    <span class="nv">operator</span><span class="o">=</span><span class="nv">$1</span>
-    <span class="c1">#</span>
-    <span class="nv">list</span><span class="o">=(</span><span class="nv">$2</span><span class="o">)</span>
-    <span class="nv">list_len</span><span class="o">=</span><span class="si">${#</span><span class="nv">list</span><span class="p">[@]</span><span class="si">}</span>
-    <span class="c1">#</span>
-    <span class="nv">result</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
-    <span class="k">if</span> <span class="o">[</span> <span class="si">${</span><span class="nv">list_len</span><span class="si">}</span> -gt <span class="m">0</span> <span class="o">]</span>
-    <span class="k">then</span>
-        <span class="nv">result</span><span class="o">=</span><span class="si">${</span><span class="nv">list</span><span class="p">[0]</span><span class="si">}</span>
-    <span class="k">fi</span>
-    <span class="c1">#</span>
-    <span class="k">if</span> <span class="o">[</span> <span class="si">${</span><span class="nv">list_len</span><span class="si">}</span> -gt <span class="m">1</span> <span class="o">]</span>
-    <span class="k">then</span>
-        <span class="k">for</span> item in <span class="si">${</span><span class="nv">list</span><span class="p">[@]:</span><span class="nv">1</span><span class="si">}</span>
-        <span class="k">do</span>
-            <span class="nv">result</span><span class="o">=</span><span class="k">$(</span><span class="si">${</span><span class="nv">operator</span><span class="si">}</span> <span class="si">${</span><span class="nv">result</span><span class="si">}</span> <span class="si">${</span><span class="nv">item</span><span class="si">}</span><span class="k">)</span>
-        <span class="k">done</span>
-    <span class="k">fi</span>
-    <span class="nb">echo</span> <span class="si">${</span><span class="nv">result</span><span class="si">}</span>
-<span class="o">}</span>
+reduce() {
+    operator=$1
+    <span style="color: #008000">#</span>
+    list=($2)
+    list_len=<span style="color: #a31515">${#</span>list[@]<span style="color: #a31515">}</span>
+    <span style="color: #008000">#</span>
+    result=<span style="color: #a31515">&quot;&quot;</span>
+    <span style="color: #0000ff">if</span> [ <span style="color: #a31515">${</span>list_len<span style="color: #a31515">}</span> -gt 0 ]
+    <span style="color: #0000ff">then</span>
+        result=<span style="color: #a31515">${</span>list[0]<span style="color: #a31515">}</span>
+    <span style="color: #0000ff">fi</span>
+    <span style="color: #008000">#</span>
+    <span style="color: #0000ff">if</span> [ <span style="color: #a31515">${</span>list_len<span style="color: #a31515">}</span> -gt 1 ]
+    <span style="color: #0000ff">then</span>
+        <span style="color: #0000ff">for</span> item in <span style="color: #a31515">${</span>list[@]:1<span style="color: #a31515">}</span>
+        <span style="color: #0000ff">do</span>
+            result=<span style="color: #0000ff">$(</span><span style="color: #a31515">${</span>operator<span style="color: #a31515">}</span> <span style="color: #a31515">${</span>result<span style="color: #a31515">}</span> <span style="color: #a31515">${</span>item<span style="color: #a31515">}</span><span style="color: #0000ff">)</span>
+        <span style="color: #0000ff">done</span>
+    <span style="color: #0000ff">fi</span>
+    echo <span style="color: #a31515">${</span>result<span style="color: #a31515">}</span>
+}
 
-filter<span class="o">()</span> <span class="o">{</span>
-    <span class="k">for</span> item in <span class="nv">$2</span>
-    <span class="k">do</span>
-        <span class="o">(</span><span class="nv">$1</span> <span class="si">${</span><span class="nv">item</span><span class="si">}</span><span class="o">)</span>
-        <span class="k">if</span> <span class="o">[</span> <span class="nv">$?</span> -eq <span class="m">0</span> <span class="o">]</span>
-        <span class="k">then</span>
-            <span class="nb">echo</span> <span class="si">${</span><span class="nv">item</span><span class="si">}</span>
-        <span class="k">fi</span>
-    <span class="k">done</span>
-<span class="o">}</span>
+filter() {
+    <span style="color: #0000ff">for</span> item in $2
+    <span style="color: #0000ff">do</span>
+        ($1 <span style="color: #a31515">${</span>item<span style="color: #a31515">}</span>)
+        <span style="color: #0000ff">if</span> [ $? -eq 0 ]
+        <span style="color: #0000ff">then</span>
+            echo <span style="color: #a31515">${</span>item<span style="color: #a31515">}</span>
+        <span style="color: #0000ff">fi</span>
+    <span style="color: #0000ff">done</span>
+}
 
-sum<span class="o">()</span> <span class="o">{</span>
-    <span class="nv">v</span><span class="o">=</span><span class="m">0</span>
-    <span class="k">for</span> arg in <span class="s2">&quot;</span><span class="nv">$@</span><span class="s2">&quot;</span>
-    <span class="k">do</span>
-        <span class="nv">v</span><span class="o">=</span><span class="k">$((</span><span class="nv">$v</span><span class="o">+</span><span class="si">${</span><span class="nv">arg</span><span class="si">}</span><span class="k">))</span>
-    <span class="k">done</span>
-    <span class="nb">echo</span> <span class="nv">$v</span>
-<span class="o">}</span>
+sum() {
+    v=0
+    <span style="color: #0000ff">for</span> arg in <span style="color: #a31515">&quot;</span>$@<span style="color: #a31515">&quot;</span>
+    <span style="color: #0000ff">do</span>
+        v=<span style="color: #0000ff">$((</span>$v+<span style="color: #a31515">${</span>arg<span style="color: #a31515">}</span><span style="color: #0000ff">))</span>
+    <span style="color: #0000ff">done</span>
+    echo $v
+}
 </pre></div>
             </div><!-- /.entry-content -->
             <div class="comments">

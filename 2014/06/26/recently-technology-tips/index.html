@@ -65,7 +65,7 @@
             </header>
             <footer class="post-info">
               <abbr class="published" title="2014-06-26T00:00:00+08:00">
-                2014-06-26 Thu
+                2014-06-26 四
               </abbr>
               <address class="vcard author">
                 By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
@@ -102,8 +102,8 @@ master进程可以理解以下信号：</p>
 <li><strong>对于Nginx、php-fpm等的日志文件使用shell脚本进行切分备份时，发现Nginx、php-fpm还是往备份的老文件中，而不是往新的access.log或error.log文件中写日志，如何解决？</strong></li>
 </ul>
 <p>shell脚本中通常使用mv + touch 或 cp + touch的方式对日志文件进行备份。由于Nginx或php-fpm进程其实只知道日志文件打开后的文件描述符，而不知道打开的是哪个文件。使用mv或cp备份文件后，应该是修改了内核中文件描述符对应的文件路径（我猜的！），但Nginx或php-fpm并不知道现在该文件描述符指向的不再是原来的日志文件。所以解决方法就是通知Nginx或php-fpm根据配置重新打开日志文件。根据前一个问题，可知可以通过kill命令给进程发送USR1信号来实现。</p>
-<div class="highlight"><pre><span></span><span class="nb">kill</span> -USR1 <span class="sb">`</span>cat php-fpm.pid<span class="sb">`</span>
-<span class="nb">kill</span> -USR1 <span class="sb">`</span>cat nginx.pid<span class="sb">`</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>kill -USR1 <span style="color: #a31515">`</span>cat php-fpm.pid<span style="color: #a31515">`</span>
+kill -USR1 <span style="color: #a31515">`</span>cat nginx.pid<span style="color: #a31515">`</span>
 </pre></div>
 
 
@@ -113,7 +113,7 @@ master进程可以理解以下信号：</p>
 </ul>
 <p>我们的应用使用Yii框架默认的URL风格(/?r=controller/action)，意味着所有非静态内容(非js、css、图片等)请求指向的服务器资源都是相同的（如<code>/</code>或<code>/xxx/</code>），而Yii框架的请求处理入口统一为一个index.php文件。Nginx有一个配置变量<code>$uri</code>，保存着请求的URL（不带请求参数）。那么可以让所有分支的测试环境共用一个root，再将所有非静态内容请求重定向到<code>$uri/index.php</code>就可以了。对于静态文件请求让其根据路径直接获取文件内容即可。但还有一个问题，怎么让分支代码中所有静态文件超链接都带上分支对应的URL前缀？可以通过为Yii配置一个名为url_prefix的参数，指定该分支所使用的URL前缀，然后在HTML模板（我们使用smarty来渲染）中让所有静态文件超链接都带上这个URL前缀参数。</p>
 <p>根据<a href="http://www.yiiframework.com/doc/guide/1.1/en/quickstart.apache-nginx-config#nginx">Yii官方文档给出的Nginx虚拟主机配置</a>进行修改得到我们需要的配置，如下所示：</p>
-<div class="highlight"><pre><span></span>listen 80;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>listen 80;
 server_name  localhost;
 
 root html;

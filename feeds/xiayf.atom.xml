@@ -1,5 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>黑·白 - xiayf</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/xiayf.atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2019-06-17T00:00:00+08:00</updated><entry><title>Java 单测伴侣 - mockito</title><link href="http://youngsterxyf.github.io/2019/06/17/mockito/" rel="alternate"></link><published>2019-06-17T00:00:00+08:00</published><updated>2019-06-17T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-06-17:/2019/06/17/mockito/</id><summary type="html">&lt;p&gt;其实工作以来，我很少写测试/单测代码，一方面是大部分互联网公司团队对测试的要求不高，另一方面是想写好测试代码还挺难的，挺花时间，其中最麻烦的是待测代码可能会访问外部资源（比如数据库、HTTP API），如果不能方便地进模拟访问这些外部资源，那么测试起来会非常麻烦。&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>黑·白 - xiayf</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/xiayf.atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2019-06-25T00:00:00+08:00</updated><entry><title>Java System.getProperty VS. System.getenv（译）</title><link href="http://youngsterxyf.github.io/2019/06/25/java-prop-env/" rel="alternate"></link><published>2019-06-25T00:00:00+08:00</published><updated>2019-06-25T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-06-25:/2019/06/25/java-prop-env/</id><summary type="html">&lt;p&gt;原文：&lt;a href="https://www.baeldung.com/java-system-get-property-vs-system-getenv"&gt;Java System.getProperty vs System.getenv&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;1、简介&lt;/h2&gt;
+&lt;p&gt;Java 应用代码中会自动引入 &lt;code&gt;java.lang&lt;/code&gt; 包。这个包包含很多常用的类，包括 &lt;code&gt;NullPointerException&lt;/code&gt;、&lt;code&gt;Object&lt;/code&gt;、&lt;code&gt;Math&lt;/code&gt;、&lt;code&gt;String&lt;/code&gt; 等等。&lt;/p&gt;
+&lt;p&gt;其中 &lt;code&gt;java.lang.System&lt;/code&gt; 类是一个 final 类，这意味着开发者无法继承它，其所有方法都是静态的（static）。&lt;/p&gt;
+&lt;p&gt;System 类中有两个方法，分别来&lt;strong&gt;读取系统属性（system properties）和环境变量（environment variables）&lt;/strong&gt;，下面我们来看看这两者的区别。&lt;/p&gt;
+&lt;h2&gt;2、使用 System.getProperty()&lt;/h2&gt;
+&lt;p&gt;Java 平台使用一个 &lt;code&gt;Properties&lt;/code&gt; 对象来提供&lt;strong&gt;本地系统相关的信息和配置 …&lt;/strong&gt;&lt;/p&gt;</summary><content type="html">&lt;p&gt;原文：&lt;a href="https://www.baeldung.com/java-system-get-property-vs-system-getenv"&gt;Java System.getProperty vs System.getenv&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;1、简介&lt;/h2&gt;
+&lt;p&gt;Java 应用代码中会自动引入 &lt;code&gt;java.lang&lt;/code&gt; 包。这个包包含很多常用的类，包括 &lt;code&gt;NullPointerException&lt;/code&gt;、&lt;code&gt;Object&lt;/code&gt;、&lt;code&gt;Math&lt;/code&gt;、&lt;code&gt;String&lt;/code&gt; 等等。&lt;/p&gt;
+&lt;p&gt;其中 &lt;code&gt;java.lang.System&lt;/code&gt; 类是一个 final 类，这意味着开发者无法继承它，其所有方法都是静态的（static）。&lt;/p&gt;
+&lt;p&gt;System 类中有两个方法，分别来&lt;strong&gt;读取系统属性（system properties）和环境变量（environment variables）&lt;/strong&gt;，下面我们来看看这两者的区别。&lt;/p&gt;
+&lt;h2&gt;2、使用 System.getProperty()&lt;/h2&gt;
+&lt;p&gt;Java 平台使用一个 &lt;code&gt;Properties&lt;/code&gt; 对象来提供&lt;strong&gt;本地系统相关的信息和配置&lt;/strong&gt;，我们称之为 &lt;strong&gt;系统属性&lt;/strong&gt;。&lt;/p&gt;
+&lt;p&gt;系统属性包括当前用户、当前 Java 运行时版本 以及 文件路径分隔符诸如此类的信息。&lt;/p&gt;
+&lt;p&gt;如下代码中，我们使用 &lt;code&gt;System.getProperty("log_dir")&lt;/code&gt; 来读取 &lt;em&gt;log_dir&lt;/em&gt; 属性值。我们也会使用默认值参数，这样如果属性不存在，&lt;code&gt;getProperty&lt;/code&gt; 则返回 &lt;em&gt;/tmp/log&lt;/em&gt;：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;String log_dir = System.getProperty(&lt;span style="color: #a31515"&gt;&amp;quot;log_dir&amp;quot;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;quot;/tmp/log&amp;quot;&lt;/span&gt;);
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;如果希望在运行时变更系统属性，则可以使用 &lt;code&gt;System.setProperty&lt;/code&gt; 方法：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;System.setProperty(&lt;span style="color: #a31515"&gt;&amp;quot;log_dir&amp;quot;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;quot;/tmp/log&amp;quot;&lt;/span&gt;);
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;我们可以以如下格式使用命令行参数向应用传递指定属性或配置值：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;java -jar jarName -DpropertyName=value
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;比如 将 app.jar 的 foo 属性值设置为 bar：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;java -jar app -Dfoo=&lt;span style="color: #a31515"&gt;&amp;quot;bar&amp;quot;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;System.getProperty 返回的一定是一个字符串。&lt;/p&gt;
+&lt;h2&gt;3、使用 System.getenv()&lt;/h2&gt;
+&lt;p&gt;环境变量是类似 Properties 的一些 键/值 对。许多操作系统都提供环境变量的方式向应用传递配置信息。&lt;/p&gt;
+&lt;p&gt;设置环境变量的方式，各操作系统之间有所不同。例如，Windows 中，我们使用控制面板中的系统工具（System Utility）应用来设置，而 Unix 系统则使用 shell 脚本。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;创建一个进程时，该进程默认会从其父进程继承一个克隆的上下文环境&lt;/strong&gt;。&lt;/p&gt;
+&lt;p&gt;如下代码片段演示：使用一个 lambda 表达式来输出所有环境变量。&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;System.getenv().forEach((k, v) -&amp;gt; {
+    System.out.println(k + &lt;span style="color: #a31515"&gt;&amp;quot;:&amp;quot;&lt;/span&gt; + v);
+});
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;strong&gt;getenv() 返回一个只读的 &lt;code&gt;Map&lt;/code&gt;&lt;/strong&gt;。尝试向该映射中添加值，会抛出 &lt;code&gt;UnsupportedOperationException&lt;/code&gt; 异常。&lt;/p&gt;
+&lt;p&gt;可以使用变量名称作为参数调用 &lt;code&gt;getenv&lt;/code&gt; 来获取单个变量值：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;String log_dir = System.getenv(&lt;span style="color: #a31515"&gt;&amp;quot;log_dir&amp;quot;&lt;/span&gt;);
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;此外，我们可以在应用中创建一个新进程，并向其上下文环境中添加新的环境变量。&lt;/p&gt;
+&lt;p&gt;Java 中，我们使用 &lt;code&gt;ProcessBuilder&lt;/code&gt; 类来创建新进程，该类有一个名为 &lt;code&gt;environment&lt;/code&gt; 的方法，此方法返回一个 &lt;code&gt;Map&lt;/code&gt;，不过这个映射不是只读的，这样就可以向其添加新元素：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;ProcessBuilder pb = &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; ProcessBuilder(args);
+Map&amp;lt;String, String&amp;gt; env = pb.environment();
+env.put(&lt;span style="color: #a31515"&gt;&amp;quot;log_dir&amp;quot;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;quot;/tmp/log&amp;quot;&lt;/span&gt;);
+Process process = pb.start();
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2&gt;4、区别&lt;/h2&gt;
+&lt;p&gt;这两者本质上都是提供 字符串类型 键值 信息的映射，区别在于：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;我们可以在运行时变更 系统属性（Properties），但是 环境变量（Environment Variables）仅是操作系统环境变量的一个不可变拷贝。&lt;/li&gt;
+&lt;li&gt;仅 Java 平台包含这个 系统属性 特性，而 环境变量 则是操作系统层面提供，全局可用的 - 运行在同一个机器上的所有应用都可以访问。&lt;/li&gt;
+&lt;li&gt;系统属性 在打包应用时就必须存在&lt;sup id="fnref:1"&gt;&lt;a class="footnote-ref" href="#fn:1"&gt;1&lt;/a&gt;&lt;/sup&gt;，而 环境变量 则任意时刻都可以在操作系统中创建。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2&gt;5、总结一下&lt;/h2&gt;
+&lt;p&gt;虽然这两者在概念上比较相似，但是 系统属性 和 环境变量 的应用方式差别很大。&lt;/p&gt;
+&lt;p&gt;二选一通常考量的是生效范围。使用 环境变量，同一个应用可以部署到多个机器上运行不同的实例，并在操作系统级别或者在 AWS / Azure 云平台控制台中进行配置，以免更新配置时还得重新构建应用（&lt;strong&gt;译注：其实使用 系统属性 也可以实现这个效果，比如在 shell 脚本中获取系统环境变量，然后作为系统属性通过 Java 命令行参数传递给应用&lt;/strong&gt;）。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;getProperty&lt;/code&gt; 方法名称是驼峰风格，但 &lt;code&gt;getenv&lt;/code&gt; 不是，谨记！&lt;/p&gt;
+&lt;div class="footnote"&gt;
+&lt;hr&gt;
+&lt;ol&gt;
+&lt;li id="fn:1"&gt;
+&lt;p&gt;原文是这么写的，但我认为这句话有问题。系统属性明明可以在应用运行时通过命令行参数指定，也可以将属性文件打包到应用包中，在运行时加载（通过 &lt;code&gt;System.getProperties().load&lt;/code&gt; 方法）。&amp;#160;&lt;a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text"&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;</content><category term="翻译"></category><category term="Java"></category></entry><entry><title>Java 单测伴侣 - mockito</title><link href="http://youngsterxyf.github.io/2019/06/17/mockito/" rel="alternate"></link><published>2019-06-17T00:00:00+08:00</published><updated>2019-06-17T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-06-17:/2019/06/17/mockito/</id><summary type="html">&lt;p&gt;其实工作以来，我很少写测试/单测代码，一方面是大部分互联网公司团队对测试的要求不高，另一方面是想写好测试代码还挺难的，挺花时间，其中最麻烦的是待测代码可能会访问外部资源（比如数据库、HTTP API），如果不能方便地进模拟访问这些外部资源，那么测试起来会非常麻烦。&lt;/p&gt;
 &lt;p&gt;但，对于复杂逻辑，如果不经过严格测试，发布到生产环境，又有些不放心，没底气，或者在代码重构时，如果没有覆盖全面的测试，很难评估代码变动带来的影响。&lt;/p&gt;
 &lt;p&gt;直到遇到 &lt;a href="https://site.mockito.org/"&gt;mockito&lt;/a&gt;，我才觉得是时候认真写写测试代码了。&lt;/p&gt;
 &lt;hr&gt;

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>Java System.getProperty VS. System.getenv（译）</title>
+        <meta charset="utf-8" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑·白 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑·白 Full RSS Feed" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/SentyZHAO/SentyZHAO.css" />
+
+        <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+            <script>
+              var _hmt = _hmt || [];
+              (function() {
+                var hm = document.createElement("script");
+                hm.src = "//hm.baidu.com/hm.js?5c5d8c3fe75afeff117777b9236b96ec";
+                var s = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(hm, s);
+              })();
+            </script>
+</head>
+
+<body id="index" class="home">
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1 style='font-family: "SentyZHAO";'><a href="../../../..">黑·白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+
+              <ul class="columns" style='font-family: "SentyZHAO";'>
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="/archives.html">归 档</a></li>
+                <li><a href="/pages/tech-share.html">技术分享</a></li>
+                <li><a href="/pages/translation.html">技术翻译</a></li>
+                <li><a href="/pages/tools.html">工具集</a></li>
+                <li><a href="/pages/links.html">链 接</a></li>
+                <li><a href="/pages/aboutme.html">关于我</a></li>
+                <li><a href="/feeds/rss.xml">RSS</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+   <div class="row">
+        <div class="columns">
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2019/06/25/java-prop-env/" rel="bookmark" title="Permalink to Java System.getProperty VS. System.getenv（译）">Java System.getProperty VS. System.getenv（译）</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2019-06-25T00:00:00+08:00">
+                2019-06-25 二
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/xiayf.html">xiayf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>原文：<a href="https://www.baeldung.com/java-system-get-property-vs-system-getenv">Java System.getProperty vs System.getenv</a></p>
+<h2>1、简介</h2>
+<p>Java 应用代码中会自动引入 <code>java.lang</code> 包。这个包包含很多常用的类，包括 <code>NullPointerException</code>、<code>Object</code>、<code>Math</code>、<code>String</code> 等等。</p>
+<p>其中 <code>java.lang.System</code> 类是一个 final 类，这意味着开发者无法继承它，其所有方法都是静态的（static）。</p>
+<p>System 类中有两个方法，分别来<strong>读取系统属性（system properties）和环境变量（environment variables）</strong>，下面我们来看看这两者的区别。</p>
+<h2>2、使用 System.getProperty()</h2>
+<p>Java 平台使用一个 <code>Properties</code> 对象来提供<strong>本地系统相关的信息和配置</strong>，我们称之为 <strong>系统属性</strong>。</p>
+<p>系统属性包括当前用户、当前 Java 运行时版本 以及 文件路径分隔符诸如此类的信息。</p>
+<p>如下代码中，我们使用 <code>System.getProperty("log_dir")</code> 来读取 <em>log_dir</em> 属性值。我们也会使用默认值参数，这样如果属性不存在，<code>getProperty</code> 则返回 <em>/tmp/log</em>：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>String log_dir = System.getProperty(<span style="color: #a31515">&quot;log_dir&quot;</span>, <span style="color: #a31515">&quot;/tmp/log&quot;</span>);
+</pre></div>
+
+
+<p>如果希望在运行时变更系统属性，则可以使用 <code>System.setProperty</code> 方法：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>System.setProperty(<span style="color: #a31515">&quot;log_dir&quot;</span>, <span style="color: #a31515">&quot;/tmp/log&quot;</span>);
+</pre></div>
+
+
+<p>我们可以以如下格式使用命令行参数向应用传递指定属性或配置值：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>java -jar jarName -DpropertyName=value
+</pre></div>
+
+
+<p>比如 将 app.jar 的 foo 属性值设置为 bar：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>java -jar app -Dfoo=<span style="color: #a31515">&quot;bar&quot;</span>
+</pre></div>
+
+
+<p>System.getProperty 返回的一定是一个字符串。</p>
+<h2>3、使用 System.getenv()</h2>
+<p>环境变量是类似 Properties 的一些 键/值 对。许多操作系统都提供环境变量的方式向应用传递配置信息。</p>
+<p>设置环境变量的方式，各操作系统之间有所不同。例如，Windows 中，我们使用控制面板中的系统工具（System Utility）应用来设置，而 Unix 系统则使用 shell 脚本。</p>
+<p><strong>创建一个进程时，该进程默认会从其父进程继承一个克隆的上下文环境</strong>。</p>
+<p>如下代码片段演示：使用一个 lambda 表达式来输出所有环境变量。</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>System.getenv().forEach((k, v) -&gt; {
+    System.out.println(k + <span style="color: #a31515">&quot;:&quot;</span> + v);
+});
+</pre></div>
+
+
+<p><strong>getenv() 返回一个只读的 <code>Map</code></strong>。尝试向该映射中添加值，会抛出 <code>UnsupportedOperationException</code> 异常。</p>
+<p>可以使用变量名称作为参数调用 <code>getenv</code> 来获取单个变量值：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>String log_dir = System.getenv(<span style="color: #a31515">&quot;log_dir&quot;</span>);
+</pre></div>
+
+
+<p>此外，我们可以在应用中创建一个新进程，并向其上下文环境中添加新的环境变量。</p>
+<p>Java 中，我们使用 <code>ProcessBuilder</code> 类来创建新进程，该类有一个名为 <code>environment</code> 的方法，此方法返回一个 <code>Map</code>，不过这个映射不是只读的，这样就可以向其添加新元素：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>ProcessBuilder pb = <span style="color: #0000ff">new</span> ProcessBuilder(args);
+Map&lt;String, String&gt; env = pb.environment();
+env.put(<span style="color: #a31515">&quot;log_dir&quot;</span>, <span style="color: #a31515">&quot;/tmp/log&quot;</span>);
+Process process = pb.start();
+</pre></div>
+
+
+<h2>4、区别</h2>
+<p>这两者本质上都是提供 字符串类型 键值 信息的映射，区别在于：</p>
+<ol>
+<li>我们可以在运行时变更 系统属性（Properties），但是 环境变量（Environment Variables）仅是操作系统环境变量的一个不可变拷贝。</li>
+<li>仅 Java 平台包含这个 系统属性 特性，而 环境变量 则是操作系统层面提供，全局可用的 - 运行在同一个机器上的所有应用都可以访问。</li>
+<li>系统属性 在打包应用时就必须存在<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>，而 环境变量 则任意时刻都可以在操作系统中创建。</li>
+</ol>
+<h2>5、总结一下</h2>
+<p>虽然这两者在概念上比较相似，但是 系统属性 和 环境变量 的应用方式差别很大。</p>
+<p>二选一通常考量的是生效范围。使用 环境变量，同一个应用可以部署到多个机器上运行不同的实例，并在操作系统级别或者在 AWS / Azure 云平台控制台中进行配置，以免更新配置时还得重新构建应用（<strong>译注：其实使用 系统属性 也可以实现这个效果，比如在 shell 脚本中获取系统环境变量，然后作为系统属性通过 Java 命令行参数传递给应用</strong>）。</p>
+<p><code>getProperty</code> 方法名称是驼峰风格，但 <code>getenv</code> 不是，谨记！</p>
+<div class="footnote">
+<hr>
+<ol>
+<li id="fn:1">
+<p>原文是这么写的，但我认为这句话有问题。系统属性明明可以在应用运行时通过命令行参数指定，也可以将属性文件打包到应用包中，在运行时加载（通过 <code>System.getProperties().load</code> 方法）。&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2019/06/25/java-prop-env/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+        </div><!-- /.twelve.columns -->
+ </div><!-- /.row -->
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+  <script src="../../../../theme/js/main.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../../../theme/emoji/css/basic/emojify.min.css" />
+  <script src="../../../../theme/emoji/js/emojify.min.js"></script>
+  <script>
+    emojify.setConfig({
+        img_dir : '../../../../theme/emoji/images/basic'
+    });
+    emojify.run();
+</script>
+</body>
+</html>

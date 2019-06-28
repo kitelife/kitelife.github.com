@@ -63,6 +63,48 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="./2014/05/03/optimizing-nginx-and-php-fpm-for-high-traffic-sites/" rel="bookmark" title="Permalink to 高流量站点NGINX与PHP-fpm配置优化（译）">高流量站点NGINX与PHP-fpm配置优化（译）</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2014-05-03T00:00:00+08:00"> 2014-05-03 六 </abbr>
+<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <p>原文：<a href="http://www.softwareprojects.com/resources/programming/t-optimizing-nginx-and-php-fpm-for-high-traffic-sites-2081.html">Optimizing NGINX and PHP-fpm for high traffic sites</a></p>
+<p>译者：<a href="https://github.com/youngsterxyf/">youngsterxyf</a></p>
+<p>使用Nginx搭配PHP已有7年的这份经历让我们学会如何为高流量站点优化NGINX和PHP-fpm配置。</p>
+<p>以下正是这方面的一些提示和建议：</p>
+<h4>1. 将TCP切换为UNIX域套接字</h4>
+<p>UNIX域套接字相比TCP套接字在loopback接口上能提供更好的性能（更少的数据拷贝和上下文切换）。</p>
+<p>但有一点需要牢记：仅运行在同一台服务器上的程序可以访问UNIX域套接字（显然没有网络支持）。</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>upstream backend
+{
+    # UNIX domain sockets
+    server unix:/var/run/fastcgi.sock;
+
+    # TCP sockets
+    # server 127.0.0.1:8080;
+}
+</pre></div>
+
+
+<h4>2. 调整工作进程数</h4>
+<p>现代计算机硬件是多处理器的，NGINX可以利用多物理或虚拟处理器。</p>
+<p>多数情况下，你的Web服务器都不会配置为处理多种任务（比如作为Web服务器提供服务的同时也是一个打印服务器），你可以配置NGINX使用所有可用的处理器，NGINX工作进程并不是多线程的。</p>
+<p>运行以下命令可以获知你的机器有多少个处理器：</p>
+<p>Linux上 …</p> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="./2014/05/03/optimizing-nginx-and-php-fpm-for-high-traffic-sites/" rel="bookmark" title="Permalink to 高流量站点NGINX与PHP-fpm配置优化（译）">阅读全文 <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="./tag/nginx.html">Nginx</a>
+                    <a class="danger label" href="./tag/php.html">PHP</a>
+                    <a class="danger label" href="./tag/fu-wu-qi.html">服务器</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="./2014/04/28/max-width-in-firefox/" rel="bookmark" title="Permalink to Firefox中“max-width:100%”不兼容问题">Firefox中“max-width:100%”不兼容问题</a>
                     </h2>
                 </header>
@@ -295,36 +337,6 @@ slice := []<span style="color: #2b91af">int</span>{1, 2 …</pre></div> </div><!
                 <div class="row tag-row">
                     <span>Tagged as : </span>
                     <a class="danger label" href="./tag/zong-jie.html">总结</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="./2013/12/28/weibo_tech_resources_summary/" rel="bookmark" title="Permalink to 微博"收藏/赞/转发"技术资料汇总">微博"收藏/赞/转发"技术资料汇总</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2013-12-28T00:00:00+08:00"> 2013-12-28 六 </abbr>
-<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>使用新浪微博，我很少发状态，主要是跟踪技术圈的一些动态，技术牛人们都在搞些什么东东，因而收藏和转发了一些优秀的技术资源，
-但有些资源当时并没有来得及阅读消化，也没必要马上就阅读学习的，所以这里整理汇总一下，以免湮没在浩瀚的网络信息海洋中。</p>
-<h3>书籍</h3>
-<ul>
-<li>HTTP权威指南 &lt;- <a href="http://weibo.com/fenng">@Fenng</a></li>
-<li><a href="http://nlp.stanford.edu/IR-book/">Introduction to Information Retrieval</a> &lt;- <a href="http://weibo.com/lirenchen">@陈利人</a></li>
-<li><a href="http://www.codingnow.com/temp/readinglua.pdf">Lua 源码欣赏</a> &lt;- <a href="http://weibo.com/deepcold">@简悦云风</a></li>
-<li><a href="http://aosabook.org/en/index.html">The Architecture of Open Source Applications</a> &lt;- <a href="http://weibo.com/u/2169336083">@CloudFoundry </a> (已陆续读了部分章节，赞！图灵社区有章节翻译)</li>
-<li>程序设计实践 &lt;- <a href="http://weibo.com/wintercn">@寒冬winter</a> <em>推荐语：薄薄200页，就能让一个掌握一门编程语言基础的人成为一个合格的程序员，其中“算法和数据结构”一章不到30页，我认为细细读过足以应付大多数面试和工作需要。</em></li>
-<li>七周七语言 &lt;- <a href="http://weibo.com/tchuba">@淘宝褚霸</a></li>
-<li>C语言接口与实现 &lt;- <a href="http://weibo.com/huangz1990">@huangz1990</a></li>
-<li>The Linux Programming Interface &lt;- <a href="http://weibo.com/533452688">@ASTA谢</a> <em>推荐语：既 …</em></li></ul> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="./2013/12/28/weibo_tech_resources_summary/" rel="bookmark" title="Permalink to 微博"收藏/赞/转发"技术资料汇总">阅读全文 <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="./tag/wei-bo.html">微博</a>
-                    <a class="danger label" href="./tag/ji-zhu.html">技术</a>
                 </div>
             </article>
             </li>

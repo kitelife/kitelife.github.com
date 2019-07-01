@@ -72,7 +72,7 @@
               </address>
             </footer><!-- /.post-info -->
             <div class="entry-content">
-              <p>原文：https://projectreactor.io/docs/core/release/reference/</p>
+              <p>原文：<a href="https://projectreactor.io/docs/core/release/reference/">Reactor 3 Reference Guide</a></p>
 <h3>1. 开始吧</h3>
 <h4>1.1 Reactor 简介</h4>
 <p>Reactor 是为 JVM 准备的一个完全非阻塞的反应式编程基础组件，支持高效的需求管理（以管理“反压”的形式），直接与 Java 8 的函数式 API 集成，尤其是 <code>CompletableFuture</code>、<code>Stream</code> 以及 <code>Duration</code>，提供可组合的异步序列 API - <code>Flux</code>（适用于 N 个元素的序列）和 <code>Mono</code>（适用于 0 或 1个元素的序列）--- 并且全面地（extensively）实现了 <a href="https://www.reactive-streams.org/">反应式流（Reative Streams）</a> 规范。</p>
@@ -599,12 +599,242 @@ Cancelling <span style="color: #0000ff">after</span> <span style="color: #0000ff
 <p><code>Mono</code> 也有一个 <code>create</code> 生成器方法。Mono 的 create 方法传入回调的 <code>MonoSink</code> 参数不允许下发多个消息，在第一个消息之后它会丢弃所有的消息。</p>
 </blockquote>
 <h5>3.4.3 异步单线程的 <code>push</code></h5>
+<p><code>push</code> 的功能介于 <code>generate</code> 和 <code>create</code> 之间，适用于处理来自单个生产者的事件。<code>push</code> 也可以是异步的，也可以使用 <code>create</code> 支持的超限策略来管理反压，然而，同时（at a time）只能有一个生产线程调用 <code>next</code>。</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>Flux&lt;String&gt; bridge = Flux.push(sink -&gt; {
+    myEventProcessor.register(
+        <span style="color: #0000ff">new</span> SingleThreadEventListener&lt;String&gt;() { <span style="color: #008000">// 1</span>
+
+            <span style="color: #0000ff">public</span> <span style="color: #2b91af">void</span> onDataChunk(List&lt;String&gt; chunk) {
+                <span style="color: #0000ff">for</span> (String s: chunk) {
+                    sink.next(<span style="border: 1px solid #FF0000"></span>s); <span style="color: #008000">// 2</span>
+                }
+            }
+
+            <span style="color: #0000ff">public</span> <span style="color: #2b91af">void</span> processComplete() {
+                sink.complete(); <span style="color: #008000">// 3</span>
+            }
+
+            <span style="color: #0000ff">public</span> <span style="color: #2b91af">void</span> processError(Throwable e) {
+                sink.error(e); <span style="color: #008000">// 4</span>
+            }
+        }
+    );
+});
+</pre></div>
+
+
+<ol>
+<li>桥接到 <code>SingleThreadEventListener</code> 的 API。</li>
+<li>在单个监听器线程中使用 <code>next</code> 向下游（sink - 接收方）推送事件。</li>
+<li><code>complete</code> 事件也是由同一个监听器线程发出的。</li>
+<li><code>error</code> 事件也是由同一个监听器线程发出的。</li>
+</ol>
+<p><strong>推/拉 混合模型</strong></p>
+<p>多数 Reactor 算子，比如 <code>create</code>，都遵从 <strong>推/拉（push/pull）</strong> 混合模型。这意味着尽管大部分的处理过程都是异步的（暗指“推”的方式），也存在小部分逻辑是 <em>拉（pull）</em>方式：数据请求。</p>
+<p>消费者从数据源<em>拉取</em>数据，意指：数据源在消费者首次请求后才会发出数据，然后只有要数据就会推送给消费者，不过数据量不会超过消费者请求的量。</p>
+<p><code>push()</code> 和 <code>create()</code> 都可以配置（set up）一个 <code>onRequest</code> 事件消费者来管理请求量，并且确保仅当存在已发起的请求，数据才会推送给下游。</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>Flux&lt;String&gt; bridge = Flux.create(sink -&gt; {
+    myMessageProcessor.register(
+        <span style="color: #0000ff">new</span> MyMessageListener&lt;String&gt;() {
+
+            <span style="color: #0000ff">public</span> <span style="color: #2b91af">void</span> onMessage(List&lt;String&gt; messages) {
+                <span style="color: #0000ff">for</span> (String s: messages) {
+                    sink.next(s); <span style="color: #008000">// 3</span>
+                }
+            }
+        }
+    );
+    sink.onRequest(n -&gt; {
+        List&lt;String&gt; messages = myMessageProcessor.getHistory(n); <span style="color: #008000">// 1</span>
+        <span style="color: #0000ff">for</span> (String s: messages) {
+            sink.next(s); <span style="color: #008000">// 2</span>
+        }
+    });    
+});
+</pre></div>
+
+
+<p><em>译者注：上面这个示例有点问题，实际并不存在这样一个 create 方法，并且 sink.onRequest 实际代表一个无限量（n = Long.MAX_VALUE）的请求。</em></p>
+<ol>
+<li>在请求发起后，拉取消息。</li>
+<li>如果即刻有消息了，则推送给下游。</li>
+<li>后续异步到达的消息也会推送给下游。</li>
+</ol>
 <h4>3.5 多线程 和 调度器 （Threading and Schedulers）</h4>
+<p>Reactor，与 RxJava 类似，可以认为是<strong>并发无关的</strong>，也就是说，Reactor 并不强制使用并发（a concurrency
+ model），而是，让开发者按需决定是否使用并发。然而，Reactor 也提供一些功能方便开启并发。</p>
+<p>获取到一个 <code>Flux</code> 或 <code>Mono</code> 处理流，并不意味着它在一个专用（dedicated）的线程（<code>Thread</code>） 中运行。相反，多数算子也是运行在前一个算子运行的线程中。除非特意指定，首个（topmost）算子（数据源）就运行在执行 <code>subscribe()</code> 方法调用的线程中。如下示例在一个新建线程中运行一个 <code>Mono</code> 处理流。</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">public</span> <span style="color: #0000ff">static</span> <span style="color: #2b91af">void</span> main(String[] args) {
+    <span style="color: #0000ff">final</span> Mono&lt;String&gt; mono = Mono.just(<span style="color: #a31515">&quot;Hello &quot;</span>); <span style="color: #008000">// 1</span>
+
+    <span style="color: #0000ff">new</span> Thread(() -&gt; mono
+        .map(msg -&gt; msg + <span style="color: #a31515">&quot;thread &quot;</span>)
+        .subscribe(v -&gt; <span style="color: #008000">// 2 </span>
+            System.out.println(v + Thread.currentThread().getName()) <span style="color: #008000">// 3</span>
+        )
+    ).join();
+}
+</pre></div>
+
+
+<ol>
+<li><code>Mono&lt;String&gt;</code> 是在主（<code>main</code>）线程中装配的（assembled）。</li>
+<li>然而， 订阅操作发生在 <code>Thread-0</code> 线程中。</li>
+<li>因而，<code>map</code> 和 <code>onNext</code> 的回调（译注：<code>onNext</code> 的回调即 subscribe 方法传入的 lambda 表达式）实际上也是在 <code>Thread-0</code> 上执行。</li>
+</ol>
+<p>上述的代码会输出如下内容：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>hello thread Thread-0
+</pre></div>
+
+
+<p>Reactor 中，运行模型以及实际的运行过程发生在什么地方由使用什么 <code>Scheduler</code> 决定。<a href="https://projectreactor.io/docs/core/release/api/reactor/core/scheduler/Scheduler.html"><code>Scheduler</code></a> 类似于 <code>ExecutorService</code>，负有调度职责，但具备一个专用的抽象，功能更强大，充当一个时钟的角色，可用的实现更多。</p>
+<p><a href="https://projectreactor.io/docs/core/release/api/reactor/core/scheduler/Schedulers.html"><code>Schedulers</code></a> 类提供了一些静态方法来访问这些运行上下文：</p>
+<ul>
+<li>当前线程（<code>Schedulers.immediate()</code>）。</li>
+<li>单个可复用的线程（<code>Schedulers.single()</code>）。注意：这个方法会为所有调用方（译注：调用 Schedulers.single()）复用同一个线程，指导 <code>Scheduler</code> 销毁（disposed）。如果期望每次调用返回一个专用线程，则应该使用 <code>Schedulers.newSingle()</code>。</li>
+<li>一个弹性的线程池（<code>Schedulers.elastic()</code>）。这个 Scheduler 会按需创建新的工作者线程池（worker pool），并复用空闲的工作者线程池。如果工作者线程池空闲时间太长（默认 60s）则会被销毁。对于 I/O 阻塞工作而言这是一个好选择。<code>Schedulers.elastic()</code> 可以简便地为阻塞处理过程提供独立的线程（its own thread），这样阻塞操作就不会占用（tie up）其他资源。详情请参考 <a href="https://projectreactor.io/docs/core/release/reference/#faq.wrap-blocking">如何包装一个同步阻塞的调用？</a></li>
+<li>固定数量工作者的（译注：我暂时的理解 - 工作者（worker）也是一个线程池）一个池，专门为并行处理工作做过调优（Schedulers.parallel()）。它会创建和 CPU 核心数量相同的工作者。</li>
+</ul>
+<p>此外，也可以使用 <code>Schedulers.fromExecutorService(ExecutorService)</code> 基于已有的 ExecutorService 创建一个 Scheduler。（也可以基于一个 Executor 来创建，但不建议这么干（译注：因为 Executor 不能销毁释放））</p>
+<p>也可以使用 <strong>newXXX</strong> 这类方法创建各种调度器（scheduler）类型的全新实例。例如，使用 <code>Schedulers.newElastic(yourScheduleName)</code> 创建一个名为 <code>yourScheduleName</code> 的全新的弹性调度器（elastic scheduler）。</p>
+<blockquote>
+<p><code>elastic</code> 调度器用于兼容处理不可避免的历史遗留的阻塞性代码，但 <code>single</code> 和 <code>parallel</code> 调度器不行，因而，如果在 <code>single</code> 或 <code>parallel</code> 调度器上使用 Reactor 的阻塞性 API（<code>block()</code>、<code>blockFirst()</code>、<code>blockLast()</code>，或者进行 <code>toIterable()</code> 或 <code>toStream()</code> 迭代），会导致抛出 <code>IllegalStateException</code> 异常。</p>
+<p>如果自定义调度器所创建的线程实例实现了 <code>NonBlocking</code> 标记性接口（marker interface），那么这个调度器也可以被标记为”仅适用于非阻塞性使用（non blocking only）“。</p>
+</blockquote>
+<p>某些算子默认会从 <code>Schedulers</code> 选择一个特定的调度器来使用（通常也支持选择其他的）。例如，调用工厂方法 <code>Flux.interval(Duration.ofMills(300))</code> 会生成一个 <code>Flux&lt;Long&gt;</code> 实例 - 每 300 ms 输出一个滴答事件。这个方法底层实现默认使用 <code>Schedulers.parallel()</code>。如下代码行演示了如何将调度器修改成类似于 <code>Schedulers.single()</code> 的调度器新实例：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>Flux.interval(Duration.ofMillis(300), Schedulers.newSingle(<span style="color: #a31515">&quot;test&quot;</span>));
+</pre></div>
+
+
+<p>Reactor 提供了两种方式来切换反应式链中的执行上下文（或者说 <code>调度器</code>）：<code>publishOn</code> 和 <code>subscribeOn</code>。两者都是接受一个 <code>Scheduler</code> 类型参数并将执行上下文切换到这个调度器。不过，链中 <code>publishOn</code> 所处的位置很关键，而 <code>subscribeOn</code> 处于哪个位置都无所谓。要理解这个差别的原因，得先理解 <a href="https://projectreactor.io/docs/core/release/reference/#reactive.subscribe">订阅之前实际什么都没有发生</a>。</p>
+<p>Reactor，串接算子，就是将很多 <code>Flux</code> 和 <code>Mono</code> 的实现一个套一个，逐层封装。一旦订阅，就创建了一个 <code>Subscriber</code> 对象链，沿链回溯即可找到第一个发布者。这些实现细节是隐藏在接口背后，开发者可见的是最外层的那个 <code>Flux</code>（或 <code>Mono</code>）以及 <code>Subscription</code>（译注：Reactor 中 Subscription 是一个接口类型，是 <code>Subscriber</code> 接口中 <code>onSubscribe</code> 方法参数的类型 - <code>public void onSubscribe(Subscription s)</code>，用于向生产者请求数据 或者 取消订阅），但这些算子特定的链中消费者是幕后功臣。</p>
+<p>有了上面这些认知，现在我们可以进一步了解 <code>publishOn</code> 和 <code>subscribeOn</code> 这两个算子：</p>
 <h5>3.5.1 <code>publishOn</code> 方法</h5>
+<p><code>publishOn</code> 和其他算子的用法一样，用在订阅链的中间环节，接收来自上游的信号，然后向下游重放这些信号，不过下发事件回调（<code>onEvent</code>、<code>onError</code>、<code>onComplete</code>）是在关联 <code>Scheduler</code> 的一个工作者上执行的。因此，这个算子会影响后续算子在哪执行（直到订阅链上又串接了另一个 <code>publishOn</code>）：</p>
+<ul>
+<li>将执行上下文切换到 <code>Scheduler</code> 选择的一个线程上</li>
+<li>根据规范（as per the specification），<code>onNext</code> 是按时序依次调用下发事件的，所以是占用一个线程（译注：这句不太理解，onNext happen in sequence, so this uses up a single thread）</li>
+<li>除非算子工作在一个特定的 <code>Scheduler</code> 上（译注：某些算子的内部实现决定了这一点），<code>publishOn</code> 之后的算子都是在同一个线程上执行</li>
+</ul>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>Scheduler s = Schedulers.newParallel(<span style="color: #a31515">&quot;parallel-scheduler&quot;</span>, 4); <span style="color: #008000">// 1</span>
+
+<span style="color: #0000ff">final</span> Flux&lt;String&gt; flux = Flux
+    .range(1, 2)
+    .map(i -&gt; 10 + i) <span style="color: #008000">// 2</span>
+    .publishOn(s) <span style="color: #008000">// 3</span>
+    .map(i -&gt; <span style="color: #a31515">&quot;value &quot;</span> + i); <span style="color: #008000">// 4</span>
+
+<span style="color: #0000ff">new</span> Thread(() -&gt; flux.subscribe(System.out::println));
+</pre></div>
+
+
+<ol>
+<li>创建一个新的 <code>Scheduler</code>，内含 4 个线程</li>
+<li>第一个 <code>map</code> 运行在 &lt;第5步&gt; 的匿名线程上</li>
+<li><code>publishOn</code> 将整个序列的后续处理切换到从 &lt;第1步&gt; 选出的线程上</li>
+<li>第二个 <code>map</code> 运行在上面说的从 &lt;第1步&gt; 选出的线程上</li>
+<li>这个匿名线程是 <em>订阅</em> 操作发生的地方。打印语句发生在 <code>publishOn</code> 切换的最新执行上下文上</li>
+</ol>
 <h5>3.5.2 <code>subscribeOn</code> 方法</h5>
-<h3>4. 测试</h3>
-<h3>5. 调试 Reactor</h3>
-<h3>6. 高级特性和概念</h3>
+<p><code>subscribeOn</code> 在构造反向链时应用于订阅处理过程（译注：所谓构造反向链时，是指调用 subscribe 方法时）。因此，无论你将 <code>subscribeOn</code> 放在算子链的何处，<strong>它始终会影响源头下发数据的执行上下文</strong>。然而，这并不会影响 <code>publishOn</code> 之后算子调用的行为，它们仍然会切换到 <code>publishOn</code> 指定的执行上下文。</p>
+<ul>
+<li>从订阅操作发生时整个算子链所在的线程切换到新的线程</li>
+<li>从指定 <code>Scheduler</code> 中选择一个线程</li>
+</ul>
+<blockquote>
+<p>只有链中最早的 <code>subscribeOn</code> 调用会发生实际作用。</p>
+</blockquote>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>Scheduler s = Schedulers.newParallel(<span style="color: #a31515">&quot;parallel-scheduler&quot;</span>, 4); <span style="color: #008000">// 1</span>
+
+<span style="color: #0000ff">final</span> Flux&lt;String&gt; flux = Flux
+    .range(1, 2)
+    .map(i -&gt; 10 + i) <span style="color: #008000">// 2</span>
+    .subscribeOn(s) <span style="color: #008000">// 3</span>
+    .map(i -&gt; <span style="color: #a31515">&quot;value &quot;</span> + i); <span style="color: #008000">// 4</span>
+
+<span style="color: #0000ff">new</span> Thread(() -&gt; flux.subscribe(System.out::println)); <span style="color: #008000">// 5 </span>
+</pre></div>
+
+
+<ol>
+<li>创建一个新的 <code>Scheduler</code>，内含 4 个线程</li>
+<li>第一个 <code>map</code> 运行在这 4 个线程中的某个线程上</li>
+<li>...因为 <code>subscribeOn</code> 将整个序列处理链从订阅操作发生时的执行上下文（第5步）切换到了新的上下文</li>
+<li>第二个 <code>map</code> 和第一个 <code>map</code> 运行在同一个线程上</li>
+<li>这个匿名线程是 <em>订阅操作</em> 一开始发生的地方的，但是 <code>subscribeOn</code> 即刻将上下文切换到调度器4个线程中的一个上</li>
+</ol>
+<h3>4. 高级特性和概念</h3>
+<h4>4.1 使用 <code>ConnectableFlux</code> 将消息广播到多个订阅者</h4>
+<p><em>以后有空再翻译</em></p>
+<h4>4.2 3种分批处理方式</h4>
+<p><em>以后有空再翻译</em></p>
+<h4>4.3 使用 <code>ParallelFlux</code> 并行化处理</h4>
+<p>如今多核架构已是下里巴人，相应地，轻松实现并行化工作的工具手段很关键。Reactor 提供了一个特殊类型 - <code>ParallelFlux</code> - 帮助实现并行化处理。<code>ParallelFlux</code> 提供的算子是为并行化工作优化过的。</p>
+<p>对任意 <code>Flux</code> 实例调用 <code>parallel()</code>算子就能得到一个 <code>ParallelFlux</code> 实例。这个方法本身并不能实现并行化工作，而是将工作负载拆分到多个“轨道”（默认“轨道”数量等于 CPU 核数）<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>。</p>
+<p>为了告知产出的 ParallelFlux 实例每个“轨道”在哪执行（以及如何并行执行“轨道”），则必须使用 <code>runOn(Scheduler)</code>。注意：对于并行工作，推荐使用一个专用调度器 - <code>Schedulers.parallel()</code>。</p>
+<p>对比如下两个示例，第一个示例的代码如下所示：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>Flux.range(1, 10)
+    .parallel(2) <span style="color: #008000">// 1</span>
+    .subscribe(i -&gt; System.out.println(Thread.currentThread().getName() + <span style="color: #a31515">&quot; -&gt; &quot;</span> + i));
+</pre></div>
+
+
+<ol>
+<li>这里强制指定了“轨道”数量，而不依赖于 CPU 核数。</li>
+</ol>
+<p>第二个示例的代码如下所示：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>Flux.range(1, 10)
+    .parallel(2)
+    .runOn(Schedulers.parallel())
+    .subscribe(i -&gt; System.out.println(Thread.currentThread().getName() + <span style="color: #a31515">&quot; -&gt; &quot;</span> + i));
+</pre></div>
+
+
+<p>第一个示例输出如下内容：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>main -&gt; 1
+main -&gt; 2
+main -&gt; 3
+main -&gt; 4
+main -&gt; 5
+main -&gt; 6
+main -&gt; 7
+main -&gt; 8
+main -&gt; 9
+main -&gt; 10
+</pre></div>
+
+
+<p>第二个示例正确地在两个线程上实现了并行化，输入如下所示：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>parallel-1 -&gt; 1
+parallel-2 -&gt; 2
+parallel-1 -&gt; 3
+parallel-2 -&gt; 4
+parallel-1 -&gt; 5
+parallel-2 -&gt; 6
+parallel-1 -&gt; 7
+parallel-1 -&gt; 9
+parallel-2 -&gt; 8
+parallel-2 -&gt; 10
+</pre></div>
+
+
+<p>如果数据序列<sup id="fnref:2"><a class="footnote-ref" href="#fn:2">2</a></sup>已经在并行化处理，而你又想将其转回一个 “常规的” <code>Flux</code> 实例，然后串行执行算子链余下的部分，则可以使用 <code>ParallelFlux</code> 的 <code>sequential()</code> 方法。</p>
+<p>注意：如果直接使用一个 <code>Subscriber</code> 类型参数而不是 lambda 表达式来调用 <code>subscribe</code> 方法，那么内部实现会隐式地调用 <code>sequential()</code> 方法。</p>
+<p>由此也要注意：<code>subscribe(Subscriber&lt;T&gt;)</code> 会合并所有数据“轨道”，而 <code>subscribe(Consumer&lt;T&gt;)</code> 是运行所有的数据“轨道”。如果以 lambda 表达式调用 <code>subscribe</code> 方法，那么每个 lambda 表达式都会被复制成多个实例（数量等于“轨道”数量）去执行<sup id="fnref:3"><a class="footnote-ref" href="#fn:3">3</a></sup>。</p>
+<div class="footnote">
+<hr>
+<ol>
+<li id="fn:1">
+<p>译注：这里的“轨道”其实不太直白。在实现上，<code>ParallelFlux</code> 会将最后 <code>subscribe</code> 的 onNext 回调按并行度（默认等于 CPU 核数 N）复制成 N 个，那么最终调用 ParallelFlux 的 N 个 Subscriber，从 ParallelFlux 实例到一个 Subscriber 的数据流路径可以理解为一个“轨道”，ParallelFlux 在接收到上游消息后按照 round-robin 方式选择一个 Subscriber 调用其 <code>onNext</code> 下发消息，但 <code>onNext</code> 是运行在什么线程上，是由 runOn 算子决定的，如果不使用 runOn 算子，那么所有 Subscriber 的 <code>onNext</code> 方法调用都是同步运行在主线程上的。&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:2">
+<p>译注：原文中用了多个词来表达相近的意思：sequence（序列）、stream（流）、flow（流），阅读时可以相互替代理解。此外，还有 event（事件）、data（数据）、message（消息），在当前上下文中，可以看成是等价的。&#160;<a class="footnote-backref" href="#fnref:2" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:3">
+<p>译注：这话写得真蠢。详细解释见脚注 1。&#160;<a class="footnote-backref" href="#fnref:3" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
             </div><!-- /.entry-content -->
             <div class="comments">
               <h3>欢迎评论</h3>

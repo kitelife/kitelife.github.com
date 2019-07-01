@@ -73,7 +73,7 @@
             </footer><!-- /.post-info -->
             <div class="entry-content">
               <p>原文：<a href="https://projectreactor.io/docs/core/release/reference/">Reactor 3 Reference Guide</a></p>
-<h3>1. 开始吧</h3>
+<h3>1. 起步</h3>
 <h4>1.1 Reactor 简介</h4>
 <p>Reactor 是为 JVM 准备的一个完全非阻塞的反应式编程基础组件，支持高效的需求管理（以管理“反压”的形式），直接与 Java 8 的函数式 API 集成，尤其是 <code>CompletableFuture</code>、<code>Stream</code> 以及 <code>Duration</code>，提供可组合的异步序列 API - <code>Flux</code>（适用于 N 个元素的序列）和 <code>Mono</code>（适用于 0 或 1个元素的序列）--- 并且全面地（extensively）实现了 <a href="https://www.reactive-streams.org/">反应式流（Reative Streams）</a> 规范。</p>
 <p>借助 <code>reactor-netty</code> 项目，Reactor 也支持进程间的非阻塞通信，适用于微服务架构。<code>reactor-netty</code> 为 HTTP（包括 Websockets）、TCP 以及 UDP 提供支持反压的网络引擎，完全支持反应式编码解码。</p>
@@ -160,7 +160,7 @@ Californium-SR32
 <blockquote>
 <p>反应式编程是一个异步编程范式，关注数据流和变化的传播。这意味着通过被采用编程语言可以轻松地表达静态（比如 数组）或动态（比如 事件发射器）数据流。 --- https://en.wikipedia.org/wiki/Reactive_programming</p>
 </blockquote>
-<p>反应式编程方向的首个重要工作是：微软在 .NET 生态体系中创建了反应式扩展（Rx）库，然后 RxJava 在 JVM 上实现了反应式编程。时光飞逝，经 Reative Streams 的大力推进，Java 社区终于出现了反应式编程标准，该规范定义了一组接口以及 JVM 上反应式编程库之间的交互规则。Java 9 标准库已将这组接口集成到 <code>Flow</code> 类（译注：https://docs.oracle.com/javase/9/docs/api/java/util/concurrent/Flow.html）中。</p>
+<p>反应式编程方向的首个重要工作是：微软在 .NET 生态体系中创建了反应式扩展（Rx）库，然后 RxJava 在 JVM 上实现了反应式编程。时光飞逝，经 Reative Streams 的大力推进，Java 社区终于出现了反应式编程标准，该规范定义了一组接口以及 JVM 上反应式编程库之间的交互规则。Java 9 标准库已将这组接口集成到 <code>Flow</code> 类（译注：见<a href="https://docs.oracle.com/javase/9/docs/api/java/util/concurrent/Flow.html">https://docs.oracle.com/javase/9/docs/api/java/util/concurrent/Flow.html</a>）中。</p>
 <p>反应式编程范式在面向对象语言中通常表现为一个观察者设计模式的扩展。你也可以将主流的反应式流模式（reactive streams pattern）和大家熟知的迭代器设计模式做对比，所有这些库中都存在对标于 <code>Iterable</code> - <code>Iterator</code> 的概念（译注：比如 发布者-消费者）。主要差别在于：迭代器是基于 pull 方式，反应式流则基于 push 方式。</p>
 <p>使用迭代器是一个命令式编程的模式，即使如何访问数据（accessing values）完全是 <code>Iterable</code> 的职责，但实际上，何时访问序列中的下一个（<code>next()</code>）值取决于开发者的选择。在反应式流中，上述 <code>Iterable</code> - <code>Iterator</code> 对的等价物为 <code>Publisher</code> - <code>Subscriber</code>。不过，在出现新的数据/事件时，由 <code>Publisher</code> 通知 <code>Subscriber</code>，这个“推”特性也是实现反应式的关键之处。并且，在被推送的值上应用哪些操作是声明式表达而不是命令式表达的：程序员表达的是计算逻辑而不是描述精确的控制流。</p>
 <p>除了“推”的特性，反应式流也良好地定义了如何处理错误和结束流。一个 <code>Publisher</code> 可以向它的 <code>Subscriber</code> 推送新的值（通过调用订阅者的 <code>onNext</code> 方法），也可以推送错误（调用 <code>onError</code> 方法）或结束（调用 <code>onComplete</code>方法）信号。错误和结束信号都可以终结事件序列。简而言之，如下所示：</p>

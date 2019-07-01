@@ -430,7 +430,7 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
 &lt;p&gt;这个算子有一个变种，允许开发者调整预取填补量（即算子变种的 &lt;code&gt;lowTide&lt;/code&gt; 参数）：&lt;code&gt;limitRate(highTide, lowTide)&lt;/code&gt;。&lt;code&gt;lowTide&lt;/code&gt; 参数设定为 &lt;code&gt;0&lt;/code&gt; 时，会导致严格限制一次请求 &lt;code&gt;highTide&lt;/code&gt; 个，而不是经填补策略进一步调整过的一次请求量。&lt;/p&gt;
 &lt;p&gt;此外，&lt;code&gt;limitRequest(N)&lt;/code&gt; 则是限制了下游最大的需求总量。它会累加请求量直到 &lt;code&gt;N&lt;/code&gt;。如果一次请求没有让需求总量超过 &lt;code&gt;N&lt;/code&gt;，则这次请求会完整地传播到上游（译注：意思是如果一次请求让需求总量超过了 &lt;code&gt;N&lt;/code&gt;，这次请求的请求量会被裁剪）。如果数据源发出的数据总量达到了限制的总量，&lt;code&gt;limitRequest&lt;/code&gt; 则认为这个序列可以结束了，向下游发送一个 &lt;code&gt;onComplete&lt;/code&gt; 信号，并取消数据源。&lt;/p&gt;
 &lt;h4&gt;3.4 动态地（programmatically）创建一个序列&lt;/h4&gt;
-&lt;h5&gt;3.4.1 同步的 &lt;code&gt;generate&lt;/code&gt;&lt;/h5&gt;
+&lt;h5&gt;3.4.1 同步的 generate&lt;/h5&gt;
 &lt;p&gt;动态创建一个 &lt;code&gt;Flux&lt;/code&gt; 最简单的方式是借助 &lt;code&gt;generate&lt;/code&gt; 方法，该方法接受一个生成器函数。&lt;/p&gt;
 &lt;p&gt;这一方式可以实现&lt;strong&gt;同步的&lt;/strong&gt;且&lt;strong&gt;一个接一个&lt;/strong&gt;地下发数据，这意味着接收方（sink）是一个 &lt;code&gt;SynchronousSink&lt;/code&gt;，其 &lt;code&gt;next()&lt;/code&gt; 方法在一次回调方法调用中最多只能调用一次。可以在其后再调用 &lt;code&gt;error(Throwable)&lt;/code&gt; 或 &lt;code&gt;complete()&lt;/code&gt;，视你的需求而定。&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;generate&lt;/code&gt; 方法变种的这个应该是最有用的：允许保持一个状态，在调用接收方的 &lt;code&gt;next&lt;/code&gt; 方法时可以基于这个状态来决定下发什么数据。那么这个生成器函数就成了一个 &lt;code&gt;BiFunction&amp;lt;S, SynchronousSink&amp;lt;T&amp;gt;, S&amp;gt;&lt;/code&gt; 实例，其中 &lt;code&gt;&amp;lt;S&amp;gt;&lt;/code&gt; 即是状态对象的类型。对于初始状态，可以提供一个 &lt;code&gt;Supplier&amp;lt;S&amp;gt;&lt;/code&gt; 来获取，这样生成器函数每轮调用都会返回一个新的状态。&lt;/p&gt;
@@ -479,7 +479,7 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h5&gt;3.4.2 异步多线程的 &lt;code&gt;create&lt;/code&gt;&lt;/h5&gt;
+&lt;h5&gt;3.4.2 异步多线程的 create&lt;/h5&gt;
 &lt;p&gt;&lt;code&gt;create&lt;/code&gt; 是动态创建一个 &lt;code&gt;Flux&lt;/code&gt; 的更高级的方式，适用于每轮下发多个数据，甚至是从多个线程中下发数据。&lt;/p&gt;
 &lt;p&gt;这个方法会向回调方法传入一个 &lt;code&gt;FluxSink&lt;/code&gt; 实例参数，在回调方法体中可以调用这个参数的 &lt;code&gt;next&lt;/code&gt;、&lt;code&gt;error&lt;/code&gt; 和 &lt;code&gt;complete&lt;/code&gt; 方法。与 &lt;code&gt;generate&lt;/code&gt; 不同，它没有基于状态的变种方法。另外，回调方法中，可以多线程地触发事件（trigger multi-threaded events）。&lt;/p&gt;
 &lt;blockquote&gt;
@@ -529,7 +529,7 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
 &lt;blockquote&gt;
 &lt;p&gt;&lt;code&gt;Mono&lt;/code&gt; 也有一个 &lt;code&gt;create&lt;/code&gt; 生成器方法。Mono 的 create 方法传入回调的 &lt;code&gt;MonoSink&lt;/code&gt; 参数不允许下发多个消息，在第一个消息之后它会丢弃所有的消息。&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;h5&gt;3.4.3 异步单线程的 &lt;code&gt;push&lt;/code&gt;&lt;/h5&gt;
+&lt;h5&gt;3.4.3 异步单线程的 push&lt;/h5&gt;
 &lt;p&gt;&lt;code&gt;push&lt;/code&gt; 的功能介于 &lt;code&gt;generate&lt;/code&gt; 和 &lt;code&gt;create&lt;/code&gt; 之间，适用于处理来自单个生产者的事件。&lt;code&gt;push&lt;/code&gt; 也可以是异步的，也可以使用 &lt;code&gt;create&lt;/code&gt; 支持的超限策略来管理反压，然而，同时（at a time）只能有一个生产线程调用 &lt;code&gt;next&lt;/code&gt;。&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;Flux&amp;lt;String&amp;gt; bridge = Flux.push(sink -&amp;gt; {
     myEventProcessor.register(
@@ -640,7 +640,7 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
 &lt;p&gt;Reactor 提供了两种方式来切换反应式链中的执行上下文（或者说 &lt;code&gt;调度器&lt;/code&gt;）：&lt;code&gt;publishOn&lt;/code&gt; 和 &lt;code&gt;subscribeOn&lt;/code&gt;。两者都是接受一个 &lt;code&gt;Scheduler&lt;/code&gt; 类型参数并将执行上下文切换到这个调度器。不过，链中 &lt;code&gt;publishOn&lt;/code&gt; 所处的位置很关键，而 &lt;code&gt;subscribeOn&lt;/code&gt; 处于哪个位置都无所谓。要理解这个差别的原因，得先理解 &lt;a href="https://projectreactor.io/docs/core/release/reference/#reactive.subscribe"&gt;订阅之前实际什么都没有发生&lt;/a&gt;。&lt;/p&gt;
 &lt;p&gt;Reactor，串接算子，就是将很多 &lt;code&gt;Flux&lt;/code&gt; 和 &lt;code&gt;Mono&lt;/code&gt; 的实现一个套一个，逐层封装。一旦订阅，就创建了一个 &lt;code&gt;Subscriber&lt;/code&gt; 对象链，沿链回溯即可找到第一个发布者。这些实现细节是隐藏在接口背后，开发者可见的是最外层的那个 &lt;code&gt;Flux&lt;/code&gt;（或 &lt;code&gt;Mono&lt;/code&gt;）以及 &lt;code&gt;Subscription&lt;/code&gt;（译注：Reactor 中 Subscription 是一个接口类型，是 &lt;code&gt;Subscriber&lt;/code&gt; 接口中 &lt;code&gt;onSubscribe&lt;/code&gt; 方法参数的类型 - &lt;code&gt;public void onSubscribe(Subscription s)&lt;/code&gt;，用于向生产者请求数据 或者 取消订阅），但这些算子特定的链中消费者是幕后功臣。&lt;/p&gt;
 &lt;p&gt;有了上面这些认知，现在我们可以进一步了解 &lt;code&gt;publishOn&lt;/code&gt; 和 &lt;code&gt;subscribeOn&lt;/code&gt; 这两个算子：&lt;/p&gt;
-&lt;h5&gt;3.5.1 &lt;code&gt;publishOn&lt;/code&gt; 方法&lt;/h5&gt;
+&lt;h5&gt;3.5.1 publishOn 方法&lt;/h5&gt;
 &lt;p&gt;&lt;code&gt;publishOn&lt;/code&gt; 和其他算子的用法一样，用在订阅链的中间环节，接收来自上游的信号，然后向下游重放这些信号，不过下发事件回调（&lt;code&gt;onEvent&lt;/code&gt;、&lt;code&gt;onError&lt;/code&gt;、&lt;code&gt;onComplete&lt;/code&gt;）是在关联 &lt;code&gt;Scheduler&lt;/code&gt; 的一个工作者上执行的。因此，这个算子会影响后续算子在哪执行（直到订阅链上又串接了另一个 &lt;code&gt;publishOn&lt;/code&gt;）：&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;将执行上下文切换到 &lt;code&gt;Scheduler&lt;/code&gt; 选择的一个线程上&lt;/li&gt;
@@ -666,7 +666,7 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
 &lt;li&gt;第二个 &lt;code&gt;map&lt;/code&gt; 运行在上面说的从 &amp;lt;第1步&amp;gt; 选出的线程上&lt;/li&gt;
 &lt;li&gt;这个匿名线程是 &lt;em&gt;订阅&lt;/em&gt; 操作发生的地方。打印语句发生在 &lt;code&gt;publishOn&lt;/code&gt; 切换的最新执行上下文上&lt;/li&gt;
 &lt;/ol&gt;
-&lt;h5&gt;3.5.2 &lt;code&gt;subscribeOn&lt;/code&gt; 方法&lt;/h5&gt;
+&lt;h5&gt;3.5.2 subscribeOn 方法&lt;/h5&gt;
 &lt;p&gt;&lt;code&gt;subscribeOn&lt;/code&gt; 在构造反向链时应用于订阅处理过程（译注：所谓构造反向链时，是指调用 subscribe 方法时）。因此，无论你将 &lt;code&gt;subscribeOn&lt;/code&gt; 放在算子链的何处，&lt;strong&gt;它始终会影响源头下发数据的执行上下文&lt;/strong&gt;。然而，这并不会影响 &lt;code&gt;publishOn&lt;/code&gt; 之后算子调用的行为，它们仍然会切换到 &lt;code&gt;publishOn&lt;/code&gt; 指定的执行上下文。&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;从订阅操作发生时整个算子链所在的线程切换到新的线程&lt;/li&gt;
@@ -695,11 +695,11 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
 &lt;li&gt;这个匿名线程是 &lt;em&gt;订阅操作&lt;/em&gt; 一开始发生的地方的，但是 &lt;code&gt;subscribeOn&lt;/code&gt; 即刻将上下文切换到调度器4个线程中的一个上&lt;/li&gt;
 &lt;/ol&gt;
 &lt;h3&gt;4. 高级特性和概念&lt;/h3&gt;
-&lt;h4&gt;4.1 使用 &lt;code&gt;ConnectableFlux&lt;/code&gt; 将消息广播到多个订阅者&lt;/h4&gt;
+&lt;h4&gt;4.1 使用 ConnectableFlux 将消息广播到多个订阅者&lt;/h4&gt;
 &lt;p&gt;&lt;em&gt;以后有空再翻译&lt;/em&gt;&lt;/p&gt;
 &lt;h4&gt;4.2 3种分批处理方式&lt;/h4&gt;
 &lt;p&gt;&lt;em&gt;以后有空再翻译&lt;/em&gt;&lt;/p&gt;
-&lt;h4&gt;4.3 使用 &lt;code&gt;ParallelFlux&lt;/code&gt; 并行化处理&lt;/h4&gt;
+&lt;h4&gt;4.3 使用 ParallelFlux 并行化处理&lt;/h4&gt;
 &lt;p&gt;如今多核架构已是下里巴人，相应地，轻松实现并行化工作的工具手段很关键。Reactor 提供了一个特殊类型 - &lt;code&gt;ParallelFlux&lt;/code&gt; - 帮助实现并行化处理。&lt;code&gt;ParallelFlux&lt;/code&gt; 提供的算子是为并行化工作优化过的。&lt;/p&gt;
 &lt;p&gt;对任意 &lt;code&gt;Flux&lt;/code&gt; 实例调用 &lt;code&gt;parallel()&lt;/code&gt;算子就能得到一个 &lt;code&gt;ParallelFlux&lt;/code&gt; 实例。这个方法本身并不能实现并行化工作，而是将工作负载拆分到多个“轨道”（默认“轨道”数量等于 CPU 核数）&lt;sup id="fnref:1"&gt;&lt;a class="footnote-ref" href="#fn:1"&gt;1&lt;/a&gt;&lt;/sup&gt;。&lt;/p&gt;
 &lt;p&gt;为了告知产出的 ParallelFlux 实例每个“轨道”在哪执行（以及如何并行执行“轨道”），则必须使用 &lt;code&gt;runOn(Scheduler)&lt;/code&gt;。注意：对于并行工作，推荐使用一个专用调度器 - &lt;code&gt;Schedulers.parallel()&lt;/code&gt;。&lt;/p&gt;

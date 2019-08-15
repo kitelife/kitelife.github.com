@@ -64,6 +64,37 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="../2015/11/20/qingcloud-iframe-app/" rel="bookmark" title="Permalink to 青云 iframe 应用开发">青云 iframe 应用开发</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2015-11-20T00:00:00+08:00"> 2015-11-20 五 </abbr>
+<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <p>上周的主要工作是将产品的功能集成到青云。青云提供 iframe 的方式来集成第三方服务，这是一种互利的做法，而且对于青云来说，实现的代价也非常小。</p>
+<p>先上图，看看集成的效果：</p>
+<p><img alt="ygc-in-qingcloud" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/ygc-in-qingcloud.png"></p>
+<hr>
+<p>对于青云来说，一个iframe应用就是一个URL，由应用开发者提供这个URL，当青云用户访问应用所在的页面时，页面先自动向应用服务器的URL发送数据请求，请求会携带认证信息，应用服务端需要先校验请求确实来自青云，并获取请求中的用户信息，最终响应一个HTML页面内容，青云应用页面收到响应数据后将其置于一个iframe标签中，之后青云用户在iframe页面中的操作都是直接与应用服务器交互。</p>
+<p><img alt="qingcloud-iframe-interaction" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/qingcloud-iframe-interaction.png"></p>
+<p>上图交互流程的第<strong>2</strong>步中，青云服务器向用户响应的内容最终会生成一个包含以下内容的页面：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>&lt;form method=<span style="color: #a31515">&quot;POST&quot;</span> action=<span style="color: #a31515">&quot;URL&quot;</span> target=<span style="color: #a31515">&quot;appframe&quot;</span>&gt;
+    &lt;input type=<span style="color: #a31515">&quot;hidden&quot;</span> name=<span style="color: #a31515">&quot;payload&quot;</span> value=<span style="color: #a31515">&quot;...&quot;</span>&gt;
+    &lt;input type=<span style="color: #a31515">&quot;hidden&quot;</span> name=<span style="color: #a31515">&quot;signature&quot;</span> value=<span style="color: #a31515">&quot;...&quot;</span>&gt;
+&lt;/form&gt;
+&lt;iframe id=<span style="color: #a31515">&quot;...&quot;</span> name=<span style="color: #a31515">&quot;appframe&quot;</span> width=<span style="color: #a31515">&quot;100 …</span></pre></div> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2015/11/20/qingcloud-iframe-app/" rel="bookmark" title="Permalink to 青云 iframe 应用开发">阅读全文 <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
+                    <a class="danger label" href="../tag/gong-zuo.html">工作</a>
+                    <a class="danger label" href="../tag/zong-jie.html">总结</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="../2015/11/16/another-system-fault/" rel="bookmark" title="Permalink to 又一次系统故障">又一次系统故障</a>
                     </h2>
                 </header>
@@ -285,38 +316,6 @@ $arrB = <span style="color: #0000ff">array</span>(<span style="color: #a31515">&
                     <span>Tagged as : </span>
                     <a class="danger label" href="../tag/fan-yi.html">翻译</a>
                     <a class="danger label" href="../tag/gan-wu.html">感悟</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="../2015/05/20/fundamentals-of-concurrent-programming/" rel="bookmark" title="Permalink to Go并发编程基础（译）">Go并发编程基础（译）</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2015-05-20T00:00:00+08:00"> 2015-05-20 三 </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>原文：<a href="http://www.nada.kth.se/~snilsson/concurrency/">Fundamentals of concurrent programming</a></p>
-<p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
-<p>本文是一篇并发编程方面的入门文章，以<a href="http://golang.org/">Go语言</a>编写示例代码，内容涵盖：</p>
-<ul>
-<li>运行期并发线程（goroutines）</li>
-<li>基本的同步技术（管道和锁）</li>
-<li>Go语言中基本的并发模式</li>
-<li>死锁和数据竞争</li>
-<li>并行计算</li>
-</ul>
-<p>在开始阅读本文之前，你应该知道如何编写简单的Go程序。如果你熟悉的是C/C++、Java或Python之类的语言，那么 <a href="http://tour.golang.org/welcome/1">Go语言之旅</a> 能提供所有必要的背景知识。也许你还有兴趣读一读 <a href="http://code.google.com/p/go-wiki/wiki/GoForCPPProgrammers">为C++程序员准备的Go语言教程</a> 或 <a href="http://www.nada.kth.se/~snilsson/go_for_java_programmers/">为Java程序员准备的Go语言教程</a>。</p>
-<h4>1. 运行期线程</h4>
-<p>Go允许使用<code>go</code>语句开启一个新的运行期线程，即 <a href="http://golang.org/ref/spec#Go_statements">goroutine</a>，以一个不同的、新创建的goroutine来执行一个函数。同一个程序中的所有goroutine共享同一个地址空间。</p>
-<p>Goroutine非常轻量，除了为之分配的栈空间，其所占用的内存空间微乎其微。并且其栈空间在开始时非常小，之后随着堆存储空间的按需分配或释放而变化。内部实现上，goroutine会在多个操作系统线程上多路复用。如果一个goroutine阻塞了一个操作系统线程 …</p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2015/05/20/fundamentals-of-concurrent-programming/" rel="bookmark" title="Permalink to Go并发编程基础（译）">阅读全文 <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/fan-yi.html">翻译</a>
-                    <a class="danger label" href="../tag/golang.html">Golang</a>
                 </div>
             </article>
             </li>

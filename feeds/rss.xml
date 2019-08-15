@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0"><channel><title>黑·白</title><link>http://youngsterxyf.github.io/</link><description></description><lastBuildDate>Wed, 26 Jun 2019 00:00:00 +0800</lastBuildDate><item><title>Reactor 官方文档翻译简化版</title><link>http://youngsterxyf.github.io/2019/06/26/simplified-reactor-doc-zh/</link><description>&lt;p&gt;原文：&lt;a href="https://projectreactor.io/docs/core/release/reference/"&gt;Reactor 3 Reference Guide&lt;/a&gt;&lt;/p&gt;
+<rss version="2.0"><channel><title>黑·白</title><link>http://youngsterxyf.github.io/</link><description></description><lastBuildDate>Wed, 14 Aug 2019 00:00:00 +0800</lastBuildDate><item><title>一个 Python 小项目的小结</title><link>http://youngsterxyf.github.io/2019/08/14/a-python-project-summary/</link><description>&lt;p&gt;前段时间临时接手一个 Python 小项目，这个项目实现的类似一个管控平台，其中核心功能是为算法同学提供机器学习模型训练任务的全流程管理，平台后端基于 Flask 框架实现，前端基于 Ant Design Pro 实现。&lt;/p&gt;
+&lt;p&gt;代码稍微有些乱，所以做了部分代码的重构，在此做点经验小结。&lt;/p&gt;
+&lt;h3&gt;1、部分请求处理逻辑，由于比较耗时，故使用线程池来加速，或者使用独立线程异步处理，或者先存储一个中间状态，由后台定时任务来完成实际的处理工作。对于异步处理结果，前端通过轮询来获取。&lt;/h3&gt;
+&lt;p&gt;线程池的使用，主要使用 map 方法：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;from&lt;/span&gt; multiprocessing.dummy &lt;span style="color: #0000ff"&gt;import&lt;/span&gt; Pool
+
+input_list = [...]
+pool: Pool = Pool(len(input_list))
+pool.map(func, input_list)
+pool.close()
+pool.join()
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;独立线程异步处理：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;import …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">xiayf</dc:creator><pubDate>Wed, 14 Aug 2019 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2019-08-14:/2019/08/14/a-python-project-summary/</guid><category>总结</category><category>Python</category></item><item><title>Reactor 官方文档翻译简化版</title><link>http://youngsterxyf.github.io/2019/06/26/simplified-reactor-doc-zh/</link><description>&lt;p&gt;原文：&lt;a href="https://projectreactor.io/docs/core/release/reference/"&gt;Reactor 3 Reference Guide&lt;/a&gt;&lt;/p&gt;
 &lt;h3&gt;1. 起步&lt;/h3&gt;
 &lt;h4&gt;1.1 Reactor 简介&lt;/h4&gt;
 &lt;p&gt;Reactor 是为 JVM 准备的一个完全非阻塞的反应式编程基础组件，支持高效的需求管理（以管理“反压”的形式），直接与 Java 8 的函数式 API 集成，尤其是 &lt;code&gt;CompletableFuture&lt;/code&gt;、&lt;code&gt;Stream&lt;/code&gt; 以及 &lt;code&gt;Duration&lt;/code&gt;，提供可组合的异步序列 API - &lt;code&gt;Flux&lt;/code&gt;（适用于 N 个元素的序列）和 &lt;code&gt;Mono&lt;/code&gt;（适用于 0 或 1个元素的序列）--- 并且全面地（extensively）实现了 &lt;a href="https://www.reactive-streams.org/"&gt;反应式流（Reative Streams）&lt;/a&gt; 规范。&lt;/p&gt;
@@ -1642,7 +1657,7 @@ mysql-client php5-mysql memcached php5-memcache php5-curl php5-gd
     #listen   80; ## listen for …&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">youngsterxyf</dc:creator><pubDate>Thu, 10 May 2012 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2012-05-10:/2012/05/10/ubuntu12.04-nginx-php-factcgi-mysql-memcached/</guid><category>Linux</category><category>Nginx</category><category>PHP</category></item><item><title>Python对象创建过程（译）</title><link>http://youngsterxyf.github.io/2012/04/26/python-object-creation-sequence/</link><description>&lt;p&gt;原文： &lt;a href="http://eli.thegreenplace.net/2012/04/16/python-object-creation-sequence/"&gt;Python object creation sequence&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;译者： &lt;a href="http://xiayf.blogspot.com/"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;[本文讨论的Python版本为3.x]&lt;/p&gt;
-&lt;p&gt;本文旨在探究Python中新对象的创建过程。正如我在&lt;a href="&amp;lt;http://eli.thegreenplace.net/2012/03/23/python-internals-how-callables-work/"&gt;前一篇文章&lt;/a&gt;中所解释的，对象的创建只是调用可调用对象的一种特例。考虑这样的一段Python代码：&lt;/p&gt;
+&lt;p&gt;本文旨在探究Python中新对象的创建过程。正如我在&lt;a href="http://eli.thegreenplace.net/2012/03/23/python-internals-how-callables-work"&gt;前一篇文章&lt;/a&gt;中所解释的，对象的创建只是调用可调用对象的一种特例。考虑这样的一段Python代码：&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;class&lt;/span&gt; &lt;span style="color: #2b91af"&gt;Joe&lt;/span&gt;:
     &lt;span style="color: #0000ff"&gt;pass&lt;/span&gt;
 

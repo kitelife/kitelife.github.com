@@ -64,6 +64,40 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="../2019/08/14/a-python-project-summary/" rel="bookmark" title="Permalink to 一个 Python 小项目的小结">一个 Python 小项目的小结</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2019-08-14T00:00:00+08:00"> 2019-08-14 三 </abbr>
+<address class="vcard author">By <a class="url fn" href="../author/xiayf.html">xiayf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <p>前段时间临时接手一个 Python 小项目，这个项目实现的类似一个管控平台，其中核心功能是为算法同学提供机器学习模型训练任务的全流程管理，平台后端基于 Flask 框架实现，前端基于 Ant Design Pro 实现。</p>
+<p>代码稍微有些乱，所以做了部分代码的重构，在此做点经验小结。</p>
+<h3>1、部分请求处理逻辑，由于比较耗时，故使用线程池来加速，或者使用独立线程异步处理，或者先存储一个中间状态，由后台定时任务来完成实际的处理工作。对于异步处理结果，前端通过轮询来获取。</h3>
+<p>线程池的使用，主要使用 map 方法：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">from</span> multiprocessing.dummy <span style="color: #0000ff">import</span> Pool
+
+input_list = [...]
+pool: Pool = Pool(len(input_list))
+pool.map(func, input_list)
+pool.close()
+pool.join()
+</pre></div>
+
+
+<p>独立线程异步处理：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">import …</span></pre></div> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2019/08/14/a-python-project-summary/" rel="bookmark" title="Permalink to 一个 Python 小项目的小结">阅读全文 <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="../tag/zong-jie.html">总结</a>
+                    <a class="danger label" href="../tag/python.html">Python</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="../2019/06/26/simplified-reactor-doc-zh/" rel="bookmark" title="Permalink to Reactor 官方文档翻译简化版">Reactor 官方文档翻译简化版</a>
                     </h2>
                 </header>
@@ -257,32 +291,6 @@ map() {
                     <span>Tagged as : </span>
                     <a class="danger label" href="../tag/fan-yi.html">翻译</a>
                     <a class="danger label" href="../tag/shu-ji.html">书籍</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="../2016/06/11/mysql-fulltext-application/" rel="bookmark" title="Permalink to 应用MySQL InnoDB全文索引">应用MySQL InnoDB全文索引</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2016-06-11T00:00:00+08:00"> 2016-06-11 六 </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <h2>问题</h2>
-<p>之前涉及的一项工作要求对某些数据做全文索引，并以API向其他内部系统提供搜索查询服务。</p>
-<p>由于需要建全文索引的数据量并不大，且已有的数据都以InnoDB引擎存储，简单起见，我们选择MySQL InnoDB引擎的全文索引特性来实现。MySQL从版本5.6开始支持InnoDB引擎的全文索引，不过“从5.7.6版本开始才提供一种内建的全文索引ngram parser，支持CJK字符集（中文、日文、韩文，CJK有个共同点就是单词不像英语习惯那样根据空格进行分解的，因此传统的内建分词方式无法准确的对类似中文进行分词）”，我们使用的MySQL版本为5.6.28，并且需要建全文索引的数据部分是中文，所以这是个问题。</p>
-<h2>方案</h2>
-<p>我们先把这项工作按“分治”的思想拆分成几个小问题：</p>
-<ol>
-<li>由于版本5.6.28的MySQL不支持中文的全文索引，那么可以对需要建全文索引的数据进行预处理 - 分词，并以空格为间隔将分词结果拼接成一个字符串。</li>
-<li>但经过第1步仍是不够的 - MySQL的系统变量<code>ft_min_word_len</code>、<code>ft_max_word_len</code>分别规定了全文检索被编入索引单词的最小长度和最大长度，默认的最小值为4个字符，默认的最大值取决于使用的MySQL版本。为了不改变这个默认值同时也是兼考虑这个值对于英文的意义，则需要通过编码（<code>urlencode</code>、<code>base64</code>、<code>汉字转拼音</code>等）将中文词变长 …</li></ol> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2016/06/11/mysql-fulltext-application/" rel="bookmark" title="Permalink to 应用MySQL InnoDB全文索引">阅读全文 <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/mysql.html">MySQL</a>
-                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
                 </div>
             </article>
             </li>

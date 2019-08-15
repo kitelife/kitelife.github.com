@@ -49,7 +49,7 @@
 
 
 &lt;p&gt;API中对搜索关键词也进行分词并经编码，以下面的SQL来查询即可：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;# &lt;span style="border: 1px solid #FF0000"&gt;其中&lt;/span&gt;%s&lt;span style="border: 1px solid #FF0000"&gt;用搜索关键词分词编码后的结果进行替换&lt;/span&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;# &lt;span style="border: 1px solid #FF0000"&gt;其中&lt;/span&gt;%s用搜索关键词分词编码后的结果进行替换
 &lt;span style="color: #0000ff"&gt;SELECT&lt;/span&gt; * &lt;span style="color: #0000ff"&gt;FROM&lt;/span&gt; `apps` &lt;span style="color: #0000ff"&gt;WHERE&lt;/span&gt; &lt;span style="color: #0000ff"&gt;MATCH&lt;/span&gt; (seg_name) AGAINST (&lt;span style="color: #a31515"&gt;&amp;#39;%s&amp;#39;&lt;/span&gt; &lt;span style="color: #0000ff"&gt;IN&lt;/span&gt; &lt;span style="color: #0000ff"&gt;NATURAL&lt;/span&gt; &lt;span style="color: #0000ff"&gt;LANGUAGE&lt;/span&gt; &lt;span style="color: #0000ff"&gt;MODE&lt;/span&gt;);
 &lt;/pre&gt;&lt;/div&gt;
 
@@ -152,13 +152,13 @@ $cache-&amp;gt;increment($key, 1);
 &lt;p&gt;经过仔细排查，最终确定问题就出在Nginx配置C的请求被转发到A、B。对于用户客户端来说，C是服务器，对于A、B来说，C则是客户端。如果不做特殊配置，从C转发到A、B的请求在处理时，A、B拿到的请求来源IP是C的IP，也就意味着到C的API访问请求，都被A、B基于C的IP进行访问频率限制。&lt;/p&gt;
 &lt;p&gt;以Nginx为例，对于从C转发到A、B的请求，如果A、B要拿到请求的真实来源IP，则需要对A、B及C的Nginx做特殊配置。为解决这个问题，Nginx提供了一个额外的模块&lt;code&gt;ngx_http_realip_module&lt;/code&gt;，这个模块默认没有编译在Nginx中，需以额外参数&lt;code&gt;--with-http_realip_module&lt;/code&gt;进行编译。&lt;/p&gt;
 &lt;p&gt;并对C的Nginx反向代理配置（location块）添加一行：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;# &lt;span style="border: 1px solid #FF0000"&gt;把请求来源放在&lt;/span&gt;X-Real-IP&lt;span style="border: 1px solid #FF0000"&gt;请求头中&lt;/span&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;# &lt;span style="border: 1px solid #FF0000"&gt;把请求来源放在&lt;/span&gt;X-Real-IP请求头中
 proxy_set_header  X-Real-IP &lt;span style="border: 1px solid #FF0000"&gt;$&lt;/span&gt;remote_addr;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;对A、B的Nginx（server块）添加以下配置：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;# &lt;span style="border: 1px solid #FF0000"&gt;说明需要进行真实请求来源&lt;/span&gt;IP&lt;span style="border: 1px solid #FF0000"&gt;替换的请求来源，即&lt;/span&gt;&lt;span style="color: #0000ff"&gt;C&lt;/span&gt;&lt;span style="border: 1px solid #FF0000"&gt;所属的&lt;/span&gt;IP&lt;span style="border: 1px solid #FF0000"&gt;段或者&lt;/span&gt;&lt;span style="color: #0000ff"&gt;C&lt;/span&gt;&lt;span style="border: 1px solid #FF0000"&gt;的&lt;/span&gt;IP
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;# &lt;span style="border: 1px solid #FF0000"&gt;说明需要进行真实请求来源&lt;/span&gt;IP替换的请求来源&lt;span style="border: 1px solid #FF0000"&gt;，即&lt;/span&gt;C所属的IP段或者C的IP
 set_real_ip_from 10.0.0.0/8;
 # &lt;span style="border: 1px solid #FF0000"&gt;说明从哪获取真实来源&lt;/span&gt;IP
 real_ip_header X-Real-IP;
@@ -18337,9 +18337,9 @@ f.add_to_my_constant(10)    &lt;span style="color: #008000"&gt;# =&amp;gt; 52&lt
 &lt;p&gt;这里有两个鬼祟的花招。第一：一个 &lt;code&gt;Markup&lt;/code&gt; 对象不会被转义两次。请看：&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&amp;gt;&amp;gt;&amp;gt; s = u&amp;#39;&amp;lt;b&amp;gt;oh noo xss&amp;lt;/b&amp;gt;&amp;#39;
 &amp;gt;&amp;gt;&amp;gt; Markup.escape(s)
-Markup(u&amp;#39;&amp;lt;b&amp;gt;oh noo xss&amp;lt;/b&amp;gt;&amp;#39;)
+Markup(u&amp;#39;&amp;amp;lt;b&amp;amp;gt;oh noo xss&amp;amp;lt;/b&amp;amp;gt;&amp;#39;)
 &amp;gt;&amp;gt; Markup.escape(Markup.escape(s))
-Markup(u&amp;#39;&amp;lt;b&amp;gt;oh noo xss&amp;lt;/b&amp;gt;&amp;#39;)
+Markup(u&amp;#39;&amp;amp;lt;b&amp;amp;gt;oh noo xss&amp;amp;lt;/b&amp;amp;gt;&amp;#39;)
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -18347,7 +18347,7 @@ Markup(u&amp;#39;&amp;lt;b&amp;gt;oh noo xss&amp;lt;/b&amp;gt;&amp;#39;)
 &lt;p&gt;另一个把戏是， &lt;code&gt;Markup&lt;/code&gt; 对象重载了所有string的方法，并且自动转义所有的参数。这意味着在Python里，你可以这么干：&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&amp;gt;&amp;gt;&amp;gt; user_input = u&amp;#39;&amp;lt;script&amp;gt;alert(&amp;quot;pwn&amp;quot;);&amp;lt;/script&amp;gt;&amp;#39;
 &amp;gt;&amp;gt;&amp;gt; Markup(u&amp;#39;&amp;lt;p&amp;gt;Hello, %s!&amp;lt;/p&amp;gt;&amp;#39;) % user_input
-Markup(u&amp;#39;&amp;lt;p&amp;gt;Hello, &amp;lt;script&amp;gt;alert(&amp;amp;#34;pwn&amp;amp;#34;);&amp;lt;/script&amp;gt;!&amp;lt;/p&amp;gt;&amp;#39;)
+Markup(u&amp;#39;&amp;lt;p&amp;gt;Hello, &amp;amp;lt;script&amp;amp;gt;alert(&amp;amp;#34;pwn&amp;amp;#34;);&amp;amp;lt;/script&amp;amp;gt;!&amp;lt;/p&amp;gt;&amp;#39;)
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -18579,7 +18579,7 @@ sudo /etc/init.d/nginx start
 &lt;/ul&gt;</content><category term="Linux"></category><category term="Nginx"></category><category term="PHP"></category></entry><entry><title>Python对象创建过程（译）</title><link href="http://youngsterxyf.github.io/2012/04/26/python-object-creation-sequence/" rel="alternate"></link><published>2012-04-26T00:00:00+08:00</published><updated>2012-04-26T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2012-04-26:/2012/04/26/python-object-creation-sequence/</id><summary type="html">&lt;p&gt;原文： &lt;a href="http://eli.thegreenplace.net/2012/04/16/python-object-creation-sequence/"&gt;Python object creation sequence&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;译者： &lt;a href="http://xiayf.blogspot.com/"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;[本文讨论的Python版本为3.x]&lt;/p&gt;
-&lt;p&gt;本文旨在探究Python中新对象的创建过程。正如我在&lt;a href="&amp;lt;http://eli.thegreenplace.net/2012/03/23/python-internals-how-callables-work/"&gt;前一篇文章&lt;/a&gt;中所解释的，对象的创建只是调用可调用对象的一种特例。考虑这样的一段Python代码：&lt;/p&gt;
+&lt;p&gt;本文旨在探究Python中新对象的创建过程。正如我在&lt;a href="http://eli.thegreenplace.net/2012/03/23/python-internals-how-callables-work"&gt;前一篇文章&lt;/a&gt;中所解释的，对象的创建只是调用可调用对象的一种特例。考虑这样的一段Python代码：&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;class&lt;/span&gt; &lt;span style="color: #2b91af"&gt;Joe&lt;/span&gt;:
     &lt;span style="color: #0000ff"&gt;pass&lt;/span&gt;
 
@@ -18591,7 +18591,7 @@ j = Joe()
 &lt;p&gt;那么，Joe的类型是什么呢？无论何时我们定义一个新的Python类(class)，它的类型都是 &lt;code&gt;type&lt;/code&gt; ，除非我们明确地为它指定一个 &lt;a href="http://eli.thegreenplace.net/2011/08/14/python-metaclasses-by-example/"&gt;metaclass&lt;/a&gt;。因此，当 &lt;code&gt;PyObject_Call&lt;/code&gt; 试图查看Joe的类型，将得到类型 &lt;code&gt;type&lt;/code&gt; ，然后选择 &lt;code&gt;type&lt;/code&gt; 的 &lt;code&gt;tp_call&lt;/code&gt; 属性 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;原文： &lt;a href="http://eli.thegreenplace.net/2012/04/16/python-object-creation-sequence/"&gt;Python object creation sequence&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;译者： &lt;a href="http://xiayf.blogspot.com/"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;[本文讨论的Python版本为3.x]&lt;/p&gt;
-&lt;p&gt;本文旨在探究Python中新对象的创建过程。正如我在&lt;a href="&amp;lt;http://eli.thegreenplace.net/2012/03/23/python-internals-how-callables-work/"&gt;前一篇文章&lt;/a&gt;中所解释的，对象的创建只是调用可调用对象的一种特例。考虑这样的一段Python代码：&lt;/p&gt;
+&lt;p&gt;本文旨在探究Python中新对象的创建过程。正如我在&lt;a href="http://eli.thegreenplace.net/2012/03/23/python-internals-how-callables-work"&gt;前一篇文章&lt;/a&gt;中所解释的，对象的创建只是调用可调用对象的一种特例。考虑这样的一段Python代码：&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;class&lt;/span&gt; &lt;span style="color: #2b91af"&gt;Joe&lt;/span&gt;:
     &lt;span style="color: #0000ff"&gt;pass&lt;/span&gt;
 

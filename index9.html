@@ -63,6 +63,32 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="./2013/11/01/unescape-html-in-golang-html_template/" rel="bookmark" title="Permalink to Golang中如何让html/template不转义html标签">Golang中如何让html/template不转义html标签</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2013-11-01T00:00:00+08:00"> 2013-11-01 五 </abbr>
+<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <p>近期在使用Golang的<a href="http://golang.org/pkg/net/http/">net/http</a>和<a href="http://golang.org/pkg/html/template/">html/template</a>开发一个简单的HAProxy负载均衡任务管理系统（见<a href="http://youngsterxyf.github.io/2013/10/16/high-availability-load-balancer-and-dns/">搭建高可用负载均衡组件及缓存DNS</a>一文说明）。</p>
+<p><a href="http://golang.org/pkg/html/template/">htmp/template</a>在渲染页面模板的时候默认会转义字符串中的html标签，但有时我们并不想转义html标签，以下图所示为例：</p>
+<p><img alt="add_haproxy_balance_task" src="/assets/uploads/pics/haproxy_task_add.jpg"></p>
+<p><img alt="list_haproxy_balance_task" src="/assets/uploads/pics/haproxy_task_list.jpg"></p>
+<p>图1中“ip:port列表(一行一个)”和“说明”两个输入框的内容行与行是以<code>\n</code>分隔的；图2中，这两部分内容分别在表格的“后端机器列表”和“说明”两列中展示，但行与行其实是以<code>&lt;br /&gt;</code>分隔的；那么在将数据存入数据库之前或从数据库中取出数据后，会将字符串中的<code>\n</code>替换为<code>&lt;br /&gt;</code>。如果将替换后的数据以字符串类型传入模板，<code>&lt;br /&gt;</code>标签渲染后的效果就是<code>&lt;br /&gt;</code>文本而不是换行。</p>
+<p>有两种方式避免<code>html/template</code>转义html标签：</p>
+<p>1.
+把字符串类型数据转换成<code>template …</code></p> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="./2013/11/01/unescape-html-in-golang-html_template/" rel="bookmark" title="Permalink to Golang中如何让html/template不转义html标签">阅读全文 <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="./tag/golang.html">Golang</a>
+                    <a class="danger label" href="./tag/template.html">template</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="./2013/10/23/learning-in-tencent-backend-arch-of-weixin/" rel="bookmark" title="Permalink to 学在腾讯：简而美的微信后台架构">学在腾讯：简而美的微信后台架构</a>
                     </h2>
                 </header>
@@ -372,48 +398,6 @@ com.权威服务器向Local DNS返回qq.com.解析记录 …</p> </div><!-- /.en
                     <span>Tagged as : </span>
                     <a class="danger label" href="./tag/zong-jie.html">总结</a>
                     <a class="danger label" href="./tag/zi-sheng.html">自省</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="./2013/06/29/learn-python-in-y-minutes/" rel="bookmark" title="Permalink to Y分钟学会Python（译）">Y分钟学会Python（译）</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2013-06-29T00:00:00+08:00"> 2013-06-29 六 </abbr>
-<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>原文：<a href="http://learnxinyminutes.com/docs/python/">Learn Python in Y Minutes</a></p>
-<p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
-<p>Python由Guido Van Rossum发明于90年代初期，是目前最流行的编程语言之一，因其语法的清晰简洁我爱上了Python，其代码基本上可以
-说是可执行的伪代码。</p>
-<p>非常欢迎反馈！你可以通过推特<a href="https://twitter.com/louiedinh">@louiedinh</a>或louiedinh AT gmail联系我。</p>
-<p>备注：本文是专门针对Python 2.7的，但应该是适用于Python 2.x的。很快我也会为Python 3写这样的一篇文章！</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #008000"># 单行注释以井字符开头</span>
-<span style="color: #a31515">&quot;&quot;&quot; 我们可以使用三个双引号（&quot;）或单引号（&#39;）</span>
-<span style="color: #a31515">    来编写多行注释</span>
-<span style="color: #a31515">&quot;&quot;&quot;</span>
-
-
-<span style="color: #008000">##########################################################</span>
-<span style="color: #008000">## 1. 基本数据类型和操作符</span>
-<span style="color: #008000">##########################################################</span>
-
-<span style="color: #008000"># 数字</span>
-3 <span style="color: #008000">#=&gt; 3</span>
-
-<span style="color: #008000"># 你预想的数学运算</span>
-1 + 1 <span style="color: #008000">#=&gt; 2</span>
-8 - 1 <span style="color: #008000">#=&gt; 7</span>
-10 * 2 <span style="color: #008000">#=&gt; 20</span>
-35 …</pre></div> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="./2013/06/29/learn-python-in-y-minutes/" rel="bookmark" title="Permalink to Y分钟学会Python（译）">阅读全文 <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="./tag/python.html">Python</a>
-                    <a class="danger label" href="./tag/fan-yi.html">翻译</a>
                 </div>
             </article>
             </li>

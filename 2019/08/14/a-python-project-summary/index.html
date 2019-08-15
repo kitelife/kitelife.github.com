@@ -74,7 +74,8 @@
             <div class="entry-content">
               <p>前段时间临时接手一个 Python 小项目，这个项目实现的类似一个管控平台，其中核心功能是为算法同学提供机器学习模型训练任务的全流程管理，平台后端基于 Flask 框架实现，前端基于 Ant Design Pro 实现。</p>
 <p>代码稍微有些乱，所以做了部分代码的重构，在此做点经验小结。</p>
-<h3>1、部分请求处理逻辑，由于比较耗时，故使用线程池来加速，或者使用独立线程异步处理，或者先存储一个中间状态，由后台定时任务来完成实际的处理工作。对于异步处理结果，前端通过轮询来获取。</h3>
+<h3>1、并行化或异步化</h3>
+<p>部分请求处理逻辑，由于比较耗时，故使用线程池来加速，或者使用独立线程异步处理，或者先存储一个中间状态，由后台定时任务来完成实际的处理工作。对于异步处理结果，前端通过轮询来获取。</p>
 <p>线程池的使用，主要使用 map 方法：</p>
 <div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">from</span> multiprocessing.dummy <span style="color: #0000ff">import</span> Pool
 
@@ -120,7 +121,7 @@ gunicorn <span style="color: #008000">--workers=4 --preload --log-level=info --a
 
 
 <p>preload 机制简单来说，就是 import app 类所在的模块及其依赖的各个模块（import 过程中会执行其中的语句），然后 fork 出多个进程，每个进程都执行 app.run()。</p>
-<h3>2、实现一些通用方案对异常进行捕获或重试</h3>
+<h4>2、实现一些通用方案对异常进行捕获或重试</h4>
 <div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">def</span> exception_try(times: int = 3, sleep_then_try_seconds=None):
     <span style="color: #0000ff">def</span> decorator(f):
         <span style="color: #0000ff">def</span> wrapper(*args, **kwargs):
@@ -175,7 +176,7 @@ with_db(conf.db.connect())(delete_task_from_job_queue)(task_id)
 
 
 <p>这个装饰器方法用于确保数据库连接在异常发生也能正常关闭，防止资源泄露。</p>
-<h3>3、循环等待或超时</h3>
+<h4>3、循环等待或超时</h4>
 <div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">class</span> <span style="color: #2b91af">TimeoutCondition</span>(object):
 
     <span style="color: #0000ff">def</span> __init__(self, condition_func, timeout_seconds):
@@ -207,7 +208,7 @@ with_db(conf.db.connect())(delete_task_from_job_queue)(task_id)
 
 
 <p><code>TimeoutCondition</code> 用于实现循环等待某个条件满足，但为了避免死循环，所以加一个超时条件判断。实例化参数第一个是原始的条件判断 lambda 语句，第二个是一个超时设置。另外，借助魔术方法 <code>__bool__</code>，让 TimeoutCondtion 的实例用起来像是一个布尔变量，调用 <code>is_timeout()</code> 方法可以区分循环等待退出是因为原始条件满足，还是超时退出的。</p>
-<h3>4、按部署环境配置应用的行为</h3>
+<h4>4、按部署环境配置应用的行为</h4>
 <p>应用在不同的环境（开发、测试、生产）中应该允许加载不同的配置，配置不同的行为。</p>
 <p>当前应用处于什么环境，可以通过环境变量来配置，应用初始化时最先检测当前处于什么环境，之后的初始化流程就可以依据环境配置来加载配置，定制应用行为。</p>
 <div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #008000"># conf/__init__.py</span>

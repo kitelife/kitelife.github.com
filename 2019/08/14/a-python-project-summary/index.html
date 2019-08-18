@@ -249,6 +249,85 @@ conf = AppConfig()
 log_level = logging.INFO <span style="color: #0000ff">if</span> conf.is_prod <span style="color: #0000ff">else</span> logging.DEBUG
 logging.basicConfig(format=consts.LOG_FORMAT, level=log_level)
 </pre></div>
+
+
+<h4>API 规范与异常提示</h4>
+<p>为了统一前端 API 响应处理，有必要对 API 响应体的结构指定标准。以我个人的习惯，所有从应用代码中返回的响应，HTTP 状态码都应该是 200，具体当前 API 请求成功还是失败，如果失败，失败的原因是什么都应该包含在响应体中，响应体大致的结构为：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>{
+    &quot;code&quot;: <span style="border: 1px solid #FF0000">...</span>,
+    &quot;msg&quot;: <span style="color: #a31515">&quot;...&quot;</span>,
+    &quot;data&quot;: <span style="border: 1px solid #FF0000">...</span>
+}
+</pre></div>
+
+
+<p>code 表示请求处理失败时，data 字段可选，code 表示请求处理成功时，msg 字段可选。</p>
+<p>前端配合对响应体进行统一检测和提示：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">import</span> { notification } from <span style="color: #a31515">&#39;antd&#39;</span>;
+
+<span style="color: #0000ff">function</span> defaultHTTPCodeHandler(response) {
+  <span style="color: #0000ff">if</span> (response.status &gt;= 400) {
+    <span style="color: #008000">// 注意 clone</span>
+    response.clone().text().then(respBody =&gt; {
+      notification.error({message: <span style="color: #a31515">&#39;API 异常响应&#39;</span>, description: <span style="color: #a31515">`${</span>response.status<span style="color: #a31515">}, ${</span>respBody<span style="color: #a31515">}`</span>, duration: <span style="color: #0000ff">null</span>});
+      console.log(<span style="color: #a31515">`${</span>response.status<span style="color: #a31515">}, ${</span>respBody<span style="color: #a31515">}`</span>);
+    });
+  }
+}
+
+<span style="color: #0000ff">function</span> defaultMsgCodeHandler(response) {
+  <span style="color: #0000ff">if</span> (response.status === 200) {
+    <span style="color: #008000">// 注意 clone</span>
+    response.clone().json().then(jsonBody =&gt; {
+      <span style="color: #008000">// 0、200、10000 都属于成功响应</span>
+      <span style="color: #0000ff">if</span> (jsonBody !== <span style="color: #0000ff">undefined</span> &amp;&amp; jsonBody.code !== <span style="color: #0000ff">undefined</span> &amp;&amp; jsonBody.code !== 0 &amp;&amp; jsonBody.code !== 200 &amp;&amp; jsonBody.code != 10000) {
+        notification.error({message: <span style="color: #a31515">&#39;请求失败&#39;</span>, description: <span style="color: #a31515">`${</span>jsonBody.code<span style="color: #a31515">}, ${</span>jsonBody.msg<span style="color: #a31515">}`</span>, duration: <span style="color: #0000ff">null</span>});
+        console.log(<span style="color: #a31515">`${</span>jsonBody.code<span style="color: #a31515">}, ${</span>jsonBody.msg<span style="color: #a31515">}`</span>);
+      }
+    });
+  }
+}
+</pre></div>
+
+
+<p>并且统一封装发起请求的逻辑：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">export</span> <span style="color: #0000ff">function</span> corsFetch(url, init, httpCodeCallback, msgCodeCallback) {
+  <span style="color: #0000ff">const</span> host = myHost();
+  <span style="color: #0000ff">let</span> urlPrefix = host;
+  <span style="color: #008000">// 自带 host，则不额外补充 host 前缀</span>
+  <span style="color: #0000ff">if</span> (url.startsWith(<span style="color: #a31515">&quot;http://&quot;</span>) || url.startsWith(<span style="color: #a31515">&quot;https://&quot;</span>)) {
+    urlPrefix = <span style="color: #a31515">&#39;&#39;</span>;
+  }
+  <span style="color: #0000ff">const</span> httpCodeHandler = httpCodeCallback === <span style="color: #0000ff">undefined</span> ? defaultHTTPCodeHandler : httpCodeCallback;
+  <span style="color: #0000ff">const</span> msgCodeHandler = msgCodeCallback === <span style="color: #0000ff">undefined</span> ? defaultMsgCodeHandler : msgCodeCallback;
+  <span style="color: #008000">// 对于线上环境或者测试环境，不跨域</span>
+  <span style="color: #0000ff">if</span> (host === PROD_ENV_HOST || host === TEST_ENV_HOST) {
+    <span style="color: #0000ff">const</span> promise = fetch(urlPrefix + url, init);
+    promise.then((response) =&gt; httpCodeHandler(response));
+    promise.then((response) =&gt; msgCodeHandler(response));
+    <span style="color: #0000ff">return</span> promise;
+  }
+  <span style="color: #008000">// 对于本地测试环境，跨域访问预发环境 API 数据，方便测试</span>
+  <span style="color: #0000ff">let</span> corsInit = {
+    credentials: <span style="color: #a31515">&#39;include&#39;</span>,
+    mode: <span style="color: #a31515">&#39;cors&#39;</span>,
+    redirect: <span style="color: #a31515">&#39;follow&#39;</span>,
+  };
+  <span style="color: #0000ff">if</span> (init !== <span style="color: #0000ff">undefined</span>) {
+    corsInit = { ...corsInit, ...init };
+  }
+  <span style="color: #0000ff">if</span> (urlPrefix !== <span style="color: #a31515">&#39;&#39;</span>) {
+    urlPrefix = TEST_ENV_HOST;
+  }
+  <span style="color: #0000ff">const</span> promise = fetch(urlPrefix + url, corsInit);
+  promise.then((response) =&gt; httpCodeHandler(response));
+  promise.then((response) =&gt; msgCodeHandler(response));
+  <span style="color: #0000ff">return</span> promise;
+}
+</pre></div>
+
+
+<p>其中为了方便本地开发测试，允许本地开发环境跨域访问测试环境（最好不要直接跨越访问生产环境），并且自动区分，corsFetch 调用方无感知。</p>
             </div><!-- /.entry-content -->
             <div class="comments">
               <h3>欢迎评论</h3>

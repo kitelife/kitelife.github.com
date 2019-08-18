@@ -190,7 +190,86 @@ conf = AppConfig()
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #008000"&gt;# 根据环境配置日志级别&lt;/span&gt;
 log_level = logging.INFO &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; conf.is_prod &lt;span style="color: #0000ff"&gt;else&lt;/span&gt; logging.DEBUG
 logging.basicConfig(format=consts.LOG_FORMAT, level=log_level)
-&lt;/pre&gt;&lt;/div&gt;</content><category term="总结"></category><category term="Python"></category></entry><entry><title>Reactor 官方文档翻译简化版</title><link href="http://youngsterxyf.github.io/2019/06/26/simplified-reactor-doc-zh/" rel="alternate"></link><published>2019-06-26T00:00:00+08:00</published><updated>2019-06-26T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-06-26:/2019/06/26/simplified-reactor-doc-zh/</id><summary type="html">&lt;p&gt;原文：&lt;a href="https://projectreactor.io/docs/core/release/reference/"&gt;Reactor 3 Reference Guide&lt;/a&gt;&lt;/p&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h4&gt;API 规范与异常提示&lt;/h4&gt;
+&lt;p&gt;为了统一前端 API 响应处理，有必要对 API 响应体的结构指定标准。以我个人的习惯，所有从应用代码中返回的响应，HTTP 状态码都应该是 200，具体当前 API 请求成功还是失败，如果失败，失败的原因是什么都应该包含在响应体中，响应体大致的结构为：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;{
+    &amp;quot;code&amp;quot;: &lt;span style="border: 1px solid #FF0000"&gt;...&lt;/span&gt;,
+    &amp;quot;msg&amp;quot;: &lt;span style="color: #a31515"&gt;&amp;quot;...&amp;quot;&lt;/span&gt;,
+    &amp;quot;data&amp;quot;: &lt;span style="border: 1px solid #FF0000"&gt;...&lt;/span&gt;
+}
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;code 表示请求处理失败时，data 字段可选，code 表示请求处理成功时，msg 字段可选。&lt;/p&gt;
+&lt;p&gt;前端配合对响应体进行统一检测和提示：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; { notification } from &lt;span style="color: #a31515"&gt;&amp;#39;antd&amp;#39;&lt;/span&gt;;
+
+&lt;span style="color: #0000ff"&gt;function&lt;/span&gt; defaultHTTPCodeHandler(response) {
+  &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; (response.status &amp;gt;= 400) {
+    &lt;span style="color: #008000"&gt;// 注意 clone&lt;/span&gt;
+    response.clone().text().then(respBody =&amp;gt; {
+      notification.error({message: &lt;span style="color: #a31515"&gt;&amp;#39;API 异常响应&amp;#39;&lt;/span&gt;, description: &lt;span style="color: #a31515"&gt;`${&lt;/span&gt;response.status&lt;span style="color: #a31515"&gt;}, ${&lt;/span&gt;respBody&lt;span style="color: #a31515"&gt;}`&lt;/span&gt;, duration: &lt;span style="color: #0000ff"&gt;null&lt;/span&gt;});
+      console.log(&lt;span style="color: #a31515"&gt;`${&lt;/span&gt;response.status&lt;span style="color: #a31515"&gt;}, ${&lt;/span&gt;respBody&lt;span style="color: #a31515"&gt;}`&lt;/span&gt;);
+    });
+  }
+}
+
+&lt;span style="color: #0000ff"&gt;function&lt;/span&gt; defaultMsgCodeHandler(response) {
+  &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; (response.status === 200) {
+    &lt;span style="color: #008000"&gt;// 注意 clone&lt;/span&gt;
+    response.clone().json().then(jsonBody =&amp;gt; {
+      &lt;span style="color: #008000"&gt;// 0、200、10000 都属于成功响应&lt;/span&gt;
+      &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; (jsonBody !== &lt;span style="color: #0000ff"&gt;undefined&lt;/span&gt; &amp;amp;&amp;amp; jsonBody.code !== &lt;span style="color: #0000ff"&gt;undefined&lt;/span&gt; &amp;amp;&amp;amp; jsonBody.code !== 0 &amp;amp;&amp;amp; jsonBody.code !== 200 &amp;amp;&amp;amp; jsonBody.code != 10000) {
+        notification.error({message: &lt;span style="color: #a31515"&gt;&amp;#39;请求失败&amp;#39;&lt;/span&gt;, description: &lt;span style="color: #a31515"&gt;`${&lt;/span&gt;jsonBody.code&lt;span style="color: #a31515"&gt;}, ${&lt;/span&gt;jsonBody.msg&lt;span style="color: #a31515"&gt;}`&lt;/span&gt;, duration: &lt;span style="color: #0000ff"&gt;null&lt;/span&gt;});
+        console.log(&lt;span style="color: #a31515"&gt;`${&lt;/span&gt;jsonBody.code&lt;span style="color: #a31515"&gt;}, ${&lt;/span&gt;jsonBody.msg&lt;span style="color: #a31515"&gt;}`&lt;/span&gt;);
+      }
+    });
+  }
+}
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;并且统一封装发起请求的逻辑：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;export&lt;/span&gt; &lt;span style="color: #0000ff"&gt;function&lt;/span&gt; corsFetch(url, init, httpCodeCallback, msgCodeCallback) {
+  &lt;span style="color: #0000ff"&gt;const&lt;/span&gt; host = myHost();
+  &lt;span style="color: #0000ff"&gt;let&lt;/span&gt; urlPrefix = host;
+  &lt;span style="color: #008000"&gt;// 自带 host，则不额外补充 host 前缀&lt;/span&gt;
+  &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; (url.startsWith(&lt;span style="color: #a31515"&gt;&amp;quot;http://&amp;quot;&lt;/span&gt;) || url.startsWith(&lt;span style="color: #a31515"&gt;&amp;quot;https://&amp;quot;&lt;/span&gt;)) {
+    urlPrefix = &lt;span style="color: #a31515"&gt;&amp;#39;&amp;#39;&lt;/span&gt;;
+  }
+  &lt;span style="color: #0000ff"&gt;const&lt;/span&gt; httpCodeHandler = httpCodeCallback === &lt;span style="color: #0000ff"&gt;undefined&lt;/span&gt; ? defaultHTTPCodeHandler : httpCodeCallback;
+  &lt;span style="color: #0000ff"&gt;const&lt;/span&gt; msgCodeHandler = msgCodeCallback === &lt;span style="color: #0000ff"&gt;undefined&lt;/span&gt; ? defaultMsgCodeHandler : msgCodeCallback;
+  &lt;span style="color: #008000"&gt;// 对于线上环境或者测试环境，不跨域&lt;/span&gt;
+  &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; (host === PROD_ENV_HOST || host === TEST_ENV_HOST) {
+    &lt;span style="color: #0000ff"&gt;const&lt;/span&gt; promise = fetch(urlPrefix + url, init);
+    promise.then((response) =&amp;gt; httpCodeHandler(response));
+    promise.then((response) =&amp;gt; msgCodeHandler(response));
+    &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; promise;
+  }
+  &lt;span style="color: #008000"&gt;// 对于本地测试环境，跨域访问预发环境 API 数据，方便测试&lt;/span&gt;
+  &lt;span style="color: #0000ff"&gt;let&lt;/span&gt; corsInit = {
+    credentials: &lt;span style="color: #a31515"&gt;&amp;#39;include&amp;#39;&lt;/span&gt;,
+    mode: &lt;span style="color: #a31515"&gt;&amp;#39;cors&amp;#39;&lt;/span&gt;,
+    redirect: &lt;span style="color: #a31515"&gt;&amp;#39;follow&amp;#39;&lt;/span&gt;,
+  };
+  &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; (init !== &lt;span style="color: #0000ff"&gt;undefined&lt;/span&gt;) {
+    corsInit = { ...corsInit, ...init };
+  }
+  &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; (urlPrefix !== &lt;span style="color: #a31515"&gt;&amp;#39;&amp;#39;&lt;/span&gt;) {
+    urlPrefix = TEST_ENV_HOST;
+  }
+  &lt;span style="color: #0000ff"&gt;const&lt;/span&gt; promise = fetch(urlPrefix + url, corsInit);
+  promise.then((response) =&amp;gt; httpCodeHandler(response));
+  promise.then((response) =&amp;gt; msgCodeHandler(response));
+  &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; promise;
+}
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;其中为了方便本地开发测试，允许本地开发环境跨域访问测试环境（最好不要直接跨越访问生产环境），并且自动区分，corsFetch 调用方无感知。&lt;/p&gt;</content><category term="总结"></category><category term="Python"></category></entry><entry><title>Reactor 官方文档翻译简化版</title><link href="http://youngsterxyf.github.io/2019/06/26/simplified-reactor-doc-zh/" rel="alternate"></link><published>2019-06-26T00:00:00+08:00</published><updated>2019-06-26T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-06-26:/2019/06/26/simplified-reactor-doc-zh/</id><summary type="html">&lt;p&gt;原文：&lt;a href="https://projectreactor.io/docs/core/release/reference/"&gt;Reactor 3 Reference Guide&lt;/a&gt;&lt;/p&gt;
 &lt;h3&gt;1. 起步&lt;/h3&gt;
 &lt;h4&gt;1.1 Reactor 简介&lt;/h4&gt;
 &lt;p&gt;Reactor 是为 JVM 准备的一个完全非阻塞的反应式编程基础组件，支持高效的需求管理（以管理“反压”的形式），直接与 Java 8 的函数式 API 集成，尤其是 &lt;code&gt;CompletableFuture&lt;/code&gt;、&lt;code&gt;Stream&lt;/code&gt; 以及 &lt;code&gt;Duration&lt;/code&gt;，提供可组合的异步序列 API - &lt;code&gt;Flux&lt;/code&gt;（适用于 N 个元素的序列）和 &lt;code&gt;Mono&lt;/code&gt;（适用于 0 或 1个元素的序列）--- 并且全面地（extensively）实现了 &lt;a href="https://www.reactive-streams.org/"&gt;反应式流（Reative Streams）&lt;/a&gt; 规范。&lt;/p&gt;

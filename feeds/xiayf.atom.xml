@@ -1,5 +1,197 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>黑·白 - xiayf</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/xiayf.atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2019-08-14T00:00:00+08:00</updated><entry><title>一个 Python 小项目的小结</title><link href="http://youngsterxyf.github.io/2019/08/14/a-python-project-summary/" rel="alternate"></link><published>2019-08-14T00:00:00+08:00</published><updated>2019-08-14T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-08-14:/2019/08/14/a-python-project-summary/</id><summary type="html">&lt;p&gt;前段时间临时接手一个 Python 小项目，这个项目实现的类似一个管控平台，其中核心功能是为算法同学提供机器学习模型训练任务的全流程管理，平台后端基于 Flask 框架实现，前端基于 Ant Design Pro 实现。&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>黑·白 - xiayf</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/xiayf.atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2019-09-04T00:00:00+08:00</updated><entry><title>Lucene 查询解析器语法</title><link href="http://youngsterxyf.github.io/2019/09/04/lucene-query-parser-syntax/" rel="alternate"></link><published>2019-09-04T00:00:00+08:00</published><updated>2019-09-04T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-09-04:/2019/09/04/lucene-query-parser-syntax/</id><summary type="html">&lt;p&gt;原文：&lt;a href="http://lucene.apache.org/core/8_2_0/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#package.description"&gt;Query Parser Syntax&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;概览&lt;/h2&gt;
+&lt;p&gt;Lucene 除了提供 API 方便开发者创建查询请求，还通过一个查询解析器（一个词法分析器，使用 JavaCC 将一个字符串翻译成一个 Lucene 查询）提供一种功能丰富的查询语言。&lt;/p&gt;
+&lt;p&gt;一般来说，查询解析器支持的语法在不同发布版本之间可能会有变化。当前这个文档页面描述的是当前这个发布版本的语法。如果你正在使用一个不同版本的 Lucene，请参考该版本自带的 docs/queryparsersyntax.html 文档。&lt;/p&gt;
+&lt;p&gt;在选择使用这个查询解析器之前，请考虑以下 3 点：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;如果你准备以编程的方式生成一个查询字符串，然后使用查询解析器来解析它。那么，你应该认真考虑以下是否应该直接使用查询 API 来构建查询。换句话说，查询解析器专门用于人类输入的文本，而不是程序生成的文本。&lt;/li&gt;
+&lt;li&gt;不可分词（untokenized）的域（译者注：抱歉，此处没太理解）最好直接添加到查询中，而不是通过查询解析器来解析。如果一个域的值是通过应用自动生成的，那么应该为这个域自动生成查询子句 …&lt;/li&gt;&lt;/ol&gt;</summary><content type="html">&lt;p&gt;原文：&lt;a href="http://lucene.apache.org/core/8_2_0/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#package.description"&gt;Query Parser Syntax&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;概览&lt;/h2&gt;
+&lt;p&gt;Lucene 除了提供 API 方便开发者创建查询请求，还通过一个查询解析器（一个词法分析器，使用 JavaCC 将一个字符串翻译成一个 Lucene 查询）提供一种功能丰富的查询语言。&lt;/p&gt;
+&lt;p&gt;一般来说，查询解析器支持的语法在不同发布版本之间可能会有变化。当前这个文档页面描述的是当前这个发布版本的语法。如果你正在使用一个不同版本的 Lucene，请参考该版本自带的 docs/queryparsersyntax.html 文档。&lt;/p&gt;
+&lt;p&gt;在选择使用这个查询解析器之前，请考虑以下 3 点：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;如果你准备以编程的方式生成一个查询字符串，然后使用查询解析器来解析它。那么，你应该认真考虑以下是否应该直接使用查询 API 来构建查询。换句话说，查询解析器专门用于人类输入的文本，而不是程序生成的文本。&lt;/li&gt;
+&lt;li&gt;不可分词（untokenized）的域（译者注：抱歉，此处没太理解）最好直接添加到查询中，而不是通过查询解析器来解析。如果一个域的值是通过应用自动生成的，那么应该为这个域自动生成查询子句。分析器（查询解析器所使用的）是专门用于将人类输入的文本转换成一些词（terms），那么程序自动生成的值，也应该由程序自动添加到查询中。&lt;/li&gt;
+&lt;li&gt;从查询形式来看，如果域的值是普通文本，则应该使用查询解析器。所有其它值类型，比如：日期范围、关键词等等，最好通过查询 API 直接添加。如果一个域的值仅限于一个有限的集合（可以通过一个下拉菜单指定），则不应该添加到查询字符串（后续会被解析）中，而是应该作为一个 TermQuery 子句添加到查询中。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2&gt;词（Terms）&lt;/h2&gt;
+&lt;p&gt;一个查询语句可以拆解成 词（terms） 和 操作符（operators）。词又分为两种：单个词（single Terms）和短语（Phrases）。&lt;/p&gt;
+&lt;p&gt;单个词是指 ”test“ 或 ”Hello“ 这类单词。&lt;/p&gt;
+&lt;p&gt;短语是指以双引号包围起来的一组单词，比如：”hello dolly“。&lt;/p&gt;
+&lt;p&gt;多个词（Multiple terms）可以使用布尔操作符组合在一起，实现一个更加复杂的查询（如下文所示）。&lt;/p&gt;
+&lt;p&gt;备注：用于创建索引的解析器也会用于解析查询字符串中的词和短语。因此，选择合适的解析器很重要，否则解析器可能会被查询字符串中的词干扰（译者注：这句应该是指英文解析器可能无法对中文进行正确分词的问题）。&lt;/p&gt;
+&lt;h2&gt;域（Fields）&lt;/h2&gt;
+&lt;p&gt;Lucene 支持分多个字段/域的数据。搜索时，可以指定一个域，也可以使用默认域。域的名称以及默认域与具体实现相关。&lt;/p&gt;
+&lt;p&gt;输入域的名称，后跟一个冒号（:），以及目标搜索词，即可对任意一个域进行搜索。&lt;/p&gt;
+&lt;p&gt;举例来说，假设一个 Lucene 索引包含 2 个域：title 和 text，text 是默认域。若想查找标题为 ”The Right Way“ 且文本内容包含 ”dont't go this way“ 的文档，可以输入：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;title:&lt;span style="color: #a31515"&gt;&amp;quot;The Right Way&amp;quot;&lt;/span&gt; &lt;span style="color: #0000ff"&gt;AND&lt;/span&gt; &lt;span style="color: #2b91af"&gt;text&lt;/span&gt;&lt;span style="border: 1px solid #FF0000"&gt;:&lt;/span&gt;&lt;span style="color: #0000ff"&gt;go&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;或者：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;title:&lt;span style="color: #a31515"&gt;&amp;quot;The Right Way&amp;quot;&lt;/span&gt; &lt;span style="color: #0000ff"&gt;AND&lt;/span&gt; &lt;span style="color: #0000ff"&gt;go&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;因为 text 是默认域，所以域的标志可以省略。&lt;/p&gt;
+&lt;p&gt;注意：指定的域仅对紧跟其后的词生效，因此，如下查询：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;title:The Right Way
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;将对 title 域仅查找 ”The“，并对默认域（当前这个例子中是指 text 域）查找 ”Right“ 和 ”Way“。&lt;/p&gt;
+&lt;h2&gt;词修饰语（Term Modifiers）&lt;/h2&gt;
+&lt;p&gt;Lucene 支持修饰查询词（modifying query terms）来提供多种搜索方式。&lt;/p&gt;
+&lt;h3&gt;通配符搜索&lt;/h3&gt;
+&lt;p&gt;Lucene 支持对单个词(single terms)（不是短语查询 phrase queries）进行单个字符和多个字符的通配搜索。&lt;/p&gt;
+&lt;p&gt;使用 &lt;code&gt;?&lt;/code&gt; 符号进行单个字符的通配搜索。&lt;/p&gt;
+&lt;p&gt;使用 &lt;code&gt;*&lt;/code&gt; 符号进行多个字符的通配搜索。&lt;/p&gt;
+&lt;p&gt;单字符通配搜索用于查找替换单个字符即可匹配的词。举例来说，若要搜索 ”text“ 或 ”test“，可以如下查询：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;te?t
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;多字符通配搜索用于查找替换0个或多个字符即可匹配的词。举例来说，若要搜索 ”test“、”tests“ 或 ”tester“，可以如下查询：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;test*
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;也可以对词的中间部分进行通配搜索：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;te*t
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;备注：不可以将 &lt;code&gt;*&lt;/code&gt; 或 &lt;code&gt;?&lt;/code&gt; 符号用作一次搜索的首个字符。&lt;/p&gt;
+&lt;h3&gt;正则表达式搜索&lt;/h3&gt;
+&lt;p&gt;Lucene 支持正则表达式搜索，匹配斜杠（&lt;code&gt;/&lt;/code&gt;） 之间的模式。正则表达式的语法在不同的发布版本之间可能会有差异，目前支持的语法在 &lt;a href="http://lucene.apache.org/core/8_2_0/core/org/apache/lucene/util/automaton/RegExp.html?is-external=true"&gt;RegExp&lt;/a&gt; 类文档中有说明。举例来说，查找包含 ”moat“ 或 ”boat“ 的文档：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;/[mb]oat/
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h3&gt;模糊搜索&lt;/h3&gt;
+&lt;p&gt;Lucene 支持基于 Damerau-Levenshtein 编辑距离的模糊搜索。在单个词的最后添加波浪符（~）即可进行模糊搜索。举例来说，使用模糊搜索查找拼写上近似 ”roam“ 的词：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;roam~
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;这个查询语句会找到 foam 和 roams 这类词。&lt;/p&gt;
+&lt;p&gt;模糊搜索可以通过一个额外（可选）的参数来指定允许的最大编辑次数。这个参数值界于 0 和 2 之间，例如：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;roam~1
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;如果未指定该参数，则默认使用 2 个编辑距离。&lt;/p&gt;
+&lt;p&gt;以前，这里还允许使用浮点数。现在这个语法已被考虑弃用，将于 Lucene 5.0 中移除。&lt;/p&gt;
+&lt;h3&gt;邻近搜索&lt;/h3&gt;
+&lt;p&gt;Lucene 支持查找指定距离的邻近词。在短语的最后添加拨浪符（~）即可进行邻近搜索。举例来说，在文档中搜索 ”apache“ 和 ”jakarta“ 相距 10 个词的模式：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;quot;jakarta apache&amp;quot;&lt;/span&gt;~10
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h3&gt;范围搜索&lt;/h3&gt;
+&lt;p&gt;范围查询可以要求域的值在范围查询语句指定的上下界之间。范围查询对于上下界可以包含也可以不包含。排序按照字典序进行。&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;mod_date:[20020101 &lt;span style="color: #0000ff"&gt;TO&lt;/span&gt; 20030101]
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;这个查询语句会查找 mod_date 域的值在 20020101 和 20030101 （包含上下界） 之间的文档。注意：范围查询并不是仅适用于日期域，也可以对非日期的域进行范围查询：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;title:&lt;span style="border: 1px solid #FF0000"&gt;{&lt;/span&gt;Aida &lt;span style="color: #0000ff"&gt;TO&lt;/span&gt; Carmen&lt;span style="border: 1px solid #FF0000"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;这个查询语句会查找到 title 域的值在 Aida 和 Carmen （不包含上下界）之间的所有文档。&lt;/p&gt;
+&lt;p&gt;包含上下界的范围查询使用方括号来表示。不包含上下界的范围查询使用大括号来表示。&lt;/p&gt;
+&lt;h3&gt;词加权（Boosting a term）&lt;/h3&gt;
+&lt;p&gt;Lucene 会基于文档中找到的词对匹配到的文档提供相关性级别（译者疑问：基于向量余弦来计算相关性？）。可以在目标搜索词之后紧接一个脱字符 “^”，后跟一个加权系数（一个数字）来提升该搜索词的相关性权重。加权系统越高，查询命中的文档与该词的相关性越强。&lt;/p&gt;
+&lt;p&gt;加权操作允许对词进行加权控制文档的相关性。例如，假设你正在搜索：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;jakarta apache
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;然后希望搜索结果和词 ”jakarta“ 更相关一些，则可以使用 ”^“ 符号后跟一个加权系数对这个词进行加权，即如下这样查询：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;jakarta^4 apache
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;这会使得查找到的文档和词 ”jakarta“ 看起来更相关一些。也可以对短语进行加权，如下所示：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;quot;jakarta apache&amp;quot;&lt;/span&gt;^4 &lt;span style="color: #a31515"&gt;&amp;quot;Apache Lucene&amp;quot;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;默认，加权系数是 1。加权系统可以小于 1（比如：0.2），但必须大于 0。&lt;/p&gt;
+&lt;h2&gt;布尔操作符&lt;/h2&gt;
+&lt;p&gt;布尔操作符允许使用逻辑操作符组合多个词。Lucene 支持的布尔操作符包含 &lt;code&gt;AND&lt;/code&gt;、&lt;code&gt;+&lt;/code&gt;、&lt;code&gt;OR&lt;/code&gt;、&lt;code&gt;NOT&lt;/code&gt; 及 &lt;code&gt;-&lt;/code&gt;（备注：布尔操作符必须全部是大写字母）。&lt;/p&gt;
+&lt;h3&gt;OR&lt;/h3&gt;
+&lt;p&gt;“OR” 操作符是默认的连接操作符。这意味着如果两个词之间没有布尔操作符，则使用 “OR” 操作符。OR 操作符链接两个词，并匹配包含其中任意一个词的文档。这相当于集合的并集操作。“||” 符合可用于替代单词 “OR”。&lt;/p&gt;
+&lt;p&gt;比如，使用如下查询语句来搜索包含 “jakarta apache” 或仅是 “jakarta” 的文档：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;quot;jakarta apache&amp;quot;&lt;/span&gt; jakarta
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;或：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;quot;jakarta apache&amp;quot;&lt;/span&gt; &lt;span style="color: #0000ff"&gt;OR&lt;/span&gt; jakarta
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h3&gt;AND&lt;/h3&gt;
+&lt;p&gt;"AND" 操作符会匹配文本内容中同时存在两个词（因为 AND 是二元操作符）的文档。这相当于集合的交集操作。“&amp;amp;&amp;amp;” 符号可用于替代单词 “AND”。&lt;/p&gt;
+&lt;p&gt;比如，使用如下查询语句来搜索包含 “jakarta apache” 和 “Apache Lucene” 的文档：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;quot;jakarta apache&amp;quot;&lt;/span&gt; &lt;span style="color: #0000ff"&gt;AND&lt;/span&gt; &lt;span style="border: 1px solid #FF0000"&gt;“&lt;/span&gt;Apache Lucene&lt;span style="border: 1px solid #FF0000"&gt;”&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h3&gt;+&lt;/h3&gt;
+&lt;p&gt;“+”（必需）操作符要求文档的某个域中包含 “+” 符号之后的词。&lt;/p&gt;
+&lt;p&gt;比如，使用如下查询语句来搜索（必须）包含 “jakarta” 以及可能包含 “lucene”（包不包含都可以）的文档：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;+jakarta lucene
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h3&gt;NOT&lt;/h3&gt;
+&lt;p&gt;若文档包含”NOT“之后的词，”NOT“ 操作会排查该文档。这相当于集合的差集操作。”!“ 符号可用于替代单词 ”NOT“。&lt;/p&gt;
+&lt;p&gt;比如，使用如下查询语句搜索包含 ”jakarta apache“ 但不包含 ”Apache Lucene“ 的文档”：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;quot;jakarta apache&amp;quot;&lt;/span&gt; &lt;span style="color: #0000ff"&gt;NOT&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;Apache Lucene&amp;quot;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;备注：“NOT” 操作符不可以用于单个词。例如，如下搜索不会返回任何结果：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;NOT&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;jakarta apache&amp;quot;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h3&gt;-&lt;/h3&gt;
+&lt;p&gt;如果文档包含”-“符号之后的词，那么”-“（禁止）操作符会排除这些文档。&lt;/p&gt;
+&lt;p&gt;比如，使用如下查询语句来查询包含 ”jakarta apache“ 但不包含 ”Apache Lucene“ 的文档：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;quot;jakarta apache&amp;quot;&lt;/span&gt; -&lt;span style="color: #a31515"&gt;&amp;quot;Apache Lucene&amp;quot;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2&gt;分组&lt;/h2&gt;
+&lt;p&gt;Lucene 支持使用圆括号对子句进行分组，构成子查询。如果你想控制一个查询语句的布尔逻辑，这对非常有用。&lt;/p&gt;
+&lt;p&gt;比如，使用如下查询语句来搜索包含 “jakarta” 或 “apache”，以及 “website” 的文档：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;(jakarta &lt;span style="color: #0000ff"&gt;OR&lt;/span&gt; apache) &lt;span style="color: #0000ff"&gt;AND&lt;/span&gt; website
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;如此就消除了任何困惑，确保你想表达是：必须存在 ”website“，以及可能存在词 ”jakarta“ 或 ”apache“。&lt;/p&gt;
+&lt;h2&gt;域分组&lt;/h2&gt;
+&lt;p&gt;Lucene 支持使用圆括号对单个域的多个子句进行分组。&lt;/p&gt;
+&lt;p&gt;例如，若想搜索一个 title 中既包含单词“return”且包含短语“pink panther”，可以使用如下查询：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;title:&lt;span style="color: #a31515"&gt;(&lt;/span&gt;+&lt;span style="color: #0000ff"&gt;return&lt;/span&gt; +&lt;span style="color: #a31515"&gt;&amp;quot;pink panther&amp;quot;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2&gt;特殊字符转义&lt;/h2&gt;
+&lt;p&gt;Lucene 支持对查询语法使用的特殊字符进行转移。目前这些特殊字符如下列表所示：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;+ - &amp;amp;&amp;amp; || ! ( ) &lt;span style="border: 1px solid #FF0000"&gt;{&lt;/span&gt; &lt;span style="border: 1px solid #FF0000"&gt;}&lt;/span&gt; [ ] ^ &lt;span style="border: 1px solid #FF0000"&gt;&amp;quot;&lt;/span&gt; ~ * ? : &lt;span style="border: 1px solid #FF0000"&gt;\&lt;/span&gt; /
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;在特殊字符之前加 &lt;code&gt;\&lt;/code&gt; 来转义。例如，使用如下查询语句来搜索 &lt;code&gt;(1+1):2&lt;/code&gt;：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="border: 1px solid #FF0000"&gt;\&lt;/span&gt;(1&lt;span style="border: 1px solid #FF0000"&gt;\&lt;/span&gt;+1&lt;span style="border: 1px solid #FF0000"&gt;\&lt;/span&gt;)&lt;span style="border: 1px solid #FF0000"&gt;\&lt;/span&gt;:2
+&lt;/pre&gt;&lt;/div&gt;</content><category term="翻译、Lucene、ElasticSearch、Kibana"></category></entry><entry><title>一个 Python 小项目的小结</title><link href="http://youngsterxyf.github.io/2019/08/14/a-python-project-summary/" rel="alternate"></link><published>2019-08-14T00:00:00+08:00</published><updated>2019-08-14T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-08-14:/2019/08/14/a-python-project-summary/</id><summary type="html">&lt;p&gt;前段时间临时接手一个 Python 小项目，这个项目实现的类似一个管控平台，其中核心功能是为算法同学提供机器学习模型训练任务的全流程管理，平台后端基于 Flask 框架实现，前端基于 Ant Design Pro 实现。&lt;/p&gt;
 &lt;p&gt;代码稍微有些乱，所以做了部分代码的重构，在此做点经验小结。&lt;/p&gt;
 &lt;h3&gt;1、并行化或异步化&lt;/h3&gt;
 &lt;p&gt;部分请求处理逻辑，由于比较耗时，故使用线程池来加速，或者使用独立线程异步处理，或者先存储一个中间状态，由后台定时任务来完成实际的处理工作。对于异步处理结果，前端通过轮询来获取。&lt;/p&gt;

@@ -5,14 +5,14 @@
 &lt;p&gt;一般来说，查询解析器支持的语法在不同发布版本之间可能会有变化。当前这个文档页面描述的是当前这个发布版本的语法。如果你正在使用一个不同版本的 Lucene，请参考该版本自带的 docs/queryparsersyntax.html 文档。&lt;/p&gt;
 &lt;p&gt;在选择使用这个查询解析器之前，请考虑以下 3 点：&lt;/p&gt;
 &lt;ol&gt;
-&lt;li&gt;如果你准备以编程的方式生成一个查询字符串，然后使用查询解析器来解析它。那么，你应该认真考虑以下是否应该直接使用查询 API 来构建查询。换句话说，查询解析器专门用于人类输入的文本，而不是程序生成的文本。&lt;/li&gt;
+&lt;li&gt;如果你准备以编程的方式生成一个查询字符串，然后使用查询解析器来解析它。那么，你应该认真考虑一下是否应该直接使用查询 API 来构建查询。换句话说，查询解析器专门用于人类输入的文本，而不是程序生成的文本。&lt;/li&gt;
 &lt;li&gt;不可分词（untokenized）的域（译者注：抱歉，此处没太理解）最好直接添加到查询中，而不是通过查询解析器来解析。如果一个域的值是通过应用自动生成的，那么应该为这个域自动生成查询子句 …&lt;/li&gt;&lt;/ol&gt;</summary><content type="html">&lt;p&gt;原文：&lt;a href="http://lucene.apache.org/core/8_2_0/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#package.description"&gt;Query Parser Syntax&lt;/a&gt;&lt;/p&gt;
 &lt;h2&gt;概览&lt;/h2&gt;
 &lt;p&gt;Lucene 除了提供 API 方便开发者创建查询请求，还通过一个查询解析器（一个词法分析器，使用 JavaCC 将一个字符串翻译成一个 Lucene 查询）提供一种功能丰富的查询语言。&lt;/p&gt;
 &lt;p&gt;一般来说，查询解析器支持的语法在不同发布版本之间可能会有变化。当前这个文档页面描述的是当前这个发布版本的语法。如果你正在使用一个不同版本的 Lucene，请参考该版本自带的 docs/queryparsersyntax.html 文档。&lt;/p&gt;
 &lt;p&gt;在选择使用这个查询解析器之前，请考虑以下 3 点：&lt;/p&gt;
 &lt;ol&gt;
-&lt;li&gt;如果你准备以编程的方式生成一个查询字符串，然后使用查询解析器来解析它。那么，你应该认真考虑以下是否应该直接使用查询 API 来构建查询。换句话说，查询解析器专门用于人类输入的文本，而不是程序生成的文本。&lt;/li&gt;
+&lt;li&gt;如果你准备以编程的方式生成一个查询字符串，然后使用查询解析器来解析它。那么，你应该认真考虑一下是否应该直接使用查询 API 来构建查询。换句话说，查询解析器专门用于人类输入的文本，而不是程序生成的文本。&lt;/li&gt;
 &lt;li&gt;不可分词（untokenized）的域（译者注：抱歉，此处没太理解）最好直接添加到查询中，而不是通过查询解析器来解析。如果一个域的值是通过应用自动生成的，那么应该为这个域自动生成查询子句。分析器（查询解析器所使用的）是专门用于将人类输入的文本转换成一些词（terms），那么程序自动生成的值，也应该由程序自动添加到查询中。&lt;/li&gt;
 &lt;li&gt;从查询形式来看，如果域的值是普通文本，则应该使用查询解析器。所有其它值类型，比如：日期范围、关键词等等，最好通过查询 API 直接添加。如果一个域的值仅限于一个有限的集合（可以通过一个下拉菜单指定），则不应该添加到查询字符串（后续会被解析）中，而是应该作为一个 TermQuery 子句添加到查询中。&lt;/li&gt;
 &lt;/ol&gt;
@@ -25,7 +25,7 @@
 &lt;h2&gt;域（Fields）&lt;/h2&gt;
 &lt;p&gt;Lucene 支持分多个字段/域的数据。搜索时，可以指定一个域，也可以使用默认域。域的名称以及默认域与具体实现相关。&lt;/p&gt;
 &lt;p&gt;输入域的名称，后跟一个冒号（:），以及目标搜索词，即可对任意一个域进行搜索。&lt;/p&gt;
-&lt;p&gt;举例来说，假设一个 Lucene 索引包含 2 个域：title 和 text，text 是默认域。若想查找标题为 ”The Right Way“ 且文本内容包含 ”dont't go this way“ 的文档，可以输入：&lt;/p&gt;
+&lt;p&gt;举例来说，假设一个 Lucene 索引包含 2 个域：title 和 text，text 是默认域。若想查找标题为 ”The Right Way“ 且文本内容包含 ”don't go this way“ 的文档，可以输入：&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;title:&lt;span style="color: #a31515"&gt;&amp;quot;The Right Way&amp;quot;&lt;/span&gt; &lt;span style="color: #0000ff"&gt;AND&lt;/span&gt; &lt;span style="color: #2b91af"&gt;text&lt;/span&gt;&lt;span style="border: 1px solid #FF0000"&gt;:&lt;/span&gt;&lt;span style="color: #0000ff"&gt;go&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
@@ -191,7 +191,7 @@
 
 &lt;p&gt;在特殊字符之前加 &lt;code&gt;\&lt;/code&gt; 来转义。例如，使用如下查询语句来搜索 &lt;code&gt;(1+1):2&lt;/code&gt;：&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="border: 1px solid #FF0000"&gt;\&lt;/span&gt;(1&lt;span style="border: 1px solid #FF0000"&gt;\&lt;/span&gt;+1&lt;span style="border: 1px solid #FF0000"&gt;\&lt;/span&gt;)&lt;span style="border: 1px solid #FF0000"&gt;\&lt;/span&gt;:2
-&lt;/pre&gt;&lt;/div&gt;</content><category term="翻译、Lucene、ElasticSearch、Kibana"></category></entry><entry><title>一个 Python 小项目的小结</title><link href="http://youngsterxyf.github.io/2019/08/14/a-python-project-summary/" rel="alternate"></link><published>2019-08-14T00:00:00+08:00</published><updated>2019-08-14T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-08-14:/2019/08/14/a-python-project-summary/</id><summary type="html">&lt;p&gt;前段时间临时接手一个 Python 小项目，这个项目实现的类似一个管控平台，其中核心功能是为算法同学提供机器学习模型训练任务的全流程管理，平台后端基于 Flask 框架实现，前端基于 Ant Design Pro 实现。&lt;/p&gt;
+&lt;/pre&gt;&lt;/div&gt;</content><category term="翻译"></category><category term="Lucene"></category><category term="ElasticSearch"></category><category term="Kibana"></category></entry><entry><title>一个 Python 小项目的小结</title><link href="http://youngsterxyf.github.io/2019/08/14/a-python-project-summary/" rel="alternate"></link><published>2019-08-14T00:00:00+08:00</published><updated>2019-08-14T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-08-14:/2019/08/14/a-python-project-summary/</id><summary type="html">&lt;p&gt;前段时间临时接手一个 Python 小项目，这个项目实现的类似一个管控平台，其中核心功能是为算法同学提供机器学习模型训练任务的全流程管理，平台后端基于 Flask 框架实现，前端基于 Ant Design Pro 实现。&lt;/p&gt;
 &lt;p&gt;代码稍微有些乱，所以做了部分代码的重构，在此做点经验小结。&lt;/p&gt;
 &lt;h3&gt;1、并行化或异步化&lt;/h3&gt;
 &lt;p&gt;部分请求处理逻辑，由于比较耗时，故使用线程池来加速，或者使用独立线程异步处理，或者先存储一个中间状态，由后台定时任务来完成实际的处理工作。对于异步处理结果，前端通过轮询来获取。&lt;/p&gt;

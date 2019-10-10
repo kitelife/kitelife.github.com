@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>读文笔记：日志 - 每个软件工程师都应该了解的实时数据统一抽象</title>
+        <meta charset="utf-8" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑·白 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑·白 Full RSS Feed" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/SentyZHAO/SentyZHAO.css" />
+
+        <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+            <script>
+              var _hmt = _hmt || [];
+              (function() {
+                var hm = document.createElement("script");
+                hm.src = "//hm.baidu.com/hm.js?5c5d8c3fe75afeff117777b9236b96ec";
+                var s = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(hm, s);
+              })();
+            </script>
+</head>
+
+<body id="index" class="home">
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1 style='font-family: "SentyZHAO";'><a href="../../../..">黑·白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+
+              <ul class="columns" style='font-family: "SentyZHAO";'>
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="/archives.html">归 档</a></li>
+                <li><a href="/pages/tech-share.html">技术分享</a></li>
+                <li><a href="/pages/translation.html">技术翻译</a></li>
+                <li><a href="/pages/tools.html">工具集</a></li>
+                <li><a href="/pages/links.html">链 接</a></li>
+                <li><a href="/pages/aboutme.html">关于我</a></li>
+                <li><a href="/feeds/rss.xml">RSS</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+   <div class="row">
+        <div class="columns">
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2019/10/10/reading-the-log/" rel="bookmark" title="Permalink to 读文笔记：日志 - 每个软件工程师都应该了解的实时数据统一抽象">读文笔记：日志 - 每个软件工程师都应该了解的实时数据统一抽象</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2019-10-10T00:00:00+08:00">
+                2019-10-10 四
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/xiayf.html">xiayf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>原文：<a href="https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying">The Log: What every software engineer should know about real-time data's unifying abstraction</a></p>
+<p>一句话概括，这篇文章细说了 Kafka 的本质原理、解决的问题、适用性等。</p>
+<p>Kafka 本质上是提供日志数据流。</p>
+<p>日志是客观世界的事件记录。</p>
+<p>日志数据的特点是：只增、不改不删，自带时间戳，数据存储的先后顺序即（大致）是实际发生的时间先后顺序。</p>
+<p>数据库可以基于日志来还原历史操作行为，并最终生成最新状态，主从同步就是这么干的。</p>
+<p>对于分布式系统而言，日志可以解决 2 个问题：按序改变状态和分发数据（ordering changes and distributing data）。</p>
+<p>状态机复制原则：</p>
+<blockquote>
+<p>If two identical, deterministic processes begin in the same state and get the same inputs in the same order, they will produce the same output and end in the same state.</p>
+</blockquote>
+<p>分布式系统中各个节点可以依据日志来同步状态，达到（最终）一致性。并且，可以依据节点处理到哪行日志即可确定/表达该节点的状态。</p>
+<p>（日志）事件流（events）和数据表（tables）是一体两面（a facinating duality）：数据表的变更操作即是一个日志事件流，基于日志事件流可以生成数据表，并将其状态不断更新到最新，数据表的状态是日志事件流的在某个时间点的切面。</p>
+<blockquote>
+<p>events -&gt; table -&gt; events = events &lt;-&gt; table</p>
+<p>The magic of the log is that if it is a complete log of changes, it holds not only the contents of the final version of the table, but also allows recreating all other versions that might have existed. It is, effectively, a sort of backup of every previous state of the table.</p>
+</blockquote>
+<p>源码版本控制系统（比如 git）也是基于日志实现的分布式系统，一次 commit 相当于一次日志记录。</p>
+<hr>
+<p>对于互联网/金融等行业的公司来说，数据是重要资产，如何尽可能发挥数据的潜在价值为公司增收，至关重要。因为管理、技术上的原因，公司通常分多个业务部门，各业务部门提供若干服务，各个服务都会产出数据，这些数据很可能需要跨部门跨服务流通，流通的速度越快，周期越短，收益越大。</p>
+<p>以前，数据的处理方式主要是批处理，并不是因为没有流处理的技术，而是数据流通的基础设施跟不上，没做到持续的数据流。<strong>（注：这个说法，我个人只部分认同，很多时候，批处理的时延和收益可以满足大部分需求，实时流处理的边际效益可能并不明显）</strong></p>
+<p>流式处理是批处理的泛化形式（stream processing is a generalization of batch processing, and, given the prevalence of real-time data, a very important generalization）。</p>
+<p>为了避免因数据流通导致各个服务之间的直接耦合，新增一个统一的数据通道中间服务，各个服务只管对数据通道进行写入或读出，不用关心数据是哪个服务写入的，或者哪些服务在消费/使用自己产出的数据。<strong>（解耦）</strong></p>
+<p>另外，消费者消费数据的速率可能不一样，也可能会经历异常重启等情况，让消费者来控制速率，并且多个消费者之间不会相互干扰，会更好。</p>
+<p>基于数据流通的需求和日志的理念，Linkedin 设计开发了 Kafka。</p>
+<p>因为日志数据量可能会很大，日志数据本质上是有序串行的，如果支持数据分片，分片之间并行消费，分片内日志数据全局有序，数据流通的吞吐能力就可以无限扩展。</p>
+<hr>
+<p>基于 Kafka 这类数据管道，服务之间可以实现多级串联。（注：我们现在做的服务就是这么干）</p>
+<p>这种分布式系统架构中，至少涉及 producer（生产者）、broker（中间人）、consumer（消费者）三个角色，角色之间在某些工作上如何分工也是值得思考的：</p>
+<p>生产者产生的数据应该是什么样的？ - 统一格式/编码、方便解析</p>
+<p>中间人（kafka）需要解决什么问题？- 对于单个生产者写入的数据，保证按写入顺序有序地分发给消费者；解决数据高可用，高吞吐能力；支持回溯/重复消费（因此数据需要保留指定时间长度），从而消费者出问题后可以从头消费数据恢复状态。因为支持很多消费者消费同一个数据流，所以平均下来，Kafka 服务的成本会比较低。</p>
+<p>消费者按各自的需求进行数据转换存储。</p>
+<hr>
+<p>对于实现高吞吐能力，除了分片，Kakfa 还充分利用了攒批处理：生产者可以批量发送，中间人将数据攒批写入磁盘日志文件 等等。</p>
+<p>此外，由于涉及大量的磁盘文件和网络之间数据读写，Kafka 还充分利用操作系统内核的零拷贝传输能力。</p>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>欢迎评论</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2019/10/10/reading-the-log/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+        </div><!-- /.twelve.columns -->
+ </div><!-- /.row -->
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+  <script src="../../../../theme/js/main.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../../../theme/emoji/css/basic/emojify.min.css" />
+  <script src="../../../../theme/emoji/js/emojify.min.js"></script>
+  <script>
+    emojify.setConfig({
+        img_dir : '../../../../theme/emoji/images/basic'
+    });
+    emojify.run();
+</script>
+</body>
+</html>

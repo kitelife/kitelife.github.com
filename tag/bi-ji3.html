@@ -63,6 +63,47 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="../2015/03/09/read-yii-code-8/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 日志组件">Yii源码阅读笔记 - 日志组件</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2015-03-09T00:00:00+08:00"> 2015-03-09 一 </abbr>
+<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <h3>使用</h3>
+<p>Yii框架为开发者提供两个静态方法进行日志记录：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>Yii::log($message, $level, $category);
+Yii::trace($message, $category);
+</pre></div>
+
+
+<p>两者的区别在于后者依赖于应用开启调试模式，即定义常量YII_DEBUG：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>defined(&#39;YII_DEBUG&#39;) or define(&#39;YII_DEBUG&#39;, true);
+</pre></div>
+
+
+<p>Yii::log方法的调用需要指定message的level和category。category是格式为“xxx.yyy.zzz”的路径别名字符串，比如日志是在yii/framework/web/CController类中记录的，那么category为“system.web.CController”。level应为以下几种之一：</p>
+<ul>
+<li>trace：Yii::trace方法即是使用的这个level。用于跟踪执行流</li>
+<li>info：记录通用信息日志</li>
+<li>profile：用于性能分析</li>
+<li>warning：用于记录警告日志</li>
+<li>error：用于记录重大错误日志</li>
+</ul>
+<p>要想日志真的输出到文件、邮件、web页面等地方 …</p> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2015/03/09/read-yii-code-8/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 日志组件">阅读全文 <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="../tag/php.html">PHP</a>
+                    <a class="danger label" href="../tag/yii.html">Yii</a>
+                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
+                    <a class="danger label" href="../tag/zong-jie.html">总结</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="../2014/12/31/setup-cordova-env/" rel="bookmark" title="Permalink to Cordova/Phonegap应用构建环境搭建">Cordova/Phonegap应用构建环境搭建</a>
                     </h2>
                 </header>
@@ -271,51 +312,6 @@ $queryResult = $connection-&gt;createCommand($sql)-&gt;queryRow();
 类CDbConnection的init类实现如下：</p>
 <div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>public function …</pre></div> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2014/11/14/read-yii-code-4/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - Model层实现">阅读全文 <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/php.html">PHP</a>
-                    <a class="danger label" href="../tag/yii.html">Yii</a>
-                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
-                    <a class="danger label" href="../tag/zong-jie.html">总结</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="../2014/11/13/read-yii-code-3/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 组件集成">Yii源码阅读笔记 - 组件集成</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2014-11-13T00:00:00+08:00"> 2014-11-13 四 </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <h3>概述</h3>
-<p>Yii框架将各种功能封装成组件，使用时按需配置加载，从而提高应用的性能。内置的组件又分为核心组件与非核心组件，核心组件是任何Web应用和Console应用都需要的。
-此外，应用开发者还可以按照一定规则封装配置使用自己的功能组件。Yii会把应用需要的组件都加载到应用容器<code>Yii::app()</code>中，使得组件的使用方式一致方便。</p>
-<p>基于Yii框架开发应用需要理解如何配置组件、如何开发自己的组件，对应着需要理解Yii是如何注册加载组件的。</p>
-<h3>分析</h3>
-<p>从<a href="http://youngsterxyf.github.io/2014/11/04/read-yii-code-1/">Yii源码阅读笔记 - 请求处理基本流程</a>一文可知，Yii加载组件的入口为抽象类CApplication构造方法中的以下两行代码：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$this-&gt;registerCoreComponents();
-$this-&gt;configure($config);
-</pre></div>
-
-
-<hr>
-<p><code>registerCoreComponents</code>方法定义于类CWebApplication中，用于加载Web应用的核心组件，组件列表如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>array(
-    // 核心组件
-    &#39;coreMessages&#39;=&gt;array(
-        &#39;class&#39;=&gt;&#39;CPhpMessageSource&#39;,
-        &#39;language&#39;=&gt;&#39;en_us&#39;,
-        &#39;basePath&#39;=&gt;YII_PATH.DIRECTORY_SEPARATOR.&#39;messages&#39;,
-    ),
-    &#39;db&#39;=&gt;array(
-        &#39;class&#39;=&gt;&#39;CDbConnection&#39;,
-    ),
-    &#39;messages&#39;=&gt;array(
-        &#39;class …</pre></div> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2014/11/13/read-yii-code-3/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 组件集成">阅读全文 <i class="icon-arrow-right"></i></a></div>
                 <div class="row tag-row">
                     <span>Tagged as : </span>
                     <a class="danger label" href="../tag/php.html">PHP</a>

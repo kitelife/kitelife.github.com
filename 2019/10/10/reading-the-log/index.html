@@ -27,6 +27,8 @@
                 s.parentNode.insertBefore(hm, s);
               })();
             </script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+        <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
 </head>
 
 <body id="index" class="home">
@@ -76,6 +78,9 @@
 <p>一句话概括，这篇文章细说了 Kafka 的本质原理、解决的问题、适用性等。</p>
 <p>Kafka 本质上是提供日志数据流。</p>
 <p>日志是客观世界的事件记录。</p>
+<blockquote>
+<p>A log is perhaps the simplest possible storage abstraction. It is an append-only, totally-ordered sequence of records ordered by time.</p>
+</blockquote>
 <p>日志数据的特点是：只增、不改不删，自带时间戳，数据存储的先后顺序即（大致）是实际发生的时间先后顺序。</p>
 <p>数据库可以基于日志来还原历史操作行为，并最终生成最新状态，主从同步就是这么干的。</p>
 <p>对于分布式系统而言，日志可以解决 2 个问题：按序改变状态和分发数据（ordering changes and distributing data）。</p>
@@ -110,6 +115,19 @@
             </div><!-- /.entry-content -->
             <div class="comments">
               <h3>欢迎评论</h3>
+              <div id="gitalk-container"></div>
+              <script type="text/javascript">
+                const gitalk = new Gitalk({
+                  clientID: '58fb3102b498bfbcb14f',
+                  clientSecret: 'dd9788d7bbd9cbca1e75c9ba4db92f96dbf20180',
+                  repo: 'youngsterxyf.github.com',
+                  owner: 'youngsterxyf',
+                  admin: ['youngsterxyf'],
+                  id: location.pathname,      // Ensure uniqueness and length less than 50
+                  distractionFreeMode: false  // Facebook-like distraction free mode
+                });
+                gitalk.render('gitalk-container');
+              </script>
               <div id="disqus_thread"></div>
               <script type="text/javascript">
                 var disqus_identifier = "2019/10/10/reading-the-log/";

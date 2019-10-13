@@ -21,8 +21,8 @@
 &lt;li&gt;对于搜索结果中的广告，用户可能会点击。广告点击会触发一次请求，谷歌的后端服务器将请求重定向到广告主的网站。在重定向之前，谷歌服务器会将点击事件记录到日志中，发送到多个日志数据中心。点击事件日志中包含广告曝光的 query_id，点击事件也会被赋予一个唯一性 ID &lt;em&gt;click_id&lt;/em&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;计费是在点击之后，但计费所需要的广告出价等信息是在曝光请求中记录的，出于数据敏感性、带宽、请求处理延迟等多方面的考量，计费相关的信息并不会返回到用户客户端，也就是说点击请求中不会包含计费直接相关的信息，需要将 点击日志 和 曝光日志 做一次 join，得到一条完整的上下文日志，才方便做后续计费等处理。&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="media/15709551370322.jpg"&gt;
-论文中提了到该系统解决了几个技术挑战点：&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="media/15709551370322.jpg"&gt;&lt;/p&gt;
+&lt;p&gt;论文中提了到该系统解决了几个技术挑战点：&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;仅处理一次语义（exactly-once semantics）：实际上达到的是 最多处理一次语义 （At most once），也就是绝对不能多算钱，然后尽可能避免少算钱&lt;/li&gt;
 &lt;li&gt;自动化的跨数据中心容错：也就是多数据中心部署，如果有一个数据中心不可用（比如 网络问题），也不会影响系统正常处理数据&lt;/li&gt;
@@ -38,11 +38,12 @@
 &lt;p&gt;那么很明显，IdRegistry 很可能成为系统的短板；另外，曝光/点击的唯一性 ID 如何生成？如果由一个中心服务来提供唯一性 ID 的生成，那么这个服务也会成为系统的短板。&lt;/p&gt;
 &lt;p&gt;所以，系统没有选择一个中心服务来生成唯一性 id，而是将 id 设计为包含3个部分：&lt;em&gt;ServerIP&lt;/em&gt;、&lt;em&gt;ProcessID&lt;/em&gt;、&lt;em&gt;Timestamp&lt;/em&gt;。由于日志文件中行之间大致是按照时间戳有序的，所以 id 中包含时间戳的一个额外好处是：根据 id 即可大致定位日志内容。另外，还有一个和横向扩展性相关的好处，后边细说。&lt;/p&gt;
 &lt;p&gt;IdRegistry 的角色至关重要，所以将其实现为一个基于 Paxos 协议的分布式系统，根据 CAP 原则，可用性（此处是指&lt;strong&gt;吞吐能力&lt;/strong&gt;）受限。解决方案是：&lt;/p&gt;
-&lt;p&gt;1、提高单机处理能力：服务端攒批处理，尽可能减少网络往返次数导致的等待（特别是：由于 IdRegistry 是跨地域分布式，部署上节点之间最大延迟是 100ms 左右）
-2、分片（Sharding）：根据 click_id 进行分片，但如果是固定分片，那么随着以后业务量增大，不好扩展。Photon 使用了一种基于时间段动态分片方案，这个方案基于 click_id 自带时间戳。大致逻辑是：使用一个配置，内容大致如下：&lt;/p&gt;
+&lt;p&gt;1、提高单机处理能力：服务端攒批处理，尽可能减少网络往返次数导致的等待（特别是：由于 IdRegistry 是跨地域分布式，部署上节点之间最大延迟是 100ms 左右）&lt;/p&gt;
+&lt;p&gt;2、分片（Sharding）：根据 click_id 进行分片，但如果是固定分片，那么随着以后业务量增大，不好扩展。Photon 使用了一种基于时间段动态分片方案，这个方案基于 click_id 自带时间戳。大致逻辑是：使用一个配置，内容大致如下：&lt;/p&gt;
 &lt;p&gt;&lt;img alt="" src="media/15709583312107.jpg"&gt;&lt;/p&gt;
 &lt;p&gt;对于每个 click 日志，先根据 click_id 中的时间戳，判断分片数，并计算对应的分片 id。&lt;/p&gt;
-&lt;h2&gt;&lt;img alt="" src="media/15709617353841.jpg"&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;img alt="" src="media/15709617353841.jpg"&gt;&lt;/p&gt;
+&lt;hr&gt;
 &lt;p&gt;系统的模块关系图如下所示：&lt;/p&gt;
 &lt;p&gt;&lt;img alt="" src="media/15709566468632.jpg"&gt;&lt;/p&gt;
 &lt;p&gt;Photon 的 Dispatcher 模块并没有以 Kafka 这种消息队列作为输入，而是直接监听文件系统中的日志文件变更，这一点有点奇怪，不是特别理解。&lt;/p&gt;
@@ -52,8 +53,10 @@
 &lt;p&gt;为了确保不会多计费，Joiner 在将 join 结果写入 Joined Click Logs 之前，会向 IdRegistry 注册 click_id。&lt;/p&gt;
 &lt;p&gt;假设注册实际上已成功，但因网络原因或 RPC 调用超时 Joiner 未收到成功响应，此时怎么办？Joiner 向 IdRegistry 注册 click_id 时，会附带一个额外的 唯一性 token，也包含3个部分：Joiner 服务器地址、进程 ID、时间戳，IdRegistry 会把这个唯一性 token 作为值存储下来，所以对于这种情况，Joiner 可以重复发注册请求，如果 IdRegistry 根据 token 发现已注册成功的 click_id 和当前收到的 click_id 来自同一个 Joiner，则也会返回注册成功。&lt;/p&gt;
 &lt;p&gt;假设注册成功，合并结果写入异常，异常分为 2 种，需要解决：&lt;/p&gt;
-&lt;p&gt;1、写入之前，Joiner 节点宕机或重启
-2、合并结果实际写入成功，但因为网络原因，Joiner 未收到响应&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;写入之前，Joiner 节点宕机或重启&lt;/li&gt;
+&lt;li&gt;合并结果实际写入成功，但因为网络原因，Joiner 未收到响应&lt;/li&gt;
+&lt;/ol&gt;
 &lt;p&gt;为尽可能减少因某个 Joiner 节点硬件异常导致的 join 结果丢失，IdRegistry 对于单个 Joiner 的请求有限流，这个限流会间接导致 Joiner 对 Dispatcher 限流。&lt;/p&gt;
 &lt;p&gt;为了进一步减少因为上面2种异常情况以及其它异常导致的 Join 结果丢失，Photon 还提供一个校验系统：获取原始点击事件日志，如果该日志 click_id 在 IdRegistry 中存在，但合并结果中不存在，则根据 IdRegistry 存储的对应 click_id 的 token，判断对应的 Joiner 是否存活，如果存活，则交于该 Joiner 重新处理，如果对应的 Joiner 已不存在，则从 IdRegistry 中删除该 click_id 记录，然后交于任一 Joiner 来处理，都一样。&lt;/p&gt;
 &lt;hr&gt;

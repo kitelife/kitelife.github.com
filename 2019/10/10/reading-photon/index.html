@@ -113,7 +113,7 @@
 <p>系统的模块关系图如下所示：</p>
 <p><img alt="" src="media/15709566468632.jpg"></p>
 <p>Photon 的 Dispatcher 模块并没有以 Kafka 这种消息队列作为输入，而是直接监听文件系统中的日志文件变更，这一点有点奇怪，不是特别理解。</p>
-<p>Joiner 负责实际的 join 工作，由于 3、4 都比较耗时，所以为了尽可能减少 Joiner 的工作量，Dispatcher 将点击事件日志发送给 Joiner，会先到 IdRegistry 中查一下该事件是否已被处理过，从而起到过滤作用。因多数据中心部署，实际过滤比为 $ \frac{N-1}{N} $。</p>
+<p>Joiner 负责实际的 join 工作，由于 3、4 都比较耗时，所以为了尽可能减少 Joiner 的工作量，Dispatcher 将点击事件日志发送给 Joiner，会先到 IdRegistry 中查一下该事件是否已被处理过，从而起到过滤作用。因多数据中心部署，实际过滤比为：$ \frac{N-1}{N} $。</p>
 <p>为了确保 Joiner 高可用，Joiner 是无状态的，向 Dispatcher 提供 RPC 接口，Joiner 内部有限流，以保证不会因为单个 Joiner 负载过大，导致处理时延增大。Dispatcher 调用 Joiner 失败后会重试，重试使用的是指数退避算法。但处理失败的点击事件，是另外存储在 GFS 上，应该是由另外的线程来负责重试，不会影响正常的事件处理。</p>
 <p>当 Joiner 收到一个点击事件的处理请求时，会根据点击日志数据中的 <em>query_id</em> 从 EventStore 查询曝光日志详情，但因为曝光日志数据流可能会有延迟，所以可能会查不到，查不到且发现 click_id 中的时间戳早于某个阈值（比如是 N天前的一个事件），Joiner 会将该 click_id 标记为不可 join，然后向 Dispatcher 返回成功；如果 click_id 中的时间戳不早于阈值，则向 Dispatcher 返回失败，由 Dispatcher 来重试。</p>
 <p>为了确保不会多计费，Joiner 在将 join 结果写入 Joined Click Logs 之前，会向 IdRegistry 注册 click_id。</p>

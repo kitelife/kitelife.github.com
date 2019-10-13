@@ -65,6 +65,47 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="../2014/11/14/read-yii-code-4/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - Model层实现">Yii源码阅读笔记 - Model层实现</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2014-11-14T00:00:00+08:00"> 2014-11-14 Fri </abbr>
+<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <h3>概述</h3>
+<p>Yii中，对Model层的使用，有两种方式：</p>
+<ol>
+<li>通过类CDbConnection和CDbCommand来操作</li>
+<li>使用ORM形式：编写model类继承自抽象类CActiveRecord</li>
+</ol>
+<p>第1种方式的示例如下：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">&lt;?php</span>
+$connection = Yii::app()-&gt;db;  <span style="color: #008000">// 或者Yii::app()-&gt;getComponent(&#39;db&#39;);</span>
+$queryResult = $connection-&gt;createCommand($sql)-&gt;queryRow();
+</pre></div>
+
+
+<p>第2种方式中编写的model类可能需要实现方法<code>getDbConnection</code>、<code>model</code>、<code>tableName</code>。</p>
+<p>在实现上，第2种方式是基于第1种方式的，即第2种方式的抽象程度更高。Yii没有屏蔽第1种方式，这样能让开发者按需选择。
+但我个人并不喜欢这样，两种方式同时存在，会导致应用的model实现稍显混乱。</p>
+<h3>分析</h3>
+<p>Yii框架model层的入口为CDbConnection类，该类有很多public的属性可供配置，如<code>connectionString</code>、<code>username</code>、<code>password</code>等。</p>
+<p>根据<a href="http://youngsterxyf.github.io/2014/11/13/read-yii-code-3/">Yii源码阅读笔记 - 组件集成</a>一文可知，组件初始化时会调用init方法。
+类CDbConnection的init类实现如下：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>public function …</pre></div> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2014/11/14/read-yii-code-4/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - Model层实现">阅读全文 <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="../tag/php.html">PHP</a>
+                    <a class="danger label" href="../tag/yii.html">Yii</a>
+                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
+                    <a class="danger label" href="../tag/zong-jie.html">总结</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="../2014/11/13/read-yii-code-3/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 组件集成">Yii源码阅读笔记 - 组件集成</a>
                     </h2>
                 </header>
@@ -326,39 +367,6 @@ $this-&gt;configure($config);
                     <span>Tagged as : </span>
                     <a class="danger label" href="../tag/socketio.html">socket.io</a>
                     <a class="danger label" href="../tag/xiao-xi-tui-song.html">消息推送</a>
-                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="../2014/06/26/recently-technology-tips/" rel="bookmark" title="Permalink to 技术问题一问一答">技术问题一问一答</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2014-06-26T00:00:00+08:00"> 2014-06-26 Thu </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <ul>
-<li><strong>如何方便地删除某目录下所有空文件？</strong></li>
-</ul>
-<p><code>find . -size 0 -exec rm {} \;</code> 或 <code>find . -size 0 | xargs rm -f</code></p>
-<p>find默认会递归遍历所有子目录，如果想只在当前目录查找，可以添加参数<code>-prune</code>。</p>
-<hr>
-<ul>
-<li><strong>如何查看某进程打开了哪些文件？</strong></li>
-</ul>
-<p>先通过<code>ps aux | grep [进程名]</code>找到该进程的进程号，然后<code>ls -la /proc/[进程号]/fd</code>，输出不仅包含打开的普通文件。</p>
-<p>另一种不太直观的方法是使用lsof，<code>lsof -c [进程名]</code>，但这个命令的输出包含进程打开的各种类型的文件，可以简单过滤一下<code>lsof -c [进程名] | grep REG</code>。</p>
-<hr>
-<ul>
-<li><strong>如何重启php-fpm？</strong></li>
-</ul>
-<p>php5.3.3以上版本的php-fpm不再支持php-fpm以前具有的<code>php-fpm (start|stop|reload …</code></p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2014/06/26/recently-technology-tips/" rel="bookmark" title="Permalink to 技术问题一问一答">阅读全文 <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
                     <a class="danger label" href="../tag/bi-ji.html">笔记</a>
                 </div>
             </article>

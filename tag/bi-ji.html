@@ -65,6 +65,34 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="../2019/10/10/reading-photon/" rel="bookmark" title="Permalink to 读文笔记：Photon - Fault-tolerant and Scalable Joining of Continuous Data Streams">读文笔记：Photon - Fault-tolerant and Scalable Joining of Continuous Data Streams</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2019-10-10T00:00:00+08:00"> 2019-10-10 Thu </abbr>
+<address class="vcard author">By <a class="url fn" href="../author/xiayf.html">xiayf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <p>原文：<a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//pubs/archive/41318.pdf">Photon: Fault-tolerant and Scalable Joining of Continuous Data Streams</a></p>
+<p>Photon 是谷歌广告系统中用于 join 广告曝光日志流和点击日志流的一套系统。</p>
+<p>数据流 join 为什么没用 flink 这类通用的流式处理框架？</p>
+<p>数据流 join，特别是广告数据流 join，技术上难在哪里？</p>
+<p>任一条流都可能乱序或延迟，广告点击涉及计费的问题，计费不能多算广告主的钱，也要尽可能避免漏计费，降低广告收入损失。</p>
+<hr>
+<p>该系统在谷歌生产环境中每分钟处理百万级的事件，端到端延迟小于 10 秒（注：对于广告实时竞价的广告主而言，这个延迟的长短很重要）。</p>
+<p>广告曝光、点击整体流程为：</p>
+<ol>
+<li>用户搜索某个关键词时，谷歌的服务器会返回广告和搜索结果。广告服务器会将广告 query 和结果数据作为日志发送到多个日志数据中心（multiple logs-datacenters），最终持久化存储在 GFS 上。每次 query …</li></ol> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2019/10/10/reading-photon/" rel="bookmark" title="Permalink to 读文笔记：Photon - Fault-tolerant and Scalable Joining of Continuous Data Streams">阅读全文 <i class="icon-arrow-right"></i></a></div>
+                <div class="row tag-row">
+                    <span>Tagged as : </span>
+                    <a class="danger label" href="../tag/lun-wen.html">论文</a>
+                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="../2019/10/10/reading-the-log/" rel="bookmark" title="Permalink to 读文笔记：日志 - 每个软件工程师都应该了解的实时数据统一抽象">读文笔记：日志 - 每个软件工程师都应该了解的实时数据统一抽象</a>
                     </h2>
                 </header>
@@ -269,37 +297,6 @@ function base64_URL_decode($data) {
                     <a class="danger label" href="../tag/bi-ji.html">笔记</a>
                     <a class="danger label" href="../tag/git.html">git</a>
                     <a class="danger label" href="../tag/kai-yuan.html">开源</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="../2015/11/20/qingcloud-iframe-app/" rel="bookmark" title="Permalink to 青云 iframe 应用开发">青云 iframe 应用开发</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2015-11-20T00:00:00+08:00"> 2015-11-20 Fri </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>上周的主要工作是将产品的功能集成到青云。青云提供 iframe 的方式来集成第三方服务，这是一种互利的做法，而且对于青云来说，实现的代价也非常小。</p>
-<p>先上图，看看集成的效果：</p>
-<p><img alt="ygc-in-qingcloud" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/ygc-in-qingcloud.png"></p>
-<hr>
-<p>对于青云来说，一个iframe应用就是一个URL，由应用开发者提供这个URL，当青云用户访问应用所在的页面时，页面先自动向应用服务器的URL发送数据请求，请求会携带认证信息，应用服务端需要先校验请求确实来自青云，并获取请求中的用户信息，最终响应一个HTML页面内容，青云应用页面收到响应数据后将其置于一个iframe标签中，之后青云用户在iframe页面中的操作都是直接与应用服务器交互。</p>
-<p><img alt="qingcloud-iframe-interaction" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/qingcloud-iframe-interaction.png"></p>
-<p>上图交互流程的第<strong>2</strong>步中，青云服务器向用户响应的内容最终会生成一个包含以下内容的页面：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>&lt;form method=<span style="color: #a31515">&quot;POST&quot;</span> action=<span style="color: #a31515">&quot;URL&quot;</span> target=<span style="color: #a31515">&quot;appframe&quot;</span>&gt;
-    &lt;input type=<span style="color: #a31515">&quot;hidden&quot;</span> name=<span style="color: #a31515">&quot;payload&quot;</span> value=<span style="color: #a31515">&quot;...&quot;</span>&gt;
-    &lt;input type=<span style="color: #a31515">&quot;hidden&quot;</span> name=<span style="color: #a31515">&quot;signature&quot;</span> value=<span style="color: #a31515">&quot;...&quot;</span>&gt;
-&lt;/form&gt;
-&lt;iframe id=<span style="color: #a31515">&quot;...&quot;</span> name=<span style="color: #a31515">&quot;appframe&quot;</span> width=<span style="color: #a31515">&quot;100 …</span></pre></div> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2015/11/20/qingcloud-iframe-app/" rel="bookmark" title="Permalink to 青云 iframe 应用开发">阅读全文 <i class="icon-arrow-right"></i></a></div>
-                <div class="row tag-row">
-                    <span>Tagged as : </span>
-                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
-                    <a class="danger label" href="../tag/gong-zuo.html">工作</a>
-                    <a class="danger label" href="../tag/zong-jie.html">总结</a>
                 </div>
             </article>
             </li>

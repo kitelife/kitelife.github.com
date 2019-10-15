@@ -65,6 +65,40 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="../2014/11/18/read-yii-code-5/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 模板引擎集成">Yii源码阅读笔记 - 模板引擎集成</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2014-11-18T00:00:00+08:00"> 2014-11-18 Tue </abbr>
+<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <h3>概述</h3>
+<p>通常我们会使用模板引擎来渲染HTML页面，而不是使用HTML代码中插入PHP代码的方式来编写动态页面。Yii框架中模板引擎也是作为组件引入的，默认ID为viewRenderer，
+但从<a href="http://youngsterxyf.github.io/2014/11/13/read-yii-code-3/">Yii源码阅读笔记 - 组件集成</a>可以看到Yii Web应用加载的核心组件中并没有viewRenderer，所以需要自己配置。
+Yii提供了一个直接可用的模板引擎组件类CPradoViewRenderer（见文件<code>yii/framework/web/renderers/CPradoViewRenderer.php</code>），该模板引擎类让开发者可以使用类Prado框架的模板语法。</p>
+<p>如果你想使用Smarty这种第三方模板引擎，有两种方式将模板引擎引入Yii中使用（以Smarty为例）：</p>
+<ol>
+<li>将Smarty封装成一个Yii的普通组件，然后配置加载到Yii::app()。假设组件ID为smarty，那么就可以通过<code>Yii::app()-&gt;smarty</code>来调用组件。</li>
+<li>参考CPradoViewRenderer类的实现，将Smarty封装成一个模板引擎组件，并以ID为viewRenderer进行配置加载。</li>
+</ol>
+<p>相比而言，第二种方式更好。原因是：第一种方式由于每种第三方模板引擎的接口不一样，如果应用要替换模板引擎，就需要修改控制器类中的代码。而第二种方式由于第三方组件统一封装成Yii框架定义的模板引擎接口形式，
+所以如果要替换模板引擎，只需修改自定义模板引擎组件类的接口实现就可以了。这样调用模板引擎的代码逻辑就只依赖接口形式，而不是依赖于接口实现，从而实现解耦。</p>
+<p>本文主要分析第二种方式的实现。</p>
+<h3>分析</h3>
+<p>Yii中对页面模板进行渲染可以调用 …</p> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2014/11/18/read-yii-code-5/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 模板引擎集成">阅读全文</a></div>
+                <div class="row tag-row">
+                    <span>标签: </span>
+                    <a class="danger label" href="../tag/php.html">PHP</a>
+                    <a class="danger label" href="../tag/yii.html">Yii</a>
+                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
+                    <a class="danger label" href="../tag/zong-jie.html">总结</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="../2014/11/14/read-yii-code-4/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - Model层实现">Yii源码阅读笔记 - Model层实现</a>
                     </h2>
                 </header>
@@ -333,41 +367,6 @@ $this-&gt;configure($config);
                     <span>标签: </span>
                     <a class="danger label" href="../tag/bi-ji.html">笔记</a>
                     <a class="danger label" href="../tag/restful.html">RESTful</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="../2014/09/06/socket.io-push-server/" rel="bookmark" title="Permalink to 基于socket.io的实时消息推送">基于socket.io的实时消息推送</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2014-09-06T00:00:00+08:00"> 2014-09-06 Sat </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>用户访问Web站点的过程是基于HTTP协议的，而HTTP协议的工作模式是：请求-响应，客户端发出访问请求，服务器端以资源数据响应请求。
-也就是说，服务器端始终是被动的，即使服务器端的资源数据发生变化，如果没有来自客户端的请求，用户就不会看到这些变化。
-这种模式是不适合某些应用场景的，比如在社交网络用户需要近乎实时地知道其他用户最新的信息。对于普通站点来说，
-请求-响应模式可以满足绝大多数的功能需求，但总有某些功能我们希望能够为用户提供实时消息的体验。</p>
-<p>为解决这个问题，有两种方案可以选择：</p>
-<ol>
-<li>仍旧使用请求-响应模式，只是增大请求的频率或者使用长连接，来达到尽可能接近实时的效果，如使用polling/long-polling，但可能会极大地增加服务器的负载压力或降低服务器的吞吐量</li>
-<li>使用新的协议，在服务器端有资源数据更新时，主动推送给客户端，如WebSocket，虽然这种思路也是使用了长连接，但效率更高，且是客户端服务器端之间的全双工通信。
-问题在于目前各大浏览器并不都支持WebSocket。</li>
-</ol>
-<p>那么目前最好的方式就是结合以上两种方案，在不同的浏览器中，尽可能使用浏览器支持的最好的方案，即浏览器支持第二种方案时，优先使用第二种方案，否则使用第一种方案。socket.io就是这么做的，并且在服务器端和客户端对于不同的方案提供统一的接口。</p>
-<hr>
-<p>在我们产品的站内信功能中，希望能够给在线用户实时推送公共消息或私有消息。考虑到以后可能还有其他功能需要实现实时消息推送，所以将实时消息推送实现为一个单独的服务。这种针对不同特性的功能进行解耦也为之后针对性的优化做了铺垫。</p>
-<p>解耦之后的系统结构如下所示：</p>
-<p><img alt="socket.io-push-server" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/socket.io-push-server.png"></p>
-<p>当站点服务器(A)监测到资源数据更新事件发生时，先将数据推送到消息推送服务器 …</p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2014/09/06/socket.io-push-server/" rel="bookmark" title="Permalink to 基于socket.io的实时消息推送">阅读全文</a></div>
-                <div class="row tag-row">
-                    <span>标签: </span>
-                    <a class="danger label" href="../tag/socketio.html">socket.io</a>
-                    <a class="danger label" href="../tag/xiao-xi-tui-song.html">消息推送</a>
-                    <a class="danger label" href="../tag/bi-ji.html">笔记</a>
                 </div>
             </article>
             </li>

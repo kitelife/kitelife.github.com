@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+        <title>读文笔记：Kafka 官方设计文档</title>
+        <meta charset="utf-8" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑·白 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑·白 Full RSS Feed" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="../../../../theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/pygment.css" />
+        <link rel="stylesheet" type="text/css" href="../../../../theme/SentyZHAO/SentyZHAO.css" />
+
+        <script src="../../../../theme/js/libs/jquery-1.9.1.min.js"></script>
+        <script src="../../../../theme/js/libs/modernizr-2.6.2.min.js"></script>
+            <script>
+              var _hmt = _hmt || [];
+              (function() {
+                var hm = document.createElement("script");
+                hm.src = "//hm.baidu.com/hm.js?5c5d8c3fe75afeff117777b9236b96ec";
+                var s = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(hm, s);
+              })();
+            </script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+        <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+</head>
+
+<body id="index" class="home">
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1 style='font-family: "SentyZHAO";'><a href="../../../..">黑·白 <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+
+              <ul class="columns" style='font-family: "SentyZHAO";'>
+                <li><a href="../../../..">主 页</a></li>
+
+                <li><a href="/archives.html">归 档</a></li>
+                <li><a href="/pages/tech-share.html">技术分享</a></li>
+                <li><a href="/pages/translation.html">技术翻译</a></li>
+                <li><a href="/pages/tools.html">工具集</a></li>
+                <li><a href="/pages/links.html">链 接</a></li>
+                <li><a href="/pages/aboutme.html">关于我</a></li>
+                <li><a href="/feeds/rss.xml">RSS</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+   <div class="row">
+        <div class="columns">
+            <header>
+              <h2 class="entry-title">
+                <a href="../../../../2019/10/13/reading-kafka-design/" rel="bookmark" title="Permalink to 读文笔记：Kafka 官方设计文档">读文笔记：Kafka 官方设计文档</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2019-10-13T00:00:00+08:00">
+                2019-10-13 Sun
+              </abbr>
+              <address class="vcard author">
+                By <a class="url fn" href="../../../../author/xiayf.html">xiayf</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>原文：<a href="http://kafka.apache.org/documentation/#design">http://kafka.apache.org/documentation/#design</a></p>
+<h2>数据持久化</h2>
+<h4>不用惧怕文件系统</h4>
+<p>磁盘的读写速度，取决于如何读写。对于线性读写方式，操作系统做了充分的优化：提前读 - 预取若干数据块，滞后写 - 将小的逻辑写操作合并成一个大的物理写操作。</p>
+<p><a href="http://queue.acm.org/detail.cfm?id=1563874">研究</a>表明：<a href="http://deliveryimages.acm.org/10.1145/1570000/1563874/jacobs3.jpg">顺序读写磁盘（sequential disk access）的速度有些时候比随机访问内存还要快</a>。</p>
+<p>现代操作系统激进地尽可能将空闲内存用作磁盘缓存。所有磁盘读写都经过操作系统提供的统一缓存。这个特性没法轻易关闭，除非直接 I/O （direct I/O），因此，如果程序在用户进程中进行数据缓存，缓存的数据通常也是和操作系统页缓存重复的，缓存两遍，没啥意义，也浪费内存。</p>
+<p>而且，Kafka 是构建在 JVM 之上的，了解 Java 内存使用方式的人应该都知道：</p>
+<ol>
+<li>对象的内存开销非常高，通常是实际数据大小的2倍（甚至更多）</li>
+<li>随着堆上数据量增大，Java 的 GC 表现也会更糟糕</li>
+</ol>
+<p>因此，使用文件系统并依赖于操作系统内存页缓存，优于在程序中维护一块内存缓存或其它结构。至少操作系统内存页缓存的可用内存翻倍了。另外，如果使用紧凑的字节结构来缓存数据，相比使用对象，可用内存可能还会翻倍。在 32GB 内存的机器上这么搞，缓存可用到 20-30GB，还不会对 GC 造成了什么坏影响。并且，即使服务重启，这块缓存空间也是热的（除非机器重启），用户进程内的内存缓存在服务重启后得重建（10GB的数据缓存可能需要10分钟左右）。</p>
+<p>这样也可以简化代码逻辑，因为缓存和文件系统之间的一致性由操作系统来保证了。</p>
+<p>这样一分析，设计就简单了：我们反其道而行之，所有数据都直接写到文件系统上持久化日志文件中，不需要在程序中使用内存缓存，也不必确保将数据刷到磁盘。这实际意味着数据转移到了内核的内存页缓存。</p>
+<h4>常量时间就能搞定</h4>
+<p>B 树的 O(log N) 时间复杂度，对于磁盘操作来说，并不能等同于常量时间复杂度。</p>
+<p>Kafka 采用日志文件方式，确保读写操作的时间复杂度是 O(1)。</p>
+<p>Kafka 不会在消息一被消费就立即删除，而是保留一段时间，这样对于消费者来说也更灵活一些。</p>
+<h2>效率</h2>
+<p>对于 Kafka 这类系统而言，即使像前述那样消除了糟糕的磁盘访问模式，也会遇到两个导致数据效率低的问题：<strong>过多的小 I/O 操作</strong>，以及<strong>过多的字节拷贝</strong>。</p>
+<p>小 I/O 问题在客户端与服务端之间，以及服务端内部的数据持久化操作中都会发生。对此，Kafka 协议建立在 “消息集” （即一批消息）的抽象之上，这样网络请求读写的是一批一批的消息，减少了网络往返的时间开销（注：消息处理的实时性会相对差一点）。服务端也是一次将一批消息写到日志文件中，消费者也按序一次获取一批消息。这一简单的优化可以将吞吐能力提升几个数量级。</p>
+<p>对于过多的字节拷贝问题，在消息量大的时候，影响比较明显。Kafka 采用了一种标准化的二进制消息格式，producer、broker、consumer 都使用这种格式，这样数据块在传输期间不需要变动。</p>
+<p>broker 维护的消息日志只是一个目录下的一堆文件，文件内容是按序写入的消息集，消息集的数据格式同于 producer、consumer 使用的。共用一种数据格式方便了一个重要的操作优化：持久化日志块的网络传输。对于从内存页缓存（pagecache）到网络套接字（socket）的数据传输操作，现代 UNIX 操作系统提供了一种高度优化的代码执行路径。Linux 中使用 <a href="http://man7.org/linux/man-pages/man2/sendfile.2.html">sendfile 系统调用</a> 可以利用这个优化。</p>
+<p>要理解 sendfile 的收益，需要先理解从文件到套接字传输数据的常规代码执行路径：</p>
+<ol>
+<li>操作系统从磁盘将数据读到内核空间的内存页缓存（pagecache）</li>
+<li>应用程序从内核空间减数据读到用户空间缓冲区</li>
+<li>应用程序将数据从用户空间缓冲区读到内核空间的套接字缓冲区</li>
+<li>操作系统将数据从套接字缓冲区读到 NIC 缓冲区，网卡从 NIC 缓冲区读取数据通过网络发出去</li>
+</ol>
+<p>这一代码执行路径，涉及 4 次数据拷贝和 2 次系统调用，很显然是低效的。使用 sendfile，可以避免内核空间和用户空间之间一些不必要的数据拷贝，操作系统可以直接将数据从内存页缓存发送到网络。</p>
+<p>进一步了解 sendfile 以及 Java 平台如何支持零拷贝，可以阅读<a href="https://developer.ibm.com/articles/j-zerocopy/">这篇文章</a>。</p>
+<h2>生产者（The Producer）</h2>
+<h4>负载均衡</h4>
+<p>消息应该发到哪个分区（partition）由客户端根据哈希算法（或者随机）决定，并且消息是直接由 producer 发到目标分区的 leader broker，没有任何中间路由层。</p>
+<p>所有 Kafka 节点都可以响应元数据请求 - 告知客户端（producer 或 consumer）哪些服务节点还存活以及某个 topic 的各个分区 leader 分别是哪个节点（疑惑：如果某个分区 leader 节点挂掉之后，客户端如何获知？何时可以获知？）</p>
+<h2>消息交付语义</h2>
+<p>producer 和 consumer 之间的消息交付语义，分 3 种：</p>
+<ol>
+<li>最多消费一次 - 消息可能会丢失，但不会被重复消费</li>
+<li>最少消费一次 - 消息不会丢，但可能被重复消费</li>
+<li>仅消费一次 - 每个消息都会被消费且仅消费一次</li>
+</ol>
+<p>这个问题可以分成两个阶段的问题：<strong>producer 向 broker 发布一个消息时的持久性保证</strong> 以及 <strong>consumer 消费一个消息时的语义保证</strong> （the durability guarantees for publishing a message and the guarantees when consuming a message）。</p>
+<p>producer 向 Kafka 集群发消息时，会提供一个请求参数 <code>acks</code>：</p>
+<ol>
+<li>acks=0：表示 producer 不需要等分区 leader broker 返回任何响应，将消息存入套接字缓冲区（socket buffer）就当做消息已经发送成功。所以可靠性是没有保证的。</li>
+<li>acks=1：表示 分区 leader broker 将消息写入自己的本地日志文件，就向 producer 响应成功，不必等待分区副本 broker 同步好消息。</li>
+<li>acks=-1 或 acks=all：表示 分区 leader broker 需要等待所有同步副本 broker 同步好消息并响应成功，才向 producer 响应成功</li>
+</ol>
+<p>第 2 种情况，如果分区 leader broker 挂掉/不存活，则副本未来得及同步的消息会丢失。</p>
+<p>第 3 种情况，只要有同步副本正常同步消息，那么即使 leader 挂了也不会丢数据。</p>
+<p>如果 leader 被系统判定为不存活，则会从（同步）副本中选举一个新的 leader，那么 Kafka 如何判定一个节点是否存活？存活判定依赖 2 个条件：</p>
+<ol>
+<li>节点必须维持与 Zookeeper 的 session 连接（通过 Zookeeper 的心跳机制）</li>
+<li>如果是一个从节点（follower），则必须不断从 leader 节点同步消息数据，且同步进度没有落后太多</li>
+</ol>
+<p>如果 producer 在发送消息的过程中发生网络问题，它没法判定分区 leader 是否收到消息。0.11.0.0 版本之前，producer 只能重发消息，别无他法，因此只能提供“最少消费一次的”交付语义。0.11.0.0 版本之后，Kafka producer 支持一个幂等交付功能选项，可以确保消息重发不会导致 Kafka 的消息日志中出现重复的条目：broker 为每个 producer 分配一个 ID，然后基于消息序号来去重。</p>
+<p>也是从 0.11.0.0 版本开始，Producer 支持以类事务的语义向多个 topic 分区发送消息：要么所有消息都发送成功，要么都不成功。这个能力主要用于实现 Kafka topic 之间的仅处理一次语义。</p>
+<p>从 consumer 角度来看，同一个分区的所有副本，日志数据相同，消费进度也一样。consumer 可以控制自己对分区日志数据的消费位置。</p>
+<ol>
+<li>如果 consumer 读取消息后，先向 kafka 提交消费位置，再处理消息；如果该 consumer 挂掉或重启，会可能导致丢消息，从而只能满足“最多处理一次”交付语义。</li>
+<li>如果 consumer 读取消息后，是先处理，再提交消费位置；如果该 consumer 挂掉或重启，则可能导致重复消费消息，从而只能满足“最少处理一次”交付语义。</li>
+</ol>
+<p>如何实现“仅处理一次”语义？借助 Producer 的事务能力。</p>
+<h2>复制</h2>
+<p>复制的粒度/单元是 topic 分区。Kafka 集群中，每个分区都有一个 leader broker 节点，0个或多个从节点（follower）。分区读写都是由 leader broker 处理。</p>
+<p>如同一个普通的 consumer，从节点从 leader broker 拉取（pull）消息，然后写到自己的消息日志文件中。让从节点以 pull 的方式获取 leader 的消息数据，好处在于批量读写。</p>
+<p>对于 follower 节点而言，“是否存活”的实际含义是“是否顺利地从 leader 同步消息”，leader 节点会追踪“同步中”节点集（ISRs）。如果一个 follower 挂掉了/卡住了/同步落后太多了，则将其从这个 ISRs 中移除。follow 是否卡住或者同步落后太多，依据 <code>replica.lag.time.max.ms</code> 配置参数判定。</p>
+<p>将某消息写到某个分区，如果该分区所有同步中副本都已经将该消息写到自己的消息日志文件中，则可以认为该消息的写操作已提交（committed），也就是真正的写成功。</p>
+<p>只有写提交的消息才会分发给 consumer。</p>
+<p>producer 可以选择是否等待消息写操作提交，在延迟（latency）和持久性（durability）之间权衡。</p>
+<p>Kafka 集群在某分区的 leader 节点挂掉之后，会快速进行失败转移（a short fail-over period），选举出新的分区 leader 节点，可用性不会受到影响。但如果发生网络分区（network partitions）问题，则无法保证可用性。CAP - C（Consistency）：一致性，A（Availability）：可用性，P（Partition Tolerance）：分区容错性 - 放弃了 分区容错性。</p>
+<h4>日志数据复制：仲裁成员集（Quorums）、同步中副本集（ISRs）和状态机</h4>
+<p>（备注：这一节我理解得还不太透彻。）</p>
+<p>一类常见的分布式系统是主从模式的，由主节点决定状态变化的顺序（the order of a series of values）。从节点通过日志复制（replicated log）方式同步状态数据。对于提交决策（commit decision）和选主（leader election），通常是基于多数人投票的机制。假设副本个数（注：个人理解包含主节点）为 2f+1，那么只有当 f+1 个副本写入成功，主节点才会将这个写操作标记为已提交（committed）。当主节点挂掉之后，基于 f 个状态最新的副本节点，可以选举出新的主节点，且状态不会有任何丢失。</p>
+<p>多数人投票方式，有一个优点：延迟取决于速度快的节点，而不是慢的。缺点是：对于实际的生产系统，抗风险能力还不够，而且不够灵活，不能让使用者做权衡。</p>
+<p>Kafka 选择仲裁成员集（quorum set）的方式与此不同，而不是基于多数人投票，而是动态维护一组同步中副本（ISR），这些副本与主节点保持同步。只有这组副本中的成员才有资格当选为主节点。ISR 集发生变化时会持久化到 Zookeeper 上。</p>
+<p>基于 ISR 模型，如果 topic 分区有 f+1 个副本，则可以容忍 f 个节点挂掉，也不会丢失任何已提交的消息。</p>
+<p>与 Kafka ISR 模型实际实现最相近的学术论文是微软的 <a href="http://research.microsoft.com/apps/pubs/default.aspx?id=66814">PacificA</a>。</p>
+<h4>可用性和持久性保证</h4>
+<p>注意：producer 发送消息时设定 <code>acks=all</code> 并不是要求所有的副本都确认写入成功，而是在当前同步中副本（ISR）都确认写入成功时，分区 leader 就向 producer 响应成功。例如：某个 topic 被设置为 2 个副本，然后其中一个副本节点挂掉，此时要求 <code>acks=all</code> 的写操作也会成功。如果剩下的副本节点也挂了，那么就会丢消息啦。</p>
+<p>为了方便用户在 可用性 和 持久性 之间权衡，Kafka 提供两个 topic 级别的配置，用于 持久性 比 可用性 重要的情况：</p>
+<ol>
+<li><a href="http://kafka.apache.org/documentation/#design_uncleanleader">禁用脏 leader 选举</a></li>
+<li>指定一个最小 ISR 集大小（<code>min.insync.replicas</code> 参数设置）：只有当 ISR 集大小大于设定的最小值，分区 [leader] 才会接受消息写入。这个设置只有当 producer 使用 <code>acks=all</code> 时才会生效。（注：在我们生产环境中，分区副本数通常申请为 3（包含 leader），那么 <code>min.insync.replicas</code> 应该设定为 2，但默认是 1。使用 1，那么当分区只有一个副本（即 leader），producer 也能写入成功，但如果这个副本又挂了，就会丢数据。）</li>
+</ol>
+<h4>副本管理</h4>
+<p>一个 Kafka 集群上一般会有多个 topic，每个 topic 又有多个 partition，为了节点之间负载均衡，通常以<strong>循环（round-robin）方式</strong>在所有节点上分布 partition 和 分区 leader 角色。</p>
+<p>另外，在分区 leader 节点之后重新选出 leader 之前，存在一段不可用的时间窗口，为了缩短这个时间窗口，Kafka 会从所有 broker 中选择一个作为“控制器（controller）”，这个控制器会检测 broker 级别的问题（failures），在发现某个 broker 挂掉之后，负责为受影响的分区指定新的 leader，而不是每个分区自己负责重新选主，这样的选主过程更轻量更快。如果控制器节点挂了，还存活的 broker 中的一个会成为新的控制器。</p>
+<h2>消费者消费进度跟踪</h2>
+<p>Kafka 为每个消费组（consumer group）指定一个 broker 来存储目标 topic 各个分区的消费进度（offsets），这个 broker 称为 <strong>组协调器（group coordinator）</strong>。这个消费组中的任一消费者实例都应该将消费进度提交到这个组协调器，或者从这个组协调器获取启动之前上次的消费进度。Kafka 基于消费组的名称为消费组分配协调器。消费者可以向任一 broker 发送 FindCoordinatorRequest 请求来查找自己的协调器，并从 FindCoordinatorResponse 响应中获取协调器的详细信息。</p>
+<p>在组协调器接收到一个 OffsetCommitRequest 请求后，会将请求数据写到一个特殊的<a href="http://kafka.apache.org/documentation/#compaction">经压实的（compacted）</a> Kafka topic - <em>__consumer_offsets</em>。在目标分区的所有副本都确认收到了，协调器才会向消费者发送进度提交成功的响应。这个 topic 的消息日志数据会定期进行压实（compact），因为只需要为每个分区维护最新的消费进度。协调器也会在内存中缓存消费进度，方便快速响应消费进度查询请求。</p>
+<p>注：如果消费者/消费组特别多（例如：我们广告引擎服务，读取正排消息 topic，一个机器实例就是一个 consumer group，数量在几百到几千不等），那么组协调器的压力会比较大，那么确保组协调器的角色均匀分配到集群的所有 broker，比较关键。另外，<em>__consumer_offsets</em> 这个 topic 的分区数量不能太少，最好和 broker 数量相同或者整数倍数量。</p>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <div id="gitalk-container"></div>
+              <script type="text/javascript">
+                const gitalk = new Gitalk({
+                  clientID: '58fb3102b498bfbcb14f',
+                  clientSecret: 'dd9788d7bbd9cbca1e75c9ba4db92f96dbf20180',
+                  repo: 'youngsterxyf.github.com',
+                  owner: 'youngsterxyf',
+                  admin: ['youngsterxyf'],
+                  id: location.pathname,      // Ensure uniqueness and length less than 50
+                  distractionFreeMode: false  // Facebook-like distraction free mode
+                });
+                gitalk.render('gitalk-container');
+              </script>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "2019/10/13/reading-kafka-design/";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://xiayfblackwhite.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+        </div><!-- /.twelve.columns -->
+ </div><!-- /.row -->
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+                <li><div class="btn primary"><a href="http://github.com/youngsterxyf" target="_blank">Github</a></div></li>
+
+                <li><div class="btn twitter"><a href="https://twitter.com/youngsterxyf" target="_blank">Twitter</a></div></li>
+
+                <li><div class="btn warning"><a href="http://weibo.com/u/1855563263" target="_blank">Weibo</a></div></li>
+
+                <li><div class="btn douban"><a href="http://www.douban.com/people/youngster21/" target="_blank">Douban</a></div></li>
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'xiayfblackwhite';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="../../../../theme/js/libs/gumby.min.js"></script>
+  <script src="../../../../theme/js/plugins.js"></script>
+  <script src="../../../../theme/js/main.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../../../theme/emoji/css/basic/emojify.min.css" />
+  <script src="../../../../theme/emoji/js/emojify.min.js"></script>
+  <script>
+    emojify.setConfig({
+        img_dir : '../../../../theme/emoji/images/basic'
+    });
+    emojify.run();
+</script>
+</body>
+</html>

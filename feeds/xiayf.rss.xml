@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0"><channel><title>黑·白 - xiayf</title><link>http://youngsterxyf.github.io/</link><description></description><lastBuildDate>Thu, 10 Oct 2019 00:00:00 +0800</lastBuildDate><item><title>读文笔记：Photon - Fault-tolerant and Scalable Joining of Continuous Data Streams</title><link>http://youngsterxyf.github.io/2019/10/10/reading-photon/</link><description>&lt;p&gt;原文：&lt;a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//pubs/archive/41318.pdf"&gt;Photon: Fault-tolerant and Scalable Joining of Continuous Data Streams&lt;/a&gt;&lt;/p&gt;
+<rss version="2.0"><channel><title>黑·白 - xiayf</title><link>http://youngsterxyf.github.io/</link><description></description><lastBuildDate>Sun, 13 Oct 2019 00:00:00 +0800</lastBuildDate><item><title>读文笔记：Kafka 官方设计文档</title><link>http://youngsterxyf.github.io/2019/10/13/reading-kafka-design/</link><description>&lt;p&gt;原文：&lt;a href="http://kafka.apache.org/documentation/#design"&gt;http://kafka.apache.org/documentation/#design&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;数据持久化&lt;/h2&gt;
+&lt;h4&gt;不用惧怕文件系统&lt;/h4&gt;
+&lt;p&gt;磁盘的读写速度，取决于如何读写。对于线性读写方式，操作系统做了充分的优化：提前读 - 预取若干数据块，滞后写 - 将小的逻辑写操作合并成一个大的物理写操作。&lt;/p&gt;
+&lt;p&gt;&lt;a href="http://queue.acm.org/detail.cfm?id=1563874"&gt;研究&lt;/a&gt;表明：&lt;a href="http://deliveryimages.acm.org/10.1145/1570000/1563874/jacobs3.jpg"&gt;顺序读写磁盘（sequential disk access）的速度有些时候比随机访问内存还要快&lt;/a&gt;。&lt;/p&gt;
+&lt;p&gt;现代操作系统激进地尽可能将空闲内存用作磁盘缓存。所有磁盘读写都经过操作系统提供的统一缓存。这个特性没法轻易关闭，除非直接 I/O （direct I/O），因此，如果程序在用户进程中进行数据缓存，缓存的数据通常也是和操作系统页缓存重复的，缓存两遍，没啥意义，也浪费内存。&lt;/p&gt;
+&lt;p&gt;而且，Kafka 是构建在 JVM 之上的，了解 Java 内存使用方式的人应该都知道：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;对象的内存开销非常高，通常是实际数据大小的2倍（甚至更多 …&lt;/li&gt;&lt;/ol&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">xiayf</dc:creator><pubDate>Sun, 13 Oct 2019 00:00:00 +0800</pubDate><guid isPermaLink="false">tag:youngsterxyf.github.io,2019-10-13:/2019/10/13/reading-kafka-design/</guid><category>文章</category><category>笔记</category><category>经典</category><category>Kafka</category><category>进行中</category></item><item><title>读文笔记：Photon - Fault-tolerant and Scalable Joining of Continuous Data Streams</title><link>http://youngsterxyf.github.io/2019/10/10/reading-photon/</link><description>&lt;p&gt;原文：&lt;a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//pubs/archive/41318.pdf"&gt;Photon: Fault-tolerant and Scalable Joining of Continuous Data Streams&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Photon 是谷歌广告系统中用于 join 广告曝光日志流和点击日志流的一套系统。&lt;/p&gt;
 &lt;p&gt;数据流 join 为什么没用 flink 这类通用的流式处理框架？&lt;/p&gt;
 &lt;p&gt;数据流 join，特别是广告数据流 join，技术上难在哪里？&lt;/p&gt;

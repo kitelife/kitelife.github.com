@@ -65,6 +65,47 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="./2014/11/14/read-yii-code-4/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - Model层实现">Yii源码阅读笔记 - Model层实现</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2014-11-14T00:00:00+08:00"> 2014-11-14 Fri </abbr>
+<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <h3>概述</h3>
+<p>Yii中，对Model层的使用，有两种方式：</p>
+<ol>
+<li>通过类CDbConnection和CDbCommand来操作</li>
+<li>使用ORM形式：编写model类继承自抽象类CActiveRecord</li>
+</ol>
+<p>第1种方式的示例如下：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">&lt;?php</span>
+$connection = Yii::app()-&gt;db;  <span style="color: #008000">// 或者Yii::app()-&gt;getComponent(&#39;db&#39;);</span>
+$queryResult = $connection-&gt;createCommand($sql)-&gt;queryRow();
+</pre></div>
+
+
+<p>第2种方式中编写的model类可能需要实现方法<code>getDbConnection</code>、<code>model</code>、<code>tableName</code>。</p>
+<p>在实现上，第2种方式是基于第1种方式的，即第2种方式的抽象程度更高。Yii没有屏蔽第1种方式，这样能让开发者按需选择。
+但我个人并不喜欢这样，两种方式同时存在，会导致应用的model实现稍显混乱。</p>
+<h3>分析</h3>
+<p>Yii框架model层的入口为CDbConnection类，该类有很多public的属性可供配置，如<code>connectionString</code>、<code>username</code>、<code>password</code>等。</p>
+<p>根据<a href="http://youngsterxyf.github.io/2014/11/13/read-yii-code-3/">Yii源码阅读笔记 - 组件集成</a>一文可知，组件初始化时会调用init方法。
+类CDbConnection的init类实现如下：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>public function …</pre></div> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="./2014/11/14/read-yii-code-4/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - Model层实现">阅读全文</a></div>
+                <div class="row tag-row">
+                    <span>标签: </span>
+                    <a class="danger label" href="./tag/php.html">PHP</a>
+                    <a class="danger label" href="./tag/yii.html">Yii</a>
+                    <a class="danger label" href="./tag/bi-ji.html">笔记</a>
+                    <a class="danger label" href="./tag/zong-jie.html">总结</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="./2014/11/13/read-yii-code-3/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 组件集成">Yii源码阅读笔记 - 组件集成</a>
                     </h2>
                 </header>
@@ -326,43 +367,6 @@ $this-&gt;configure($config);
                     <span>标签: </span>
                     <a class="danger label" href="./tag/fan-yi.html">翻译</a>
                     <a class="danger label" href="./tag/php.html">PHP</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="./2014/09/06/experience-about-restful-api/" rel="bookmark" title="Permalink to RESTful API设计的一点经验">RESTful API设计的一点经验</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2014-09-06T00:00:00+08:00"> 2014-09-06 Sat </abbr>
-<address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>前段时间的工作涉及产品开放API的设计与实现，整个过程大致可分为以下几个步骤：</p>
-<ol>
-<li>根据需求、原有数据库设计等，花了半天左右的工夫完成初稿；</li>
-<li>就初稿与相关同事进行讨论，确定一些细节问题，逐步完善；</li>
-<li>根据设计稿，基于Yii框架，配置路由，实现用户身份认证模块；</li>
-<li>基于步骤3，逐个实现业务相关API；</li>
-<li>对部分代码进行重构，减少不必要的代码重复。主要使用Yii控制器的beforeAction方法来实现多层过滤器。</li>
-</ol>
-<h3>设计</h3>
-<p>考虑到RESTful API简洁明了的接口表现形式，一开始我们就一致确定使用RESTful风格的API。参考以前自己使用多个开放平台API的经验，
-及<a href="https://developer.github.com/v3/">Github的开放API文档</a>，大致完成设计初稿。</p>
-<h5>资源</h5>
-<p>RESTful API主要有两个核心：</p>
-<ol>
-<li>HTTP协议的4个谓词 - GET、POST、PUT、DELETE，分别对应“查询”、“新增”、“更新”、“删除”4种操作</li>
-<li>资源（resource）</li>
-</ol>
-<p>RESTful风格API的设计，最难之处，我认为就是“资源”。</p>
-<p>“资源”是什么？“资源”并不是对应数据库中一个一个数据表，“资源 …</p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="./2014/09/06/experience-about-restful-api/" rel="bookmark" title="Permalink to RESTful API设计的一点经验">阅读全文</a></div>
-                <div class="row tag-row">
-                    <span>标签: </span>
-                    <a class="danger label" href="./tag/bi-ji.html">笔记</a>
-                    <a class="danger label" href="./tag/restful.html">RESTful</a>
                 </div>
             </article>
             </li>

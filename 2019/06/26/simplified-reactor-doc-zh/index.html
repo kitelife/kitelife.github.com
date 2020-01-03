@@ -82,11 +82,11 @@
 <h4>1.2 理解 BOM</h4>
 <p>Reactor 3 开始采用 BOM （Bill of Materials，物料清单）发布模型（自 <code>reactor-core 3.0.4</code> 开始，使用 <code>Aluminium</code>（铝）版本序列），一个版本包含一组相关组件的版本，这些版本组件之间兼容性非常好，允许这些组件采用不同的版本命名方式。</p>
 <p>BOM 发布模型本身也是版本化的，以一个代号后接一个修饰词来命名一个版本序列。如下是一个示例列表：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>Aluminium-RELEASE
-Californium-BUILD-SNAPSHOT
-Aluminium-SR1
-Bismuth-RELEASE
-Californium-SR32
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="border: 1px solid #FF0000">Aluminium-RELEASE</span>
+<span style="border: 1px solid #FF0000">Californium-BUILD-SNAPSHOT</span>
+<span style="border: 1px solid #FF0000">Aluminium-SR1</span>
+<span style="border: 1px solid #FF0000">Bismuth-RELEASE</span>
+<span style="border: 1px solid #FF0000">Californium-SR32</span>
 </pre></div>
 
 
@@ -135,24 +135,24 @@ Californium-SR32
 <h5>1.3.2 以 Gradle 管理依赖包</h5>
 <p>Gradle 核心并不支持 Maven BOM，不过可以借助 Spring 的 <a href="https://github.com/spring-gradle-plugins/dependency-management-plugin">gradle-dependency-management</a> 插件。</p>
 <p>首先，应用插件，如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>plugins <span style="border: 1px solid #FF0000">{</span>
-    id <span style="color: #a31515">&quot;io.spring.dependency-management&quot;</span> <span style="color: #0000ff">version</span> <span style="color: #a31515">&quot;1.0.6.RELEASE&quot;</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="border: 1px solid #FF0000">plugins {</span>
+<span style="border: 1px solid #FF0000">    id &quot;io.spring.dependency-management&quot; version &quot;1.0.6.RELEASE&quot;</span>
 <span style="border: 1px solid #FF0000">}</span>
 </pre></div>
 
 
 <p>然后使用它来引入 BOM，如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>dependencyManagement <span style="border: 1px solid #FF0000">{</span>
-     imports <span style="border: 1px solid #FF0000">{</span>
-          mavenBom <span style="color: #a31515">&quot;io.projectreactor:reactor-bom:Bismuth-RELEASE&quot;</span>
-     <span style="border: 1px solid #FF0000">}</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="border: 1px solid #FF0000">dependencyManagement {</span>
+<span style="border: 1px solid #FF0000">     imports {</span>
+<span style="border: 1px solid #FF0000">          mavenBom &quot;io.projectreactor:reactor-bom:Bismuth-RELEASE&quot;</span>
+<span style="border: 1px solid #FF0000">     }</span>
 <span style="border: 1px solid #FF0000">}</span>
 </pre></div>
 
 
 <p>最后将依赖添加到项目中，无需指定版本号，如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>dependencies <span style="border: 1px solid #FF0000">{</span>
-     compile <span style="color: #a31515">&#39;io.projectreactor:reactor-core&#39;</span> 
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="border: 1px solid #FF0000">dependencies {</span>
+<span style="border: 1px solid #FF0000">     compile &#39;io.projectreactor:reactor-core&#39; </span>
 <span style="border: 1px solid #FF0000">}</span>
 </pre></div>
 
@@ -166,7 +166,7 @@ Californium-SR32
 <p>反应式编程范式在面向对象语言中通常表现为一个观察者设计模式的扩展。你也可以将主流的反应式流模式（reactive streams pattern）和大家熟知的迭代器设计模式做对比，所有这些库中都存在对标于 <code>Iterable</code> - <code>Iterator</code> 的概念（译注：比如 发布者-消费者）。主要差别在于：迭代器是基于 pull 方式，反应式流则基于 push 方式。</p>
 <p>使用迭代器是一个命令式编程的模式，即使如何访问数据（accessing values）完全是 <code>Iterable</code> 的职责，但实际上，何时访问序列中的下一个（<code>next()</code>）值取决于开发者的选择。在反应式流中，上述 <code>Iterable</code> - <code>Iterator</code> 对的等价物为 <code>Publisher</code> - <code>Subscriber</code>。不过，在出现新的数据/事件时，由 <code>Publisher</code> 通知 <code>Subscriber</code>，这个“推”特性也是实现反应式的关键之处。并且，在被推送的值上应用哪些操作是声明式表达而不是命令式表达的：程序员表达的是计算逻辑而不是描述精确的控制流。</p>
 <p>除了“推”的特性，反应式流也良好地定义了如何处理错误和结束流。一个 <code>Publisher</code> 可以向它的 <code>Subscriber</code> 推送新的值（通过调用订阅者的 <code>onNext</code> 方法），也可以推送错误（调用 <code>onError</code> 方法）或结束（调用 <code>onComplete</code>方法）信号。错误和结束信号都可以终结事件序列。简而言之，如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>onNext x 0..N [onError | onComplete]
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="border: 1px solid #FF0000">onNext x 0..N [onError | onComplete]</span>
 </pre></div>
 
 
@@ -486,8 +486,8 @@ ints.subscribe(ss);
 
 
 <p>上面这个代码片段输出如下内容：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>request <span style="color: #0000ff">of</span> 1
-Cancelling <span style="color: #0000ff">after</span> <span style="color: #0000ff">having</span> received 1
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="border: 1px solid #FF0000">request of 1</span>
+<span style="border: 1px solid #FF0000">Cancelling after having received 1</span>
 </pre></div>
 
 
@@ -685,7 +685,7 @@ Cancelling <span style="color: #0000ff">after</span> <span style="color: #0000ff
 <li>因而，<code>map</code> 和 <code>onNext</code> 的回调（译注：<code>onNext</code> 的回调即 subscribe 方法传入的 lambda 表达式）实际上也是在 <code>Thread-0</code> 上执行。</li>
 </ol>
 <p>上述的代码会输出如下内容：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>hello thread Thread-0
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="border: 1px solid #FF0000">hello thread Thread-0</span>
 </pre></div>
 
 
@@ -793,30 +793,30 @@ Cancelling <span style="color: #0000ff">after</span> <span style="color: #0000ff
 
 
 <p>第一个示例输出如下内容：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>main -&gt; 1
-main -&gt; 2
-main -&gt; 3
-main -&gt; 4
-main -&gt; 5
-main -&gt; 6
-main -&gt; 7
-main -&gt; 8
-main -&gt; 9
-main -&gt; 10
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="border: 1px solid #FF0000">main -&gt; 1</span>
+<span style="border: 1px solid #FF0000">main -&gt; 2</span>
+<span style="border: 1px solid #FF0000">main -&gt; 3</span>
+<span style="border: 1px solid #FF0000">main -&gt; 4</span>
+<span style="border: 1px solid #FF0000">main -&gt; 5</span>
+<span style="border: 1px solid #FF0000">main -&gt; 6</span>
+<span style="border: 1px solid #FF0000">main -&gt; 7</span>
+<span style="border: 1px solid #FF0000">main -&gt; 8</span>
+<span style="border: 1px solid #FF0000">main -&gt; 9</span>
+<span style="border: 1px solid #FF0000">main -&gt; 10</span>
 </pre></div>
 
 
 <p>第二个示例正确地在两个线程上实现了并行化，输入如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>parallel-1 -&gt; 1
-parallel-2 -&gt; 2
-parallel-1 -&gt; 3
-parallel-2 -&gt; 4
-parallel-1 -&gt; 5
-parallel-2 -&gt; 6
-parallel-1 -&gt; 7
-parallel-1 -&gt; 9
-parallel-2 -&gt; 8
-parallel-2 -&gt; 10
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="border: 1px solid #FF0000">parallel-1 -&gt; 1</span>
+<span style="border: 1px solid #FF0000">parallel-2 -&gt; 2</span>
+<span style="border: 1px solid #FF0000">parallel-1 -&gt; 3</span>
+<span style="border: 1px solid #FF0000">parallel-2 -&gt; 4</span>
+<span style="border: 1px solid #FF0000">parallel-1 -&gt; 5</span>
+<span style="border: 1px solid #FF0000">parallel-2 -&gt; 6</span>
+<span style="border: 1px solid #FF0000">parallel-1 -&gt; 7</span>
+<span style="border: 1px solid #FF0000">parallel-1 -&gt; 9</span>
+<span style="border: 1px solid #FF0000">parallel-2 -&gt; 8</span>
+<span style="border: 1px solid #FF0000">parallel-2 -&gt; 10</span>
 </pre></div>
 
 

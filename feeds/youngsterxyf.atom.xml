@@ -152,17 +152,17 @@ $cache-&amp;gt;increment($key, 1);
 &lt;p&gt;经过仔细排查，最终确定问题就出在Nginx配置C的请求被转发到A、B。对于用户客户端来说，C是服务器，对于A、B来说，C则是客户端。如果不做特殊配置，从C转发到A、B的请求在处理时，A、B拿到的请求来源IP是C的IP，也就意味着到C的API访问请求，都被A、B基于C的IP进行访问频率限制。&lt;/p&gt;
 &lt;p&gt;以Nginx为例，对于从C转发到A、B的请求，如果A、B要拿到请求的真实来源IP，则需要对A、B及C的Nginx做特殊配置。为解决这个问题，Nginx提供了一个额外的模块&lt;code&gt;ngx_http_realip_module&lt;/code&gt;，这个模块默认没有编译在Nginx中，需以额外参数&lt;code&gt;--with-http_realip_module&lt;/code&gt;进行编译。&lt;/p&gt;
 &lt;p&gt;并对C的Nginx反向代理配置（location块）添加一行：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;# &lt;span style="border: 1px solid #FF0000"&gt;把请求来源放在&lt;/span&gt;X-Real-IP请求头中
-proxy_set_header  X-Real-IP &lt;span style="border: 1px solid #FF0000"&gt;$&lt;/span&gt;remote_addr;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="border: 1px solid #FF0000"&gt;# 把请求来源放在X-Real-IP请求头中&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;proxy_set_header  X-Real-IP $remote_addr;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;对A、B的Nginx（server块）添加以下配置：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;# &lt;span style="border: 1px solid #FF0000"&gt;说明需要进行真实请求来源&lt;/span&gt;IP替换的请求来源&lt;span style="border: 1px solid #FF0000"&gt;，即&lt;/span&gt;C所属的IP段或者C的IP
-set_real_ip_from 10.0.0.0/8;
-# &lt;span style="border: 1px solid #FF0000"&gt;说明从哪获取真实来源&lt;/span&gt;IP
-real_ip_header X-Real-IP;
-real_ip_recursive &lt;span style="color: #0000ff"&gt;on&lt;/span&gt;;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="border: 1px solid #FF0000"&gt;# 说明需要进行真实请求来源IP替换的请求来源，即C所属的IP段或者C的IP&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;set_real_ip_from 10.0.0.0/8;&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;# 说明从哪获取真实来源IP&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;real_ip_header X-Real-IP;&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;real_ip_recursive on;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -210,10 +210,10 @@ real_ip_recursive &lt;span style="color: #0000ff"&gt;on&lt;/span&gt;;
 
 
 &lt;p&gt;假设得到的输出如下所示：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;8328 ? 00:00:00 mono &amp;lt;defunct&amp;gt;
-8522 ? 00:00:01 mono &amp;lt;defunct&amp;gt;
-13132 ? 00:00:00 mono &amp;lt;defunct&amp;gt;
-25822 ? 00 …&lt;/pre&gt;&lt;/div&gt;</summary><content type="html">&lt;p&gt;原文：&lt;a href="https://kenno.wordpress.com/2007/04/04/how-to-kill-defunct-process/"&gt;How to kill defunct process&lt;/a&gt;&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="border: 1px solid #FF0000"&gt;8328 ? 00:00:00 mono &amp;lt;defunct&amp;gt;&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;8522 ? 00:00:01 mono &amp;lt;defunct&amp;gt;&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;13132 ? 00:00:00 mono &amp;lt;defunct&amp;gt;&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;25822 ? 00 …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</summary><content type="html">&lt;p&gt;原文：&lt;a href="https://kenno.wordpress.com/2007/04/04/how-to-kill-defunct-process/"&gt;How to kill defunct process&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;译者：&lt;a href="https://github.com/youngsterxyf"&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;defunct进程是指出错损坏的进程，父子进程之间不会再通信。有时，它们会演变成“僵尸进程”，存留在你的系统中，直到系统重启。可以尝试 “kill -9” 命令来清除，但多数时候不管用。&lt;/p&gt;
 &lt;p&gt;为了杀死这些defunct进程，你有两个选择：&lt;/p&gt;
@@ -227,12 +227,12 @@ real_ip_recursive &lt;span style="color: #0000ff"&gt;on&lt;/span&gt;;
 
 
 &lt;p&gt;假设得到的输出如下所示：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;8328 ? 00:00:00 mono &amp;lt;defunct&amp;gt;
-8522 ? 00:00:01 mono &amp;lt;defunct&amp;gt;
-13132 ? 00:00:00 mono &amp;lt;defunct&amp;gt;
-25822 ? 00:00:00 ruby &amp;lt;defunct&amp;gt;
-28383 ? 00:00:00 ruby &amp;lt;defunct&amp;gt;
-18803 ? 00:00:00 ruby &amp;lt;defunct&amp;gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="border: 1px solid #FF0000"&gt;8328 ? 00:00:00 mono &amp;lt;defunct&amp;gt;&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;8522 ? 00:00:01 mono &amp;lt;defunct&amp;gt;&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;13132 ? 00:00:00 mono &amp;lt;defunct&amp;gt;&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;25822 ? 00:00:00 ruby &amp;lt;defunct&amp;gt;&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;28383 ? 00:00:00 ruby &amp;lt;defunct&amp;gt;&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;18803 ? 00:00:00 ruby &amp;lt;defunct&amp;gt;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -712,22 +712,22 @@ xhprof.output_dir=&lt;span style="color: #a31515"&gt;&amp;quot;/path/to/output/d
 &lt;p&gt;4.执行&lt;code&gt;/path/to/php/bin/php -i | grep "xhprof"&lt;/code&gt;，确认xhprof扩展能成功加载&lt;/p&gt;
 &lt;p&gt;5.xhprof会将收集到的性能数据按文件（一次数据收集存放一个文件）存放在&lt;code&gt;xhprof.output_dir&lt;/code&gt;指定的目录（注意添加写权限）下，并通过&lt;code&gt;xhprof/xhprof_html&lt;/code&gt;目录下的PHP脚本程序提供网页形式的展示，所以还需配置web服务提供对该脚本程序的访问，以Nginx为例：&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;server {
-    listen 8080&lt;span style="color: #008000"&gt;;&lt;/span&gt;
-    server_name localhost&lt;span style="color: #008000"&gt;;&lt;/span&gt;
+    &lt;span style="border: 1px solid #FF0000"&gt;listen&lt;/span&gt; &lt;span style="border: 1px solid #FF0000"&gt;8080&lt;/span&gt;;
+    &lt;span style="border: 1px solid #FF0000"&gt;server_name&lt;/span&gt; &lt;span style="border: 1px solid #FF0000"&gt;localhost&lt;/span&gt;;
 
-    root /path/to/xhprof/xhprof_html&lt;span style="color: #008000"&gt;;&lt;/span&gt;
-    location / {
-        index index.html index.php&lt;span style="color: #008000"&gt;;&lt;/span&gt;
-        try_files $uri /index.php?$query_string&lt;span style="color: #008000"&gt;;&lt;/span&gt;
+    &lt;span style="border: 1px solid #FF0000"&gt;root&lt;/span&gt; &lt;span style="border: 1px solid #FF0000"&gt;/path/to/xhprof/xhprof_html&lt;/span&gt;;
+    &lt;span style="border: 1px solid #FF0000"&gt;location&lt;/span&gt; &lt;span style="border: 1px solid #FF0000"&gt;/&lt;/span&gt; &lt;span style="border: 1px solid #FF0000"&gt;{&lt;/span&gt;
+        &lt;span style="border: 1px solid #FF0000"&gt;index&lt;/span&gt; &lt;span style="border: 1px solid #FF0000"&gt;index.html&lt;/span&gt; &lt;span style="border: 1px solid #FF0000"&gt;index.php&lt;/span&gt;;
+        &lt;span style="border: 1px solid #FF0000"&gt;try_files&lt;/span&gt; &lt;span style="border: 1px solid #FF0000"&gt;$uri&lt;/span&gt; &lt;span style="border: 1px solid #FF0000"&gt;/index.php?$query_string&lt;/span&gt;;
     }
-    location ~ \.php$ {
-        fastcgi_split_path_info ^&lt;span style="color: #a31515"&gt;(&lt;/span&gt;.+.php&lt;span style="color: #a31515"&gt;)(&lt;/span&gt;/.+&lt;span style="color: #a31515"&gt;)&lt;/span&gt;$&lt;span style="color: #008000"&gt;;&lt;/span&gt;
-        fastcgi_pass unix:/var/run/php5-fpm.sock&lt;span style="color: #008000"&gt;;&lt;/span&gt;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name&lt;span style="color: #008000"&gt;;&lt;/span&gt;
-        fastcgi_index index.php&lt;span style="color: #008000"&gt;;&lt;/span&gt;
-        &lt;span style="color: #0000ff"&gt;include&lt;/span&gt; fastcgi_params&lt;span style="color: #008000"&gt;;&lt;/span&gt;
+    location ~ &lt;span style="border: 1px solid #FF0000"&gt;\&lt;/span&gt;.&lt;span style="color: #2b91af"&gt;php&lt;/span&gt;$ {
+        &lt;span style="border: 1px solid #FF0000"&gt;fastcgi_split_path_info&lt;/span&gt; &lt;span style="border: 1px solid #FF0000"&gt;^(.+.php)(/.+)$&lt;/span&gt;;
+        &lt;span style="border: 1px solid #FF0000"&gt;fastcgi_pass&lt;/span&gt; unix:/var/run/php5-fpm.sock;
+        &lt;span style="border: 1px solid #FF0000"&gt;fastcgi_param&lt;/span&gt; &lt;span style="border: 1px solid #FF0000"&gt;SCRIPT_FILENAME&lt;/span&gt; &lt;span style="border: 1px solid #FF0000"&gt;$document_root$fastcgi_script_name&lt;/span&gt;;
+        &lt;span style="border: 1px solid #FF0000"&gt;fastcgi_index&lt;/span&gt; &lt;span style="border: 1px solid #FF0000"&gt;index.php&lt;/span&gt;;
+        &lt;span style="border: 1px solid #FF0000"&gt;include&lt;/span&gt; &lt;span style="border: 1px solid #FF0000"&gt;fastcgi_params&lt;/span&gt;;
     }
-}
+&lt;span style="border: 1px solid #FF0000"&gt;}&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -770,13 +770,13 @@ $run_id = $xhprof_runs-&amp;gt;save_run($xhprof_data, &lt;span style="color: #a3
 &lt;/ol&gt;
 &lt;p&gt;可以组合使用三个可选值：&lt;code&gt;xhprof_enable(XHPROF_FLAGS_NO_BUILTINS | XHPROF_FLAGS_CPU | XHPROF_FLAGS_MEMORY);&lt;/code&gt;。&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;$options&lt;/code&gt;是数组类型，可传入键为&lt;code&gt;ignored_functions&lt;/code&gt;的值，表示忽略性能分析中的某些函数，如：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;xhprof_enable(0, array(
-    &lt;span style="color: #a31515"&gt;&amp;#39;ignored_functions&amp;#39;&lt;/span&gt; =&amp;gt;  array(
-                                &lt;span style="color: #a31515"&gt;&amp;#39;call_user_func&amp;#39;&lt;/span&gt;,
-                                &lt;span style="color: #a31515"&gt;&amp;#39;call_user_func_array&amp;#39;&lt;/span&gt;
-                            )
-    )
-);
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="border: 1px solid #FF0000"&gt;xhprof_enable(0, array(&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;    &amp;#39;ignored_functions&amp;#39; =&amp;gt;  array(&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;                                &amp;#39;call_user_func&amp;#39;,&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;                                &amp;#39;call_user_func_array&amp;#39;&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;                            )&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;    )&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;);&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -794,28 +794,28 @@ $run_id = $xhprof_runs-&amp;gt;save_run($xhprof_data, &lt;span style="color: #a3
 &lt;p&gt;2.依照原生XHprof安装步骤的2-7操作&lt;/p&gt;
 &lt;p&gt;3.因为XHProf UI默认使用MySQL来存储性能数据，所以需要进行数据库配置。将文件&lt;code&gt;/path/to/xhprof-ui/xhprof_lib/&lt;/code&gt;目录下的&lt;code&gt;config.sample.php&lt;/code&gt;重命名为&lt;code&gt;config.php&lt;/code&gt;，然后修改如下配置项：&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;// Change these:
-$_xhprof[&lt;span style="color: #a31515"&gt;&amp;#39;dbtype&amp;#39;&lt;/span&gt;] = &lt;span style="color: #a31515"&gt;&amp;#39;mysql&amp;#39;&lt;/span&gt;&lt;span style="color: #008000"&gt;; // Only relevant for PDO&lt;/span&gt;
-$_xhprof[&lt;span style="color: #a31515"&gt;&amp;#39;dbhost&amp;#39;&lt;/span&gt;] = &lt;span style="color: #a31515"&gt;&amp;#39;localhost&amp;#39;&lt;/span&gt;&lt;span style="color: #008000"&gt;;&lt;/span&gt;
-$_xhprof[&lt;span style="color: #a31515"&gt;&amp;#39;dbuser&amp;#39;&lt;/span&gt;] = &lt;span style="color: #a31515"&gt;&amp;#39;root&amp;#39;&lt;/span&gt;&lt;span style="color: #008000"&gt;;&lt;/span&gt;
-$_xhprof[&lt;span style="color: #a31515"&gt;&amp;#39;dbpass&amp;#39;&lt;/span&gt;] = &lt;span style="color: #a31515"&gt;&amp;#39;password&amp;#39;&lt;/span&gt;&lt;span style="color: #008000"&gt;;&lt;/span&gt;
-$_xhprof[&lt;span style="color: #a31515"&gt;&amp;#39;dbname&amp;#39;&lt;/span&gt;] = &lt;span style="color: #a31515"&gt;&amp;#39;xhprof&amp;#39;&lt;/span&gt;&lt;span style="color: #008000"&gt;;&lt;/span&gt;
-$_xhprof[&lt;span style="color: #a31515"&gt;&amp;#39;dbadapter&amp;#39;&lt;/span&gt;] = &lt;span style="color: #a31515"&gt;&amp;#39;Pdo&amp;#39;&lt;/span&gt;&lt;span style="color: #008000"&gt;;&lt;/span&gt;
-// 注意：这里有个坑，$_xhprof[&lt;span style="color: #a31515"&gt;&amp;#39;servername&amp;#39;&lt;/span&gt;]的值不能超过三个字符，这个配置项即对应数据表details的server_id字段
-$_xhprof[&lt;span style="color: #a31515"&gt;&amp;#39;servername&amp;#39;&lt;/span&gt;] = &lt;span style="color: #a31515"&gt;&amp;#39;myserver&amp;#39;&lt;/span&gt;&lt;span style="color: #008000"&gt;;&lt;/span&gt;
-$_xhprof[&lt;span style="color: #a31515"&gt;&amp;#39;namespace&amp;#39;&lt;/span&gt;] = &lt;span style="color: #a31515"&gt;&amp;#39;myapp&amp;#39;&lt;/span&gt;&lt;span style="color: #008000"&gt;;&lt;/span&gt;
-$_xhprof[&lt;span style="color: #a31515"&gt;&amp;#39;url&amp;#39;&lt;/span&gt;] = &lt;span style="color: #a31515"&gt;&amp;#39;http://url/to/xhprof/xhprof_html&amp;#39;&lt;/span&gt;&lt;span style="color: #008000"&gt;;&lt;/span&gt;
+$_xhprof&lt;span style="color: #0000ff"&gt;[&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;#39;dbtype&amp;#39;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;]&lt;/span&gt; = &lt;span style="color: #a31515"&gt;&amp;#39;mysql&amp;#39;&lt;/span&gt;; // Only relevant for PDO
+$_xhprof&lt;span style="color: #0000ff"&gt;[&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;#39;dbhost&amp;#39;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;]&lt;/span&gt; = &lt;span style="color: #a31515"&gt;&amp;#39;localhost&amp;#39;&lt;/span&gt;;
+$_xhprof&lt;span style="color: #0000ff"&gt;[&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;#39;dbuser&amp;#39;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;]&lt;/span&gt; = &lt;span style="color: #a31515"&gt;&amp;#39;root&amp;#39;&lt;/span&gt;;
+$_xhprof&lt;span style="color: #0000ff"&gt;[&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;#39;dbpass&amp;#39;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;]&lt;/span&gt; = &lt;span style="color: #a31515"&gt;&amp;#39;password&amp;#39;&lt;/span&gt;;
+$_xhprof&lt;span style="color: #0000ff"&gt;[&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;#39;dbname&amp;#39;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;]&lt;/span&gt; = &lt;span style="color: #a31515"&gt;&amp;#39;xhprof&amp;#39;&lt;/span&gt;;
+$_xhprof&lt;span style="color: #0000ff"&gt;[&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;#39;dbadapter&amp;#39;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;]&lt;/span&gt; = &lt;span style="color: #a31515"&gt;&amp;#39;Pdo&amp;#39;&lt;/span&gt;;
+// 注意&lt;span style="border: 1px solid #FF0000"&gt;：&lt;/span&gt;这里有个坑&lt;span style="border: 1px solid #FF0000"&gt;，&lt;/span&gt;$_xhprof&lt;span style="color: #0000ff"&gt;[&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;#39;servername&amp;#39;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;]&lt;/span&gt;的值不能超过三个字符&lt;span style="border: 1px solid #FF0000"&gt;，&lt;/span&gt;这个配置项即对应数据表details的server_id字段
+$_xhprof&lt;span style="color: #0000ff"&gt;[&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;#39;servername&amp;#39;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;]&lt;/span&gt; = &lt;span style="color: #a31515"&gt;&amp;#39;myserver&amp;#39;&lt;/span&gt;;
+$_xhprof&lt;span style="color: #0000ff"&gt;[&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;#39;namespace&amp;#39;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;]&lt;/span&gt; = &lt;span style="color: #a31515"&gt;&amp;#39;myapp&amp;#39;&lt;/span&gt;;
+$_xhprof&lt;span style="color: #0000ff"&gt;[&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;#39;url&amp;#39;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;]&lt;/span&gt; = &lt;span style="color: #a31515"&gt;&amp;#39;http://url/to/xhprof/xhprof_html&amp;#39;&lt;/span&gt;;
 
-//These are good &lt;span style="color: #0000ff"&gt;for&lt;/span&gt; linux and its derivatives.
+//These are good for linux and its derivatives.
 &lt;span style="color: #008000"&gt;/*&lt;/span&gt;
-&lt;span style="color: #008000"&gt;$_xhprof[&amp;#39;dot_binary&amp;#39;]  = &amp;#39;/usr/bin/dot&amp;#39;;&lt;/span&gt;
-&lt;span style="color: #008000"&gt;$_xhprof[&amp;#39;dot_tempdir&amp;#39;] = &amp;#39;/tmp&amp;#39;;&lt;/span&gt;
-&lt;span style="color: #008000"&gt;$_xhprof[&amp;#39;dot_errfile&amp;#39;] = &amp;#39;/tmp/xh_dot.err&amp;#39;;&lt;/span&gt;
+&lt;span style="color: #008000"&gt;$_xhprof&lt;/span&gt;&lt;span style="color: #0000ff"&gt;[&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;#39;dot_binary&amp;#39;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;]&lt;/span&gt;&lt;span style="color: #008000"&gt;  = &amp;#39;/usr/bin/dot&amp;#39;;&lt;/span&gt;
+&lt;span style="color: #008000"&gt;$_xhprof&lt;/span&gt;&lt;span style="color: #0000ff"&gt;[&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;#39;dot_tempdir&amp;#39;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;]&lt;/span&gt;&lt;span style="color: #008000"&gt; = &amp;#39;/tmp&amp;#39;;&lt;/span&gt;
+&lt;span style="color: #008000"&gt;$_xhprof&lt;/span&gt;&lt;span style="color: #0000ff"&gt;[&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;#39;dot_errfile&amp;#39;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;]&lt;/span&gt;&lt;span style="color: #008000"&gt; = &amp;#39;/tmp/xh_dot.err&amp;#39;;&lt;/span&gt;
 &lt;span style="color: #008000"&gt;*/&lt;/span&gt;
 
-// $controlIPs = false&lt;span style="color: #008000"&gt;; //Disables access controlls completely. &lt;/span&gt;
-$controlIPs = array&lt;span style="color: #a31515"&gt;()&lt;/span&gt;&lt;span style="color: #008000"&gt;;&lt;/span&gt;
-$controlIPs[] = &lt;span style="color: #a31515"&gt;&amp;quot;127.0.0.1&amp;quot;&lt;/span&gt;&lt;span style="color: #008000"&gt;;   // localhost, you&amp;#39;ll want to add your own ip here&lt;/span&gt;
-$controlIPs[] = &lt;span style="color: #a31515"&gt;&amp;quot;::1&amp;quot;&lt;/span&gt;&lt;span style="color: #008000"&gt;;         // localhost IP v6&lt;/span&gt;
+// $controlIPs = false; //Disables access controlls completely. 
+$controlIPs = array();
+$controlIPs&lt;span style="color: #0000ff"&gt;[]&lt;/span&gt; = &lt;span style="color: #a31515"&gt;&amp;quot;127.0.0.1&amp;quot;&lt;/span&gt;;   // localhost, you&lt;span style="border: 1px solid #FF0000"&gt;&amp;#39;&lt;/span&gt;ll want to add your own ip here
+$controlIPs&lt;span style="color: #0000ff"&gt;[]&lt;/span&gt; = &lt;span style="color: #a31515"&gt;&amp;quot;::1&amp;quot;&lt;/span&gt;;         // localhost IP v6
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -1517,7 +1517,7 @@ $this-&amp;gt;onException($event);
     self._queue = queue 
 
   &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; run(self):
-    &lt;span style="color: #0000ff"&gt;while&lt;/span&gt; True: 
+    &lt;span style="color: #0000ff"&gt;while&lt;/span&gt; &lt;span style="color: #0000ff"&gt;True&lt;/span&gt;: 
       &lt;span style="color: #008000"&gt;# queue.get() 会阻塞当前线程，直到获取到一个数据项&lt;/span&gt;
       msg = self._queue.get() 
       &lt;span style="color: #008000"&gt;# 检查当前消息是否是个“毒药丸”&lt;/span&gt;
@@ -1525,9 +1525,9 @@ $this-&amp;gt;onException($event);
         &lt;span style="color: #008000"&gt;# 如果是，则退出循环&lt;/span&gt;
         &lt;span style="color: #0000ff"&gt;break&lt;/span&gt;
       &lt;span style="color: #008000"&gt;# “处理” (这里是打印)从队列中取出的数据项&lt;/span&gt;
-      &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;I&amp;#39;m a thread, and I received %s!!&amp;quot;&lt;/span&gt; % msg
+      print &lt;span style="color: #a31515"&gt;&amp;quot;I&amp;#39;m a thread, and I received %s!!&amp;quot;&lt;/span&gt; % msg
     &lt;span style="color: #008000"&gt;# 我始终是这么的友好&lt;/span&gt;
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;Bye byes!&amp;#39;&lt;/span&gt;
+    print &lt;span style="color: #a31515"&gt;&amp;#39;Bye byes!&amp;#39;&lt;/span&gt;
 
 
 &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; Producer():
@@ -1582,12 +1582,12 @@ $this-&amp;gt;onException($event);
     self._queue = queue 
 
   &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; run(self):
-    &lt;span style="color: #0000ff"&gt;while&lt;/span&gt; True: 
+    &lt;span style="color: #0000ff"&gt;while&lt;/span&gt; &lt;span style="color: #0000ff"&gt;True&lt;/span&gt;: 
       content = self._queue.get() 
       &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; isinstance(content, str) &lt;span style="color: #0000ff"&gt;and&lt;/span&gt; content == &lt;span style="color: #a31515"&gt;&amp;#39;quit&amp;#39;&lt;/span&gt;:
         &lt;span style="color: #0000ff"&gt;break&lt;/span&gt;
       response = urllib2.urlopen(content)
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;Bye byes!&amp;#39;&lt;/span&gt;
+    print &lt;span style="color: #a31515"&gt;&amp;#39;Bye byes!&amp;#39;&lt;/span&gt;
 
 
 &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; Producer():
@@ -1609,7 +1609,7 @@ $this-&amp;gt;onException($event);
   &lt;span style="color: #0000ff"&gt;for&lt;/span&gt; worker &lt;span style="color: #0000ff"&gt;in&lt;/span&gt; worker_threads:
     worker.join()
 
-  &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;Done! Time taken: {}&amp;#39;&lt;/span&gt;.format(time.time() - start_time)
+  print &lt;span style="color: #a31515"&gt;&amp;#39;Done! Time taken: {}&amp;#39;&lt;/span&gt;.format(time.time() - start_time)
 
 &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; build_worker_pool(queue, size):
   workers = []
@@ -1906,14 +1906,14 @@ var_dump($ha);
 &lt;li&gt;New 语句，例如 foo(new foobar())&lt;/li&gt;
 &lt;li&gt;从函数中返回的引用，例如：&lt;/li&gt;
 &lt;/ul&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&amp;lt;?php
-function &amp;amp;bar&lt;span style="color: #a31515"&gt;()&lt;/span&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span style="color: #0000ff"&gt;function&lt;/span&gt; &amp;amp;bar()
 {
-    $a = 5&lt;span style="color: #008000"&gt;;&lt;/span&gt;
-    &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; $a&lt;span style="color: #008000"&gt;;&lt;/span&gt;
+    $a = 5;
+    &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; $a;
 }
-foo&lt;span style="color: #a31515"&gt;(&lt;/span&gt;bar&lt;span style="color: #a31515"&gt;())&lt;/span&gt;&lt;span style="color: #008000"&gt;;&lt;/span&gt;
-?&amp;gt;
+foo(bar());
+&lt;span style="color: #0000ff"&gt;?&amp;gt;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -1931,7 +1931,7 @@ array_pop(&lt;span style="color: #0000ff"&gt;array&lt;/span&gt;(1, 2, 3, 4));
 
 
 &lt;p&gt;会抛出错误：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;PHP Fatal error:  &lt;span style="color: #0000ff"&gt;Only&lt;/span&gt; variables can be passed &lt;span style="color: #0000ff"&gt;by&lt;/span&gt; reference &lt;span style="color: #0000ff"&gt;in&lt;/span&gt; /Users/xiayf/test.php &lt;span style="color: #0000ff"&gt;on&lt;/span&gt; line 2
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="border: 1px solid #FF0000"&gt;PHP Fatal error:  Only variables can be passed by reference in /Users/xiayf/test.php on line 2&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -3940,15 +3940,15 @@ Phonegap官网提供的文档与Apache Cordova文档是相同的，所以从技�
 &lt;p&gt;如果下载Android Studio，解压缩后执行&lt;code&gt;bin/android.sh&lt;/code&gt;，Android Studio启动时需要从Google的服务器上获取一些SDK相关的文件，
 由于GFW的原因，无法成功获取，也就无法顺利启动。Android Studio网络代理设置的方法（参考&lt;a href="http://stackoverflow.com/questions/27683678/android-studio-component-installation-not-working-in-proxy-security-server?lq=1"&gt;这里&lt;/a&gt;）：&lt;/p&gt;
 &lt;p&gt;在Android Studio首次启动后，可以在HOME目录下找到文件&lt;code&gt;~/.AndroidStudio/config/options/other.xml&lt;/code&gt;，在该文件中，可以找到如下几行：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&amp;lt;&lt;span style="color: #0000ff"&gt;option&lt;/span&gt; name=&lt;span style="color: #a31515"&gt;&amp;quot;PROXY_TYPE_IS_SOCKS&amp;quot;&lt;/span&gt; value=&lt;span style="color: #a31515"&gt;&amp;quot;false&amp;quot;&lt;/span&gt; /&amp;gt;
-&amp;lt;&lt;span style="color: #0000ff"&gt;option&lt;/span&gt; name=&lt;span style="color: #a31515"&gt;&amp;quot;USE_HTTP_PROXY&amp;quot;&lt;/span&gt; value=&lt;span style="color: #a31515"&gt;&amp;quot;false&amp;quot;&lt;/span&gt; /&amp;gt;
-&amp;lt;&lt;span style="color: #0000ff"&gt;option&lt;/span&gt; name=&lt;span style="color: #a31515"&gt;&amp;quot;USE_PROXY_PAC&amp;quot;&lt;/span&gt; value=&lt;span style="color: #a31515"&gt;&amp;quot;false&amp;quot;&lt;/span&gt; /&amp;gt;
-&amp;lt;&lt;span style="color: #0000ff"&gt;option&lt;/span&gt; name=&lt;span style="color: #a31515"&gt;&amp;quot;PROXY_HOST&amp;quot;&lt;/span&gt; value=&lt;span style="color: #a31515"&gt;&amp;quot;&amp;quot;&lt;/span&gt; /&amp;gt;
-&amp;lt;&lt;span style="color: #0000ff"&gt;option&lt;/span&gt; name=&lt;span style="color: #a31515"&gt;&amp;quot;PROXY_PORT&amp;quot;&lt;/span&gt; value=&lt;span style="color: #a31515"&gt;&amp;quot;80&amp;quot;&lt;/span&gt; /&amp;gt;
-&amp;lt;&lt;span style="color: #0000ff"&gt;option&lt;/span&gt; name=&lt;span style="color: #a31515"&gt;&amp;quot;PROXY_AUTHENTICATION&amp;quot;&lt;/span&gt; value=&lt;span style="color: #a31515"&gt;&amp;quot;false&amp;quot;&lt;/span&gt; /&amp;gt;
-&amp;lt;&lt;span style="color: #0000ff"&gt;option&lt;/span&gt; name=&lt;span style="color: #a31515"&gt;&amp;quot;PROXY_LOGIN&amp;quot;&lt;/span&gt; value=&lt;span style="color: #a31515"&gt;&amp;quot;&amp;quot;&lt;/span&gt; /&amp;gt;
-&amp;lt;&lt;span style="color: #0000ff"&gt;option&lt;/span&gt; name=&lt;span style="color: #a31515"&gt;&amp;quot;PROXY_PASSWORD_CRYPT&amp;quot;&lt;/span&gt; value=&lt;span style="color: #a31515"&gt;&amp;quot;&amp;quot;&lt;/span&gt; /&amp;gt;
-&amp;lt;&lt;span style="color: #0000ff"&gt;option&lt;/span&gt; name=&lt;span style="color: #a31515"&gt;&amp;quot;KEEP_PROXY_PASSWORD&amp;quot;&lt;/span&gt; value=&lt;span style="color: #a31515"&gt;&amp;quot;false&amp;quot;&lt;/span&gt; /&amp;gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="border: 1px solid #FF0000"&gt;&amp;lt;option name=&amp;quot;PROXY_TYPE_IS_SOCKS&amp;quot; value=&amp;quot;false&amp;quot; /&amp;gt;&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;&amp;lt;option name=&amp;quot;USE_HTTP_PROXY&amp;quot; value=&amp;quot;false&amp;quot; /&amp;gt;&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;&amp;lt;option name=&amp;quot;USE_PROXY_PAC&amp;quot; value=&amp;quot;false&amp;quot; /&amp;gt;&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;&amp;lt;option name=&amp;quot;PROXY_HOST&amp;quot; value=&amp;quot;&amp;quot; /&amp;gt;&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;&amp;lt;option name=&amp;quot;PROXY_PORT&amp;quot; value=&amp;quot;80&amp;quot; /&amp;gt;&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;&amp;lt;option name=&amp;quot;PROXY_AUTHENTICATION&amp;quot; value=&amp;quot;false&amp;quot; /&amp;gt;&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;&amp;lt;option name=&amp;quot;PROXY_LOGIN&amp;quot; value=&amp;quot;&amp;quot; /&amp;gt;&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;&amp;lt;option name=&amp;quot;PROXY_PASSWORD_CRYPT&amp;quot; value=&amp;quot;&amp;quot; /&amp;gt;&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;&amp;lt;option name=&amp;quot;KEEP_PROXY_PASSWORD&amp;quot; value=&amp;quot;false&amp;quot; /&amp;gt;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -5949,31 +5949,31 @@ public function update($attributes=null)
 
 &lt;hr&gt;
 &lt;p&gt;基于CActiveRecord类，如果想进行读取操作，那么子类需要重写model方法。CActiveRecord类的model方法实现如下：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #008000"&gt;/**&lt;/span&gt;
-&lt;span style="color: #008000"&gt; * Returns the static model of the specified AR class.&lt;/span&gt;
-&lt;span style="color: #008000"&gt; * The model returned is a static instance of the AR class.&lt;/span&gt;
-&lt;span style="color: #008000"&gt; * It is provided for invoking class-level methods (something similar to static class methods.)&lt;/span&gt;
-&lt;span style="color: #008000"&gt; *&lt;/span&gt;
-&lt;span style="color: #008000"&gt; * EVERY derived AR class must override this method as follows,&lt;/span&gt;
-&lt;span style="color: #008000"&gt; * &amp;lt;pre&amp;gt;&lt;/span&gt;
-&lt;span style="color: #008000"&gt; * public static function model($className=__CLASS__)&lt;/span&gt;
-&lt;span style="color: #008000"&gt; * {&lt;/span&gt;
-&lt;span style="color: #008000"&gt; *     return parent::model($className);&lt;/span&gt;
-&lt;span style="color: #008000"&gt; * }&lt;/span&gt;
-&lt;span style="color: #008000"&gt; * &amp;lt;/pre&amp;gt;&lt;/span&gt;
-&lt;span style="color: #008000"&gt; *&lt;/span&gt;
-&lt;span style="color: #008000"&gt; * @param string $className active record class name.&lt;/span&gt;
-&lt;span style="color: #008000"&gt; * @return CActiveRecord active record model instance.&lt;/span&gt;
-&lt;span style="color: #008000"&gt; */&lt;/span&gt;
-public static function model&lt;span style="color: #a31515"&gt;(&lt;/span&gt;$className=__CLASS__&lt;span style="color: #a31515"&gt;)&lt;/span&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;/**
+ * Returns the static model of the specified AR class.
+ * The model returned is a static instance of the AR class.
+ * It is provided for invoking class-level methods (something similar to static class methods.)
+ *
+ * EVERY derived AR class must override this method as follows,
+ * &amp;lt;pre&amp;gt;
+ * public static function model($className=__CLASS__)
+ * {
+ *     return parent::model($className);
+ * }
+ * &amp;lt;/pre&amp;gt;
+ *
+ * @param string $className active record class name.
+ * @return CActiveRecord active record model instance.
+ */
+public static function model($className=__CLASS__)
 {
-    &lt;span style="color: #0000ff"&gt;if&lt;/span&gt;&lt;span style="color: #a31515"&gt;(&lt;/span&gt;isset&lt;span style="color: #a31515"&gt;(&lt;/span&gt;self::$_models[$className]&lt;span style="color: #a31515"&gt;))&lt;/span&gt;
-        &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; self::$_models[$className]&lt;span style="color: #008000"&gt;;&lt;/span&gt;
-    &lt;span style="color: #0000ff"&gt;else&lt;/span&gt;
+    if(isset(self::$_models[$className]))
+        return self::$_models[$className];
+    else
     {
-        $model=self::$_models[$className]=new $className&lt;span style="color: #a31515"&gt;(&lt;/span&gt;null&lt;span style="color: #a31515"&gt;)&lt;/span&gt;&lt;span style="color: #008000"&gt;;&lt;/span&gt;
-        $model-&amp;gt;attachBehaviors&lt;span style="color: #a31515"&gt;(&lt;/span&gt;$model-&amp;gt;behaviors&lt;span style="color: #a31515"&gt;())&lt;/span&gt;&lt;span style="color: #008000"&gt;;&lt;/span&gt;
-        &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; $model&lt;span style="color: #008000"&gt;;&lt;/span&gt;
+        $model=self::$_models[$className]=new $className(null);
+        $model-&amp;gt;attachBehaviors($model-&amp;gt;behaviors());
+        return $model;
     }
 }
 &lt;/pre&gt;&lt;/div&gt;
@@ -8848,11 +8848,11 @@ access_token需要通过API向微信服务器获取。成功启用服务号的�
         &lt;span style="color: #0000ff"&gt;try&lt;/span&gt;:
             r = self.session.post(target_url, data=content)
             &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; r.status_code == 200:
-                &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; r.json()
+                print r.json()
             &lt;span style="color: #0000ff"&gt;else&lt;/span&gt;:
                 &lt;span style="color: #0000ff"&gt;raise&lt;/span&gt; Exception(&lt;span style="color: #a31515"&gt;u&amp;#39;非正常响应, %d&amp;#39;&lt;/span&gt; % (r.status_code,))
         &lt;span style="color: #0000ff"&gt;except&lt;/span&gt; Exception &lt;span style="color: #0000ff"&gt;as&lt;/span&gt; e:
-            &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; e.message
+            print e.message
             self._remote_fetch_access_token()
             self.create_menu(content)
 
@@ -8861,11 +8861,11 @@ access_token需要通过API向微信服务器获取。成功启用服务号的�
         &lt;span style="color: #0000ff"&gt;try&lt;/span&gt;:
             r = self.session.get(target_url)
             &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; r.status_code == 200:
-                &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; r.json()
+                print r.json()
             &lt;span style="color: #0000ff"&gt;else&lt;/span&gt;:
                 &lt;span style="color: #0000ff"&gt;raise&lt;/span&gt; Exception(&lt;span style="color: #a31515"&gt;u&amp;#39;非正常响应，%d, %s&amp;#39;&lt;/span&gt; % (r.status_code, r.text))
         &lt;span style="color: #0000ff"&gt;except&lt;/span&gt; Exception &lt;span style="color: #0000ff"&gt;as&lt;/span&gt; e:
-            &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; e.message
+            print e.message
             self._remote_fetch_access_token()
             self.fetch_menu()
 
@@ -8874,11 +8874,11 @@ access_token需要通过API向微信服务器获取。成功启用服务号的�
         &lt;span style="color: #0000ff"&gt;try&lt;/span&gt;:
             r = self.session.get(target_url)
             &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; r.status_code == 200:
-                &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; r.json()
+                print r.json()
             &lt;span style="color: #0000ff"&gt;else&lt;/span&gt;:
                 &lt;span style="color: #0000ff"&gt;raise&lt;/span&gt; Exception(&lt;span style="color: #a31515"&gt;u&amp;#39;非正常响应, %d, %s&amp;#39;&lt;/span&gt; % (r.status_code, r.text))
         &lt;span style="color: #0000ff"&gt;except&lt;/span&gt; Exception &lt;span style="color: #0000ff"&gt;as&lt;/span&gt; e:
-            &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; e.message
+            print e.message
             self._remote_fetch_access_token()
             self.delete_menu()
 
@@ -11278,12 +11278,12 @@ d9976cfe0430557885d162927dd70186d0f521e8
 
 
 &lt;span style="color: #008000"&gt;# 布尔值也是基本类型数据&lt;/span&gt;
-True
-False
+&lt;span style="color: #0000ff"&gt;True&lt;/span&gt;
+&lt;span style="color: #0000ff"&gt;False&lt;/span&gt;
 
 &lt;span style="color: #008000"&gt;# 使用not来求反&lt;/span&gt;
-&lt;span style="color: #0000ff"&gt;not&lt;/span&gt; True &lt;span style="color: #008000"&gt;#=&amp;gt; False&lt;/span&gt;
-&lt;span style="color: #0000ff"&gt;not&lt;/span&gt; False &lt;span style="color: #008000"&gt;#=&amp;gt; True&lt;/span&gt;
+&lt;span style="color: #0000ff"&gt;not&lt;/span&gt; &lt;span style="color: #0000ff"&gt;True&lt;/span&gt; &lt;span style="color: #008000"&gt;#=&amp;gt; False&lt;/span&gt;
+&lt;span style="color: #0000ff"&gt;not&lt;/span&gt; &lt;span style="color: #0000ff"&gt;False&lt;/span&gt; &lt;span style="color: #008000"&gt;#=&amp;gt; True&lt;/span&gt;
 
 &lt;span style="color: #008000"&gt;# 相等比较使用==&lt;/span&gt;
 1 == 1 &lt;span style="color: #008000"&gt;#=&amp;gt; True&lt;/span&gt;
@@ -11314,7 +11314,7 @@ False
 &lt;span style="color: #a31515"&gt;&amp;quot;This is a string&amp;quot;&lt;/span&gt;[0] &lt;span style="color: #008000"&gt;#=&amp;gt; &amp;#39;T&amp;#39;&lt;/span&gt;
 
 &lt;span style="color: #008000"&gt;# None是一个对象&lt;/span&gt;
-None &lt;span style="color: #008000"&gt;#=&amp;gt; None&lt;/span&gt;
+&lt;span style="color: #0000ff"&gt;None&lt;/span&gt; &lt;span style="color: #008000"&gt;#=&amp;gt; None&lt;/span&gt;
 
 
 &lt;span style="color: #008000"&gt;####################################################&lt;/span&gt;
@@ -11322,7 +11322,7 @@ None &lt;span style="color: #008000"&gt;#=&amp;gt; None&lt;/span&gt;
 &lt;span style="color: #008000"&gt;####################################################&lt;/span&gt;
 
 &lt;span style="color: #008000"&gt;# 打印输出非常简单&lt;/span&gt;
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;I&amp;#39;m Python. Nice to meet you!&amp;quot;&lt;/span&gt;
+print &lt;span style="color: #a31515"&gt;&amp;quot;I&amp;#39;m Python. Nice to meet you!&amp;quot;&lt;/span&gt;
 
 &lt;span style="color: #008000"&gt;# 赋值之前不需要声明变量&lt;/span&gt;
 some_var = 5    &lt;span style="color: #008000"&gt;# 约定使用 小写_字母_和_下划线 的命名方式&lt;/span&gt;
@@ -11332,7 +11332,7 @@ some_var &lt;span style="color: #008000"&gt;#=&amp;gt; 5&lt;/span&gt;
 &lt;span style="color: #0000ff"&gt;try&lt;/span&gt;:
     some_other_var
 &lt;span style="color: #0000ff"&gt;except&lt;/span&gt; NameError:
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;Raises a name error&amp;quot;&lt;/span&gt;
+    print &lt;span style="color: #a31515"&gt;&amp;quot;Raises a name error&amp;quot;&lt;/span&gt;
 
 &lt;span style="color: #008000"&gt;# 赋值时可以使用条件表达式&lt;/span&gt;
 some_var = a &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; a &amp;gt; b &lt;span style="color: #0000ff"&gt;else&lt;/span&gt; b
@@ -11364,7 +11364,7 @@ li[-1] &lt;span style="color: #008000"&gt;#=&amp;gt; 3&lt;/span&gt;
 &lt;span style="color: #0000ff"&gt;try&lt;/span&gt;:
     li[4] &lt;span style="color: #008000"&gt;# 抛出一个IndexError异常&lt;/span&gt;
 &lt;span style="color: #0000ff"&gt;except&lt;/span&gt; IndexError:
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;Raises an IndexError&amp;quot;&lt;/span&gt;
+    print &lt;span style="color: #a31515"&gt;&amp;quot;Raises an IndexError&amp;quot;&lt;/span&gt;
 
 &lt;span style="color: #008000"&gt;# 可以通过分片(slice)语法来查看列表中某个区间的数据&lt;/span&gt;
 &lt;span style="color: #008000"&gt;# 以数学角度来说，这是一个闭合/开放区间&lt;/span&gt;
@@ -11395,7 +11395,7 @@ tup[0] &lt;span style="color: #008000"&gt;#=&amp;gt; 1&lt;/span&gt;
 &lt;span style="color: #0000ff"&gt;try&lt;/span&gt;:
     tup[0] = 3 &lt;span style="color: #008000"&gt;# 抛出一个TypeError异常&lt;/span&gt;
 &lt;span style="color: #0000ff"&gt;except&lt;/span&gt; TypeError:
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;Tuples cannot be mutated.&amp;quot;&lt;/span&gt;
+    print &lt;span style="color: #a31515"&gt;&amp;quot;Tuples cannot be mutated.&amp;quot;&lt;/span&gt;
 
 &lt;span style="color: #008000"&gt;# 可以在元组上使用和列表一样的操作&lt;/span&gt;
 len(tup) &lt;span style="color: #008000"&gt;#=&amp;gt; 3&lt;/span&gt;
@@ -11472,11 +11472,11 @@ some_var = 5
 &lt;span style="color: #008000"&gt;# 以下是一个if语句。缩进在Python是有重要意义的。&lt;/span&gt;
 &lt;span style="color: #008000"&gt;# 打印 &amp;quot;some_var is smaller than 10&amp;quot;&lt;/span&gt;
 &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; some_var &amp;gt; 10:
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;some_var is totally bigger than 10.&amp;quot;&lt;/span&gt;
+    print &lt;span style="color: #a31515"&gt;&amp;quot;some_var is totally bigger than 10.&amp;quot;&lt;/span&gt;
 &lt;span style="color: #0000ff"&gt;elif&lt;/span&gt; some_var &amp;lt; 10:
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;some_var is smaller than 10.&amp;quot;&lt;/span&gt;
+    print &lt;span style="color: #a31515"&gt;&amp;quot;some_var is smaller than 10.&amp;quot;&lt;/span&gt;
 &lt;span style="color: #0000ff"&gt;else&lt;/span&gt;:
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;some_var is indeed 10.&amp;quot;&lt;/span&gt;
+    print &lt;span style="color: #a31515"&gt;&amp;quot;some_var is indeed 10.&amp;quot;&lt;/span&gt;
 
 
 &lt;span style="color: #a31515"&gt;&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
@@ -11488,7 +11488,7 @@ some_var = 5
 &lt;span style="color: #a31515"&gt;&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
 &lt;span style="color: #0000ff"&gt;for&lt;/span&gt; animal &lt;span style="color: #0000ff"&gt;in&lt;/span&gt; [&lt;span style="color: #a31515"&gt;&amp;quot;dog&amp;quot;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;quot;cat&amp;quot;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;quot;mouse&amp;quot;&lt;/span&gt;]:
     &lt;span style="color: #008000"&gt;# 可以使用%来插补格式化字符串&lt;/span&gt;
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;%s is a mammal&amp;quot;&lt;/span&gt; % animal
+    print &lt;span style="color: #a31515"&gt;&amp;quot;%s is a mammal&amp;quot;&lt;/span&gt; % animal
 
 &lt;span style="color: #a31515"&gt;&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
 &lt;span style="color: #a31515"&gt;while循环直到未满足某个条件。&lt;/span&gt;
@@ -11500,7 +11500,7 @@ some_var = 5
 &lt;span style="color: #a31515"&gt;&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
 x = 0
 &lt;span style="color: #0000ff"&gt;while&lt;/span&gt; x &amp;lt; 4:
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; x
+    print x
     x += 1    &lt;span style="color: #008000"&gt;# x = x + 1的一种简写&lt;/span&gt;
 
 &lt;span style="color: #008000"&gt;# 使用try/except块来处理异常&lt;/span&gt;
@@ -11525,7 +11525,7 @@ x = 0
 
 &lt;span style="color: #008000"&gt;# 使用def来创建新函数&lt;/span&gt;
 &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; add(x, y):
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;x is %s and y is %s&amp;quot;&lt;/span&gt; % (x, y)
+    print &lt;span style="color: #a31515"&gt;&amp;quot;x is %s and y is %s&amp;quot;&lt;/span&gt; % (x, y)
     &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; x + y    &lt;span style="color: #008000"&gt;# 以一个return语句来返回值&lt;/span&gt;
 
 &lt;span style="color: #008000"&gt;# 以参数调用函数&lt;/span&gt;
@@ -11549,8 +11549,8 @@ keyword_args(big=&lt;span style="color: #a31515"&gt;&amp;quot;foot&amp;quot;&lt;
 
 &lt;span style="color: #008000"&gt;# 也可以一次性接受两种参数&lt;/span&gt;
 &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; all_the_args(*args, **kwargs):
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; args
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; kwargs
+    print args
+    print kwargs
 &lt;span style="color: #a31515"&gt;&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
 &lt;span style="color: #a31515"&gt;all_the_args(1, 2, a=3, b=4)输出：&lt;/span&gt;
 &lt;span style="color: #a31515"&gt;    [1, 2]&lt;/span&gt;
@@ -11616,10 +11616,10 @@ filter(lamda x: x &amp;gt; 5, [3, 4, 5, 6, 7]) &lt;span style="color: #008000"&g
 
 &lt;span style="color: #008000"&gt;# 实例化一个类&lt;/span&gt;
 i = Human(name=&lt;span style="color: #a31515"&gt;&amp;quot;Ian&amp;quot;&lt;/span&gt;)
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; i.say(&lt;span style="color: #a31515"&gt;&amp;quot;hi&amp;quot;&lt;/span&gt;)       &lt;span style="color: #008000"&gt;# 输出&amp;quot;Ian: hi&amp;quot;&lt;/span&gt;
+print i.say(&lt;span style="color: #a31515"&gt;&amp;quot;hi&amp;quot;&lt;/span&gt;)       &lt;span style="color: #008000"&gt;# 输出&amp;quot;Ian: hi&amp;quot;&lt;/span&gt;
 
 j = Human(&lt;span style="color: #a31515"&gt;&amp;quot;Joel&amp;quot;&lt;/span&gt;)
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; j.say(&lt;span style="color: #a31515"&gt;&amp;quot;hello&amp;quot;&lt;/span&gt;)        &lt;span style="color: #008000"&gt;# 输出&amp;quot;Joel: hello&amp;quot;&lt;/span&gt;
+print j.say(&lt;span style="color: #a31515"&gt;&amp;quot;hello&amp;quot;&lt;/span&gt;)        &lt;span style="color: #008000"&gt;# 输出&amp;quot;Joel: hello&amp;quot;&lt;/span&gt;
 
 &lt;span style="color: #008000"&gt;# 调用类方法&lt;/span&gt;
 i.get_species() &lt;span style="color: #008000"&gt;#=&amp;gt; &amp;quot;H. sapiens&amp;quot;&lt;/span&gt;
@@ -12894,11 +12894,11 @@ parser = argparse.ArgumentParser(description=&lt;span style="color: #a31515"&gt;
 
 parser = argparse.ArgumentParser(description=&lt;span style="color: #a31515"&gt;&amp;#39;Short sample app&amp;#39;&lt;/span&gt;)
 
-parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-a&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=False)
+parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-a&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=&lt;span style="color: #0000ff"&gt;False&lt;/span&gt;)
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-b&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store&amp;quot;&lt;/span&gt;, dest=&lt;span style="color: #a31515"&gt;&amp;quot;b&amp;quot;&lt;/span&gt;)
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-c&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store&amp;quot;&lt;/span&gt;, dest=&lt;span style="color: #a31515"&gt;&amp;quot;c&amp;quot;&lt;/span&gt;, type=int)
 
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; parser.parse_args([&lt;span style="color: #a31515"&gt;&amp;#39;-a&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;-bval&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;-c&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;3&amp;#39;&lt;/span&gt;])
+print parser.parse_args([&lt;span style="color: #a31515"&gt;&amp;#39;-a&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;-bval&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;-c&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;3&amp;#39;&lt;/span&gt;])
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -12914,11 +12914,11 @@ Namespace(a=True, b=&amp;#39;val&amp;#39;, c=3)
 
 parser = argparse.ArgumentParser(description=&lt;span style="color: #a31515"&gt;&amp;#39;Example with long option names&amp;#39;&lt;/span&gt;)
 
-parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--noarg&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=False)
+parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--noarg&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=&lt;span style="color: #0000ff"&gt;False&lt;/span&gt;)
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--witharg&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store&amp;quot;&lt;/span&gt;, dest=&lt;span style="color: #a31515"&gt;&amp;quot;witharg&amp;quot;&lt;/span&gt;)
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--witharg2&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store&amp;quot;&lt;/span&gt;, dest=&lt;span style="color: #a31515"&gt;&amp;quot;witharg2&amp;quot;&lt;/span&gt;, type=int)
 
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; parser.parse_args([&lt;span style="color: #a31515"&gt;&amp;#39;--noarg&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;--witharg&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;val&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;--withargs=3&amp;#39;&lt;/span&gt;])
+print parser.parse_args([&lt;span style="color: #a31515"&gt;&amp;#39;--noarg&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;--witharg&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;val&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;--withargs=3&amp;#39;&lt;/span&gt;])
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -12936,7 +12936,7 @@ parser = argparse.ArgumentParser(description=&lt;span style="color: #a31515"&gt;
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;count&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store&amp;quot;&lt;/span&gt;, type=int)
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;units&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store&amp;quot;&lt;/span&gt;)
 
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; parser.parse_args()
+print parser.parse_args()
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -12982,10 +12982,10 @@ parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-c&amp;#39;&lt;/
         const=&lt;span style="color: #a31515"&gt;&amp;#39;value-to-store&amp;#39;&lt;/span&gt;,
         help=&lt;span style="color: #a31515"&gt;&amp;#39;Store a constant value&amp;#39;&lt;/span&gt;)
 
-parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-t&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;#39;store_true&amp;#39;&lt;/span&gt;, default=False,
+parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-t&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;#39;store_true&amp;#39;&lt;/span&gt;, default=&lt;span style="color: #0000ff"&gt;False&lt;/span&gt;,
         dest=&lt;span style="color: #a31515"&gt;&amp;#39;boolean_switch&amp;#39;&lt;/span&gt;,
         help=&lt;span style="color: #a31515"&gt;&amp;#39;Set a switch to true&amp;#39;&lt;/span&gt;)
-parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-f&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;#39;store_false&amp;#39;&lt;/span&gt;, default=False,
+parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-f&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;#39;store_false&amp;#39;&lt;/span&gt;, default=&lt;span style="color: #0000ff"&gt;False&lt;/span&gt;,
         dest=&lt;span style="color: #a31515"&gt;&amp;#39;boolean_switch&amp;#39;&lt;/span&gt;,
         help=&lt;span style="color: #a31515"&gt;&amp;#39;Set a switch to false&amp;#39;&lt;/span&gt;)
 
@@ -13004,11 +13004,11 @@ parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-B&amp;#39;&lt;/
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--version&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;#39;version&amp;#39;&lt;/span&gt;, version=&lt;span style="color: #a31515"&gt;&amp;#39;%(prog)s 1.0&amp;#39;&lt;/span&gt;)
 
 results = parser.parse_args()
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;simple_value     =&amp;#39;&lt;/span&gt;, results.simple_value
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;constant_value   =&amp;#39;&lt;/span&gt;, results.constant_value
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;boolean_switch   =&amp;#39;&lt;/span&gt;, results.boolean_switch
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;collection       =&amp;#39;&lt;/span&gt;, results.collection
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;const_collection =&amp;#39;&lt;/span&gt;, results.const_collection
+print &lt;span style="color: #a31515"&gt;&amp;#39;simple_value     =&amp;#39;&lt;/span&gt;, results.simple_value
+print &lt;span style="color: #a31515"&gt;&amp;#39;constant_value   =&amp;#39;&lt;/span&gt;, results.constant_value
+print &lt;span style="color: #a31515"&gt;&amp;#39;boolean_switch   =&amp;#39;&lt;/span&gt;, results.boolean_switch
+print &lt;span style="color: #a31515"&gt;&amp;#39;collection       =&amp;#39;&lt;/span&gt;, results.collection
+print &lt;span style="color: #a31515"&gt;&amp;#39;const_collection =&amp;#39;&lt;/span&gt;, results.const_collection
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -13090,15 +13090,15 @@ argparse_action.py 1.0
 parser = argparse.ArgumentParser(description=&lt;span style="color: #a31515"&gt;&amp;#39;Change the option prefix charaters&amp;#39;&lt;/span&gt;, 
         prefix_chars=&lt;span style="color: #a31515"&gt;&amp;#39;-+/&amp;#39;&lt;/span&gt;)
 
-parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-a&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_false&amp;quot;&lt;/span&gt;, default=None,
+parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-a&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_false&amp;quot;&lt;/span&gt;, default=&lt;span style="color: #0000ff"&gt;None&lt;/span&gt;,
         help=&lt;span style="color: #a31515"&gt;&amp;#39;Turn A off&amp;#39;&lt;/span&gt;)
 
-parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;+a&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=None,
+parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;+a&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=&lt;span style="color: #0000ff"&gt;None&lt;/span&gt;,
         help=&lt;span style="color: #a31515"&gt;&amp;#39;Turn A on&amp;#39;&lt;/span&gt;)
 
-parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;//noarg&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;++noarg&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=False)
+parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;//noarg&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;++noarg&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=&lt;span style="color: #0000ff"&gt;False&lt;/span&gt;)
 
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; parser.parse_args()
+print parser.parse_args()
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -13146,19 +13146,19 @@ argparse_prefix_chars.py: error: unrecognized arguments: --noarg
 
 parser = argparse.ArgumentParser(description=&lt;span style="color: #a31515"&gt;&amp;#39;Short sample app&amp;#39;&lt;/span&gt;)
 
-parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-a&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=False)
+parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-a&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=&lt;span style="color: #0000ff"&gt;False&lt;/span&gt;)
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-b&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store&amp;quot;&lt;/span&gt;, dest=&lt;span style="color: #a31515"&gt;&amp;quot;b&amp;quot;&lt;/span&gt;)
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-c&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store&amp;quot;&lt;/span&gt;, dest=&lt;span style="color: #a31515"&gt;&amp;quot;c&amp;quot;&lt;/span&gt;, type=int)
 
 config = ConfigParser()
 config.read(&lt;span style="color: #a31515"&gt;&amp;#39;argparse_witH_shlex.ini&amp;#39;&lt;/span&gt;)
 config_value = config.get(&lt;span style="color: #a31515"&gt;&amp;#39;cli&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;options&amp;#39;&lt;/span&gt;)
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;Config: &amp;#39;&lt;/span&gt;, config_value
+print &lt;span style="color: #a31515"&gt;&amp;#39;Config: &amp;#39;&lt;/span&gt;, config_value
 
 argument_list = shlex.split(config_value)
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;Arg List:&amp;#39;&lt;/span&gt;, argument_list
+print &lt;span style="color: #a31515"&gt;&amp;#39;Arg List:&amp;#39;&lt;/span&gt;, argument_list
 
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;Results:&amp;#39;&lt;/span&gt;, parser.parse_args(argument_list)
+print &lt;span style="color: #a31515"&gt;&amp;#39;Results:&amp;#39;&lt;/span&gt;, parser.parse_args(argument_list)
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -13180,11 +13180,11 @@ parser = argparse.ArgumentParser(description=&lt;span style="color: #a31515"&gt;
         fromfile_prefix_chars=&lt;span style="color: #a31515"&gt;&amp;#39;@&amp;#39;&lt;/span&gt;
         )
 
-parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-a&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=False)
+parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-a&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=&lt;span style="color: #0000ff"&gt;False&lt;/span&gt;)
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-b&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store&amp;quot;&lt;/span&gt;, dest=&lt;span style="color: #a31515"&gt;&amp;quot;b&amp;quot;&lt;/span&gt;)
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-c&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store&amp;quot;&lt;/span&gt;, dest=&lt;span style="color: #a31515"&gt;&amp;quot;c&amp;quot;&lt;/span&gt;, type=int)
 
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; parser.parse_args([&lt;span style="color: #a31515"&gt;&amp;#39;@argparse_fromfile_prefix_chars.txt&amp;#39;&lt;/span&gt;])
+print parser.parse_args([&lt;span style="color: #a31515"&gt;&amp;#39;@argparse_fromfile_prefix_chars.txt&amp;#39;&lt;/span&gt;])
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -13207,26 +13207,26 @@ Namespace(a=True, b=&amp;#39;2&amp;#39;, c=None)
 &lt;p&gt;&lt;strong&gt;ArgumentParser&lt;/strong&gt;的参数&lt;em&gt;add_help&lt;/em&gt; 控制帮助信息相关的选项。&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; argparse
 
-parser = argparse.ArgumentParser(add_help=True)
+parser = argparse.ArgumentParser(add_help=&lt;span style="color: #0000ff"&gt;True&lt;/span&gt;)
 
-parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-a&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=False)
+parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-a&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=&lt;span style="color: #0000ff"&gt;False&lt;/span&gt;)
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-b&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store&amp;quot;&lt;/span&gt;, dest=&lt;span style="color: #a31515"&gt;&amp;quot;b&amp;quot;&lt;/span&gt;)
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-c&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store&amp;quot;&lt;/span&gt;, dest=&lt;span style="color: #a31515"&gt;&amp;quot;c&amp;quot;&lt;/span&gt;, type=int)
 
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; parser.parse_args()
+print parser.parse_args()
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;帮助选项（-h和--help）默认是添加的，但可以通过将&lt;em&gt;add_help&lt;/em&gt;设置为false来禁用。&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; argparse
 
-parser = argparse.ArgumentParser(add_help=False)
+parser = argparse.ArgumentParser(add_help=&lt;span style="color: #0000ff"&gt;False&lt;/span&gt;)
 
-parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-a&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=False)
+parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-a&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=&lt;span style="color: #0000ff"&gt;False&lt;/span&gt;)
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-b&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store&amp;quot;&lt;/span&gt;, dest=&lt;span style="color: #a31515"&gt;&amp;quot;b&amp;quot;&lt;/span&gt;)
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-c&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store&amp;quot;&lt;/span&gt;, dest=&lt;span style="color: #a31515"&gt;&amp;quot;c&amp;quot;&lt;/span&gt;, type=int)
 
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; parser.parse_args()
+print parser.parse_args()
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -13253,13 +13253,13 @@ argparse_without_help.py: error: unrecognized arguments: -h
 
 parser = argparse.ArgumentParser(version=&lt;span style="color: #a31515"&gt;&amp;#39;1.0&amp;#39;&lt;/span&gt;)
 
-parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-a&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=False)
+parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-a&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=&lt;span style="color: #0000ff"&gt;False&lt;/span&gt;)
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-b&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store&amp;quot;&lt;/span&gt;, dest=&lt;span style="color: #a31515"&gt;&amp;quot;b&amp;quot;&lt;/span&gt;)
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-c&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store&amp;quot;&lt;/span&gt;, dest=&lt;span style="color: #a31515"&gt;&amp;quot;c&amp;quot;&lt;/span&gt;, type=int)
 
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; parser.parse_args()
+print parser.parse_args()
 
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;This is not printed&amp;#39;&lt;/span&gt;
+print &lt;span style="color: #a31515"&gt;&amp;#39;This is not printed&amp;#39;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -13288,7 +13288,7 @@ $ python argparse_with_version.py -v
 &lt;p&gt;第一步是以共享的参数定义建立“父母”解析器。由于“父母”解析器的后代使用者会添加相同的帮助选项，从而会引发一个异常，所以在基础解析器中我们关闭自动帮助选项生成。&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; argparse
 
-parser = argparse.ArgumentParser(add_help=False)
+parser = argparse.ArgumentParser(add_help=&lt;span style="color: #0000ff"&gt;False&lt;/span&gt;)
 
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--user&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store&amp;quot;&lt;/span&gt;)
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--password&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store&amp;quot;&lt;/span&gt;)
@@ -13301,9 +13301,9 @@ parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--password&amp;#
 
 parser = argparse.ArgumentParser(parents=[argparse_parent_base.parser])
 
-parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--local-arg&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=False)
+parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--local-arg&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=&lt;span style="color: #0000ff"&gt;False&lt;/span&gt;)
 
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; parser.parse_args()
+print parser.parse_args()
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -13331,7 +13331,7 @@ parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-a&amp;#39;&lt;/
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-b&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store&amp;quot;&lt;/span&gt;, help=&lt;span style="color: #a31515"&gt;&amp;quot;Short alone&amp;quot;&lt;/span&gt;)
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--long-b&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;-b&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store&amp;quot;&lt;/span&gt;, help=&lt;span style="color: #a31515"&gt;&amp;quot;Long and short together&amp;quot;&lt;/span&gt;)
 
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; parser.parse_args([&lt;span style="color: #a31515"&gt;&amp;#39;-h&amp;#39;&lt;/span&gt;])
+print parser.parse_args([&lt;span style="color: #a31515"&gt;&amp;#39;-h&amp;#39;&lt;/span&gt;])
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -13357,7 +13357,7 @@ parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-a&amp;#39;&lt;/
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--long-b&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;-b&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store&amp;quot;&lt;/span&gt;, help=&lt;span style="color: #a31515"&gt;&amp;#39;Long and short together&amp;#39;&lt;/span&gt;)
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-b&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store&amp;quot;&lt;/span&gt;, help=&lt;span style="color: #a31515"&gt;&amp;#39;Short alone&amp;#39;&lt;/span&gt;)
 
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; parser.parse_args([-h])
+print parser.parse_args([-h])
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -13380,10 +13380,10 @@ optional arguments:
 
 parser = argparse.ArgumentParser(description=&lt;span style="color: #a31515"&gt;&amp;#39;Short sample app&amp;#39;&lt;/span&gt;)
 
-parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--optional&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=False)
+parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--optional&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=&lt;span style="color: #0000ff"&gt;False&lt;/span&gt;)
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;positional&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store&amp;quot;&lt;/span&gt;)
 
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; parser.parse_args()
+print parser.parse_args()
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -13407,7 +13407,7 @@ optional arguments:
 &lt;p&gt;在基础解析器中使用&lt;strong&gt;add_argument_group()&lt;/strong&gt;来创建一个“身份认证”群组，然后逐个添加身份认证相关的选项到该群组。&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; argparse
 
-parser = argparser.ArgumentParser(add_help=False)
+parser = argparser.ArgumentParser(add_help=&lt;span style="color: #0000ff"&gt;False&lt;/span&gt;)
 
 group = parser.add_argument_group(&lt;span style="color: #a31515"&gt;&amp;#39;authentication&amp;#39;&lt;/span&gt;)
 
@@ -13422,9 +13422,9 @@ group.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--password&amp;#3
 
 parser = argparse.ArgumentParser(parents=[argparse_parent_with_group.parser])
 
-parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--local-arg&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=False)
+parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--local-arg&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;, default=&lt;span style="color: #0000ff"&gt;False&lt;/span&gt;)
 
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; parser.parse_args()
+print parser.parse_args()
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -13453,7 +13453,7 @@ group = parser.add_mutually_exclusive_group()
 group.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-a&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;#39;store_true&amp;#39;&lt;/span&gt;)
 group.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-b&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;quot;store_true&amp;quot;&lt;/span&gt;)
 
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; parser.parse_args()
+print parser.parse_args()
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -13498,16 +13498,16 @@ list_parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;dirname&amp
 &lt;span style="color: #008000"&gt;# A create command&lt;/span&gt;
 create_parser = subparsers.add_parser(&lt;span style="color: #a31515"&gt;&amp;#39;create&amp;#39;&lt;/span&gt;, help=&lt;span style="color: #a31515"&gt;&amp;#39;Create a directory&amp;#39;&lt;/span&gt;)
 create_parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;dirname&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;#39;store&amp;#39;&lt;/span&gt;, help=&lt;span style="color: #a31515"&gt;&amp;#39;New directory to create&amp;#39;&lt;/span&gt;)
-create_parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--read-only&amp;#39;&lt;/span&gt;, default=False, action=&lt;span style="color: #a31515"&gt;&amp;#39;store_true&amp;#39;&lt;/span&gt;,
+create_parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--read-only&amp;#39;&lt;/span&gt;, default=&lt;span style="color: #0000ff"&gt;False&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;#39;store_true&amp;#39;&lt;/span&gt;,
         help=&lt;span style="color: #a31515"&gt;&amp;#39;Set permissions to prevent writing to the directory&amp;#39;&lt;/span&gt;)
 
 &lt;span style="color: #008000"&gt;# A delete command&lt;/span&gt;
 delete_parser = subparsers.add_parser(&lt;span style="color: #a31515"&gt;&amp;#39;delete&amp;#39;&lt;/span&gt;, help=&lt;span style="color: #a31515"&gt;&amp;#39;Remove a directory&amp;#39;&lt;/span&gt;)
 delete_parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;dirname&amp;#39;&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;#39;store&amp;#39;&lt;/span&gt;, help=&lt;span style="color: #a31515"&gt;&amp;#39;The directory to remove&amp;#39;&lt;/span&gt;)
-delete_parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--recursive&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;-r&amp;#39;&lt;/span&gt;, default=False, action=&lt;span style="color: #a31515"&gt;&amp;#39;store_true&amp;#39;&lt;/span&gt;,
+delete_parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--recursive&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;-r&amp;#39;&lt;/span&gt;, default=&lt;span style="color: #0000ff"&gt;False&lt;/span&gt;, action=&lt;span style="color: #a31515"&gt;&amp;#39;store_true&amp;#39;&lt;/span&gt;,
         help=&lt;span style="color: #a31515"&gt;&amp;#39;Remove the contents of the directory, too&amp;#39;&lt;/span&gt;)
 
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; parser.parse_args()
+print parser.parse_args()
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -13570,7 +13570,7 @@ parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--optional&amp;#
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--all&amp;#39;&lt;/span&gt;, nargs=&lt;span style="color: #a31515"&gt;&amp;#39;*&amp;#39;&lt;/span&gt;, dest=&lt;span style="color: #a31515"&gt;&amp;#39;all&amp;#39;&lt;/span&gt;)
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--one-or-more&amp;#39;&lt;/span&gt;, nargs=&lt;span style="color: #a31515"&gt;&amp;#39;+&amp;#39;&lt;/span&gt;)
 
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; parser.parse_args()
+print parser.parse_args()
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -13643,7 +13643,7 @@ parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-f&amp;#39;&lt;/
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--file&amp;#39;&lt;/span&gt;, type=file)
 
 &lt;span style="color: #0000ff"&gt;try&lt;/span&gt;:
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; parser.parse_args()
+    print parser.parse_args()
 &lt;span style="color: #0000ff"&gt;except&lt;/span&gt; IOError, msg:
     parser.error(str(msg))
 &lt;/pre&gt;&lt;/div&gt;
@@ -13689,7 +13689,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;--mode&amp;#39;&lt;/span&gt;, choices=(&lt;span style="color: #a31515"&gt;&amp;#39;read-only&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;read-write&amp;#39;&lt;/span&gt;))
 
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; parser.parse_args()
+print parser.parse_args()
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -13725,8 +13725,8 @@ parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-o&amp;#39;&lt;/
 
 &lt;span style="color: #0000ff"&gt;try&lt;/span&gt;:
     results = parser.parse_args()
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;Input file:&amp;#39;&lt;/span&gt;, results.i
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;Output file:&amp;#39;&lt;/span&gt;, results.o
+    print &lt;span style="color: #a31515"&gt;&amp;#39;Input file:&amp;#39;&lt;/span&gt;, results.i
+    print &lt;span style="color: #a31515"&gt;&amp;#39;Output file:&amp;#39;&lt;/span&gt;, results.o
 &lt;span style="color: #0000ff"&gt;except&lt;/span&gt; IOError, msg:
     parser.error(str(msg))
 &lt;/pre&gt;&lt;/div&gt;
@@ -13764,14 +13764,14 @@ argparse_FileType.py: error: argument -i: can&amp;#39;t open &amp;#39;no_such_fi
     &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; __init__(self,
             option_strings,
             dest,
-            nargs=None,
-            const=None,
-            default=None,
-            type=None,
-            choices=None,
-            required=False,
-            help=None,
-            metavar=None):
+            nargs=&lt;span style="color: #0000ff"&gt;None&lt;/span&gt;,
+            const=&lt;span style="color: #0000ff"&gt;None&lt;/span&gt;,
+            default=&lt;span style="color: #0000ff"&gt;None&lt;/span&gt;,
+            type=&lt;span style="color: #0000ff"&gt;None&lt;/span&gt;,
+            choices=&lt;span style="color: #0000ff"&gt;None&lt;/span&gt;,
+            required=&lt;span style="color: #0000ff"&gt;False&lt;/span&gt;,
+            help=&lt;span style="color: #0000ff"&gt;None&lt;/span&gt;,
+            metavar=&lt;span style="color: #0000ff"&gt;None&lt;/span&gt;):
         argparse.Action.__init__(self,
                 option_strings=option_strings,
                 dest=dest,
@@ -13783,20 +13783,20 @@ argparse_FileType.py: error: argument -i: can&amp;#39;t open &amp;#39;no_such_fi
                 required=required,
                 help=help,
                 metavar=metavar)
-        &lt;span style="color: #0000ff"&gt;print&lt;/span&gt;
-        &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;Initializing CustomAction&amp;#39;&lt;/span&gt;
+        print
+        print &lt;span style="color: #a31515"&gt;&amp;#39;Initializing CustomAction&amp;#39;&lt;/span&gt;
         &lt;span style="color: #0000ff"&gt;for&lt;/span&gt; name,value &lt;span style="color: #0000ff"&gt;in&lt;/span&gt; sorted(locals().items()):
-            &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; name == &lt;span style="color: #a31515"&gt;&amp;#39;self&amp;#39;&lt;/span&gt; &lt;span style="color: #0000ff"&gt;or&lt;/span&gt; value &lt;span style="color: #0000ff"&gt;is&lt;/span&gt; None:
+            &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; name == &lt;span style="color: #a31515"&gt;&amp;#39;self&amp;#39;&lt;/span&gt; &lt;span style="color: #0000ff"&gt;or&lt;/span&gt; value &lt;span style="color: #0000ff"&gt;is&lt;/span&gt; &lt;span style="color: #0000ff"&gt;None&lt;/span&gt;:
                 &lt;span style="color: #0000ff"&gt;continue&lt;/span&gt;
-            &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;  %s = %r&amp;#39;&lt;/span&gt; % (name, value)
+            print &lt;span style="color: #a31515"&gt;&amp;#39;  %s = %r&amp;#39;&lt;/span&gt; % (name, value)
         &lt;span style="color: #0000ff"&gt;return&lt;/span&gt;
 
-    &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; __call__(self, parser, namespace, values, option_string=None):
-        &lt;span style="color: #0000ff"&gt;print&lt;/span&gt;
-        &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;Processing CustomAction for &amp;quot;%s&amp;quot;&amp;#39;&lt;/span&gt; % self.dest
-        &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;  parser = %s&amp;#39;&lt;/span&gt; % id(parser)
-        &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;  values = %r&amp;#39;&lt;/span&gt; % values
-        &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;  option_string = %r&amp;#39;&lt;/span&gt; % option_string
+    &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; __call__(self, parser, namespace, values, option_string=&lt;span style="color: #0000ff"&gt;None&lt;/span&gt;):
+        print
+        print &lt;span style="color: #a31515"&gt;&amp;#39;Processing CustomAction for &amp;quot;%s&amp;quot;&amp;#39;&lt;/span&gt; % self.dest
+        print &lt;span style="color: #a31515"&gt;&amp;#39;  parser = %s&amp;#39;&lt;/span&gt; % id(parser)
+        print &lt;span style="color: #a31515"&gt;&amp;#39;  values = %r&amp;#39;&lt;/span&gt; % values
+        print &lt;span style="color: #a31515"&gt;&amp;#39;  option_string = %r&amp;#39;&lt;/span&gt; % option_string
 
         &lt;span style="color: #008000"&gt;# Do some arbitrary processing of the input values&lt;/span&gt;
         &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; isinstance(values, list):
@@ -13814,8 +13814,8 @@ parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;-m&amp;#39;&lt;/
 parser.add_argument(&lt;span style="color: #a31515"&gt;&amp;#39;positional&amp;#39;&lt;/span&gt;, action=CustomAction)
 
 results = parser.parse_args([&lt;span style="color: #a31515"&gt;&amp;#39;-a&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;value&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;-m&amp;#39;&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;multi-value&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;positional-value&amp;#39;&lt;/span&gt;])
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt;
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; results
+print
+print results
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -15440,7 +15440,7 @@ s2 = &lt;span style="color: #a31515"&gt;&amp;quot; {1} is better than {0} &amp;q
 &lt;p&gt;Python2.6之前，格式字符串的使用方法相对更简单些，虽然其能够接收的参数数量有限制。这些方法在Python3.3中仍然有效，但已有含蓄的警告称将完全淘汰这些方法，目前还没有明确的时间进度表。[&lt;a href="http://www.python.org/dev/peps/pep-3101/"&gt;PEP-3101&lt;/a&gt;]&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;格式化浮点数：&lt;/strong&gt;&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;pi = 3.14159
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt;(&lt;span style="color: #a31515"&gt;&amp;quot; pi = %1.2f &amp;quot;&lt;/span&gt;, % pi)
+print(&lt;span style="color: #a31515"&gt;&amp;quot; pi = %1.2f &amp;quot;&lt;/span&gt;, % pi)
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -15481,7 +15481,7 @@ string"，因为我数错了替换变量的数量，编写如下这样的代码�
 
 &lt;p&gt;&lt;strong&gt;将数值转换为不同的进制&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;可以使用如下字母来将数字转换成字母代表的进制，&lt;strong&gt;d&lt;/strong&gt;ecimal，he&lt;strong&gt;x&lt;/strong&gt;，&lt;strong&gt;o&lt;/strong&gt;ctal, &lt;strong&gt;b&lt;/strong&gt;inary。&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;print&lt;/span&gt;(&lt;span style="color: #a31515"&gt;&amp;quot;{0:d} - {0:x} - {0:o} - {0:b} &amp;quot;&lt;/span&gt;.format(21))
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;print(&lt;span style="color: #a31515"&gt;&amp;quot;{0:d} - {0:x} - {0:o} - {0:b} &amp;quot;&lt;/span&gt;.format(21))
 &amp;gt;&amp;gt;&amp;gt; 21 - 15 - 25 -10101
 &lt;/pre&gt;&lt;/div&gt;
 
@@ -15492,7 +15492,7 @@ string"，因为我数错了替换变量的数量，编写如下这样的代码�
 email_f = &lt;span style="color: #a31515"&gt;&amp;quot;Your email address was {email}&amp;quot;&lt;/span&gt;.format
 
 &lt;span style="color: #008000"&gt;### 在另一个地方使用&lt;/span&gt;
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt;(email_f(email=&lt;span style="color: #a31515"&gt;&amp;quot;bob@example.com&amp;quot;&lt;/span&gt;))
+print(email_f(email=&lt;span style="color: #a31515"&gt;&amp;quot;bob@example.com&amp;quot;&lt;/span&gt;))
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -15501,7 +15501,7 @@ email_f = &lt;span style="color: #a31515"&gt;&amp;quot;Your email address was {e
 &lt;h2&gt;其他技巧&lt;/h2&gt;
 &lt;p&gt;&lt;strong&gt;转义大括号&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;使用str.format()时，若你需要使用大括号，只要写两次就可以了：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;print&lt;/span&gt;(&lt;span style="color: #a31515"&gt;&amp;quot; The {} set is often represented as { {0} } &amp;quot;&lt;/span&gt;.format(&lt;span style="color: #a31515"&gt;&amp;quot;empty&amp;quot;&lt;/span&gt;))
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;print(&lt;span style="color: #a31515"&gt;&amp;quot; The {} set is often represented as { {0} } &amp;quot;&lt;/span&gt;.format(&lt;span style="color: #a31515"&gt;&amp;quot;empty&amp;quot;&lt;/span&gt;))
 &amp;gt;&amp;gt;&amp;gt; The empty set &lt;span style="color: #0000ff"&gt;is&lt;/span&gt; often represented &lt;span style="color: #0000ff"&gt;as&lt;/span&gt; {0}
 &lt;/pre&gt;&lt;/div&gt;
 
@@ -15980,7 +15980,7 @@ git push origin HEAD --force              &lt;span style="color: #008000"&gt;# �
 &lt;h2&gt;函数是一等对象&lt;/h2&gt;
 &lt;p&gt;Python中，所有东西都是对象。这意味着可以通过名字引用函数，以及像其他对象那样传递。例如：&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;def&lt;/span&gt; traveling_function():
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;Here I am!&amp;quot;&lt;/span&gt;
+    print &lt;span style="color: #a31515"&gt;&amp;quot;Here I am!&amp;quot;&lt;/span&gt;
 
 function_dict = {
     &lt;span style="color: #a31515"&gt;&amp;quot;func&amp;quot;&lt;/span&gt;: traveling_function
@@ -16004,7 +16004,7 @@ trav_func()
 &lt;h2&gt;函数是一等对象&lt;/h2&gt;
 &lt;p&gt;Python中，所有东西都是对象。这意味着可以通过名字引用函数，以及像其他对象那样传递。例如：&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;def&lt;/span&gt; traveling_function():
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;Here I am!&amp;quot;&lt;/span&gt;
+    print &lt;span style="color: #a31515"&gt;&amp;quot;Here I am!&amp;quot;&lt;/span&gt;
 
 function_dict = {
     &lt;span style="color: #a31515"&gt;&amp;quot;func&amp;quot;&lt;/span&gt;: traveling_function
@@ -16023,7 +16023,7 @@ trav_func()
     &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;I&amp;#39;m an amazing function!&amp;quot;&lt;/span&gt;
 
 &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; printer(func):
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;The function passed to me says: &amp;quot;&lt;/span&gt; + func()
+    print &lt;span style="color: #a31515"&gt;&amp;quot;The function passed to me says: &amp;quot;&lt;/span&gt; + func()
 
 &lt;span style="color: #008000"&gt;# Call `printer` and give it `self_absorbed_function` as an argument&lt;/span&gt;
 printer(self_absorbed_function)
@@ -16040,7 +16040,7 @@ printer(self_absorbed_function)
     &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; wrapper
 
 &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; a_function():
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;I&amp;#39;m a normal function.&amp;quot;&lt;/span&gt;
+    print &lt;span style="color: #a31515"&gt;&amp;quot;I&amp;#39;m a normal function.&amp;quot;&lt;/span&gt;
 
 &lt;span style="color: #008000"&gt;# `decorated_function` 是 `identity_function` 返回的函数，也就是嵌套函数 `wrapper`&lt;/span&gt;
 decorated_function = identity_function(a_function)
@@ -16066,13 +16066,13 @@ decorated_function()
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;def&lt;/span&gt; logging_decorator(func):
     &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; wrapper():
         wrapper.count += 1
-        &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;The function I modify has been called {0} time(s)&amp;quot;&lt;/span&gt;.format(wrapper.count)
+        print &lt;span style="color: #a31515"&gt;&amp;quot;The function I modify has been called {0} time(s)&amp;quot;&lt;/span&gt;.format(wrapper.count)
         func()
     wrapper.count = 0
     &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; wrapper
 
 &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; a_function():
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;I&amp;#39;m a normal function.&amp;quot;&lt;/span&gt;
+    print &lt;span style="color: #a31515"&gt;&amp;quot;I&amp;#39;m a normal function.&amp;quot;&lt;/span&gt;
 
 modified_function = logging_decorator(a_function)
 
@@ -16097,7 +16097,7 @@ modified_function()
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #008000"&gt;# In the previous example, we used our decorator function by passing the&lt;/span&gt;
 &lt;span style="color: #008000"&gt;# function we wanted to modify to it, and assigning the result to a variable&lt;/span&gt;
 &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; some_function():
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;I&amp;#39;m happiest when decorated.&amp;quot;&lt;/span&gt;
+    print &lt;span style="color: #a31515"&gt;&amp;quot;I&amp;#39;m happiest when decorated.&amp;quot;&lt;/span&gt;
 
 &lt;span style="color: #008000"&gt;# Here we will make the assigned variable the same name as the wrapped function&lt;/span&gt;
 some_function = logging_decorator(some_function)
@@ -16109,7 +16109,7 @@ some_function = logging_decorator(some_function)
 
 @logging_decorator
 &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; some_function():
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;I&amp;#39;m happiest when decorated&amp;quot;&lt;/span&gt;
+    print &lt;span style="color: #a31515"&gt;&amp;quot;I&amp;#39;m happiest when decorated&amp;quot;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -16139,22 +16139,22 @@ some_function = logging_decorator(some_function)
 &lt;/ul&gt;
 &lt;hr&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;def&lt;/span&gt; function_with_many_arguments(*args):
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; args
+    print args
 
 &lt;span style="color: #008000"&gt;# `args` within the function will be a tuple of any arguments we pass&lt;/span&gt;
 &lt;span style="color: #008000"&gt;# which can be used within the function like any other tuple&lt;/span&gt;
-function_with_many_arguments(&lt;span style="color: #a31515"&gt;&amp;#39;hello&amp;#39;&lt;/span&gt;, 123, True)
+function_with_many_arguments(&lt;span style="color: #a31515"&gt;&amp;#39;hello&amp;#39;&lt;/span&gt;, 123, &lt;span style="color: #0000ff"&gt;True&lt;/span&gt;)
 &lt;span style="color: #008000"&gt;# &amp;gt;&amp;gt;&amp;gt; (&amp;#39;hello&amp;#39;, 123, True)&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;hr&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;def&lt;/span&gt; function_with_3_parameters(num, boolean, string):
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;num is &amp;quot;&lt;/span&gt; + str(num)
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;boolean is &amp;quot;&lt;/span&gt; + str(boolean)
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;string is &amp;quot;&lt;/span&gt; + string
+    print &lt;span style="color: #a31515"&gt;&amp;quot;num is &amp;quot;&lt;/span&gt; + str(num)
+    print &lt;span style="color: #a31515"&gt;&amp;quot;boolean is &amp;quot;&lt;/span&gt; + str(boolean)
+    print &lt;span style="color: #a31515"&gt;&amp;quot;string is &amp;quot;&lt;/span&gt; + string
 
-arg_list = [1, False, &lt;span style="color: #a31515"&gt;&amp;#39;decorators&amp;#39;&lt;/span&gt;]
+arg_list = [1, &lt;span style="color: #0000ff"&gt;False&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;decorators&amp;#39;&lt;/span&gt;]
 
 &lt;span style="color: #008000"&gt;# arg_list will be expanded into 3 positional arguments by the `*` symbol&lt;/span&gt;
 function_with_3_parameters(*arg_list)
@@ -16171,7 +16171,7 @@ function_with_3_parameters(*arg_list)
 &lt;/ul&gt;
 &lt;hr&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;def&lt;/span&gt; funtion_with_many_keyword_args(**kwargs):
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; kwargs
+    print kwargs
 
 function_with_many_keyword_args(a=&lt;span style="color: #a31515"&gt;&amp;#39;apples&amp;#39;&lt;/span&gt;, b=&lt;span style="color: #a31515"&gt;&amp;#39;bananas&amp;#39;&lt;/span&gt;, c=&lt;span style="color: #a31515"&gt;&amp;#39;cantalopes&amp;#39;&lt;/span&gt;)
 &lt;span style="color: #008000"&gt;# &amp;gt;&amp;gt; {&amp;#39;a&amp;#39;:&amp;#39;apples&amp;#39;, &amp;#39;b&amp;#39;:&amp;#39;bananas&amp;#39;, &amp;#39;c&amp;#39;:&amp;#39;cantalopes&amp;#39;}&lt;/span&gt;
@@ -16180,7 +16180,7 @@ function_with_many_keyword_args(a=&lt;span style="color: #a31515"&gt;&amp;#39;ap
 
 &lt;hr&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;def&lt;/span&gt; multiply_name(count=0, name=&lt;span style="color: #a31515"&gt;&amp;#39;&amp;#39;&lt;/span&gt;):
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; name * count
+    print name * count
 
 arg_dict = {&lt;span style="color: #a31515"&gt;&amp;#39;count&amp;#39;&lt;/span&gt;: 3, &lt;span style="color: #a31515"&gt;&amp;#39;name&amp;#39;&lt;/span&gt;: &lt;span style="color: #a31515"&gt;&amp;#39;Brian&amp;#39;&lt;/span&gt;}
 
@@ -16232,7 +16232,7 @@ multiply_name(**arg_dict)
 
 brian = Person()
 
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt; brian.foo
+print brian.foo
 &lt;span style="color: #008000"&gt;# &amp;gt;&amp;gt; [&amp;#39;important&amp;#39;, &amp;#39;foo&amp;#39;, &amp;#39;stuff&amp;#39;]&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
@@ -16254,7 +16254,7 @@ brian = Person()
 
 @IdentityDecorator
 &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; a_function():
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;I&amp;#39;m a normal function.&amp;quot;&lt;/span&gt;
+    print &lt;span style="color: #a31515"&gt;&amp;quot;I&amp;#39;m a normal function.&amp;quot;&lt;/span&gt;
 
 a_function()
 &lt;span style="color: #008000"&gt;# &amp;gt;&amp;gt; I&amp;#39;m a normal function.&lt;/span&gt;
@@ -16285,14 +16285,14 @@ a_function()
     &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; func_wrapper(func):
         @wraps(func)
         &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; returned_wrapper(*args, **kwargs):
-             &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;I don&amp;#39;t like this &amp;quot;&lt;/span&gt; + gift + &lt;span style="color: #a31515"&gt;&amp;quot;you gave me!&amp;quot;&lt;/span&gt;
+             print &lt;span style="color: #a31515"&gt;&amp;quot;I don&amp;#39;t like this &amp;quot;&lt;/span&gt; + gift + &lt;span style="color: #a31515"&gt;&amp;quot;you gave me!&amp;quot;&lt;/span&gt;
              &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; func(gift, *args, **kwargs)
         &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; returned_wrapper
     &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; func_wrapper
 
 @argumentative_decorator(&lt;span style="color: #a31515"&gt;&amp;quot;sweater&amp;quot;&lt;/span&gt;)
 &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; grateful_function(gift):
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;I love the &amp;quot;&lt;/span&gt; + gift + &lt;span style="color: #a31515"&gt;&amp;quot;!Thank you!&amp;quot;&lt;/span&gt;
+    print &lt;span style="color: #a31515"&gt;&amp;quot;I love the &amp;quot;&lt;/span&gt; + gift + &lt;span style="color: #a31515"&gt;&amp;quot;!Thank you!&amp;quot;&lt;/span&gt;
 
 grateful_function()
 &lt;span style="color: #008000"&gt;# &amp;gt;&amp;gt; I don&amp;#39;t like this sweater you gave me!&lt;/span&gt;
@@ -16324,11 +16324,11 @@ grateful_function = argumentative_decorator(&lt;span style="color: #a31515"&gt;&
 
 GLOBAL_NAME = &lt;span style="color: #a31515"&gt;&amp;quot;Brian&amp;quot;&lt;/span&gt;
 
-&lt;span style="color: #0000ff"&gt;def&lt;/span&gt; print_name(function=None, name=GLOBAL_NAME):
+&lt;span style="color: #0000ff"&gt;def&lt;/span&gt; print_name(function=&lt;span style="color: #0000ff"&gt;None&lt;/span&gt;, name=GLOBAL_NAME):
     &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; actual_decorator(function):
         @wraps(function)
         &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; returned_func(*args, **kwargs):
-            &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;My name is &amp;quot;&lt;/span&gt; + name
+            print &lt;span style="color: #a31515"&gt;&amp;quot;My name is &amp;quot;&lt;/span&gt; + name
             &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; function(*args, **kwargs)
         &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; returned_func
 
@@ -16342,11 +16342,11 @@ GLOBAL_NAME = &lt;span style="color: #a31515"&gt;&amp;quot;Brian&amp;quot;&lt;/s
 
 @print_name
 &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; a_function():
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;I like the name!&amp;quot;&lt;/span&gt;
+    print &lt;span style="color: #a31515"&gt;&amp;quot;I like the name!&amp;quot;&lt;/span&gt;
 
 @print_name(name=&lt;span style="color: #a31515"&gt;&amp;#39;Matt&amp;#39;&lt;/span&gt;)
 &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; another_function():
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;Hey, that&amp;#39;s new!&amp;quot;&lt;/span&gt;
+    print &lt;span style="color: #a31515"&gt;&amp;quot;Hey, that&amp;#39;s new!&amp;quot;&lt;/span&gt;
 
 a_function()
 &lt;span style="color: #008000"&gt;# &amp;gt;&amp;gt; My name is Brian&lt;/span&gt;
@@ -16371,7 +16371,7 @@ another_function()
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;@print_name(&lt;span style="color: #a31515"&gt;&amp;#39;Sam&amp;#39;&lt;/span&gt;)
 @logging_decorator
 &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; some_function():
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;I&amp;#39;m the wrapped function!&amp;quot;&lt;/span&gt;
+    print &lt;span style="color: #a31515"&gt;&amp;quot;I&amp;#39;m the wrapped function!&amp;quot;&lt;/span&gt;
 
 some_function()
 &lt;span style="color: #008000"&gt;# &amp;gt;&amp;gt; My name is Sam&lt;/span&gt;
@@ -16922,13 +16922,13 @@ TCP与UDP的区别？UDP主要用于哪些方面？TCP连接3次握手，断开�
 &lt;/pre&gt;&lt;/div&gt;</content><category term="Linux"></category><category term="命令行"></category><category term="工具"></category></entry><entry><title>2012校招-sonicWALL的两道编程笔试题</title><link href="http://youngsterxyf.github.io/2012/12/05/sonicWALL-exam/" rel="alternate"></link><published>2012-12-05T00:00:00+08:00</published><updated>2012-12-05T00:00:00+08:00</updated><author><name>youngsterxyf</name></author><id>tag:youngsterxyf.github.io,2012-12-05:/2012/12/05/sonicWALL-exam/</id><summary type="html">&lt;h2&gt;求二叉树中两个结点的最近公共祖先&lt;/h2&gt;
 &lt;p&gt;比如：对于树&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;         A
-       /
-      B
-    /   &lt;span style="border: 1px solid #FF0000"&gt;\&lt;/span&gt;
-   &lt;span style="color: #0000ff"&gt;C&lt;/span&gt;     D
- /   &lt;span style="border: 1px solid #FF0000"&gt;\&lt;/span&gt;
-E     F
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="border: 1px solid #FF0000"&gt;         A&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;       /&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;      B&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;    /   \&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;   C     D&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt; /   \&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;E     F&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -16949,13 +16949,13 @@ E     F
     &lt;span style="color: #0000ff"&gt;if …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</summary><content type="html">&lt;h2&gt;求二叉树中两个结点的最近公共祖先&lt;/h2&gt;
 &lt;p&gt;比如：对于树&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;         A
-       /
-      B
-    /   &lt;span style="border: 1px solid #FF0000"&gt;\&lt;/span&gt;
-   &lt;span style="color: #0000ff"&gt;C&lt;/span&gt;     D
- /   &lt;span style="border: 1px solid #FF0000"&gt;\&lt;/span&gt;
-E     F
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="border: 1px solid #FF0000"&gt;         A&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;       /&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;      B&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;    /   \&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;   C     D&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt; /   \&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;E     F&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -17350,7 +17350,7 @@ src[2]=&lt;span style="color: #a31515"&gt;&amp;#39;/var/www/apps/website3.com/we
     &lt;span style="color: #0000ff"&gt;for&lt;/span&gt; t &lt;span style="color: #0000ff"&gt;in&lt;/span&gt; threads:
         t.join()
 
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;pi: &amp;#39;&lt;/span&gt;, 4.0 * allcount / task_all_num
+    print &lt;span style="color: #a31515"&gt;&amp;#39;pi: &amp;#39;&lt;/span&gt;, 4.0 * allcount / task_all_num
 
 &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; __name__ == &lt;span style="color: #a31515"&gt;&amp;#39;__main__&amp;#39;&lt;/span&gt;:
 
@@ -17564,7 +17564,7 @@ src[2]=&lt;span style="color: #a31515"&gt;&amp;#39;/var/www/apps/website3.com/we
 f = fibonacci()
 n = 100
 &lt;span style="color: #0000ff"&gt;for&lt;/span&gt; i &lt;span style="color: #0000ff"&gt;in&lt;/span&gt; range(n+1):
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt;(next(f)
+    print(next(f)
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -17672,15 +17672,15 @@ fibonacci_matrix = numpy.matrix([1,1],[1,0], dtype=numpy.ndarray)
 &lt;p&gt;&lt;strong&gt;代码实现&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;冒泡排序---Python&lt;/em&gt;:&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;def&lt;/span&gt; bubbleSort(L):
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;start bubble sort:&amp;#39;&lt;/span&gt;
-    &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; L
+    print &lt;span style="color: #a31515"&gt;&amp;#39;start bubble sort:&amp;#39;&lt;/span&gt;
+    print L
     count = 0
-    &lt;span style="color: #0000ff"&gt;while&lt;/span&gt; True:
+    &lt;span style="color: #0000ff"&gt;while&lt;/span&gt; &lt;span style="color: #0000ff"&gt;True&lt;/span&gt;:
         step = 0
         &lt;span style="color: #0000ff"&gt;for&lt;/span&gt; i &lt;span style="color: #0000ff"&gt;in&lt;/span&gt; range(len(L)-1):
             &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; L[i] &amp;gt; L[i+1]:
                 L[i], L[i+1] = L[i+1], L[i]
-                &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; L
+                print L
                 step += 1
                 count += 1
         &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; step == 0:
@@ -18108,7 +18108,7 @@ fib = memoize(fib)
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;def&lt;/span&gt; make_verbose(fn):
     &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; verbose(*args):
         &lt;span style="color: #008000"&gt;# will print (e.g.) fib(5)&lt;/span&gt;
-        &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;#39;%s(%s)&amp;#39;&lt;/span&gt; % (fb.__name__, &lt;span style="color: #a31515"&gt;&amp;#39;, &amp;#39;&lt;/span&gt;.join(repr(arg) &lt;span style="color: #0000ff"&gt;for&lt;/span&gt; arg &lt;span style="color: #0000ff"&gt;in&lt;/span&gt; args))
+        print &lt;span style="color: #a31515"&gt;&amp;#39;%s(%s)&amp;#39;&lt;/span&gt; % (fb.__name__, &lt;span style="color: #a31515"&gt;&amp;#39;, &amp;#39;&lt;/span&gt;.join(repr(arg) &lt;span style="color: #0000ff"&gt;for&lt;/span&gt; arg &lt;span style="color: #0000ff"&gt;in&lt;/span&gt; args))
         &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; fn(*args)   &lt;span style="color: #008000"&gt;# actually call the decorated function&lt;/span&gt;
 
     &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; verbose
@@ -18645,15 +18645,15 @@ type_call(PyTypeObject *type, PyObject *args, PyObject *kwds)
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;class&lt;/span&gt; &lt;span style="color: #2b91af"&gt;Joe&lt;/span&gt;:
     &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; __new__(cls, *args, **kwargs):
         obj = super(Joe, cls).__new__(cls)
-        &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; (&lt;span style="color: #a31515"&gt;&amp;#39;__new__ called. got new obj id=0x%x&amp;#39;&lt;/span&gt; % id(obj))
+        print (&lt;span style="color: #a31515"&gt;&amp;#39;__new__ called. got new obj id=0x%x&amp;#39;&lt;/span&gt; % id(obj))
         &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; obj
 
     &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; __init__(self, arg):
-        &lt;span style="color: #0000ff"&gt;print&lt;/span&gt; (&lt;span style="color: #a31515"&gt;&amp;#39;__init__ called (self=0x%x) with arg=%s&amp;#39;&lt;/span&gt; % (id(self), arg))
+        print (&lt;span style="color: #a31515"&gt;&amp;#39;__init__ called (self=0x%x) with arg=%s&amp;#39;&lt;/span&gt; % (id(self), arg))
         self.arg=arg
 
 j = Joe(12)
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt;(type(j))
+print(type(j))
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -18668,21 +18668,21 @@ __init__ called (self=0x7f88e7218290) with arg=12
 &lt;p&gt;如上所示，Joe的类型为 &lt;code&gt;type&lt;/code&gt; ，所以调用函数 &lt;code&gt;type_call&lt;/code&gt; 定义Joe实例的创建过程。可以通过为Joe指定一个自定义的类型来改变这个过程---换句话来说，这种自定义的类型就是一个metaclass。让我们修改前面的示例来为Joe指定一个自定义的metaclass：&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;class&lt;/span&gt; &lt;span style="color: #2b91af"&gt;MetaJoe&lt;/span&gt;(type):
     &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; __call__(cls, *args, **kwargs):
-        &lt;span style="color: #0000ff"&gt;print&lt;/span&gt;(&lt;span style="color: #a31515"&gt;&amp;#39;MetaJoe.__call__&amp;#39;&lt;/span&gt;)
-        &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; None
+        print(&lt;span style="color: #a31515"&gt;&amp;#39;MetaJoe.__call__&amp;#39;&lt;/span&gt;)
+        &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; &lt;span style="color: #0000ff"&gt;None&lt;/span&gt;
 
 &lt;span style="color: #0000ff"&gt;class&lt;/span&gt; &lt;span style="color: #2b91af"&gt;Joe&lt;/span&gt;(metaclass=MetaJoe):
     &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; __new__(cls, *args, **kwargs):
         obj = super(Joe, cls).__new__(cls)
-        &lt;span style="color: #0000ff"&gt;print&lt;/span&gt;(&lt;span style="color: #a31515"&gt;&amp;#39;__new__ called. got new obj id=0x%x&amp;#39;&lt;/span&gt; % id(obj))
+        print(&lt;span style="color: #a31515"&gt;&amp;#39;__new__ called. got new obj id=0x%x&amp;#39;&lt;/span&gt; % id(obj))
         &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; obj
 
     &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; __init__(self, arg):
-        &lt;span style="color: #0000ff"&gt;print&lt;/span&gt;(&lt;span style="color: #a31515"&gt;&amp;#39;__init__ called (self=0x%x) with arg=%s&amp;#39;&lt;/span&gt; % (id(self), arg))
+        print(&lt;span style="color: #a31515"&gt;&amp;#39;__init__ called (self=0x%x) with arg=%s&amp;#39;&lt;/span&gt; % (id(self), arg))
         self.arg = arg
 
 j = Joe(12)
-&lt;span style="color: #0000ff"&gt;print&lt;/span&gt;(type(j))
+print(type(j))
 &lt;/pre&gt;&lt;/div&gt;
 
 

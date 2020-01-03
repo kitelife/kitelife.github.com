@@ -131,15 +131,15 @@ type_call(PyTypeObject *type, PyObject *args, PyObject *kwds)
 <div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">class</span> <span style="color: #2b91af">Joe</span>:
     <span style="color: #0000ff">def</span> __new__(cls, *args, **kwargs):
         obj = super(Joe, cls).__new__(cls)
-        <span style="color: #0000ff">print</span> (<span style="color: #a31515">&#39;__new__ called. got new obj id=0x%x&#39;</span> % id(obj))
+        print (<span style="color: #a31515">&#39;__new__ called. got new obj id=0x%x&#39;</span> % id(obj))
         <span style="color: #0000ff">return</span> obj
 
     <span style="color: #0000ff">def</span> __init__(self, arg):
-        <span style="color: #0000ff">print</span> (<span style="color: #a31515">&#39;__init__ called (self=0x%x) with arg=%s&#39;</span> % (id(self), arg))
+        print (<span style="color: #a31515">&#39;__init__ called (self=0x%x) with arg=%s&#39;</span> % (id(self), arg))
         self.arg=arg
 
 j = Joe(12)
-<span style="color: #0000ff">print</span>(type(j))
+print(type(j))
 </pre></div>
 
 
@@ -154,21 +154,21 @@ __init__ called (self=0x7f88e7218290) with arg=12
 <p>如上所示，Joe的类型为 <code>type</code> ，所以调用函数 <code>type_call</code> 定义Joe实例的创建过程。可以通过为Joe指定一个自定义的类型来改变这个过程---换句话来说，这种自定义的类型就是一个metaclass。让我们修改前面的示例来为Joe指定一个自定义的metaclass：</p>
 <div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">class</span> <span style="color: #2b91af">MetaJoe</span>(type):
     <span style="color: #0000ff">def</span> __call__(cls, *args, **kwargs):
-        <span style="color: #0000ff">print</span>(<span style="color: #a31515">&#39;MetaJoe.__call__&#39;</span>)
-        <span style="color: #0000ff">return</span> None
+        print(<span style="color: #a31515">&#39;MetaJoe.__call__&#39;</span>)
+        <span style="color: #0000ff">return</span> <span style="color: #0000ff">None</span>
 
 <span style="color: #0000ff">class</span> <span style="color: #2b91af">Joe</span>(metaclass=MetaJoe):
     <span style="color: #0000ff">def</span> __new__(cls, *args, **kwargs):
         obj = super(Joe, cls).__new__(cls)
-        <span style="color: #0000ff">print</span>(<span style="color: #a31515">&#39;__new__ called. got new obj id=0x%x&#39;</span> % id(obj))
+        print(<span style="color: #a31515">&#39;__new__ called. got new obj id=0x%x&#39;</span> % id(obj))
         <span style="color: #0000ff">return</span> obj
 
     <span style="color: #0000ff">def</span> __init__(self, arg):
-        <span style="color: #0000ff">print</span>(<span style="color: #a31515">&#39;__init__ called (self=0x%x) with arg=%s&#39;</span> % (id(self), arg))
+        print(<span style="color: #a31515">&#39;__init__ called (self=0x%x) with arg=%s&#39;</span> % (id(self), arg))
         self.arg = arg
 
 j = Joe(12)
-<span style="color: #0000ff">print</span>(type(j))
+print(type(j))
 </pre></div>
 
 

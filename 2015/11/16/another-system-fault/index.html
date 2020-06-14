@@ -4,8 +4,8 @@
 
         <title>又一次系统故障</title>
         <meta charset="utf-8" />
-        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑·白 Full Atom Feed" />
-        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑·白 Full RSS Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="有趣的技术 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="有趣的技术 Full RSS Feed" />
 
 
         <!-- Mobile viewport optimized: j.mp/bplateviewport -->
@@ -37,7 +37,7 @@
         <div class="row">
 
           <header id="banner" class="body">
-                  <h1 style='font-family: "SentyZHAO";'><a href="../../../..">黑·白 <strong></strong></a></h1>
+                  <h1 style='font-family: "SentyZHAO";'><a href="../../../..">有趣的技术 <strong></strong></a></h1>
           </header><!-- /#banner -->
 
             <div id="navigation" class="navbar row">
@@ -76,7 +76,7 @@
             </footer><!-- /.post-info -->
             <div class="entry-content">
               <p>上周五早上9点多，我还在上班的路上，接到技术leader的电话：线上突然出故障了；接着发来一张故障信息页面截图：</p>
-<p><img alt="system-fault-err-page" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/system-fault-err-page.png"></p>
+<p><img alt="system-fault-err-page" src="https://i.loli.net/2020/06/14/L4fVgPGAb3Whznr.png"></p>
 <p>截图包含的信息是：数据库中没找到数据表<code>Users</code>。</p>
 <p>但同事检查过数据库，Users数据表是存在的。</p>
 <hr>
@@ -110,7 +110,7 @@
 <p>再来说说这个故障的原因 - 磁盘满。个人认为这个故障原因是比较低级的，可见我们监控运维的缺失。为什么磁盘使用率到了98.88%才告警？大量占用磁盘的日志文件是否可以定期自动清理？后来，我们<strong>将磁盘告警的阈值修改为85%，并且定期删除一段时间之前的日志文件</strong>。</p>
 <p>故障解决之后，我了解到数据库服务器上占用磁盘最多的竟然是<strong>数据库代理服务的日志</strong>。数据库代理服务会将每个网络请求的信息记录在日志中，在网络请求量大时，日志会快速增长 <em>（这样的日志信息除了在故障发生时帮助排查故障，没有其他用处，完全可以定期清除）</em> 。</p>
 <p>那么数据库服务、数据库代理服务是如何部署的呢？前一篇文章给出了一张系统架构图，其中数据库代理服务和数据库服务我们运维的同学实际上是这样部署的：</p>
-<p><img alt="db-proxy-deployment" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/db-proxy-deployment.png"></p>
+<p><img alt="db-proxy-deployment" src="https://i.loli.net/2020/06/14/H1MhZn6Nj52moiR.png"></p>
 <p>这样的部署徒增别人的迷惑，增大故障排除的难度，而且主MySQL与数据库代理服务之间会存在资源竞争，特别是在数据量访问量大的时候。</p>
 <hr>
 <p>导致这种低级故障和部署混乱的原因又是什么呢？- 在我们团队中，运维同事是与另一个业务部门共享的，由于另一个业务部门做的是公司的重点业务，运维同事的KPI是根据它们业务来定，也就是说运维同事在我们这完全是友情支持，又能花多少时间来帮我们做运维呢？</p>

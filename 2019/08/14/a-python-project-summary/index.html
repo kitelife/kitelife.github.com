@@ -4,8 +4,8 @@
 
         <title>一个 Python 小项目的小结</title>
         <meta charset="utf-8" />
-        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑·白 Full Atom Feed" />
-        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑·白 Full RSS Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="有趣的技术 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="有趣的技术 Full RSS Feed" />
 
 
         <!-- Mobile viewport optimized: j.mp/bplateviewport -->
@@ -37,7 +37,7 @@
         <div class="row">
 
           <header id="banner" class="body">
-                  <h1 style='font-family: "SentyZHAO";'><a href="../../../..">黑·白 <strong></strong></a></h1>
+                  <h1 style='font-family: "SentyZHAO";'><a href="../../../..">有趣的技术 <strong></strong></a></h1>
           </header><!-- /#banner -->
 
             <div id="navigation" class="navbar row">
@@ -118,18 +118,18 @@ scheduler.start()
 </pre></div>
 
 
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="border: 1px solid #FF0000"># 注意其中的 --preload 参数</span>
-<span style="border: 1px solid #FF0000">gunicorn --workers=4 --preload --log-level=info --access-logfile=access.log -b 0.0.0.0:8080 wsgi:app</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span># <span style="border: 1px solid #FF0000">注意其中的</span> <span style="color: #008000">--preload 参数</span>
+gunicorn <span style="color: #008000">--workers=4 --preload --log-level=info --access-logfile=access.log -b 0.0.0.0:8080 wsgi:app</span>
 </pre></div>
 
 
 <p>preload 机制简单来说，就是 import app 类所在的模块及其依赖的各个模块（import 过程中会执行其中的语句），然后 fork 出多个进程，每个进程都执行 app.run()。</p>
 <h4>2、实现一些通用方案对异常进行捕获或重试</h4>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">def</span> exception_try(times: int = 3, sleep_then_try_seconds=<span style="color: #0000ff">None</span>):
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">def</span> exception_try(times: int = 3, sleep_then_try_seconds=None):
     <span style="color: #0000ff">def</span> decorator(f):
         <span style="color: #0000ff">def</span> wrapper(*args, **kwargs):
             count = 0
-            exception = <span style="color: #0000ff">None</span>
+            exception = None
             <span style="color: #0000ff">while</span> count &lt; times:
                 <span style="color: #0000ff">try</span>:
                     <span style="color: #0000ff">return</span> f(*args, **kwargs)
@@ -137,7 +137,7 @@ scheduler.start()
                     exception = e
                     count += 1
                     logging.exception(<span style="color: #a31515">&quot;Try {} times&quot;</span>.format(count))
-                    <span style="color: #0000ff">if</span> (sleep_then_try_seconds <span style="color: #0000ff">is</span> <span style="color: #0000ff">not</span> <span style="color: #0000ff">None</span>) <span style="color: #0000ff">and</span> count &lt; times:
+                    <span style="color: #0000ff">if</span> (sleep_then_try_seconds <span style="color: #0000ff">is</span> <span style="color: #0000ff">not</span> None) <span style="color: #0000ff">and</span> count &lt; times:
                         time.sleep(sleep_then_try_seconds)
             <span style="color: #0000ff">raise</span> exception
         <span style="color: #0000ff">return</span> wrapper
@@ -153,14 +153,14 @@ scheduler.start()
 
 <p>这个装饰器方法用于实现异常重试，并且可以指定重试的时间间隔，实际使用下来效果较好。而且也不会因为 <code>try...except</code> 导致大块代码缩进。</p>
 <p><strong>确保数据库连接关闭（其它类似资源也可以这样实现）</strong></p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">def</span> with_db(db: Connection, exception_callback=<span style="color: #0000ff">None</span>):
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">def</span> with_db(db: Connection, exception_callback=None):
     <span style="color: #0000ff">def</span> decorator(f):
         <span style="color: #0000ff">def</span> db_context(*a, **kw):
             <span style="color: #0000ff">try</span>:
                 <span style="color: #0000ff">return</span> f(db, *a, **kw)
             <span style="color: #0000ff">except</span> Exception <span style="color: #0000ff">as</span> e:
                 logging.exception(str(e))
-                <span style="color: #0000ff">if</span> exception_callback <span style="color: #0000ff">is</span> <span style="color: #0000ff">not</span> <span style="color: #0000ff">None</span>:
+                <span style="color: #0000ff">if</span> exception_callback <span style="color: #0000ff">is</span> <span style="color: #0000ff">not</span> None:
                     exception_callback(e)
             <span style="color: #0000ff">finally</span>:
                 <span style="color: #0000ff">try</span>:
@@ -185,12 +185,12 @@ with_db(conf.db.connect())(delete_task_from_job_queue)(task_id)
     <span style="color: #0000ff">def</span> __init__(self, condition_func, timeout_seconds):
         self.condition = condition_func
         self.timeout = timeout_seconds
-        self.begin = <span style="color: #0000ff">None</span>
-        self.timeout_false = <span style="color: #0000ff">True</span>
-        self.cond_true = <span style="color: #0000ff">True</span>
+        self.begin = None
+        self.timeout_false = True
+        self.cond_true = True
 
     <span style="color: #0000ff">def</span> __bool__(self):
-        <span style="color: #0000ff">if</span> self.begin <span style="color: #0000ff">is</span> <span style="color: #0000ff">None</span>:
+        <span style="color: #0000ff">if</span> self.begin <span style="color: #0000ff">is</span> None:
             self.begin = timeit.default_timer()
         self.cond_true = self.condition()
         self.timeout_false = self.timeout &lt;= 0 <span style="color: #0000ff">or</span> (timeit.default_timer() - self.begin) &lt; self.timeout
@@ -206,7 +206,7 @@ with_db(conf.db.connect())(delete_task_from_job_queue)(task_id)
     time.sleep(1)
     service_list = get_service_list()
 <span style="color: #0000ff">if</span> cond.is_timeout():
-    <span style="color: #0000ff">return</span> <span style="color: #0000ff">None</span>, <span style="color: #0000ff">None</span>
+    <span style="color: #0000ff">return</span> None, None
 </pre></div>
 
 

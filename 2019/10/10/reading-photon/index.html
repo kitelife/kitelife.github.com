@@ -4,8 +4,8 @@
 
         <title>读文笔记：Photon - Fault-tolerant and Scalable Joining of Continuous Data Streams</title>
         <meta charset="utf-8" />
-        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑·白 Full Atom Feed" />
-        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑·白 Full RSS Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="有趣的技术 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="有趣的技术 Full RSS Feed" />
 
 
         <!-- Mobile viewport optimized: j.mp/bplateviewport -->
@@ -54,7 +54,7 @@
         <div class="row">
 
           <header id="banner" class="body">
-                  <h1 style='font-family: "SentyZHAO";'><a href="../../../..">黑·白 <strong></strong></a></h1>
+                  <h1 style='font-family: "SentyZHAO";'><a href="../../../..">有趣的技术 <strong></strong></a></h1>
           </header><!-- /#banner -->
 
             <div id="navigation" class="navbar row">
@@ -105,7 +105,7 @@
 <li>对于搜索结果中的广告，用户可能会点击。广告点击会触发一次请求，谷歌的后端服务器将请求重定向到广告主的网站。在重定向之前，谷歌服务器会将点击事件记录到日志中，发送到多个日志数据中心。点击事件日志中包含广告曝光的 query_id，点击事件也会被赋予一个唯一性 ID <em>click_id</em></li>
 </ol>
 <p>计费是在点击之后，但计费所需要的广告出价等信息是在曝光请求中记录的，出于数据敏感性、带宽、请求处理延迟等多方面的考量，计费相关的信息并不会返回到用户客户端，也就是说点击请求中不会包含计费直接相关的信息，需要将 点击日志 和 曝光日志 做一次 join，得到一条完整的上下文日志，才方便做后续计费等处理。</p>
-<p><img alt="" src="media/15709551370322.jpg"></p>
+<p><img alt="" src="https://i.loli.net/2020/06/14/EDOy6VKxeJUcgAW.jpg"></p>
 <p>论文中提了到该系统解决了几个技术挑战点：</p>
 <ol>
 <li>仅处理一次语义（exactly-once semantics）：实际上达到的是 最多处理一次语义 （At most once），也就是绝对不能多算钱，然后尽可能避免少算钱</li>
@@ -124,12 +124,12 @@
 <p>IdRegistry 的角色至关重要，所以将其实现为一个基于 Paxos 协议的分布式系统，根据 CAP 原则，可用性（此处是指<strong>吞吐能力</strong>）受限。解决方案是：</p>
 <p>1、提高单机处理能力：服务端攒批处理，尽可能减少网络往返次数导致的等待（特别是：由于 IdRegistry 是跨地域分布式，部署上节点之间最大延迟是 100ms 左右）</p>
 <p>2、分片（Sharding）：根据 click_id 进行分片，但如果是固定分片，那么随着以后业务量增大，不好扩展。Photon 使用了一种基于时间段动态分片方案，这个方案基于 click_id 自带时间戳。大致逻辑是：使用一个配置，内容大致如下：</p>
-<p><img alt="" src="media/15709583312107.jpg"></p>
+<p><img alt="" src="https://i.loli.net/2020/06/14/VRlgr2CoD8zw7Mm.jpg"></p>
 <p>对于每个 click 日志，先根据 click_id 中的时间戳，判断分片数，并计算对应的分片 id。</p>
-<p><img alt="" src="media/15709617353841.jpg"></p>
+<p><img alt="" src="https://i.loli.net/2020/06/14/JMWyQvrDZCaAEdH.jpg"></p>
 <hr>
 <p>系统的模块关系图如下所示：</p>
-<p><img alt="" src="media/15709566468632.jpg"></p>
+<p><img alt="" src="https://i.loli.net/2020/06/14/zghk6oVaqZ5uEs3.jpg"></p>
 <p>Photon 的 Dispatcher 模块并没有以 Kafka 这种消息队列作为输入，而是直接监听文件系统中的日志文件变更，这一点有点奇怪，不是特别理解。</p>
 <p>Joiner 负责实际的 join 工作，由于 3、4 都比较耗时，所以为了尽可能减少 Joiner 的工作量，Dispatcher 将点击事件日志发送给 Joiner，会先到 IdRegistry 中查一下该事件是否已被处理过，从而起到过滤作用。因多数据中心部署，实际过滤比为：$ \frac{N-1}{N} $。</p>
 <p>为了确保 Joiner 高可用，Joiner 是无状态的，向 Dispatcher 提供 RPC 接口，Joiner 内部有限流，以保证不会因为单个 Joiner 负载过大，导致处理时延增大。Dispatcher 调用 Joiner 失败后会重试，重试使用的是指数退避算法。但处理失败的点击事件，是另外存储在 GFS 上，应该是由另外的线程来负责重试，不会影响正常的事件处理。</p>

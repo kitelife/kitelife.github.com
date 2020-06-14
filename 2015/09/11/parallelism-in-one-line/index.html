@@ -4,8 +4,8 @@
 
         <title>一行式并行方案（译）</title>
         <meta charset="utf-8" />
-        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑·白 Full Atom Feed" />
-        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑·白 Full RSS Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="有趣的技术 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="有趣的技术 Full RSS Feed" />
 
 
         <!-- Mobile viewport optimized: j.mp/bplateviewport -->
@@ -37,7 +37,7 @@
         <div class="row">
 
           <header id="banner" class="body">
-                  <h1 style='font-family: "SentyZHAO";'><a href="../../../..">黑·白 <strong></strong></a></h1>
+                  <h1 style='font-family: "SentyZHAO";'><a href="../../../..">有趣的技术 <strong></strong></a></h1>
           </header><!-- /#banner -->
 
             <div id="navigation" class="navbar row">
@@ -97,7 +97,7 @@
     self._queue = queue 
 
   <span style="color: #0000ff">def</span> run(self):
-    <span style="color: #0000ff">while</span> <span style="color: #0000ff">True</span>: 
+    <span style="color: #0000ff">while</span> True: 
       <span style="color: #008000"># queue.get() 会阻塞当前线程，直到获取到一个数据项</span>
       msg = self._queue.get() 
       <span style="color: #008000"># 检查当前消息是否是个“毒药丸”</span>
@@ -105,9 +105,9 @@
         <span style="color: #008000"># 如果是，则退出循环</span>
         <span style="color: #0000ff">break</span>
       <span style="color: #008000"># “处理” (这里是打印)从队列中取出的数据项</span>
-      print <span style="color: #a31515">&quot;I&#39;m a thread, and I received %s!!&quot;</span> % msg
+      <span style="color: #0000ff">print</span> <span style="color: #a31515">&quot;I&#39;m a thread, and I received %s!!&quot;</span> % msg
     <span style="color: #008000"># 我始终是这么的友好</span>
-    print <span style="color: #a31515">&#39;Bye byes!&#39;</span>
+    <span style="color: #0000ff">print</span> <span style="color: #a31515">&#39;Bye byes!&#39;</span>
 
 
 <span style="color: #0000ff">def</span> Producer():
@@ -162,12 +162,12 @@
     self._queue = queue 
 
   <span style="color: #0000ff">def</span> run(self):
-    <span style="color: #0000ff">while</span> <span style="color: #0000ff">True</span>: 
+    <span style="color: #0000ff">while</span> True: 
       content = self._queue.get() 
       <span style="color: #0000ff">if</span> isinstance(content, str) <span style="color: #0000ff">and</span> content == <span style="color: #a31515">&#39;quit&#39;</span>:
         <span style="color: #0000ff">break</span>
       response = urllib2.urlopen(content)
-    print <span style="color: #a31515">&#39;Bye byes!&#39;</span>
+    <span style="color: #0000ff">print</span> <span style="color: #a31515">&#39;Bye byes!&#39;</span>
 
 
 <span style="color: #0000ff">def</span> Producer():
@@ -189,7 +189,7 @@
   <span style="color: #0000ff">for</span> worker <span style="color: #0000ff">in</span> worker_threads:
     worker.join()
 
-  print <span style="color: #a31515">&#39;Done! Time taken: {}&#39;</span>.format(time.time() - start_time)
+  <span style="color: #0000ff">print</span> <span style="color: #a31515">&#39;Done! Time taken: {}&#39;</span>.format(time.time() - start_time)
 
 <span style="color: #0000ff">def</span> build_worker_pool(queue, size):
   workers = []
@@ -222,7 +222,7 @@ results = map(urllib2.urlopen, urls)
 
 <p>Map会为我们处理在序列上的迭代，应用函数，最后将结果存入一个方便使用的列表。</p>
 <p>这为什么重要呢？因为利用恰当的库，map让并行处理成为小事一桩！</p>
-<p><img alt="map-function" src="/assets/uploads/pics/map-function.png"></p>
+<p><img alt="map-function" src="https://i.loli.net/2020/06/14/kqumnip3B7M2dcQ.png"></p>
 <p>Python标准库中<em>multiprocessing</em>模块，以及极少人知但同样出色的子模块<em>multiprocessing.dummy</em>，提供了map函数的并行版本。</p>
 <p>题外话：这是啥？你从未听说过这名为dummy的mulprocessing模块的线程克隆版本？我也是最近才知道的。在multiprocessing文档页中仅有一句提到这个子模块，而这句话基本可以归结为“哦，是的，存在这样一个东西”。完全低估了这个模块的价值！</p>
 <p>Dummy是multiprocessing模块的精确克隆，唯一的区别是：multiprocessing基于进程工作，而dummy模块使用线程（也就带来了常见的Python限制）。因此，任何东西可套用到一个模块，也就可以套用到另一个模块。在两个模块之间来回切换也就相当容易，当你不太确定一些框架调用是IO密集型还是CPU密集型时，想做探索性质的编程，这一点会让你觉得非常赞！</p>

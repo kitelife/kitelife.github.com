@@ -4,8 +4,8 @@
 
         <title>Yii源码阅读笔记 - Model层实现</title>
         <meta charset="utf-8" />
-        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="黑·白 Full Atom Feed" />
-        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="黑·白 Full RSS Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="有趣的技术 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="有趣的技术 Full RSS Feed" />
 
 
         <!-- Mobile viewport optimized: j.mp/bplateviewport -->
@@ -37,7 +37,7 @@
         <div class="row">
 
           <header id="banner" class="body">
-                  <h1 style='font-family: "SentyZHAO";'><a href="../../../..">黑·白 <strong></strong></a></h1>
+                  <h1 style='font-family: "SentyZHAO";'><a href="../../../..">有趣的技术 <strong></strong></a></h1>
           </header><!-- /#banner -->
 
             <div id="navigation" class="navbar row">
@@ -884,31 +884,31 @@ public function update($attributes=null)
 
 <hr>
 <p>基于CActiveRecord类，如果想进行读取操作，那么子类需要重写model方法。CActiveRecord类的model方法实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>/**
- * Returns the static model of the specified AR class.
- * The model returned is a static instance of the AR class.
- * It is provided for invoking class-level methods (something similar to static class methods.)
- *
- * EVERY derived AR class must override this method as follows,
- * &lt;pre&gt;
- * public static function model($className=__CLASS__)
- * {
- *     return parent::model($className);
- * }
- * &lt;/pre&gt;
- *
- * @param string $className active record class name.
- * @return CActiveRecord active record model instance.
- */
-public static function model($className=__CLASS__)
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #008000">/**</span>
+<span style="color: #008000"> * Returns the static model of the specified AR class.</span>
+<span style="color: #008000"> * The model returned is a static instance of the AR class.</span>
+<span style="color: #008000"> * It is provided for invoking class-level methods (something similar to static class methods.)</span>
+<span style="color: #008000"> *</span>
+<span style="color: #008000"> * EVERY derived AR class must override this method as follows,</span>
+<span style="color: #008000"> * &lt;pre&gt;</span>
+<span style="color: #008000"> * public static function model($className=__CLASS__)</span>
+<span style="color: #008000"> * {</span>
+<span style="color: #008000"> *     return parent::model($className);</span>
+<span style="color: #008000"> * }</span>
+<span style="color: #008000"> * &lt;/pre&gt;</span>
+<span style="color: #008000"> *</span>
+<span style="color: #008000"> * @param string $className active record class name.</span>
+<span style="color: #008000"> * @return CActiveRecord active record model instance.</span>
+<span style="color: #008000"> */</span>
+public static function model<span style="color: #a31515">(</span>$className=__CLASS__<span style="color: #a31515">)</span>
 {
-    if(isset(self::$_models[$className]))
-        return self::$_models[$className];
-    else
+    <span style="color: #0000ff">if</span><span style="color: #a31515">(</span>isset<span style="color: #a31515">(</span>self::$_models[$className]<span style="color: #a31515">))</span>
+        <span style="color: #0000ff">return</span> self::$_models[$className]<span style="color: #008000">;</span>
+    <span style="color: #0000ff">else</span>
     {
-        $model=self::$_models[$className]=new $className(null);
-        $model-&gt;attachBehaviors($model-&gt;behaviors());
-        return $model;
+        $model=self::$_models[$className]=new $className<span style="color: #a31515">(</span>null<span style="color: #a31515">)</span><span style="color: #008000">;</span>
+        $model-&gt;attachBehaviors<span style="color: #a31515">(</span>$model-&gt;behaviors<span style="color: #a31515">())</span><span style="color: #008000">;</span>
+        <span style="color: #0000ff">return</span> $model<span style="color: #008000">;</span>
     }
 }
 </pre></div>

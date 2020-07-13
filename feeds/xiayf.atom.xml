@@ -1,65 +1,197 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>有趣的技术 - xiayf</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/xiayf.atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2020-06-14T00:00:00+08:00</updated><entry><title>博客构建环境准备</title><link href="http://youngsterxyf.github.io/2020/06/14/blog-build-env/" rel="alternate"></link><published>2020-06-14T00:00:00+08:00</published><updated>2020-06-14T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2020-06-14:/2020/06/14/blog-build-env/</id><summary type="html">&lt;p&gt;好记性不如烂笔头。&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>有趣的技术 - xiayf</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/xiayf.atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2020-07-13T00:00:00+08:00</updated><entry><title>如何剖析 JVM 应用（译）</title><link href="http://youngsterxyf.github.io/2020/07/13/how-to-profile-jvm-applications/" rel="alternate"></link><published>2020-07-13T00:00:00+08:00</published><updated>2020-07-13T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2020-07-13:/2020/07/13/how-to-profile-jvm-applications/</id><summary type="html">&lt;p&gt;原文链接：&lt;a href="https://www.lightbend.com/blog/profiling-jvm-applications"&gt;How to profile JVM applications&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Hi 大家好。工具团队（tooling team）近期的一个关注点是改进 sbt 贡献流程（ improvement of the contribution process to sbt）。我们一直在思考的另一个事情是 sbt 的性能。为一举解决这两件事情，我调研了 Jason Zaugg、Johannes Rudolph 这些人如何剖析 JVM 应用，这篇文章即是调研结果。&lt;/p&gt;
+&lt;p&gt;这里论述的技术应该可以应用于Java 和 Scala，也基本与你使用的工具无关。&lt;/p&gt;
+&lt;h2&gt;火焰图（使用 async-profiler 生成）&lt;/h2&gt;
+&lt;p&gt;剖析 JVM 应用的方式有多种，但新晋热门是Netflix 高级性能架构师（Senior Performance Architect …&lt;/p&gt;</summary><content type="html">&lt;p&gt;原文链接：&lt;a href="https://www.lightbend.com/blog/profiling-jvm-applications"&gt;How to profile JVM applications&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Hi 大家好。工具团队（tooling team）近期的一个关注点是改进 sbt 贡献流程（ improvement of the contribution process to sbt）。我们一直在思考的另一个事情是 sbt 的性能。为一举解决这两件事情，我调研了 Jason Zaugg、Johannes Rudolph 这些人如何剖析 JVM 应用，这篇文章即是调研结果。&lt;/p&gt;
+&lt;p&gt;这里论述的技术应该可以应用于Java 和 Scala，也基本与你使用的工具无关。&lt;/p&gt;
+&lt;h2&gt;火焰图（使用 async-profiler 生成）&lt;/h2&gt;
+&lt;p&gt;剖析 JVM 应用的方式有多种，但新晋热门是Netflix 高级性能架构师（Senior Performance Architect）Brendan Gregg 发明的&lt;strong&gt;火焰图&lt;/strong&gt;。开发者先收集堆栈踪迹抽样数据（stack trace samples），然后将其处理成一张交互式的 svg 图。若要快速了解火焰图，可阅读如下链接资料：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://www.youtube.com/watch?v=ugRrFdda_JQ"&gt;Using FlameGraphs To Illuminate The JVM by Nitsan Wakart&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.youtube.com/watch?v=D53T1Ejig1Q"&gt;USENIX ATC ’17: Visualizing Performance with Flame Graphs&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;我推荐的第一个火焰图工具是  Andrei Pangin 发起的 async-profiler，在 macOS 和 Linux 操作系统环境下均可使用，上手使用也更简单。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;下载安装器 &lt;a href="https://github.com/jvm-profiling-tools/async-profiler/releases/tag/v1.2"&gt;async-profiler 1.2&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;假设你的系统中存在一个命令查找路径 &lt;code&gt;$HOME/bin&lt;/code&gt;，在 &lt;code&gt;$HOME/bin&lt;/code&gt; 目录下创建符号链接指向 &lt;code&gt;build/&lt;/code&gt; 和 &lt;code&gt;profiler.sh&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ln -s ~/App/async-profiler/profiler.sh $HOME/bin/profiler.sh
+ln -s ~/App/async-profiler/build $HOME/bin/build
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;接下来，关闭所有 Java 应用，以及任何可能影响剖析过程的东西，比如 Slack，然后在终端程序（terminal）中运行你的应用。对于我而言，则是尝试剖析 &lt;code&gt;sbt&lt;/code&gt; 的初始化加载过程：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ sbt exit
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;在另一个终端中，运行：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ jps
+92746 sbt-launch.jar
+92780 Jps
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;由此我们知道应用的进程 ID。对于我而言，目标进程 ID 是 &lt;code&gt;92746&lt;/code&gt;。在应用运行的同时，运行如下命令：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;$&lt;/span&gt; profiler.sh -d 60 &amp;lt;process id&amp;gt;
+Started [cpu] profiling
+&lt;span style="color: #008000"&gt;--- Execution profile ---&lt;/span&gt;
+Total samples:         31602
+Non-Java:              3239 (10.25%)
+GC active:             46 (0.15%)
+&lt;span style="color: #0000ff"&gt;Unknown&lt;/span&gt; (native)&lt;span style="border: 1px solid #FF0000"&gt;:&lt;/span&gt;      14667 (46.41%)
+&lt;span style="color: #0000ff"&gt;Not&lt;/span&gt; walkable (native)&lt;span style="border: 1px solid #FF0000"&gt;:&lt;/span&gt; 3 (0.01%)
+&lt;span style="color: #0000ff"&gt;Unknown&lt;/span&gt; (Java)&lt;span style="border: 1px solid #FF0000"&gt;:&lt;/span&gt;        433 (1.37%)
+&lt;span style="color: #0000ff"&gt;Not&lt;/span&gt; walkable (Java)&lt;span style="border: 1px solid #FF0000"&gt;:&lt;/span&gt;   8 (0.03%)
+Thread &lt;span style="color: #0000ff"&gt;exit&lt;/span&gt;&lt;span style="border: 1px solid #FF0000"&gt;:&lt;/span&gt;           1 (0.00%)
+Deopt:                 9 (0.03%)
+
+Frame buffer &lt;span style="color: #0000ff"&gt;usage&lt;/span&gt;&lt;span style="border: 1px solid #FF0000"&gt;:&lt;/span&gt;    55.658%
+
+Total: 1932000000 (6.11%)  samples: 1932
+  [ 0] java.lang.ClassLoader&lt;span style="border: 1px solid #FF0000"&gt;$&lt;/span&gt;NativeLibrary.&lt;span style="color: #0000ff"&gt;load&lt;/span&gt;
+  [ 1] java.lang.ClassLoader.loadLibrary0
+  [ 2] java.lang.ClassLoader.loadLibrary
+  [ 3] java.lang.Runtime.loadLibrary0
+  [ 4] java.lang.&lt;span style="color: #0000ff"&gt;System&lt;/span&gt;.loadLibrary
+....
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;命令会输出一大堆有用的堆栈跟踪信息（stacktraces），为将这些信息可视化为一张火焰图，运行如下命令：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;profiler.sh -d 60 -f /tmp/flamegraph.svg &amp;lt;process id&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;命令最后应该会产出文件 &lt;code&gt;/tmp/flamegraph.svg&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="flamegraph" src="https://i.loli.net/2020/07/13/dZVkB9xq2Gy6NfA.png"&gt;&lt;/p&gt;
+&lt;p&gt;你自己来体验一下 &lt;a href="https://downloads.lightbend.com/website/blog/2019/flamegraph.svg?_ga=2.187105832.1642569835.1594378538-197429397.1594378538"&gt;flamegraph.svg&lt;/a&gt; 输出的信息。&lt;/p&gt;
+&lt;h2&gt;火焰图（使用 perf-map-agent 生成）&lt;/h2&gt;
+&lt;p&gt;虽然 async-profiler 上手使用很简单，但火焰图真正有趣之处在于可以混合展现 JVM 堆栈追踪和原生代码（native code）堆栈跟踪信息，让开发者可以看到 CPU 实际消耗在程序的何处。Lightbend 公司的 Johannes Rudolph 为此写了一个工具 - &lt;a href="https://github.com/jvm-profiling-tools/perf-map-agent"&gt;perf-map-agent&lt;/a&gt;。该工具在 macOS 环境下会使用 &lt;code&gt;dtrace&lt;/code&gt;，在 Linux 环境下会使用 &lt;code&gt;perf&lt;/code&gt;。如果你想确认瓶颈是否出现在原生代码中，这个工具会特别有用。&lt;/p&gt;
+&lt;p&gt;我们先要编译 &lt;a href="https://github.com/jvm-profiling-tools/perf-map-agent"&gt;perf-map-agent&lt;/a&gt;。对于 macOS 环境，在运行 &lt;code&gt;cmake .&lt;/code&gt; 之前需要先设置 &lt;code&gt;JAVA_HOME&lt;/code&gt; 环境变量：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ cd work
+$ git clone https://github.com/brendangregg/FlameGraph.git
+
+$ git clone https://github.com/jvm-profiling-tools/perf-map-agent.git
+$ cd perf-map-agent
+$ export JAVA_HOME=&lt;span style="color: #0000ff"&gt;$(&lt;/span&gt;/usr/libexec/java_home&lt;span style="color: #0000ff"&gt;)&lt;/span&gt;
+$ cmake .
+-- The C compiler identification is AppleClang 9.0.0.9000039
+-- The CXX compiler identification is AppleClang 9.0.0.9000039
+...
+$ make
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;在一个新的终端中，带 &lt;code&gt;-XX:+PreserveFramePointer&lt;/code&gt; 标记参数运行 sbt：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ sbt -J-Dsbt.launcher.standby=20s -J-XX:+PreserveFramePointer exit
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;在另一个终端中运行：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ cd quicktest/
+$ export JAVA_HOME=&lt;span style="color: #0000ff"&gt;$(&lt;/span&gt;/usr/libexec/java_home&lt;span style="color: #0000ff"&gt;)&lt;/span&gt;
+$ export FLAMEGRAPH_DIR=$HOME/work/FlameGraph
+$ jps
+94592 Jps
+94549 sbt-launch.jar
+$ $HOME/work/perf-map-agent/bin/dtrace-java-flames 94549
+dtrace: system integrity protection is on, some features will not be available
+
+dtrace: description &lt;span style="color: #a31515"&gt;&amp;#39;profile-99 &amp;#39;&lt;/span&gt; matched 2 probes
+Flame graph SVG written to DTRACE_FLAME_OUTPUT=&lt;span style="color: #a31515"&gt;&amp;#39;/Users/xxx/work/quicktest/flamegraph-94549.svg&amp;#39;&lt;/span&gt;.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;理论上这样会产出更全面的火焰图，不过对于 &lt;code&gt;sbt exit&lt;/code&gt;，产出的火焰图看起来可能有点凌乱。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="flamegraph-2" src="https://i.loli.net/2020/07/13/s9BbWAnluTPwE3J.png"&gt;&lt;/p&gt;
+&lt;p&gt;如果 sbt 操作已经经过即时编译器优化（the operations are already JITed），或者操作比较特殊（the operation is more specific），那么火焰图的效果会更好。为了得到效果更好的火焰图，我们可以将相同的操作多重复几次：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ sbt -J-Dsbt.launcher.standby=20s -J-XX:+PreserveFramePointer reload reload reload reload exit
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;这样就可以产出程序的稳定态火焰图，逐步放大火焰图，就可以找到执行的热点路径。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="flamegraph-3" src="https://i.loli.net/2020/07/13/93YyjxR5ATS1Dnq.png"&gt;&lt;/p&gt;
+&lt;h2&gt;Flamescope&lt;/h2&gt;
+&lt;p&gt;Netflix 公司近期发布了一个新的火焰图可视化工具 - &lt;a href="https://medium.com/netflix-techblog/netflix-flamescope-a57ca19d47bb"&gt;Flamescope&lt;/a&gt;，可以将火焰图过滤限制在一个特定的时间范围内。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="FlameScope" src="https://i.loli.net/2020/07/13/djm2hkvC98irQu7.png"&gt;&lt;/p&gt;
+&lt;p&gt;Martin Spier 和 Brendan Gregg 为研究扰动以及其他时间相关的问题（perturbations and other time-based issues）而开发了这个工具。常规的火焰图是聚合了所有堆栈追踪抽样数据，如果系统中发生了一个短时小故障，就会被深埋于其他追踪信息中，这个工具就是为了解决这个问题。&lt;/p&gt;
+&lt;h2&gt;JMH (sbt-jmh)&lt;/h2&gt;
+&lt;p&gt;因为 JIT 存在预热等特点，增大了基准测试的困难。JMH 会将相同的测试运行多次，消除 JIT 预热等特点造成的影响，从而更准确地测量代码的性能。&lt;/p&gt;
+&lt;p&gt;对于 sbt 用户而言，Lightbend 公司 Konrad Malawski 编写的 &lt;a href="https://github.com/ktoso/sbt-jmh"&gt;sbt-jmh&lt;/a&gt; 进一步简化了 JMH 测试。并且它也集成了 async-profiler。&lt;/p&gt;
+&lt;h2&gt;VisualVM&lt;/h2&gt;
+&lt;p&gt;我也想提一下传统的 JVM 剖析工具。因为 &lt;a href="https://visualvm.github.io/"&gt;VisualVM&lt;/a&gt; 开源了，所以就来说说它。&lt;/p&gt;
+&lt;p&gt;1、先打开 VisualVM
+2、在一个终端中启动 sbt
+3、从 VisualVM 界面的 Local 应用目录下应该可以看到 &lt;code&gt;xsbt.boot.Boot&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="https://i.loli.net/2020/07/13/EB7vsuo1HjaTtQw.jpg"&gt;&lt;/p&gt;
+&lt;p&gt;4、打开它，选择 抽样功能（sampler） 或 剖析功能（profiler），在你想要开始的时间点点击 CPU 按钮&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="https://i.loli.net/2020/07/13/aoiIDfMKw9pjY4Z.jpg"&gt;&lt;/p&gt;
+&lt;p&gt;如果你对 &lt;a href="https://www.yourkit.com/"&gt;YourKit&lt;/a&gt; 比较熟悉，也可以使用它，用法比较相似。&lt;/p&gt;
+&lt;h2&gt;总结&lt;/h2&gt;
+&lt;p&gt;火焰图对堆栈跟踪抽样数据进行可视化，方便识别应用代码中的热点路径。也有助于确认代码变更是否实际影响了应用性能。&lt;/p&gt;</content><category term="其他"></category><category term="翻译"></category><category term="Java"></category><category term="工具"></category><category term="问题排查"></category></entry><entry><title>博客构建环境准备</title><link href="http://youngsterxyf.github.io/2020/06/14/blog-build-env/" rel="alternate"></link><published>2020-06-14T00:00:00+08:00</published><updated>2020-06-14T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2020-06-14:/2020/06/14/blog-build-env/</id><summary type="html">&lt;p&gt;好记性不如烂笔头。&lt;/p&gt;
 &lt;p&gt;1、Python 虚拟环境&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;virtualenv -p python3 ~/.py3
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;virtualenv -p python3 ~/.py3
 source ~/.py3/bin/activate
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;2、安装 Python 依赖包&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;pip install pelican[Markdown]   &lt;span style="color: #008000"&gt;# 可能需要先安装 pip：easy_install pip&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;pip install pelican[Markdown]   &lt;span style="color: #008000"&gt;# 可能需要先安装 pip：easy_install pip&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;3、安装主题包&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;git clone https://github.com/youngsterxyf/my-pelican-themes.git ~/github/youngsterxyf/my-pelican-themes
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;git clone https://github.com/youngsterxyf/my-pelican-themes.git ~/github/youngsterxyf/my-pelican-themes
 pelican-themes -i ~/github/youngsterxyf/my-pelican-themes/my-gum
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;4、构建&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;make html
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;make html
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;hr&gt;
 &lt;p&gt;另，更新艺术字体或字集：&lt;/p&gt;
 &lt;p&gt;(1 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;好记性不如烂笔头。&lt;/p&gt;
 &lt;p&gt;1、Python 虚拟环境&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;virtualenv -p python3 ~/.py3
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;virtualenv -p python3 ~/.py3
 source ~/.py3/bin/activate
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;2、安装 Python 依赖包&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;pip install pelican[Markdown]   &lt;span style="color: #008000"&gt;# 可能需要先安装 pip：easy_install pip&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;pip install pelican[Markdown]   &lt;span style="color: #008000"&gt;# 可能需要先安装 pip：easy_install pip&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;3、安装主题包&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;git clone https://github.com/youngsterxyf/my-pelican-themes.git ~/github/youngsterxyf/my-pelican-themes
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;git clone https://github.com/youngsterxyf/my-pelican-themes.git ~/github/youngsterxyf/my-pelican-themes
 pelican-themes -i ~/github/youngsterxyf/my-pelican-themes/my-gum
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;4、构建&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;make html
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;make html
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;hr&gt;
 &lt;p&gt;另，更新艺术字体或字集：&lt;/p&gt;
 &lt;p&gt;(1) 下载 fontmin-app：https://github.com/ecomfe/fontmin-app&lt;/p&gt;
-&lt;p&gt;(2) 导入字体 SentyZHAO（汉仪新蒂赵孟頫体）：https://github.com/youngsterxyf/blog-content/blob/master/new-blog/SentyZHAO-20180827.ttf&lt;/p&gt;
+&lt;p&gt;(2) 导入字体 SentyZHAO（汉仪新蒂赵孟頫体）：https://github.com/youngsterxyf/blog-content/blob/master/new-blog/SentyZHAO.ttf&lt;/p&gt;
 &lt;p&gt;&lt;img alt="fontmin" src="https://i.loli.net/2020/06/14/Xn8b9kZDIfWoLmp.png"&gt;&lt;/p&gt;
 &lt;p&gt;(3) 生成字体样式，并拷贝更新到目标主题包目录中：https://github.com/youngsterxyf/my-pelican-themes/tree/master/my-gum/static&lt;/p&gt;
 &lt;p&gt;(4) 更新主题包：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;pelican-themes -r my-gum
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;pelican-themes -r my-gum
 pelican-themes -i ~/github/youngsterxyf/my-pelican-themes
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;(5) 重新构建生成博客&lt;/p&gt;</content></entry><entry><title>读文笔记：Kafka 官方设计文档</title><link href="http://youngsterxyf.github.io/2019/10/13/reading-kafka-design/" rel="alternate"></link><published>2019-10-13T00:00:00+08:00</published><updated>2019-10-13T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-10-13:/2019/10/13/reading-kafka-design/</id><summary type="html">&lt;p&gt;原文：&lt;a href="http://kafka.apache.org/documentation/#design"&gt;http://kafka.apache.org/documentation/#design&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;(5) 重新构建生成博客&lt;/p&gt;</content><category term="其他"></category></entry><entry><title>读文笔记：Kafka 官方设计文档</title><link href="http://youngsterxyf.github.io/2019/10/13/reading-kafka-design/" rel="alternate"></link><published>2019-10-13T00:00:00+08:00</published><updated>2019-10-13T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-10-13:/2019/10/13/reading-kafka-design/</id><summary type="html">&lt;p&gt;原文：&lt;a href="http://kafka.apache.org/documentation/#design"&gt;http://kafka.apache.org/documentation/#design&lt;/a&gt;&lt;/p&gt;
 &lt;h2&gt;数据持久化&lt;/h2&gt;
 &lt;h4&gt;不用惧怕文件系统&lt;/h4&gt;
 &lt;p&gt;磁盘的读写速度，取决于如何读写。对于线性读写方式，操作系统做了充分的优化：提前读 - 预取若干数据块，滞后写 - 将小的逻辑写操作合并成一个大的物理写操作。&lt;/p&gt;
@@ -160,7 +292,7 @@ pelican-themes -i ~/github/youngsterxyf/my-pelican-themes
 &lt;h2&gt;消费者消费进度跟踪&lt;/h2&gt;
 &lt;p&gt;Kafka 为每个消费组（consumer group）指定一个 broker 来存储目标 topic 各个分区的消费进度（offsets），这个 broker 称为 &lt;strong&gt;组协调器（group coordinator）&lt;/strong&gt;。这个消费组中的任一消费者实例都应该将消费进度提交到这个组协调器，或者从这个组协调器获取启动之前上次的消费进度。Kafka 基于消费组的名称为消费组分配协调器。消费者可以向任一 broker 发送 FindCoordinatorRequest 请求来查找自己的协调器，并从 FindCoordinatorResponse 响应中获取协调器的详细信息。&lt;/p&gt;
 &lt;p&gt;在组协调器接收到一个 OffsetCommitRequest 请求后，会将请求数据写到一个特殊的&lt;a href="http://kafka.apache.org/documentation/#compaction"&gt;经压实的（compacted）&lt;/a&gt; Kafka topic - &lt;em&gt;__consumer_offsets&lt;/em&gt;。在目标分区的所有副本都确认收到了，协调器才会向消费者发送进度提交成功的响应。这个 topic 的消息日志数据会定期进行压实（compact），因为只需要为每个分区维护最新的消费进度。协调器也会在内存中缓存消费进度，方便快速响应消费进度查询请求。&lt;/p&gt;
-&lt;p&gt;注：如果消费者/消费组特别多（例如：我们广告引擎服务，读取正排消息 topic，一个机器实例就是一个 consumer group，数量在几百到几千不等），那么组协调器的压力会比较大，那么确保组协调器的角色均匀分配到集群的所有 broker，比较关键。另外，&lt;em&gt;__consumer_offsets&lt;/em&gt; 这个 topic 的分区数量不能太少，最好和 broker 数量相同或者整数倍数量。&lt;/p&gt;</content><category term="文章"></category><category term="笔记"></category><category term="经典"></category><category term="Kafka"></category><category term="进行中"></category></entry><entry><title>读文笔记：Photon - Fault-tolerant and Scalable Joining of Continuous Data Streams</title><link href="http://youngsterxyf.github.io/2019/10/10/reading-photon/" rel="alternate"></link><published>2019-10-10T00:00:00+08:00</published><updated>2019-10-10T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-10-10:/2019/10/10/reading-photon/</id><summary type="html">&lt;p&gt;原文：&lt;a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//pubs/archive/41318.pdf"&gt;Photon: Fault-tolerant and Scalable Joining of Continuous Data Streams&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;注：如果消费者/消费组特别多（例如：我们广告引擎服务，读取正排消息 topic，一个机器实例就是一个 consumer group，数量在几百到几千不等），那么组协调器的压力会比较大，那么确保组协调器的角色均匀分配到集群的所有 broker，比较关键。另外，&lt;em&gt;__consumer_offsets&lt;/em&gt; 这个 topic 的分区数量不能太少，最好和 broker 数量相同或者整数倍数量。&lt;/p&gt;</content><category term="其他"></category><category term="文章"></category><category term="笔记"></category><category term="经典"></category><category term="Kafka"></category><category term="进行中"></category></entry><entry><title>读文笔记：Photon - Fault-tolerant and Scalable Joining of Continuous Data Streams</title><link href="http://youngsterxyf.github.io/2019/10/10/reading-photon/" rel="alternate"></link><published>2019-10-10T00:00:00+08:00</published><updated>2019-10-10T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-10-10:/2019/10/10/reading-photon/</id><summary type="html">&lt;p&gt;原文：&lt;a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//pubs/archive/41318.pdf"&gt;Photon: Fault-tolerant and Scalable Joining of Continuous Data Streams&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Photon 是谷歌广告系统中用于 join 广告曝光日志流和点击日志流的一套系统。&lt;/p&gt;
 &lt;p&gt;数据流 join 为什么没用 flink 这类通用的流式处理框架？&lt;/p&gt;
 &lt;p&gt;数据流 join，特别是广告数据流 join，技术上难在哪里？&lt;/p&gt;
@@ -223,7 +355,7 @@ pelican-themes -i ~/github/youngsterxyf/my-pelican-themes
 &lt;hr&gt;
 &lt;p&gt;EventStore 获取原始的曝光日志，向 Joiner 提供查询接口，返回原始的曝光日志内容。&lt;/p&gt;
 &lt;p&gt;基于时间局部性，EventStore 内部分 2 层，第一层为 CacheEventStore - 一个类似 Memcached 的 KV 内存映射，K 是 query_id，V 是曝光日志内容，基于一致性哈希算法根据 query_id 进行分片，缓存几分钟最新的曝光日志数据，可以命中 90% 左右的查询请求。&lt;/p&gt;
-&lt;p&gt;如果 CacheEventStore 查询 miss，则交于第二层 LogsEventStore 来处理。LogsEventStore 对 query_id 和 曝光日志所在的日志文件及目标起始行（因为日志文件数据大致按时间戳有序，根据 query_id 中的时间戳大致可以知道查询的起始行）建立索引（实际存储在 BigTable 中），查询时，先根据 query_id，查到目标日志文件和起始行，然后从日志文件中读取原始曝光日志内容。&lt;/p&gt;</content><category term="论文"></category><category term="笔记"></category></entry><entry><title>读文笔记：日志 - 每个软件工程师都应该了解的实时数据统一抽象</title><link href="http://youngsterxyf.github.io/2019/10/10/reading-the-log/" rel="alternate"></link><published>2019-10-10T00:00:00+08:00</published><updated>2019-10-10T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-10-10:/2019/10/10/reading-the-log/</id><summary type="html">&lt;p&gt;原文：&lt;a href="https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying"&gt;The Log: What every software engineer should know about real-time data's unifying abstraction&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;如果 CacheEventStore 查询 miss，则交于第二层 LogsEventStore 来处理。LogsEventStore 对 query_id 和 曝光日志所在的日志文件及目标起始行（因为日志文件数据大致按时间戳有序，根据 query_id 中的时间戳大致可以知道查询的起始行）建立索引（实际存储在 BigTable 中），查询时，先根据 query_id，查到目标日志文件和起始行，然后从日志文件中读取原始曝光日志内容。&lt;/p&gt;</content><category term="其他"></category><category term="论文"></category><category term="笔记"></category></entry><entry><title>读文笔记：日志 - 每个软件工程师都应该了解的实时数据统一抽象</title><link href="http://youngsterxyf.github.io/2019/10/10/reading-the-log/" rel="alternate"></link><published>2019-10-10T00:00:00+08:00</published><updated>2019-10-10T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-10-10:/2019/10/10/reading-the-log/</id><summary type="html">&lt;p&gt;原文：&lt;a href="https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying"&gt;The Log: What every software engineer should know about real-time data's unifying abstraction&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;一句话概括，这篇文章细说了 Kafka 的本质原理、解决的问题、适用性等。&lt;/p&gt;
 &lt;p&gt;Kafka 本质上是提供日志数据流。&lt;/p&gt;
 &lt;p&gt;日志是客观世界的事件记录。&lt;/p&gt;
@@ -268,7 +400,7 @@ pelican-themes -i ~/github/youngsterxyf/my-pelican-themes
 &lt;p&gt;消费者按各自的需求进行数据转换存储。&lt;/p&gt;
 &lt;hr&gt;
 &lt;p&gt;对于实现高吞吐能力，除了分片，Kakfa 还充分利用了攒批处理：生产者可以批量发送，中间人将数据攒批写入磁盘日志文件 等等。&lt;/p&gt;
-&lt;p&gt;此外，由于涉及大量的磁盘文件和网络之间数据读写，Kafka 还充分利用操作系统内核的零拷贝传输能力。&lt;/p&gt;</content><category term="论文"></category><category term="笔记"></category></entry><entry><title>Lucene 查询解析器语法（译）</title><link href="http://youngsterxyf.github.io/2019/09/04/lucene-query-parser-syntax/" rel="alternate"></link><published>2019-09-04T00:00:00+08:00</published><updated>2019-09-04T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-09-04:/2019/09/04/lucene-query-parser-syntax/</id><summary type="html">&lt;p&gt;原文：&lt;a href="http://lucene.apache.org/core/8_2_0/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#package.description"&gt;Query Parser Syntax&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;此外，由于涉及大量的磁盘文件和网络之间数据读写，Kafka 还充分利用操作系统内核的零拷贝传输能力。&lt;/p&gt;</content><category term="其他"></category><category term="论文"></category><category term="笔记"></category></entry><entry><title>Lucene 查询解析器语法（译）</title><link href="http://youngsterxyf.github.io/2019/09/04/lucene-query-parser-syntax/" rel="alternate"></link><published>2019-09-04T00:00:00+08:00</published><updated>2019-09-04T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-09-04:/2019/09/04/lucene-query-parser-syntax/</id><summary type="html">&lt;p&gt;原文：&lt;a href="http://lucene.apache.org/core/8_2_0/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#package.description"&gt;Query Parser Syntax&lt;/a&gt;&lt;/p&gt;
 &lt;h2&gt;概览&lt;/h2&gt;
 &lt;p&gt;Lucene 除了提供 API 方便开发者创建查询请求，还通过一个查询解析器（一个词法分析器，使用 JavaCC 将一个字符串翻译成一个 Lucene 查询）提供一种功能丰富的查询语言。&lt;/p&gt;
 &lt;p&gt;一般来说，查询解析器支持的语法在不同发布版本之间可能会有变化。当前这个文档页面描述的是当前这个发布版本的语法。如果你正在使用一个不同版本的 Lucene，请参考该版本自带的 docs/queryparsersyntax.html 文档。&lt;/p&gt;
@@ -295,19 +427,19 @@ pelican-themes -i ~/github/youngsterxyf/my-pelican-themes
 &lt;p&gt;Lucene 支持分多个字段/域的数据。搜索时，可以指定一个域，也可以使用默认域。域的名称以及默认域与具体实现相关。&lt;/p&gt;
 &lt;p&gt;输入域的名称，后跟一个冒号（:），以及目标搜索词，即可对任意一个域进行搜索。&lt;/p&gt;
 &lt;p&gt;举例来说，假设一个 Lucene 索引包含 2 个域：title 和 text，text 是默认域。若想查找标题为 ”The Right Way“ 且文本内容包含 ”don't go this way“ 的文档，可以输入：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;title:&lt;span style="color: #a31515"&gt;&amp;quot;The Right Way&amp;quot;&lt;/span&gt; &lt;span style="color: #0000ff"&gt;AND&lt;/span&gt; &lt;span style="color: #2b91af"&gt;text&lt;/span&gt;&lt;span style="border: 1px solid #FF0000"&gt;:&lt;/span&gt;&lt;span style="color: #0000ff"&gt;go&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #008000"&gt;title:&amp;quot;The Right Way&amp;quot; AND text:go&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;或者：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;title:&lt;span style="color: #a31515"&gt;&amp;quot;The Right Way&amp;quot;&lt;/span&gt; &lt;span style="color: #0000ff"&gt;AND&lt;/span&gt; &lt;span style="color: #0000ff"&gt;go&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #008000"&gt;title:&amp;quot;The Right Way&amp;quot; AND go&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;因为 text 是默认域，所以域的标志可以省略。&lt;/p&gt;
 &lt;p&gt;注意：指定的域仅对紧跟其后的词生效，因此，如下查询：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;title:The Right Way
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;title:The Right Way
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;将对 title 域仅查找 ”The“，并对默认域（当前这个例子中是指 text 域）查找 ”Right“ 和 ”Way“。&lt;/p&gt;
@@ -318,56 +450,56 @@ pelican-themes -i ~/github/youngsterxyf/my-pelican-themes
 &lt;p&gt;使用 &lt;code&gt;?&lt;/code&gt; 符号进行单个字符的通配搜索。&lt;/p&gt;
 &lt;p&gt;使用 &lt;code&gt;*&lt;/code&gt; 符号进行多个字符的通配搜索。&lt;/p&gt;
 &lt;p&gt;单字符通配搜索用于查找替换单个字符即可匹配的词。举例来说，若要搜索 ”text“ 或 ”test“，可以如下查询：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;te?t
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;te?t&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;多字符通配搜索用于查找替换0个或多个字符即可匹配的词。举例来说，若要搜索 ”test“、”tests“ 或 ”tester“，可以如下查询：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;test*
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;test*&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;也可以对词的中间部分进行通配搜索：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;te*t
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;te*t&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;备注：不可以将 &lt;code&gt;*&lt;/code&gt; 或 &lt;code&gt;?&lt;/code&gt; 符号用作一次搜索的首个字符。&lt;/p&gt;
 &lt;h3&gt;正则表达式搜索&lt;/h3&gt;
 &lt;p&gt;Lucene 支持正则表达式搜索，匹配斜杠（&lt;code&gt;/&lt;/code&gt;） 之间的模式。正则表达式的语法在不同的发布版本之间可能会有差异，目前支持的语法在 &lt;a href="http://lucene.apache.org/core/8_2_0/core/org/apache/lucene/util/automaton/RegExp.html?is-external=true"&gt;RegExp&lt;/a&gt; 类文档中有说明。举例来说，查找包含 ”moat“ 或 ”boat“ 的文档：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;/[mb]oat/
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;/[mb]oat/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;h3&gt;模糊搜索&lt;/h3&gt;
 &lt;p&gt;Lucene 支持基于 Damerau-Levenshtein 编辑距离的模糊搜索。在单个词的最后添加波浪符（~）即可进行模糊搜索。举例来说，使用模糊搜索查找拼写上近似 ”roam“ 的词：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;roam~
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;roam~&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;这个查询语句会找到 foam 和 roams 这类词。&lt;/p&gt;
 &lt;p&gt;模糊搜索可以通过一个额外（可选）的参数来指定允许的最大编辑次数。这个参数值界于 0 和 2 之间，例如：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;roam~1
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;roam~1&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;如果未指定该参数，则默认使用 2 个编辑距离。&lt;/p&gt;
 &lt;p&gt;以前，这里还允许使用浮点数。现在这个语法已被考虑弃用，将于 Lucene 5.0 中移除。&lt;/p&gt;
 &lt;h3&gt;邻近搜索&lt;/h3&gt;
 &lt;p&gt;Lucene 支持查找指定距离的邻近词。在短语的最后添加拨浪符（~）即可进行邻近搜索。举例来说，在文档中搜索 ”apache“ 和 ”jakarta“ 相距 10 个词的模式：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;quot;jakarta apache&amp;quot;&lt;/span&gt;~10
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;&amp;quot;jakarta apache&amp;quot;~10&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;h3&gt;范围搜索&lt;/h3&gt;
 &lt;p&gt;范围查询可以要求域的值在范围查询语句指定的上下界之间。范围查询对于上下界可以包含也可以不包含。排序按照字典序进行。&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;mod_date:[20020101 &lt;span style="color: #0000ff"&gt;TO&lt;/span&gt; 20030101]
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #008000"&gt;mod_date:[20020101 TO 20030101]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;这个查询语句会查找 mod_date 域的值在 20020101 和 20030101 （包含上下界） 之间的文档。注意：范围查询并不是仅适用于日期域，也可以对非日期的域进行范围查询：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;title:&lt;span style="border: 1px solid #FF0000"&gt;{&lt;/span&gt;Aida &lt;span style="color: #0000ff"&gt;TO&lt;/span&gt; Carmen&lt;span style="border: 1px solid #FF0000"&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #008000"&gt;title:{Aida TO Carmen}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;这个查询语句会查找到 title 域的值在 Aida 和 Carmen （不包含上下界）之间的所有文档。&lt;/p&gt;
@@ -375,18 +507,18 @@ pelican-themes -i ~/github/youngsterxyf/my-pelican-themes
 &lt;h3&gt;词加权（Boosting a term）&lt;/h3&gt;
 &lt;p&gt;Lucene 会基于文档中找到的词对匹配到的文档提供相关性级别（译者疑问：基于向量余弦来计算相关性？）。可以在目标搜索词之后紧接一个脱字符 “^”，后跟一个加权系数（一个数字）来提升该搜索词的相关性权重。加权系统越高，查询命中的文档与该词的相关性越强。&lt;/p&gt;
 &lt;p&gt;加权操作允许对词进行加权控制文档的相关性。例如，假设你正在搜索：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;jakarta apache
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;jakarta apache&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;然后希望搜索结果和词 ”jakarta“ 更相关一些，则可以使用 ”^“ 符号后跟一个加权系数对这个词进行加权，即如下这样查询：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;jakarta^4 apache
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;jakarta^4 apache&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;这会使得查找到的文档和词 ”jakarta“ 看起来更相关一些。也可以对短语进行加权，如下所示：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;quot;jakarta apache&amp;quot;&lt;/span&gt;^4 &lt;span style="color: #a31515"&gt;&amp;quot;Apache Lucene&amp;quot;&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;&amp;quot;jakarta apache&amp;quot;^4 &amp;quot;Apache Lucene&amp;quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;默认，加权系数是 1。加权系统可以小于 1（比如：0.2），但必须大于 0。&lt;/p&gt;
@@ -395,84 +527,84 @@ pelican-themes -i ~/github/youngsterxyf/my-pelican-themes
 &lt;h3&gt;OR&lt;/h3&gt;
 &lt;p&gt;“OR” 操作符是默认的连接操作符。这意味着如果两个词之间没有布尔操作符，则使用 “OR” 操作符。OR 操作符链接两个词，并匹配包含其中任意一个词的文档。这相当于集合的并集操作。“||” 符合可用于替代单词 “OR”。&lt;/p&gt;
 &lt;p&gt;比如，使用如下查询语句来搜索包含 “jakarta apache” 或仅是 “jakarta” 的文档：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;quot;jakarta apache&amp;quot;&lt;/span&gt; jakarta
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;&amp;quot;jakarta apache&amp;quot; jakarta&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;或：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;quot;jakarta apache&amp;quot;&lt;/span&gt; &lt;span style="color: #0000ff"&gt;OR&lt;/span&gt; jakarta
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;&amp;quot;jakarta apache&amp;quot; OR jakarta&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;h3&gt;AND&lt;/h3&gt;
 &lt;p&gt;"AND" 操作符会匹配文本内容中同时存在两个词（因为 AND 是二元操作符）的文档。这相当于集合的交集操作。“&amp;amp;&amp;amp;” 符号可用于替代单词 “AND”。&lt;/p&gt;
 &lt;p&gt;比如，使用如下查询语句来搜索包含 “jakarta apache” 和 “Apache Lucene” 的文档：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;quot;jakarta apache&amp;quot;&lt;/span&gt; &lt;span style="color: #0000ff"&gt;AND&lt;/span&gt; &lt;span style="border: 1px solid #FF0000"&gt;“&lt;/span&gt;Apache Lucene&lt;span style="border: 1px solid #FF0000"&gt;”&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;&amp;quot;jakarta apache&amp;quot; AND “Apache Lucene”&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;h3&gt;+&lt;/h3&gt;
 &lt;p&gt;“+”（必需）操作符要求文档的某个域中包含 “+” 符号之后的词。&lt;/p&gt;
 &lt;p&gt;比如，使用如下查询语句来搜索（必须）包含 “jakarta” 以及可能包含 “lucene”（包不包含都可以）的文档：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;+jakarta lucene
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;+jakarta lucene&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;h3&gt;NOT&lt;/h3&gt;
 &lt;p&gt;若文档包含”NOT“之后的词，”NOT“ 操作会排查该文档。这相当于集合的差集操作。”!“ 符号可用于替代单词 ”NOT“。&lt;/p&gt;
 &lt;p&gt;比如，使用如下查询语句搜索包含 ”jakarta apache“ 但不包含 ”Apache Lucene“ 的文档”：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;quot;jakarta apache&amp;quot;&lt;/span&gt; &lt;span style="color: #0000ff"&gt;NOT&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;Apache Lucene&amp;quot;&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;&amp;quot;jakarta apache&amp;quot; NOT &amp;quot;Apache Lucene&amp;quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;备注：“NOT” 操作符不可以用于单个词。例如，如下搜索不会返回任何结果：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;NOT&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;jakarta apache&amp;quot;&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;NOT &amp;quot;jakarta apache&amp;quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;h3&gt;-&lt;/h3&gt;
 &lt;p&gt;如果文档包含”-“符号之后的词，那么”-“（禁止）操作符会排除这些文档。&lt;/p&gt;
 &lt;p&gt;比如，使用如下查询语句来查询包含 ”jakarta apache“ 但不包含 ”Apache Lucene“ 的文档：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #a31515"&gt;&amp;quot;jakarta apache&amp;quot;&lt;/span&gt; -&lt;span style="color: #a31515"&gt;&amp;quot;Apache Lucene&amp;quot;&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;&amp;quot;jakarta apache&amp;quot; -&amp;quot;Apache Lucene&amp;quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;h2&gt;分组&lt;/h2&gt;
 &lt;p&gt;Lucene 支持使用圆括号对子句进行分组，构成子查询。如果你想控制一个查询语句的布尔逻辑，这对非常有用。&lt;/p&gt;
 &lt;p&gt;比如，使用如下查询语句来搜索包含 “jakarta” 或 “apache”，以及 “website” 的文档：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;(jakarta &lt;span style="color: #0000ff"&gt;OR&lt;/span&gt; apache) &lt;span style="color: #0000ff"&gt;AND&lt;/span&gt; website
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;(jakarta OR apache) AND website&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;如此就消除了任何困惑，确保你想表达是：必须存在 ”website“，以及可能存在词 ”jakarta“ 或 ”apache“。&lt;/p&gt;
 &lt;h2&gt;域分组&lt;/h2&gt;
 &lt;p&gt;Lucene 支持使用圆括号对单个域的多个子句进行分组。&lt;/p&gt;
 &lt;p&gt;例如，若想搜索一个 title 中既包含单词“return”且包含短语“pink panther”，可以使用如下查询：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;title:&lt;span style="color: #a31515"&gt;(&lt;/span&gt;+&lt;span style="color: #0000ff"&gt;return&lt;/span&gt; +&lt;span style="color: #a31515"&gt;&amp;quot;pink panther&amp;quot;)&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #008000"&gt;title:(+return +&amp;quot;pink panther&amp;quot;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;h2&gt;特殊字符转义&lt;/h2&gt;
 &lt;p&gt;Lucene 支持对查询语法使用的特殊字符进行转移。目前这些特殊字符如下列表所示：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;+ - &amp;amp;&amp;amp; || ! ( ) &lt;span style="border: 1px solid #FF0000"&gt;{&lt;/span&gt; &lt;span style="border: 1px solid #FF0000"&gt;}&lt;/span&gt; [ ] ^ &lt;span style="border: 1px solid #FF0000"&gt;&amp;quot;&lt;/span&gt; ~ * ? : &lt;span style="border: 1px solid #FF0000"&gt;\&lt;/span&gt; /
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;+ - &amp;amp;&amp;amp; || ! ( ) { } [ ] ^ &amp;quot; ~ * ? : \ /&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;在特殊字符之前加 &lt;code&gt;\&lt;/code&gt; 来转义。例如，使用如下查询语句来搜索 &lt;code&gt;(1+1):2&lt;/code&gt;：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="border: 1px solid #FF0000"&gt;\&lt;/span&gt;(1&lt;span style="border: 1px solid #FF0000"&gt;\&lt;/span&gt;+1&lt;span style="border: 1px solid #FF0000"&gt;\&lt;/span&gt;)&lt;span style="border: 1px solid #FF0000"&gt;\&lt;/span&gt;:2
-&lt;/pre&gt;&lt;/div&gt;</content><category term="翻译"></category><category term="Lucene"></category><category term="ElasticSearch"></category><category term="Kibana"></category></entry><entry><title>一个 Python 小项目的小结</title><link href="http://youngsterxyf.github.io/2019/08/14/a-python-project-summary/" rel="alternate"></link><published>2019-08-14T00:00:00+08:00</published><updated>2019-08-14T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-08-14:/2019/08/14/a-python-project-summary/</id><summary type="html">&lt;p&gt;前段时间临时接手一个 Python 小项目，这个项目实现的类似一个管控平台，其中核心功能是为算法同学提供机器学习模型训练任务的全流程管理，平台后端基于 Flask 框架实现，前端基于 Ant Design Pro 实现。&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;\(1\+1\)\:2&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content><category term="其他"></category><category term="翻译"></category><category term="Lucene"></category><category term="ElasticSearch"></category><category term="Kibana"></category></entry><entry><title>一个 Python 小项目的小结</title><link href="http://youngsterxyf.github.io/2019/08/14/a-python-project-summary/" rel="alternate"></link><published>2019-08-14T00:00:00+08:00</published><updated>2019-08-14T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-08-14:/2019/08/14/a-python-project-summary/</id><summary type="html">&lt;p&gt;前段时间临时接手一个 Python 小项目，这个项目实现的类似一个管控平台，其中核心功能是为算法同学提供机器学习模型训练任务的全流程管理，平台后端基于 Flask 框架实现，前端基于 Ant Design Pro 实现。&lt;/p&gt;
 &lt;p&gt;代码稍微有些乱，所以做了部分代码的重构，在此做点经验小结。&lt;/p&gt;
 &lt;h3&gt;1、并行化或异步化&lt;/h3&gt;
 &lt;p&gt;部分请求处理逻辑，由于比较耗时，故使用线程池来加速，或者使用独立线程异步处理，或者先存储一个中间状态，由后台定时任务来完成实际的处理工作。对于异步处理结果，前端通过轮询来获取。&lt;/p&gt;
 &lt;p&gt;线程池的使用，主要使用 map 方法：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;from&lt;/span&gt; multiprocessing.dummy &lt;span style="color: #0000ff"&gt;import&lt;/span&gt; Pool
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;from&lt;/span&gt; multiprocessing.dummy &lt;span style="color: #0000ff"&gt;import&lt;/span&gt; Pool
 
 input_list = [...]
 pool: Pool = Pool(len(input_list))
 pool.map(func, input_list)
 pool.close()
 pool.join()
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;独立线程异步处理 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;前段时间临时接手一个 Python 小项目，这个项目实现的类似一个管控平台，其中核心功能是为算法同学提供机器学习模型训练任务的全流程管理，平台后端基于 Flask 框架实现，前端基于 Ant Design Pro 实现。&lt;/p&gt;
@@ -480,56 +612,56 @@ pool.join()
 &lt;h3&gt;1、并行化或异步化&lt;/h3&gt;
 &lt;p&gt;部分请求处理逻辑，由于比较耗时，故使用线程池来加速，或者使用独立线程异步处理，或者先存储一个中间状态，由后台定时任务来完成实际的处理工作。对于异步处理结果，前端通过轮询来获取。&lt;/p&gt;
 &lt;p&gt;线程池的使用，主要使用 map 方法：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;from&lt;/span&gt; multiprocessing.dummy &lt;span style="color: #0000ff"&gt;import&lt;/span&gt; Pool
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;from&lt;/span&gt; multiprocessing.dummy &lt;span style="color: #0000ff"&gt;import&lt;/span&gt; Pool
 
 input_list = [...]
 pool: Pool = Pool(len(input_list))
 pool.map(func, input_list)
 pool.close()
 pool.join()
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;独立线程异步处理：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; multiprocessing
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; multiprocessing
 
 p = multiprocessing.Process(target=func, args=(...))
 p.start()
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;定时任务，基于 apscheduler 库实现：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;from&lt;/span&gt; apscheduler.schedulers.background &lt;span style="color: #0000ff"&gt;import&lt;/span&gt; BackgroundScheduler
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;from&lt;/span&gt; apscheduler.schedulers.background &lt;span style="color: #0000ff"&gt;import&lt;/span&gt; BackgroundScheduler
 
 scheduler = BackgroundScheduler()
 
 scheduler.add_join(func, &lt;span style="color: #a31515"&gt;&amp;#39;interval&amp;#39;&lt;/span&gt;, seconds=1)
 
 scheduler.start()
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;因为对于 Python 应用，通常会使用 gunicorn 这种 WSGI HTTP 服务器以多进程启动多个应用实例，提升请求吞吐能力。但是对于定时任务我们希望只有一个实例，对此，如果使用 gunicorn，可以基于它的 preload 机制来实现：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #008000"&gt;# wsgi.py&lt;/span&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #008000"&gt;# wsgi.py&lt;/span&gt;
 &lt;span style="color: #0000ff"&gt;import&lt;/span&gt; app
 
 &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; __name__ == &lt;span style="color: #a31515"&gt;&amp;quot;__main__&amp;quot;&lt;/span&gt;:
     app.run()
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;# &lt;span style="border: 1px solid #FF0000"&gt;注意其中的&lt;/span&gt; &lt;span style="color: #008000"&gt;--preload 参数&lt;/span&gt;
-gunicorn &lt;span style="color: #008000"&gt;--workers=4 --preload --log-level=info --access-logfile=access.log -b 0.0.0.0:8080 wsgi:app&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;# 注意其中的 --preload 参数&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;gunicorn --workers=4 --preload --log-level=info --access-logfile=access.log -b 0.0.0.0:8080 wsgi:app&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;preload 机制简单来说，就是 import app 类所在的模块及其依赖的各个模块（import 过程中会执行其中的语句），然后 fork 出多个进程，每个进程都执行 app.run()。&lt;/p&gt;
 &lt;h4&gt;2、实现一些通用方案对异常进行捕获或重试&lt;/h4&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;def&lt;/span&gt; exception_try(times: int = 3, sleep_then_try_seconds=None):
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;def&lt;/span&gt; exception_try(times: int = 3, sleep_then_try_seconds=&lt;span style="color: #0000ff"&gt;None&lt;/span&gt;):
     &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; decorator(f):
         &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; wrapper(*args, **kwargs):
             count = 0
-            exception = None
+            exception = &lt;span style="color: #0000ff"&gt;None&lt;/span&gt;
             &lt;span style="color: #0000ff"&gt;while&lt;/span&gt; count &amp;lt; times:
                 &lt;span style="color: #0000ff"&gt;try&lt;/span&gt;:
                     &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; f(*args, **kwargs)
@@ -537,30 +669,30 @@ gunicorn &lt;span style="color: #008000"&gt;--workers=4 --preload --log-level=in
                     exception = e
                     count += 1
                     logging.exception(&lt;span style="color: #a31515"&gt;&amp;quot;Try {} times&amp;quot;&lt;/span&gt;.format(count))
-                    &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; (sleep_then_try_seconds &lt;span style="color: #0000ff"&gt;is&lt;/span&gt; &lt;span style="color: #0000ff"&gt;not&lt;/span&gt; None) &lt;span style="color: #0000ff"&gt;and&lt;/span&gt; count &amp;lt; times:
+                    &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; (sleep_then_try_seconds &lt;span style="color: #0000ff"&gt;is&lt;/span&gt; &lt;span style="color: #0000ff"&gt;not&lt;/span&gt; &lt;span style="color: #0000ff"&gt;None&lt;/span&gt;) &lt;span style="color: #0000ff"&gt;and&lt;/span&gt; count &amp;lt; times:
                         time.sleep(sleep_then_try_seconds)
             &lt;span style="color: #0000ff"&gt;raise&lt;/span&gt; exception
         &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; wrapper
     &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; decorator
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;@exception_try(times=3, sleep_then_try_seconds=0.5)
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;@exception_try(times=3, sleep_then_try_seconds=0.5)
 &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; connect(self):
     &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; pymysql.connect(host=self.host, user=self.user, password=self.password, db=self.db, charset=self.charset)
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;这个装饰器方法用于实现异常重试，并且可以指定重试的时间间隔，实际使用下来效果较好。而且也不会因为 &lt;code&gt;try...except&lt;/code&gt; 导致大块代码缩进。&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;确保数据库连接关闭（其它类似资源也可以这样实现）&lt;/strong&gt;&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;def&lt;/span&gt; with_db(db: Connection, exception_callback=None):
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;def&lt;/span&gt; with_db(db: Connection, exception_callback=&lt;span style="color: #0000ff"&gt;None&lt;/span&gt;):
     &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; decorator(f):
         &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; db_context(*a, **kw):
             &lt;span style="color: #0000ff"&gt;try&lt;/span&gt;:
                 &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; f(db, *a, **kw)
             &lt;span style="color: #0000ff"&gt;except&lt;/span&gt; Exception &lt;span style="color: #0000ff"&gt;as&lt;/span&gt; e:
                 logging.exception(str(e))
-                &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; exception_callback &lt;span style="color: #0000ff"&gt;is&lt;/span&gt; &lt;span style="color: #0000ff"&gt;not&lt;/span&gt; None:
+                &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; exception_callback &lt;span style="color: #0000ff"&gt;is&lt;/span&gt; &lt;span style="color: #0000ff"&gt;not&lt;/span&gt; &lt;span style="color: #0000ff"&gt;None&lt;/span&gt;:
                     exception_callback(e)
             &lt;span style="color: #0000ff"&gt;finally&lt;/span&gt;:
                 &lt;span style="color: #0000ff"&gt;try&lt;/span&gt;:
@@ -570,27 +702,27 @@ gunicorn &lt;span style="color: #008000"&gt;--workers=4 --preload --log-level=in
         &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; db_context
 
     &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; decorator
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #008000"&gt;# 将 conf.db.connect() 对象作为 delete_task_from_job_queue 的第一个参数注入，task_id 这个参数以不定参数的方式传入 delete_task_from_job_queue&lt;/span&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #008000"&gt;# 将 conf.db.connect() 对象作为 delete_task_from_job_queue 的第一个参数注入，task_id 这个参数以不定参数的方式传入 delete_task_from_job_queue&lt;/span&gt;
 with_db(conf.db.connect())(delete_task_from_job_queue)(task_id)
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;这个装饰器方法用于确保数据库连接在异常发生也能正常关闭，防止资源泄露。&lt;/p&gt;
 &lt;h4&gt;3、循环等待或超时&lt;/h4&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;class&lt;/span&gt; &lt;span style="color: #2b91af"&gt;TimeoutCondition&lt;/span&gt;(object):
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;class&lt;/span&gt; &lt;span style="color: #2b91af"&gt;TimeoutCondition&lt;/span&gt;(object):
 
     &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; __init__(self, condition_func, timeout_seconds):
         self.condition = condition_func
         self.timeout = timeout_seconds
-        self.begin = None
-        self.timeout_false = True
-        self.cond_true = True
+        self.begin = &lt;span style="color: #0000ff"&gt;None&lt;/span&gt;
+        self.timeout_false = &lt;span style="color: #0000ff"&gt;True&lt;/span&gt;
+        self.cond_true = &lt;span style="color: #0000ff"&gt;True&lt;/span&gt;
 
     &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; __bool__(self):
-        &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; self.begin &lt;span style="color: #0000ff"&gt;is&lt;/span&gt; None:
+        &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; self.begin &lt;span style="color: #0000ff"&gt;is&lt;/span&gt; &lt;span style="color: #0000ff"&gt;None&lt;/span&gt;:
             self.begin = timeit.default_timer()
         self.cond_true = self.condition()
         self.timeout_false = self.timeout &amp;lt;= 0 &lt;span style="color: #0000ff"&gt;or&lt;/span&gt; (timeit.default_timer() - self.begin) &amp;lt; self.timeout
@@ -598,23 +730,23 @@ with_db(conf.db.connect())(delete_task_from_job_queue)(task_id)
 
     &lt;span style="color: #0000ff"&gt;def&lt;/span&gt; is_timeout(self):
         &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; self.cond_true &lt;span style="color: #0000ff"&gt;and&lt;/span&gt; &lt;span style="color: #0000ff"&gt;not&lt;/span&gt; self.timeout_false
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;cond = TimeoutCondition(&lt;span style="color: #0000ff"&gt;lambda&lt;/span&gt; : len(service_list) == 0, 5)
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;cond = TimeoutCondition(&lt;span style="color: #0000ff"&gt;lambda&lt;/span&gt; : len(service_list) == 0, 5)
 &lt;span style="color: #0000ff"&gt;while&lt;/span&gt; cond:
     time.sleep(1)
     service_list = get_service_list()
 &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; cond.is_timeout():
-    &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; None, None
-&lt;/pre&gt;&lt;/div&gt;
+    &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; &lt;span style="color: #0000ff"&gt;None&lt;/span&gt;, &lt;span style="color: #0000ff"&gt;None&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;&lt;code&gt;TimeoutCondition&lt;/code&gt; 用于实现循环等待某个条件满足，但为了避免死循环，所以加一个超时条件判断。实例化参数第一个是原始的条件判断 lambda 语句，第二个是一个超时设置。另外，借助魔术方法 &lt;code&gt;__bool__&lt;/code&gt;，让 TimeoutCondtion 的实例用起来像是一个布尔变量，调用 &lt;code&gt;is_timeout()&lt;/code&gt; 方法可以区分循环等待退出是因为原始条件满足，还是超时退出的。&lt;/p&gt;
 &lt;h4&gt;4、按部署环境配置应用的行为&lt;/h4&gt;
 &lt;p&gt;应用在不同的环境（开发、测试、生产）中应该允许加载不同的配置，配置不同的行为。&lt;/p&gt;
 &lt;p&gt;当前应用处于什么环境，可以通过环境变量来配置，应用初始化时最先检测当前处于什么环境，之后的初始化流程就可以依据环境配置来加载配置，定制应用行为。&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #008000"&gt;# conf/__init__.py&lt;/span&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #008000"&gt;# conf/__init__.py&lt;/span&gt;
 &lt;span style="color: #0000ff"&gt;class&lt;/span&gt; &lt;span style="color: #2b91af"&gt;AppConfig&lt;/span&gt;(object):
     app_env = os.getenv(&lt;span style="color: #a31515"&gt;&amp;#39;APP_ENV&amp;#39;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;#39;development&amp;#39;&lt;/span&gt;)
     is_prod = app_env == &lt;span style="color: #a31515"&gt;&amp;#39;production&amp;#39;&lt;/span&gt;
@@ -645,36 +777,36 @@ conf = AppConfig()
         &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; name.startswith(&lt;span style="color: #a31515"&gt;&amp;#39;__&amp;#39;&lt;/span&gt;):
             &lt;span style="color: #0000ff"&gt;continue&lt;/span&gt;
         conf.__dict__[name] = value
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #008000"&gt;# 根据环境配置日志级别&lt;/span&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #008000"&gt;# 根据环境配置日志级别&lt;/span&gt;
 log_level = logging.INFO &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; conf.is_prod &lt;span style="color: #0000ff"&gt;else&lt;/span&gt; logging.DEBUG
 logging.basicConfig(format=consts.LOG_FORMAT, level=log_level)
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;h4&gt;5、方便排查问题的日志输出&lt;/h4&gt;
 &lt;p&gt;日志是问题排查的主要信息来源，所以日志记录得好不好，很关键。&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #008000"&gt;# https://github.com/python/cpython/blob/3.7/Lib/logging/__init__.py#L457&lt;/span&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #008000"&gt;# https://github.com/python/cpython/blob/3.7/Lib/logging/__init__.py#L457&lt;/span&gt;
 &lt;span style="color: #008000"&gt;# 日志时间 - 日志级别 - 代码文件路径 - 行号 - 进程 ID - 线程名称 - 日志内容&lt;/span&gt;
 LOG_FORMAT = &lt;span style="color: #a31515"&gt;&amp;#39;%(asctime)-15s - %(levelname)s - %(pathname)s - %(lineno)d - %(process)d - %(threadName)s - %(message)s&amp;#39;&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;h4&gt;6、API 规范与异常提示&lt;/h4&gt;
 &lt;p&gt;为了统一前端 API 响应处理，有必要对 API 响应体的结构指定标准。以我个人的习惯，所有从应用代码中返回的响应，HTTP 状态码都应该是 200，具体当前 API 请求成功还是失败，如果失败，失败的原因是什么都应该包含在响应体中，响应体大致的结构为：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;{
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;{
     &amp;quot;code&amp;quot;: &lt;span style="border: 1px solid #FF0000"&gt;...&lt;/span&gt;,
     &amp;quot;msg&amp;quot;: &lt;span style="color: #a31515"&gt;&amp;quot;...&amp;quot;&lt;/span&gt;,
     &amp;quot;data&amp;quot;: &lt;span style="border: 1px solid #FF0000"&gt;...&lt;/span&gt;
 }
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;code 表示请求处理失败时，data 字段可选，code 表示请求处理成功时，msg 字段可选。&lt;/p&gt;
 &lt;p&gt;前端配合对响应体进行统一检测和提示：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; { notification } from &lt;span style="color: #a31515"&gt;&amp;#39;antd&amp;#39;&lt;/span&gt;;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; { notification } from &lt;span style="color: #a31515"&gt;&amp;#39;antd&amp;#39;&lt;/span&gt;;
 
 &lt;span style="color: #0000ff"&gt;function&lt;/span&gt; defaultHTTPCodeHandler(response) {
   &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; (response.status &amp;gt;= 400) {
@@ -698,11 +830,11 @@ LOG_FORMAT = &lt;span style="color: #a31515"&gt;&amp;#39;%(asctime)-15s - %(leve
     });
   }
 }
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;并且统一封装发起请求的逻辑：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;export&lt;/span&gt; &lt;span style="color: #0000ff"&gt;function&lt;/span&gt; corsFetch(url, init, httpCodeCallback, msgCodeCallback) {
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;export&lt;/span&gt; &lt;span style="color: #0000ff"&gt;function&lt;/span&gt; corsFetch(url, init, httpCodeCallback, msgCodeCallback) {
   &lt;span style="color: #0000ff"&gt;const&lt;/span&gt; host = myHost();
   &lt;span style="color: #0000ff"&gt;let&lt;/span&gt; urlPrefix = host;
   &lt;span style="color: #008000"&gt;// 自带 host，则不额外补充 host 前缀&lt;/span&gt;
@@ -735,10 +867,10 @@ LOG_FORMAT = &lt;span style="color: #a31515"&gt;&amp;#39;%(asctime)-15s - %(leve
   promise.then((response) =&amp;gt; msgCodeHandler(response));
   &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; promise;
 }
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;其中为了方便本地开发测试，允许本地开发环境跨域访问测试环境（最好不要直接跨越访问生产环境），并且自动区分，corsFetch 调用方无感知。&lt;/p&gt;</content><category term="总结"></category><category term="Python"></category></entry><entry><title>Reactor 官方文档翻译简化版</title><link href="http://youngsterxyf.github.io/2019/06/26/simplified-reactor-doc-zh/" rel="alternate"></link><published>2019-06-26T00:00:00+08:00</published><updated>2019-06-26T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-06-26:/2019/06/26/simplified-reactor-doc-zh/</id><summary type="html">&lt;p&gt;原文：&lt;a href="https://projectreactor.io/docs/core/release/reference/"&gt;Reactor 3 Reference Guide&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;其中为了方便本地开发测试，允许本地开发环境跨域访问测试环境（最好不要直接跨越访问生产环境），并且自动区分，corsFetch 调用方无感知。&lt;/p&gt;</content><category term="其他"></category><category term="总结"></category><category term="Python"></category></entry><entry><title>Reactor 官方文档翻译简化版</title><link href="http://youngsterxyf.github.io/2019/06/26/simplified-reactor-doc-zh/" rel="alternate"></link><published>2019-06-26T00:00:00+08:00</published><updated>2019-06-26T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-06-26:/2019/06/26/simplified-reactor-doc-zh/</id><summary type="html">&lt;p&gt;原文：&lt;a href="https://projectreactor.io/docs/core/release/reference/"&gt;Reactor 3 Reference Guide&lt;/a&gt;&lt;/p&gt;
 &lt;h3&gt;1. 起步&lt;/h3&gt;
 &lt;h4&gt;1.1 Reactor 简介&lt;/h4&gt;
 &lt;p&gt;Reactor 是为 JVM 准备的一个完全非阻塞的反应式编程基础组件，支持高效的需求管理（以管理“反压”的形式），直接与 Java 8 的函数式 API 集成，尤其是 &lt;code&gt;CompletableFuture&lt;/code&gt;、&lt;code&gt;Stream&lt;/code&gt; 以及 &lt;code&gt;Duration&lt;/code&gt;，提供可组合的异步序列 API - &lt;code&gt;Flux&lt;/code&gt;（适用于 N 个元素的序列）和 &lt;code&gt;Mono&lt;/code&gt;（适用于 0 或 1个元素的序列）--- 并且全面地（extensively）实现了 &lt;a href="https://www.reactive-streams.org/"&gt;反应式流（Reative Streams）&lt;/a&gt; 规范。&lt;/p&gt;
@@ -750,12 +882,12 @@ LOG_FORMAT = &lt;span style="color: #a31515"&gt;&amp;#39;%(asctime)-15s - %(leve
 &lt;h4&gt;1.2 理解 BOM&lt;/h4&gt;
 &lt;p&gt;Reactor 3 开始采用 BOM （Bill of Materials，物料清单）发布模型（自 &lt;code&gt;reactor-core 3.0.4&lt;/code&gt; 开始，使用 &lt;code&gt;Aluminium&lt;/code&gt;（铝）版本序列），一个版本包含一组相关组件的版本，这些版本组件之间兼容性非常好，允许这些组件采用不同的版本命名方式。&lt;/p&gt;
 &lt;p&gt;BOM 发布模型本身也是版本化的，以一个代号后接一个修饰词来命名一个版本序列。如下是一个示例列表：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;Aluminium-RELEASE
-Californium-BUILD-SNAPSHOT
-Aluminium-SR1
-Bismuth-RELEASE
-Californium-SR32
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;Aluminium-RELEASE&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;Californium-BUILD-SNAPSHOT&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;Aluminium-SR1&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;Bismuth-RELEASE&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;Californium-SR32&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;代号等价于常规的 &lt;code&gt;大版本号.小版本号&lt;/code&gt; 形式，通常以字母升序方式取自 &lt;a href="https://en.wikipedia.org/wiki/Periodic_table#Overview"&gt;元素周期表&lt;/a&gt;。&lt;/p&gt;
@@ -769,7 +901,7 @@ Californium-SR32
 &lt;h4&gt;1.3 如何获取 Reactor&lt;/h4&gt;
 &lt;h5&gt;1.3.1 以 Maven 管理依赖包&lt;/h5&gt;
 &lt;p&gt;Maven 原生支持 BOM 模型概念。首先，在你的 &lt;code&gt;pom.xml&lt;/code&gt; 文件添加如下代码片段来引入 BOM：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&amp;lt;dependencyManagement&amp;gt; 
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&amp;lt;dependencyManagement&amp;gt; 
     &amp;lt;dependencies&amp;gt;
         &amp;lt;dependency&amp;gt;
             &amp;lt;groupId&amp;gt;io.projectreactor&amp;lt;/groupId&amp;gt;
@@ -780,13 +912,13 @@ Californium-SR32
         &amp;lt;/dependency&amp;gt;
     &amp;lt;/dependencies&amp;gt;
 &amp;lt;/dependencyManagement&amp;gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;&lt;em&gt;备注：注意其中的 &lt;code&gt;dependencyManagement&lt;/code&gt; 标签，添加到 &lt;code&gt;dependencies&lt;/code&gt; 一节中。&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;如果顶部标签（&lt;code&gt;dependencyManagement&lt;/code&gt;）已经存在，则只添加上面该标签的内部内容。&lt;/p&gt;
 &lt;p&gt;接下来，将依赖包添加到项目中，和一般依赖包一样，不过没有 &lt;code&gt;&amp;lt;version&amp;gt;&lt;/code&gt;，如下所示：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&amp;lt;dependencies&amp;gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&amp;lt;dependencies&amp;gt;
     &amp;lt;dependency&amp;gt;
         &amp;lt;groupId&amp;gt;io.projectreactor&amp;lt;/groupId&amp;gt;
         &amp;lt;artifactId&amp;gt;reactor-core&amp;lt;/artifactId&amp;gt; 
@@ -797,32 +929,32 @@ Californium-SR32
         &amp;lt;scope&amp;gt;test&amp;lt;/scope&amp;gt;
     &amp;lt;/dependency&amp;gt;
 &amp;lt;/dependencies&amp;gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;h5&gt;1.3.2 以 Gradle 管理依赖包&lt;/h5&gt;
 &lt;p&gt;Gradle 核心并不支持 Maven BOM，不过可以借助 Spring 的 &lt;a href="https://github.com/spring-gradle-plugins/dependency-management-plugin"&gt;gradle-dependency-management&lt;/a&gt; 插件。&lt;/p&gt;
 &lt;p&gt;首先，应用插件，如下所示：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;plugins &lt;span style="border: 1px solid #FF0000"&gt;{&lt;/span&gt;
-    id &lt;span style="color: #a31515"&gt;&amp;quot;io.spring.dependency-management&amp;quot;&lt;/span&gt; &lt;span style="color: #0000ff"&gt;version&lt;/span&gt; &lt;span style="color: #a31515"&gt;&amp;quot;1.0.6.RELEASE&amp;quot;&lt;/span&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;plugins {&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;    id &amp;quot;io.spring.dependency-management&amp;quot; version &amp;quot;1.0.6.RELEASE&amp;quot;&lt;/span&gt;
 &lt;span style="border: 1px solid #FF0000"&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;然后使用它来引入 BOM，如下所示：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;dependencyManagement &lt;span style="border: 1px solid #FF0000"&gt;{&lt;/span&gt;
-     imports &lt;span style="border: 1px solid #FF0000"&gt;{&lt;/span&gt;
-          mavenBom &lt;span style="color: #a31515"&gt;&amp;quot;io.projectreactor:reactor-bom:Bismuth-RELEASE&amp;quot;&lt;/span&gt;
-     &lt;span style="border: 1px solid #FF0000"&gt;}&lt;/span&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;dependencyManagement {&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;     imports {&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;          mavenBom &amp;quot;io.projectreactor:reactor-bom:Bismuth-RELEASE&amp;quot;&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;     }&lt;/span&gt;
 &lt;span style="border: 1px solid #FF0000"&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;最后将依赖添加到项目中，无需指定版本号，如下所示：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;dependencies &lt;span style="border: 1px solid #FF0000"&gt;{&lt;/span&gt;
-     compile &lt;span style="color: #a31515"&gt;&amp;#39;io.projectreactor:reactor-core&amp;#39;&lt;/span&gt; 
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;dependencies {&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;     compile &amp;#39;io.projectreactor:reactor-core&amp;#39; &lt;/span&gt;
 &lt;span style="border: 1px solid #FF0000"&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;h3&gt;2. 反应式编程简介&lt;/h3&gt;
@@ -834,8 +966,8 @@ Californium-SR32
 &lt;p&gt;反应式编程范式在面向对象语言中通常表现为一个观察者设计模式的扩展。你也可以将主流的反应式流模式（reactive streams pattern）和大家熟知的迭代器设计模式做对比，所有这些库中都存在对标于 &lt;code&gt;Iterable&lt;/code&gt; - &lt;code&gt;Iterator&lt;/code&gt; 的概念（译注：比如 发布者-消费者）。主要差别在于：迭代器是基于 pull 方式，反应式流则基于 push 方式。&lt;/p&gt;
 &lt;p&gt;使用迭代器是一个命令式编程的模式，即使如何访问数据（accessing values）完全是 &lt;code&gt;Iterable&lt;/code&gt; 的职责，但实际上，何时访问序列中的下一个（&lt;code&gt;next()&lt;/code&gt;）值取决于开发者的选择。在反应式流中，上述 &lt;code&gt;Iterable&lt;/code&gt; - &lt;code&gt;Iterator&lt;/code&gt; 对的等价物为 &lt;code&gt;Publisher&lt;/code&gt; - &lt;code&gt;Subscriber&lt;/code&gt;。不过，在出现新的数据/事件时，由 &lt;code&gt;Publisher&lt;/code&gt; 通知 &lt;code&gt;Subscriber&lt;/code&gt;，这个“推”特性也是实现反应式的关键之处。并且，在被推送的值上应用哪些操作是声明式表达而不是命令式表达的：程序员表达的是计算逻辑而不是描述精确的控制流。&lt;/p&gt;
 &lt;p&gt;除了“推”的特性，反应式流也良好地定义了如何处理错误和结束流。一个 &lt;code&gt;Publisher&lt;/code&gt; 可以向它的 &lt;code&gt;Subscriber&lt;/code&gt; 推送新的值（通过调用订阅者的 &lt;code&gt;onNext&lt;/code&gt; 方法），也可以推送错误（调用 &lt;code&gt;onError&lt;/code&gt; 方法）或结束（调用 &lt;code&gt;onComplete&lt;/code&gt;方法）信号。错误和结束信号都可以终结事件序列。简而言之，如下所示：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;onNext x 0..N [onError | onComplete]
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;onNext x 0..N [onError | onComplete]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;这个方式非常灵活。这个模式支持“没有值”、“一个值”或“n个值”（包括值无限的序列，比如时钟的持续滴答事件）的各种使用场景。&lt;/p&gt;
@@ -861,7 +993,7 @@ Californium-SR32
 &lt;p&gt;多个回调难以组合使用，容易导致代码难以阅读和维护（就是所谓的“回调地狱”）。&lt;/p&gt;
 &lt;p&gt;来看一个例子：在界面上为用户显示他最喜爱的5个物件，如果用户还没有任何喜欢的物件，则给出建议物件。这个逻辑涉及3个服务（第一个服务提供物件 ID，第二个服务获取物件的详细信息，第三个服务提供建议物件的详细信息），如下所示：&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;回调地域的示例&lt;/em&gt;&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;userService.getFavorites(userId, &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; Callback&amp;lt;List&amp;lt;String&amp;gt;&amp;gt;() { &lt;span style="color: #008000"&gt;// 1&lt;/span&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;userService.getFavorites(userId, &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; Callback&amp;lt;List&amp;lt;String&amp;gt;&amp;gt;() { &lt;span style="color: #008000"&gt;// 1&lt;/span&gt;
     &lt;span style="color: #0000ff"&gt;public&lt;/span&gt; &lt;span style="color: #2b91af"&gt;void&lt;/span&gt; onSuccess(List&amp;lt;String&amp;gt; list) { &lt;span style="color: #008000"&gt;// 2&lt;/span&gt;
         &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; (list.isEmpty()) { &lt;span style="color: #008000"&gt;// 3&lt;/span&gt;
             suggestionService.getSuggestions(&lt;span style="color: #0000ff"&gt;new&lt;/span&gt; Callback&amp;lt;List&amp;lt;Favorite&amp;gt;&amp;gt;() {
@@ -898,7 +1030,7 @@ Californium-SR32
         UiUtils.errorPopup(error);
     }
 })
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;ol&gt;
@@ -914,13 +1046,13 @@ Californium-SR32
 &lt;/ol&gt;
 &lt;p&gt;看看有多少代码，理解起来也有点困难，其中也有一些重复的代码片段。再来看看使用 Reactor 如何来实现这段逻辑：&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;和回调实现方式等价的 Reactor 实现&lt;/em&gt;&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;userService.getFavorite(userId) &lt;span style="color: #008000"&gt;// 1&lt;/span&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;userService.getFavorite(userId) &lt;span style="color: #008000"&gt;// 1&lt;/span&gt;
             .flatMap(favoriteService::getDetails) &lt;span style="color: #008000"&gt;// 2&lt;/span&gt;
             .switchIfEmpty(suggestionService.getSuggestions()) &lt;span style="color: #008000"&gt;// 3&lt;/span&gt;
             .take(5) &lt;span style="color: #008000"&gt;// 4&lt;/span&gt;
             .publishOn(UiUtils.uiThreadScheduler()) &lt;span style="color: #008000"&gt;// 5&lt;/span&gt;
             .subscribe(uiList::show, UiUtils::errorPopup); &lt;span style="color: #008000"&gt;// 6&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;ol&gt;
@@ -933,7 +1065,7 @@ Californium-SR32
 &lt;/ol&gt;
 &lt;p&gt;如果希望确保在 800ms 以内获取到喜爱物件 ID 列表，如果超时，则从缓存中获取数据，如何实现？基于回调的代码实现，这是一个复杂的任务。使用 Reactor，只需在操作链中添加一个 &lt;code&gt;timeout&lt;/code&gt; 算子就能轻松搞定，如下所示：&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;超时回退处理的 Reactor 代码示例&lt;/em&gt;&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;userService.getFavorites(userId)
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;userService.getFavorites(userId)
             .timeout(Duration.ofMillis(800)) &lt;span style="color: #008000"&gt;// 1&lt;/span&gt;
             .onErrorResume(cacheService.cachedFavoritesFor(userId)) &lt;span style="color: #008000"&gt;// 2&lt;/span&gt;
             .flatMap(favoriteService::getDetails)
@@ -941,7 +1073,7 @@ Californium-SR32
             .take(5)
             .publishOn(UiUtils.uiThreadScheduler())
             .subscribe(uiList::show, UiUtils::errorPopup);
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;ol&gt;
@@ -956,7 +1088,7 @@ Californium-SR32
 &lt;li&gt;对多个值的处理和高级错误处理缺乏支持。&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;来看看另一个例子：先获取一个 ID 列表，然后根据 ID 获取一个名字以及获取一个统计数值，再将名字和统计数值组合起来使用，这几个步骤都必须是异步的。如下示例以一组 &lt;code&gt;CompletableFuture&lt;/code&gt; 来实现这个逻辑：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;CompletableFuture&amp;lt;List&amp;lt;String&amp;gt;&amp;gt; ids = ifhIds(); &lt;span style="color: #008000"&gt;// 1&lt;/span&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;CompletableFuture&amp;lt;List&amp;lt;String&amp;gt;&amp;gt; ids = ifhIds(); &lt;span style="color: #008000"&gt;// 1&lt;/span&gt;
 
 CompletableFuture&amp;lt;List&amp;lt;String&amp;gt;&amp;gt; results = ids.thenComposeAsync(l -&amp;gt; { &lt;span style="color: #008000"&gt;// 2&lt;/span&gt;
     Stream&amp;lt;CompletableFuture&amp;lt;String&amp;gt;&amp;gt; zip = 
@@ -981,7 +1113,7 @@ assertThat(results).contains(
         &lt;span style="color: #a31515"&gt;&amp;quot;Name NameHenry has stats 105&amp;quot;&lt;/span&gt;,
         &lt;span style="color: #a31515"&gt;&amp;quot;Name NameNicole has stats 106&amp;quot;&lt;/span&gt;,
         &lt;span style="color: #a31515"&gt;&amp;quot;Name NameABSLAJNFOAJNFOANFANSF has stats 121&amp;quot;&lt;/span&gt;);
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;ol&gt;
@@ -997,7 +1129,7 @@ assertThat(results).contains(
 &lt;li&gt;触发执行整个异步处理流水线（调用 &lt;code&gt;join()&lt;/code&gt; 方法），然而等着异步处理完成并返回一个结果列表，就可以进行断言判断了。&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;Reactor 自带了很多组合算子，可以简化这个处理过程的实现，如下所示：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;Flux&amp;lt;String&amp;gt; ids = ifhrIds(); &lt;span style="color: #008000"&gt;// 1&lt;/span&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Flux&amp;lt;String&amp;gt; ids = ifhrIds(); &lt;span style="color: #008000"&gt;// 1&lt;/span&gt;
 
 Flux&amp;lt;String&amp;gt; combinations = 
         ids.flatMap(id -&amp;gt; { &lt;span style="color: #008000"&gt;// 2&lt;/span&gt;
@@ -1018,7 +1150,7 @@ assertThat(results).containsExactly( &lt;span style="color: #008000"&gt;// 8&lt;
     &lt;span style="color: #a31515"&gt;&amp;quot;Name NameNicole has stats 106&amp;quot;&lt;/span&gt;,
     &lt;span style="color: #a31515"&gt;&amp;quot;Name NameABSLAJNFOAJNFOANFANSF has stats 121&amp;quot;&lt;/span&gt;
 );
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;ol&gt;
@@ -1051,23 +1183,23 @@ assertThat(results).containsExactly( &lt;span style="color: #008000"&gt;// 8&lt;
 &lt;h4&gt;3.3 创建一个 Flux 或 Mono 并进行订阅的一些简单方法&lt;/h4&gt;
 &lt;p&gt;&lt;code&gt;Flux&lt;/code&gt; 和 &lt;code&gt;Mono&lt;/code&gt; 的类中包含大量的工厂方法，上手使用 Reactor 最简单的方式是从中选择一个用起来。&lt;/p&gt;
 &lt;p&gt;例如，创建一个 &lt;code&gt;String&lt;/code&gt; 序列，可以逐个列举出这些字符串，或者将这些字符串放到一个集合中，然后基于这个集合创建一个 Flux，如下所示：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;Flux&amp;lt;&lt;span style="border: 1px solid #FF0000"&gt;&lt;/span&gt;String&amp;gt; seq1 = Flux.just(&lt;span style="color: #a31515"&gt;&amp;quot;foo&amp;quot;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;quot;bar&amp;quot;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;quot;foobar&amp;quot;&lt;/span&gt;);
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Flux&amp;lt;&lt;span style="border: 1px solid #FF0000"&gt;&lt;/span&gt;String&amp;gt; seq1 = Flux.just(&lt;span style="color: #a31515"&gt;&amp;quot;foo&amp;quot;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;quot;bar&amp;quot;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;quot;foobar&amp;quot;&lt;/span&gt;);
 
 List&amp;lt;String&amp;gt; iterable = Arrays.asList(&lt;span style="color: #a31515"&gt;&amp;quot;foo&amp;quot;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;quot;bar&amp;quot;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;quot;foobar&amp;quot;&lt;/span&gt;);
 Flux&amp;lt;String&amp;gt; seq2 = Flux.fromIterable(iterable);
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;其它一些工厂方法的使用示例如下所示：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;Mono&amp;lt;String&amp;gt; noData = Mono.empty();
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Mono&amp;lt;String&amp;gt; noData = Mono.empty();
 Mono&amp;lt;String&amp;gt; data = Mono.just(&lt;span style="color: #a31515"&gt;&amp;quot;foo&amp;quot;&lt;/span&gt;);
 Flux&amp;lt;Integer&amp;gt; numbersFromFiveToSeven = Flux.range(5, 3);
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;对于订阅操作，&lt;code&gt;Flux&lt;/code&gt; 和 &lt;code&gt;Mono&lt;/code&gt; 借助了 Java 8 的 lambda 表达式。有大量 &lt;code&gt;.subscribe()&lt;/code&gt; 的重载方法/变种方法（variants）可选选择使用，使用 lambda 表达式来实现回调的不同组合，如下所示是这些方法的签名：&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;Flux 中基于 lambda 表达式的订阅方法变种&lt;/em&gt;&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;subscribe();
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;subscribe();
 
 subscribe(Consumer&amp;lt;? &lt;span style="color: #0000ff"&gt;super&lt;/span&gt; T&amp;gt; consumer);
 
@@ -1082,7 +1214,7 @@ subscribe(Consumer&amp;lt;? &lt;span style="color: #0000ff"&gt;super&lt;/span&gt
           Consumer&amp;lt;? &lt;span style="color: #0000ff"&gt;super&lt;/span&gt; Throwable&amp;gt; errorConsumer,
           Runnable completeConsumer,
           Consumer&amp;lt;? &lt;span style="color: #0000ff"&gt;super&lt;/span&gt; Subscription&amp;gt; subscriptionConsumer);
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;blockquote&gt;
@@ -1091,7 +1223,7 @@ subscribe(Consumer&amp;lt;? &lt;span style="color: #0000ff"&gt;super&lt;/span&gt
 &lt;h5&gt;3.3.1 lambda 表达式的替代方案：BaseSubscriber&lt;/h5&gt;
 &lt;p&gt;&lt;code&gt;Flux&lt;/code&gt; 和 &lt;code&gt;Mono&lt;/code&gt; 提供了一个相比上面那么订阅方法更通用的 &lt;code&gt;subscribe&lt;/code&gt; 方法，其参数是一个完整的 &lt;code&gt;Subscriber&lt;/code&gt; 实例，而不是根据几个 lambda 表达式组合出一个 &lt;code&gt;Subscriber&lt;/code&gt; 实例。为了方便实现这样的一个 &lt;code&gt;Subscriber&lt;/code&gt;，Reactor 提供了一个名为 &lt;code&gt;BaseSubscriber&lt;/code&gt; 的可扩展的抽象类。&lt;/p&gt;
 &lt;p&gt;下面来实现一个，我们将其命名为 &lt;code&gt;SampleSubscriber&lt;/code&gt;。如下示例演示了如何将其应用到一个 &lt;code&gt;Flux&lt;/code&gt; 序列上：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;SampleSubscriber&amp;lt;Integer&amp;gt; ss = &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; SampleSubscriber&amp;lt;Integer&amp;gt;();
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;SampleSubscriber&amp;lt;Integer&amp;gt; ss = &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; SampleSubscriber&amp;lt;Integer&amp;gt;();
 Flux&amp;lt;Integer&amp;gt; ints = Flux.range(1, 4);
 &lt;span style="color: #008000"&gt;//&lt;/span&gt;
 ints.subscribe(i -&amp;gt; System.out.println(i),
@@ -1100,11 +1232,11 @@ ints.subscribe(i -&amp;gt; System.out.println(i),
     s -&amp;gt; s.request(10));
 &lt;span style="color: #008000"&gt;//&lt;/span&gt;
 ints.subscribe(ss);
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;如下示例演示了 &lt;code&gt;SampleSubscriber&lt;/code&gt; 继承自 &lt;code&gt;BaseSubscriber&lt;/code&gt; 的一个最简化实现：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;package&lt;/span&gt; io.projectreactor.samples;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;package&lt;/span&gt; io.projectreactor.samples;
 
 &lt;span style="color: #0000ff"&gt;import&lt;/span&gt; org.reactivestreams.Subscription;
 &lt;span style="color: #0000ff"&gt;import&lt;/span&gt; reactor.core.publisher.BaseSubscriber;
@@ -1121,7 +1253,7 @@ ints.subscribe(ss);
         request(1);
     }
 }
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;&lt;code&gt;BaseSubscriber&lt;/code&gt; 还提供了一个 &lt;code&gt;requestUnbounded()&lt;/code&gt; 方法来切换到无限消费模式（相当于 &lt;code&gt;request(Long.MAX_VALUES)&lt;/code&gt;），另外也提供了一个 &lt;code&gt;cancel()&lt;/code&gt; 方法。&lt;/p&gt;
@@ -1135,7 +1267,7 @@ ints.subscribe(ss);
 &lt;li&gt;调用 &lt;code&gt;toIterable()&lt;/code&gt; 或 &lt;code&gt;toStream()&lt;/code&gt; 进行遍历&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;对首个请求进行定制的最简单方式是以一个 &lt;code&gt;BaseSubscriber&lt;/code&gt; 派生类实例来 &lt;code&gt;subscribe&lt;/code&gt;，派生类重写 &lt;code&gt;BaseSubscriber&lt;/code&gt; 的 &lt;code&gt;hookOnSubscribe&lt;/code&gt; 方法，如下所示：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;Flux.range(1, 10)
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Flux.range(1, 10)
     .doOnRequest(r -&amp;gt; System.out.println(&lt;span style="color: #a31515"&gt;&amp;quot;request of &amp;quot;&lt;/span&gt; + r))
     .subscribe(&lt;span style="color: #0000ff"&gt;new&lt;/span&gt; BaseSubscriber&amp;lt;Integer&amp;gt;() {
 
@@ -1150,13 +1282,13 @@ ints.subscribe(ss);
         cancel();
       }
     });
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;上面这个代码片段输出如下内容：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;request &lt;span style="color: #0000ff"&gt;of&lt;/span&gt; 1
-Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style="color: #0000ff"&gt;having&lt;/span&gt; received 1
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;request of 1&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;Cancelling after having received 1&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;&lt;strong&gt;改变下游需求量的算子&lt;/strong&gt;&lt;/p&gt;
@@ -1175,14 +1307,14 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
 &lt;p&gt;&lt;code&gt;generate&lt;/code&gt; 方法变种的这个应该是最有用的：允许保持一个状态，在调用接收方的 &lt;code&gt;next&lt;/code&gt; 方法时可以基于这个状态来决定下发什么数据。那么这个生成器函数就成了一个 &lt;code&gt;BiFunction&amp;lt;S, SynchronousSink&amp;lt;T&amp;gt;, S&amp;gt;&lt;/code&gt; 实例，其中 &lt;code&gt;&amp;lt;S&amp;gt;&lt;/code&gt; 即是状态对象的类型。对于初始状态，可以提供一个 &lt;code&gt;Supplier&amp;lt;S&amp;gt;&lt;/code&gt; 来获取，这样生成器函数每轮调用都会返回一个新的状态。&lt;/p&gt;
 &lt;p&gt;例如，可以使用一个 &lt;code&gt;int&lt;/code&gt; 实例作为状态：&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;基于状态的 &lt;code&gt;generate&lt;/code&gt; 方法使用示例&lt;/em&gt;&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;Flux&amp;lt;String&amp;gt; flux = Flux.generate(
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Flux&amp;lt;String&amp;gt; flux = Flux.generate(
     () -&amp;gt; 0, &lt;span style="color: #008000"&gt;// 1&lt;/span&gt;
     (state, sink) -&amp;gt; {
         sink.next(&lt;span style="color: #a31515"&gt;&amp;quot;3 x &amp;quot;&lt;/span&gt; + state + &lt;span style="color: #a31515"&gt;&amp;quot; = &amp;quot;&lt;/span&gt; + 3*state); &lt;span style="color: #008000"&gt;// 2&lt;/span&gt;
         &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; (state == 10) sink.complete(); &lt;span style="color: #008000"&gt;// 3&lt;/span&gt;
         &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; state + 1; &lt;span style="color: #008000"&gt;// 4&lt;/span&gt;
     });
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;ol&gt;
@@ -1192,7 +1324,7 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
 &lt;li&gt;返回一个新状态，下次调用时可以使用（除非在这次调用时已经终止序列）。&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;也可以使用一个 &lt;code&gt;&amp;lt;S&amp;gt;&lt;/code&gt; 类型的可变对象。比如，上面的示例可以使用一个 &lt;code&gt;AtomicLong&lt;/code&gt; 实例作为状态来重写，每轮调用都会改变它的值：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;Flux&amp;lt;String&amp;gt; flux = Flux.generate(
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Flux&amp;lt;String&amp;gt; flux = Flux.generate(
     AtomicLong::&lt;span style="color: #0000ff"&gt;new&lt;/span&gt;,
     (state, sink) -&amp;gt; {
         &lt;span style="color: #2b91af"&gt;long&lt;/span&gt; i = state.getAndIncrement();
@@ -1200,14 +1332,14 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
         &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; (i == 10) sink.complete();
         &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; state;
     });
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;blockquote&gt;
 &lt;p&gt;如果状态对象在序列终止时需要清理一些资源，则应该使用 &lt;code&gt;generate(Supplier&amp;lt;S&amp;gt;, BiFunction, Consumer&amp;lt;S&amp;gt;)&lt;/code&gt; 变种方法来清理最后的状态实例。&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;如下示例使用的 &lt;code&gt;generate&lt;/code&gt; 方法接受一个 &lt;code&gt;Consumer&lt;/code&gt; 类型参数：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;Flux&amp;lt;String&amp;gt; flux = Flux.generate(
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Flux&amp;lt;String&amp;gt; flux = Flux.generate(
     AtomicLong::&lt;span style="color: #0000ff"&gt;new&lt;/span&gt;,
     (state, sink) -&amp;gt; {
         &lt;span style="color: #2b91af"&gt;long&lt;/span&gt; i = state.getAndIncrement();
@@ -1215,7 +1347,7 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
         &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; (i == 10) sink.complete();
         &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; state;
     }, (state) -&amp;gt; System.out.println(&lt;span style="color: #a31515"&gt;&amp;quot;state: &amp;quot;&lt;/span&gt; + state));
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;h5&gt;3.4.2 异步多线程的 create&lt;/h5&gt;
@@ -1226,15 +1358,15 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
 &lt;p&gt;&lt;code&gt;create&lt;/code&gt; 并不会自动并行化执行你的代码，也不会让处理过程自动变成异步的，即使它可以配合异步 API 使用。如果在 &lt;code&gt;create&lt;/code&gt; 的 lambda 表达式中发生阻塞，就会存在死锁或者其它副作用的风险。即使借助 &lt;code&gt;subscribeOn&lt;/code&gt;，也要当心 &lt;code&gt;create&lt;/code&gt; lambda 表达式中长时间的阻塞（比如无限循环调用 &lt;code&gt;sink.next(t)&lt;/code&gt;）锁住流水线处理： （译注：异步的）数据请求可能根本得不到执行，因为（译注：线程池只有一个线程）同一个线程一直被无限循环占用着。使用 &lt;code&gt;subscribeOn(Scheduler, false)&lt;/code&gt; 变种方法：&lt;code&gt;requestOnSeparateThread = false&lt;/code&gt; 将使用 &lt;code&gt;Scheduler&lt;/code&gt; 的线程来执行 &lt;code&gt;create&lt;/code&gt; 方法的回调，在原始的线程中执行 &lt;code&gt;request&lt;/code&gt;，从而让数据仍然可以流动起来。（译注：此处逻辑有点绕，也可能是因为 subscribeOn 方法本身语义就不太直观）。&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;假设我们要使用一个基于监听器的 API，它按块处理数据，提供两类事件：（1）来了一块数据，（2）处理可以结束了（终止事件），如下 &lt;code&gt;MyEventListener&lt;/code&gt; 接口定义所示：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;interface&lt;/span&gt; &lt;span style="color: #2b91af"&gt;MyEventListener&lt;/span&gt;&amp;lt;T&amp;gt; {
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;interface&lt;/span&gt; &lt;span style="color: #2b91af"&gt;MyEventListener&lt;/span&gt;&amp;lt;T&amp;gt; {
     &lt;span style="color: #2b91af"&gt;void&lt;/span&gt; onDataChunk(List&amp;lt;T&amp;gt; chunk);
     &lt;span style="color: #2b91af"&gt;void&lt;/span&gt; processComplete();
 }
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;我们使用 &lt;code&gt;create&lt;/code&gt; 将这个 API 桥接到一个 &lt;code&gt;Flux&amp;lt;T&amp;gt;&lt;/code&gt; 实例上：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;Flux&amp;lt;String&amp;gt; bridge = Flux.create(sink -&amp;gt; {
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Flux&amp;lt;String&amp;gt; bridge = Flux.create(sink -&amp;gt; {
     myEventProcessor.register(  &lt;span style="color: #008000"&gt;// 4&lt;/span&gt;
         &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; MyEventListener&amp;lt;String&amp;gt;() { &lt;span style="color: #008000"&gt;// 1&lt;/span&gt;
             &lt;span style="color: #0000ff"&gt;public&lt;/span&gt; &lt;span style="color: #2b91af"&gt;void&lt;/span&gt; onDataChunk(List&amp;lt;String&amp;gt; chunk) {
@@ -1249,7 +1381,7 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
         }
     );
 });
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;ol&gt;
@@ -1270,7 +1402,7 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
 &lt;/blockquote&gt;
 &lt;h5&gt;3.4.3 异步单线程的 push&lt;/h5&gt;
 &lt;p&gt;&lt;code&gt;push&lt;/code&gt; 的功能介于 &lt;code&gt;generate&lt;/code&gt; 和 &lt;code&gt;create&lt;/code&gt; 之间，适用于处理来自单个生产者的事件。&lt;code&gt;push&lt;/code&gt; 也可以是异步的，也可以使用 &lt;code&gt;create&lt;/code&gt; 支持的超限策略来管理反压，然而，同时（at a time）只能有一个生产线程调用 &lt;code&gt;next&lt;/code&gt;。&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;Flux&amp;lt;String&amp;gt; bridge = Flux.push(sink -&amp;gt; {
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Flux&amp;lt;String&amp;gt; bridge = Flux.push(sink -&amp;gt; {
     myEventProcessor.register(
         &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; SingleThreadEventListener&amp;lt;String&amp;gt;() { &lt;span style="color: #008000"&gt;// 1&lt;/span&gt;
 
@@ -1290,7 +1422,7 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
         }
     );
 });
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;ol&gt;
@@ -1303,7 +1435,7 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
 &lt;p&gt;多数 Reactor 算子，比如 &lt;code&gt;create&lt;/code&gt;，都遵从 &lt;strong&gt;推/拉（push/pull）&lt;/strong&gt; 混合模型。这意味着尽管大部分的处理过程都是异步的（暗指“推”的方式），也存在小部分逻辑是 &lt;em&gt;拉（pull）&lt;/em&gt;方式：数据请求。&lt;/p&gt;
 &lt;p&gt;消费者从数据源&lt;em&gt;拉取&lt;/em&gt;数据，意指：数据源在消费者首次请求后才会发出数据，然后只有要数据就会推送给消费者，不过数据量不会超过消费者请求的量。&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;push()&lt;/code&gt; 和 &lt;code&gt;create()&lt;/code&gt; 都可以配置（set up）一个 &lt;code&gt;onRequest&lt;/code&gt; 事件消费者来管理请求量，并且确保仅当存在已发起的请求，数据才会推送给下游。&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;Flux&amp;lt;String&amp;gt; bridge = Flux.create(sink -&amp;gt; {
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Flux&amp;lt;String&amp;gt; bridge = Flux.create(sink -&amp;gt; {
     myMessageProcessor.register(
         &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; MyMessageListener&amp;lt;String&amp;gt;() {
 
@@ -1321,7 +1453,7 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
         }
     });    
 });
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;&lt;em&gt;译者注：上面这个示例有点问题，实际并不存在这样一个 create 方法，并且 sink.onRequest 实际代表一个无限量（n = Long.MAX_VALUE）的请求。&lt;/em&gt;&lt;/p&gt;
@@ -1334,7 +1466,7 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
 &lt;p&gt;Reactor，与 RxJava 类似，可以认为是&lt;strong&gt;并发无关的&lt;/strong&gt;，也就是说，Reactor 并不强制使用并发（a concurrency
  model），而是，让开发者按需决定是否使用并发。然而，Reactor 也提供一些功能方便开启并发。&lt;/p&gt;
 &lt;p&gt;获取到一个 &lt;code&gt;Flux&lt;/code&gt; 或 &lt;code&gt;Mono&lt;/code&gt; 处理流，并不意味着它在一个专用（dedicated）的线程（&lt;code&gt;Thread&lt;/code&gt;） 中运行。相反，多数算子也是运行在前一个算子运行的线程中。除非特意指定，首个（topmost）算子（数据源）就运行在执行 &lt;code&gt;subscribe()&lt;/code&gt; 方法调用的线程中。如下示例在一个新建线程中运行一个 &lt;code&gt;Mono&lt;/code&gt; 处理流。&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;public&lt;/span&gt; &lt;span style="color: #0000ff"&gt;static&lt;/span&gt; &lt;span style="color: #2b91af"&gt;void&lt;/span&gt; main(String[] args) {
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;public&lt;/span&gt; &lt;span style="color: #0000ff"&gt;static&lt;/span&gt; &lt;span style="color: #2b91af"&gt;void&lt;/span&gt; main(String[] args) {
     &lt;span style="color: #0000ff"&gt;final&lt;/span&gt; Mono&amp;lt;String&amp;gt; mono = Mono.just(&lt;span style="color: #a31515"&gt;&amp;quot;Hello &amp;quot;&lt;/span&gt;); &lt;span style="color: #008000"&gt;// 1&lt;/span&gt;
 
     &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; Thread(() -&amp;gt; mono
@@ -1344,7 +1476,7 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
         )
     ).join();
 }
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;ol&gt;
@@ -1353,8 +1485,8 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
 &lt;li&gt;因而，&lt;code&gt;map&lt;/code&gt; 和 &lt;code&gt;onNext&lt;/code&gt; 的回调（译注：&lt;code&gt;onNext&lt;/code&gt; 的回调即 subscribe 方法传入的 lambda 表达式）实际上也是在 &lt;code&gt;Thread-0&lt;/code&gt; 上执行。&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;上述的代码会输出如下内容：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;hello thread Thread-0
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;hello thread Thread-0&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;Reactor 中，运行模型以及实际的运行过程发生在什么地方由使用什么 &lt;code&gt;Scheduler&lt;/code&gt; 决定。&lt;a href="https://projectreactor.io/docs/core/release/api/reactor/core/scheduler/Scheduler.html"&gt;&lt;code&gt;Scheduler&lt;/code&gt;&lt;/a&gt; 类似于 &lt;code&gt;ExecutorService&lt;/code&gt;，负有调度职责，但具备一个专用的抽象，功能更强大，充当一个时钟的角色，可用的实现更多。&lt;/p&gt;
@@ -1372,8 +1504,8 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
 &lt;p&gt;如果自定义调度器所创建的线程实例实现了 &lt;code&gt;NonBlocking&lt;/code&gt; 标记性接口（marker interface），那么这个调度器也可以被标记为”仅适用于非阻塞性使用（non blocking only）“。&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;某些算子默认会从 &lt;code&gt;Schedulers&lt;/code&gt; 选择一个特定的调度器来使用（通常也支持选择其他的）。例如，调用工厂方法 &lt;code&gt;Flux.interval(Duration.ofMills(300))&lt;/code&gt; 会生成一个 &lt;code&gt;Flux&amp;lt;Long&amp;gt;&lt;/code&gt; 实例 - 每 300 ms 输出一个滴答事件。这个方法底层实现默认使用 &lt;code&gt;Schedulers.parallel()&lt;/code&gt;。如下代码行演示了如何将调度器修改成类似于 &lt;code&gt;Schedulers.single()&lt;/code&gt; 的调度器新实例：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;Flux.interval(Duration.ofMillis(300), Schedulers.newSingle(&lt;span style="color: #a31515"&gt;&amp;quot;test&amp;quot;&lt;/span&gt;));
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Flux.interval(Duration.ofMillis(300), Schedulers.newSingle(&lt;span style="color: #a31515"&gt;&amp;quot;test&amp;quot;&lt;/span&gt;));
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;Reactor 提供了两种方式来切换反应式链中的执行上下文（或者说 &lt;code&gt;调度器&lt;/code&gt;）：&lt;code&gt;publishOn&lt;/code&gt; 和 &lt;code&gt;subscribeOn&lt;/code&gt;。两者都是接受一个 &lt;code&gt;Scheduler&lt;/code&gt; 类型参数并将执行上下文切换到这个调度器。不过，链中 &lt;code&gt;publishOn&lt;/code&gt; 所处的位置很关键，而 &lt;code&gt;subscribeOn&lt;/code&gt; 处于哪个位置都无所谓。要理解这个差别的原因，得先理解 &lt;a href="https://projectreactor.io/docs/core/release/reference/#reactive.subscribe"&gt;订阅之前实际什么都没有发生&lt;/a&gt;。&lt;/p&gt;
@@ -1386,7 +1518,7 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
 &lt;li&gt;根据规范（as per the specification），&lt;code&gt;onNext&lt;/code&gt; 是按时序依次调用下发事件的，所以是占用一个线程（译注：这句不太理解，onNext happen in sequence, so this uses up a single thread）&lt;/li&gt;
 &lt;li&gt;除非算子工作在一个特定的 &lt;code&gt;Scheduler&lt;/code&gt; 上（译注：某些算子的内部实现决定了这一点），&lt;code&gt;publishOn&lt;/code&gt; 之后的算子都是在同一个线程上执行&lt;/li&gt;
 &lt;/ul&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;Scheduler s = Schedulers.newParallel(&lt;span style="color: #a31515"&gt;&amp;quot;parallel-scheduler&amp;quot;&lt;/span&gt;, 4); &lt;span style="color: #008000"&gt;// 1&lt;/span&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Scheduler s = Schedulers.newParallel(&lt;span style="color: #a31515"&gt;&amp;quot;parallel-scheduler&amp;quot;&lt;/span&gt;, 4); &lt;span style="color: #008000"&gt;// 1&lt;/span&gt;
 
 &lt;span style="color: #0000ff"&gt;final&lt;/span&gt; Flux&amp;lt;String&amp;gt; flux = Flux
     .range(1, 2)
@@ -1395,7 +1527,7 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
     .map(i -&amp;gt; &lt;span style="color: #a31515"&gt;&amp;quot;value &amp;quot;&lt;/span&gt; + i); &lt;span style="color: #008000"&gt;// 4&lt;/span&gt;
 
 &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; Thread(() -&amp;gt; flux.subscribe(System.out::println));
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;ol&gt;
@@ -1414,7 +1546,7 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
 &lt;blockquote&gt;
 &lt;p&gt;只有链中最早的 &lt;code&gt;subscribeOn&lt;/code&gt; 调用会发生实际作用。&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;Scheduler s = Schedulers.newParallel(&lt;span style="color: #a31515"&gt;&amp;quot;parallel-scheduler&amp;quot;&lt;/span&gt;, 4); &lt;span style="color: #008000"&gt;// 1&lt;/span&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Scheduler s = Schedulers.newParallel(&lt;span style="color: #a31515"&gt;&amp;quot;parallel-scheduler&amp;quot;&lt;/span&gt;, 4); &lt;span style="color: #008000"&gt;// 1&lt;/span&gt;
 
 &lt;span style="color: #0000ff"&gt;final&lt;/span&gt; Flux&amp;lt;String&amp;gt; flux = Flux
     .range(1, 2)
@@ -1423,7 +1555,7 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
     .map(i -&amp;gt; &lt;span style="color: #a31515"&gt;&amp;quot;value &amp;quot;&lt;/span&gt; + i); &lt;span style="color: #008000"&gt;// 4&lt;/span&gt;
 
 &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; Thread(() -&amp;gt; flux.subscribe(System.out::println)); &lt;span style="color: #008000"&gt;// 5 &lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;ol&gt;
@@ -1440,71 +1572,71 @@ Cancelling &lt;span style="color: #0000ff"&gt;after&lt;/span&gt; &lt;span style=
 &lt;p&gt;&lt;em&gt;以后有空再翻译&lt;/em&gt;&lt;/p&gt;
 &lt;h4&gt;4.3 使用 ParallelFlux 并行化处理&lt;/h4&gt;
 &lt;p&gt;如今多核架构已是下里巴人，相应地，轻松实现并行化工作的工具手段很关键。Reactor 提供了一个特殊类型 - &lt;code&gt;ParallelFlux&lt;/code&gt; - 帮助实现并行化处理。&lt;code&gt;ParallelFlux&lt;/code&gt; 提供的算子是为并行化工作优化过的。&lt;/p&gt;
-&lt;p&gt;对任意 &lt;code&gt;Flux&lt;/code&gt; 实例调用 &lt;code&gt;parallel()&lt;/code&gt;算子就能得到一个 &lt;code&gt;ParallelFlux&lt;/code&gt; 实例。这个方法本身并不能实现并行化工作，而是将工作负载拆分到多个“轨道”（默认“轨道”数量等于 CPU 核数）&lt;sup id="fnref-1"&gt;&lt;a class="footnote-ref" href="#fn-1"&gt;1&lt;/a&gt;&lt;/sup&gt;。&lt;/p&gt;
+&lt;p&gt;对任意 &lt;code&gt;Flux&lt;/code&gt; 实例调用 &lt;code&gt;parallel()&lt;/code&gt;算子就能得到一个 &lt;code&gt;ParallelFlux&lt;/code&gt; 实例。这个方法本身并不能实现并行化工作，而是将工作负载拆分到多个“轨道”（默认“轨道”数量等于 CPU 核数）&lt;sup id="fnref:1"&gt;&lt;a class="footnote-ref" href="#fn:1"&gt;1&lt;/a&gt;&lt;/sup&gt;。&lt;/p&gt;
 &lt;p&gt;为了告知产出的 ParallelFlux 实例每个“轨道”在哪执行（以及如何并行执行“轨道”），则必须使用 &lt;code&gt;runOn(Scheduler)&lt;/code&gt;。注意：对于并行工作，推荐使用一个专用调度器 - &lt;code&gt;Schedulers.parallel()&lt;/code&gt;。&lt;/p&gt;
 &lt;p&gt;对比如下两个示例，第一个示例的代码如下所示：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;Flux.range(1, 10)
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Flux.range(1, 10)
     .parallel(2) &lt;span style="color: #008000"&gt;// 1&lt;/span&gt;
     .subscribe(i -&amp;gt; System.out.println(Thread.currentThread().getName() + &lt;span style="color: #a31515"&gt;&amp;quot; -&amp;gt; &amp;quot;&lt;/span&gt; + i));
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;ol&gt;
 &lt;li&gt;这里强制指定了“轨道”数量，而不依赖于 CPU 核数。&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;第二个示例的代码如下所示：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;Flux.range(1, 10)
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Flux.range(1, 10)
     .parallel(2)
     .runOn(Schedulers.parallel())
     .subscribe(i -&amp;gt; System.out.println(Thread.currentThread().getName() + &lt;span style="color: #a31515"&gt;&amp;quot; -&amp;gt; &amp;quot;&lt;/span&gt; + i));
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;第一个示例输出如下内容：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;main -&amp;gt; 1
-main -&amp;gt; 2
-main -&amp;gt; 3
-main -&amp;gt; 4
-main -&amp;gt; 5
-main -&amp;gt; 6
-main -&amp;gt; 7
-main -&amp;gt; 8
-main -&amp;gt; 9
-main -&amp;gt; 10
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;main -&amp;gt; 1&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;main -&amp;gt; 2&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;main -&amp;gt; 3&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;main -&amp;gt; 4&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;main -&amp;gt; 5&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;main -&amp;gt; 6&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;main -&amp;gt; 7&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;main -&amp;gt; 8&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;main -&amp;gt; 9&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;main -&amp;gt; 10&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;第二个示例正确地在两个线程上实现了并行化，输入如下所示：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;parallel-1 -&amp;gt; 1
-parallel-2 -&amp;gt; 2
-parallel-1 -&amp;gt; 3
-parallel-2 -&amp;gt; 4
-parallel-1 -&amp;gt; 5
-parallel-2 -&amp;gt; 6
-parallel-1 -&amp;gt; 7
-parallel-1 -&amp;gt; 9
-parallel-2 -&amp;gt; 8
-parallel-2 -&amp;gt; 10
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;parallel-1 -&amp;gt; 1&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;parallel-2 -&amp;gt; 2&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;parallel-1 -&amp;gt; 3&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;parallel-2 -&amp;gt; 4&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;parallel-1 -&amp;gt; 5&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;parallel-2 -&amp;gt; 6&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;parallel-1 -&amp;gt; 7&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;parallel-1 -&amp;gt; 9&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;parallel-2 -&amp;gt; 8&lt;/span&gt;
+&lt;span style="border: 1px solid #FF0000"&gt;parallel-2 -&amp;gt; 10&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;如果数据序列&lt;sup id="fnref-2"&gt;&lt;a class="footnote-ref" href="#fn-2"&gt;2&lt;/a&gt;&lt;/sup&gt;已经在并行化处理，而你又想将其转回一个 “常规的” &lt;code&gt;Flux&lt;/code&gt; 实例，然后串行执行算子链余下的部分，则可以使用 &lt;code&gt;ParallelFlux&lt;/code&gt; 的 &lt;code&gt;sequential()&lt;/code&gt; 方法。&lt;/p&gt;
+&lt;p&gt;如果数据序列&lt;sup id="fnref:2"&gt;&lt;a class="footnote-ref" href="#fn:2"&gt;2&lt;/a&gt;&lt;/sup&gt;已经在并行化处理，而你又想将其转回一个 “常规的” &lt;code&gt;Flux&lt;/code&gt; 实例，然后串行执行算子链余下的部分，则可以使用 &lt;code&gt;ParallelFlux&lt;/code&gt; 的 &lt;code&gt;sequential()&lt;/code&gt; 方法。&lt;/p&gt;
 &lt;p&gt;注意：如果直接使用一个 &lt;code&gt;Subscriber&lt;/code&gt; 类型参数而不是 lambda 表达式来调用 &lt;code&gt;subscribe&lt;/code&gt; 方法，那么内部实现会隐式地调用 &lt;code&gt;sequential()&lt;/code&gt; 方法。&lt;/p&gt;
-&lt;p&gt;由此也要注意：&lt;code&gt;subscribe(Subscriber&amp;lt;T&amp;gt;)&lt;/code&gt; 会合并所有数据“轨道”，而 &lt;code&gt;subscribe(Consumer&amp;lt;T&amp;gt;)&lt;/code&gt; 是运行所有的数据“轨道”。如果以 lambda 表达式调用 &lt;code&gt;subscribe&lt;/code&gt; 方法，那么每个 lambda 表达式都会被复制成多个实例（数量等于“轨道”数量）去执行&lt;sup id="fnref-3"&gt;&lt;a class="footnote-ref" href="#fn-3"&gt;3&lt;/a&gt;&lt;/sup&gt;。&lt;/p&gt;
+&lt;p&gt;由此也要注意：&lt;code&gt;subscribe(Subscriber&amp;lt;T&amp;gt;)&lt;/code&gt; 会合并所有数据“轨道”，而 &lt;code&gt;subscribe(Consumer&amp;lt;T&amp;gt;)&lt;/code&gt; 是运行所有的数据“轨道”。如果以 lambda 表达式调用 &lt;code&gt;subscribe&lt;/code&gt; 方法，那么每个 lambda 表达式都会被复制成多个实例（数量等于“轨道”数量）去执行&lt;sup id="fnref:3"&gt;&lt;a class="footnote-ref" href="#fn:3"&gt;3&lt;/a&gt;&lt;/sup&gt;。&lt;/p&gt;
 &lt;div class="footnote"&gt;
 &lt;hr&gt;
 &lt;ol&gt;
-&lt;li id="fn-1"&gt;
-&lt;p&gt;译注：这里的“轨道”其实不太直白。在实现上，&lt;code&gt;ParallelFlux&lt;/code&gt; 会将最后 &lt;code&gt;subscribe&lt;/code&gt; 的 onNext 回调按并行度（默认等于 CPU 核数 N）复制成 N 个，那么最终调用 ParallelFlux 的 N 个 Subscriber，从 ParallelFlux 实例到一个 Subscriber 的数据流路径可以理解为一个“轨道”，ParallelFlux 在接收到上游消息后按照 round-robin 方式选择一个 Subscriber 调用其 &lt;code&gt;onNext&lt;/code&gt; 下发消息，但 &lt;code&gt;onNext&lt;/code&gt; 是运行在什么线程上，是由 runOn 算子决定的，如果不使用 runOn 算子，那么所有 Subscriber 的 &lt;code&gt;onNext&lt;/code&gt; 方法调用都是同步运行在主线程上的。&amp;#160;&lt;a class="footnote-backref" href="#fnref-1" title="Jump back to footnote 1 in the text"&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+&lt;li id="fn:1"&gt;
+&lt;p&gt;译注：这里的“轨道”其实不太直白。在实现上，&lt;code&gt;ParallelFlux&lt;/code&gt; 会将最后 &lt;code&gt;subscribe&lt;/code&gt; 的 onNext 回调按并行度（默认等于 CPU 核数 N）复制成 N 个，那么最终调用 ParallelFlux 的 N 个 Subscriber，从 ParallelFlux 实例到一个 Subscriber 的数据流路径可以理解为一个“轨道”，ParallelFlux 在接收到上游消息后按照 round-robin 方式选择一个 Subscriber 调用其 &lt;code&gt;onNext&lt;/code&gt; 下发消息，但 &lt;code&gt;onNext&lt;/code&gt; 是运行在什么线程上，是由 runOn 算子决定的，如果不使用 runOn 算子，那么所有 Subscriber 的 &lt;code&gt;onNext&lt;/code&gt; 方法调用都是同步运行在主线程上的。&amp;#160;&lt;a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text"&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
 &lt;/li&gt;
-&lt;li id="fn-2"&gt;
-&lt;p&gt;译注：原文中用了多个词来表达相近的意思：sequence（序列）、stream（流）、flow（流），阅读时可以相互替代理解。此外，还有 event（事件）、data（数据）、message（消息），在当前上下文中，可以看成是等价的。&amp;#160;&lt;a class="footnote-backref" href="#fnref-2" title="Jump back to footnote 2 in the text"&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+&lt;li id="fn:2"&gt;
+&lt;p&gt;译注：原文中用了多个词来表达相近的意思：sequence（序列）、stream（流）、flow（流），阅读时可以相互替代理解。此外，还有 event（事件）、data（数据）、message（消息），在当前上下文中，可以看成是等价的。&amp;#160;&lt;a class="footnote-backref" href="#fnref:2" title="Jump back to footnote 2 in the text"&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
 &lt;/li&gt;
-&lt;li id="fn-3"&gt;
-&lt;p&gt;译注：这话写得真蠢。详细解释见脚注 1。&amp;#160;&lt;a class="footnote-backref" href="#fnref-3" title="Jump back to footnote 3 in the text"&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+&lt;li id="fn:3"&gt;
+&lt;p&gt;译注：这话写得真蠢。详细解释见脚注 1。&amp;#160;&lt;a class="footnote-backref" href="#fnref:3" title="Jump back to footnote 3 in the text"&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
-&lt;/div&gt;</content><category term="翻译"></category><category term="Reactor"></category><category term="Reactive"></category></entry><entry><title>Java System.getProperty VS. System.getenv（译）</title><link href="http://youngsterxyf.github.io/2019/06/25/java-prop-env/" rel="alternate"></link><published>2019-06-25T00:00:00+08:00</published><updated>2019-06-25T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-06-25:/2019/06/25/java-prop-env/</id><summary type="html">&lt;p&gt;原文：&lt;a href="https://www.baeldung.com/java-system-get-property-vs-system-getenv"&gt;Java System.getProperty vs System.getenv&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;</content><category term="其他"></category><category term="翻译"></category><category term="Reactor"></category><category term="Reactive"></category></entry><entry><title>Java System.getProperty VS. System.getenv（译）</title><link href="http://youngsterxyf.github.io/2019/06/25/java-prop-env/" rel="alternate"></link><published>2019-06-25T00:00:00+08:00</published><updated>2019-06-25T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-06-25:/2019/06/25/java-prop-env/</id><summary type="html">&lt;p&gt;原文：&lt;a href="https://www.baeldung.com/java-system-get-property-vs-system-getenv"&gt;Java System.getProperty vs System.getenv&lt;/a&gt;&lt;/p&gt;
 &lt;h2&gt;1、简介&lt;/h2&gt;
 &lt;p&gt;Java 应用代码中会自动引入 &lt;code&gt;java.lang&lt;/code&gt; 包。这个包包含很多常用的类，包括 &lt;code&gt;NullPointerException&lt;/code&gt;、&lt;code&gt;Object&lt;/code&gt;、&lt;code&gt;Math&lt;/code&gt;、&lt;code&gt;String&lt;/code&gt; 等等。&lt;/p&gt;
 &lt;p&gt;其中 &lt;code&gt;java.lang.System&lt;/code&gt; 类是一个 final 类，这意味着开发者无法继承它，其所有方法都是静态的（static）。&lt;/p&gt;
@@ -1519,23 +1651,23 @@ parallel-2 -&amp;gt; 10
 &lt;p&gt;Java 平台使用一个 &lt;code&gt;Properties&lt;/code&gt; 对象来提供&lt;strong&gt;本地系统相关的信息和配置&lt;/strong&gt;，我们称之为 &lt;strong&gt;系统属性&lt;/strong&gt;。&lt;/p&gt;
 &lt;p&gt;系统属性包括当前用户、当前 Java 运行时版本 以及 文件路径分隔符诸如此类的信息。&lt;/p&gt;
 &lt;p&gt;如下代码中，我们使用 &lt;code&gt;System.getProperty("log_dir")&lt;/code&gt; 来读取 &lt;em&gt;log_dir&lt;/em&gt; 属性值。我们也会使用默认值参数，这样如果属性不存在，&lt;code&gt;getProperty&lt;/code&gt; 则返回 &lt;em&gt;/tmp/log&lt;/em&gt;：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;String log_dir = System.getProperty(&lt;span style="color: #a31515"&gt;&amp;quot;log_dir&amp;quot;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;quot;/tmp/log&amp;quot;&lt;/span&gt;);
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;String log_dir = System.getProperty(&lt;span style="color: #a31515"&gt;&amp;quot;log_dir&amp;quot;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;quot;/tmp/log&amp;quot;&lt;/span&gt;);
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;如果希望在运行时变更系统属性，则可以使用 &lt;code&gt;System.setProperty&lt;/code&gt; 方法：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;System.setProperty(&lt;span style="color: #a31515"&gt;&amp;quot;log_dir&amp;quot;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;quot;/tmp/log&amp;quot;&lt;/span&gt;);
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;System.setProperty(&lt;span style="color: #a31515"&gt;&amp;quot;log_dir&amp;quot;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;quot;/tmp/log&amp;quot;&lt;/span&gt;);
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;我们可以以如下格式使用命令行参数向应用传递指定属性或配置值：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;java -jar jarName -DpropertyName=value
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;java -jar jarName -DpropertyName=value&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;比如 将 app.jar 的 foo 属性值设置为 bar：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;java -jar app -Dfoo=&lt;span style="color: #a31515"&gt;&amp;quot;bar&amp;quot;&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="border: 1px solid #FF0000"&gt;java -jar app -Dfoo=&amp;quot;bar&amp;quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;System.getProperty 返回的一定是一个字符串。&lt;/p&gt;
@@ -1544,25 +1676,25 @@ parallel-2 -&amp;gt; 10
 &lt;p&gt;设置环境变量的方式，各操作系统之间有所不同。例如，Windows 中，我们使用控制面板中的系统工具（System Utility）应用来设置，而 Unix 系统则使用 shell 脚本。&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;创建一个进程时，该进程默认会从其父进程继承一个克隆的上下文环境&lt;/strong&gt;。&lt;/p&gt;
 &lt;p&gt;如下代码片段演示：使用一个 lambda 表达式来输出所有环境变量。&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;System.getenv().forEach((k, v) -&amp;gt; {
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;System.getenv().forEach((k, v) -&amp;gt; {
     System.out.println(k + &lt;span style="color: #a31515"&gt;&amp;quot;:&amp;quot;&lt;/span&gt; + v);
 });
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;&lt;strong&gt;getenv() 返回一个只读的 &lt;code&gt;Map&lt;/code&gt;&lt;/strong&gt;。尝试向该映射中添加值，会抛出 &lt;code&gt;UnsupportedOperationException&lt;/code&gt; 异常。&lt;/p&gt;
 &lt;p&gt;可以使用变量名称作为参数调用 &lt;code&gt;getenv&lt;/code&gt; 来获取单个变量值：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;String log_dir = System.getenv(&lt;span style="color: #a31515"&gt;&amp;quot;log_dir&amp;quot;&lt;/span&gt;);
-&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;String log_dir = System.getenv(&lt;span style="color: #a31515"&gt;&amp;quot;log_dir&amp;quot;&lt;/span&gt;);
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;此外，我们可以在应用中创建一个新进程，并向其上下文环境中添加新的环境变量。&lt;/p&gt;
 &lt;p&gt;Java 中，我们使用 &lt;code&gt;ProcessBuilder&lt;/code&gt; 类来创建新进程，该类有一个名为 &lt;code&gt;environment&lt;/code&gt; 的方法，此方法返回一个 &lt;code&gt;Map&lt;/code&gt;，不过这个映射不是只读的，这样就可以向其添加新元素：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;ProcessBuilder pb = &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; ProcessBuilder(args);
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ProcessBuilder pb = &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; ProcessBuilder(args);
 Map&amp;lt;String, String&amp;gt; env = pb.environment();
 env.put(&lt;span style="color: #a31515"&gt;&amp;quot;log_dir&amp;quot;&lt;/span&gt;, &lt;span style="color: #a31515"&gt;&amp;quot;/tmp/log&amp;quot;&lt;/span&gt;);
 Process process = pb.start();
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;h2&gt;4、区别&lt;/h2&gt;
@@ -1570,7 +1702,7 @@ Process process = pb.start();
 &lt;ol&gt;
 &lt;li&gt;我们可以在运行时变更 系统属性（Properties），但是 环境变量（Environment Variables）仅是操作系统环境变量的一个不可变拷贝。&lt;/li&gt;
 &lt;li&gt;仅 Java 平台包含这个 系统属性 特性，而 环境变量 则是操作系统层面提供，全局可用的 - 运行在同一个机器上的所有应用都可以访问。&lt;/li&gt;
-&lt;li&gt;系统属性 在打包应用时就必须存在&lt;sup id="fnref-1"&gt;&lt;a class="footnote-ref" href="#fn-1"&gt;1&lt;/a&gt;&lt;/sup&gt;，而 环境变量 则任意时刻都可以在操作系统中创建。&lt;/li&gt;
+&lt;li&gt;系统属性 在打包应用时就必须存在&lt;sup id="fnref:1"&gt;&lt;a class="footnote-ref" href="#fn:1"&gt;1&lt;/a&gt;&lt;/sup&gt;，而 环境变量 则任意时刻都可以在操作系统中创建。&lt;/li&gt;
 &lt;/ol&gt;
 &lt;h2&gt;5、总结一下&lt;/h2&gt;
 &lt;p&gt;虽然这两者在概念上比较相似，但是 系统属性 和 环境变量 的应用方式差别很大。&lt;/p&gt;
@@ -1579,20 +1711,20 @@ Process process = pb.start();
 &lt;div class="footnote"&gt;
 &lt;hr&gt;
 &lt;ol&gt;
-&lt;li id="fn-1"&gt;
-&lt;p&gt;原文是这么写的，但我认为这句话有问题。系统属性明明可以在应用运行时通过命令行参数指定，也可以将属性文件打包到应用包中，在运行时加载（通过 &lt;code&gt;System.getProperties().load&lt;/code&gt; 方法）。&amp;#160;&lt;a class="footnote-backref" href="#fnref-1" title="Jump back to footnote 1 in the text"&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+&lt;li id="fn:1"&gt;
+&lt;p&gt;原文是这么写的，但我认为这句话有问题。系统属性明明可以在应用运行时通过命令行参数指定，也可以将属性文件打包到应用包中，在运行时加载（通过 &lt;code&gt;System.getProperties().load&lt;/code&gt; 方法）。&amp;#160;&lt;a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text"&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
-&lt;/div&gt;</content><category term="翻译"></category><category term="Java"></category></entry><entry><title>Java 单测伴侣 - mockito</title><link href="http://youngsterxyf.github.io/2019/06/17/mockito/" rel="alternate"></link><published>2019-06-17T00:00:00+08:00</published><updated>2019-06-17T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-06-17:/2019/06/17/mockito/</id><summary type="html">&lt;p&gt;其实工作以来，我很少写测试/单测代码，一方面是大部分互联网公司团队对测试的要求不高，另一方面是想写好测试代码还挺难的，挺花时间，其中最麻烦的是待测代码可能会访问外部资源（比如数据库、HTTP API），如果不能方便地进模拟访问这些外部资源，那么测试起来会非常麻烦。&lt;/p&gt;
+&lt;/div&gt;</content><category term="其他"></category><category term="翻译"></category><category term="Java"></category></entry><entry><title>Java 单测伴侣 - mockito</title><link href="http://youngsterxyf.github.io/2019/06/17/mockito/" rel="alternate"></link><published>2019-06-17T00:00:00+08:00</published><updated>2019-06-17T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-06-17:/2019/06/17/mockito/</id><summary type="html">&lt;p&gt;其实工作以来，我很少写测试/单测代码，一方面是大部分互联网公司团队对测试的要求不高，另一方面是想写好测试代码还挺难的，挺花时间，其中最麻烦的是待测代码可能会访问外部资源（比如数据库、HTTP API），如果不能方便地进模拟访问这些外部资源，那么测试起来会非常麻烦。&lt;/p&gt;
 &lt;p&gt;但，对于复杂逻辑，如果不经过严格测试，发布到生产环境，又有些不放心，没底气，或者在代码重构时，如果没有覆盖全面的测试，很难评估代码变动带来的影响。&lt;/p&gt;
 &lt;p&gt;直到遇到 &lt;a href="https://site.mockito.org/"&gt;mockito&lt;/a&gt;，我才觉得是时候认真写写测试代码了。&lt;/p&gt;
 &lt;hr&gt;
 &lt;p&gt;&lt;a href="https://site.mockito.org/"&gt;mockito&lt;/a&gt; 提供两种对象模拟方式：&lt;strong&gt;mock&lt;/strong&gt; 和 &lt;strong&gt;spy&lt;/strong&gt;。&lt;/p&gt;
 &lt;p&gt;简单来说，mock 模拟的对象是一个完全假的对象，只是具备指定类型的接口，以 &lt;code&gt;java.util.List&lt;/code&gt; 为例：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;import static&lt;/span&gt; org.mockito.Mockito.mock;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;import static&lt;/span&gt; org.mockito.Mockito.mock;
 
 List mockedList = mock(List.class);
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;虽然 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;其实工作以来，我很少写测试/单测代码，一方面是大部分互联网公司团队对测试的要求不高，另一方面是想写好测试代码还挺难的，挺花时间，其中最麻烦的是待测代码可能会访问外部资源（比如数据库、HTTP API），如果不能方便地进模拟访问这些外部资源，那么测试起来会非常麻烦。&lt;/p&gt;
@@ -1601,14 +1733,14 @@ List mockedList = mock(List.class);
 &lt;hr&gt;
 &lt;p&gt;&lt;a href="https://site.mockito.org/"&gt;mockito&lt;/a&gt; 提供两种对象模拟方式：&lt;strong&gt;mock&lt;/strong&gt; 和 &lt;strong&gt;spy&lt;/strong&gt;。&lt;/p&gt;
 &lt;p&gt;简单来说，mock 模拟的对象是一个完全假的对象，只是具备指定类型的接口，以 &lt;code&gt;java.util.List&lt;/code&gt; 为例：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;import static&lt;/span&gt; org.mockito.Mockito.mock;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;import static&lt;/span&gt; org.mockito.Mockito.mock;
 
 List mockedList = mock(List.class);
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;虽然 List 是一个 interface，也可以模拟出一个对象实例，这个 mockedList 对象具备 List 接口定义的所有方法，但所有方法都不具备实际的行为操作，对于有返回值的方法，则默认返回方法返回类型的默认值，没有返回值的方法，则纯粹是一个空方法。比如：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #008000"&gt;// mockedList 并不会真的把 1 存下来&lt;/span&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #008000"&gt;// mockedList 并不会真的把 1 存下来&lt;/span&gt;
 mockedList.add(1);
 &lt;span style="color: #008000"&gt;// 所以，size() 返回默认值，输出 0&lt;/span&gt;
 System.out.println(mockedList.size());
@@ -1616,11 +1748,11 @@ System.out.println(mockedList.size());
 System.out.println(mockedList.get(0));
 &lt;span style="color: #008000"&gt;// 输出 null&lt;/span&gt;
 System.out.println(mockedList.get(1));
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;对于模拟出来的对象，可以任意指定其方法的返回值，比如：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;import static&lt;/span&gt; org.mockito.Mockito.when;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;import static&lt;/span&gt; org.mockito.Mockito.when;
 
 &lt;span style="color: #008000"&gt;// 调用 size() 方法时，返回 10&lt;/span&gt;
 when(mockedList.size()).willReturn(10);
@@ -1633,21 +1765,21 @@ System.out.println(mockedList.size());
 System.out.println(mockedList.get(0));
 &lt;span style="color: #008000"&gt;// 输出 您好！&lt;/span&gt;
 System.out.println(mockedList.get(1));
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;当然我们写测试代码时，并不会使用 System.out.println，然后看输出，而是使用&lt;strong&gt;断言&lt;/strong&gt;：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;import static&lt;/span&gt; org.junit.Assert.assertEquals;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;import static&lt;/span&gt; org.junit.Assert.assertEquals;
 
 assertEquals(10, mockedList.size());
 assertEquals(&lt;span style="color: #a31515"&gt;&amp;quot;Hello World!&amp;quot;&lt;/span&gt;, mockedList.get(0));
 assertEquals(&lt;span style="color: #a31515"&gt;&amp;quot;您好！&amp;quot;&lt;/span&gt;, mockedList.get(1));
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;断言方法非常多，不仅仅只是 assertEquals。&lt;/p&gt;
 &lt;p&gt;对于同一个方法，可以模拟多次调用返回不同的值：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #008000"&gt;// 会覆盖之前 mock 的行为：when(mockedList.size()).willReturn(10);&lt;/span&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #008000"&gt;// 会覆盖之前 mock 的行为：when(mockedList.size()).willReturn(10);&lt;/span&gt;
 &lt;span style="color: #008000"&gt;// 或者这么写：when(mockedList.size()).willReturn(0, -1, 10);&lt;/span&gt;
 when(mockedList.size()).thenReturn(0).thenReturn(-1).thenReturn(10);
 assertEquals(0, mockedList.size());
@@ -1665,11 +1797,11 @@ assertEquals(10, iterator.next());
 assertEquals(1000, iterator.next());
 &lt;span style="color: #008000"&gt;// 第 4 次之后的 iterator.next() 调用都返回 1000&lt;/span&gt;
 assertEquals(1000, iterator.next());
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;还可以模拟异常抛出：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;List mockedList = mock(List.class);
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;List mockedList = mock(List.class);
 
 when(mockedList.get(-1000)).thenThrow(&lt;span style="color: #0000ff"&gt;new&lt;/span&gt; RuntimeException(&lt;span style="color: #a31515"&gt;&amp;quot;参数异常！&amp;quot;&lt;/span&gt;));
 &lt;span style="color: #0000ff"&gt;try&lt;/span&gt; {
@@ -1678,11 +1810,11 @@ when(mockedList.get(-1000)).thenThrow(&lt;span style="color: #0000ff"&gt;new&lt;
     assertTrue(e &lt;span style="color: #0000ff"&gt;instanceof&lt;/span&gt; RuntimeException);
     assertEquals(&lt;span style="color: #a31515"&gt;&amp;quot;参数异常！&amp;quot;&lt;/span&gt;, e.getMessage());
 }
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;也可以基于复杂的逻辑来构造返回值：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; org.mockito.invocation.InvocationOnMock;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; org.mockito.invocation.InvocationOnMock;
 &lt;span style="color: #0000ff"&gt;import&lt;/span&gt; org.mockito.stubbing.Answer;
 
 List&amp;lt;Integer&amp;gt; mockedList = mock(List.class);
@@ -1697,11 +1829,11 @@ assertTrue(10 == mockedList.get(10));
         &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; var.getArgument(0);
     }
 }
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;除了 &lt;code&gt;when(...).thenReturn(...)&lt;/code&gt; 风格的测试模拟方式，还有 BDD（Behavior Driven Development 行为驱动开发）风格的：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;import static&lt;/span&gt; org.mockito.BDDMockito.given;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;import static&lt;/span&gt; org.mockito.BDDMockito.given;
 
 &lt;span style="color: #008000"&gt;// given&lt;/span&gt;
 given(mockedList.get(0)).willReturn(100);
@@ -1709,12 +1841,12 @@ given(mockedList.get(0)).willReturn(100);
 &lt;span style="color: #2b91af"&gt;int&lt;/span&gt; v = (&lt;span style="color: #2b91af"&gt;int&lt;/span&gt;) mockedList.get(0);
 &lt;span style="color: #008000"&gt;// then&lt;/span&gt;
 assertEquals(100, v);
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;如果方法没有返回值，或者其它奇葩的需求，则没法使用 when.thenReturn / willReturn 这样的模拟方法，可以使用 &lt;code&gt;doReturn(...).when(...)...&lt;/code&gt;：
 &lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;import static&lt;/span&gt; org.mockito.Mockito.doThrow;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;import static&lt;/span&gt; org.mockito.Mockito.doThrow;
 &lt;span style="color: #0000ff"&gt;import static&lt;/span&gt; org.mockito.Mockito.doReturn;
 
 ArrayList mockedList = mock(ArrayList.class);
@@ -1730,13 +1862,13 @@ doThrow(&lt;span style="color: #0000ff"&gt;new&lt;/span&gt; RuntimeException(&lt
 
 &lt;span style="color: #008000"&gt;// 没有意义，因为没法使用 断言 来验证，实际运行时会抛异常&lt;/span&gt;
 doReturn(10).when(mockedList).clear();
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;从示例代码可以看出，&lt;code&gt;doReturn(...).when(...)....&lt;/code&gt; 不会做类型校验，mockedList.clear() 返回值类型为 void，但我们模拟让其返回 10；所以，正常情况应该尽可能使用 &lt;code&gt;when(...).thenReturn(...)&lt;/code&gt; 或 &lt;code&gt;given(...).willReturn(...)&lt;/code&gt;。&lt;/p&gt;
 &lt;hr&gt;
 &lt;p&gt;前述代码示例中，模拟方法的参数都做了硬编码，实际情况通常都不是这么测试，而是模拟方法的参数符合一定的要求即可，比如：在某个范围之内、符合类型的任何值：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;import static&lt;/span&gt; org.mockito.Mockito.anyInt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;import static&lt;/span&gt; org.mockito.Mockito.anyInt;
 
 &lt;span style="color: #008000"&gt;/*&lt;/span&gt;
 &lt;span style="color: #008000"&gt;以任何 int 类型的参数调用 mockedList.get 方法，都返回 100&lt;/span&gt;
@@ -1747,19 +1879,19 @@ when(mockedList.get(anyInt())).thenReturn(100);
 
 assertEquals(100, mockedList.get(0));
 assertEquals(100, mockedList.get(1000));
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;可用的参数匹配器，见 org.mockito.ArgumentMatchers 类的静态方法列表，也可以自己实现 ArgumentMatcher 接口：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;package&lt;/span&gt; org.mockito;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;package&lt;/span&gt; org.mockito;
 
 &lt;span style="color: #0000ff"&gt;public&lt;/span&gt; &lt;span style="color: #0000ff"&gt;interface&lt;/span&gt; &lt;span style="color: #2b91af"&gt;ArgumentMatcher&lt;/span&gt;&amp;lt;T&amp;gt; {
     &lt;span style="color: #2b91af"&gt;boolean&lt;/span&gt; matches(T var1);
 }
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; org.mockito.ArgumentMatcher;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; org.mockito.ArgumentMatcher;
 &lt;span style="color: #0000ff"&gt;import static&lt;/span&gt; org.mockito.Mockito.intThat;
 
 when(mockedList.get(intThat(&lt;span style="color: #0000ff"&gt;new&lt;/span&gt; LimitedInt()))).thenReturn(10);
@@ -1772,17 +1904,17 @@ assertEquals(&lt;span style="color: #0000ff"&gt;null&lt;/span&gt;, mockedList.ge
 &lt;span style="color: #0000ff"&gt;public&lt;/span&gt; &lt;span style="color: #0000ff"&gt;class&lt;/span&gt; &lt;span style="color: #2b91af"&gt;LimitedInt&lt;/span&gt; &lt;span style="color: #0000ff"&gt;implements&lt;/span&gt; ArgumentMatcher&amp;lt;Integer&amp;gt; {
 
     &lt;span style="color: #0000ff"&gt;public&lt;/span&gt; &lt;span style="color: #2b91af"&gt;boolean&lt;/span&gt; matches(Integer var) {
-        &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; var &amp;gt; 0 &amp;amp;&amp;amp; var &amp;lt; 100;
+        &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; &lt;span style="color: #0000ff"&gt;var&lt;/span&gt; &lt;span style="border: 1px solid #FF0000"&gt;&amp;gt; 0 &amp;amp;&amp;amp; &lt;/span&gt;var &amp;lt; 100;
     }
 }
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;如果被模拟的方法包含多个参数，那么这些参数要么全部使用匹配器，要么全部不使用。&lt;/p&gt;
 &lt;hr&gt;
 &lt;p&gt;模拟某些类（A）的方法，通常会将 mock 出来的对象注入到依赖该类实例的其他类（B）中，来替代真实的依赖，这种方式的目的是为了测试类 B 的行为是否符合预期。&lt;/p&gt;
 &lt;p&gt;另一个测试需求是，测试某个类 A' 在某个上下文环境中的行为是否符合预期，比如： A' 的某个方法是否被调用过、调用过几次、调用参数是否符合预期、几个方法之间的调用次序是否符合预期、方法调用耗时是否符合预期等等。&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;import static&lt;/span&gt; org.mockito.Mockito.verify;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;import static&lt;/span&gt; org.mockito.Mockito.verify;
 &lt;span style="color: #0000ff"&gt;import static&lt;/span&gt; org.mockito.Mockito.times;
 &lt;span style="color: #0000ff"&gt;import static&lt;/span&gt; org.mockito.Mockito.never;
 &lt;span style="color: #0000ff"&gt;import static&lt;/span&gt; org.mockito.Mockito.verifyZeroInteractions;
@@ -1822,10 +1954,10 @@ verify(mocked, times(11)).size();
         list.isEmpty();
     }
 }
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;List mocked = mock(List.class);
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;List mocked = mock(List.class);
 
 mocked.add(1);
 mocked.add(2);
@@ -1834,10 +1966,10 @@ verify(mocked).add(1);
 
 &lt;span style="color: #008000"&gt;// 是否有其他交互没有验证过？因为 mocked 还调用过 mocked.add(2)，所以这句测试会失败&lt;/span&gt;
 verifyNoMoreInteractions(mocked);
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; org.mockito.InOrder;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; org.mockito.InOrder;
 
 &lt;span style="color: #008000"&gt;// 也可以验证调用次序&lt;/span&gt;
 List mocked1 = mock(List.class);
@@ -1853,12 +1985,12 @@ InOrder inOrder = inOrder(mocked1, mocked2);
 inOrder.verify(mocked1).size();
 inOrder.verify(mocked1).isEmpty();
 inOrder.verify(mocked2).isEmpty();
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;hr&gt;
 &lt;p&gt;也可以验证某个方法被调用时所使用的参数是否符合预期：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; org.mockito.ArgumentCaptor;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; org.mockito.ArgumentCaptor;
 
 List mockedlist = mock(List.class);
 
@@ -1879,13 +2011,13 @@ assertTrue(100 == argumentCaptor.getValue());
         list.add(100);
     }
 }
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;hr&gt;
 &lt;p&gt;前面的内容都是以 mock 为例，我们再来说说 spy，与 mock 的区别：&lt;/p&gt;
 &lt;p&gt;mock 出来的对象是一个完全假的对象，但 spy 通常是基于一个具体的类或类实例，对其篡改某些方法，对于被篡改方法之外的方法，其行为都和调用真实对象的方法一样，不过并没有调用真实对象的方法，也不会对真实对象产生影响：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #008000"&gt;// 基于一个实际的类实例&lt;/span&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #008000"&gt;// 基于一个实际的类实例&lt;/span&gt;
 List&amp;lt;Integer&amp;gt; realList = &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; ArrayList&amp;lt;&amp;gt;(10);
 List&amp;lt;Integer&amp;gt; spy = spy(realList);
 
@@ -1898,11 +2030,11 @@ assertEquals(1, spy.size());
 &lt;span style="color: #008000"&gt;// 这句会抛出 java.lang.IndexOutOfBoundsException，因为 realList 还是为空&lt;/span&gt;
 assertTrue(1 == realList.get(0));
 assertTrue(1 == spy.get(0));
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;也可以基于一个具体的类来构造 spy，但这样无法使用带参数的构造方法，也无法指定类型参数：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;List&amp;lt;Integer&amp;gt; = spy(ArrayList.class);
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;List&amp;lt;Integer&amp;gt; = spy(ArrayList.class);
 assertEquals(0, spy.size());
 spy.add(100);
 assertEquals(1, spy.size());
@@ -1911,13 +2043,13 @@ assertTrue(100 == spy.get(0));
 &lt;span style="color: #008000"&gt;// 篡改方法&lt;/span&gt;
 when(spy.size()).thenReturn(-1);
 assertEquals(-1, spy.size());
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;实际上，mock 也可以基于具体的类来构造，这时可以指定某些方法实际调用具体类的方法。&lt;/p&gt;
 &lt;hr&gt;
 &lt;p&gt;除了使用 mock、spy 方法来构造模拟对象，还可以通过注解来构造，但这样的话得指定 JUnit 的 Runner 为 &lt;code&gt;org.mockito.junit.MockitoJUnitRunner&lt;/code&gt;：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; org.junit.Test;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; org.junit.Test;
 &lt;span style="color: #0000ff"&gt;import&lt;/span&gt; org.junit.runner.RunWith;
 &lt;span style="color: #0000ff"&gt;import&lt;/span&gt; org.mockito.Mock;
 &lt;span style="color: #0000ff"&gt;import&lt;/span&gt; org.mockito.Spy;
@@ -1953,8 +2085,8 @@ assertEquals(-1, spy.size());
         assertTrue(1 == spyed.size());
     }
 }
-&lt;/pre&gt;&lt;/div&gt;</content><category term="Java"></category><category term="mockito"></category><category term="单测"></category></entry><entry><title>编写漂亮的 shell 代码</title><link href="http://youngsterxyf.github.io/2018/05/16/beautiful-shell-code/" rel="alternate"></link><published>2018-05-16T00:00:00+08:00</published><updated>2018-05-16T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2018-05-16:/2018/05/16/beautiful-shell-code/</id><summary type="html">&lt;p&gt;使用丑陋的编程语言也能写出漂亮的代码。&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;true_then_run() {
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content><category term="其他"></category><category term="Java"></category><category term="mockito"></category><category term="单测"></category></entry><entry><title>编写漂亮的 shell 代码</title><link href="http://youngsterxyf.github.io/2018/05/16/beautiful-shell-code/" rel="alternate"></link><published>2018-05-16T00:00:00+08:00</published><updated>2018-05-16T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2018-05-16:/2018/05/16/beautiful-shell-code/</id><summary type="html">&lt;p&gt;使用丑陋的编程语言也能写出漂亮的代码。&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;true_then_run() {
     condition=$1
     action=$2
 
@@ -1983,8 +2115,8 @@ false_then_run() {
 map() {
     &lt;span style="color: #0000ff"&gt;for&lt;/span&gt; item in $2
     &lt;span style="color: #0000ff"&gt;do&lt;/span&gt;
-        ($1 …&lt;/pre&gt;&lt;/div&gt;</summary><content type="html">&lt;p&gt;使用丑陋的编程语言也能写出漂亮的代码。&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;true_then_run() {
+        ($1 …&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</summary><content type="html">&lt;p&gt;使用丑陋的编程语言也能写出漂亮的代码。&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;true_then_run() {
     condition=$1
     action=$2
 
@@ -2058,16 +2190,16 @@ sum() {
     &lt;span style="color: #0000ff"&gt;done&lt;/span&gt;
     echo $v
 }
-&lt;/pre&gt;&lt;/div&gt;</content><category term="Bash"></category></entry><entry><title>配置 Maven 自动化构建 protobuf 代码依赖</title><link href="http://youngsterxyf.github.io/2018/05/14/maven-protobuf/" rel="alternate"></link><published>2018-05-14T00:00:00+08:00</published><updated>2018-05-14T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2018-05-14:/2018/05/14/maven-protobuf/</id><summary type="html">&lt;p&gt;1.pom.xml 中添加如下属性配置：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&amp;lt;properties&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content><category term="其他"></category><category term="Bash"></category></entry><entry><title>配置 Maven 自动化构建 protobuf 代码依赖</title><link href="http://youngsterxyf.github.io/2018/05/14/maven-protobuf/" rel="alternate"></link><published>2018-05-14T00:00:00+08:00</published><updated>2018-05-14T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2018-05-14:/2018/05/14/maven-protobuf/</id><summary type="html">&lt;p&gt;1.pom.xml 中添加如下属性配置：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&amp;lt;properties&amp;gt;
     &lt;span style="color: #008000"&gt;&amp;lt;!-- protobuf paths --&amp;gt;&lt;/span&gt;
     &amp;lt;protobuf.input.directory&amp;gt;${project.basedir}/src/main/protobuf&amp;lt;/protobuf.input.directory&amp;gt;
     &amp;lt;protobuf.output.directory&amp;gt;${project.build.directory}/generated-sources&amp;lt;/protobuf.output.directory&amp;gt;
     &lt;span style="color: #008000"&gt;&amp;lt;!-- library versions --&amp;gt;&lt;/span&gt;
     &amp;lt;build-helper-maven-plugin.version&amp;gt;3.0.0&amp;lt;/build-helper-maven-plugin.version&amp;gt;
     &amp;lt;maven-antrun-plugin.version&amp;gt;1.8&amp;lt;/maven-antrun-plugin.version&amp;gt;
-    &amp;lt;maven-dependency-plugin.version&amp;gt;3.0.2&amp;lt;/maven-dependency-plugin.version …&lt;/pre&gt;&lt;/div&gt;</summary><content type="html">&lt;p&gt;1.pom.xml 中添加如下属性配置：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&amp;lt;properties&amp;gt;
+    &amp;lt;maven-dependency-plugin.version&amp;gt;3.0.2&amp;lt;/maven-dependency-plugin.version …&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</summary><content type="html">&lt;p&gt;1.pom.xml 中添加如下属性配置：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&amp;lt;properties&amp;gt;
     &lt;span style="color: #008000"&gt;&amp;lt;!-- protobuf paths --&amp;gt;&lt;/span&gt;
     &amp;lt;protobuf.input.directory&amp;gt;${project.basedir}/src/main/protobuf&amp;lt;/protobuf.input.directory&amp;gt;
     &amp;lt;protobuf.output.directory&amp;gt;${project.build.directory}/generated-sources&amp;lt;/protobuf.output.directory&amp;gt;
@@ -2078,22 +2210,22 @@ sum() {
     &amp;lt;os-maven-plugin.version&amp;gt;1.5.0.Final&amp;lt;/os-maven-plugin.version&amp;gt;
     &amp;lt;protobuf.version&amp;gt;2.5.0&amp;lt;/protobuf.version&amp;gt;
 &amp;lt;/properties&amp;gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;2.添加 protobuf-java 库依赖&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&amp;lt;dependencies&amp;gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&amp;lt;dependencies&amp;gt;
     &amp;lt;dependency&amp;gt;
         &amp;lt;groupId&amp;gt;com.google.protobuf&amp;lt;/groupId&amp;gt;
         &amp;lt;artifactId&amp;gt;protobuf-java&amp;lt;/artifactId&amp;gt;
         &amp;lt;version&amp;gt;${protobuf.version}&amp;lt;/version&amp;gt;
     &amp;lt;/dependency&amp;gt;
 &amp;lt;/dependencies&amp;gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;3.添加 maven 扩展：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&amp;lt;build&amp;gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&amp;lt;build&amp;gt;
     &amp;lt;extensions&amp;gt;
         &lt;span style="color: #008000"&gt;&amp;lt;!-- provides os.detected.classifier (i.e. linux-x86_64, osx-x86_64) property --&amp;gt;&lt;/span&gt;
         &amp;lt;extension&amp;gt;
@@ -2103,11 +2235,11 @@ sum() {
         &amp;lt;/extension&amp;gt;
     &amp;lt;/extensions&amp;gt;
 &amp;lt;/build&amp;gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;4.配置构建插件：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&amp;lt;build&amp;gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&amp;lt;build&amp;gt;
     &amp;lt;plugins&amp;gt;
         &lt;span style="color: #008000"&gt;&amp;lt;!-- copy protoc binary into build directory --&amp;gt;&lt;/span&gt;
         &amp;lt;plugin&amp;gt;
@@ -2195,12 +2327,12 @@ sum() {
         &amp;lt;/plugin&amp;gt;
     &amp;lt;/plugins&amp;gt;
 &amp;lt;/build&amp;gt;
-&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;&lt;strong&gt;参考资料&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;http://vlkan.com/blog/post/2015/11/27/maven-protobuf/&lt;/p&gt;
-&lt;p&gt;http://www.chendan.me/2017/07/02/maven-protobuf/&lt;/p&gt;</content><category term="java"></category><category term="maven"></category><category term="protobuf"></category></entry><entry><title>《Python 编程之美》译者序</title><link href="http://youngsterxyf.github.io/2018/04/01/the-python-guide/" rel="alternate"></link><published>2018-04-01T00:00:00+08:00</published><updated>2018-04-01T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2018-04-01:/2018/04/01/the-python-guide/</id><summary type="html">&lt;p&gt;从毕业至今，在互联网行业从事软件研发工作，将近五年。这五年间，做过后端开发、前端开发、大数据处理等，使用过的编程语言包括：Python、PHP、Go、Java、JavaScript 等。&lt;/p&gt;
+&lt;p&gt;http://www.chendan.me/2017/07/02/maven-protobuf/&lt;/p&gt;</content><category term="其他"></category><category term="java"></category><category term="maven"></category><category term="protobuf"></category></entry><entry><title>《Python 编程之美》译者序</title><link href="http://youngsterxyf.github.io/2018/04/01/the-python-guide/" rel="alternate"></link><published>2018-04-01T00:00:00+08:00</published><updated>2018-04-01T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2018-04-01:/2018/04/01/the-python-guide/</id><summary type="html">&lt;p&gt;从毕业至今，在互联网行业从事软件研发工作，将近五年。这五年间，做过后端开发、前端开发、大数据处理等，使用过的编程语言包括：Python、PHP、Go、Java、JavaScript 等。&lt;/p&gt;
 &lt;p&gt;虽说编程语言各异，但我使用它们来写各种项目的代码却一直坚持两点：代码可读性和自解释性/自文档性（self-documentation）。这很大程度上应该是受到 Python 语言设计哲学的影响 - 追求简单易读易懂的代码。&lt;/p&gt;
 &lt;p&gt;很多人可能会认为这两点其实是一点 - 代码可读性，但我想做点区分：代码可读性突出对代码阅读者视觉上的影响，是否存在不必要的理解干扰，比如：必要的空行、变量定义与使用之间的距离、函数体/逻辑分支是否过长、逻辑表达是否直观等等。可读性高的代码通常都非常漂亮、赏心悦目。自解释性代码则更突出语义层面，比如：变量名称/函数名称/类名是否恰当、函数/方法/API 是否单一职责、工程目录结构/包/模块拆分是否符合“高内聚低耦合”原则等等 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;从毕业至今，在互联网行业从事软件研发工作，将近五年。这五年间，做过后端开发、前端开发、大数据处理等，使用过的编程语言包括：Python、PHP、Go、Java、JavaScript 等。&lt;/p&gt;
 &lt;p&gt;虽说编程语言各异，但我使用它们来写各种项目的代码却一直坚持两点：代码可读性和自解释性/自文档性（self-documentation）。这很大程度上应该是受到 Python 语言设计哲学的影响 - 追求简单易读易懂的代码。&lt;/p&gt;
@@ -2217,4 +2349,4 @@ sum() {
 &lt;p&gt;虽说我已尽自己所能地保证译文质量，但错误瑕疵难免，在此也请读者原谅。希望你们阅读愉快！&lt;/p&gt;
 &lt;p&gt;至此，我如释重负。&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;夏永锋&lt;/em&gt;&lt;/p&gt;
-&lt;p&gt;&lt;em&gt;写于上海&lt;/em&gt;&lt;/p&gt;</content><category term="翻译"></category><category term="书籍"></category></entry></feed>
+&lt;p&gt;&lt;em&gt;写于上海&lt;/em&gt;&lt;/p&gt;</content><category term="其他"></category><category term="翻译"></category><category term="书籍"></category></entry></feed>

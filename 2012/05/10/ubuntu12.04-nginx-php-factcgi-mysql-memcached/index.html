@@ -77,9 +77,9 @@
             <div class="entry-content">
               <p>1.
 安装必要的软件</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>sudo apt-get install nginx php5-cli php5-cgi spawn-fcgi psmisc mysql-server <span style="color: #a31515">\</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>sudo apt-get install nginx php5-cli php5-cgi spawn-fcgi psmisc mysql-server <span style="color: #a31515">\</span>
 mysql-client php5-mysql memcached php5-memcache php5-curl php5-gd
-</pre></div>
+</code></pre></div>
 
 
 <p>2.
@@ -87,7 +87,7 @@ mysql-client php5-mysql memcached php5-memcache php5-curl php5-gd
 （注：ngnix的配置文件目录为/etc/ngnix/，默认网站根目录为/usr/share/ngnix/www/；php配置文件目录为/etc/php5/）</p>
 <p>3.
 编辑文件/etc/ngnix/sites-available/default，内容如下(可以先把原文件备份一下)：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>server {
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>server {
     #listen   80; ## listen for ipv4; this line is default and implied
     #listen   [::]:80 default ipv6only=on; ## listen for ipv6
 
@@ -110,19 +110,19 @@ mysql-client php5-mysql memcached php5-memcache php5-curl php5-gd
 
     error_page 404 /404.html;
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>4.
 修改文件/etc/php5/cgi/php.ini。去除</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>#cgi.fix_pathinfo=1
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>#cgi.fix_pathinfo=1
+</code></pre></div>
 
 
 <p>一行前面的<code>#</code>。具体信息请看php.ini的相关注释。</p>
 <p>5.
 创建文件/usr/bin/php-fastcgi :</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #008000">#!/bin/bash</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #008000">#!/bin/bash</span>
 
 FASTCGI_USER=www-data
 FASTCGI_GROUP=www-data
@@ -135,18 +135,18 @@ CHILDREN=6
 
 PHP5=/usr/bin/php5-cgi
 /usr/bin/spawn-fcgi -a $ADDRESS -p $PORT -P $PIDFILE -C $CHILDREN -u $FASTCGI_USER -g $FASTCGI_GROUP -f $PHP5
-</pre></div>
+</code></pre></div>
 
 
 <p>6.
 设置/usr/bin/php-fastcgi为可执行：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>sudo chmod +x /usr/bin/php-fastcgi
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>sudo chmod +x /usr/bin/php-fastcgi
+</code></pre></div>
 
 
 <p>7.
 创建文件/etc/init.d/php-fastcgi：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #008000">#!/bin/bash</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #008000">#!/bin/bash</span>
 
 PHP_SCRIPT=/usr/bin/php-fastcgi
 
@@ -212,24 +212,24 @@ RET_VAL=0
     ;;
 <span style="color: #0000ff">esac</span>
 exit $RET_VAL
-</pre></div>
+</code></pre></div>
 
 
 <p>8.
 添加可执行权限，以及设置为开机启动</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>sudo chmod +x /etc/init.d/php-fastcgi
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>sudo chmod +x /etc/init.d/php-fastcgi
 sudo update-rc.d php-fastcgi defaults
 sudo /etc/init.d/php-fastcgi start
 sudo /etc/init.d/nginx start
-</pre></div>
+</code></pre></div>
 
 
 <p>9.
 创建文件/usr/share/nginx/www/test.php, 内容如下:</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
     phpinfo();
 <span style="color: #0000ff">?&gt;</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>10.

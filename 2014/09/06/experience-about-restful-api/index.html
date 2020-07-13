@@ -104,21 +104,21 @@
 得出县一级的天气预报数据。</p>
 <p>如果仅通过一个API来提供全国所有县一级的天气数据，那么可以想象，这个API返回的数据有多大多复杂。并且用户可能需要更灵活的数据查询方式，如仅查询某个省份
 所有县一级的天气预报数据。那么可以将这个API拆分成以下几个API：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>GET /province/
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>GET /province/
 GET /province/{province_name_or_id}/county/
 GET /province/{province_name_or_id}/county/{county_id_or_name}/weather/
-</pre></div>
+</code></pre></div>
 
 
 <p>拆分之后，可能需要多次调用API才能获取到需要的数据，但每个API的定义都简单而明确。</p>
 <p>对于<code>GET /province/{province_name_or_id}/county/{county_id_or_name}/weather/</code>这个URL，可能有人觉得它过长了，可以缩短设计为：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>GET /county/{county_id_or_name}/weather/
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>GET /county/{county_id_or_name}/weather/
+</code></pre></div>
 
 
 <p>甚至</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>GET /{county_id_or_name}/weather/
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>GET /{county_id_or_name}/weather/
+</code></pre></div>
 
 
 <p>但我更倾向于归属关系明确的长URL，主要原因是，API服务器端可以验证province_name_or_id与county_id_or_name之间的归属关系，以避免用户错误地调用API，
@@ -146,7 +146,7 @@ API就需要提供兼容方案。我们的兼容方案是：以POST谓词来替�
 <p>Yii框架默认的路由形式为：查询字符串r=xxx/yyy，其中xxx为控制器(controller)的名称，yyy为动作方法(action)的名称，这种路由形式对应Yii内部的get路由类型，
 因为是默认形式，所以无需额外配置。
 Yii另外提供一种名为path的路由形式，即使用URL的路径(path)部分来表达路由。要这种形式的路由需要额外配置Yii框架，如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>&#39;components&#39; =&gt; array(
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>&#39;components&#39; =&gt; array(
     &#39;urlManager&#39; =&gt; array(
         &#39;urlFormat&#39; =&gt; &#39;path&#39;,
         &#39;rules&#39; =&gt; array(
@@ -156,7 +156,7 @@ Yii另外提供一种名为path的路由形式，即使用URL的路径(path)部�
     ),
     ...
 ),
-</pre></div>
+</code></pre></div>
 
 
 <p>urlManager是Yii使用的路由管理组件，其中的urlFormat指明使用path形式的路由，rules中的每一数组项即一个路由配置，路由配置数组的第一个元素（如aaa/bbb），
@@ -166,7 +166,7 @@ xxx为控制器名称，yyy为动作方法名称，这里可以看出HTTP API UR
 <h5>兼容方案</h5>
 <p>对于兼容方案，POST谓词原本是用来“新增”资源，那么对于相同的URL，POST谓词可能已经被占用，也即意味着谓词“DELETE”或“PUT”的“POST”兼容方案的API请求，也会被Yii框架路由到“新增”资源的处理逻辑，那么需要在“新增”资源的控制器类的beforeAction方法中，通过检查查询字符串参数_method，重新将请求路由到正确的
 动作方法上，代码如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>protected function beforeAction($action)
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>protected function beforeAction($action)
 {
     $this-&gt;requestMethod = Yii::app()-&gt;request-&gt;getRequestType();
     // 兼容方案
@@ -187,12 +187,12 @@ xxx为控制器名称，yyy为动作方法名称，这里可以看出HTTP API UR
     }
     ...
 }
-</pre></div>
+</code></pre></div>
 
 
 <h5>响应码</h5>
 <p>对于API可能用到的所有响应码及其说明，我们使用一个单独的类来集中管理，以避免API中硬编码响应码，以及避免代码重复。如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
     <span style="color: #0000ff">class</span> <span style="color: #2b91af">CodeStatus</span> {
         <span style="color: #0000ff">const</span> OK = 200; <span style="color: #008000">// 成功</span>
         <span style="color: #0000ff">const</span> CREATED = 201; <span style="color: #008000">// 创建成功</span>
@@ -220,7 +220,7 @@ xxx为控制器名称，yyy为动作方法名称，这里可以看出HTTP API UR
             ...
         );
     }
-</pre></div>
+</code></pre></div>
 
 
 <p>API中仅需使用CodeStatus类定义的常量成员即可（如CodeStatus::OK）。</p>

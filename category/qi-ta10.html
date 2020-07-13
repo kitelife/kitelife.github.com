@@ -67,6 +67,49 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="../2013/10/16/high-availability-load-balancer-and-dns/" rel="bookmark" title="Permalink to 搭建高可用负载均衡组件及缓存DNS">搭建高可用负载均衡组件及缓存DNS</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2013-10-16T00:00:00+08:00"> 2013-10-16 Wed </abbr>
+<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <p>该项工作，如题所示，主要分为两部分：高可用负载均衡组件、缓存DNS。</p>
+<h3>高可用负载均衡组件</h3>
+<p>需求：优化业务系统架构中某些关键环节，针对TCP层数据流量进行负载均衡，并保证服务的高可用。</p>
+<p>技术选型：HAProxy + Keepalived，这对组合比较常见成熟。</p>
+<p>另外，由于HAProxy的负载均衡任务可能比较多，靠人工修改配置来增删改任务不方便可靠，所以实现了一个简单的HAProxy管理系统，
+以后经实际使用验证和完善会开放源码。</p>
+<p><img alt="high availability load balancer" src="/assets/uploads/pics/high-availability-load-balancer.png"></p>
+<h3>缓存DNS</h3>
+<p>先以www.qq.com为例，解释一下域名解析过程：</p>
+<p><img alt="resolve qq.com" src="/assets/uploads/pics/resolve-qq-com.jpg"></p>
+<p>1.
+用户向Local DNS发起www.qq.com.查询请求；</p>
+<p>2.
+Local DNS向根服务器发起com.查询请求；</p>
+<p>3.
+根服务器向Local DNS返回com.解析记录；</p>
+<p>4.
+Local DNS向com.权威服务器发起qq.com.查询请求；</p>
+<p>5.
+com.权威服务器向Local DNS返回qq.com.解析记录 …</p> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2013/10/16/high-availability-load-balancer-and-dns/" rel="bookmark" title="Permalink to 搭建高可用负载均衡组件及缓存DNS">阅读全文</a></div>
+                <div class="row tag-row">
+                    <span>标签: </span>
+                    <a class="danger label" href="../tag/gao-ke-yong.html">高可用</a>
+                    <a class="danger label" href="../tag/fu-zai-jun-heng.html">负载均衡</a>
+                    <a class="danger label" href="../tag/haproxy.html">HAProxy</a>
+                    <a class="danger label" href="../tag/keepalived.html">Keepalived</a>
+                    <a class="danger label" href="../tag/haproxyconsole.html">HAProxyConsole</a>
+                    <a class="danger label" href="../tag/dns.html">DNS</a>
+                    <a class="danger label" href="../tag/bind.html">BIND</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="../2013/10/15/standardization-operation-development/" rel="bookmark" title="Permalink to 运营开发规范化">运营开发规范化</a>
                     </h2>
                 </header>
@@ -126,14 +169,14 @@
                 <div class="entry-content"> <p>今天写了点shell脚本，在一些CentOS服务器上进行了一些操作，涉及如下命令：</p>
 <h3>统计特定进程个数</h3>
 <p>如统计haproxy进程的个数</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>ps -e | grep haproxy | wc -l
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>ps -e | grep haproxy | wc -l
+</code></pre></div>
 
 
 <h3>获取特定进程的pid</h3>
 <p>如获取haproxy进程的pid</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>ps -e | grep haproxy | awk <span style="color: #a31515">&#39;{print $1}&#39;</span>
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>ps -e | grep haproxy | awk <span style="color: #a31515">&#39;{print $1}&#39;</span>
+</code></pre></div>
 
 
 <h3>一对多添加ssh信任关系</h3>
@@ -141,14 +184,14 @@
 <ol>
 <li>
 <p>在192.168.2.1创建自己的公钥私钥：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>ssh-keygen -t rsa   <span style="color: #008000"># 提示输入时，全部留空回车。</span>
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>ssh-keygen -t rsa   <span style="color: #008000"># 提示输入时，全部留空回车。</span>
+</code></pre></div>
 
 
 </li>
 <li>
 <p>拷贝192.168.2.1的公钥到192.168.2.x机器上：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>ssh-copy-id <span style="color: #a31515">&quot;-p 22 usernameB@192.168 …</span></pre></div></li></ol> </div><!-- /.entry-content -->
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>ssh-copy-id <span style="color: #a31515">&quot;-p 22 usernameB@192.168 …</span></code></pre></div></li></ol> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2013/10/14/several-command-in-one-task/" rel="bookmark" title="Permalink to 一项工作中涉及的几个命令">阅读全文</a></div>
                 <div class="row tag-row">
                     <span>标签: </span>
@@ -287,7 +330,7 @@
 说是可执行的伪代码。</p>
 <p>非常欢迎反馈！你可以通过推特<a href="https://twitter.com/louiedinh">@louiedinh</a>或louiedinh AT gmail联系我。</p>
 <p>备注：本文是专门针对Python 2.7的，但应该是适用于Python 2.x的。很快我也会为Python 3写这样的一篇文章！</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #008000"># 单行注释以井字符开头</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #008000"># 单行注释以井字符开头</span>
 <span style="color: #a31515">&quot;&quot;&quot; 我们可以使用三个双引号（&quot;）或单引号（&#39;）</span>
 <span style="color: #a31515">    来编写多行注释</span>
 <span style="color: #a31515">&quot;&quot;&quot;</span>
@@ -304,7 +347,7 @@
 1 + 1 <span style="color: #008000">#=&gt; 2</span>
 8 - 1 <span style="color: #008000">#=&gt; 7</span>
 10 * 2 <span style="color: #008000">#=&gt; 20</span>
-35 …</pre></div> </div><!-- /.entry-content -->
+35 …</code></pre></div> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2013/06/29/learn-python-in-y-minutes/" rel="bookmark" title="Permalink to Y分钟学会Python（译）">阅读全文</a></div>
                 <div class="row tag-row">
                     <span>标签: </span>
@@ -327,15 +370,15 @@
 <p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
 <p>首先，在你的服务器上创建一个目录，并在其中初始化一个空的git仓库。我喜欢使用<code>~/www/</code>目录来存放网站代码，
 因此我会这么做：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>mkdir ~/www/example.com &amp;&amp; cd ~/www/example.com
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>mkdir ~/www/example.com &amp;&amp; cd ~/www/example.com
 git init
-</pre></div>
+</code></pre></div>
 
 
 <p>接着，设置你服务器上的git仓库以便很好地通过<code>git push</code>来部署代码。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>git config core.worktree ~/www/example.com
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>git config core.worktree ~/www/example.com
 git config receive.denycurrentbranch ignore
-</pre></div>
+</code></pre></div>
 
 
 <p>最后，为git设置一个post-receive钩子来检出<code>master</code>分支 …</p> </div><!-- /.entry-content -->
@@ -344,33 +387,6 @@ git config receive.denycurrentbranch ignore
                     <span>标签: </span>
                     <a class="danger label" href="../tag/git.html">Git</a>
                     <a class="danger label" href="../tag/fan-yi.html">翻译</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="../2013/06/18/setup-testing-server/" rel="bookmark" title="Permalink to 搭建测试服务器(源码编译方式)">搭建测试服务器(源码编译方式)</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2013-06-18T00:00:00+08:00"> 2013-06-18 Tue </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>目前工作中开发流程还比较初级，甚至连测试服务器都没有，代码的变更都是直接先在开发人员的本地机器上简单测试一下，然后直接部署到生产服务器上，这就相当于生产服务器同时充当了测试服务器的角色，虽然开发的是面向公司内部的系统，但作为一个有理想有追求的码农，是不允许这样粗糙混乱的开发流程的，所以申请了台服务器，自己搭建个测试服务器。</p>
-<p>由于公司的服务器统一使用SUSE Linux Server操作系统，并且版本较老。与Ubuntu、Centos等Linux发行版不同，SUSE Linux没有可用的软件源（不知是否与OpenSUSE的软件源兼容？），即没法使用系统的软件包管理工具。这样问题就很多了。</p>
-<p>我选择源码编译的方式来安装所有涉及的软件。也许有人会说，为什么不在网络上查找RPM包然后安装呢？那么先想一下RPM包本质上是个什么东西呢？RPM包（以及DEB包）其实就是将编译好的一些程序以一定的规则打包在一起，然后系统的包管理工具（yum、zypper）按照相同的规则（在依赖满足的情况下）将RPM包里文件复制到指定好的目录里。如果RPM包的依赖没有解决，是无法成功安装的。即使安装好了，若程序依赖的动态链接库等不存在或版本不匹配，也是无法正确运行的，比如libc库的版本过低，但明显你不能轻易替换libc库，因为系统中已安装的很多程序都依赖于libc库。那么相比源码编译方式，RPM包方式的问题更难解决。</p>
-<p>需要安装的软件有Nginx、PHP、MySQL、Memcached、Redis、Mongodb …</p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2013/06/18/setup-testing-server/" rel="bookmark" title="Permalink to 搭建测试服务器(源码编译方式)">阅读全文</a></div>
-                <div class="row tag-row">
-                    <span>标签: </span>
-                    <a class="danger label" href="../tag/linux.html">Linux</a>
-                    <a class="danger label" href="../tag/php.html">PHP</a>
-                    <a class="danger label" href="../tag/mysql.html">MySQL</a>
-                    <a class="danger label" href="../tag/nginx.html">Nginx</a>
-                    <a class="danger label" href="../tag/fu-wu-qi.html">服务器</a>
-                    <a class="danger label" href="../tag/python.html">Python</a>
-                    <a class="danger label" href="../tag/git.html">Git</a>
                 </div>
             </article>
             </li>

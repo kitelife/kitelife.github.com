@@ -78,18 +78,18 @@
               <p>原文： <a href="http://eli.thegreenplace.net/2012/04/16/python-object-creation-sequence/">Python object creation sequence</a></p>
 <p>译者： <a href="http://xiayf.blogspot.com/">youngsterxyf</a></p>
 <p>[本文讨论的Python版本为3.x]</p>
-<p>本文旨在探究Python中新对象的创建过程。正如我在<a href="http://eli.thegreenplace.net/2012/03/23/python-internals-how-callables-work">前一篇文章</a>中所解释的，对象的创建只是调用可调用对象的一种特例。考虑这样的一段Python代码：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">class</span> <span style="color: #2b91af">Joe</span>:
+<p>本文旨在探究Python中新对象的创建过程。正如我在<a href="&lt;http://eli.thegreenplace.net/2012/03/23/python-internals-how-callables-work/">前一篇文章</a>中所解释的，对象的创建只是调用可调用对象的一种特例。考虑这样的一段Python代码：</p>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">class</span> <span style="color: #2b91af">Joe</span>:
     <span style="color: #0000ff">pass</span>
 
 j = Joe()
-</pre></div>
+</code></pre></div>
 
 
 <p>当j = Joe()被执行时发生了什么呢？Python把它看作对可调用的Joe的一次调用，并且将它路由到内部函数 <code>PyObject_Call</code> ，将Joe作为PyObject_Call的第一个参数。 <code>PyObject_Call</code> 根据其第一个参数的类型抽取这个参数类型的 <code>tp_call</code> 属性。</p>
 <p>那么，Joe的类型是什么呢？无论何时我们定义一个新的Python类(class)，它的类型都是 <code>type</code> ，除非我们明确地为它指定一个 <a href="http://eli.thegreenplace.net/2011/08/14/python-metaclasses-by-example/">metaclass</a>。因此，当 <code>PyObject_Call</code> 试图查看Joe的类型，将得到类型 <code>type</code> ，然后选择 <code>type</code> 的 <code>tp_call</code> 属性。换句话说，就是调用 <code>Objects/typeobject.c</code> 文件中的函数 <code>type_call</code> [1]。</p>
 <p>这是一个有趣并且短小的函数，所以我将它整个地粘贴到这里：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">static</span> PyObject *
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">static</span> PyObject *
 type_call(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     PyObject *obj;
@@ -123,69 +123,69 @@ type_call(PyTypeObject *type, PyObject *args, PyObject *kwds)
     }
     <span style="color: #0000ff">return</span> obj; 
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>在我们的例子中传给 <code>type_call</code> 的参数是什么呢？第一个是Joe自己---它是如何表示的呢？好吧，Joe是一个类(class)，因此它是一个 <em>类型(type)</em> (<a href="http://eli.thegreenplace.net/2012/03/30/python-objects-types-classes-and-instances-a-glossary/">Python3中所有类都是类型</a>)。而类型在CPython虚拟机内部是通过 <code>PyTypeObject</code> 对象来表示的[2]。</p>
 <p><code>type_call</code> 首先调用给定类型的 <code>tp_new</code> 属性。然后，检测一个特殊的情况(为简单起见可忽视先)以确保 <code>tp_new</code> 返回的是预期类型的对象，然后调用 <code>tp_init</code> 。如果返回的是一个不同类型的对象，则不将其初始化。</p>
 <p>从Python代码来看，就是发生了这些事情：如果你的类中定义了特殊方法 <code>__new__</code> ，当创建类的一个新实例时，首先调用这个特殊方法。这个方法必须返回某个对象。通常，返回的即是预期类型的对象，但是并非必须如此。所需类型的对象对其自身调用 <code>__init__</code> 。示例如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">class</span> <span style="color: #2b91af">Joe</span>:
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">class</span> <span style="color: #2b91af">Joe</span>:
     <span style="color: #0000ff">def</span> __new__(cls, *args, **kwargs):
         obj = super(Joe, cls).__new__(cls)
-        <span style="color: #0000ff">print</span> (<span style="color: #a31515">&#39;__new__ called. got new obj id=0x%x&#39;</span> % id(obj))
+        print (<span style="color: #a31515">&#39;__new__ called. got new obj id=0x%x&#39;</span> % id(obj))
         <span style="color: #0000ff">return</span> obj
 
     <span style="color: #0000ff">def</span> __init__(self, arg):
-        <span style="color: #0000ff">print</span> (<span style="color: #a31515">&#39;__init__ called (self=0x%x) with arg=%s&#39;</span> % (id(self), arg))
+        print (<span style="color: #a31515">&#39;__init__ called (self=0x%x) with arg=%s&#39;</span> % (id(self), arg))
         self.arg=arg
 
 j = Joe(12)
-<span style="color: #0000ff">print</span>(type(j))
-</pre></div>
+print(type(j))
+</code></pre></div>
 
 
 <p>输出如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>__new__ called. got new obj id=0x7f88e7218290
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>__new__ called. got new obj id=0x7f88e7218290
 __init__ called (self=0x7f88e7218290) with arg=12
 &lt;class &#39;__main__.Joe&#39;&gt;
-</pre></div>
+</code></pre></div>
 
 
 <h2>自定义过程</h2>
 <p>如上所示，Joe的类型为 <code>type</code> ，所以调用函数 <code>type_call</code> 定义Joe实例的创建过程。可以通过为Joe指定一个自定义的类型来改变这个过程---换句话来说，这种自定义的类型就是一个metaclass。让我们修改前面的示例来为Joe指定一个自定义的metaclass：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">class</span> <span style="color: #2b91af">MetaJoe</span>(type):
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">class</span> <span style="color: #2b91af">MetaJoe</span>(type):
     <span style="color: #0000ff">def</span> __call__(cls, *args, **kwargs):
-        <span style="color: #0000ff">print</span>(<span style="color: #a31515">&#39;MetaJoe.__call__&#39;</span>)
-        <span style="color: #0000ff">return</span> None
+        print(<span style="color: #a31515">&#39;MetaJoe.__call__&#39;</span>)
+        <span style="color: #0000ff">return</span> <span style="color: #0000ff">None</span>
 
 <span style="color: #0000ff">class</span> <span style="color: #2b91af">Joe</span>(metaclass=MetaJoe):
     <span style="color: #0000ff">def</span> __new__(cls, *args, **kwargs):
         obj = super(Joe, cls).__new__(cls)
-        <span style="color: #0000ff">print</span>(<span style="color: #a31515">&#39;__new__ called. got new obj id=0x%x&#39;</span> % id(obj))
+        print(<span style="color: #a31515">&#39;__new__ called. got new obj id=0x%x&#39;</span> % id(obj))
         <span style="color: #0000ff">return</span> obj
 
     <span style="color: #0000ff">def</span> __init__(self, arg):
-        <span style="color: #0000ff">print</span>(<span style="color: #a31515">&#39;__init__ called (self=0x%x) with arg=%s&#39;</span> % (id(self), arg))
+        print(<span style="color: #a31515">&#39;__init__ called (self=0x%x) with arg=%s&#39;</span> % (id(self), arg))
         self.arg = arg
 
 j = Joe(12)
-<span style="color: #0000ff">print</span>(type(j))
-</pre></div>
+print(type(j))
+</code></pre></div>
 
 
 <p>现在Joe的类型不是 <code>type</code> ，而是 <code>MetaJoe</code> 。因此，当 <code>PyObject_Call</code> 为 <code>j = Joe(12)</code> 选择要执行的调用函数，它选择的是 <code>MetaJoe.__call__</code> 。后者先打印一条关于自己的提示，然后返回None，所以我们根本不要期望调用Joe的方法 <code>__new__</code> 和 <code>__init__</code> 。</p>
 <p>事实上，输出是这样的：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>MetaJoe.__call__
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>MetaJoe.__call__
 &lt;class &#39;NoneType&#39;&gt;
-</pre></div>
+</code></pre></div>
 
 
 <h2>更深的挖掘 - tp_new</h2>
 <p>很好，现在我们对于对象创建过程有了一个更好的理解，但是这一问题的一个关键部分还没有得到解释。虽然我们几乎总会为类定义方法 <code>__init__</code> ，但却很少定义 <code>__new__</code> [3]。此外，快速浏览一下代码就能明显地发现从某种程度上 <code>__new__</code> 更为重要。这个方法是被用来创建对象的。每个实例仅调用它一次。另一方面，调用 <code>__init__</code> 时已经得到了一个构造好的对象，且 <code>__init__</code> 可能根本不会被调用；而且它也可以被调用多次。</p>
 <p>在我们的例子中，传递给 <code>type_call</code> 的参数type是Joe，而Joe并没有自定义的 <code>__new__</code> 方法，那么 <code>type-&gt;tp_new</code> 的工作将交予基本类型(the base type)的结构成员(slot) <code>tp_new</code> 。Joe(<a href="http://eli.thegreenplace.net/2012/04/03/the-fundamental-types-of-python-a-diagram/">以及所有其他的Python对象</a> ，除了object自己)的基本类型是object。CPython内部是通过Objects/typeobject.c中的object_new函数来实现object.tp_new结构成员的。</p>
 <p><code>object_new</code> 实际上非常简单：先检查某些参数，核实正尝试实例化的类型不是<a href="http://docs.python.org/dev/library/abc.html">抽象</a>的，然后：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">return</span> type-&gt;tp_alloc(type, 0)
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">return</span> type-&gt;tp_alloc(type, 0)
+</code></pre></div>
 
 
 <p><code>tp_alloc</code> 是CPython内部类型对象的一个低层次结构成员，不可以在Python代码中直接访问它，但是C扩展开发人员应该对它比较熟悉。C扩展程序中的自定义类型(custom type)可能会重载这个结构成员从而为自己的实例提供一个自定义的内存分配方案。然而，大多数的C扩展类型会将其实例的内存分配工作交予 <code>PyType_GenericAlloc</code> 函数完成。</p>

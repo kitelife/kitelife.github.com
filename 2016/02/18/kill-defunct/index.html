@@ -84,28 +84,28 @@
 <li>继续往下读...</li>
 </ul>
 <p>我们先看看系统中是否存在defunct进程：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$ ps -A | grep defunct
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ ps -A | grep defunct
+</code></pre></div>
 
 
 <p>假设得到的输出如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>8328 ? 00:00:00 mono &lt;defunct&gt;
-8522 ? 00:00:01 mono &lt;defunct&gt;
-13132 ? 00:00:00 mono &lt;defunct&gt;
-25822 ? 00:00:00 ruby &lt;defunct&gt;
-28383 ? 00:00:00 ruby &lt;defunct&gt;
-18803 ? 00:00:00 ruby &lt;defunct&gt;
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000">8328 ? 00:00:00 mono &lt;defunct&gt;</span>
+<span style="border: 1px solid #FF0000">8522 ? 00:00:01 mono &lt;defunct&gt;</span>
+<span style="border: 1px solid #FF0000">13132 ? 00:00:00 mono &lt;defunct&gt;</span>
+<span style="border: 1px solid #FF0000">25822 ? 00:00:00 ruby &lt;defunct&gt;</span>
+<span style="border: 1px solid #FF0000">28383 ? 00:00:00 ruby &lt;defunct&gt;</span>
+<span style="border: 1px solid #FF0000">18803 ? 00:00:00 ruby &lt;defunct&gt;</span>
+</code></pre></div>
 
 
 <p>这意味着存在6个defunct进程：3个mono进程，以及3个ruby进程。这些进程之所以存在，可能是因为应用程序写得很烂或者用户做了不常见的操作，在我这，一定是我写的mono C#程序存在严重问题 :smile: 。</p>
 <p>现在，我们来看看这些进程的ID及其父进程ID：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$ ps -ef | grep defunct | more
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ ps -ef | grep defunct | more
+</code></pre></div>
 
 
 <p>以上命令的输出如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>UID PID PPID ...
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>UID PID PPID ...
 <span style="color: #008000">---------------------------------------------------------------</span>
 
 kenno 8328 6757 0 Mar22 ? 00<span style="border: 1px solid #FF0000">:</span>00<span style="border: 1px solid #FF0000">:</span>00 [mono] &lt;defunct&gt;
@@ -114,7 +114,7 @@ kenno 13132 6757 0 Mar23 ? 00<span style="border: 1px solid #FF0000">:</span>00<
 kenno 25822 25808 0 Mar27 ? 00<span style="border: 1px solid #FF0000">:</span>00<span style="border: 1px solid #FF0000">:</span>00 [ruby] &lt;defunct&gt;
 kenno 28383 28366 0 Mar27 ? 00<span style="border: 1px solid #FF0000">:</span>00<span style="border: 1px solid #FF0000">:</span>00 [ruby] &lt;defunct&gt;
 kenno 18803 18320 0 Apr02 ? 00<span style="border: 1px solid #FF0000">:</span>00<span style="border: 1px solid #FF0000">:</span>00 [ruby] &lt;defunct&gt;
-</pre></div>
+</code></pre></div>
 
 
 <ul>
@@ -132,7 +132,7 @@ kenno 18803 18320 0 Apr02 ? 00<span style="border: 1px solid #FF0000">:</span>00
 <hr>
 <p><strong>译注</strong></p>
 <p>执行命令 <code>ps aux | grep defunct</code>，如果进程为defunct，则其第8列为 <code>Z</code> 。如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">work</span>     13391  0.1  0.0      0     0 pts/0    Z    10<span style="border: 1px solid #FF0000">:</span>50   0<span style="border: 1px solid #FF0000">:</span>23 [python] &lt;defunct&gt;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">work</span>     13391  0.1  0.0      0     0 pts/0    Z    10<span style="border: 1px solid #FF0000">:</span>50   0<span style="border: 1px solid #FF0000">:</span>23 [python] &lt;defunct&gt;
 <span style="color: #0000ff">work</span>     13393  0.0  0.0      0     0 pts/0    Z    10<span style="border: 1px solid #FF0000">:</span>50   0<span style="border: 1px solid #FF0000">:</span>15 [python] &lt;defunct&gt;
 <span style="color: #0000ff">work</span>     13394  0.0  0.0      0     0 pts/0    Z    10<span style="border: 1px solid #FF0000">:</span>50   0<span style="border: 1px solid #FF0000">:</span>15 [python] &lt;defunct&gt;
 <span style="color: #0000ff">work</span>     13395  0.1  0.0      0     0 pts/0    Z    10<span style="border: 1px solid #FF0000">:</span>50   0<span style="border: 1px solid #FF0000">:</span>28 [python] &lt;defunct&gt;
@@ -149,7 +149,7 @@ kenno 18803 18320 0 Apr02 ? 00<span style="border: 1px solid #FF0000">:</span>00
 <span style="color: #0000ff">work</span>     13406  0.0  0.0      0     0 pts/0    Z    10<span style="border: 1px solid #FF0000">:</span>50   0<span style="border: 1px solid #FF0000">:</span>16 [python] &lt;defunct&gt;
 <span style="color: #0000ff">work</span>     13407  0.0  0.0      0     0 pts/0    Z    10<span style="border: 1px solid #FF0000">:</span>50   0<span style="border: 1px solid #FF0000">:</span>02 [python] &lt;defunct&gt;
 <span style="color: #0000ff">work</span>     13408  0.0  0.0      0     0 pts/0    Z    10<span style="border: 1px solid #FF0000">:</span>50   0<span style="border: 1px solid #FF0000">:</span>14 [python] &lt;defunct&gt;
-</pre></div>
+</code></pre></div>
             </div><!-- /.entry-content -->
             <div class="comments">
               <div id="gitalk-container"></div>

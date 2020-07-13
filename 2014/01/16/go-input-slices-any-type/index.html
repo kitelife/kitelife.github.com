@@ -80,37 +80,37 @@
 <p>最近参与的一个业余项目，<a href="https://github.com/ahmetalpbalkan/go-linq">go-linq</a>，让我了解到Go语言的类型系统并不是为任何类面向
 对象编程而设计的。没有泛型，没有类型继承，也没有提供任何对这些特性有用的东西。</p>
 <p>但是，提供了一个名为<code>interface{}</code>的类型，你可以向其赋予几乎任意类型的值，不会抛出编译错误，就像.NET的<code>Object</code>或Java的<code>Object</code>：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">var</span> o <span style="color: #0000ff">interface</span>{}
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">var</span> o <span style="color: #0000ff">interface</span>{}
 o := 3.14
 o := Student{Name: <span style="color: #a31515">&quot;Ahmet&quot;</span>}
-</pre></div>
+</code></pre></div>
 
 
 <p>我们假设你需要一个可以接收任意类型slices的函数，如果考虑如下这样实现：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">func</span> Method(in []<span style="color: #0000ff">interface</span>{}){...}
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">func</span> Method(in []<span style="color: #0000ff">interface</span>{}){...}
 ...
 slice := []<span style="color: #2b91af">int</span>{1, 2, 3}
 Method(slice)   <span style="color: #008000">// 抛出错误</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>这样的代码会抛出编译错误，因为<code>[]int</code>不是<code>[]interface{}</code>。那么该如何解决这个问题呢？你可以要求<code>Method</code>的使用者先把slices
 转换为<code>[]interface{}</code>类型。也就是说他们必须借助于如下类似函数将他们的<code>[]AnyType</code>类型参数转换为<code>[]interface{}</code>类型：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">func</span> conv(in []AnyType) (out []<span style="color: #0000ff">interface</span>{}) {
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">func</span> conv(in []AnyType) (out []<span style="color: #0000ff">interface</span>{}) {
     out = make([]<span style="color: #0000ff">interface</span>{}, len(in))
     <span style="color: #0000ff">for</span> i, v := <span style="color: #0000ff">range</span> in {
         out[i] = v
     }
     <span style="color: #0000ff">return</span>
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>但这种实现的扩展性并不好。如果<code>Method</code>的使用者（可以是一个常用函数如<code>Map</code>、<code>Filter</code>等）想向<code>Method</code>传递N种不同类型的参数，
 那么他们就必须编写N个<code>conv</code>函数。</p>
 <p>对此，我们该怎么办呢？使用<strong>reflection</strong>（反射）呀！实现一个函数以<code>interface{}</code>（可以赋任意类型的值）为输入参数类型，在函数内部
 将这个输入参数转换为一个slice，然后用于我们<code>Method</code>函数。如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">func</span> takeSliceArg(arg <span style="color: #0000ff">interface</span>{}) (out []<span style="color: #0000ff">interface</span>{}, ok <span style="color: #2b91af">bool</span>) {
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">func</span> takeSliceArg(arg <span style="color: #0000ff">interface</span>{}) (out []<span style="color: #0000ff">interface</span>{}, ok <span style="color: #2b91af">bool</span>) {
     slice, success := takeArg(arg, reflect.Slice)
     <span style="color: #0000ff">if</span> !success {
         ok = <span style="color: #0000ff">false</span>
@@ -131,7 +131,7 @@ Method(slice)   <span style="color: #008000">// 抛出错误</span>
     }
     <span style="color: #0000ff">return</span>
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>函数<code>takeArg()</code>尝试将传入的参数值转换为指定的<a href="http://golang.org/pkg/reflect/#Kind">reflect.Kind</a>类型，然后函数<code>takeSliceArg()</code>

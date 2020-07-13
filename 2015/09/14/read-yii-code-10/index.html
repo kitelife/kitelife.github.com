@@ -83,13 +83,13 @@
 <h3>分析</h3>
 <p>我们来看看Yii框架在哪个地方注册错误/异常处理过程？处理过程是什么样的？</p>
 <p>Yii框架在请求处理初始化过程中，在<code>CApplication</code>类（见文件<code>base/CApplication.php</code>）的构造方法中调用了：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
 $this-&gt;initSystemHandlers();
-</pre></div>
+</code></pre></div>
 
 
 <p><code>initSystemHandlers</code>的实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
 <span style="color: #a31515">/**</span>
 <span style="color: #a31515"> * Initializes the class autoloader and error handlers.</span>
 <span style="color: #a31515"> */</span>
@@ -102,11 +102,11 @@ $this-&gt;initSystemHandlers();
     <span style="color: #0000ff">if</span>(YII_ENABLE_ERROR_HANDLER)
         set_error_handler(<span style="color: #0000ff">array</span>($this,<span style="color: #a31515">&#39;handleError&#39;</span>),error_reporting());
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>其中注册的方法<code>handleException</code>和<code>handleError</code>实现分别如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
 <span style="color: #0000ff">public</span> <span style="color: #0000ff">function</span> handleException($exception)
 {
     <span style="color: #008000">// disable error capturing to avoid recursive errors</span>
@@ -165,10 +165,10 @@ $this-&gt;initSystemHandlers();
         <span style="color: #0000ff">exit</span>(1);
     }
 }
-</pre></div>
+</code></pre></div>
 
 
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
 <span style="color: #0000ff">public</span> <span style="color: #0000ff">function</span> handleError($code,$message,$file,$line)
 {
     <span style="color: #0000ff">if</span>($code &amp; error_reporting())
@@ -241,11 +241,11 @@ $this-&gt;initSystemHandlers();
         }
     }
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>从上面代码可以看到，方法<code>handleException</code>的关键部分（<code>handleError</code>类似）为：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
 <span style="color: #008000">// 将异常封装成事件，并触发事件，从而触发监听该事件的处理过程</span>
 $event=<span style="color: #0000ff">new</span> CExceptionEvent($this,$exception);
 $this-&gt;onException($event);
@@ -258,20 +258,20 @@ $this-&gt;onException($event);
     <span style="color: #0000ff">else</span>
         $this-&gt;displayException($exception);
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>其中方法<code>onException</code>的实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
 <span style="color: #0000ff">public</span> <span style="color: #0000ff">function</span> onException($event)
 {
     $this-&gt;raiseEvent(<span style="color: #a31515">&#39;onException&#39;</span>,$event);
 }
-</pre></div>
+</code></pre></div>
 
 
 <p><code>raiseEvent</code>方法实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
 <span style="color: #0000ff">public</span> <span style="color: #0000ff">function</span> raiseEvent($name,$event)
 {
     <span style="color: #008000">// 根据事件名称，如onException，找到注册到该事件的处理过程，逐个触发调用。</span>
@@ -312,22 +312,22 @@ $this-&gt;onException($event);
         <span style="color: #0000ff">throw</span> <span style="color: #0000ff">new</span> CException(Yii::t(<span style="color: #a31515">&#39;yii&#39;</span>,<span style="color: #a31515">&#39;Event &quot;{class}.{event}&quot; is not defined.&#39;</span>,
             <span style="color: #0000ff">array</span>(<span style="color: #a31515">&#39;{class}&#39;</span>=&gt;get_class($this), <span style="color: #a31515">&#39;{event}&#39;</span>=&gt;$name)));
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>那么是如何注册事件的处理过程的呢？</p>
 <p>在类<code>CComponent</code>（见文件<code>base/CComponent.php</code>，<code>CApplication</code>类间接继承自该类）中定义了一对方法：<code>attachEventHandler</code>（将处理过程绑定到某事件）和<code>detachEventHandler</code>（将处理过程从事件解绑）。</p>
 <p>方法<code>attachEventHandler</code>的实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
 <span style="color: #0000ff">public</span> <span style="color: #0000ff">function</span> attachEventHandler($name,$handler)
 {
     $this-&gt;getEventHandlers($name)-&gt;add($handler);
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>其中<code>getEventHandlers</code>实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
 <span style="color: #0000ff">public</span> <span style="color: #0000ff">function</span> getEventHandlers($name)
 {
     <span style="color: #008000">// 可以关注一下方法hasEvent</span>
@@ -344,23 +344,23 @@ $this-&gt;onException($event);
         <span style="color: #0000ff">throw</span> <span style="color: #0000ff">new</span> CException(Yii::t(<span style="color: #a31515">&#39;yii&#39;</span>,<span style="color: #a31515">&#39;Event &quot;{class}.{event}&quot; is not defined.&#39;</span>,
             <span style="color: #0000ff">array</span>(<span style="color: #a31515">&#39;{class}&#39;</span>=&gt;get_class($this), <span style="color: #a31515">&#39;{event}&#39;</span>=&gt;$name)));
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>回到“方法<code>handleException</code>的关键部分”，在事件的handled属性没有置为true的情况下，会调用方法<code>getErrorHandler</code>取到内置的一个处理过程，该方法实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
 <span style="color: #0000ff">public</span> <span style="color: #0000ff">function</span> getErrorHandler()
 {
     <span style="color: #008000">// 获取名为errorHandler的组件，该组件默认会在CApplication类的registerCoreComponents方法中注册，</span>
     <span style="color: #008000">// 见http://blog.xiayf.cn/2014/11/13/read-yii-code-3/一文的说明</span>
     <span style="color: #0000ff">return</span> $this-&gt;getComponent(<span style="color: #a31515">&#39;errorHandler&#39;</span>);
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>名为errorHandler的组件默认为类<code>CErrorHandler</code>（见文件<code>base/CErrorHandler.php</code>），当然也可以配置覆盖默认行为。</p>
 <p><code>CErrorHandler</code>类的<code>handle</code>方法实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
 <span style="color: #0000ff">public</span> <span style="color: #0000ff">function</span> handle($event)
 {
     <span style="color: #008000">// set event as handled to prevent it from being handled by other event handlers</span>
@@ -403,11 +403,11 @@ $this-&gt;onException($event);
     <span style="color: #0000ff">else</span> <span style="color: #008000">// CErrorEvent</span>
         $this-&gt;handleError($event);
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>其中方法<code>handleException</code>和<code>handleError</code>实现分别如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
 <span style="color: #0000ff">protected</span> <span style="color: #0000ff">function</span> handleException($exception)
 {
     $app=Yii::app();
@@ -473,10 +473,10 @@ $this-&gt;onException($event);
     <span style="color: #0000ff">else</span>
         $app-&gt;displayException($exception);
 }
-</pre></div>
+</code></pre></div>
 
 
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
 <span style="color: #0000ff">protected</span> <span style="color: #0000ff">function</span> handleError($event)
 {
     $trace=debug_backtrace();
@@ -554,12 +554,12 @@ $this-&gt;onException($event);
     <span style="color: #0000ff">else</span>
         $app-&gt;displayError($event-&gt;code,$event-&gt;message,$event-&gt;file,$event-&gt;line);
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>上面的代码最终显示异常/错误信息，是通过方法<code>render</code>、以及应用实例的<code>displayError</code>和<code>displayException</code>方法来完成。</p>
 <p><strong>render</strong></p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
 <span style="color: #0000ff">protected</span> <span style="color: #0000ff">function</span> render($view,$data)
 {
     <span style="color: #008000">// 注意这个地方，如果配置了errorAction，则可以指定目标controller的某个action来处理错误</span>
@@ -618,7 +618,7 @@ $this-&gt;onException($event);
         $viewFile=$viewPath.DIRECTORY_SEPARATOR.<span style="color: #a31515">&quot;exception.php&quot;</span>;
     <span style="color: #0000ff">return</span> $viewFile;
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>上面代码的逻辑是 - 对于error类型的信息，Yii会依次在以下目录中寻找名为<code>error{$code}.php</code>文件来展示错误/异常信息：</p>
@@ -631,7 +631,7 @@ $this-&gt;onException($event);
 <p>对于exception类型信息，则是查找<code>exception.php</code>文件。</p>
 <p>所以如果应用开发过程需要定制4xx、5xx的错误页面，可以在<code>WebRoot/protected/views/system</code>或<code>WebRoot/themes/ThemeName/views/system</code>放置对应的错误模板页面。</p>
 <p><strong>displayError</strong></p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
 <span style="color: #0000ff">public</span> <span style="color: #0000ff">function</span> displayError($code,$message,$file,$line)
 {
     <span style="color: #0000ff">if</span>(YII_DEBUG)
@@ -666,11 +666,11 @@ $this-&gt;onException($event);
         <span style="color: #0000ff">echo</span> <span style="color: #a31515">&quot;&lt;p&gt;$message&lt;/p&gt;\n&quot;</span>;
     }
 }
-</pre></div>
+</code></pre></div>
 
 
 <p><strong>displayException</strong></p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
 <span style="color: #0000ff">public</span> <span style="color: #0000ff">function</span> displayException($exception)
 {
     <span style="color: #0000ff">if</span>(YII_DEBUG)
@@ -685,7 +685,7 @@ $this-&gt;onException($event);
         <span style="color: #0000ff">echo</span> <span style="color: #a31515">&#39;&lt;p&gt;&#39;</span>.$exception-&gt;getMessage().<span style="color: #a31515">&#39;&lt;/p&gt;&#39;</span>;
     }
 }
-</pre></div>
+</code></pre></div>
 
 
 <h3>总结</h3>

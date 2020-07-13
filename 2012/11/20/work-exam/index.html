@@ -97,22 +97,22 @@
 <p>F(n)的值是多少？</p>
 <p><img alt="Fabonacci" src="https://raw.githubusercontent.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/NumberedEquation6.gif"></p>
 <p><strong>常规算法</strong>：根据Fabonacci的定义，递归求值。时间复杂度$ O(2^n) $</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">def</span> fibobacci(n):
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">def</span> fibobacci(n):
     <span style="color: #0000ff">return</span> n&gt;=2 <span style="color: #0000ff">and</span> fibonacci(n-2) + fibonacci(n-1) <span style="color: #0000ff">or</span> n
-</pre></div>
+</code></pre></div>
 
 
 <p><strong>迭代</strong>：利用循环取代递归。时间复杂度O(n)</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">def</span> fibonacci(n):
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">def</span> fibonacci(n):
     a, b = 0, 1
     <span style="color: #0000ff">for</span> i <span style="color: #0000ff">in</span> range(n):
         a, b = b, a+b
     <span style="color: #0000ff">return</span> a
-</pre></div>
+</code></pre></div>
 
 
 <p><em>迭代算法的变种</em> ：利用python的generator，原理一样，只是应用场合不一样。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">def</span> fibonacci():
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">def</span> fibonacci():
     a, b = 0, 1
     <span style="color: #0000ff">while</span> 1:
         <span style="color: #0000ff">yield</span> a
@@ -121,25 +121,25 @@
 f = fibonacci()
 n = 100
 <span style="color: #0000ff">for</span> i <span style="color: #0000ff">in</span> range(n+1):
-    <span style="color: #0000ff">print</span>(next(f)
-</pre></div>
+    print(next(f)
+</code></pre></div>
 
 
 <p><strong>利用矩阵运算来加速的算法</strong>：（还没懂）算法复杂度$ O(\log n) $</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">import</span> numpy
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">import</span> numpy
 
 fibonacci_matrix = numpy.matrix([1,1],[1,0], dtype=numpy.ndarray)
 <span style="color: #0000ff">def</span> fibonacci(n):
     <span style="color: #0000ff">return</span> fibonacci_matrix**(n-1)[0, 0]
-</pre></div>
+</code></pre></div>
 
 
 <p><strong>数学方法:使用Fibonacci序列的通用公式</strong>：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">from</span> math <span style="color: #0000ff">import</span> sqrt
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">from</span> math <span style="color: #0000ff">import</span> sqrt
 
 <span style="color: #0000ff">def</span> fibonacci(n):
     <span style="color: #0000ff">return</span> int(((1+sqrt(5))/2)**n/sqrt(5))
-</pre></div>
+</code></pre></div>
 
 
 <p>虽然数学方法在4种方法中速度最快，但当n越大，其计算精度偏差越大。</p>
@@ -149,7 +149,7 @@ fibonacci_matrix = numpy.matrix([1,1],[1,0], dtype=numpy.ndarray)
 <h4>大文件处理</h4>
 <p>设计算法从文件中随机取K行(内存够存储K行)，每行被取的概率相等，算法复杂度要低。(具体的记不太清楚了)</p>
 <h4>CAS(Compare And Swap)</h4>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #2b91af">bool</span> compare_and_swap(<span style="color: #2b91af">int</span> *accum, <span style="color: #2b91af">int</span> *dest, <span style="color: #2b91af">int</span> newval)
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #2b91af">bool</span> compare_and_swap(<span style="color: #2b91af">int</span> *accum, <span style="color: #2b91af">int</span> *dest, <span style="color: #2b91af">int</span> newval)
 {
     <span style="color: #0000ff">if</span>(*accum == *dest)
     {
@@ -158,11 +158,11 @@ fibonacci_matrix = numpy.matrix([1,1],[1,0], dtype=numpy.ndarray)
     }
     <span style="color: #0000ff">return</span> false;
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>CAS方式实现的进队列操作：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>EnQueue(x)  <span style="color: #008000">//进队列</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>EnQueue(x)  <span style="color: #008000">//进队列</span>
 {
     q = new record();
     q-&gt;value = x;
@@ -174,7 +174,7 @@ fibonacci_matrix = numpy.matrix([1,1],[1,0], dtype=numpy.ndarray)
 
     CAS(tail, p, q);    <span style="color: #008000">//置尾结点</span>
 }
-</pre></div>
+</code></pre></div>
 
 
 <ol>
@@ -228,25 +228,25 @@ fibonacci_matrix = numpy.matrix([1,1],[1,0], dtype=numpy.ndarray)
 </ul>
 <p><strong>代码实现</strong></p>
 <p><em>冒泡排序---Python</em>:</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">def</span> bubbleSort(L):
-    <span style="color: #0000ff">print</span> <span style="color: #a31515">&#39;start bubble sort:&#39;</span>
-    <span style="color: #0000ff">print</span> L
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">def</span> bubbleSort(L):
+    print <span style="color: #a31515">&#39;start bubble sort:&#39;</span>
+    print L
     count = 0
-    <span style="color: #0000ff">while</span> True:
+    <span style="color: #0000ff">while</span> <span style="color: #0000ff">True</span>:
         step = 0
         <span style="color: #0000ff">for</span> i <span style="color: #0000ff">in</span> range(len(L)-1):
             <span style="color: #0000ff">if</span> L[i] &gt; L[i+1]:
                 L[i], L[i+1] = L[i+1], L[i]
-                <span style="color: #0000ff">print</span> L
+                print L
                 step += 1
                 count += 1
         <span style="color: #0000ff">if</span> step == 0:
             <span style="color: #0000ff">return</span> L, <span style="color: #a31515">&#39;totalstep:&#39;</span>, count
-</pre></div>
+</code></pre></div>
 
 
 <p><em>计数排序---C</em>:</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">#include</span> <span style="color: #008000">&lt;stdlib.h&gt;</span><span style="color: #0000ff"></span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">#include</span> <span style="color: #008000">&lt;stdlib.h&gt;</span><span style="color: #0000ff"></span>
 
 <span style="color: #2b91af">void</span> counting_sort(<span style="color: #2b91af">int</span> *array, <span style="color: #2b91af">int</span> size)
 {
@@ -274,15 +274,15 @@ fibonacci_matrix = numpy.matrix([1,1],[1,0], dtype=numpy.ndarray)
             array[z++] = i;
     free(count);
 }
-</pre></div>
+</code></pre></div>
 
 
 <p><em>快速排序---Python</em>:</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">def</span> qsort(L):
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">def</span> qsort(L):
     <span style="color: #0000ff">if</span> <span style="color: #0000ff">not</span> L: <span style="color: #0000ff">return</span> []
     <span style="color: #0000ff">return</span> qsort([x <span style="color: #0000ff">for</span> x <span style="color: #0000ff">in</span> L[1:] <span style="color: #0000ff">if</span> x &lt; L[0]]) + L[0:1] + \
         qsort([x <span style="color: #0000ff">for</span> x <span style="color: #0000ff">in</span> L[1:] <span style="color: #0000ff">if</span> x&gt;=L[0]])
-</pre></div>
+</code></pre></div>
 
 
 <h3>2013-小米科技-校园招聘-笔试-软件开发工程师</h3>
@@ -315,15 +315,15 @@ fibonacci_matrix = numpy.matrix([1,1],[1,0], dtype=numpy.ndarray)
 </li>
 </ol>
 <p>然后，我们可以声明一个指针fp，将它赋值为这个函数，代码如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>(<span style="color: #2b91af">int</span>) (*fp)(<span style="color: #2b91af">int</span>, <span style="color: #2b91af">int</span> *);
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>(<span style="color: #2b91af">int</span>) (*fp)(<span style="color: #2b91af">int</span>, <span style="color: #2b91af">int</span> *);
 fp = fun;
-</pre></div>
+</code></pre></div>
 
 
 <p>然后用以下指针来调用这个函数：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #2b91af">int</span> y = 1;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #2b91af">int</span> y = 1;
 <span style="color: #2b91af">int</span> result = fp(3, &amp;y);
-</pre></div>
+</code></pre></div>
 
 
 <p>函数指针的值是该函数机器代码表示中第一条指令的地址。</p>
@@ -334,7 +334,7 @@ fp = fun;
 <h4>给定二维数组a[1...100][1...65]，以行序进行存储，假设数组的基地址为10000，每个元素需要2个存储单元，请求出元素a[56][21]的存储地址。</h4>
 <p>$$ (55 \times 65 + 22) \times 2 + 10000 = 17194 $$</p>
 <h4>给定一个数组a，求数组result，其中result[i]的值为除a[i]之外的其他a的元素值的乘积(假设不会溢出)。算法的时间，空间复杂度要尽可能低。</h4>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #2b91af">int</span>* getProduct(<span style="color: #2b91af">int</span>* a, <span style="color: #2b91af">int</span> n)
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #2b91af">int</span>* getProduct(<span style="color: #2b91af">int</span>* a, <span style="color: #2b91af">int</span> n)
 {
     <span style="color: #2b91af">int</span> allproduct = 1;
     <span style="color: #2b91af">int</span> index;
@@ -345,11 +345,11 @@ fp = fun;
         productResult[index] = allproduct / a[index];
     <span style="color: #0000ff">return</span> productResult;
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>时间复杂度为O(n)</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #2b91af">int</span>* getProduct(<span style="color: #2b91af">int</span>* a, <span style="color: #2b91af">int</span> n)
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #2b91af">int</span>* getProduct(<span style="color: #2b91af">int</span>* a, <span style="color: #2b91af">int</span> n)
 {
     <span style="color: #2b91af">int</span>* productResult = new <span style="color: #2b91af">int</span>[n];
     <span style="color: #2b91af">int</span> i, j, temp;
@@ -366,7 +366,7 @@ fp = fun;
     }
     <span style="color: #0000ff">return</span> productResult;
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>时间复杂度为O(n^2)</p>
@@ -388,7 +388,7 @@ fp = fun;
 <h4>有一个指针void *mPem指向一段分配好的内存空间，现在创建类A的对象a，如何使得a在其上申请内存空间？</h4>
 <p>难道真是A* a = (A*)mPem么?</p>
 <h4>虚继承与多态</h4>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">#include</span> <span style="color: #008000">&lt;stdio.h&gt;</span><span style="color: #0000ff"></span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">#include</span> <span style="color: #008000">&lt;stdio.h&gt;</span><span style="color: #0000ff"></span>
 <span style="color: #0000ff">#include</span><span style="color: #008000">&lt;stdlib.h&gt;</span><span style="color: #0000ff"></span>
 
 <span style="color: #0000ff">using</span> <span style="color: #0000ff">namespace</span> std;
@@ -418,22 +418,22 @@ fp = fun;
     a-&gt;S();
     printf(<span style="color: #a31515">&quot;%d&quot;</span>,a-&gt;a);
 }
-</pre></div>
+</code></pre></div>
 
 
 <h4>BITMAP的简单实现：使用char类型数组</h4>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #2b91af">char</span>* a;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #2b91af">char</span>* a;
 ...
 <span style="color: #2b91af">void</span> set(<span style="color: #2b91af">int</span> n) <span style="color: #008000">//设置第n位为1</span>
 {
     <span style="color: #2b91af">int</span> index = (n-1)/8;
     a[index] |= 1&lt;&lt;(n-1-(n-1)%8)
 }
-</pre></div>
+</code></pre></div>
 
 
 <h4>矩阵向右旋转90度的实现</h4>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #2b91af">int</span> maxtrix[M][N];
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #2b91af">int</span> maxtrix[M][N];
 ...
 <span style="color: #2b91af">int</span> reverseMatrix[N][M];
 <span style="color: #2b91af">int</span> i, j;
@@ -444,7 +444,7 @@ fp = fun;
         reverseMatrix[j][M-1-i] = matrix[i][j];
     }
 }
-</pre></div>
+</code></pre></div>
 
 
 <h4>数据结构：线性结构与非线性结构</h4>
@@ -460,12 +460,12 @@ fp = fun;
 <h4>union和struct结构的存储与空间占用问题(对齐)</h4>
 <p>1.</p>
 <p>联合提供了一种方式，能够规避C语言的类型系统，允许以多种类型来引用一个对象。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">union</span> U3 {
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">union</span> U3 {
     <span style="color: #2b91af">char</span> c;
     <span style="color: #2b91af">int</span> i[2];
     <span style="color: #2b91af">double</span> v;
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>对于类型union U3*的指针p, p-&gt;c、p-&gt;i[0]和p-&gt;v引用的都是数据结构的起始位置。一个联合的总的大小等于它最大字段的大小。</p>
@@ -543,7 +543,7 @@ Ki &lt;= K2i 并且 Ki &lt;= K2i+1  或  Ki &gt;= K2i 并且 Ki &gt;= K2i+1</p>
 <h3>程序员面试宝典</h3>
 <h4>用一个表达式，判断一个数X是否是2的N次方(2,4,8,16,...)，不可用循环语句。</h4>
 <h4>下面程序的结果是多少？</h4>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">#include</span> <span style="color: #008000">&lt;iostream&gt;</span><span style="color: #0000ff"></span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">#include</span> <span style="color: #008000">&lt;iostream&gt;</span><span style="color: #0000ff"></span>
 <span style="color: #0000ff">#include</span> <span style="color: #008000">&lt;string&gt;</span><span style="color: #0000ff"></span>
 
 <span style="color: #0000ff">using</span> <span style="color: #0000ff">namespace</span> std;
@@ -559,29 +559,29 @@ Ki &lt;= K2i 并且 Ki &lt;= K2i+1  或  Ki &gt;= K2i 并且 Ki &gt;= K2i+1</p>
 
     <span style="color: #0000ff">return</span> 0;
 }
-</pre></div>
+</code></pre></div>
 
 
 <h4>There are two int variables: a and b, don't use "if", "?:", "switch" or other judgement statements, find out the biggest one of the two numbers.</h4>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #2b91af">int</span> max = ((a+b)+abs(a-b)) / 2;
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #2b91af">int</span> max = ((a+b)+abs(a-b)) / 2;
+</code></pre></div>
 
 
 <h4>如何将a, b的值进行交换，并且不使用任何中间变量?</h4>
 <p>简而言之，用异或语句比较容易，不用担心超界的问题。</p>
 <p>如果采用：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>a=a+b;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>a=a+b;
 b=a-b;
 a=a-b;
-</pre></div>
+</code></pre></div>
 
 
 <p>这样做的缺点就是如果a, b都是比较大的两个数，a=a+b时就会超界。</p>
 <p>而采用：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>a=a^b;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>a=a^b;
 b=a^b;
 a=a^b;
-</pre></div>
+</code></pre></div>
 
 
 <p>无需担心超界的问题，这样就比较好</p>

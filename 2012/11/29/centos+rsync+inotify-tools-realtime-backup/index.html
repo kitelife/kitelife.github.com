@@ -82,19 +82,19 @@
 <p><strong>配置步骤</strong>：</p>
 <p>1.
 主服务器，备份服务器上安装rsync:</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>sudo yum install rsync
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>sudo yum install rsync
+</code></pre></div>
 
 
 <p>2.
 主服务器上安装inotify-tools:</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>sudo yum install inotify-tools
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>sudo yum install inotify-tools
+</code></pre></div>
 
 
 <p>3.
 备份服务器上添加配置文件/etc/rsyncd.conf</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>readonly=no
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>readonly=no
 chroot=no
 uid=root
 gid=root
@@ -115,42 +115,42 @@ path=/home/yongfeng/apps/website2.com/webroot/upload
 
 [website3]
 path=/home/yongfeng/apps/website3.com/webroot/upload
-</pre></div>
+</code></pre></div>
 
 
 <p>以及配置文件/etc/rsync.pass</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>tongbu:somesecurepassword
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>tongbu:somesecurepassword
+</code></pre></div>
 
 
 <p>给密码文件赋权:</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>sudo chmod 400 /etc/rsync.pass
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>sudo chmod 400 /etc/rsync.pass
+</code></pre></div>
 
 
 <p>（注：tongbu就是用户名，与rsyncd.conf中auth users的值一致。somesecurepassword是密码，会在后面主服务器上的配置密码文件用到）</p>
 <p>4.
 在备份服务器上创建需要的目录:</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>sudo mkdir -p /home/yongfeng/apps/website1.org/webroot/upload
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>sudo mkdir -p /home/yongfeng/apps/website1.org/webroot/upload
 sudo mkdir -p /home/yongfeng/apps/website2.com/webroot/upload
 sudo mkdir -p /home/yongfeng/apps/website3.com/webroot/upload
-</pre></div>
+</code></pre></div>
 
 
 <p>5.
 在主服务器上添加配置文件/etc/rsync-client.pass：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>somesecurepassword
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>somesecurepassword
+</code></pre></div>
 
 
 <p>赋权限:</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>chmod 600 /etc/rsync-client.pass
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>chmod 600 /etc/rsync-client.pass
+</code></pre></div>
 
 
 <p>6.
 在主服务器上添加要执行的脚本/home/autoscript/rsyncInotify.sh:</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #008000">#!/bin/sh</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #008000">#!/bin/sh</span>
 src[0]=<span style="color: #a31515">&#39;/var/www/apps/website1.org/webroot/upload,website1&#39;</span>
 src[1]=<span style="color: #a31515">&#39;/var/www/apps/website2.com/webroot/upload,website2&#39;</span>
 src[2]=<span style="color: #a31515">&#39;/var/www/apps/website3.com/webroot/upload,website3&#39;</span>
@@ -166,42 +166,42 @@ src[2]=<span style="color: #a31515">&#39;/var/www/apps/website3.com/webroot/uplo
         echo <span style="color: #a31515">&quot;*******************************&quot;</span>
     <span style="color: #0000ff">done</span> &amp;
 <span style="color: #0000ff">done</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>赋可执行权限:</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>sudo chmod +x rsyncInotify.sh
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>sudo chmod +x rsyncInotify.sh
+</code></pre></div>
 
 
 <p>7.
 在备份服务器的防火墙中添加规则以允许rsync服务请求---可通过直接编辑文件/etc/sysconfig/iptables，在文件中添加一行内容：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>-A INPUT -s 1.1.1.1 -p tcp -m tcp --dport 873 -j ACCEPT
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>-A INPUT -s 1.1.1.1 -p tcp -m tcp --dport 873 -j ACCEPT
+</code></pre></div>
 
 
 <p>8.
 备份服务器启动rsync服务:</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>sudo /usr/bin/rsync --daemon
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>sudo /usr/bin/rsync --daemon
+</code></pre></div>
 
 
 <p>9.
 主服务器启动rsync+inotify服务:</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>sudo /home/autoscript/tongbu/rsyncInotify.sh
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>sudo /home/autoscript/tongbu/rsyncInotify.sh
+</code></pre></div>
 
 
 <p>10.
 在备份服务器上将rsync服务设置为开机自启动服务---直接编辑配置文件/etc/rc.d/rc.local，添加一行内容：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>/usr/bin/rsync --daemon
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/usr/bin/rsync --daemon
+</code></pre></div>
 
 
 <p>11.
 在主服务器上将rsyncInotify.sh设置为开始自启动---直接编辑配置文件/etc/rc.d/rc.local，添加一行内容：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>/home/autoscript/tongbu/rsyncInotify.sh &gt;&gt; /home/autoscript/tongbu/tongbu.log
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/home/autoscript/tongbu/rsyncInotify.sh &gt;&gt; /home/autoscript/tongbu/tongbu.log
+</code></pre></div>
 
 
 <p><strong>存在的问题</strong></p>

@@ -81,14 +81,14 @@
 <hr>
 <p><a href="https://site.mockito.org/">mockito</a> 提供两种对象模拟方式：<strong>mock</strong> 和 <strong>spy</strong>。</p>
 <p>简单来说，mock 模拟的对象是一个完全假的对象，只是具备指定类型的接口，以 <code>java.util.List</code> 为例：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">import static</span> org.mockito.Mockito.mock;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">import static</span> org.mockito.Mockito.mock;
 
 List mockedList = mock(List.class);
-</pre></div>
+</code></pre></div>
 
 
 <p>虽然 List 是一个 interface，也可以模拟出一个对象实例，这个 mockedList 对象具备 List 接口定义的所有方法，但所有方法都不具备实际的行为操作，对于有返回值的方法，则默认返回方法返回类型的默认值，没有返回值的方法，则纯粹是一个空方法。比如：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #008000">// mockedList 并不会真的把 1 存下来</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #008000">// mockedList 并不会真的把 1 存下来</span>
 mockedList.add(1);
 <span style="color: #008000">// 所以，size() 返回默认值，输出 0</span>
 System.out.println(mockedList.size());
@@ -96,11 +96,11 @@ System.out.println(mockedList.size());
 System.out.println(mockedList.get(0));
 <span style="color: #008000">// 输出 null</span>
 System.out.println(mockedList.get(1));
-</pre></div>
+</code></pre></div>
 
 
 <p>对于模拟出来的对象，可以任意指定其方法的返回值，比如：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">import static</span> org.mockito.Mockito.when;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">import static</span> org.mockito.Mockito.when;
 
 <span style="color: #008000">// 调用 size() 方法时，返回 10</span>
 when(mockedList.size()).willReturn(10);
@@ -113,21 +113,21 @@ System.out.println(mockedList.size());
 System.out.println(mockedList.get(0));
 <span style="color: #008000">// 输出 您好！</span>
 System.out.println(mockedList.get(1));
-</pre></div>
+</code></pre></div>
 
 
 <p>当然我们写测试代码时，并不会使用 System.out.println，然后看输出，而是使用<strong>断言</strong>：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">import static</span> org.junit.Assert.assertEquals;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">import static</span> org.junit.Assert.assertEquals;
 
 assertEquals(10, mockedList.size());
 assertEquals(<span style="color: #a31515">&quot;Hello World!&quot;</span>, mockedList.get(0));
 assertEquals(<span style="color: #a31515">&quot;您好！&quot;</span>, mockedList.get(1));
-</pre></div>
+</code></pre></div>
 
 
 <p>断言方法非常多，不仅仅只是 assertEquals。</p>
 <p>对于同一个方法，可以模拟多次调用返回不同的值：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #008000">// 会覆盖之前 mock 的行为：when(mockedList.size()).willReturn(10);</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #008000">// 会覆盖之前 mock 的行为：when(mockedList.size()).willReturn(10);</span>
 <span style="color: #008000">// 或者这么写：when(mockedList.size()).willReturn(0, -1, 10);</span>
 when(mockedList.size()).thenReturn(0).thenReturn(-1).thenReturn(10);
 assertEquals(0, mockedList.size());
@@ -145,11 +145,11 @@ assertEquals(10, iterator.next());
 assertEquals(1000, iterator.next());
 <span style="color: #008000">// 第 4 次之后的 iterator.next() 调用都返回 1000</span>
 assertEquals(1000, iterator.next());
-</pre></div>
+</code></pre></div>
 
 
 <p>还可以模拟异常抛出：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>List mockedList = mock(List.class);
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>List mockedList = mock(List.class);
 
 when(mockedList.get(-1000)).thenThrow(<span style="color: #0000ff">new</span> RuntimeException(<span style="color: #a31515">&quot;参数异常！&quot;</span>));
 <span style="color: #0000ff">try</span> {
@@ -158,11 +158,11 @@ when(mockedList.get(-1000)).thenThrow(<span style="color: #0000ff">new</span> Ru
     assertTrue(e <span style="color: #0000ff">instanceof</span> RuntimeException);
     assertEquals(<span style="color: #a31515">&quot;参数异常！&quot;</span>, e.getMessage());
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>也可以基于复杂的逻辑来构造返回值：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">import</span> org.mockito.invocation.InvocationOnMock;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">import</span> org.mockito.invocation.InvocationOnMock;
 <span style="color: #0000ff">import</span> org.mockito.stubbing.Answer;
 
 List&lt;Integer&gt; mockedList = mock(List.class);
@@ -177,11 +177,11 @@ assertTrue(10 == mockedList.get(10));
         <span style="color: #0000ff">return</span> var.getArgument(0);
     }
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>除了 <code>when(...).thenReturn(...)</code> 风格的测试模拟方式，还有 BDD（Behavior Driven Development 行为驱动开发）风格的：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">import static</span> org.mockito.BDDMockito.given;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">import static</span> org.mockito.BDDMockito.given;
 
 <span style="color: #008000">// given</span>
 given(mockedList.get(0)).willReturn(100);
@@ -189,12 +189,12 @@ given(mockedList.get(0)).willReturn(100);
 <span style="color: #2b91af">int</span> v = (<span style="color: #2b91af">int</span>) mockedList.get(0);
 <span style="color: #008000">// then</span>
 assertEquals(100, v);
-</pre></div>
+</code></pre></div>
 
 
 <p>如果方法没有返回值，或者其它奇葩的需求，则没法使用 when.thenReturn / willReturn 这样的模拟方法，可以使用 <code>doReturn(...).when(...)...</code>：
 </p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">import static</span> org.mockito.Mockito.doThrow;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">import static</span> org.mockito.Mockito.doThrow;
 <span style="color: #0000ff">import static</span> org.mockito.Mockito.doReturn;
 
 ArrayList mockedList = mock(ArrayList.class);
@@ -210,13 +210,13 @@ doThrow(<span style="color: #0000ff">new</span> RuntimeException(<span style="co
 
 <span style="color: #008000">// 没有意义，因为没法使用 断言 来验证，实际运行时会抛异常</span>
 doReturn(10).when(mockedList).clear();
-</pre></div>
+</code></pre></div>
 
 
 <p>从示例代码可以看出，<code>doReturn(...).when(...)....</code> 不会做类型校验，mockedList.clear() 返回值类型为 void，但我们模拟让其返回 10；所以，正常情况应该尽可能使用 <code>when(...).thenReturn(...)</code> 或 <code>given(...).willReturn(...)</code>。</p>
 <hr>
 <p>前述代码示例中，模拟方法的参数都做了硬编码，实际情况通常都不是这么测试，而是模拟方法的参数符合一定的要求即可，比如：在某个范围之内、符合类型的任何值：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">import static</span> org.mockito.Mockito.anyInt;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">import static</span> org.mockito.Mockito.anyInt;
 
 <span style="color: #008000">/*</span>
 <span style="color: #008000">以任何 int 类型的参数调用 mockedList.get 方法，都返回 100</span>
@@ -227,19 +227,19 @@ when(mockedList.get(anyInt())).thenReturn(100);
 
 assertEquals(100, mockedList.get(0));
 assertEquals(100, mockedList.get(1000));
-</pre></div>
+</code></pre></div>
 
 
 <p>可用的参数匹配器，见 org.mockito.ArgumentMatchers 类的静态方法列表，也可以自己实现 ArgumentMatcher 接口：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">package</span> org.mockito;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">package</span> org.mockito;
 
 <span style="color: #0000ff">public</span> <span style="color: #0000ff">interface</span> <span style="color: #2b91af">ArgumentMatcher</span>&lt;T&gt; {
     <span style="color: #2b91af">boolean</span> matches(T var1);
 }
-</pre></div>
+</code></pre></div>
 
 
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">import</span> org.mockito.ArgumentMatcher;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">import</span> org.mockito.ArgumentMatcher;
 <span style="color: #0000ff">import static</span> org.mockito.Mockito.intThat;
 
 when(mockedList.get(intThat(<span style="color: #0000ff">new</span> LimitedInt()))).thenReturn(10);
@@ -252,17 +252,17 @@ assertEquals(<span style="color: #0000ff">null</span>, mockedList.get(100));
 <span style="color: #0000ff">public</span> <span style="color: #0000ff">class</span> <span style="color: #2b91af">LimitedInt</span> <span style="color: #0000ff">implements</span> ArgumentMatcher&lt;Integer&gt; {
 
     <span style="color: #0000ff">public</span> <span style="color: #2b91af">boolean</span> matches(Integer var) {
-        <span style="color: #0000ff">return</span> var &gt; 0 &amp;&amp; var &lt; 100;
+        <span style="color: #0000ff">return</span> <span style="color: #0000ff">var</span> <span style="border: 1px solid #FF0000">&gt; 0 &amp;&amp; </span>var &lt; 100;
     }
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>如果被模拟的方法包含多个参数，那么这些参数要么全部使用匹配器，要么全部不使用。</p>
 <hr>
 <p>模拟某些类（A）的方法，通常会将 mock 出来的对象注入到依赖该类实例的其他类（B）中，来替代真实的依赖，这种方式的目的是为了测试类 B 的行为是否符合预期。</p>
 <p>另一个测试需求是，测试某个类 A' 在某个上下文环境中的行为是否符合预期，比如： A' 的某个方法是否被调用过、调用过几次、调用参数是否符合预期、几个方法之间的调用次序是否符合预期、方法调用耗时是否符合预期等等。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">import static</span> org.mockito.Mockito.verify;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">import static</span> org.mockito.Mockito.verify;
 <span style="color: #0000ff">import static</span> org.mockito.Mockito.times;
 <span style="color: #0000ff">import static</span> org.mockito.Mockito.never;
 <span style="color: #0000ff">import static</span> org.mockito.Mockito.verifyZeroInteractions;
@@ -302,10 +302,10 @@ verify(mocked, times(11)).size();
         list.isEmpty();
     }
 }
-</pre></div>
+</code></pre></div>
 
 
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>List mocked = mock(List.class);
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>List mocked = mock(List.class);
 
 mocked.add(1);
 mocked.add(2);
@@ -314,10 +314,10 @@ verify(mocked).add(1);
 
 <span style="color: #008000">// 是否有其他交互没有验证过？因为 mocked 还调用过 mocked.add(2)，所以这句测试会失败</span>
 verifyNoMoreInteractions(mocked);
-</pre></div>
+</code></pre></div>
 
 
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">import</span> org.mockito.InOrder;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">import</span> org.mockito.InOrder;
 
 <span style="color: #008000">// 也可以验证调用次序</span>
 List mocked1 = mock(List.class);
@@ -333,12 +333,12 @@ InOrder inOrder = inOrder(mocked1, mocked2);
 inOrder.verify(mocked1).size();
 inOrder.verify(mocked1).isEmpty();
 inOrder.verify(mocked2).isEmpty();
-</pre></div>
+</code></pre></div>
 
 
 <hr>
 <p>也可以验证某个方法被调用时所使用的参数是否符合预期：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">import</span> org.mockito.ArgumentCaptor;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">import</span> org.mockito.ArgumentCaptor;
 
 List mockedlist = mock(List.class);
 
@@ -359,13 +359,13 @@ assertTrue(100 == argumentCaptor.getValue());
         list.add(100);
     }
 }
-</pre></div>
+</code></pre></div>
 
 
 <hr>
 <p>前面的内容都是以 mock 为例，我们再来说说 spy，与 mock 的区别：</p>
 <p>mock 出来的对象是一个完全假的对象，但 spy 通常是基于一个具体的类或类实例，对其篡改某些方法，对于被篡改方法之外的方法，其行为都和调用真实对象的方法一样，不过并没有调用真实对象的方法，也不会对真实对象产生影响：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #008000">// 基于一个实际的类实例</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #008000">// 基于一个实际的类实例</span>
 List&lt;Integer&gt; realList = <span style="color: #0000ff">new</span> ArrayList&lt;&gt;(10);
 List&lt;Integer&gt; spy = spy(realList);
 
@@ -378,11 +378,11 @@ assertEquals(1, spy.size());
 <span style="color: #008000">// 这句会抛出 java.lang.IndexOutOfBoundsException，因为 realList 还是为空</span>
 assertTrue(1 == realList.get(0));
 assertTrue(1 == spy.get(0));
-</pre></div>
+</code></pre></div>
 
 
 <p>也可以基于一个具体的类来构造 spy，但这样无法使用带参数的构造方法，也无法指定类型参数：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>List&lt;Integer&gt; = spy(ArrayList.class);
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>List&lt;Integer&gt; = spy(ArrayList.class);
 assertEquals(0, spy.size());
 spy.add(100);
 assertEquals(1, spy.size());
@@ -391,13 +391,13 @@ assertTrue(100 == spy.get(0));
 <span style="color: #008000">// 篡改方法</span>
 when(spy.size()).thenReturn(-1);
 assertEquals(-1, spy.size());
-</pre></div>
+</code></pre></div>
 
 
 <p>实际上，mock 也可以基于具体的类来构造，这时可以指定某些方法实际调用具体类的方法。</p>
 <hr>
 <p>除了使用 mock、spy 方法来构造模拟对象，还可以通过注解来构造，但这样的话得指定 JUnit 的 Runner 为 <code>org.mockito.junit.MockitoJUnitRunner</code>：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">import</span> org.junit.Test;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">import</span> org.junit.Test;
 <span style="color: #0000ff">import</span> org.junit.runner.RunWith;
 <span style="color: #0000ff">import</span> org.mockito.Mock;
 <span style="color: #0000ff">import</span> org.mockito.Spy;
@@ -433,7 +433,7 @@ assertEquals(-1, spy.size());
         assertTrue(1 == spyed.size());
     }
 }
-</pre></div>
+</code></pre></div>
             </div><!-- /.entry-content -->
             <div class="comments">
               <div id="gitalk-container"></div>

@@ -215,15 +215,15 @@
                 <div class="entry-content"> <p>之前在<a href="http://youngsterxyf.github.io/2013/11/29/inner_warehouse_monitor_system/">仓库作业机器监控系统</a>项目中使用<a href="http://www.highcharts.com/demo/line-time-series">HighCharts的时间序列数据图</a>来绘制机器CPU使用率、内存使用量、网络流量趋势变化图等，这些图在IE下却没有正常显示，IE也没有报错，按理说HighCharts的IE兼容性是较好的，不会出现这种问题，
 最后查明原因---确实不是HighCharts的问题，而是由于IE下JavaScript的Date对象缺少一种构造函数导致的。</p>
 <p>IE中JavaScript的Date对象有如下<a href="http://msdn.microsoft.com/zh-cn/library/ie/cd9w2te4.aspx">三种构造函数</a>：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>dateObj = new Date()
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>dateObj = new Date()
 dateObj = new Date(dateVal)
 dateObj = new Date(year, month, date[, hours[, minutes[, seconds[,ms]]]])
-</pre></div>
+</code></pre></div>
 
 
 <p>其他浏览器中除了这三种之外，<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date">还有一种</a>:</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>dateObj = <span style="color: #0000ff">new</span> Date(dateString);
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>dateObj = <span style="color: #0000ff">new</span> Date(dateString);
+</code></pre></div>
 
 
 <p>如果在IE下使用了这种构造函数，IE不会提示错误，但在调用dateObj的getMonth、getDate等等方法时返回的是<strong>NaN</strong>，从而导致了其他问题。</p>

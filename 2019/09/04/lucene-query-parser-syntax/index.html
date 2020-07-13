@@ -95,19 +95,19 @@
 <p>Lucene 支持分多个字段/域的数据。搜索时，可以指定一个域，也可以使用默认域。域的名称以及默认域与具体实现相关。</p>
 <p>输入域的名称，后跟一个冒号（:），以及目标搜索词，即可对任意一个域进行搜索。</p>
 <p>举例来说，假设一个 Lucene 索引包含 2 个域：title 和 text，text 是默认域。若想查找标题为 ”The Right Way“ 且文本内容包含 ”don't go this way“ 的文档，可以输入：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>title:<span style="color: #a31515">&quot;The Right Way&quot;</span> <span style="color: #0000ff">AND</span> <span style="color: #2b91af">text</span><span style="border: 1px solid #FF0000">:</span><span style="color: #0000ff">go</span>
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #008000">title:&quot;The Right Way&quot; AND text:go</span>
+</code></pre></div>
 
 
 <p>或者：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>title:<span style="color: #a31515">&quot;The Right Way&quot;</span> <span style="color: #0000ff">AND</span> <span style="color: #0000ff">go</span>
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #008000">title:&quot;The Right Way&quot; AND go</span>
+</code></pre></div>
 
 
 <p>因为 text 是默认域，所以域的标志可以省略。</p>
 <p>注意：指定的域仅对紧跟其后的词生效，因此，如下查询：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>title:The Right Way
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>title:The Right Way
+</code></pre></div>
 
 
 <p>将对 title 域仅查找 ”The“，并对默认域（当前这个例子中是指 text 域）查找 ”Right“ 和 ”Way“。</p>
@@ -118,56 +118,56 @@
 <p>使用 <code>?</code> 符号进行单个字符的通配搜索。</p>
 <p>使用 <code>*</code> 符号进行多个字符的通配搜索。</p>
 <p>单字符通配搜索用于查找替换单个字符即可匹配的词。举例来说，若要搜索 ”text“ 或 ”test“，可以如下查询：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>te?t
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000">te?t</span>
+</code></pre></div>
 
 
 <p>多字符通配搜索用于查找替换0个或多个字符即可匹配的词。举例来说，若要搜索 ”test“、”tests“ 或 ”tester“，可以如下查询：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>test*
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000">test*</span>
+</code></pre></div>
 
 
 <p>也可以对词的中间部分进行通配搜索：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>te*t
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000">te*t</span>
+</code></pre></div>
 
 
 <p>备注：不可以将 <code>*</code> 或 <code>?</code> 符号用作一次搜索的首个字符。</p>
 <h3>正则表达式搜索</h3>
 <p>Lucene 支持正则表达式搜索，匹配斜杠（<code>/</code>） 之间的模式。正则表达式的语法在不同的发布版本之间可能会有差异，目前支持的语法在 <a href="http://lucene.apache.org/core/8_2_0/core/org/apache/lucene/util/automaton/RegExp.html?is-external=true">RegExp</a> 类文档中有说明。举例来说，查找包含 ”moat“ 或 ”boat“ 的文档：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>/[mb]oat/
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/[mb]oat/
+</code></pre></div>
 
 
 <h3>模糊搜索</h3>
 <p>Lucene 支持基于 Damerau-Levenshtein 编辑距离的模糊搜索。在单个词的最后添加波浪符（~）即可进行模糊搜索。举例来说，使用模糊搜索查找拼写上近似 ”roam“ 的词：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>roam~
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000">roam~</span>
+</code></pre></div>
 
 
 <p>这个查询语句会找到 foam 和 roams 这类词。</p>
 <p>模糊搜索可以通过一个额外（可选）的参数来指定允许的最大编辑次数。这个参数值界于 0 和 2 之间，例如：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>roam~1
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000">roam~1</span>
+</code></pre></div>
 
 
 <p>如果未指定该参数，则默认使用 2 个编辑距离。</p>
 <p>以前，这里还允许使用浮点数。现在这个语法已被考虑弃用，将于 Lucene 5.0 中移除。</p>
 <h3>邻近搜索</h3>
 <p>Lucene 支持查找指定距离的邻近词。在短语的最后添加拨浪符（~）即可进行邻近搜索。举例来说，在文档中搜索 ”apache“ 和 ”jakarta“ 相距 10 个词的模式：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #a31515">&quot;jakarta apache&quot;</span>~10
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000">&quot;jakarta apache&quot;~10</span>
+</code></pre></div>
 
 
 <h3>范围搜索</h3>
 <p>范围查询可以要求域的值在范围查询语句指定的上下界之间。范围查询对于上下界可以包含也可以不包含。排序按照字典序进行。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>mod_date:[20020101 <span style="color: #0000ff">TO</span> 20030101]
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #008000">mod_date:[20020101 TO 20030101]</span>
+</code></pre></div>
 
 
 <p>这个查询语句会查找 mod_date 域的值在 20020101 和 20030101 （包含上下界） 之间的文档。注意：范围查询并不是仅适用于日期域，也可以对非日期的域进行范围查询：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>title:<span style="border: 1px solid #FF0000">{</span>Aida <span style="color: #0000ff">TO</span> Carmen<span style="border: 1px solid #FF0000">}</span>
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #008000">title:{Aida TO Carmen}</span>
+</code></pre></div>
 
 
 <p>这个查询语句会查找到 title 域的值在 Aida 和 Carmen （不包含上下界）之间的所有文档。</p>
@@ -175,18 +175,18 @@
 <h3>词加权（Boosting a term）</h3>
 <p>Lucene 会基于文档中找到的词对匹配到的文档提供相关性级别（译者疑问：基于向量余弦来计算相关性？）。可以在目标搜索词之后紧接一个脱字符 “^”，后跟一个加权系数（一个数字）来提升该搜索词的相关性权重。加权系统越高，查询命中的文档与该词的相关性越强。</p>
 <p>加权操作允许对词进行加权控制文档的相关性。例如，假设你正在搜索：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>jakarta apache
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000">jakarta apache</span>
+</code></pre></div>
 
 
 <p>然后希望搜索结果和词 ”jakarta“ 更相关一些，则可以使用 ”^“ 符号后跟一个加权系数对这个词进行加权，即如下这样查询：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>jakarta^4 apache
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000">jakarta^4 apache</span>
+</code></pre></div>
 
 
 <p>这会使得查找到的文档和词 ”jakarta“ 看起来更相关一些。也可以对短语进行加权，如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #a31515">&quot;jakarta apache&quot;</span>^4 <span style="color: #a31515">&quot;Apache Lucene&quot;</span>
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000">&quot;jakarta apache&quot;^4 &quot;Apache Lucene&quot;</span>
+</code></pre></div>
 
 
 <p>默认，加权系数是 1。加权系统可以小于 1（比如：0.2），但必须大于 0。</p>
@@ -195,72 +195,72 @@
 <h3>OR</h3>
 <p>“OR” 操作符是默认的连接操作符。这意味着如果两个词之间没有布尔操作符，则使用 “OR” 操作符。OR 操作符链接两个词，并匹配包含其中任意一个词的文档。这相当于集合的并集操作。“||” 符合可用于替代单词 “OR”。</p>
 <p>比如，使用如下查询语句来搜索包含 “jakarta apache” 或仅是 “jakarta” 的文档：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #a31515">&quot;jakarta apache&quot;</span> jakarta
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000">&quot;jakarta apache&quot; jakarta</span>
+</code></pre></div>
 
 
 <p>或：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #a31515">&quot;jakarta apache&quot;</span> <span style="color: #0000ff">OR</span> jakarta
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000">&quot;jakarta apache&quot; OR jakarta</span>
+</code></pre></div>
 
 
 <h3>AND</h3>
 <p>"AND" 操作符会匹配文本内容中同时存在两个词（因为 AND 是二元操作符）的文档。这相当于集合的交集操作。“&amp;&amp;” 符号可用于替代单词 “AND”。</p>
 <p>比如，使用如下查询语句来搜索包含 “jakarta apache” 和 “Apache Lucene” 的文档：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #a31515">&quot;jakarta apache&quot;</span> <span style="color: #0000ff">AND</span> <span style="border: 1px solid #FF0000">“</span>Apache Lucene<span style="border: 1px solid #FF0000">”</span>
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000">&quot;jakarta apache&quot; AND “Apache Lucene”</span>
+</code></pre></div>
 
 
 <h3>+</h3>
 <p>“+”（必需）操作符要求文档的某个域中包含 “+” 符号之后的词。</p>
 <p>比如，使用如下查询语句来搜索（必须）包含 “jakarta” 以及可能包含 “lucene”（包不包含都可以）的文档：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>+jakarta lucene
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000">+jakarta lucene</span>
+</code></pre></div>
 
 
 <h3>NOT</h3>
 <p>若文档包含”NOT“之后的词，”NOT“ 操作会排查该文档。这相当于集合的差集操作。”!“ 符号可用于替代单词 ”NOT“。</p>
 <p>比如，使用如下查询语句搜索包含 ”jakarta apache“ 但不包含 ”Apache Lucene“ 的文档”：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #a31515">&quot;jakarta apache&quot;</span> <span style="color: #0000ff">NOT</span> <span style="color: #a31515">&quot;Apache Lucene&quot;</span>
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000">&quot;jakarta apache&quot; NOT &quot;Apache Lucene&quot;</span>
+</code></pre></div>
 
 
 <p>备注：“NOT” 操作符不可以用于单个词。例如，如下搜索不会返回任何结果：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">NOT</span> <span style="color: #a31515">&quot;jakarta apache&quot;</span>
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000">NOT &quot;jakarta apache&quot;</span>
+</code></pre></div>
 
 
 <h3>-</h3>
 <p>如果文档包含”-“符号之后的词，那么”-“（禁止）操作符会排除这些文档。</p>
 <p>比如，使用如下查询语句来查询包含 ”jakarta apache“ 但不包含 ”Apache Lucene“ 的文档：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #a31515">&quot;jakarta apache&quot;</span> -<span style="color: #a31515">&quot;Apache Lucene&quot;</span>
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000">&quot;jakarta apache&quot; -&quot;Apache Lucene&quot;</span>
+</code></pre></div>
 
 
 <h2>分组</h2>
 <p>Lucene 支持使用圆括号对子句进行分组，构成子查询。如果你想控制一个查询语句的布尔逻辑，这对非常有用。</p>
 <p>比如，使用如下查询语句来搜索包含 “jakarta” 或 “apache”，以及 “website” 的文档：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>(jakarta <span style="color: #0000ff">OR</span> apache) <span style="color: #0000ff">AND</span> website
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000">(jakarta OR apache) AND website</span>
+</code></pre></div>
 
 
 <p>如此就消除了任何困惑，确保你想表达是：必须存在 ”website“，以及可能存在词 ”jakarta“ 或 ”apache“。</p>
 <h2>域分组</h2>
 <p>Lucene 支持使用圆括号对单个域的多个子句进行分组。</p>
 <p>例如，若想搜索一个 title 中既包含单词“return”且包含短语“pink panther”，可以使用如下查询：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>title:<span style="color: #a31515">(</span>+<span style="color: #0000ff">return</span> +<span style="color: #a31515">&quot;pink panther&quot;)</span>
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #008000">title:(+return +&quot;pink panther&quot;)</span>
+</code></pre></div>
 
 
 <h2>特殊字符转义</h2>
 <p>Lucene 支持对查询语法使用的特殊字符进行转移。目前这些特殊字符如下列表所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>+ - &amp;&amp; || ! ( ) <span style="border: 1px solid #FF0000">{</span> <span style="border: 1px solid #FF0000">}</span> [ ] ^ <span style="border: 1px solid #FF0000">&quot;</span> ~ * ? : <span style="border: 1px solid #FF0000">\</span> /
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000">+ - &amp;&amp; || ! ( ) { } [ ] ^ &quot; ~ * ? : \ /</span>
+</code></pre></div>
 
 
 <p>在特殊字符之前加 <code>\</code> 来转义。例如，使用如下查询语句来搜索 <code>(1+1):2</code>：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="border: 1px solid #FF0000">\</span>(1<span style="border: 1px solid #FF0000">\</span>+1<span style="border: 1px solid #FF0000">\</span>)<span style="border: 1px solid #FF0000">\</span>:2
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000">\(1\+1\)\:2</span>
+</code></pre></div>
             </div><!-- /.entry-content -->
             <div class="comments">
               <div id="gitalk-container"></div>

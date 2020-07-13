@@ -75,7 +75,7 @@
                 <div class="entry-content"> <p>工作中涉及一些对外开放的无需特殊权限的API，用户会因为某些需求而通过程序来频繁访问这些API，导致系统的负载陡增，可能影响系统其它功能的正常使用。虽然做了一些优化让这种API尽可能地轻量，但仍然不够，因此需要进行访问频率的限制。</p>
 <p>由于这样的API并不多，所以我们并没有在Nginx这样的反向代理接入层中实现频率限制，而是API自己去实现，而且实现方案比较粗糙 - 基于Memcached的缓存自动过期特性。</p>
 <p>方案的PHP示例实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>// 每个IP一分钟10次
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>// 每个IP一分钟10次
 $limit = 10;
 
 $cache = new Memcached();
@@ -92,7 +92,7 @@ if ($requestNum !== FALSE &amp;&amp; $requestNum &gt; 10) {
     return;
 }
 
-$cache-&gt;add …</pre></div> </div><!-- /.entry-content -->
+$cache-&gt;add …</code></pre></div> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2016/06/05/frequency-limitation/" rel="bookmark" title="Permalink to 关于API访问频率限制的一个问题">阅读全文</a></div>
                 <div class="row tag-row">
                     <span>标签: </span>
@@ -119,11 +119,11 @@ $cache-&gt;add …</pre></div> </div><!-- /.entry-content -->
 <p>对于青云来说，一个iframe应用就是一个URL，由应用开发者提供这个URL，当青云用户访问应用所在的页面时，页面先自动向应用服务器的URL发送数据请求，请求会携带认证信息，应用服务端需要先校验请求确实来自青云，并获取请求中的用户信息，最终响应一个HTML页面内容，青云应用页面收到响应数据后将其置于一个iframe标签中，之后青云用户在iframe页面中的操作都是直接与应用服务器交互。</p>
 <p><img alt="qingcloud-iframe-interaction" src="https://i.loli.net/2020/06/14/r4AVfQZnlw3YH1C.png"></p>
 <p>上图交互流程的第<strong>2</strong>步中，青云服务器向用户响应的内容最终会生成一个包含以下内容的页面：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>&lt;form method=<span style="color: #a31515">&quot;POST&quot;</span> action=<span style="color: #a31515">&quot;URL&quot;</span> target=<span style="color: #a31515">&quot;appframe&quot;</span>&gt;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>&lt;form method=<span style="color: #a31515">&quot;POST&quot;</span> action=<span style="color: #a31515">&quot;URL&quot;</span> target=<span style="color: #a31515">&quot;appframe&quot;</span>&gt;
     &lt;input type=<span style="color: #a31515">&quot;hidden&quot;</span> name=<span style="color: #a31515">&quot;payload&quot;</span> value=<span style="color: #a31515">&quot;...&quot;</span>&gt;
     &lt;input type=<span style="color: #a31515">&quot;hidden&quot;</span> name=<span style="color: #a31515">&quot;signature&quot;</span> value=<span style="color: #a31515">&quot;...&quot;</span>&gt;
 &lt;/form&gt;
-&lt;iframe id=<span style="color: #a31515">&quot;...&quot;</span> name=<span style="color: #a31515">&quot;appframe&quot;</span> width=<span style="color: #a31515">&quot;100 …</span></pre></div> </div><!-- /.entry-content -->
+&lt;iframe id=<span style="color: #a31515">&quot;...&quot;</span> name=<span style="color: #a31515">&quot;appframe&quot;</span> width=<span style="color: #a31515">&quot;100 …</span></code></pre></div> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2015/11/20/qingcloud-iframe-app/" rel="bookmark" title="Permalink to 青云 iframe 应用开发">阅读全文</a></div>
                 <div class="row tag-row">
                     <span>标签: </span>

@@ -82,7 +82,7 @@
 <h2>以原型链实现继承</h2>
 <h3>继承属性</h3>
 <p>JavaScript对象可看作是动态地装载属性（这里指<strong>自有属性</strong>）的"包包"，并且每个对象都有一个链指向一个原型对象。如下即为当尝试访问一个属性时发生的事情：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #008000">// 假设有个对象o，其原型链如下所示：</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #008000">// 假设有个对象o，其原型链如下所示：</span>
 <span style="color: #008000">// {a: 1, b: 2} ---&gt; {b: 3, c: 4} ---&gt; null</span>
 <span style="color: #008000">// &#39;a&#39;和&#39;b&#39;是o的自有属性。</span>
 
@@ -104,14 +104,14 @@ console.log(o.d);   <span style="color: #008000">// undefined</span>
 <span style="color: #008000">// o有自有属性&#39;d&#39;吗？没有，检查其原型</span>
 <span style="color: #008000">// o.[[Prototype]]有自有属性&#39;d&#39;吗？没有，检查其原型</span>
 <span style="color: #008000">// o.[[Prototype]].[[Prototype]]为null，停止搜索，没有找到属性，返回undefined。</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>将一个属性分配给一个对象会创建一个自有属性。对于获取和设置属性的行为规则，唯一的例外是当一个继承而来的属性带有一个<a href="https://developer.mozilla.org/en/docs/JavaScript/Guide/Working_with_Objects?redirectlocale=en-US&amp;redirectslug=Core_JavaScript_1.5_Guide%2FWorking_with_Objects#Defining_getters_and_setters">属性值获取器或设置器</a>。</p>
 <h3>继承"方法"</h3>
 <p>JavaScript没有以基于类的编程语言定义方法的形式出现的"方法"。JavaScript中，任何函数都可以作为一个属性被添加到一个对象。一个继承而来的函数，操作起来与任何其他属性相同，包括如上所示的属性隐藏（在这里，称为<em>方法覆盖</em>）。</p>
 <p>当执行一个继承而来的函数时，<a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Operators/this">this</a>的值指向继承对象，而不是原型对象，该函数是原型对象的自有属性。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">var</span> o = {
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">var</span> o = {
     a: 2,
     m: <span style="color: #0000ff">function</span>(b) {
         <span style="color: #0000ff">return</span> <span style="color: #0000ff">this</span>.a + 1;
@@ -128,12 +128,12 @@ p.a = 12;   <span style="color: #008000">// 为p创建一个自有属性&#39;a&#
 console.log(p.m()); <span style="color: #008000">// 13</span>
 <span style="color: #008000">// 这里调用p.m时，&#39;this&#39;引用p</span>
 <span style="color: #008000">// 因此，当p继承了o的函数m，&#39;this.a&#39;意味着p.a，p的自有属性&#39;a&#39;</span>
-</pre></div>
+</code></pre></div>
 
 
 <h2>创建对象的不同方式，以及由此产生的原型链</h2>
 <h3>以语法结构创建对象</h3>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">var</span> o = {a: 1};
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">var</span> o = {a: 1};
 
 <span style="color: #008000">// 新创建的对象o有Object.prototype作为其[[Prototype]]</span>
 <span style="color: #008000">// o没有名为&#39;hasOwnProperty&#39;的自有属性</span>
@@ -153,12 +153,12 @@ console.log(p.m()); <span style="color: #008000">// 13</span>
 
 <span style="color: #008000">// 函数继承自Function.prototype（它具有call，bind等方法）：</span>
 <span style="color: #008000">// f ---&gt; Function.prototype ---&gt; Object.prototype ---&gt; null</span>
-</pre></div>
+</code></pre></div>
 
 
 <h3>使用构造器</h3>
 <p>JavaScript中，"构造器""就"是一个恰好以<a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Operators/new">new操作符</a>调用的函数。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">function</span> Graph() {
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">function</span> Graph() {
     <span style="color: #0000ff">this</span>.vertexes = [];
     <span style="color: #0000ff">this</span>.edges = [];
 }
@@ -172,13 +172,13 @@ Graph.prototype = {
 <span style="color: #0000ff">var</span> g = <span style="color: #0000ff">new</span> Graph();
 <span style="color: #008000">// g是一个带有自有属性&#39;vertexes&#39;和&#39;edges&#39;的对象。</span>
 <span style="color: #008000">// 执行new Graph()后，g.[[Prototype]]是Graph.prototype的值。</span>
-</pre></div>
+</code></pre></div>
 
 
 <h3>使用Object.create</h3>
 <p>ECMAScript
 5引入了一个新方法：<a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Object/create">Object.create</a>。调用这个方法会创建一个新对象。这个对象的原型是该函数的第一个参数：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">var</span> a = {a: 1};
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">var</span> a = {a: 1};
 <span style="color: #008000">// a ---&gt; Object.prototype ---&gt; null</span>
 
 <span style="color: #0000ff">var</span> b = Object.create(a);
@@ -191,7 +191,7 @@ console.log(b.a);   <span style="color: #008000">// 1 (继承而来)</span>
 <span style="color: #0000ff">var</span> d = Object.create(<span style="color: #0000ff">null</span>);
 <span style="color: #008000">// d ---&gt; null</span>
 console.log(d.hasOwnProperty);  <span style="color: #008000">// undefined，因为d并不继承自Object.prototype</span>
-</pre></div>
+</code></pre></div>
             </div><!-- /.entry-content -->
             <div class="comments">
               <div id="gitalk-container"></div>

@@ -112,8 +112,8 @@
 <h2>示例</h2>
 <p>我们来演练一个简单的示例，创建一个Git代码仓库，提交一些文件，看看幕后<code>.git</code>目录中都发生了些什么。</p>
 <h3>初始化新的代码仓库</h3>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$ git init canai
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ git init canai
+</code></pre></div>
 
 
 <p><img alt="初始化代码仓库后" src="/assets/uploads/pics/git-internals/init.png"></p>
@@ -121,17 +121,17 @@
 <ul>
 <li>创建了空目录<code>.git/objects/</code>和<code>.git/refs/</code>。</li>
 <li>还没有索引（Index）文件。</li>
-<li>创建了符号索引文件<code>HEAD</code>。<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$ cat .git/HEAD
+<li>创建了符号索引文件<code>HEAD</code>。<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ cat .git/HEAD
 ref: refs/heads/master
-</pre></div>
+</code></pre></div>
 
 
 </li>
 </ul>
 <h3>添加新文件</h3>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$ echo &quot;A roti canai project.&quot; &gt;&gt; README
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ echo &quot;A roti canai project.&quot; &gt;&gt; README
 $ git add README
-</pre></div>
+</code></pre></div>
 
 
 <p><img alt="添加新文件后" src="/assets/uploads/pics/git-internals/new-file.png"></p>
@@ -139,28 +139,28 @@ $ git add README
 <ul>
 <li>
 <p>创建了索引（Index）文件。它有一个SHA1哈希值指向一个blob实体。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$ git ls-files --stage
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ git ls-files --stage
 100644 5f89c6f016cad2d419e865df380595e39b1256db 0 README
-</pre></div>
+</code></pre></div>
 
 
 </li>
 <li>
 <p>创建了一个blob实体。README文件的内容存储在该blob中。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span># .git/objects/5f/89c6f016cad2d419e865df380595e39b1256db
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code># .git/objects/5f/89c6f016cad2d419e865df380595e39b1256db
 $ git cat-file blob 5f89c6
 A roti canai project.
-</pre></div>
+</code></pre></div>
 
 
 </li>
 </ul>
 <h3>首次提交</h3>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$ git commit -m&#39;first commit&#39;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ git commit -m&#39;first commit&#39;
 [master (root-commit) d9976cf] first commit
  1 files changed, 1 insertions(+), 0 deletions(-)
  create mode 100644 README
-</pre></div>
+</code></pre></div>
 
 
 <p><img alt="首次提交后" src="/assets/uploads/pics/git-internals/first-commit.png"></p>
@@ -168,39 +168,39 @@ A roti canai project.
 <ul>
 <li>
 <p>创建了分支‘master’引用，指向‘master’分支中最新的commit实体。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$ cat .git/refs/heads/master 
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ cat .git/refs/heads/master 
 d9976cfe0430557885d162927dd70186d0f521e8
-</pre></div>
+</code></pre></div>
 
 
 </li>
 <li>
 <p>创建了第一个commit实体，指向代码仓库根目录tree实体。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span># .git/objects/d9/976cfe0430557885d162927dd70186d0f521e8
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code># .git/objects/d9/976cfe0430557885d162927dd70186d0f521e8
 $ git cat-file commit d9976cf
 tree 0ff699bbafc5d17d0637bf058c924ab405b5dcfe
 author Huiming Teo &lt;huiming@favoritemedium.com&gt; 1306739524 +0800
 committer Huiming Teo &lt;huiming@favoritemedium.com&gt; 1306739524 +0800
 
 first commit
-</pre></div>
+</code></pre></div>
 
 
 </li>
 <li>
 <p>创建了tree实体。该tree代表目录“canai”。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span># .git/objects/0f/f699bbafc5d17d0637bf058c924ab405b5dcfe
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code># .git/objects/0f/f699bbafc5d17d0637bf058c924ab405b5dcfe
 $ git ls-tree 0ff699
 100644 blob 5f89c6f016cad2d419e865df380595e39b1256db  README
-</pre></div>
+</code></pre></div>
 
 
 </li>
 </ul>
 <h3>添加一个修改过的文件</h3>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$ echo &quot;Welcome everyone.&quot; &gt;&gt; README
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ echo &quot;Welcome everyone.&quot; &gt;&gt; README
 $ git add README
-</pre></div>
+</code></pre></div>
 
 
 <p><img alt="添加一个修改过的文件后" src="/assets/uploads/pics/git-internals/modified-file.png"></p>
@@ -208,28 +208,28 @@ $ git add README
 <ul>
 <li>
 <p>更新了索引（Index）文件。注意到了吗？它记录了一个新blob。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$ git ls-files --stage
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ git ls-files --stage
 100644 1192db4c15e019da7fc053225d09dea14bc3ac07 0 README
-</pre></div>
+</code></pre></div>
 
 
 </li>
 <li>
 <p>创建了一个新的blob实体。README的整个内容被存入一个新的blob。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span># .git/objects/11/92db4c15e019da7fc053225d09dea14bc3ac07
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code># .git/objects/11/92db4c15e019da7fc053225d09dea14bc3ac07
 $ git cat-file blob 1192db
 A roti canai project.
 Welcome everyone.
-</pre></div>
+</code></pre></div>
 
 
 </li>
 </ul>
 <h3>向子目录中添加文件</h3>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$ mkdir doc
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ mkdir doc
 $ echo &quot;[[TBD]] manual toc&quot; &gt;&gt; doc/manual.txt
 $ git add doc
-</pre></div>
+</code></pre></div>
 
 
 <p><img alt="向子目录添加文件后" src="/assets/uploads/pics/git-internals/subdir.png"></p>
@@ -237,29 +237,29 @@ $ git add doc
 <ul>
 <li>
 <p>更新了索引（Index）文件。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$ git ls-files --stage
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ git ls-files --stage
 100644 1192db4c15e019da7fc053225d09dea14bc3ac07 0 README
 100644 ea283e4fb22719fad512405d41dffa050cd16f9a 0 doc/manual.txt
-</pre></div>
+</code></pre></div>
 
 
 </li>
 <li>
 <p>创建了一个新的blob实体。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span># .git/objects/ea/283e4fb22719fad512405d41dffa050cd16f9a
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code># .git/objects/ea/283e4fb22719fad512405d41dffa050cd16f9a
 $ git cat-file blob ea283
 [[TBD]] manual toc
-</pre></div>
+</code></pre></div>
 
 
 </li>
 </ul>
 <h3>第二次提交</h3>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$ git commit -m&#39;second commit&#39;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ git commit -m&#39;second commit&#39;
 [master 556eaf3] second commit
  2 files changed, 2 insertions(+), 0 deletions(-)
  create mode 100644 doc/manual.txt
-</pre></div>
+</code></pre></div>
 
 
 <p><img alt="第二次提交后" src="/assets/uploads/pics/git-internals/second-commit.png"></p>
@@ -267,46 +267,46 @@ $ git cat-file blob ea283
 <ul>
 <li>
 <p>更新了分支“master”引用，指向该分支中最新的commit实体。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$ cat .git/refs/heads/master 
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ cat .git/refs/heads/master 
 556eaf374886d4c07a1906b9fdcaba195292b96
-</pre></div>
+</code></pre></div>
 
 
 </li>
 <li>
 <p>创建了第二个commit实体。注意它的“parent”是指向首个commit实体。这样形成了一个提交图谱。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$ git cat-file commit 556e
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ git cat-file commit 556e
 tree 7729a8b15b747bce541a9752a8f10d57daf221b6
 parent d9976cfe0430557885d162927dd70186d0f521e8
 author Huiming Teo &lt;huiming@favoritemedium.com&gt; 1306743598 +0800
 committer Huiming Teo &lt;huiming@favoritemedium.com&gt; 1306743598 +0800
 
 second commit
-</pre></div>
+</code></pre></div>
 
 
 </li>
 <li>
 <p>创建了一个新的代码仓库根目录tree实体。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$ git ls-tree 7729
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ git ls-tree 7729
 100644 blob 1192db4c15e019da7fc053225d09dea14bc3ac07  README
 040000 tree 6ff17d485bf857514f299f0bde0e2a5c932bd055  doc
-</pre></div>
+</code></pre></div>
 
 
 </li>
 <li>
 <p>创建了一个新的子目录tree实体。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$ git ls-tree 6ff1
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ git ls-tree 6ff1
 100644 blob ea283e4fb22719fad512405d41dffa050cd16f9a  manual.txt
-</pre></div>
+</code></pre></div>
 
 
 </li>
 </ul>
 <h3>添加一个注释标签（annotated tag）</h3>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$ git tag -a -m&#39;this is annotated tag&#39; v0.1 d9976
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ git tag -a -m&#39;this is annotated tag&#39; v0.1 d9976
+</code></pre></div>
 
 
 <p><img alt="添加一个注释标签后" src="/assets/uploads/pics/git-internals/annotated-tag.png"></p>
@@ -314,37 +314,37 @@ second commit
 <ul>
 <li>
 <p>创建了一个标签引用，指向一个tag实体。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$ cat .git/refs/tags/v0.1 
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ cat .git/refs/tags/v0.1 
 c758f4820f02acf20bb3f6d7f6098f25ee6ed730
-</pre></div>
+</code></pre></div>
 
 
 </li>
 <li>
 <p>创建了一个tag实体。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$ git cat-file tag c758
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ git cat-file tag c758
 object d9976cfe0430557885d162927dd70186d0f521e8
 type commit
 tag v0.1
 tagger Huiming Teo &lt;huiming@favoritemedium.com&gt; 1306744918 +0800
 
 this is annotated tag
-</pre></div>
+</code></pre></div>
 
 
 </li>
 </ul>
 <h3>添加一个新的（轻量的）标签</h3>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$ git tag root-commit d9976
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ git tag root-commit d9976
+</code></pre></div>
 
 
 <p><img alt="添加一个新的轻量标签后" src="/assets/uploads/pics/git-internals/new-tag.png"></p>
 <p>发生了什么呢？</p>
 <ul>
-<li>创建了一个标签引用，指向一个commit实体。<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$ cat .git/refs/tags/root-commit 
+<li>创建了一个标签引用，指向一个commit实体。<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ cat .git/refs/tags/root-commit 
 d9976cfe0430557885d162927dd70186d0f521e8
-</pre></div>
+</code></pre></div>
 
 
 </li>

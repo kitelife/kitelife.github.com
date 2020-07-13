@@ -86,7 +86,7 @@
 <h3>分析</h3>
 <p>类<code>CMemcache</code>所在的整个继承树（<code>CMemcache</code> -&gt; <code>CCache</code> -&gt; <code>CApplicationComponent</code> -&gt; <code>CComponent</code>）上的类都没有构造方法。</p>
 <p><code>CMemcache</code>的init方法实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>public function init()
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>public function init()
 {
     // 调用父类CCache的init方法
     parent::init();
@@ -112,11 +112,11 @@
     else
         $cache-&gt;addServer(&#39;localhost&#39;,11211);
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>其中调用的父类的init方法实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>public function init()
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>public function init()
 {
     parent::init();
     // 可以为整个应用的缓存的key加一个统一的前缀，这是为了避免在同一个缓存池中，不同应用的key冲突
@@ -126,11 +126,11 @@
         // getId方法定义于抽象类CApplication中
         $this-&gt;keyPrefix=Yii::app()-&gt;getId();
 }
-</pre></div>
+</code></pre></div>
 
 
 <p><code>CMemcache</code>的init方法中调用的方法<code>getServers</code>和<code>getMemcache</code>，实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>public function getMemCache()
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>public function getMemCache()
 {
     // 单例
     if($this-&gt;_cache!==null)
@@ -152,30 +152,30 @@ public function getServers()
 {
     return $this-&gt;_servers;
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>与<code>getServers</code>对应的有方法<code>setServers</code>，如果需要配置缓存服务器列表，则应该为缓存组件配置<code>servers</code>一项，基本形式为：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>&#39;servers&#39;=&gt;array(
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>&#39;servers&#39;=&gt;array(
     array(
         &#39;host&#39;=&gt;&#39;127.0.0.1&#39;,
         &#39;port&#39;=&gt;11211,
     ),
 ),
-</pre></div>
+</code></pre></div>
 
 
 <p><code>setServers</code>方法实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>public function setServers($config)
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>public function setServers($config)
 {
     foreach($config as $c)
         $this-&gt;_servers[]=new CMemCacheServerConfiguration($c);
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>其中实例化的类<code>CMemCacheServerConfiguration</code>也定义于文件<code>yii/framework/caching/CMemCache.php</code>中，其构造方法实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>public function __construct($config)
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>public function __construct($config)
 {
     if(is_array($config))
     {
@@ -187,11 +187,11 @@ public function getServers()
     else
         throw new CException(Yii::t(&#39;yii&#39;,&#39;CMemCache server configuration must be an array.&#39;));
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>从该构造方法可以看到该类的作用就是将一个Memcached缓存服务器的配置信息封装成一个配置类对象。该类有如下public的属性：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>/**
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
  * @var string memcache server hostname or IP address
  */
 public $host;
@@ -219,13 +219,13 @@ public $retryInterval=15;
  * @var boolean if the server should be flagged as online upon a failure
  */
 public $status=true;
-</pre></div>
+</code></pre></div>
 
 
 <p>这些属性也即是每台缓存服务器的可配置项，当然如果用的是memcached扩展，某些配置项就用不上了。</p>
 <hr>
 <p>类<code>CCache</code>定义了访问控制类型public的方法<code>get</code>、<code>mget</code>、<code>set</code>、<code>add</code>、<code>delete</code>、<code>flush</code>，对应Yii框架缓存组件提供的几个操作，即开发者可以使用这些方法来操作缓存。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>// 根据单个key，获取对应的value
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>// 根据单个key，获取对应的value
 public function get($id)
 {
     // generateUniqueKey是根据$id来生成一个唯一的key，也即真正存到缓存的key并不是get方法的$id参数值
@@ -332,7 +332,7 @@ public function flush()
     Yii::trace(&#39;Flushing cache&#39;,&#39;system.caching.&#39;.get_class($this));
     return $this-&gt;flushValues();
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>从上述代码中可以看到，每种操作方法实际上都是调用另一个方法来完成操作：</p>
@@ -345,7 +345,7 @@ public function flush()
 <li>flush -&gt; flushValues</li>
 </ul>
 <p>但抽象类<code>CCache</code>中对于后面的这些方法并没有真正实现操作逻辑（除了getValues，其实现是循环调用getValue，也许并不是开发者想要的实现，<code>CMemCache</code>类重写了这个方法），需要在继承类中实现。<code>CMemCache</code>类中对这些方法实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>protected function getValue($key)
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>protected function getValue($key)
 {
     return $this-&gt;_cache-&gt;get($key);
 }
@@ -388,7 +388,7 @@ protected function flushValues()
 {
     return $this-&gt;_cache-&gt;flush();
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>方法<code>get</code>、<code>mget</code>、<code>set</code>、<code>add</code>、<code>delete</code>、<code>flush</code>的实现有两点需要注意：</p>
@@ -397,7 +397,7 @@ protected function flushValues()
 <li>实际存储的value可能是经过序列化的，而且可能还包含依赖值</li>
 </ol>
 <p>关于第一点，<code>generateUniqueKey</code>方法在抽象类<code>CCache</code>中实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>/**
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
  * @param string $key a key identifying a value to be cached
  * @return string a key generated from the provided key which ensures the uniqueness across applications
  */
@@ -405,7 +405,7 @@ protected function generateUniqueKey($key)
 {
     return $this-&gt;hashKey ? md5($this-&gt;keyPrefix.$key) : $this-&gt;keyPrefix.$key;
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>将原本的$key拼接上统一的前缀，如果需要，还进行md5哈希，这样能保证不同的应用之间不会有key冲突。属性hashKey默认值为true。</p>
@@ -417,7 +417,7 @@ protected function generateUniqueKey($key)
 <p>以缓存依赖类<code>CDbCacheDependency</code>为例（见文件<code>yii/framework/caching/dependencies/CDbCacheDependency.php</code>），
 该类直接继承自类<code>CCacheDependency</code>。类<code>CDbCacheDependency</code>的作用就是根据一条SQL语句从数据库查询数据，然后根据查询结果来判断缓存是否有效。</p>
 <p>父类<code>CCacheDependency</code>中实现方法<code>evaluateDependency</code>和<code>getHasChanged</code>，如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>/**
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
  * Evaluates the dependency by generating and saving the data related with dependency.
  * This method is invoked by cache before writing data into it.
  */
@@ -457,11 +457,11 @@ public function getHasChanged()
     else
         return $this-&gt;generateDependentData()!=$this-&gt;_data;
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>但父类<code>CCacheDependency</code>并未有效实现上述两个方法中调用的<code>generateDependentData</code>方法，在类<code>CDbCacheDependency</code>中实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>protected function generateDependentData()
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>protected function generateDependentData()
 {
     if($this-&gt;sql!==null)
     {
@@ -491,7 +491,7 @@ public function getHasChanged()
     else
         throw new CException(Yii::t(&#39;yii&#39;,&#39;CDbCacheDependency.sql cannot be empty.&#39;));
 }
-</pre></div>
+</code></pre></div>
             </div><!-- /.entry-content -->
             <div class="comments">
               <div id="gitalk-container"></div>

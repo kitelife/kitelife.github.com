@@ -90,8 +90,8 @@
 <p>现在在装饰器的定义上进行详述，先解释一些先决条件。</p>
 <h2>函数是一等对象</h2>
 <p>Python中，所有东西都是对象。这意味着可以通过名字引用函数，以及像其他对象那样传递。例如：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">def</span> traveling_function():
-    <span style="color: #0000ff">print</span> <span style="color: #a31515">&quot;Here I am!&quot;</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">def</span> traveling_function():
+    print <span style="color: #a31515">&quot;Here I am!&quot;</span>
 
 function_dict = {
     <span style="color: #a31515">&quot;func&quot;</span>: traveling_function
@@ -100,34 +100,34 @@ function_dict = {
 trav_func = function_dict[<span style="color: #a31515">&#39;func&#39;</span>]
 trav_func()
 <span style="color: #008000"># &gt;&gt; Here I am!</span>
-</pre></div>
+</code></pre></div>
 
 
 <p><code>traveling_function</code> 被赋值给 <code>function_dict</code> 字典中键 <code>func</code> 的值，仍旧可以正常调用。</p>
 <h2>一等函数允许高阶函数</h2>
 <p>我们可以像其他对象那样传递函数。可以将函数作为值传递给字典，放在列表中，或者作为对象的属性进行赋值。那为什么不能作为参数传给另一个函数呢？当然可以！如果一个函数接受另一个函数作为其参数或者返回另一个函数，则称之为高阶函数。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">def</span> self_absorbed_function():
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">def</span> self_absorbed_function():
     <span style="color: #0000ff">return</span> <span style="color: #a31515">&quot;I&#39;m an amazing function!&quot;</span>
 
 <span style="color: #0000ff">def</span> printer(func):
-    <span style="color: #0000ff">print</span> <span style="color: #a31515">&quot;The function passed to me says: &quot;</span> + func()
+    print <span style="color: #a31515">&quot;The function passed to me says: &quot;</span> + func()
 
 <span style="color: #008000"># Call `printer` and give it `self_absorbed_function` as an argument</span>
 printer(self_absorbed_function)
 <span style="color: #008000"># &gt;&gt;&gt; The function passed to me says: I&#39;m an amazing function!</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>现在你也看到函数可以作为参数传给另一个函数，而且传给函数的函数还可以调用。这允许我们创建一些有意思的函数，例如装饰器。</p>
 <h2>装饰器基础</h2>
 <p>本质上，装饰器就是一个以另一个函数为参数的函数。大多数情况下，它们会返回所包装函数的一个修改版本。来看个我们能想到的最简单的装饰器---同一性（identity）装饰器，或许对我们理解装饰器的工作原理有所帮助。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">def</span> identity_decorator(func):
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">def</span> identity_decorator(func):
     <span style="color: #0000ff">def</span> wrapper():
         func()
     <span style="color: #0000ff">return</span> wrapper
 
 <span style="color: #0000ff">def</span> a_function():
-    <span style="color: #0000ff">print</span> <span style="color: #a31515">&quot;I&#39;m a normal function.&quot;</span>
+    print <span style="color: #a31515">&quot;I&#39;m a normal function.&quot;</span>
 
 <span style="color: #008000"># `decorated_function` 是 `identity_function` 返回的函数，也就是嵌套函数 `wrapper`</span>
 decorated_function = identity_function(a_function)
@@ -135,7 +135,7 @@ decorated_function = identity_function(a_function)
 <span style="color: #008000"># 如下调用 `identity_function` 返回的函数</span>
 decorated_function()
 <span style="color: #008000"># &gt;&gt;&gt; I&#39;m a normal function</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>这里， <code>identity_decorator</code>
@@ -150,16 +150,16 @@ decorated_function()
 <code>func</code>。这意味着在 <code>wrapper</code> （返回并赋值给变量 <code>decorated_function</code> ）的整个生命周期内，它都可以访问 <code>func</code> 变量。一旦 <code>identity_decorator</code>返回，那么访问 <code>func</code> 的唯一方式就是通过 <code>decorated_function</code> 。 <code>func</code> 只作为一个变量存在于 <code>decorated_function</code> 作用域环境的内部。</p>
 <h2>一个简单的装饰器</h2>
 <p>现在我们来创建一个确实有点用的装饰器。这个装饰器所做的就是记录它所修改的函数被调用了多少次。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">def</span> logging_decorator(func):
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">def</span> logging_decorator(func):
     <span style="color: #0000ff">def</span> wrapper():
         wrapper.count += 1
-        <span style="color: #0000ff">print</span> <span style="color: #a31515">&quot;The function I modify has been called {0} time(s)&quot;</span>.format(wrapper.count)
+        print <span style="color: #a31515">&quot;The function I modify has been called {0} time(s)&quot;</span>.format(wrapper.count)
         func()
     wrapper.count = 0
     <span style="color: #0000ff">return</span> wrapper
 
 <span style="color: #0000ff">def</span> a_function():
-    <span style="color: #0000ff">print</span> <span style="color: #a31515">&quot;I&#39;m a normal function.&quot;</span>
+    print <span style="color: #a31515">&quot;I&#39;m a normal function.&quot;</span>
 
 modified_function = logging_decorator(a_function)
 
@@ -170,7 +170,7 @@ modified_function()
 modified_function()
 <span style="color: #008000"># &gt;&gt;&gt; The function I modify has been called 2 time(s).</span>
 <span style="color: #008000"># &gt;&gt;&gt; I&#39;m a normal function.</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>我们说装饰器会修改函数，这样来想对理解也是有帮助的。但如例子所见，
@@ -181,23 +181,23 @@ modified_function()
 <p>你也许正疑惑为什么我们的计数器是 <code>wrapper</code> 的一个属性而不是一个普通的变量。难道 <code>wrapper</code> 的闭包环境不是让我们访问在其局部作用域中声明的任意变量么？是的，但有个问题。Python中，闭包允许对其函数作用域链中任一变量的进行任意读操作，但只允许对可变对象（列表、字典、等等）进行写操作。整数在Python中是非可变对象，因此我们不能修改 <code>wrapper</code> 内部整型变量的值。相反，我们将计数器作为 <code>wrapper</code> 的一个属性---一个可变对象，因此可以随我们自己增大它的值。</p>
 <h2>装饰器语法</h2>
 <p>在前一个例子中，我们看到可以将一个函数作为参数传给装饰器，从而使用装饰器函数对该函数进行包装。然而，Python还有一个语法模式使得这一切更加直观，更容易阅读，一旦你熟悉了装饰器。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #008000"># In the previous example, we used our decorator function by passing the</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #008000"># In the previous example, we used our decorator function by passing the</span>
 <span style="color: #008000"># function we wanted to modify to it, and assigning the result to a variable</span>
 <span style="color: #0000ff">def</span> some_function():
-    <span style="color: #0000ff">print</span> <span style="color: #a31515">&quot;I&#39;m happiest when decorated.&quot;</span>
+    print <span style="color: #a31515">&quot;I&#39;m happiest when decorated.&quot;</span>
 
 <span style="color: #008000"># Here we will make the assigned variable the same name as the wrapped function</span>
 some_function = logging_decorator(some_function)
-</pre></div>
+</code></pre></div>
 
 
 <hr>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #008000"># We can achieve the exact same thing with this syntax:</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #008000"># We can achieve the exact same thing with this syntax:</span>
 
 @logging_decorator
 <span style="color: #0000ff">def</span> some_function():
-    <span style="color: #0000ff">print</span> <span style="color: #a31515">&quot;I&#39;m happiest when decorated&quot;</span>
-</pre></div>
+    print <span style="color: #a31515">&quot;I&#39;m happiest when decorated&quot;</span>
+</code></pre></div>
 
 
 <p>使用装饰器语法，鸟瞰其中发生的事情：</p>
@@ -207,14 +207,14 @@ some_function = logging_decorator(some_function)
 <li>装饰器函数（通常是用来包装原函数的另一个函数）的返回值取代原来的函数（<code>some_function</code> ），绑定到变量名 <code>some_function</code> 。</li>
 </ol>
 <p>将这些步骤记住，让我们来更清晰地解释 <code>identity_decorator</code> 。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">def</span> identity_decorator(func):
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">def</span> identity_decorator(func):
     <span style="color: #008000"># Everything here happens when the decorator LOADS and is passed</span>
     <span style="color: #008000"># the function as decribed in step 2 above</span>
     <span style="color: #0000ff">def</span> wrapper():
         <span style="color: #008000"># Things here happen each time the final wrapped function gets CALLED</span>
         func()
     <span style="color: #0000ff">return</span> wrapper
-</pre></div>
+</code></pre></div>
 
 
 <p>希望那些注释有助于理解。每次调用被包装的函数，仅执行装饰器返回的函数中的指令。返回函数之外的指令仅执行一次---上述步骤2中描述的：装饰器首次接收到传递给它的待包装函数之时。</p>
@@ -225,30 +225,30 @@ some_function = logging_decorator(some_function)
 <li>通过在形参列表中使用 <code>*args</code> 语法，python函数能够接收可变数量的位置参数(positional arguments)。 <code>*args</code> 会将所有没有关键字的参数放入一个参数元组中，在函数里可以访问元组中的参数。相反，将 <code>*args</code> 用于函数调用时的实参列表之时，它会将参数元组展开成一系列的位置参数。</li>
 </ul>
 <hr>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">def</span> function_with_many_arguments(*args):
-    <span style="color: #0000ff">print</span> args
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">def</span> function_with_many_arguments(*args):
+    print args
 
 <span style="color: #008000"># `args` within the function will be a tuple of any arguments we pass</span>
 <span style="color: #008000"># which can be used within the function like any other tuple</span>
-function_with_many_arguments(<span style="color: #a31515">&#39;hello&#39;</span>, 123, True)
+function_with_many_arguments(<span style="color: #a31515">&#39;hello&#39;</span>, 123, <span style="color: #0000ff">True</span>)
 <span style="color: #008000"># &gt;&gt;&gt; (&#39;hello&#39;, 123, True)</span>
-</pre></div>
+</code></pre></div>
 
 
 <hr>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">def</span> function_with_3_parameters(num, boolean, string):
-    <span style="color: #0000ff">print</span> <span style="color: #a31515">&quot;num is &quot;</span> + str(num)
-    <span style="color: #0000ff">print</span> <span style="color: #a31515">&quot;boolean is &quot;</span> + str(boolean)
-    <span style="color: #0000ff">print</span> <span style="color: #a31515">&quot;string is &quot;</span> + string
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">def</span> function_with_3_parameters(num, boolean, string):
+    print <span style="color: #a31515">&quot;num is &quot;</span> + str(num)
+    print <span style="color: #a31515">&quot;boolean is &quot;</span> + str(boolean)
+    print <span style="color: #a31515">&quot;string is &quot;</span> + string
 
-arg_list = [1, False, <span style="color: #a31515">&#39;decorators&#39;</span>]
+arg_list = [1, <span style="color: #0000ff">False</span>, <span style="color: #a31515">&#39;decorators&#39;</span>]
 
 <span style="color: #008000"># arg_list will be expanded into 3 positional arguments by the `*` symbol</span>
 function_with_3_parameters(*arg_list)
 <span style="color: #008000"># &gt;&gt;&gt; num is 1</span>
 <span style="color: #008000"># &gt;&gt;&gt; boolean is False</span>
 <span style="color: #008000"># &gt;&gt;&gt; string is decorators</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>重述一遍：在形参列表中， <code>*args</code>会将一系列的参数压缩进一个名为'args'的元组，而在实参列表中， <code>*args</code> 会将一个可迭代的参数数据结构展开为一系列的位置实参应用于函数。</p>
@@ -257,29 +257,29 @@ function_with_3_parameters(*arg_list)
 <li><code>**kwargs</code> 与 <code>*args</code> 的行为类似，但用于关键字参数而非位置参数。如果在函数的形参列表中使用 <code>**kwargs</code> ，它会收集函数收到的所有额外关键字参数，放入一个字典中。如果用于函数的实参列表，它会将一个字典展开为一系列的关键字参数。</li>
 </ul>
 <hr>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">def</span> funtion_with_many_keyword_args(**kwargs):
-    <span style="color: #0000ff">print</span> kwargs
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">def</span> funtion_with_many_keyword_args(**kwargs):
+    print kwargs
 
 function_with_many_keyword_args(a=<span style="color: #a31515">&#39;apples&#39;</span>, b=<span style="color: #a31515">&#39;bananas&#39;</span>, c=<span style="color: #a31515">&#39;cantalopes&#39;</span>)
 <span style="color: #008000"># &gt;&gt; {&#39;a&#39;:&#39;apples&#39;, &#39;b&#39;:&#39;bananas&#39;, &#39;c&#39;:&#39;cantalopes&#39;}</span>
-</pre></div>
+</code></pre></div>
 
 
 <hr>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">def</span> multiply_name(count=0, name=<span style="color: #a31515">&#39;&#39;</span>):
-    <span style="color: #0000ff">print</span> name * count
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">def</span> multiply_name(count=0, name=<span style="color: #a31515">&#39;&#39;</span>):
+    print name * count
 
 arg_dict = {<span style="color: #a31515">&#39;count&#39;</span>: 3, <span style="color: #a31515">&#39;name&#39;</span>: <span style="color: #a31515">&#39;Brian&#39;</span>}
 
 multiply_name(**arg_dict)
 <span style="color: #008000"># &gt;&gt; BrianBrianBrian</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>既然你理解了 <code>*args</code> 与 <code>**kwargs</code> 的工作原理，那么我们就继续研究一个你会发现很有用的装饰器。</p>
 <h2>缓存制表（Memoization）</h2>
 <p>缓存制表是避免潜在的昂贵的重复计算的一种方法，通过缓存函数每次执行的结果来实现。这样，下一次函数以相同的参数执行，就可以从缓存中获取返回结果，不需要再次计算结果。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">from</span> functools <span style="color: #0000ff">import</span> wraps
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">from</span> functools <span style="color: #0000ff">import</span> wraps
 
 <span style="color: #0000ff">def</span> memoize(func):
     cache = {}
@@ -294,7 +294,7 @@ multiply_name(**arg_dict)
 @memoize
 <span style="color: #0000ff">def</span> an_expensive_function(arg1, arg2, arg3):
     ...
-</pre></div>
+</code></pre></div>
 
 
 <p>你可能注意到了示例代码中一个奇怪的 <code>@wraps</code> 装饰器。在完整地讨论 <code>memoize</code>
@@ -306,7 +306,7 @@ multiply_name(**arg_dict)
 <p>需要提醒的是：缓存制表仅适用于纯函数。也就是说给定一个特定的参数设置，函数确定总会产生相同的结果。如果函数依赖于不作为参数传递的全局变量、I/O、或者其它任意可能影响返回值的东西，缓存制表会产生令人迷惑的结果！并且，一个纯函数不会有任何副作用。因此，如果你的函数会增大一个计数器，或者调用另一个对象的方法，或者其它任意不在函数的返回结果中表示的东西，当结果是从缓存中返回时，副作用操作并不会得到执行。</p>
 <h2>类的装饰器</h2>
 <p>最初，我们说装饰器是一个修改另一个函数的函数，但其实它们可以用于修改类或者方法。对类进行装饰并不常见，但某些情况下作为元类(metaclass)的一个替代，类的装饰器是一个有用的工具。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>foo = [<span style="color: #a31515">&#39;important&#39;</span>, <span style="color: #a31515">&#39;foo&#39;</span>, <span style="color: #a31515">&#39;stuff&#39;</span>]
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>foo = [<span style="color: #a31515">&#39;important&#39;</span>, <span style="color: #a31515">&#39;foo&#39;</span>, <span style="color: #a31515">&#39;stuff&#39;</span>]
 
 <span style="color: #0000ff">def</span> add_foo(klass):
     klass.foo = foo
@@ -319,9 +319,9 @@ multiply_name(**arg_dict)
 
 brian = Person()
 
-<span style="color: #0000ff">print</span> brian.foo
+print brian.foo
 <span style="color: #008000"># &gt;&gt; [&#39;important&#39;, &#39;foo&#39;, &#39;stuff&#39;]</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>现在，类 <code>Person</code> 的任一对象都有一个超级重要的 <code>foo</code>
@@ -331,7 +331,7 @@ brian = Person()
 </blockquote>
 <h2>装饰器类</h2>
 <p>事实证明我早先对你隐瞒了一些其它事情。不仅装饰器可以装饰一个类，并且装饰器也可以是一个类！对于装饰器的唯一要求就是它的返回值必须可调用(callable)。这意味着装饰器必须实现 <code>__call__</code> 魔术方法，当你调用一个对象时，会隐式调用这个方法。函数当然是隐式设置这个方法的。我们重新将 <code>identity_decorator</code> 创建为一个类来看看它是如何工作的。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">class</span> <span style="color: #2b91af">IdentityDecorator</span>(object):
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">class</span> <span style="color: #2b91af">IdentityDecorator</span>(object):
     <span style="color: #0000ff">def</span> __init__(self, func):
         self.func = func
 
@@ -341,11 +341,11 @@ brian = Person()
 
 @IdentityDecorator
 <span style="color: #0000ff">def</span> a_function():
-    <span style="color: #0000ff">print</span> <span style="color: #a31515">&quot;I&#39;m a normal function.&quot;</span>
+    print <span style="color: #a31515">&quot;I&#39;m a normal function.&quot;</span>
 
 a_function()
 <span style="color: #008000"># &gt;&gt; I&#39;m a normal function.</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>如下是上例中发生的事情：</p>
@@ -366,34 +366,34 @@ a_function()
 </blockquote>
 <h2>带参数的装饰器</h2>
 <p>有时，需要根据不同的情况改变装饰器的行为。你可以通过传参来做到这一点。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">from</span> functools <span style="color: #0000ff">import</span> wraps
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">from</span> functools <span style="color: #0000ff">import</span> wraps
 
 <span style="color: #0000ff">def</span> argumentative_decorator(gift):
     <span style="color: #0000ff">def</span> func_wrapper(func):
         @wraps(func)
         <span style="color: #0000ff">def</span> returned_wrapper(*args, **kwargs):
-             <span style="color: #0000ff">print</span> <span style="color: #a31515">&quot;I don&#39;t like this &quot;</span> + gift + <span style="color: #a31515">&quot;you gave me!&quot;</span>
+             print <span style="color: #a31515">&quot;I don&#39;t like this &quot;</span> + gift + <span style="color: #a31515">&quot;you gave me!&quot;</span>
              <span style="color: #0000ff">return</span> func(gift, *args, **kwargs)
         <span style="color: #0000ff">return</span> returned_wrapper
     <span style="color: #0000ff">return</span> func_wrapper
 
 @argumentative_decorator(<span style="color: #a31515">&quot;sweater&quot;</span>)
 <span style="color: #0000ff">def</span> grateful_function(gift):
-    <span style="color: #0000ff">print</span> <span style="color: #a31515">&quot;I love the &quot;</span> + gift + <span style="color: #a31515">&quot;!Thank you!&quot;</span>
+    print <span style="color: #a31515">&quot;I love the &quot;</span> + gift + <span style="color: #a31515">&quot;!Thank you!&quot;</span>
 
 grateful_function()
 <span style="color: #008000"># &gt;&gt; I don&#39;t like this sweater you gave me!</span>
 <span style="color: #008000"># &gt;&gt; I love the sweater! Thank you!</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>我们来看看如果不使用装饰器语法这个装饰器函数是如何工作的：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #008000"># If we tried to invoke without an argument:</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #008000"># If we tried to invoke without an argument:</span>
 grateful_function = argumentative_function(grateful_function)
 
 <span style="color: #008000"># But when given an argument, the pattern changes to:</span>
 grateful_function = argumentative_decorator(<span style="color: #a31515">&quot;sweater&quot;</span>)(grateful_function)
-</pre></div>
+</code></pre></div>
 
 
 <p>需要注意的地方是：当给定参数，首先仅以那些参数调用装饰器---被包装的函数并不在参数中。装饰器调用返回后，装饰器要包装的函数被传递给装饰器初始调用返回的函数（本例中，为 <code>argumentative_decorator("sweater")</code> 的返回值）。</p>
@@ -407,15 +407,15 @@ grateful_function = argumentative_decorator(<span style="color: #a31515">&quot;s
 <p>我想这一过程相比没有装饰器参数理解起来更难一点，但是如果你花些时间将其理解通透，我希望是有意义的。</p>
 <h2>带可选参数的装饰器</h2>
 <p>有多种方式让装饰器接受可选参数。根据你是想使用位置参数、关键字参数还是两者皆是，需要使用稍微不同的模式。如下我将展示一种接受一个可选关键字参数的方式：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">from</span> functools <span style="color: #0000ff">import</span> wraps
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">from</span> functools <span style="color: #0000ff">import</span> wraps
 
 GLOBAL_NAME = <span style="color: #a31515">&quot;Brian&quot;</span>
 
-<span style="color: #0000ff">def</span> print_name(function=None, name=GLOBAL_NAME):
+<span style="color: #0000ff">def</span> print_name(function=<span style="color: #0000ff">None</span>, name=GLOBAL_NAME):
     <span style="color: #0000ff">def</span> actual_decorator(function):
         @wraps(function)
         <span style="color: #0000ff">def</span> returned_func(*args, **kwargs):
-            <span style="color: #0000ff">print</span> <span style="color: #a31515">&quot;My name is &quot;</span> + name
+            print <span style="color: #a31515">&quot;My name is &quot;</span> + name
             <span style="color: #0000ff">return</span> function(*args, **kwargs)
         <span style="color: #0000ff">return</span> returned_func
 
@@ -429,11 +429,11 @@ GLOBAL_NAME = <span style="color: #a31515">&quot;Brian&quot;</span>
 
 @print_name
 <span style="color: #0000ff">def</span> a_function():
-    <span style="color: #0000ff">print</span> <span style="color: #a31515">&quot;I like the name!&quot;</span>
+    print <span style="color: #a31515">&quot;I like the name!&quot;</span>
 
 @print_name(name=<span style="color: #a31515">&#39;Matt&#39;</span>)
 <span style="color: #0000ff">def</span> another_function():
-    <span style="color: #0000ff">print</span> <span style="color: #a31515">&quot;Hey, that&#39;s new!&quot;</span>
+    print <span style="color: #a31515">&quot;Hey, that&#39;s new!&quot;</span>
 
 a_function()
 <span style="color: #008000"># &gt;&gt; My name is Brian</span>
@@ -442,7 +442,7 @@ a_function()
 another_function()
 <span style="color: #008000"># &gt;&gt; My name is Matt</span>
 <span style="color: #008000"># &gt;&gt; Hey, that&#39;s new!</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>如果我们传递关键字参数 <code>name</code> 给 <code>print_name</code>
@@ -455,16 +455,16 @@ another_function()
 ，该函数可以被包装函数作为参数进行调用。如果收到被包装函数作为参数，则跳过中间步骤，直接调用 <code>actual_decorator</code> 。</p>
 <h2>串接装饰器</h2>
 <p>现在来探索一下今天要讲的最后一个装饰器的特性：串接。你可以在任意给定的函数之上堆叠使用多个装饰器， 这种构建函数的方式与使用多重继承构建类相类似。不过最好不要疯狂使用这种特性。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>@print_name(<span style="color: #a31515">&#39;Sam&#39;</span>)
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>@print_name(<span style="color: #a31515">&#39;Sam&#39;</span>)
 @logging_decorator
 <span style="color: #0000ff">def</span> some_function():
-    <span style="color: #0000ff">print</span> <span style="color: #a31515">&quot;I&#39;m the wrapped function!&quot;</span>
+    print <span style="color: #a31515">&quot;I&#39;m the wrapped function!&quot;</span>
 
 some_function()
 <span style="color: #008000"># &gt;&gt; My name is Sam</span>
 <span style="color: #008000"># &gt;&gt; The function I modify has been called 1 time(s).</span>
 <span style="color: #008000"># &gt;&gt; I&#39;m the wrapped function!</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>当你串接使用装饰器时，它们堆叠的顺序是自底向上的。将被包装的函数 <code>some_function</code> 经编译后传递给它之上的第一个装饰器（ <code>logging_decorator</code> ）。然后第一个装饰器的返回值被传递给第二个装饰器。依此逐个应用链上每个装饰器。</p>

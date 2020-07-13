@@ -67,6 +67,31 @@
             <article class="hentry">
                 <header>
                     <h2 class="entry-title">
+                        <a href="../2020/07/13/how-to-profile-jvm-applications/" rel="bookmark" title="Permalink to 如何剖析 JVM 应用（译）">如何剖析 JVM 应用（译）</a>
+                    </h2>
+                </header>
+                <footer class="post-info">
+                    <abbr class="published" title="2020-07-13T00:00:00+08:00"> 2020-07-13 Mon </abbr>
+<address class="vcard author">By <a class="url fn" href="../author/xiayf.html">xiayf</a></address>                </footer><!-- /.post-info -->
+                <div class="entry-content"> <p>原文链接：<a href="https://www.lightbend.com/blog/profiling-jvm-applications">How to profile JVM applications</a></p>
+<p>Hi 大家好。工具团队（tooling team）近期的一个关注点是改进 sbt 贡献流程（ improvement of the contribution process to sbt）。我们一直在思考的另一个事情是 sbt 的性能。为一举解决这两件事情，我调研了 Jason Zaugg、Johannes Rudolph 这些人如何剖析 JVM 应用，这篇文章即是调研结果。</p>
+<p>这里论述的技术应该可以应用于Java 和 Scala，也基本与你使用的工具无关。</p>
+<h2>火焰图（使用 async-profiler 生成）</h2>
+<p>剖析 JVM 应用的方式有多种，但新晋热门是Netflix 高级性能架构师（Senior Performance Architect …</p> </div><!-- /.entry-content -->
+                <div class="medium primary btn"><a href="../2020/07/13/how-to-profile-jvm-applications/" rel="bookmark" title="Permalink to 如何剖析 JVM 应用（译）">阅读全文</a></div>
+                <div class="row tag-row">
+                    <span>标签: </span>
+                    <a class="danger label" href="../tag/fan-yi.html">翻译</a>
+                    <a class="danger label" href="../tag/java.html">Java</a>
+                    <a class="danger label" href="../tag/gong-ju.html">工具</a>
+                    <a class="danger label" href="../tag/wen-ti-pai-cha.html">问题排查</a>
+                </div>
+            </article>
+            </li>
+            <li>
+            <article class="hentry">
+                <header>
+                    <h2 class="entry-title">
                         <a href="../2020/06/14/blog-build-env/" rel="bookmark" title="Permalink to 博客构建环境准备">博客构建环境准备</a>
                     </h2>
                 </header>
@@ -75,25 +100,25 @@
 <address class="vcard author">By <a class="url fn" href="../author/xiayf.html">xiayf</a></address>                </footer><!-- /.post-info -->
                 <div class="entry-content"> <p>好记性不如烂笔头。</p>
 <p>1、Python 虚拟环境</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>virtualenv -p python3 ~/.py3
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>virtualenv -p python3 ~/.py3
 source ~/.py3/bin/activate
-</pre></div>
+</code></pre></div>
 
 
 <p>2、安装 Python 依赖包</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>pip install pelican[Markdown]   <span style="color: #008000"># 可能需要先安装 pip：easy_install pip</span>
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>pip install pelican[Markdown]   <span style="color: #008000"># 可能需要先安装 pip：easy_install pip</span>
+</code></pre></div>
 
 
 <p>3、安装主题包</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>git clone https://github.com/youngsterxyf/my-pelican-themes.git ~/github/youngsterxyf/my-pelican-themes
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>git clone https://github.com/youngsterxyf/my-pelican-themes.git ~/github/youngsterxyf/my-pelican-themes
 pelican-themes -i ~/github/youngsterxyf/my-pelican-themes/my-gum
-</pre></div>
+</code></pre></div>
 
 
 <p>4、构建</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>make html
-</pre></div>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>make html
+</code></pre></div>
 
 
 <hr>
@@ -232,14 +257,14 @@ pelican-themes -i ~/github/youngsterxyf/my-pelican-themes/my-gum
 <h3>1、并行化或异步化</h3>
 <p>部分请求处理逻辑，由于比较耗时，故使用线程池来加速，或者使用独立线程异步处理，或者先存储一个中间状态，由后台定时任务来完成实际的处理工作。对于异步处理结果，前端通过轮询来获取。</p>
 <p>线程池的使用，主要使用 map 方法：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">from</span> multiprocessing.dummy <span style="color: #0000ff">import</span> Pool
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">from</span> multiprocessing.dummy <span style="color: #0000ff">import</span> Pool
 
 input_list = [...]
 pool: Pool = Pool(len(input_list))
 pool.map(func, input_list)
 pool.close()
 pool.join()
-</pre></div>
+</code></pre></div>
 
 
 <p>独立线程异步处理 …</p> </div><!-- /.entry-content -->
@@ -272,31 +297,6 @@ pool.join()
                     <a class="danger label" href="../tag/fan-yi.html">翻译</a>
                     <a class="danger label" href="../tag/reactor.html">Reactor</a>
                     <a class="danger label" href="../tag/reactive.html">Reactive</a>
-                </div>
-            </article>
-            </li>
-            <li>
-            <article class="hentry">
-                <header>
-                    <h2 class="entry-title">
-                        <a href="../2019/06/25/java-prop-env/" rel="bookmark" title="Permalink to Java System.getProperty VS. System.getenv（译）">Java System.getProperty VS. System.getenv（译）</a>
-                    </h2>
-                </header>
-                <footer class="post-info">
-                    <abbr class="published" title="2019-06-25T00:00:00+08:00"> 2019-06-25 Tue </abbr>
-<address class="vcard author">By <a class="url fn" href="../author/xiayf.html">xiayf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>原文：<a href="https://www.baeldung.com/java-system-get-property-vs-system-getenv">Java System.getProperty vs System.getenv</a></p>
-<h2>1、简介</h2>
-<p>Java 应用代码中会自动引入 <code>java.lang</code> 包。这个包包含很多常用的类，包括 <code>NullPointerException</code>、<code>Object</code>、<code>Math</code>、<code>String</code> 等等。</p>
-<p>其中 <code>java.lang.System</code> 类是一个 final 类，这意味着开发者无法继承它，其所有方法都是静态的（static）。</p>
-<p>System 类中有两个方法，分别来<strong>读取系统属性（system properties）和环境变量（environment variables）</strong>，下面我们来看看这两者的区别。</p>
-<h2>2、使用 System.getProperty()</h2>
-<p>Java 平台使用一个 <code>Properties</code> 对象来提供<strong>本地系统相关的信息和配置 …</strong></p> </div><!-- /.entry-content -->
-                <div class="medium primary btn"><a href="../2019/06/25/java-prop-env/" rel="bookmark" title="Permalink to Java System.getProperty VS. System.getenv（译）">阅读全文</a></div>
-                <div class="row tag-row">
-                    <span>标签: </span>
-                    <a class="danger label" href="../tag/fan-yi.html">翻译</a>
-                    <a class="danger label" href="../tag/java.html">Java</a>
                 </div>
             </article>
             </li>

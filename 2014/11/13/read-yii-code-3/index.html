@@ -81,14 +81,14 @@
 <p>基于Yii框架开发应用需要理解如何配置组件、如何开发自己的组件，对应着需要理解Yii是如何注册加载组件的。</p>
 <h3>分析</h3>
 <p>从<a href="http://youngsterxyf.github.io/2014/11/04/read-yii-code-1/">Yii源码阅读笔记 - 请求处理基本流程</a>一文可知，Yii加载组件的入口为抽象类CApplication构造方法中的以下两行代码：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>$this-&gt;registerCoreComponents();
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$this-&gt;registerCoreComponents();
 $this-&gt;configure($config);
-</pre></div>
+</code></pre></div>
 
 
 <hr>
 <p><code>registerCoreComponents</code>方法定义于类CWebApplication中，用于加载Web应用的核心组件，组件列表如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>array(
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>array(
     // 核心组件
     &#39;coreMessages&#39;=&gt;array(
         &#39;class&#39;=&gt;&#39;CPhpMessageSource&#39;,
@@ -143,13 +143,13 @@ $this-&gt;configure($config);
         &#39;class&#39;=&gt;&#39;CWidgetFactory&#39;,
     ),
 )
-</pre></div>
+</code></pre></div>
 
 
 <p>注册加载组件都是直接调用方法<code>setComponents</code>，间接调用方法<code>setComponent</code>来完成的。</p>
 <hr>
 <p><code>configure</code>方法定义于类<code>CModule</code>中，是用于加载所有配置信息的，实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>public function configure($config)
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>public function configure($config)
 {
     if(is_array($config))
     {
@@ -157,11 +157,11 @@ $this-&gt;configure($config);
             $this-&gt;$key=$value;
     }
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>从<a href="http://youngsterxyf.github.io/2014/11/04/read-yii-code-1/">Yii源码阅读笔记 - 请求处理基本流程</a>一文可知，配置信息的加载是基于类<code>CComponent</code>中的魔术方法<code>__set</code>来完成的，该方法实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>public function __set($name,$value)
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>public function __set($name,$value)
 {
     // PHP的类名、函数名、方法名都是不区分大小写的！
     $setter=&#39;set&#39;.$name;
@@ -190,12 +190,12 @@ $this-&gt;configure($config);
         throw new CException(Yii::t(&#39;yii&#39;,&#39;Property &quot;{class}.{property}&quot; is not defined.&#39;,
             array(&#39;{class}&#39;=&gt;get_class($this), &#39;{property}&#39;=&gt;$name)));
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>而类CModule中又定义了方法<code>setComponents</code>，所以对于key为<code>components</code>的配置项，也是调用方法<code>setComponents</code>，间接调用方法<code>setComponent</code>来完成的。</p>
 <p>方法<code>setComponent</code>实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>/**
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
  * Puts a component under the management of the module.
  * The component will be initialized by calling its {@link CApplicationComponent::init() init()}
  * method if it has not done so.
@@ -257,7 +257,7 @@ public function setComponent($id,$component,$merge=true)
         // 非核心组件、自定义组件注册走这个分支
         $this-&gt;_componentConfig[$id]=$component;
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>对于以registerCoreComponents方法、configure方法为入口的组件注册，调用setComponent方法时的参数$component是一个数组。</p>
@@ -266,28 +266,28 @@ public function setComponent($id,$component,$merge=true)
 <p>可以看到以这两个方法为入口的组件注册都没有对组件进行初始化。那么什么时候初始化组件的呢？只能是调用组件的时候了。</p>
 <hr>
 <p>组件是通过应用对象容器来调用的。以db组件为例，调用方式为：<code>Yii::app()-&gt;db</code>，但实际是基于魔术方法<code>__get</code>来完成的，该魔术方法定义于类CModule中，实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>public function __get($name)
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>public function __get($name)
 {
     if($this-&gt;hasComponent($name))
         return $this-&gt;getComponent($name);
     else
         return parent::__get($name);
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>先尝试查找对应$name的组件。从这里可以看出Web应用容器中除了存组件，还可以存其他信息，如所有的配置信息。</p>
 <p>方法hasComponent实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>public function hasComponent($id)
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>public function hasComponent($id)
 {
     return isset($this-&gt;_components[$id]) || isset($this-&gt;_componentConfig[$id]);
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>之所以会先查看属性_components，是因为_components中保存的组件是已经加载好的，而_componentConfig保存的是所有注册的组件，但未初始化。即_components中的组件是_componentConfig中组件的子集，检测起来会更快？我的理解是这样的。</p>
 <p>方法getComponent实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>public function getComponent($id,$createIfNull=true)
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>public function getComponent($id,$createIfNull=true)
 {
     if(isset($this-&gt;_components[$id]))
         return $this-&gt;_components[$id];
@@ -304,7 +304,7 @@ public function setComponent($id,$component,$merge=true)
         }
     }
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>先查看属性_components中是否已保存初始化好的对应组件，是，则直接取出来返回，这样重复调用相同组件只会初始化一次；否，则对该组件进行初始化。</p>
@@ -316,7 +316,7 @@ public function setComponent($id,$component,$merge=true)
 <p>初始化结束后，将组件对象存入属性_components中。</p>
 <hr>
 <p>静态方法<code>createComponent</code>定义于类YiiBase中，实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>/**
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
  * Creates an object and initializes it based on the given configuration.
  *
  * The specified configuration can be either a string or an array.
@@ -383,7 +383,7 @@ public static function createComponent($config)
 
     return $object;
 }
-</pre></div>
+</code></pre></div>
 
 
 <p>从上述代码可以看出，在配置组件时，如果是配置核心组件，可以不提供class字段，否则一定要提供。除了class字段，还可以为组件对象的属性赋值。按照PHP中对一个对象的属性进行赋值的规则：</p>

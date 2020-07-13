@@ -90,15 +90,15 @@
 <h2>举个栗子</h2>
 <p>假设已有一个数据表<code>apps</code>，其有个字段<code>name</code>，需要对这个字段做基于全文索引的查询。</p>
 <p>为了不变更已有数据，我们对该数据表新增一个字段<code>seg_name</code>，使用脚本批量地对<code>name</code>字段进行分词编码，将结果存入该字段。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">ALTER</span> <span style="color: #0000ff">TABLE</span> `apps` <span style="color: #0000ff">ADD</span> <span style="color: #0000ff">COLUMN</span> `seg_name` VARCHAR(1024) <span style="color: #0000ff">DEFAULT</span> <span style="color: #0000ff">NULL</span> <span style="color: #0000ff">COMMENT</span> <span style="color: #a31515">&#39;name字段分词编码后的结果&#39;</span>;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">ALTER</span> <span style="color: #0000ff">TABLE</span> `apps` <span style="color: #0000ff">ADD</span> <span style="color: #0000ff">COLUMN</span> `seg_name` VARCHAR(1024) <span style="color: #0000ff">DEFAULT</span> <span style="color: #0000ff">NULL</span> <span style="color: #0000ff">COMMENT</span> <span style="color: #a31515">&#39;name字段分词编码后的结果&#39;</span>;
 <span style="color: #0000ff">ALTER</span> <span style="color: #0000ff">TABLE</span> `apps` <span style="color: #0000ff">ADD</span> FULLTEXT <span style="color: #0000ff">INDEX</span> (`seg_name`);
-</pre></div>
+</code></pre></div>
 
 
 <p>API中对搜索关键词也进行分词并经编码，以下面的SQL来查询即可：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span># <span style="border: 1px solid #FF0000">其中</span>%s用搜索关键词分词编码后的结果进行替换
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code># <span style="border: 1px solid #FF0000">其中</span>%s用搜索关键词分词编码后的结果进行替换
 <span style="color: #0000ff">SELECT</span> * <span style="color: #0000ff">FROM</span> `apps` <span style="color: #0000ff">WHERE</span> <span style="color: #0000ff">MATCH</span> (seg_name) AGAINST (<span style="color: #a31515">&#39;%s&#39;</span> <span style="color: #0000ff">IN</span> <span style="color: #0000ff">NATURAL</span> <span style="color: #0000ff">LANGUAGE</span> <span style="color: #0000ff">MODE</span>);
-</pre></div>
+</code></pre></div>
 
 
 <p>可以看到我们选择了“  自然语言模式（IN NATURAL LANGUAGE MODE），即通过MATCH AGAINST传递某个特定的字符串来进行检索”。</p>

@@ -141,8 +141,8 @@ disruptor.handleEventsWith((Event&lt;T&gt; event, <span style="color: #2b91af">l
 
 
 <p><a href="https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/locks/LockSupport.html#parkNanos-long-">LockSupport.parkNanos</a> 方法的作用简单而言即让当前线程睡眠 sleepTimeNs 纳秒。</p>
-<p>Disruptor 作为一个任务队列，自带一个线程池，线程池的线程工厂即构造方法传入的 factory，线程数量等于 <a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/dsl/Disruptor.java#L165">disruptor.handleEventsWith</a>调用时传入的回调方法数量，handleEventsWith 的参数数量是不定的（<code>public final EventHandlerGroup&lt;T&gt; handleEventsWith(final EventHandler&lt;? super T&gt;... handlers)</code>）。</p>
-<p>18个 Disruptor 实例，每个实例有一个消费者线程，消费者线程不断检查队列中是否有新的 <code>Event&lt;T&gt;</code> 任务需要处理，如果有，则调用 EventHandler 会调用方法进行处理，否则睡眠 sleepTimeNs 纳秒。</p>
+<p>Disruptor 作为一个任务队列，自带一个线程池，线程池的线程工厂即构造方法传入的 factory，线程数量等于 <a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/dsl/Disruptor.java#L165">disruptor.handleEventsWith</a> 调用时传入的回调方法数量，handleEventsWith 的参数数量不定（<code>public final EventHandlerGroup&lt;T&gt; handleEventsWith(final EventHandler&lt;? super T&gt;... handlers)</code>）。</p>
+<p>18个 Disruptor 实例，每个实例有一个消费者线程，消费者线程不断检查队列中是否有新的 <code>Event&lt;T&gt;</code> 任务需要处理，如果有，则调用 EventHandler 回调方法进行处理，否则睡眠 sleepTimeNs 纳秒。</p>
 <p>到此，结合监控指标，可以大致猜测：由于 sleepTimeNs 较小，导致多个线程的状态不断在 <code>运行</code>、<code>睡眠</code>、<code>等待调度</code> 之间切换，线程上下文切换非常频繁。</p>
 <p>围绕 LockSupport.parkNanos 编写一个测试程序，来复现这个问题：</p>
 <div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">import</span> java.util.concurrent.CountDownLatch;
@@ -176,7 +176,7 @@ disruptor.handleEventsWith((Event&lt;T&gt; event, <span style="color: #2b91af">l
 <li>使用更大的值来替换 sleepTimeNs 默认值：<code>new Disruptor&lt;&gt;(Event&lt;T&gt;::new, bufferSize, factory, ProducerType.MULTI, new SleepingWaitStrategy(200, 1000 * 1000 / 10)); // 0.1 ms</code></li>
 <li>使用其他等待策略（WaitStrategy），比如：<code>com.lmax.disruptor.BlockingWaitStrategy</code></li>
 </ol>
-<p>不过解决方案也是有微小的负作用 - 部分新任务/<code>Event&lt;T&gt;</code>实例的处理时延会增大，但在我们的数据流处理场景下，这点时延增大对业务完全没有影响。</p>
+<p>不过解决方案也有微小的负作用 - 部分新任务/<code>Event&lt;T&gt;</code>实例的处理时延会增大，但在我们的数据流处理场景下，这点时延增大对业务完全没有影响。</p>
 <p>不过，这个问题应该是一直存在，为什么近期才收到告警，为什么以前从监控上未发现？</p>
 <ol>
 <li>为什么近期才收到告警？因为这个监控告警是近期公司监控平台才统一配置的</li>

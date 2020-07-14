@@ -73,8 +73,8 @@ disruptor.handleEventsWith((Event&amp;lt;T&amp;gt; event, &lt;span style="color:
 
 
 &lt;p&gt;&lt;a href="https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/locks/LockSupport.html#parkNanos-long-"&gt;LockSupport.parkNanos&lt;/a&gt; 方法的作用简单而言即让当前线程睡眠 sleepTimeNs 纳秒。&lt;/p&gt;
-&lt;p&gt;Disruptor 作为一个任务队列，自带一个线程池，线程池的线程工厂即构造方法传入的 factory，线程数量等于 &lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/dsl/Disruptor.java#L165"&gt;disruptor.handleEventsWith&lt;/a&gt;调用时传入的回调方法数量，handleEventsWith 的参数数量是不定的（&lt;code&gt;public final EventHandlerGroup&amp;lt;T&amp;gt; handleEventsWith(final EventHandler&amp;lt;? super T&amp;gt;... handlers)&lt;/code&gt;）。&lt;/p&gt;
-&lt;p&gt;18个 Disruptor 实例，每个实例有一个消费者线程，消费者线程不断检查队列中是否有新的 &lt;code&gt;Event&amp;lt;T&amp;gt;&lt;/code&gt; 任务需要处理，如果有，则调用 EventHandler 会调用方法进行处理，否则睡眠 sleepTimeNs 纳秒。&lt;/p&gt;
+&lt;p&gt;Disruptor 作为一个任务队列，自带一个线程池，线程池的线程工厂即构造方法传入的 factory，线程数量等于 &lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/dsl/Disruptor.java#L165"&gt;disruptor.handleEventsWith&lt;/a&gt; 调用时传入的回调方法数量，handleEventsWith 的参数数量不定（&lt;code&gt;public final EventHandlerGroup&amp;lt;T&amp;gt; handleEventsWith(final EventHandler&amp;lt;? super T&amp;gt;... handlers)&lt;/code&gt;）。&lt;/p&gt;
+&lt;p&gt;18个 Disruptor 实例，每个实例有一个消费者线程，消费者线程不断检查队列中是否有新的 &lt;code&gt;Event&amp;lt;T&amp;gt;&lt;/code&gt; 任务需要处理，如果有，则调用 EventHandler 回调方法进行处理，否则睡眠 sleepTimeNs 纳秒。&lt;/p&gt;
 &lt;p&gt;到此，结合监控指标，可以大致猜测：由于 sleepTimeNs 较小，导致多个线程的状态不断在 &lt;code&gt;运行&lt;/code&gt;、&lt;code&gt;睡眠&lt;/code&gt;、&lt;code&gt;等待调度&lt;/code&gt; 之间切换，线程上下文切换非常频繁。&lt;/p&gt;
 &lt;p&gt;围绕 LockSupport.parkNanos 编写一个测试程序，来复现这个问题：&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; java.util.concurrent.CountDownLatch;
@@ -108,7 +108,7 @@ disruptor.handleEventsWith((Event&amp;lt;T&amp;gt; event, &lt;span style="color:
 &lt;li&gt;使用更大的值来替换 sleepTimeNs 默认值：&lt;code&gt;new Disruptor&amp;lt;&amp;gt;(Event&amp;lt;T&amp;gt;::new, bufferSize, factory, ProducerType.MULTI, new SleepingWaitStrategy(200, 1000 * 1000 / 10)); // 0.1 ms&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;使用其他等待策略（WaitStrategy），比如：&lt;code&gt;com.lmax.disruptor.BlockingWaitStrategy&lt;/code&gt;&lt;/li&gt;
 &lt;/ol&gt;
-&lt;p&gt;不过解决方案也是有微小的负作用 - 部分新任务/&lt;code&gt;Event&amp;lt;T&amp;gt;&lt;/code&gt;实例的处理时延会增大，但在我们的数据流处理场景下，这点时延增大对业务完全没有影响。&lt;/p&gt;
+&lt;p&gt;不过解决方案也有微小的负作用 - 部分新任务/&lt;code&gt;Event&amp;lt;T&amp;gt;&lt;/code&gt;实例的处理时延会增大，但在我们的数据流处理场景下，这点时延增大对业务完全没有影响。&lt;/p&gt;
 &lt;p&gt;不过，这个问题应该是一直存在，为什么近期才收到告警，为什么以前从监控上未发现？&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;为什么近期才收到告警？因为这个监控告警是近期公司监控平台才统一配置的&lt;/li&gt;

@@ -1,5 +1,124 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>有趣的技术</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2020-07-13T00:00:00+08:00</updated><entry><title>如何剖析 JVM 应用（译）</title><link href="http://youngsterxyf.github.io/2020/07/13/how-to-profile-jvm-applications/" rel="alternate"></link><published>2020-07-13T00:00:00+08:00</published><updated>2020-07-13T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2020-07-13:/2020/07/13/how-to-profile-jvm-applications/</id><summary type="html">&lt;p&gt;原文链接：&lt;a href="https://www.lightbend.com/blog/profiling-jvm-applications"&gt;How to profile JVM applications&lt;/a&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>有趣的技术</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2020-07-14T00:00:00+08:00</updated><entry><title>Disruptor 等待策略引发的 CPU 负载异常问题</title><link href="http://youngsterxyf.github.io/2020/07/14/disruptor-waitstrategy-cpu-busy/" rel="alternate"></link><published>2020-07-14T00:00:00+08:00</published><updated>2020-07-14T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2020-07-14:/2020/07/14/disruptor-waitstrategy-cpu-busy/</id><summary type="html">&lt;h2&gt;背景&lt;/h2&gt;
+&lt;p&gt;工作中，我负责的系统是一个数据流处理服务 - 以流水线（pipeline）的形式分多级异步处理：&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="https://i.loli.net/2020/07/14/ONwUsrlhLmIq8BW.jpg"&gt;&lt;/p&gt;
+&lt;p&gt;其中的 队列 实际使用的是 &lt;a href="https://github.com/LMAX-Exchange/disruptor"&gt;Disruptor&lt;/a&gt;，多生产者单消费者模式：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ThreadFactory factory = &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; ThreadFactoryBuilder().setNameFormat(name).setDaemon(&lt;span style="color: #0000ff"&gt;true&lt;/span&gt;).build();
+Disruptor&amp;lt;Event&amp;lt;T&amp;gt;&amp;gt;  disruptor = &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; Disruptor&amp;lt;&amp;gt;(Event&amp;lt;T&amp;gt;::&lt;span style="color: #0000ff"&gt;new&lt;/span&gt;, bufferSize, factory, ProducerType.MULTI, &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; SleepingWaitStrategy());
+disruptor.handleEventsWith((Event&amp;lt;T&amp;gt; event, &lt;span style="color: #2b91af"&gt;long&lt;/span&gt; sequence, &lt;span style="color: #2b91af"&gt;boolean&lt;/span&gt; endOfBatch) -&amp;gt; {
+    consumer.accept(event.value, endOfBatch);
+    event …&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</summary><content type="html">&lt;h2&gt;背景&lt;/h2&gt;
+&lt;p&gt;工作中，我负责的系统是一个数据流处理服务 - 以流水线（pipeline）的形式分多级异步处理：&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="https://i.loli.net/2020/07/14/ONwUsrlhLmIq8BW.jpg"&gt;&lt;/p&gt;
+&lt;p&gt;其中的 队列 实际使用的是 &lt;a href="https://github.com/LMAX-Exchange/disruptor"&gt;Disruptor&lt;/a&gt;，多生产者单消费者模式：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ThreadFactory factory = &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; ThreadFactoryBuilder().setNameFormat(name).setDaemon(&lt;span style="color: #0000ff"&gt;true&lt;/span&gt;).build();
+Disruptor&amp;lt;Event&amp;lt;T&amp;gt;&amp;gt;  disruptor = &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; Disruptor&amp;lt;&amp;gt;(Event&amp;lt;T&amp;gt;::&lt;span style="color: #0000ff"&gt;new&lt;/span&gt;, bufferSize, factory, ProducerType.MULTI, &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; SleepingWaitStrategy());
+disruptor.handleEventsWith((Event&amp;lt;T&amp;gt; event, &lt;span style="color: #2b91af"&gt;long&lt;/span&gt; sequence, &lt;span style="color: #2b91af"&gt;boolean&lt;/span&gt; endOfBatch) -&amp;gt; {
+    consumer.accept(event.value, endOfBatch);
+    event.value = &lt;span style="color: #0000ff"&gt;null&lt;/span&gt;;
+});
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;服务运行在 k8s 集群上，每个容器节点上可能会运行多个 pipeline，也即意味着单个节点上会存在多个 disruptor 实例。&lt;/p&gt;
+&lt;h2&gt;现象&lt;/h2&gt;
+&lt;p&gt;近期突然收到测试环境很多节点（生产环境也有少量节点）的 CPU 使用率告警 - CPU 使用率持续 5 分钟以上超过 90%，如下其中一个任务节点的 CPU 使用率监控图：&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="https://i.loli.net/2020/07/14/XJVsiMI3b9m5dlB.jpg"&gt;
+&lt;img alt="" src="https://i.loli.net/2020/07/14/2YwPQAqaICr879x.jpg"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;cpu.busy = cpu.system + cpu.user + 软/硬中断&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;注意其中 &lt;code&gt;cpu.system&lt;/code&gt; 比 &lt;code&gt;cpu.user&lt;/code&gt; 高不少，&lt;code&gt;cpu.busy&lt;/code&gt; 又比 &lt;code&gt;cpu.system&lt;/code&gt; 高不少。也即 CPU 时间片资源主要消耗在 内核态 和中断逻辑上（对于这些任务而言 &lt;code&gt;cpu.user&lt;/code&gt; 指标也是异常的）。&lt;/p&gt;
+&lt;p&gt;这些节点运行的任务，几乎没有数据需要处理，也就是说几乎是空跑的。从线程数量监控以及 jstack 输出的堆栈跟踪信息，也未发现明显异常。&lt;/p&gt;
+&lt;h2&gt;原因排查&lt;/h2&gt;
+&lt;p&gt;将测试环境的任务在本地环境运行起来，并基于 &lt;a href="https://www.lightbend.com/blog/profiling-jvm-applications"&gt;How to profile JVM applications&lt;/a&gt; 一文中提到的火焰图工具，产出对应 JVM 应用的火焰图：
+&lt;img alt="" src="https://i.loli.net/2020/07/14/zQMWsBeKbuZLamN.jpg"&gt;&lt;/p&gt;
+&lt;p&gt;从图中可以大致看出其中 &lt;code&gt;com/lmax/disruptor/SleepingWaitStrategy:::waitFor&lt;/code&gt; / &lt;code&gt;jdk/internal/misc/Unsafe:::park&lt;/code&gt; 比较可疑，在调用栈中耗时最长。&lt;/p&gt;
+&lt;p&gt;从项目源码和 jstack 输出的堆栈跟踪信息可以看到，测试任务中大致涉及 18个 disruptor 实例，均使用 &lt;code&gt;SleepingWaitStrategy&lt;/code&gt; 等待策略，该策略的 &lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/SleepingWaitStrategy.java#L56"&gt;waitFor&lt;/a&gt; 方法实现如下所示：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;public&lt;/span&gt; &lt;span style="color: #2b91af"&gt;long&lt;/span&gt; waitFor(&lt;span style="color: #0000ff"&gt;final&lt;/span&gt; &lt;span style="color: #2b91af"&gt;long&lt;/span&gt; sequence, Sequence cursor, &lt;span style="color: #0000ff"&gt;final&lt;/span&gt; Sequence dependentSequence, &lt;span style="color: #0000ff"&gt;final&lt;/span&gt; SequenceBarrier barrier) &lt;span style="color: #0000ff"&gt;throws&lt;/span&gt; AlertException {
+    &lt;span style="color: #2b91af"&gt;long&lt;/span&gt; availableSequence;
+    &lt;span style="color: #008000"&gt;// 默认 200&lt;/span&gt;
+    &lt;span style="color: #2b91af"&gt;int&lt;/span&gt; counter = retries;
+
+    &lt;span style="color: #0000ff"&gt;while&lt;/span&gt; ((availableSequence = dependentSequence.get()) &amp;lt; sequence) {
+      counter = applyWaitMethod(barrier, counter);
+    }
+
+    &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; availableSequence;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;waitFor 方法中核心调用了 &lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/SleepingWaitStrategy.java#L76"&gt;applyWaitMethod&lt;/a&gt; ：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;private&lt;/span&gt; &lt;span style="color: #2b91af"&gt;int&lt;/span&gt; applyWaitMethod(&lt;span style="color: #0000ff"&gt;final&lt;/span&gt; SequenceBarrier barrier, &lt;span style="color: #2b91af"&gt;int&lt;/span&gt; counter) &lt;span style="color: #0000ff"&gt;throws&lt;/span&gt; AlertException {
+    barrier.checkAlert();
+
+    &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; (counter &amp;gt; 100)
+    {
+        --counter;
+    }
+    &lt;span style="color: #0000ff"&gt;else&lt;/span&gt; &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; (counter &amp;gt; 0)
+    {
+        --counter;
+        Thread.yield();
+    }
+    &lt;span style="color: #0000ff"&gt;else&lt;/span&gt;
+    {
+        &lt;span style="color: #008000"&gt;// sleepTimeNs 默认 100&lt;/span&gt;
+        &lt;span style="color: #008000"&gt;// 间接调用  jdk/internal/misc/Unsafe:::park 方法&lt;/span&gt;
+        LockSupport.parkNanos(sleepTimeNs);
+    }
+
+    &lt;span style="color: #0000ff"&gt;return&lt;/span&gt; counter;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;a href="https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/locks/LockSupport.html#parkNanos-long-"&gt;LockSupport.parkNanos&lt;/a&gt; 方法的作用简单而言即让当前线程睡眠 sleepTimeNs 纳秒。&lt;/p&gt;
+&lt;p&gt;Disruptor 作为一个任务队列，自带一个线程池，线程池的线程工厂即构造方法传入的 factory，线程数量等于 &lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/dsl/Disruptor.java#L165"&gt;disruptor.handleEventsWith&lt;/a&gt;调用时传入的回调方法数量，handleEventsWith 的参数数量是不定的（&lt;code&gt;public final EventHandlerGroup&amp;lt;T&amp;gt; handleEventsWith(final EventHandler&amp;lt;? super T&amp;gt;... handlers)&lt;/code&gt;）。&lt;/p&gt;
+&lt;p&gt;18个 Disruptor 实例，每个实例有一个消费者线程，消费者线程不断检查队列中是否有新的 &lt;code&gt;Event&amp;lt;T&amp;gt;&lt;/code&gt; 任务需要处理，如果有，则调用 EventHandler 会调用方法进行处理，否则睡眠 sleepTimeNs 纳秒。&lt;/p&gt;
+&lt;p&gt;到此，结合监控指标，可以大致猜测：由于 sleepTimeNs 较小，导致多个线程的状态不断在 &lt;code&gt;运行&lt;/code&gt;、&lt;code&gt;睡眠&lt;/code&gt;、&lt;code&gt;等待调度&lt;/code&gt; 之间切换，线程上下文切换非常频繁。&lt;/p&gt;
+&lt;p&gt;围绕 LockSupport.parkNanos 编写一个测试程序，来复现这个问题：&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; java.util.concurrent.CountDownLatch;
+&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; java.util.concurrent.ExecutorService;
+&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; java.util.concurrent.Executors;
+&lt;span style="color: #0000ff"&gt;import&lt;/span&gt; java.util.concurrent.locks.LockSupport;
+
+&lt;span style="color: #0000ff"&gt;public&lt;/span&gt; &lt;span style="color: #0000ff"&gt;class&lt;/span&gt; &lt;span style="color: #2b91af"&gt;Test&lt;/span&gt; {
+
+  &lt;span style="color: #0000ff"&gt;public&lt;/span&gt; &lt;span style="color: #0000ff"&gt;static&lt;/span&gt; &lt;span style="color: #2b91af"&gt;void&lt;/span&gt; main(String[] args) &lt;span style="color: #0000ff"&gt;throws&lt;/span&gt; InterruptedException {
+    ExecutorService tp = Executors.newFixedThreadPool(18);
+    &lt;span style="color: #0000ff"&gt;for&lt;/span&gt; (&lt;span style="color: #2b91af"&gt;int&lt;/span&gt; idx = 0; idx &amp;lt; 18; idx++) {
+      tp.submit(() -&amp;gt; {
+        &lt;span style="color: #0000ff"&gt;while&lt;/span&gt; (&lt;span style="color: #0000ff"&gt;true&lt;/span&gt;) {
+          LockSupport.parkNanos(100);
+        }
+      });
+    }
+    CountDownLatch wg = &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; CountDownLatch(1);
+    wg.await();
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;在 3.2 GHz 6-Core Intel Core i7 配置 macOS 系统中，这个测试程序可以稳定地将 CPU 使用率控制在 700%+，如下 &lt;code&gt;top -pid [测试程序的进程 id]&lt;/code&gt; 命令的输出：&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="https://i.loli.net/2020/07/14/Z6jixvuWY1yTnL4.jpg"&gt;&lt;/p&gt;
+&lt;p&gt;其中 CSW 为线程上下文切换的次数。&lt;/p&gt;
+&lt;p&gt;既然问题原因在于多个线程频繁睡眠导致，那么解决方案也比较简单：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;使用更大的值来替换 sleepTimeNs 默认值：&lt;code&gt;new Disruptor&amp;lt;&amp;gt;(Event&amp;lt;T&amp;gt;::new, bufferSize, factory, ProducerType.MULTI, new SleepingWaitStrategy(200, 1000 * 1000 / 10)); // 0.1 ms&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;使用其他等待策略（WaitStrategy），比如：&lt;code&gt;com.lmax.disruptor.BlockingWaitStrategy&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;不过解决方案也是有微小的负作用 - 部分新任务/&lt;code&gt;Event&amp;lt;T&amp;gt;&lt;/code&gt;实例的处理时延会增大，但在我们的数据流处理场景下，这点时延增大对业务完全没有影响。&lt;/p&gt;
+&lt;p&gt;不过，这个问题应该是一直存在，为什么近期才收到告警，为什么以前从监控上未发现？&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;为什么近期才收到告警？因为这个监控告警是近期公司监控平台才统一配置的&lt;/li&gt;
+&lt;li&gt;为什么以前从监控上未发现？因为公司切换了新的监控平台，老的监控平台没有 cpu.busy 这个指标，而这些没什么数据要处理的任务长时间不需要开发维护，也就未得到及时关注。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2&gt;扩展资料&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;上下文切换耗时多少？&lt;a href="https://blog.tsunanet.net/2010/11/how-long-does-it-take-to-make-context.html"&gt;How long does it take to make a context switch?&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;LockSupport.parkNanos(100)&lt;/code&gt; 真的就是睡眠 100 纳秒吗？&lt;a href="https://hazelcast.com/blog/locksupport-parknanos-under-the-hood-and-the-curious-case-of-parking/"&gt;LockSupport.parkNanos() Under the Hood and the Curious Case of Parking&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;</content><category term="其他"></category><category term="问题排查"></category><category term="Java"></category><category term="Disruptor"></category></entry><entry><title>如何剖析 JVM 应用（译）</title><link href="http://youngsterxyf.github.io/2020/07/13/how-to-profile-jvm-applications/" rel="alternate"></link><published>2020-07-13T00:00:00+08:00</published><updated>2020-07-13T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2020-07-13:/2020/07/13/how-to-profile-jvm-applications/</id><summary type="html">&lt;p&gt;原文链接：&lt;a href="https://www.lightbend.com/blog/profiling-jvm-applications"&gt;How to profile JVM applications&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Hi 大家好。工具团队（tooling team）近期的一个关注点是改进 sbt 贡献流程（ improvement of the contribution process to sbt）。我们一直在思考的另一个事情是 sbt 的性能。为一举解决这两件事情，我调研了 Jason Zaugg、Johannes Rudolph 这些人如何剖析 JVM 应用，这篇文章即是调研结果。&lt;/p&gt;
 &lt;p&gt;这里论述的技术应该可以应用于Java 和 Scala，也基本与你使用的工具无关。&lt;/p&gt;
 &lt;h2&gt;火焰图（使用 async-profiler 生成）&lt;/h2&gt;

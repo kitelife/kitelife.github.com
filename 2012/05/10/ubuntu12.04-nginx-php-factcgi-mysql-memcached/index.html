@@ -4,8 +4,8 @@
 
         <title>ubuntu12.04+ngnix+php-fastcgi+mysql+memcached网站开发测试环境搭建</title>
         <meta charset="utf-8" />
-        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="有趣的技术 Full Atom Feed" />
-        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="有趣的技术 Full RSS Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="数据与智能 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="数据与智能 Full RSS Feed" />
 
 
         <!-- Mobile viewport optimized: j.mp/bplateviewport -->
@@ -37,7 +37,7 @@
         <div class="row">
 
           <header id="banner" class="body">
-                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">有趣的技术 <strong></strong></a></h1>
+                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">数据与智能 <strong></strong></a></h1>
           </header><!-- /#banner -->
 
             <div id="navigation" class="navbar row">
@@ -77,17 +77,16 @@
             <div class="entry-content">
               <p>1.
 安装必要的软件</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>sudo apt-get install nginx php5-cli php5-cgi spawn-fcgi psmisc mysql-server <span style="color: #a31515">\</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>sudo apt-get install nginx php5-cli php5-cgi spawn-fcgi psmisc mysql-server <span style="color: #a31515">\</span>
 mysql-client php5-mysql memcached php5-memcache php5-curl php5-gd
 </code></pre></div>
-
 
 <p>2.
 打开浏览器访问: 127.0.0.1。就能看到表示nginx安装成功的页面。但这时访问php文件页面还不行。
 （注：ngnix的配置文件目录为/etc/ngnix/，默认网站根目录为/usr/share/ngnix/www/；php配置文件目录为/etc/php5/）</p>
 <p>3.
 编辑文件/etc/ngnix/sites-available/default，内容如下(可以先把原文件备份一下)：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>server {
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>server {
     #listen   80; ## listen for ipv4; this line is default and implied
     #listen   [::]:80 default ipv6only=on; ## listen for ipv6
 
@@ -112,125 +111,118 @@ mysql-client php5-mysql memcached php5-memcache php5-curl php5-gd
 }
 </code></pre></div>
 
-
 <p>4.
 修改文件/etc/php5/cgi/php.ini。去除</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>#cgi.fix_pathinfo=1
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>#cgi.fix_pathinfo=1
 </code></pre></div>
-
 
 <p>一行前面的<code>#</code>。具体信息请看php.ini的相关注释。</p>
 <p>5.
 创建文件/usr/bin/php-fastcgi :</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #008000">#!/bin/bash</span>
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #408080; font-style: italic">#!/bin/bash</span>
 
-FASTCGI_USER=www-data
-FASTCGI_GROUP=www-data
+<span style="color: #19177C">FASTCGI_USER</span><span style="color: #666666">=</span>www-data
+<span style="color: #19177C">FASTCGI_GROUP</span><span style="color: #666666">=</span>www-data
 
-ADDRESS=127.0.0.1
-PORT=9000
+<span style="color: #19177C">ADDRESS</span><span style="color: #666666">=127</span>.0.0.1
+<span style="color: #19177C">PORT</span><span style="color: #666666">=9000</span>
 
-PIDFILE=/var/run/php-fastcgi/php-fastcgi.pid
-CHILDREN=6
+<span style="color: #19177C">PIDFILE</span><span style="color: #666666">=</span>/var/run/php-fastcgi/php-fastcgi.pid
+<span style="color: #19177C">CHILDREN</span><span style="color: #666666">=6</span>
 
-PHP5=/usr/bin/php5-cgi
-/usr/bin/spawn-fcgi -a $ADDRESS -p $PORT -P $PIDFILE -C $CHILDREN -u $FASTCGI_USER -g $FASTCGI_GROUP -f $PHP5
+<span style="color: #19177C">PHP5</span><span style="color: #666666">=</span>/usr/bin/php5-cgi
+/usr/bin/spawn-fcgi -a <span style="color: #19177C">$ADDRESS</span> -p <span style="color: #19177C">$PORT</span> -P <span style="color: #19177C">$PIDFILE</span> -C <span style="color: #19177C">$CHILDREN</span> -u <span style="color: #19177C">$FASTCGI_USER</span> -g <span style="color: #19177C">$FASTCGI_GROUP</span> -f <span style="color: #19177C">$PHP5</span>
 </code></pre></div>
-
 
 <p>6.
 设置/usr/bin/php-fastcgi为可执行：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>sudo chmod +x /usr/bin/php-fastcgi
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>sudo chmod +x /usr/bin/php-fastcgi
 </code></pre></div>
-
 
 <p>7.
 创建文件/etc/init.d/php-fastcgi：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #008000">#!/bin/bash</span>
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #408080; font-style: italic">#!/bin/bash</span>
 
-PHP_SCRIPT=/usr/bin/php-fastcgi
+<span style="color: #19177C">PHP_SCRIPT</span><span style="color: #666666">=</span>/usr/bin/php-fastcgi
 
-FASTCGI_USER=www-data
-FASTCGI_GROUP=www-data
+<span style="color: #19177C">FASTCGI_USER</span><span style="color: #666666">=</span>www-data
+<span style="color: #19177C">FASTCGI_GROUP</span><span style="color: #666666">=</span>www-data
 
-PID_DIR=/var/run/php-fastcgi
-PID_FILE=/var/run/php-fastcgi/php-fastcgi.pid
-RET_VAL=0
+<span style="color: #19177C">PID_DIR</span><span style="color: #666666">=</span>/var/run/php-fastcgi
+<span style="color: #19177C">PID_FILE</span><span style="color: #666666">=</span>/var/run/php-fastcgi/php-fastcgi.pid
+<span style="color: #19177C">RET_VAL</span><span style="color: #666666">=0</span>
 
-<span style="color: #0000ff">case</span> <span style="color: #a31515">&quot;</span>$1<span style="color: #a31515">&quot;</span> in
-    start)
-        <span style="color: #0000ff">if</span> [[ ! -d $PID_DIR ]]
-        <span style="color: #0000ff">then</span>
-            mkdir $PID_DIR
-            chown $FASTCGI_USER:$FASTCGI_GROUP $PID_DIR
-            chmod 0770 $PID_DIR
-        <span style="color: #0000ff">fi</span>
-        <span style="color: #0000ff">if</span> [[ -r $PID_FILE ]]
-        <span style="color: #0000ff">then</span>
-            echo <span style="color: #a31515">&quot;php-fastcgi already running with PID `cat </span>$PID_FILE<span style="color: #a31515">`&quot;</span>
-            RET_VAL=1
-        <span style="color: #0000ff">else</span>
-            $PHP_SCRIPT
-            RET_VAL=$?
-        <span style="color: #0000ff">fi</span>
+<span style="color: #008000; font-weight: bold">case</span> <span style="color: #BA2121">&quot;</span><span style="color: #19177C">$1</span><span style="color: #BA2121">&quot;</span> <span style="color: #008000; font-weight: bold">in</span>
+    start<span style="color: #666666">)</span>
+        <span style="color: #008000; font-weight: bold">if</span> <span style="color: #666666">[[</span> ! -d <span style="color: #19177C">$PID_DIR</span> <span style="color: #666666">]]</span>
+        <span style="color: #008000; font-weight: bold">then</span>
+            mkdir <span style="color: #19177C">$PID_DIR</span>
+            chown <span style="color: #19177C">$FASTCGI_USER</span>:<span style="color: #19177C">$FASTCGI_GROUP</span> <span style="color: #19177C">$PID_DIR</span>
+            chmod <span style="color: #666666">0770</span> <span style="color: #19177C">$PID_DIR</span>
+        <span style="color: #008000; font-weight: bold">fi</span>
+        <span style="color: #008000; font-weight: bold">if</span> <span style="color: #666666">[[</span> -r <span style="color: #19177C">$PID_FILE</span> <span style="color: #666666">]]</span>
+        <span style="color: #008000; font-weight: bold">then</span>
+            <span style="color: #008000">echo</span> <span style="color: #BA2121">&quot;php-fastcgi already running with PID `cat </span><span style="color: #19177C">$PID_FILE</span><span style="color: #BA2121">`&quot;</span>
+            <span style="color: #19177C">RET_VAL</span><span style="color: #666666">=1</span>
+        <span style="color: #008000; font-weight: bold">else</span>
+            <span style="color: #19177C">$PHP_SCRIPT</span>
+            <span style="color: #19177C">RET_VAL</span><span style="color: #666666">=</span><span style="color: #19177C">$?</span>
+        <span style="color: #008000; font-weight: bold">fi</span>
     ;;
-    stop)
-        <span style="color: #0000ff">if</span> [[ -r $PID_FILE ]]
-        <span style="color: #0000ff">then</span>
-            kill <span style="color: #a31515">`</span>cat $PID_FILE<span style="color: #a31515">`</span>
-            rm $PID_FILE
-            RET_VAL=$?
-        <span style="color: #0000ff">else</span>
-            echo <span style="color: #a31515">&quot;Could not find PID file </span>$PID_FILE<span style="color: #a31515">&quot;</span>
-            RET_VAL=1
-        <span style="color: #0000ff">fi</span>
+    stop<span style="color: #666666">)</span>
+        <span style="color: #008000; font-weight: bold">if</span> <span style="color: #666666">[[</span> -r <span style="color: #19177C">$PID_FILE</span> <span style="color: #666666">]]</span>
+        <span style="color: #008000; font-weight: bold">then</span>
+            <span style="color: #008000">kill</span> <span style="color: #BA2121">`</span>cat <span style="color: #19177C">$PID_FILE</span><span style="color: #BA2121">`</span>
+            rm <span style="color: #19177C">$PID_FILE</span>
+            <span style="color: #19177C">RET_VAL</span><span style="color: #666666">=</span><span style="color: #19177C">$?</span>
+        <span style="color: #008000; font-weight: bold">else</span>
+            <span style="color: #008000">echo</span> <span style="color: #BA2121">&quot;Could not find PID file </span><span style="color: #19177C">$PID_FILE</span><span style="color: #BA2121">&quot;</span>
+            <span style="color: #19177C">RET_VAL</span><span style="color: #666666">=1</span>
+        <span style="color: #008000; font-weight: bold">fi</span>
     ;;
-    restart)
-        <span style="color: #0000ff">if</span> [[ -r $PID_FILE ]]
-        <span style="color: #0000ff">then</span>
-            kill <span style="color: #a31515">`</span>cat $PID_FILE<span style="color: #a31515">`</span>
-            rm $PID_FILE
-            RET_VAL=$?
-        <span style="color: #0000ff">else</span>
-            echo <span style="color: #a31515">&quot;Could not find PID file </span>$PID_FILE<span style="color: #a31515">&quot;</span>
-        <span style="color: #0000ff">fi</span>
-        $PHP_SCRIPT
-        RET_VAL=$?
+    restart<span style="color: #666666">)</span>
+        <span style="color: #008000; font-weight: bold">if</span> <span style="color: #666666">[[</span> -r <span style="color: #19177C">$PID_FILE</span> <span style="color: #666666">]]</span>
+        <span style="color: #008000; font-weight: bold">then</span>
+            <span style="color: #008000">kill</span> <span style="color: #BA2121">`</span>cat <span style="color: #19177C">$PID_FILE</span><span style="color: #BA2121">`</span>
+            rm <span style="color: #19177C">$PID_FILE</span>
+            <span style="color: #19177C">RET_VAL</span><span style="color: #666666">=</span><span style="color: #19177C">$?</span>
+        <span style="color: #008000; font-weight: bold">else</span>
+            <span style="color: #008000">echo</span> <span style="color: #BA2121">&quot;Could not find PID file </span><span style="color: #19177C">$PID_FILE</span><span style="color: #BA2121">&quot;</span>
+        <span style="color: #008000; font-weight: bold">fi</span>
+        <span style="color: #19177C">$PHP_SCRIPT</span>
+        <span style="color: #19177C">RET_VAL</span><span style="color: #666666">=</span><span style="color: #19177C">$?</span>
     ;;
-    status)
-        <span style="color: #0000ff">if</span> [[ -r $PID_FILE ]]
-        <span style="color: #0000ff">then</span>
-            echo <span style="color: #a31515">&quot;php-fastcgi running with PID `cat </span>$PID_FILE<span style="color: #a31515">`&quot;</span>
-            RET_VAL=$?
-        <span style="color: #0000ff">else</span>
-            echo <span style="color: #a31515">&quot;Could not find PID file </span>$PID_FILE<span style="color: #a31515">, php-fastcgi does not appear to be running&quot;</span>
-        <span style="color: #0000ff">fi</span>
+    status<span style="color: #666666">)</span>
+        <span style="color: #008000; font-weight: bold">if</span> <span style="color: #666666">[[</span> -r <span style="color: #19177C">$PID_FILE</span> <span style="color: #666666">]]</span>
+        <span style="color: #008000; font-weight: bold">then</span>
+            <span style="color: #008000">echo</span> <span style="color: #BA2121">&quot;php-fastcgi running with PID `cat </span><span style="color: #19177C">$PID_FILE</span><span style="color: #BA2121">`&quot;</span>
+            <span style="color: #19177C">RET_VAL</span><span style="color: #666666">=</span><span style="color: #19177C">$?</span>
+        <span style="color: #008000; font-weight: bold">else</span>
+            <span style="color: #008000">echo</span> <span style="color: #BA2121">&quot;Could not find PID file </span><span style="color: #19177C">$PID_FILE</span><span style="color: #BA2121">, php-fastcgi does not appear to be running&quot;</span>
+        <span style="color: #008000; font-weight: bold">fi</span>
     ;;
-    *)
-        echo <span style="color: #a31515">&quot;Usage: php-fastcgi {start|stop|restart|status}&quot;</span>
-        RET_VAL=1
+    *<span style="color: #666666">)</span>
+        <span style="color: #008000">echo</span> <span style="color: #BA2121">&quot;Usage: php-fastcgi {start|stop|restart|status}&quot;</span>
+        <span style="color: #19177C">RET_VAL</span><span style="color: #666666">=1</span>
     ;;
-<span style="color: #0000ff">esac</span>
-exit $RET_VAL
+<span style="color: #008000; font-weight: bold">esac</span>
+<span style="color: #008000">exit</span> <span style="color: #19177C">$RET_VAL</span>
 </code></pre></div>
-
 
 <p>8.
 添加可执行权限，以及设置为开机启动</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>sudo chmod +x /etc/init.d/php-fastcgi
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>sudo chmod +x /etc/init.d/php-fastcgi
 sudo update-rc.d php-fastcgi defaults
 sudo /etc/init.d/php-fastcgi start
 sudo /etc/init.d/nginx start
 </code></pre></div>
 
-
 <p>9.
 创建文件/usr/share/nginx/www/test.php, 内容如下:</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
-    phpinfo();
-<span style="color: #0000ff">?&gt;</span>
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #BC7A00">&lt;?php</span>
+    <span style="color: #008000">phpinfo</span>();
+<span style="color: #BC7A00">?&gt;</span>
 </code></pre></div>
-
 
 <p>10.
 打开浏览器访问127.0.0.1/test.php，就能看到关于php信息的表格页面了。</p>

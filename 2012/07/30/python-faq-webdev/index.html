@@ -4,8 +4,8 @@
 
         <title>Python FAQ：Web开发（译）</title>
         <meta charset="utf-8" />
-        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="有趣的技术 Full Atom Feed" />
-        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="有趣的技术 Full RSS Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="数据与智能 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="数据与智能 Full RSS Feed" />
 
 
         <!-- Mobile viewport optimized: j.mp/bplateviewport -->
@@ -37,7 +37,7 @@
         <div class="row">
 
           <header id="banner" class="body">
-                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">有趣的技术 <strong></strong></a></h1>
+                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">数据与智能 <strong></strong></a></h1>
           </header><!-- /#banner -->
 
             <div id="navigation" class="navbar row">
@@ -123,11 +123,10 @@
 <h2>路由选择(Routing)</h2>
 <p>PHP是根据URL执行一整个文件，Python web应用则倾向"拥有"一整个目录结构(或者甚至是整个域(domain))。因此，将特定的代码连接到特定的代码更加灵活，这种连接通常是由一个路由选择系统来处理。</p>
 <p>路由(routes)是包含可选占位符的URL，就像这样：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/users/{name}
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>/users/{name}
 /companies/{id}/products
 /blog/{year:\d\d\d\d}/{month:\d\d}/{day:\d\d}/{title}
 </code></pre></div>
-
 
 <p>你可以把这样的一个路由绑定到一个函数，那么当你浏览到 <code>/users/eevee</code> ，那个函数就会被执行，占位符则以 <code>dict(name=u'eevee')</code> 这样的结构可供使用。</p>
 <p>一些框架(比如Pyramid)在这一步上走得更远：不是直接将路由绑定到函数，而是给路由一个名字，然后把名字绑定到函数。需要一点额外的工作，但优点是在你的应用中只需维护一个所有页面的核心列表。你也可以一个路由名和占位符值来生成一个URL---那么，之后，你就可以只在一个地方修改一下就能改变一个URL，而不需要接触其他东西，并且开发过程中打字错误会产生一个错误信息而不是一个404页面。</p>
@@ -192,30 +191,27 @@
 </ul>
 <h2>XSS(跨站脚本攻击)</h2>
 <p>实际上，现在的每项相关技术都内建某种形式的自动HTML转义过滤器。理念是：对于这样的一个模板：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>&lt;p&gt;Hello, ${name}!&lt;/p&gt;
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>&lt;p&gt;Hello, ${name}!&lt;/p&gt;
 </code></pre></div>
-
 
 <p>当给定 <code>name = '&lt;b&gt;'</code> ，将安全地打印出 <code>Hello, &amp;lt;b&amp;gt;!</code> 。这意味着，大多数时候，你并不需要担心XSS。</p>
 <p>大多数时候，如果没有别的，你必须核对所使用框架和模板引擎的文档，确保自动HTML转义过滤功能默认开启，如果不是，则开启它。(随便说一下：对于Pyramid，Django和Flask，你能轻松获得此项功能。如果你的模板文件具备一个处理HTML的扩展，Bottle则也能自动做到。)</p>
 <p>那么，棘手的地方就是知道何时以及如何关闭它。如果你在Python代码中构建了某种复杂的HTML，且不想完全转义它，那么仅仅使得转义行为失效是个蹩脚的解决方案。任何转义失效的地方都可能发生注入。幸运的是，许多框架(至少有Pyramid和Flask)使用了<a href="http://pypi.python.org/pypi/MarkupSafe">markupsafe</a>库，它能智能地帮助避免这个问题。</p>
 <p>markupsafe提供一个单一的类， <code>Markup</code> ，继承自 <code>unicode</code> . <code>Markup(u'Hello!')</code> ，会产生一个行为上相当像字符串的对象。类方法 <code>Markup.escape</code> 工作方式相同，但会转义经过包裹的字符串中的任意HTML字符。</p>
 <p>这里有两个鬼祟的花招。第一：一个 <code>Markup</code> 对象不会被转义两次。请看：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>&gt;&gt;&gt; s = u&#39;&lt;b&gt;oh noo xss&lt;/b&gt;&#39;
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>&gt;&gt;&gt; s = u&#39;&lt;b&gt;oh noo xss&lt;/b&gt;&#39;
 &gt;&gt;&gt; Markup.escape(s)
-Markup(u&#39;&lt;b&gt;oh noo xss&lt;/b&gt;&#39;)
+Markup(u&#39;&amp;lt;b&amp;gt;oh noo xss&amp;lt;/b&amp;gt;&#39;)
 &gt;&gt; Markup.escape(Markup.escape(s))
-Markup(u&#39;&lt;b&gt;oh noo xss&lt;/b&gt;&#39;)
+Markup(u&#39;&amp;lt;b&amp;gt;oh noo xss&amp;lt;/b&amp;gt;&#39;)
 </code></pre></div>
-
 
 <p>因此，一旦创建了一个 <code>Markup</code> 对象，就可将它用于你的模板，过滤器不会管它---即使它包含HTML。</p>
 <p>另一个把戏是， <code>Markup</code> 对象重载了所有string的方法，并且自动转义所有的参数。这意味着在Python里，你可以这么干：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>&gt;&gt;&gt; user_input = u&#39;&lt;script&gt;alert(&quot;pwn&quot;);&lt;/script&gt;&#39;
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>&gt;&gt;&gt; user_input = u&#39;&lt;script&gt;alert(&quot;pwn&quot;);&lt;/script&gt;&#39;
 &gt;&gt;&gt; Markup(u&#39;&lt;p&gt;Hello, %s!&lt;/p&gt;&#39;) % user_input
-Markup(u&#39;&lt;p&gt;Hello, &lt;script&gt;alert(&amp;#34;pwn&amp;#34;);&lt;/script&gt;!&lt;/p&gt;&#39;)
+Markup(u&#39;&lt;p&gt;Hello, &amp;lt;script&amp;gt;alert(&amp;#34;pwn&amp;#34;);&amp;lt;/script&amp;gt;!&lt;/p&gt;&#39;)
 </code></pre></div>
-
 
 <p>因此你可以相当安全地构建一些复杂的HTML代码，而不用太担心转义不够或者过分转义。</p>
 <p>当然，这并不完美。主要问题是你需要将 <code>Markup().join(...)</code> 用于一些其他的 <code>Markup</code> 对象，而不是 <code>''.join(...)</code> 。并且某些操作，比如分片(slicing)，分割(splitting)，以及正则表达式，有可能产生没有意义的结果。 <strong>绝对</strong> 不要试图分解一个 <code>Markup</code> 对象或者任何其他HTML字符串；如果实在需要的话，那就使用一个真正的解析器，比如 <code>lxml</code> ，但是大多数时候，你可以在将普通字符串包裹进HTML之前，对它做任何你需要的转换。</p>

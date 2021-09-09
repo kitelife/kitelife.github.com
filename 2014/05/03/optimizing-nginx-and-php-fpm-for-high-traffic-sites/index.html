@@ -4,8 +4,8 @@
 
         <title>高流量站点NGINX与PHP-fpm配置优化（译）</title>
         <meta charset="utf-8" />
-        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="有趣的技术 Full Atom Feed" />
-        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="有趣的技术 Full RSS Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="数据与智能 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="数据与智能 Full RSS Feed" />
 
 
         <!-- Mobile viewport optimized: j.mp/bplateviewport -->
@@ -37,7 +37,7 @@
         <div class="row">
 
           <header id="banner" class="body">
-                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">有趣的技术 <strong></strong></a></h1>
+                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">数据与智能 <strong></strong></a></h1>
           </header><!-- /#banner -->
 
             <div id="navigation" class="navbar row">
@@ -82,7 +82,7 @@
 <h4>1. 将TCP切换为UNIX域套接字</h4>
 <p>UNIX域套接字相比TCP套接字在loopback接口上能提供更好的性能（更少的数据拷贝和上下文切换）。</p>
 <p>但有一点需要牢记：仅运行在同一台服务器上的程序可以访问UNIX域套接字（显然没有网络支持）。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>upstream backend
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>upstream backend
 {
     # UNIX domain sockets
     server unix:/var/run/fastcgi.sock;
@@ -92,24 +92,21 @@
 }
 </code></pre></div>
 
-
 <h4>2. 调整工作进程数</h4>
 <p>现代计算机硬件是多处理器的，NGINX可以利用多物理或虚拟处理器。</p>
 <p>多数情况下，你的Web服务器都不会配置为处理多种任务（比如作为Web服务器提供服务的同时也是一个打印服务器），你可以配置NGINX使用所有可用的处理器，NGINX工作进程并不是多线程的。</p>
 <p>运行以下命令可以获知你的机器有多少个处理器：</p>
 <p>Linux上 -</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>cat /proc/cpuinfo | grep processor
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>cat /proc/cpuinfo | grep processor
 </code></pre></div>
-
 
 <p>FreeBSD上 -</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>sysctl dev .cpu | grep location
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>sysctl dev .cpu | grep location
 </code></pre></div>
-
 
 <p>将nginx.conf文件中work_processes的值设置为机器的处理器核数。</p>
 <p>同时，增大worker_connections（每个处理器核心可以处理多少个连接）的值，以及将"multi_accept"设置为ON，如果你使用的是Linux，则也使用"epoll"：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code># We have 16 cores
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code># We have 16 cores
 worker_processes 16;
 
 # connections per worker
@@ -120,19 +117,17 @@ events
 }
 </code></pre></div>
 
-
 <h4>3. 设置upstream负载均衡</h4>
 <p>以我们的经验来看，同一台机器上多个upstream后端相比单个upstream后端能够带来更高的吞吐量。</p>
 <p>例如，如果你想支持最大1000个PHP-fpm子进程（children），可以将该数字平均分配到两个upstream后端，各自处理500个PHP-fpm子进程：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>upstream backend {
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>upstream backend {
     server unix:/var/run/php5-fpm.sock1 weight=100 max_fails=5 fail_timeout=5;
     server unix:/var/run/php5-fpm.sock2 weight=100 max_fails=5 fail_timeout=5;
 }
 </code></pre></div>
 
-
 <p>以下是两个来自php-fpm.conf的进程池：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>&lt;section name=&quot;pool&quot;&gt;
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>&lt;section name=&quot;pool&quot;&gt;
 
     &lt;value name=&quot;name&quot;&gt;www1&lt;/value&gt;
     &lt;value name=&quot;listen_address&quot;&gt;/var/run/php5-fpm.sock1&lt;/value&gt;
@@ -219,22 +214,19 @@ events
 &lt;/section&gt;
 </code></pre></div>
 
-
 <h4>4. 禁用访问日志文件</h4>
 <p>这一点影响较大，因为高流量站点上的日志文件涉及大量必须在所有线程之间同步的IO操作。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>access_log off;
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>access_log off;
 log_not_found off;
 error_log /var/log/nginx-error.log warn;
 </code></pre></div>
 
-
 <p>若你不能关闭访问日志文件，至少应该使用缓冲：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>access_log /var/log/nginx/access.log main buffer=16k;
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>access_log /var/log/nginx/access.log main buffer=16k;
 </code></pre></div>
 
-
 <h4>5. 启用GZip</h4>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>gzip on;
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>gzip on;
 gzip_disable &quot;msie6&quot;;
 gzip_vary on;
 gzip_proxied any;
@@ -245,17 +237,15 @@ gzip_http_version 1.1;
 gzip_types text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript;
 </code></pre></div>
 
-
 <h4>6. 缓存被频繁访问的文件相关的信息</h4>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>open_file_cache max=200000 inactive=20s;
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>open_file_cache max=200000 inactive=20s;
 open_file_cache_valid 30s;
 open_file_cache_min_uses 2;
 open_file_cache_errors on;
 </code></pre></div>
 
-
 <h4>7. 调整客户端超时时间</h4>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>client_max_body_size 500M;
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>client_max_body_size 500M;
 client_body_buffer_size 1m;
 client_body_timeout 15;
 client_header_timeout 15;
@@ -266,9 +256,8 @@ tcp_nopush on;
 tcp_nodelay on;
 </code></pre></div>
 
-
 <h4>8. 调整输出缓冲区大小</h4>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>fastcgi_buffers 256 16k;
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>fastcgi_buffers 256 16k;
 fastcgi_buffer_size 128k;
 fastcgi_connect_timeout 3s;
 fastcgi_send_timeout 120s;
@@ -277,9 +266,8 @@ reset_timedout_connection on;
 server_names_hash_bucket_size 100;
 </code></pre></div>
 
-
 <h4>9. /etc/sysctl.conf调优</h4>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code># Recycle Zombie connections
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code># Recycle Zombie connections
 net.inet.tcp.fast_finwait2_recycle=1
 net.inet.tcp.maxtcptw=200000
 
@@ -320,12 +308,11 @@ net.inet.tcp.blackhole=2
 net.inet.udp.blackhole=1
 </code></pre></div>
 
-
 <h4>10. 监控</h4>
 <p>持续监控打开连接的数目，空闲内存以及等待状态线程的数目。</p>
 <p>设置警报在超出阈值时通知你。你可以自己构建这些警报，或者使用类似<a href="http://serverdensity.io">ServerDensity</a>的东西。</p>
 <p>确认安装了NGINX的<a href="http://wiki.nginx.org/HttpStubStatusModule">stub_status</a>模块。该模块默认并不会编译进NGINX，所以可能你需要重新编译NGINX -</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>./configure --with-http_ssl_module --with-http_stub_status_module --without-mail_pop3_module
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>./configure --with-http_ssl_module --with-http_stub_status_module --without-mail_pop3_module
 --without-mail_imap_module --without-mail_smtp_module
 make install BATCH=yes
 </code></pre></div>

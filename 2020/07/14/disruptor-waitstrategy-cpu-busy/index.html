@@ -4,8 +4,8 @@
 
         <title>Disruptor 等待策略引发的 CPU 负载异常问题</title>
         <meta charset="utf-8" />
-        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="有趣的技术 Full Atom Feed" />
-        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="有趣的技术 Full RSS Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="数据与智能 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="数据与智能 Full RSS Feed" />
 
 
         <!-- Mobile viewport optimized: j.mp/bplateviewport -->
@@ -37,7 +37,7 @@
         <div class="row">
 
           <header id="banner" class="body">
-                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">有趣的技术 <strong></strong></a></h1>
+                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">数据与智能 <strong></strong></a></h1>
           </header><!-- /#banner -->
 
             <div id="navigation" class="navbar row">
@@ -79,14 +79,13 @@
 <p>工作中，我负责的系统是一个数据流处理服务 - 以流水线（pipeline）的形式分多级异步处理：</p>
 <p><img alt="" src="https://i.loli.net/2020/07/14/ONwUsrlhLmIq8BW.jpg"></p>
 <p>其中的 队列 实际使用的是 <a href="https://github.com/LMAX-Exchange/disruptor">Disruptor</a>，多生产者单消费者模式：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>ThreadFactory factory = <span style="color: #0000ff">new</span> ThreadFactoryBuilder().setNameFormat(name).setDaemon(<span style="color: #0000ff">true</span>).build();
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>ThreadFactory factory = <span style="color: #0000ff">new</span> ThreadFactoryBuilder().setNameFormat(name).setDaemon(<span style="color: #0000ff">true</span>).build();
 Disruptor&lt;Event&lt;T&gt;&gt;  disruptor = <span style="color: #0000ff">new</span> Disruptor&lt;&gt;(Event&lt;T&gt;::<span style="color: #0000ff">new</span>, bufferSize, factory, ProducerType.MULTI, <span style="color: #0000ff">new</span> SleepingWaitStrategy());
 disruptor.handleEventsWith((Event&lt;T&gt; event, <span style="color: #2b91af">long</span> sequence, <span style="color: #2b91af">boolean</span> endOfBatch) -&gt; {
     consumer.accept(event.value, endOfBatch);
     event.value = <span style="color: #0000ff">null</span>;
 });
 </code></pre></div>
-
 
 <p>服务运行在 k8s 集群上，每个容器节点上可能会运行多个 pipeline，也即意味着单个节点上会存在多个 disruptor 实例。</p>
 <h2>现象</h2>
@@ -101,7 +100,7 @@ disruptor.handleEventsWith((Event&lt;T&gt; event, <span style="color: #2b91af">l
 <img alt="" src="https://i.loli.net/2020/07/14/zQMWsBeKbuZLamN.jpg"></p>
 <p>从图中可以大致看出其中 <code>com/lmax/disruptor/SleepingWaitStrategy:::waitFor</code> / <code>jdk/internal/misc/Unsafe:::park</code> 比较可疑，在调用栈中耗时最长。</p>
 <p>从项目源码和 jstack 输出的堆栈跟踪信息可以看到，测试任务中大致涉及 18个 disruptor 实例，均使用 <code>SleepingWaitStrategy</code> 等待策略，该策略的 <a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/SleepingWaitStrategy.java#L56">waitFor</a> 方法实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">public</span> <span style="color: #2b91af">long</span> waitFor(<span style="color: #0000ff">final</span> <span style="color: #2b91af">long</span> sequence, Sequence cursor, <span style="color: #0000ff">final</span> Sequence dependentSequence, <span style="color: #0000ff">final</span> SequenceBarrier barrier) <span style="color: #0000ff">throws</span> AlertException {
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">public</span> <span style="color: #2b91af">long</span> waitFor(<span style="color: #0000ff">final</span> <span style="color: #2b91af">long</span> sequence, Sequence cursor, <span style="color: #0000ff">final</span> Sequence dependentSequence, <span style="color: #0000ff">final</span> SequenceBarrier barrier) <span style="color: #0000ff">throws</span> AlertException {
     <span style="color: #2b91af">long</span> availableSequence;
     <span style="color: #008000">// 默认 200</span>
     <span style="color: #2b91af">int</span> counter = retries;
@@ -114,9 +113,8 @@ disruptor.handleEventsWith((Event&lt;T&gt; event, <span style="color: #2b91af">l
 }
 </code></pre></div>
 
-
 <p>waitFor 方法中核心调用了 <a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/SleepingWaitStrategy.java#L76">applyWaitMethod</a> ：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">private</span> <span style="color: #2b91af">int</span> applyWaitMethod(<span style="color: #0000ff">final</span> SequenceBarrier barrier, <span style="color: #2b91af">int</span> counter) <span style="color: #0000ff">throws</span> AlertException {
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">private</span> <span style="color: #2b91af">int</span> applyWaitMethod(<span style="color: #0000ff">final</span> SequenceBarrier barrier, <span style="color: #2b91af">int</span> counter) <span style="color: #0000ff">throws</span> AlertException {
     barrier.checkAlert();
 
     <span style="color: #0000ff">if</span> (counter &gt; 100)
@@ -139,13 +137,12 @@ disruptor.handleEventsWith((Event&lt;T&gt; event, <span style="color: #2b91af">l
 }
 </code></pre></div>
 
-
 <p><a href="https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/locks/LockSupport.html#parkNanos-long-">LockSupport.parkNanos</a> 方法的作用简单而言即让当前线程睡眠 sleepTimeNs 纳秒。</p>
 <p>Disruptor 作为一个任务队列，自带一个线程池，线程池的线程工厂即构造方法传入的 factory，线程数量等于 <a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/dsl/Disruptor.java#L165">disruptor.handleEventsWith</a> 调用时传入的回调方法数量，handleEventsWith 的参数数量不定（<code>public final EventHandlerGroup&lt;T&gt; handleEventsWith(final EventHandler&lt;? super T&gt;... handlers)</code>）。</p>
 <p>18个 Disruptor 实例，每个实例有一个消费者线程，消费者线程不断检查队列中是否有新的 <code>Event&lt;T&gt;</code> 任务需要处理，如果有，则调用 EventHandler 回调方法进行处理，否则睡眠 sleepTimeNs 纳秒。</p>
 <p>到此，结合监控指标，可以大致猜测：由于 sleepTimeNs 较小，导致多个线程的状态不断在 <code>运行</code>、<code>睡眠</code>、<code>等待调度</code> 之间切换，线程上下文切换非常频繁。</p>
 <p>围绕 LockSupport.parkNanos 编写一个测试程序，来复现这个问题：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">import</span> java.util.concurrent.CountDownLatch;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">import</span> java.util.concurrent.CountDownLatch;
 <span style="color: #0000ff">import</span> java.util.concurrent.ExecutorService;
 <span style="color: #0000ff">import</span> java.util.concurrent.Executors;
 <span style="color: #0000ff">import</span> java.util.concurrent.locks.LockSupport;
@@ -166,7 +163,6 @@ disruptor.handleEventsWith((Event&lt;T&gt; event, <span style="color: #2b91af">l
   }
 }
 </code></pre></div>
-
 
 <p>在 3.2 GHz 6-Core Intel Core i7 配置 macOS 系统中，这个测试程序可以稳定地将 CPU 使用率控制在 700%+，如下 <code>top -pid [测试程序的进程 id]</code> 命令的输出：</p>
 <p><img alt="" src="https://i.loli.net/2020/07/14/Z6jixvuWY1yTnL4.jpg"></p>

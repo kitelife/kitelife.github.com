@@ -4,8 +4,8 @@
 
         <title>基于socket.io的实时消息推送</title>
         <meta charset="utf-8" />
-        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="有趣的技术 Full Atom Feed" />
-        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="有趣的技术 Full RSS Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="数据与智能 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="数据与智能 Full RSS Feed" />
 
 
         <!-- Mobile viewport optimized: j.mp/bplateviewport -->
@@ -37,7 +37,7 @@
         <div class="row">
 
           <header id="banner" class="body">
-                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">有趣的技术 <strong></strong></a></h1>
+                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">数据与智能 <strong></strong></a></h1>
           </header><!-- /#banner -->
 
             <div id="navigation" class="navbar row">
@@ -92,7 +92,7 @@
 <p><img alt="socket.io-push-server" src="https://raw.github.com/youngsterxyf/youngsterxyf.github.com/master/assets/uploads/pics/socket.io-push-server.png"></p>
 <p>当站点服务器(A)监测到资源数据更新事件发生时，先将数据推送到消息推送服务器(B)，B根据消息的类型以及消息的目标接收人来决定是否推送，如何推送。</p>
 <p>由于我们的Web后端是基于Yii框架实现，那么该如何实现A与B的socket.io服务通信呢？socket.io有自己的一套协议，如果自己实现PHP库来与socket.io服务交互，还有一些工作量。最终我们选择<a href="https://github.com/oncesk/elephant.io">elephant.io这个PHP库</a>，并将elephant.io封装为Yii框架的一个组件，实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">&lt;?php</span>
 
 $basePath = Yii::getPathOfAlias(<span style="color: #a31515">&#39;application.vendor.elephantio.lib.ElephantIO&#39;</span>);
 
@@ -152,9 +152,8 @@ $basePath = Yii::getPathOfAlias(<span style="color: #a31515">&#39;application.ve
 }
 </code></pre></div>
 
-
 <p>将该代码文件放在应用目录extensions下，然后为Yii添加如下配置项：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>&#39;components&#39; =&gt; array(
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>&#39;components&#39; =&gt; array(
     &#39;ElephantIO&#39; =&gt; array(
         &#39;class&#39; =&gt; &#39;application.extensions.extElephantIO&#39;,
         &#39;host&#39; =&gt; &#39;xxx&#39;,
@@ -164,9 +163,8 @@ $basePath = Yii::getPathOfAlias(<span style="color: #a31515">&#39;application.ve
 ),
 </code></pre></div>
 
-
 <p>当有资源数据变更事件产生时，如下调用向消息推送服务器发送消息：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$elephant = Yii::app()-&gt;ElephantIO;
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>$elephant = Yii::app()-&gt;ElephantIO;
 $elephant-&gt;setNameSpace(&#39;/message_namespace&#39;);
 $elephant-&gt;sendMsg(
     &#39;message_event_type&#39;,
@@ -174,7 +172,6 @@ $elephant-&gt;sendMsg(
 );       
 $elephant-&gt;close();
 </code></pre></div>
-
 
 <hr>
 <p>对于私有消息推送，如何判断用户当前是否在线？如何验证用户的身份？</p>

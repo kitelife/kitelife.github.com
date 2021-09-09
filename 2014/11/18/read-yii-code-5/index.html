@@ -4,8 +4,8 @@
 
         <title>Yii源码阅读笔记 - 模板引擎集成</title>
         <meta charset="utf-8" />
-        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="有趣的技术 Full Atom Feed" />
-        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="有趣的技术 Full RSS Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="数据与智能 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="数据与智能 Full RSS Feed" />
 
 
         <!-- Mobile viewport optimized: j.mp/bplateviewport -->
@@ -37,7 +37,7 @@
         <div class="row">
 
           <header id="banner" class="body">
-                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">有趣的技术 <strong></strong></a></h1>
+                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">数据与智能 <strong></strong></a></h1>
           </header><!-- /#banner -->
 
             <div id="navigation" class="navbar row">
@@ -89,7 +89,7 @@ Yii提供了一个直接可用的模板引擎组件类CPradoViewRenderer（见�
 <p>本文主要分析第二种方式的实现。</p>
 <h3>分析</h3>
 <p>Yii中对页面模板进行渲染可以调用<code>CController</code>类（见文件<code>yii/framework/web/CController.php</code>）的方法<code>render</code>，实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>/**
  * Renders a view with a layout.
  *
  * This method first calls {@link renderPartial} to render the view (called content view).
@@ -138,9 +138,8 @@ public function render($view,$data=null,$return=false)
 }
 </code></pre></div>
 
-
 <p>其中方法renderPartial的实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
  * Renders a view.
  *
  * The named view refers to a PHP script (resolved via {@link getViewFile})
@@ -185,10 +184,9 @@ public function renderPartial($view,$data=null,$return=false,$processOutput=fals
 }
 </code></pre></div>
 
-
 <p><code>renderPartial</code>方法并不会渲染出一个完整的页面，只是渲染页面的一部分，通常是主体部分，或者为AJAX请求渲染出响应结果。
 其中调用的getViewFile方法实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>public function getViewFile($viewName)
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>public function getViewFile($viewName)
 {
     // 如果未配置theme项，即表示不使用theme，那么getTheme方法返回null
     if(($theme=Yii::app()-&gt;getTheme())!==null &amp;&amp; ($viewFile=$theme-&gt;getViewFile($this,$viewName))!==false)
@@ -204,9 +202,8 @@ public function renderPartial($view,$data=null,$return=false,$processOutput=fals
 }
 </code></pre></div>
 
-
 <p>代码中<code>$this-&gt;getViewPath()</code>方法的实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>public function getViewPath()
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>public function getViewPath()
 {
     if(($module=$this-&gt;getModule())===null)
         $module=Yii::app();
@@ -216,9 +213,8 @@ public function renderPartial($view,$data=null,$return=false,$processOutput=fals
 }
 </code></pre></div>
 
-
 <p><code>getViewFile</code>中最后调用的方法<code>resolveViewFile</code>实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>public function resolveViewFile($viewName,$viewPath,$basePath,$moduleViewPath=null)
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>public function resolveViewFile($viewName,$viewPath,$basePath,$moduleViewPath=null)
 {
     // 连模板文件名都不给，还玩个屁啊
     if(empty($viewName))
@@ -264,9 +260,8 @@ public function renderPartial($view,$data=null,$return=false,$processOutput=fals
 }
 </code></pre></div>
 
-
 <p>方法<code>resolveViewFile</code>中最后调用的方法<code>findLocalizedFile</code>，定义于抽象类CApplication中，实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>public function findLocalizedFile($srcFile,$srcLanguage=null,$language=null)
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>public function findLocalizedFile($srcFile,$srcLanguage=null,$language=null)
 {
     if($srcLanguage===null)
         // sourceLanguage为public的属性，可配置，默认为en_us
@@ -286,10 +281,9 @@ public function renderPartial($view,$data=null,$return=false,$processOutput=fals
 }
 </code></pre></div>
 
-
 <p>从上述模板文件的寻找过程可以看到，最后返回的目标模板文件的路径是一个相对路径，以动态脚本根目录（默认为protected）开始。</p>
 <p>方法<code>renderPartial</code>中在得到目标模板文件相对路径后，即调用renderFile方法（定义于CBaseController类中）来渲染模板，该方法的实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>public function renderFile($viewFile,$data=null,$return=false)
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>public function renderFile($viewFile,$data=null,$return=false)
 {
     $widgetCount=count($this-&gt;_widgetStack);
     // Yii::app()-&gt;getViewRenderer() 获取模板引擎组件
@@ -309,9 +303,8 @@ public function renderPartial($view,$data=null,$return=false,$processOutput=fals
 }
 </code></pre></div>
 
-
 <p><code>renderFile</code>中<code>$content=$renderer-&gt;renderFile($this,$viewFile,$data,$return);</code>一行调用的renderFile方法，在抽象类CViewRenderer中定义如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>public function renderFile($context,$sourceFile,$data,$return)
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>public function renderFile($context,$sourceFile,$data,$return)
 {
     if(!is_file($sourceFile) || ($file=realpath($sourceFile))===false)
         throw new CException(Yii::t(&#39;yii&#39;,&#39;View file &quot;{file}&quot; does not exist.&#39;,array(&#39;{file}&#39;=&gt;$sourceFile)));
@@ -332,10 +325,9 @@ public function renderPartial($view,$data=null,$return=false,$processOutput=fals
 }
 </code></pre></div>
 
-
 <p>类<code>CController</code>的<code>render</code>方法在调用<code>renderPartial</code>得到渲染结果后，取得页面布局模板文件，然后将<code>renderPartial</code>的渲染结果作为数据渲染布局模板，从而得到一个完整HTML页面。
 获取布局模板文件路径的方法<code>getLayoutFile</code>实现如下所示（定义于类CController中）：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>public function getLayoutFile($layoutName)
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>public function getLayoutFile($layoutName)
 {
     if($layoutName===false)
         return false;
@@ -366,7 +358,6 @@ public function renderPartial($view,$data=null,$return=false,$processOutput=fals
     return $this-&gt;resolveViewFile($layoutName,$module-&gt;getLayoutPath(),Yii::app()-&gt;getViewPath(),$module-&gt;getViewPath());
 }
 </code></pre></div>
-
 
 <p>其逻辑与方法<code>getViewFile</code>类似。</p>
 <hr>

@@ -4,8 +4,8 @@
 
         <title>Yii源码阅读笔记 - 日志组件</title>
         <meta charset="utf-8" />
-        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="有趣的技术 Full Atom Feed" />
-        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="有趣的技术 Full RSS Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="数据与智能 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="数据与智能 Full RSS Feed" />
 
 
         <!-- Mobile viewport optimized: j.mp/bplateviewport -->
@@ -37,7 +37,7 @@
         <div class="row">
 
           <header id="banner" class="body">
-                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">有趣的技术 <strong></strong></a></h1>
+                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">数据与智能 <strong></strong></a></h1>
           </header><!-- /#banner -->
 
             <div id="navigation" class="navbar row">
@@ -77,15 +77,13 @@
             <div class="entry-content">
               <h3>使用</h3>
 <p>Yii框架为开发者提供两个静态方法进行日志记录：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>Yii::log($message, $level, $category);
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>Yii::log($message, $level, $category);
 Yii::trace($message, $category);
 </code></pre></div>
 
-
 <p>两者的区别在于后者依赖于应用开启调试模式，即定义常量YII_DEBUG：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>defined(&#39;YII_DEBUG&#39;) or define(&#39;YII_DEBUG&#39;, true);
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>defined(&#39;YII_DEBUG&#39;) or define(&#39;YII_DEBUG&#39;, true);
 </code></pre></div>
-
 
 <p>Yii::log方法的调用需要指定message的level和category。category是格式为“xxx.yyy.zzz”的路径别名字符串，比如日志是在yii/framework/web/CController类中记录的，那么category为“system.web.CController”。level应为以下几种之一：</p>
 <ul>
@@ -96,7 +94,7 @@ Yii::trace($message, $category);
 <li>error：用于记录重大错误日志</li>
 </ul>
 <p>要想日志真的输出到文件、邮件、web页面等地方，还得为应用添加如下配置：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>array(
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>array(
     ......
     &#39;preload&#39;=&gt;array(&#39;log&#39;),
     &#39;components&#39;=&gt;array(
@@ -120,13 +118,12 @@ Yii::trace($message, $category);
 )
 </code></pre></div>
 
-
 <p>注册使用名为log的组件，组件对应的类为CLogRouter（见类文件yii/framework/logging/CLogRouter.php），并且需要为组件提供参数routes，
 从目录yii/framework/logging可以看到可使用的日志输出目标路由有：<code>CDbLogRoute</code>（将日志记录到数据库中）、<code>CEmailLogRoute</code>（将日志发送到邮箱）、<code>CFileLogRoute</code>（记录到文件中）、<code>CWebLogRoute</code>（将日志显示在对应的网页中）、<code>CProfileLogRoute</code>，其中CProfileLogRoute直接继承自CWebLogRoute，其他路由类都直接继承自CLogRoute类。</p>
 <p>至于为什么需要对log组件进行preload，即预先实例化，后边再说。</p>
 <h3>分析</h3>
 <p>先来看看Yii::log和Yii::trace的实现：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
  * Writes a trace message.
  * This method will only log a message when the application is in debug mode.
  * @param string $msg message to be logged
@@ -175,9 +172,8 @@ public static function log($msg,$level=CLogger::LEVEL_INFO,$category=&#39;applic
 }
 </code></pre></div>
 
-
 <p>CLogger类的log方法实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
  * Logs a message.
  * Messages logged by this method may be retrieved back via {@link getLogs}.
  * @param string $message message to be logged
@@ -200,9 +196,8 @@ public function log($message,$level=&#39;info&#39;,$category=&#39;application&#3
 }
 </code></pre></div>
 
-
 <p>CLogger类的flush方法实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
  * Removes all recorded messages from the memory.
  * This method will raise an {@link onFlush} event.
  * The attached event handlers can process the log messages before they are removed.
@@ -233,9 +228,8 @@ public function onFlush($event)
 }
 </code></pre></div>
 
-
 <p>CComponent类的raiseEvent方法实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
  * Raises an event.
  * This method represents the happening of an event. It invokes
  * all attached handlers for the event.
@@ -285,12 +279,11 @@ public function raiseEvent($name,$event)
 }
 </code></pre></div>
 
-
 <p>看到这里，你可能会很奇怪怎么都没看到真正记录日志的代码呢？在与事件绑定的各个$handler里呢，这也是log组件的routes参数配置成数组的原因，$handle就是该数组中对应类的实例化对象的日志记录方法。</p>
 <p>那么这些$handle是在哪里绑定事件的呢？</p>
 <p>既然log组件对应的是CLogRouter类，那么来看看其实现。</p>
 <p>类CLogRouter继承自类CApplicationComponent。根据<a href="http://youngsterxyf.github.io/2014/11/13/read-yii-code-3/">Yii源码阅读笔记 - 组件集成</a>一文，可知组件初始化时实例化对象会调用init方法来完成一些初始化操作，类CLogRouter的init方法实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
  * Initializes this application component.
  * This method is required by the IApplicationComponent interface.
  */
@@ -311,9 +304,8 @@ public function init()
 }
 </code></pre></div>
 
-
 <p>而类CLogRouter的方法collectLogs和processLogs实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
  * Collects log messages from a logger.
  * This method is an event handler to the {@link CLogger::onFlush} event.
  * @param CEvent $event event parameter
@@ -351,9 +343,8 @@ public function processLogs($event)
 }
 </code></pre></div>
 
-
 <p>以类CWebLogRoute为例来看看日志路由类的方法collectLogs，该方法定义于类CLogRoute中，实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
  * Retrieves filtered log messages from logger for further processing.
  * @param CLogger $logger logger instance
  * @param boolean $processLogs whether to process the logs after they are collected from the logger
@@ -376,9 +367,8 @@ public function collectLogs($logger, $processLogs=false)
 }
 </code></pre></div>
 
-
 <p>而类CWebLogRoute的processLogs方法实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
  * Displays the log messages.
  * @param array $logs list of log messages
  */
@@ -421,19 +411,17 @@ protected function render($view,$data)
 }
 </code></pre></div>
 
-
 <p>从上述代码可以知道日志路由类是将日志信息按照一定格式显示在实际请求页面内容的下方。</p>
 <p>再来看看方法init中调用的两个attachEventHandler，它们的定义是同一个，定义在类CComponent中（类CLogger直接继承自类CComponent），实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>public function attachEventHandler($name,$handler)
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>public function attachEventHandler($name,$handler)
 {
     // 将事件处理器$handler加到处理器列表中，在事件发生时会逐个处理器触发执行
     $this-&gt;getEventHandlers($name)-&gt;add($handler);
 }
 </code></pre></div>
 
-
 <p>其中方法EventHandlers的实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
  * Returns the list of attached event handlers for an event.
  * @param string $name the event name
  * @return CList list of attached event handlers for the event
@@ -453,7 +441,6 @@ public function getEventHandlers($name)
             array(&#39;{class}&#39;=&gt;get_class($this), &#39;{event}&#39;=&gt;$name)));
 }
 </code></pre></div>
-
 
 <p>从上述分析可以知道所谓事件系统，其实就是将处理函数/对象方法放到与事件ID对应的一个列表中，然后在事件触发时，逐个调用执行这些函数/对象方法。</p>
 <p>Yii框架基于事件系统，可以做到同时将日志信息写到多个目标输出中。</p>

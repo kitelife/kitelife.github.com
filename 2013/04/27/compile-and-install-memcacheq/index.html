@@ -4,8 +4,8 @@
 
         <title>编译安装MemcacheQ</title>
         <meta charset="utf-8" />
-        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="有趣的技术 Full Atom Feed" />
-        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="有趣的技术 Full RSS Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="数据与智能 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="数据与智能 Full RSS Feed" />
 
 
         <!-- Mobile viewport optimized: j.mp/bplateviewport -->
@@ -37,7 +37,7 @@
         <div class="row">
 
           <header id="banner" class="body">
-                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">有趣的技术 <strong></strong></a></h1>
+                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">数据与智能 <strong></strong></a></h1>
           </header><!-- /#banner -->
 
             <div id="navigation" class="navbar row">
@@ -91,10 +91,9 @@
 <p>然后执行 1) <code>./configure -prefix=/usr/local/memcacheq -enable-threads</code>（<code>-prefix</code>选项指定将memcacheq安装到/usr/local/memcacheq目录下），2) <code>make</code> , 3) <code>sudo make install</code> 。</p>
 <p>4.
 在Linux上，memcacheq启动时要想成功动态链接BerkeleyDB和libevent的库文件，得先手动配置动态链接库查找路径：编辑文件<code>/etc/ld.so.conf</code>，在末尾添加两行：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/usr/local/lib
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>/usr/local/lib
 /usr/local/BerkeleyDB.5.0/lib
 </code></pre></div>
-
 
 <p>保存后，在命令行执行： <code>ldconfig</code>即可。</p>
 <hr>
@@ -103,21 +102,20 @@
 <p>memcacheq默认打开的网络端口为22201，可通过命令<code>netstat -tlnp</code>来查看。</p>
 <hr>
 <p>若想编写PHP程序来测试使用memcacheq，需要先安装配置PHP <a href="http://cn2.php.net/memcache">memcache扩展模块</a>，可先通过<code>php -m | grep memcache</code>来查看是否已安装。测试程序如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
-$memcache_obj = memcache_connect(<span style="color: #a31515">&#39;127.0.0.1&#39;</span>, 22201);
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #BC7A00">&lt;?php</span>
+<span style="color: #19177C">$memcache_obj</span> <span style="color: #666666">=</span> memcache_connect(<span style="color: #BA2121">&#39;127.0.0.1&#39;</span>, <span style="color: #666666">22201</span>);
 
-<span style="color: #008000">// push数据进入队列demoqueue1</span>
-$set_rs = memcache_set($memcache_obj, <span style="color: #a31515">&#39;demoqueue1&#39;</span>, <span style="color: #a31515">&#39;message body here&#39;</span>, 0, 0);
-var_dump($set_rs);
+<span style="color: #408080; font-style: italic">// push数据进入队列demoqueue1</span>
+<span style="color: #19177C">$set_rs</span> <span style="color: #666666">=</span> memcache_set(<span style="color: #19177C">$memcache_obj</span>, <span style="color: #BA2121">&#39;demoqueue1&#39;</span>, <span style="color: #BA2121">&#39;message body here&#39;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>);
+<span style="color: #008000">var_dump</span>(<span style="color: #19177C">$set_rs</span>);
 
-<span style="color: #008000">// 从队列demoqueue1中pop出数据</span>
-$get_rs = memcache_get($memcache_obj, <span style="color: #a31515">&#39;demoqueue1&#39;</span>);
-var_dump($get_rs);
+<span style="color: #408080; font-style: italic">// 从队列demoqueue1中pop出数据</span>
+<span style="color: #19177C">$get_rs</span> <span style="color: #666666">=</span> memcache_get(<span style="color: #19177C">$memcache_obj</span>, <span style="color: #BA2121">&#39;demoqueue1&#39;</span>);
+<span style="color: #008000">var_dump</span>(<span style="color: #19177C">$get_rs</span>);
 
-memcache_close($memcache_obj);
-<span style="color: #0000ff">?&gt;</span>
+memcache_close(<span style="color: #19177C">$memcache_obj</span>);
+<span style="color: #BC7A00">?&gt;</span>
 </code></pre></div>
-
 
 <h3>参考资料</h3>
 <ol>

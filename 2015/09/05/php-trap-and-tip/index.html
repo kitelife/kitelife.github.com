@@ -4,8 +4,8 @@
 
         <title>那些Python党踩过的PHP坑</title>
         <meta charset="utf-8" />
-        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="有趣的技术 Full Atom Feed" />
-        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="有趣的技术 Full RSS Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="数据与智能 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="数据与智能 Full RSS Feed" />
 
 
         <!-- Mobile viewport optimized: j.mp/bplateviewport -->
@@ -37,7 +37,7 @@
         <div class="row">
 
           <header id="banner" class="body">
-                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">有趣的技术 <strong></strong></a></h1>
+                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">数据与智能 <strong></strong></a></h1>
           </header><!-- /#banner -->
 
             <div id="navigation" class="navbar row">
@@ -86,7 +86,7 @@
 <p>PHP 实际并不区分索引数组和关联数组，都是一种有序映射。</p>
 </blockquote>
 <p>虽然很多时候索引数组和关联数组在表现上是不一样的，比如对以下两个数组进行序列化：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">&lt;?php</span>
 $arrA = <span style="color: #0000ff">array</span>(<span style="color: #a31515">&#39;a&#39;</span>, <span style="color: #a31515">&#39;b&#39;</span>, <span style="color: #a31515">&#39;c&#39;</span>);
 <span style="color: #0000ff">echo</span> json_encode($arrA) . <span style="color: #a31515">&quot;\n&quot;</span>;
 
@@ -94,17 +94,15 @@ $arrB = <span style="color: #0000ff">array</span>(<span style="color: #a31515">&
 <span style="color: #0000ff">echo</span> json_encode($arrB) . <span style="color: #a31515">&quot;\n&quot;</span>;
 </code></pre></div>
 
-
 <p>结果为：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">[&quot;a&quot;,&quot;b&quot;,&quot;c&quot;]</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">[&quot;a&quot;,&quot;b&quot;,&quot;c&quot;]</span>
 {&quot;a&quot;:1,&quot;b&quot;:2,&quot;c&quot;:3}
 </code></pre></div>
-
 
 <p>如果把序列化的结果作为JSON输出到前端，对于JS来说，是两种不同的数据结构：数组和对象。</p>
 <p>其中 <code>$arrA</code> 的初始化值是 <code>array(0 =&gt; 'a', 1 =&gt; 'b', 2 =&gt; 'c')</code> 的简写方式。</p>
 <p>再来看另一段程序：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$arrA = array(&#39;a&#39;, &#39;b&#39;, &#39;c&#39;);
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>$arrA = array(&#39;a&#39;, &#39;b&#39;, &#39;c&#39;);
 echo json_encode($arrA) . &quot;\n&quot;;
 
 $arrA = array(0 =&gt; &#39;a&#39;, 1 =&gt; &#39;b&#39;, 2 =&gt; &#39;c&#39;);
@@ -117,14 +115,12 @@ $arrA = array(0 =&gt; &#39;a&#39;, 2 =&gt; &#39;b&#39;, 3 =&gt; &#39;c&#39;);
 echo json_encode($arrA) . &quot;\n&quot;;
 </code></pre></div>
 
-
 <p>输出为：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">[&quot;a&quot;,&quot;b&quot;,&quot;c&quot;]</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">[&quot;a&quot;,&quot;b&quot;,&quot;c&quot;]</span>
 <span style="color: #0000ff">[&quot;a&quot;,&quot;b&quot;,&quot;c&quot;]</span>
 {&quot;1&quot;:&quot;a&quot;,&quot;2&quot;:&quot;b&quot;,&quot;3&quot;:&quot;c&quot;}
 {&quot;0&quot;:&quot;a&quot;,&quot;2&quot;:&quot;b&quot;,&quot;3&quot;:&quot;c&quot;}
 </code></pre></div>
-
 
 <p>从输出可以知道：仅当数组的key是从0开始的整数，并且key连续不间断，对其序列化的结果才是JS中的数组，也就是通常认为的PHP索引数组。</p>
 <p>这个坑可能在某些时候不小心就掉进去了，比如我曾对一个索引数组应用array_filter函数操作，然后json_encode序列化输出到前端，认为前端反序列化出来的是一个数组，没想到却是个对象。</p>
@@ -138,7 +134,7 @@ echo json_encode($arrA) . &quot;\n&quot;;
 <hr>
 <h4>引用传递</h4>
 <p>先来看一段代码：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">&lt;?php</span>
 <span style="color: #0000ff">class</span> <span style="color: #2b91af">CommonUtils</span> {
     <span style="color: #0000ff">static</span> $TASK_INTERVAL_SEMANTIC_INT_MAPPER = <span style="color: #0000ff">array</span>(
         <span style="color: #a31515">&#39;PER_DAY&#39;</span> =&gt; 86400,
@@ -152,7 +148,6 @@ $ha = array_pop(array_keys(CommonUtils::$TASK_INTERVAL_SEMANTIC_INT_MAPPER));
 var_dump($ha);
 </code></pre></div>
 
-
 <p>在 <code>error_reporting = E_ALL</code> 时，上面的代码会抛出一个严格模式错误：<code>Only variables should be passed by reference</code> 。这是为什么呢？</p>
 <p><a href="http://php.net/manual/zh/language.references.pass.php">PHP文档</a>中说明只有三种内容可以通过引用传递：</p>
 <ul>
@@ -160,7 +155,7 @@ var_dump($ha);
 <li>New 语句，例如 foo(new foobar())</li>
 <li>从函数中返回的引用，例如：</li>
 </ul>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">&lt;?php</span>
 <span style="color: #0000ff">function</span> &amp;bar()
 {
     $a = 5;
@@ -170,7 +165,6 @@ foo(bar());
 <span style="color: #0000ff">?&gt;</span>
 </code></pre></div>
 
-
 <p><strong>任何其它表达式都不能通过引用传递，结果未定义。</strong></p>
 <p>上面代码中 <code>$ha = array_pop(array_keys(CommonUtils::$TASK_INTERVAL_SEMANTIC_INT_MAPPER));</code> 一行，调用了 <code>array_pop</code> 和 <code>array_keys</code>，<code>array_pop</code> 的函数签名为：<code>mixed array_pop ( array &amp;$array )</code> ，但 <code>array_keys</code> 函数调用返回的是一个array值，不属于上面列出三种内容，所以会抛错。但 <strong>这个情况下这种错误</strong> 的级别不同版本的PHP也不一样：</p>
 <ul>
@@ -179,15 +173,13 @@ foo(bar());
 <li>自 PHP 7.0 起导致 notice 信息</li>
 </ul>
 <p>但如果直接给 <code>array_pop</code> 传递一个数组值，则会导致致命错误，如：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">&lt;?php</span>
 array_pop(<span style="color: #0000ff">array</span>(1, 2, 3, 4));
 </code></pre></div>
 
-
 <p>会抛出错误：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000">PHP Fatal error:  Only variables can be passed by reference in /Users/xiayf/test.php on line 2</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>PHP Fatal error:  Only variables can be passed by reference <span style="color: #0000ff">in</span> /Users/xiayf/test.php on line 2
 </code></pre></div>
-
 
 <p>文档：<a href="http://php.net/manual/zh/language.references.php">http://php.net/manual/zh/language.references.php</a></p>
             </div><!-- /.entry-content -->

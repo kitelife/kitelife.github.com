@@ -4,8 +4,8 @@
 
         <title>Yii源码阅读笔记 - 应用模块化</title>
         <meta charset="utf-8" />
-        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="有趣的技术 Full Atom Feed" />
-        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="有趣的技术 Full RSS Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="数据与智能 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="数据与智能 Full RSS Feed" />
 
 
         <!-- Mobile viewport optimized: j.mp/bplateviewport -->
@@ -37,7 +37,7 @@
         <div class="row">
 
           <header id="banner" class="body">
-                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">有趣的技术 <strong></strong></a></h1>
+                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">数据与智能 <strong></strong></a></h1>
           </header><!-- /#banner -->
 
             <div id="navigation" class="navbar row">
@@ -84,7 +84,7 @@
 <p>上图所示项目有一个名为“forum”的模块，该模块下也有自己的<code>components</code>、<code>controllers</code>、<code>models</code>、<code>views</code>、<code>extensions</code>目录，与一个普通的/不分模块的Yii框架Web应用的项目结构非常相似。</p>
 <p>Yii框架模块化应用的所有模块默认都是放在<code>protected/modules</code>目录下，每个模块的内容又各自放在以模块ID（如<code>forum</code>）为名称的子目录下，并且在模块子目录下要有一个模块类文件，如<code>ForumModule.php</code>，该类文件的命名规范是：模块ID首字母大写，然后拼接上字符串Module。</p>
 <p>模块化的应用需要在配置文件中配置<code>modules</code>一项 - 指定模块列表，示例如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>&#39;modules&#39; =&gt; array(
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>&#39;modules&#39; =&gt; array(
     &#39;forum&#39; =&gt; array(
         ...
     ),
@@ -92,7 +92,6 @@
     ...
 ),
 </code></pre></div>
-
 
 <p>每个模块的配置，可以只指定模块ID，也可以通过数组来指定额外的信息，如模块类、类实例化参数、params、components，以及子模块等等。Yii中模块是可以嵌套的，并且嵌套深度没有限制（有这个必要么？不要玩脱了啊）。</p>
 <p>对应某个模块中的控制器及控制器中的Action，路由中需要带模块ID前缀，如<code>moduleID/controllerID/actionID</code>，对于嵌套的模块，路由的形式则为<code>parentModuleID/childModuleID/controllerID/actionID</code>。路由分发逻辑会根据模块ID到配置信息中查找对应的模块，最终分发到某个模块的某个控制器的某个Action中做处理。</p>
@@ -107,7 +106,7 @@
 <hr>
 <p>由<a href="http://youngsterxyf.github.io/2014/11/04/read-yii-code-1/">Yii源码阅读笔记 - 请求处理基本流程</a>一文可知，应用配置的加载是抽象类CApplication的构造方法中调用方法<code>configure</code>来完成的，
 该方法定义于类<code>CModule</code>中，实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
  * Configures the module with the specified configuration.
  * @param array $config the configuration array
  */
@@ -121,9 +120,8 @@ public function configure($config)
 }
 </code></pre></div>
 
-
 <p>对于配置项“modules”的加载，则是通过类<code>CComponent</code>中的魔术方法<code>__set</code>最终调用类<code>CModule</code>中的<code>setModules</code>方法来完成的：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
  * Configures the sub-modules of this module.
  *
  * Call this method to declare sub-modules and configure them with their initial property values.
@@ -175,11 +173,10 @@ public function setModules($modules)
 }
 </code></pre></div>
 
-
 <p>可以看到模块列表配置信息加载后并未对模块类进行实例化初始化。</p>
 <hr>
 <p>请求处理在路由解析得到目标路由后，调用方法<code>createController</code>来做路由分发（这样表述可能不太严谨），该方法定义于类<code>CWebApplication</code>中，实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>public function createController($route,$owner=null)
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>public function createController($route,$owner=null)
 {
     // 如果未提供参数$owner，即未指定当前$route所属的模块，则默认当前应用对象为owner，可以将应用当做是顶级模块
     if($owner===null)
@@ -256,10 +253,9 @@ public function setModules($modules)
 }
 </code></pre></div>
 
-
 <p>从上述代码中可以看到，控制器类在实例化时需要传入该控制器类属于应用还是属于某个模块，这个归属记录在控制器类实例的_module属性中，如果属性值为null，则表示属于应用，_module属性定义于类<code>CController</code>中。</p>
 <p>我们来看看上述代码中调用的方法<code>getModule</code>的实现，这个方法调用的<code>$owner</code>可能是应用对象也可能是某个模块类对象，该方法定义于抽象类<code>CModule</code>中，实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>public function getModule($id)
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>public function getModule($id)
 {
     // 如果$id对应的module已经实例化好，则直接返回
     if(isset($this-&gt;_modules[$id]) || array_key_exists($id,$this-&gt;_modules))
@@ -284,10 +280,9 @@ public function setModules($modules)
 }
 </code></pre></div>
 
-
 <p>从上述代码可以看到，每个模块对象也会记录它的归属 - 属于应用对象，还是某个父模块对象。</p>
 <p>自定义模块类无需定义自己的构造方法，构造方法可以间接继承自抽象类<code>CModule</code>（<code>CWebModule</code>类并未定义自己的构造方法），其构造方法实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>public function __construct($id,$parent,$config=null)
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>public function __construct($id,$parent,$config=null)
 {
     $this-&gt;_id=$id;
     $this-&gt;_parentModule=$parent;
@@ -312,13 +307,12 @@ public function setModules($modules)
 }
 </code></pre></div>
 
-
 <p>这个方法与Web应用类的构造方法（定义于抽象类<code>CApplication</code>中）实现非常相似。这两个构造方法是调用同一个<code>configure</code>方法来加载配置的，所以很多“应用”的配置项，“模块”也都支持。
 从上述模块的构造方法中可以看到当前模块属于哪个父模块是记录在属性<code>_parentModule</code>中的，如果该属性值为null，则表示当前模块属于当前Web应用对象。这样通过获取控制器对象的<code>_module</code>属性值，继而获取模块对象的<code>_parentModule</code>属性值，就能知道整个归属关系链。</p>
 <hr>
 <p>注：<em>以下部分是对<a href="http://youngsterxyf.github.io/2014/11/04/read-yii-code-2/">Yii源码阅读笔记 - 路由解析</a>一文的补充。</em></p>
 <p>前面讨论的方法<code>createController</code>中还调用了方法<code>parseActionParams</code>来解析获取Action的ID，也定义于类<code>CWebApplication</code>中，实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
  * Parses a path info into an action ID and GET variables.
  * @param string $pathInfo path info
  * @return string action ID
@@ -341,9 +335,8 @@ protected function parseActionParams($pathInfo)
 }
 </code></pre></div>
 
-
 <p>其中调用的<code>parsePathInfo</code>方法，定义于类<code>CUrlManager</code>中，实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
  * Parses a path info into URL segments and saves them to $_GET and $_REQUEST.
  * @param string $pathInfo path info
  */
@@ -378,7 +371,6 @@ public function parsePathInfo($pathInfo)
 }
 </code></pre></div>
 
-
 <p>仔细看看上述代码的逻辑吧，累觉不爱啊！</p>
 <p>这个方法的作用：在目标路由去除Controller ID和Action ID两个部分后，从剩余部分中按一定规则解析出请求参数，那么规则是什么样的呢？</p>
 <p>举例来说，这个目标路由剩余部分的基本形式如下所示：</p>
@@ -387,7 +379,7 @@ public function parsePathInfo($pathInfo)
 <p>但<code>key</code>的形式可以数组取值的形式，如：</p>
 <p><code>name[x][y][z]</code></p>
 <p>这种形式的<code>key</code>对应的<code>value</code>会从原来的字符串转换成数组形式，如：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>array(
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>array(
     &#39;x&#39; =&gt; array(
         &#39;y&#39; =&gt; array(
             &#39;z&#39; =&gt; array(&#39;value&#39;)
@@ -396,11 +388,10 @@ public function parsePathInfo($pathInfo)
 )
 </code></pre></div>
 
-
 <p>多个<code>key</code>的<code>name</code>可以相同，如果相同，则会合并数组。如：</p>
 <p><code>name[a][b][c]/value1/name[A][B][C]/value2/name[x][y][z]/value3/name[a][X][f]/value4/</code></p>
 <p>最终会转换成请求参数项：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$_REQUEST[&#39;name&#39;] = $_GET[&#39;name&#39;] = array(
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>$_REQUEST[&#39;name&#39;] = $_GET[&#39;name&#39;] = array(
     &#39;a&#39; =&gt; array(
         &#39;b&#39; =&gt; array(
             &#39;c&#39; =&gt; array(&#39;value1&#39;),
@@ -421,7 +412,6 @@ public function parsePathInfo($pathInfo)
     ),
 );
 </code></pre></div>
-
 
 <p>擦，牛逼到死啊！</p>
             </div><!-- /.entry-content -->

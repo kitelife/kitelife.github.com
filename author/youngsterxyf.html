@@ -2,10 +2,10 @@
 <html lang="zh">
 <head>
 
-        <title>有趣的技术 - Articles by youngsterxyf</title>
+        <title>数据与智能 - Articles by youngsterxyf</title>
         <meta charset="utf-8" />
-        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="有趣的技术 Full Atom Feed" />
-        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="有趣的技术 Full RSS Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="数据与智能 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="数据与智能 Full RSS Feed" />
 
 
         <!-- Mobile viewport optimized: j.mp/bplateviewport -->
@@ -37,7 +37,7 @@
         <div class="row">
 
           <header id="banner" class="body">
-                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="..">有趣的技术 <strong></strong></a></h1>
+                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="..">数据与智能 <strong></strong></a></h1>
           </header><!-- /#banner -->
 
             <div id="navigation" class="navbar row">
@@ -151,7 +151,7 @@
                 <div class="entry-content"> <p>工作中涉及一些对外开放的无需特殊权限的API，用户会因为某些需求而通过程序来频繁访问这些API，导致系统的负载陡增，可能影响系统其它功能的正常使用。虽然做了一些优化让这种API尽可能地轻量，但仍然不够，因此需要进行访问频率的限制。</p>
 <p>由于这样的API并不多，所以我们并没有在Nginx这样的反向代理接入层中实现频率限制，而是API自己去实现，而且实现方案比较粗糙 - 基于Memcached的缓存自动过期特性。</p>
 <p>方案的PHP示例实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>// 每个IP一分钟10次
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>// 每个IP一分钟10次
 $limit = 10;
 
 $cache = new Memcached();
@@ -223,15 +223,13 @@ $cache-&gt;add …</code></pre></div> </div><!-- /.entry-content -->
 <li>继续往下读...</li>
 </ul>
 <p>我们先看看系统中是否存在defunct进程：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ ps -A | grep defunct
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>$ ps -A | grep defunct
 </code></pre></div>
 
-
 <p>假设得到的输出如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000">8328 ? 00:00:00 mono &lt;defunct&gt;</span>
-<span style="border: 1px solid #FF0000">8522 ? 00:00:01 mono &lt;defunct&gt;</span>
-<span style="border: 1px solid #FF0000">13132 ? 00:00:00 mono &lt;defunct&gt;</span>
-<span style="border: 1px solid #FF0000">25822 ? 00 …</span></code></pre></div> </div><!-- /.entry-content -->
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>8328 <span style="border: 1px solid #FF0000">?</span> 00:00:00 mono &lt;<span style="color: #0000ff">def</span>unct&gt;
+8522 <span style="border: 1px solid #FF0000">?</span> 00:00:01 mono &lt;<span style="color: #0000ff">def</span>unct&gt;
+13132 <span style="border: 1px solid #FF0000">?</span> 00:00:00 mono &lt;<span style="color: #0000ff">def …</span></code></pre></div> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2016/02/18/kill-defunct/" rel="bookmark" title="Permalink to 如何杀死defunct进程（译）">阅读全文</a></div>
                 <div class="row tag-row">
                     <span>标签: </span>
@@ -250,7 +248,7 @@ $cache-&gt;add …</code></pre></div> </div><!-- /.entry-content -->
                     <abbr class="published" title="2016-01-24T00:00:00+08:00"> 2016-01-24 Sun </abbr>
 <address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
                 <div class="entry-content"> <p>2015年，我们在青云平台上实现了“百度云观测”应用。青云应用本质上是一个iframe，在向iframe服务方发送的请求中会携带一些数据，青云平台会使用<code>Base64 URL</code>对这些数据进行编码，其提供的编码解码算法示例如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>// php版本
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>// php版本
 function base64_URL_encode($data) {
   return rtrim(strtr(base64_encode($data), &#39;+/&#39;, &#39;-_&#39;), &#39;=&#39;);
 }
@@ -259,7 +257,6 @@ function base64_URL_decode($data) {
                             strlen($data) % 4, &#39;=&#39;, STR_PAD_RIGHT));
 }
 </code></pre></div>
-
 
 <p>可以看出，<code>Base64 URL</code> 是标准Base64编码的一个变种，分别用 <code>-</code>、<code>_</code> 替换标准Base64编码结果中的 <code>+</code> 、 <code>/</code> ，并删除结果最后的 <code>=</code> 。</p>
 <p>在实现 “百度云观测” 青云应用时，我在想：</p>

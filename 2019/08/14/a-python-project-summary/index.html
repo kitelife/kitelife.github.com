@@ -4,8 +4,8 @@
 
         <title>一个 Python 小项目的小结</title>
         <meta charset="utf-8" />
-        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="有趣的技术 Full Atom Feed" />
-        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="有趣的技术 Full RSS Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="数据与智能 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="数据与智能 Full RSS Feed" />
 
 
         <!-- Mobile viewport optimized: j.mp/bplateviewport -->
@@ -37,7 +37,7 @@
         <div class="row">
 
           <header id="banner" class="body">
-                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">有趣的技术 <strong></strong></a></h1>
+                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">数据与智能 <strong></strong></a></h1>
           </header><!-- /#banner -->
 
             <div id="navigation" class="navbar row">
@@ -80,7 +80,7 @@
 <h3>1、并行化或异步化</h3>
 <p>部分请求处理逻辑，由于比较耗时，故使用线程池来加速，或者使用独立线程异步处理，或者先存储一个中间状态，由后台定时任务来完成实际的处理工作。对于异步处理结果，前端通过轮询来获取。</p>
 <p>线程池的使用，主要使用 map 方法：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">from</span> multiprocessing.dummy <span style="color: #0000ff">import</span> Pool
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">from</span> multiprocessing.dummy <span style="color: #0000ff">import</span> Pool
 
 input_list = [...]
 pool: Pool = Pool(len(input_list))
@@ -89,17 +89,15 @@ pool.close()
 pool.join()
 </code></pre></div>
 
-
 <p>独立线程异步处理：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">import</span> multiprocessing
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">import</span> multiprocessing
 
 p = multiprocessing.Process(target=func, args=(...))
 p.start()
 </code></pre></div>
 
-
 <p>定时任务，基于 apscheduler 库实现：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">from</span> apscheduler.schedulers.background <span style="color: #0000ff">import</span> BackgroundScheduler
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">from</span> apscheduler.schedulers.background <span style="color: #0000ff">import</span> BackgroundScheduler
 
 scheduler = BackgroundScheduler()
 
@@ -108,24 +106,21 @@ scheduler.add_join(func, <span style="color: #a31515">&#39;interval&#39;</span>,
 scheduler.start()
 </code></pre></div>
 
-
 <p>因为对于 Python 应用，通常会使用 gunicorn 这种 WSGI HTTP 服务器以多进程启动多个应用实例，提升请求吞吐能力。但是对于定时任务我们希望只有一个实例，对此，如果使用 gunicorn，可以基于它的 preload 机制来实现：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #008000"># wsgi.py</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000"># wsgi.py</span>
 <span style="color: #0000ff">import</span> app
 
 <span style="color: #0000ff">if</span> __name__ == <span style="color: #a31515">&quot;__main__&quot;</span>:
     app.run()
 </code></pre></div>
 
-
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000"># 注意其中的 --preload 参数</span>
-<span style="border: 1px solid #FF0000">gunicorn --workers=4 --preload --log-level=info --access-logfile=access.log -b 0.0.0.0:8080 wsgi:app</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000"># 注意其中的 --preload 参数</span>
+gunicorn --workers=4 --preload --log-level=info --access-logfile=access.log -b 0.0.0.0:8080 wsgi:app
 </code></pre></div>
-
 
 <p>preload 机制简单来说，就是 import app 类所在的模块及其依赖的各个模块（import 过程中会执行其中的语句），然后 fork 出多个进程，每个进程都执行 app.run()。</p>
 <h4>2、实现一些通用方案对异常进行捕获或重试</h4>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">def</span> exception_try(times: int = 3, sleep_then_try_seconds=<span style="color: #0000ff">None</span>):
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">def</span> exception_try(times: int = 3, sleep_then_try_seconds=<span style="color: #0000ff">None</span>):
     <span style="color: #0000ff">def</span> decorator(f):
         <span style="color: #0000ff">def</span> wrapper(*args, **kwargs):
             count = 0
@@ -144,16 +139,14 @@ scheduler.start()
     <span style="color: #0000ff">return</span> decorator
 </code></pre></div>
 
-
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>@exception_try(times=3, sleep_then_try_seconds=0.5)
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>@exception_try(times=3, sleep_then_try_seconds=0.5)
 <span style="color: #0000ff">def</span> connect(self):
     <span style="color: #0000ff">return</span> pymysql.connect(host=self.host, user=self.user, password=self.password, db=self.db, charset=self.charset)
 </code></pre></div>
 
-
 <p>这个装饰器方法用于实现异常重试，并且可以指定重试的时间间隔，实际使用下来效果较好。而且也不会因为 <code>try...except</code> 导致大块代码缩进。</p>
 <p><strong>确保数据库连接关闭（其它类似资源也可以这样实现）</strong></p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">def</span> with_db(db: Connection, exception_callback=<span style="color: #0000ff">None</span>):
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">def</span> with_db(db: Connection, exception_callback=<span style="color: #0000ff">None</span>):
     <span style="color: #0000ff">def</span> decorator(f):
         <span style="color: #0000ff">def</span> db_context(*a, **kw):
             <span style="color: #0000ff">try</span>:
@@ -172,15 +165,13 @@ scheduler.start()
     <span style="color: #0000ff">return</span> decorator
 </code></pre></div>
 
-
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #008000"># 将 conf.db.connect() 对象作为 delete_task_from_job_queue 的第一个参数注入，task_id 这个参数以不定参数的方式传入 delete_task_from_job_queue</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000"># 将 conf.db.connect() 对象作为 delete_task_from_job_queue 的第一个参数注入，task_id 这个参数以不定参数的方式传入 delete_task_from_job_queue</span>
 with_db(conf.db.connect())(delete_task_from_job_queue)(task_id)
 </code></pre></div>
 
-
 <p>这个装饰器方法用于确保数据库连接在异常发生也能正常关闭，防止资源泄露。</p>
 <h4>3、循环等待或超时</h4>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">class</span> <span style="color: #2b91af">TimeoutCondition</span>(object):
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">class</span> <span style="color: #2b91af">TimeoutCondition</span>(object):
 
     <span style="color: #0000ff">def</span> __init__(self, condition_func, timeout_seconds):
         self.condition = condition_func
@@ -200,8 +191,7 @@ with_db(conf.db.connect())(delete_task_from_job_queue)(task_id)
         <span style="color: #0000ff">return</span> self.cond_true <span style="color: #0000ff">and</span> <span style="color: #0000ff">not</span> self.timeout_false
 </code></pre></div>
 
-
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>cond = TimeoutCondition(<span style="color: #0000ff">lambda</span> : len(service_list) == 0, 5)
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>cond = TimeoutCondition(<span style="color: #0000ff">lambda</span> : len(service_list) == 0, 5)
 <span style="color: #0000ff">while</span> cond:
     time.sleep(1)
     service_list = get_service_list()
@@ -209,12 +199,11 @@ with_db(conf.db.connect())(delete_task_from_job_queue)(task_id)
     <span style="color: #0000ff">return</span> <span style="color: #0000ff">None</span>, <span style="color: #0000ff">None</span>
 </code></pre></div>
 
-
 <p><code>TimeoutCondition</code> 用于实现循环等待某个条件满足，但为了避免死循环，所以加一个超时条件判断。实例化参数第一个是原始的条件判断 lambda 语句，第二个是一个超时设置。另外，借助魔术方法 <code>__bool__</code>，让 TimeoutCondtion 的实例用起来像是一个布尔变量，调用 <code>is_timeout()</code> 方法可以区分循环等待退出是因为原始条件满足，还是超时退出的。</p>
 <h4>4、按部署环境配置应用的行为</h4>
 <p>应用在不同的环境（开发、测试、生产）中应该允许加载不同的配置，配置不同的行为。</p>
 <p>当前应用处于什么环境，可以通过环境变量来配置，应用初始化时最先检测当前处于什么环境，之后的初始化流程就可以依据环境配置来加载配置，定制应用行为。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #008000"># conf/__init__.py</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000"># conf/__init__.py</span>
 <span style="color: #0000ff">class</span> <span style="color: #2b91af">AppConfig</span>(object):
     app_env = os.getenv(<span style="color: #a31515">&#39;APP_ENV&#39;</span>, <span style="color: #a31515">&#39;development&#39;</span>)
     is_prod = app_env == <span style="color: #a31515">&#39;production&#39;</span>
@@ -247,34 +236,30 @@ conf = AppConfig()
         conf.__dict__[name] = value
 </code></pre></div>
 
-
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #008000"># 根据环境配置日志级别</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000"># 根据环境配置日志级别</span>
 log_level = logging.INFO <span style="color: #0000ff">if</span> conf.is_prod <span style="color: #0000ff">else</span> logging.DEBUG
 logging.basicConfig(format=consts.LOG_FORMAT, level=log_level)
 </code></pre></div>
 
-
 <h4>5、方便排查问题的日志输出</h4>
 <p>日志是问题排查的主要信息来源，所以日志记录得好不好，很关键。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #008000"># https://github.com/python/cpython/blob/3.7/Lib/logging/__init__.py#L457</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000"># https://github.com/python/cpython/blob/3.7/Lib/logging/__init__.py#L457</span>
 <span style="color: #008000"># 日志时间 - 日志级别 - 代码文件路径 - 行号 - 进程 ID - 线程名称 - 日志内容</span>
 LOG_FORMAT = <span style="color: #a31515">&#39;%(asctime)-15s - %(levelname)s - %(pathname)s - %(lineno)d - %(process)d - %(threadName)s - %(message)s&#39;</span>
 </code></pre></div>
 
-
 <h4>6、API 规范与异常提示</h4>
 <p>为了统一前端 API 响应处理，有必要对 API 响应体的结构指定标准。以我个人的习惯，所有从应用代码中返回的响应，HTTP 状态码都应该是 200，具体当前 API 请求成功还是失败，如果失败，失败的原因是什么都应该包含在响应体中，响应体大致的结构为：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>{
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>{
     &quot;code&quot;: <span style="border: 1px solid #FF0000">...</span>,
     &quot;msg&quot;: <span style="color: #a31515">&quot;...&quot;</span>,
     &quot;data&quot;: <span style="border: 1px solid #FF0000">...</span>
 }
 </code></pre></div>
 
-
 <p>code 表示请求处理失败时，data 字段可选，code 表示请求处理成功时，msg 字段可选。</p>
 <p>前端配合对响应体进行统一检测和提示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">import</span> { notification } from <span style="color: #a31515">&#39;antd&#39;</span>;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">import</span> { notification } <span style="color: #0000ff">from</span> <span style="color: #a31515">&#39;antd&#39;</span>;
 
 <span style="color: #0000ff">function</span> defaultHTTPCodeHandler(response) {
   <span style="color: #0000ff">if</span> (response.status &gt;= 400) {
@@ -300,9 +285,8 @@ LOG_FORMAT = <span style="color: #a31515">&#39;%(asctime)-15s - %(levelname)s - 
 }
 </code></pre></div>
 
-
 <p>并且统一封装发起请求的逻辑：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">export</span> <span style="color: #0000ff">function</span> corsFetch(url, init, httpCodeCallback, msgCodeCallback) {
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">export</span> <span style="color: #0000ff">function</span> corsFetch(url, init, httpCodeCallback, msgCodeCallback) {
   <span style="color: #0000ff">const</span> host = myHost();
   <span style="color: #0000ff">let</span> urlPrefix = host;
   <span style="color: #008000">// 自带 host，则不额外补充 host 前缀</span>
@@ -336,7 +320,6 @@ LOG_FORMAT = <span style="color: #a31515">&#39;%(asctime)-15s - %(levelname)s - 
   <span style="color: #0000ff">return</span> promise;
 }
 </code></pre></div>
-
 
 <p>其中为了方便本地开发测试，允许本地开发环境跨域访问测试环境（最好不要直接跨越访问生产环境），并且自动区分，corsFetch 调用方无感知。</p>
             </div><!-- /.entry-content -->

@@ -2,10 +2,10 @@
 <html lang="zh">
 <head>
 
-        <title>有趣的技术</title>
+        <title>数据与智能</title>
         <meta charset="utf-8" />
-        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="有趣的技术 Full Atom Feed" />
-        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="有趣的技术 Full RSS Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="数据与智能 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="数据与智能 Full RSS Feed" />
 
 
         <!-- Mobile viewport optimized: j.mp/bplateviewport -->
@@ -37,7 +37,7 @@
         <div class="row">
 
           <header id="banner" class="body">
-                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="..">有趣的技术 <strong></strong></a></h1>
+                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="..">数据与智能 <strong></strong></a></h1>
           </header><!-- /#banner -->
 
             <div id="navigation" class="navbar row">
@@ -77,7 +77,7 @@
 <p>工作中，我负责的系统是一个数据流处理服务 - 以流水线（pipeline）的形式分多级异步处理：</p>
 <p><img alt="" src="https://i.loli.net/2020/07/14/ONwUsrlhLmIq8BW.jpg"></p>
 <p>其中的 队列 实际使用的是 <a href="https://github.com/LMAX-Exchange/disruptor">Disruptor</a>，多生产者单消费者模式：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>ThreadFactory factory = <span style="color: #0000ff">new</span> ThreadFactoryBuilder().setNameFormat(name).setDaemon(<span style="color: #0000ff">true</span>).build();
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>ThreadFactory factory = <span style="color: #0000ff">new</span> ThreadFactoryBuilder().setNameFormat(name).setDaemon(<span style="color: #0000ff">true</span>).build();
 Disruptor&lt;Event&lt;T&gt;&gt;  disruptor = <span style="color: #0000ff">new</span> Disruptor&lt;&gt;(Event&lt;T&gt;::<span style="color: #0000ff">new</span>, bufferSize, factory, ProducerType.MULTI, <span style="color: #0000ff">new</span> SleepingWaitStrategy());
 disruptor.handleEventsWith((Event&lt;T&gt; event, <span style="color: #2b91af">long</span> sequence, <span style="color: #2b91af">boolean</span> endOfBatch) -&gt; {
     consumer.accept(event.value, endOfBatch);
@@ -128,26 +128,22 @@ disruptor.handleEventsWith((Event&lt;T&gt; event, <span style="color: #2b91af">l
 <address class="vcard author">By <a class="url fn" href="../author/xiayf.html">xiayf</a></address>                </footer><!-- /.post-info -->
                 <div class="entry-content"> <p>好记性不如烂笔头。</p>
 <p>1、Python 虚拟环境</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>virtualenv -p python3 ~/.py3
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>virtualenv -p python3 ~/.py3
 source ~/.py3/bin/activate
 </code></pre></div>
 
-
 <p>2、安装 Python 依赖包</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>pip install pelican[Markdown]   <span style="color: #008000"># 可能需要先安装 pip：easy_install pip</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>pip install pelican[Markdown]   <span style="color: #008000"># 可能需要先安装 pip：easy_install pip</span>
 </code></pre></div>
 
-
 <p>3、安装主题包</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>git clone https://github.com/youngsterxyf/my-pelican-themes.git ~/github/youngsterxyf/my-pelican-themes
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>git clone https://github.com/youngsterxyf/my-pelican-themes.git ~/github/youngsterxyf/my-pelican-themes
 pelican-themes -i ~/github/youngsterxyf/my-pelican-themes/my-gum
 </code></pre></div>
 
-
 <p>4、构建</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>make html
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>make html
 </code></pre></div>
-
 
 <hr>
 <p>另，更新艺术字体或字集：</p>
@@ -285,7 +281,7 @@ pelican-themes -i ~/github/youngsterxyf/my-pelican-themes/my-gum
 <h3>1、并行化或异步化</h3>
 <p>部分请求处理逻辑，由于比较耗时，故使用线程池来加速，或者使用独立线程异步处理，或者先存储一个中间状态，由后台定时任务来完成实际的处理工作。对于异步处理结果，前端通过轮询来获取。</p>
 <p>线程池的使用，主要使用 map 方法：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">from</span> multiprocessing.dummy <span style="color: #0000ff">import</span> Pool
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">from</span> multiprocessing.dummy <span style="color: #0000ff">import</span> Pool
 
 input_list = [...]
 pool: Pool = Pool(len(input_list))
@@ -293,7 +289,6 @@ pool.map(func, input_list)
 pool.close()
 pool.join()
 </code></pre></div>
-
 
 <p>独立线程异步处理 …</p> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2019/08/14/a-python-project-summary/" rel="bookmark" title="Permalink to 一个 Python 小项目的小结">阅读全文</a></div>

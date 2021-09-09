@@ -4,8 +4,8 @@
 
         <title>RESTful API设计的一点经验</title>
         <meta charset="utf-8" />
-        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="有趣的技术 Full Atom Feed" />
-        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="有趣的技术 Full RSS Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="数据与智能 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="数据与智能 Full RSS Feed" />
 
 
         <!-- Mobile viewport optimized: j.mp/bplateviewport -->
@@ -37,7 +37,7 @@
         <div class="row">
 
           <header id="banner" class="body">
-                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">有趣的技术 <strong></strong></a></h1>
+                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">数据与智能 <strong></strong></a></h1>
           </header><!-- /#banner -->
 
             <div id="navigation" class="navbar row">
@@ -104,22 +104,19 @@
 得出县一级的天气预报数据。</p>
 <p>如果仅通过一个API来提供全国所有县一级的天气数据，那么可以想象，这个API返回的数据有多大多复杂。并且用户可能需要更灵活的数据查询方式，如仅查询某个省份
 所有县一级的天气预报数据。那么可以将这个API拆分成以下几个API：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>GET /province/
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>GET /province/
 GET /province/{province_name_or_id}/county/
 GET /province/{province_name_or_id}/county/{county_id_or_name}/weather/
 </code></pre></div>
 
-
 <p>拆分之后，可能需要多次调用API才能获取到需要的数据，但每个API的定义都简单而明确。</p>
 <p>对于<code>GET /province/{province_name_or_id}/county/{county_id_or_name}/weather/</code>这个URL，可能有人觉得它过长了，可以缩短设计为：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>GET /county/{county_id_or_name}/weather/
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>GET /county/{county_id_or_name}/weather/
 </code></pre></div>
-
 
 <p>甚至</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>GET /{county_id_or_name}/weather/
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>GET /{county_id_or_name}/weather/
 </code></pre></div>
-
 
 <p>但我更倾向于归属关系明确的长URL，主要原因是，API服务器端可以验证province_name_or_id与county_id_or_name之间的归属关系，以避免用户错误地调用API，
 特别是当涉及增删改操作时。</p>
@@ -146,7 +143,7 @@ API就需要提供兼容方案。我们的兼容方案是：以POST谓词来替�
 <p>Yii框架默认的路由形式为：查询字符串r=xxx/yyy，其中xxx为控制器(controller)的名称，yyy为动作方法(action)的名称，这种路由形式对应Yii内部的get路由类型，
 因为是默认形式，所以无需额外配置。
 Yii另外提供一种名为path的路由形式，即使用URL的路径(path)部分来表达路由。要这种形式的路由需要额外配置Yii框架，如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>&#39;components&#39; =&gt; array(
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>&#39;components&#39; =&gt; array(
     &#39;urlManager&#39; =&gt; array(
         &#39;urlFormat&#39; =&gt; &#39;path&#39;,
         &#39;rules&#39; =&gt; array(
@@ -158,7 +155,6 @@ Yii另外提供一种名为path的路由形式，即使用URL的路径(path)部�
 ),
 </code></pre></div>
 
-
 <p>urlManager是Yii使用的路由管理组件，其中的urlFormat指明使用path形式的路由，rules中的每一数组项即一个路由配置，路由配置数组的第一个元素（如aaa/bbb），
 其中aaa为实际控制器类的名称(不包含Controller后缀)，bbb为控制器类aaa中实际动作方法的名称(不包含action前缀)，pattern元素指明当前路由配置项会处理的URL，
 xxx为控制器名称，yyy为动作方法名称，这里可以看出HTTP API URL中的控制器名称、动作方法名称可以和实际的控制器类名称、动作方法名称不一样。verb元素指明
@@ -166,7 +162,7 @@ xxx为控制器名称，yyy为动作方法名称，这里可以看出HTTP API UR
 <h5>兼容方案</h5>
 <p>对于兼容方案，POST谓词原本是用来“新增”资源，那么对于相同的URL，POST谓词可能已经被占用，也即意味着谓词“DELETE”或“PUT”的“POST”兼容方案的API请求，也会被Yii框架路由到“新增”资源的处理逻辑，那么需要在“新增”资源的控制器类的beforeAction方法中，通过检查查询字符串参数_method，重新将请求路由到正确的
 动作方法上，代码如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>protected function beforeAction($action)
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>protected function beforeAction($action)
 {
     $this-&gt;requestMethod = Yii::app()-&gt;request-&gt;getRequestType();
     // 兼容方案
@@ -189,39 +185,37 @@ xxx为控制器名称，yyy为动作方法名称，这里可以看出HTTP API UR
 }
 </code></pre></div>
 
-
 <h5>响应码</h5>
 <p>对于API可能用到的所有响应码及其说明，我们使用一个单独的类来集中管理，以避免API中硬编码响应码，以及避免代码重复。如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
-    <span style="color: #0000ff">class</span> <span style="color: #2b91af">CodeStatus</span> {
-        <span style="color: #0000ff">const</span> OK = 200; <span style="color: #008000">// 成功</span>
-        <span style="color: #0000ff">const</span> CREATED = 201; <span style="color: #008000">// 创建成功</span>
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #BC7A00">&lt;?php</span>
+    <span style="color: #008000; font-weight: bold">class</span> <span style="color: #0000FF; font-weight: bold">CodeStatus</span> {
+        <span style="color: #008000; font-weight: bold">const</span> <span style="color: #880000">OK</span> <span style="color: #666666">=</span> <span style="color: #666666">200</span>; <span style="color: #408080; font-style: italic">// 成功</span>
+        <span style="color: #008000; font-weight: bold">const</span> <span style="color: #880000">CREATED</span> <span style="color: #666666">=</span> <span style="color: #666666">201</span>; <span style="color: #408080; font-style: italic">// 创建成功</span>
 
-        <span style="color: #0000ff">const</span> REQUEST_WRONG = 400;
-        <span style="color: #0000ff">const</span> TOKEN_WRONG = 403; <span style="color: #008000">// token已过期或不存在</span>
-        <span style="color: #0000ff">const</span> NOT_FOUND = 404; <span style="color: #008000">// 资源不存在</span>
-        <span style="color: #0000ff">const</span> LACK_PARAM = 423; <span style="color: #008000">// 缺少必要的请求参数</span>
-        <span style="color: #0000ff">const</span> WRONG_PARAM = 425; <span style="color: #008000">// 请求参数不正确</span>
-        <span style="color: #0000ff">const</span> DUPLICATE_RESOURCE = 426; <span style="color: #008000">// 已经存在相同的资源</span>
+        <span style="color: #008000; font-weight: bold">const</span> <span style="color: #880000">REQUEST_WRONG</span> <span style="color: #666666">=</span> <span style="color: #666666">400</span>;
+        <span style="color: #008000; font-weight: bold">const</span> <span style="color: #880000">TOKEN_WRONG</span> <span style="color: #666666">=</span> <span style="color: #666666">403</span>; <span style="color: #408080; font-style: italic">// token已过期或不存在</span>
+        <span style="color: #008000; font-weight: bold">const</span> <span style="color: #880000">NOT_FOUND</span> <span style="color: #666666">=</span> <span style="color: #666666">404</span>; <span style="color: #408080; font-style: italic">// 资源不存在</span>
+        <span style="color: #008000; font-weight: bold">const</span> <span style="color: #880000">LACK_PARAM</span> <span style="color: #666666">=</span> <span style="color: #666666">423</span>; <span style="color: #408080; font-style: italic">// 缺少必要的请求参数</span>
+        <span style="color: #008000; font-weight: bold">const</span> <span style="color: #880000">WRONG_PARAM</span> <span style="color: #666666">=</span> <span style="color: #666666">425</span>; <span style="color: #408080; font-style: italic">// 请求参数不正确</span>
+        <span style="color: #008000; font-weight: bold">const</span> <span style="color: #880000">DUPLICATE_RESOURCE</span> <span style="color: #666666">=</span> <span style="color: #666666">426</span>; <span style="color: #408080; font-style: italic">// 已经存在相同的资源</span>
 
-        <span style="color: #0000ff">const</span> SYSTEM_ERROR = 500; <span style="color: #008000">// 系统异常</span>
+        <span style="color: #008000; font-weight: bold">const</span> <span style="color: #880000">SYSTEM_ERROR</span> <span style="color: #666666">=</span> <span style="color: #666666">500</span>; <span style="color: #408080; font-style: italic">// 系统异常</span>
 
-        ...
+        <span style="color: #666666">...</span>
 
-        <span style="color: #0000ff">public</span> <span style="color: #0000ff">static</span> $status_code = <span style="color: #0000ff">array</span>(
-            self::OK =&gt; <span style="color: #a31515">&#39;成功&#39;</span>,
-            self::CREATED =&gt; <span style="color: #a31515">&#39;创建成功&#39;</span>,
-            self::TOKEN_WRONG =&gt; <span style="color: #a31515">&#39;token已过期或不存在&#39;</span>,
-            self::LACK_PARAM =&gt; <span style="color: #a31515">&#39;缺少必要的请求参数&#39;</span>,
-            self::SYSTEM_ERROR =&gt; <span style="color: #a31515">&#39;系统异常&#39;</span>,
-            self::WRONG_PARAM =&gt; <span style="color: #a31515">&#39;请求参数不正确&#39;</span>,
-            self::DUPLICATE_RESOURCE =&gt; <span style="color: #a31515">&#39;已经存在相同的资源&#39;</span>,
-            self::NOT_FOUND =&gt; <span style="color: #a31515">&#39;资源不存在&#39;</span>,
-            ...
+        <span style="color: #008000; font-weight: bold">public</span> <span style="color: #008000; font-weight: bold">static</span> <span style="color: #19177C">$status_code</span> <span style="color: #666666">=</span> <span style="color: #008000; font-weight: bold">array</span>(
+            self<span style="color: #666666">::</span><span style="color: #7D9029">OK</span> <span style="color: #666666">=&gt;</span> <span style="color: #BA2121">&#39;成功&#39;</span>,
+            self<span style="color: #666666">::</span><span style="color: #7D9029">CREATED</span> <span style="color: #666666">=&gt;</span> <span style="color: #BA2121">&#39;创建成功&#39;</span>,
+            self<span style="color: #666666">::</span><span style="color: #7D9029">TOKEN_WRONG</span> <span style="color: #666666">=&gt;</span> <span style="color: #BA2121">&#39;token已过期或不存在&#39;</span>,
+            self<span style="color: #666666">::</span><span style="color: #7D9029">LACK_PARAM</span> <span style="color: #666666">=&gt;</span> <span style="color: #BA2121">&#39;缺少必要的请求参数&#39;</span>,
+            self<span style="color: #666666">::</span><span style="color: #7D9029">SYSTEM_ERROR</span> <span style="color: #666666">=&gt;</span> <span style="color: #BA2121">&#39;系统异常&#39;</span>,
+            self<span style="color: #666666">::</span><span style="color: #7D9029">WRONG_PARAM</span> <span style="color: #666666">=&gt;</span> <span style="color: #BA2121">&#39;请求参数不正确&#39;</span>,
+            self<span style="color: #666666">::</span><span style="color: #7D9029">DUPLICATE_RESOURCE</span> <span style="color: #666666">=&gt;</span> <span style="color: #BA2121">&#39;已经存在相同的资源&#39;</span>,
+            self<span style="color: #666666">::</span><span style="color: #7D9029">NOT_FOUND</span> <span style="color: #666666">=&gt;</span> <span style="color: #BA2121">&#39;资源不存在&#39;</span>,
+            <span style="color: #666666">...</span>
         );
     }
 </code></pre></div>
-
 
 <p>API中仅需使用CodeStatus类定义的常量成员即可（如CodeStatus::OK）。</p>
 <h3>推荐阅读</h3>

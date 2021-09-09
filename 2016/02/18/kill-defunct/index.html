@@ -4,8 +4,8 @@
 
         <title>如何杀死defunct进程（译）</title>
         <meta charset="utf-8" />
-        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="有趣的技术 Full Atom Feed" />
-        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="有趣的技术 Full RSS Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="数据与智能 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="数据与智能 Full RSS Feed" />
 
 
         <!-- Mobile viewport optimized: j.mp/bplateviewport -->
@@ -37,7 +37,7 @@
         <div class="row">
 
           <header id="banner" class="body">
-                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">有趣的技术 <strong></strong></a></h1>
+                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">数据与智能 <strong></strong></a></h1>
           </header><!-- /#banner -->
 
             <div id="navigation" class="navbar row">
@@ -84,29 +84,26 @@
 <li>继续往下读...</li>
 </ul>
 <p>我们先看看系统中是否存在defunct进程：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ ps -A | grep defunct
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>$ ps -A | grep defunct
 </code></pre></div>
-
 
 <p>假设得到的输出如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="border: 1px solid #FF0000">8328 ? 00:00:00 mono &lt;defunct&gt;</span>
-<span style="border: 1px solid #FF0000">8522 ? 00:00:01 mono &lt;defunct&gt;</span>
-<span style="border: 1px solid #FF0000">13132 ? 00:00:00 mono &lt;defunct&gt;</span>
-<span style="border: 1px solid #FF0000">25822 ? 00:00:00 ruby &lt;defunct&gt;</span>
-<span style="border: 1px solid #FF0000">28383 ? 00:00:00 ruby &lt;defunct&gt;</span>
-<span style="border: 1px solid #FF0000">18803 ? 00:00:00 ruby &lt;defunct&gt;</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>8328 <span style="border: 1px solid #FF0000">?</span> 00:00:00 mono &lt;<span style="color: #0000ff">def</span>unct&gt;
+8522 <span style="border: 1px solid #FF0000">?</span> 00:00:01 mono &lt;<span style="color: #0000ff">def</span>unct&gt;
+13132 <span style="border: 1px solid #FF0000">?</span> 00:00:00 mono &lt;<span style="color: #0000ff">def</span>unct&gt;
+25822 <span style="border: 1px solid #FF0000">?</span> 00:00:00 ruby &lt;<span style="color: #0000ff">def</span>unct&gt;
+28383 <span style="border: 1px solid #FF0000">?</span> 00:00:00 ruby &lt;<span style="color: #0000ff">def</span>unct&gt;
+18803 <span style="border: 1px solid #FF0000">?</span> 00:00:00 ruby &lt;<span style="color: #0000ff">def</span>unct&gt;
 </code></pre></div>
-
 
 <p>这意味着存在6个defunct进程：3个mono进程，以及3个ruby进程。这些进程之所以存在，可能是因为应用程序写得很烂或者用户做了不常见的操作，在我这，一定是我写的mono C#程序存在严重问题 :smile: 。</p>
 <p>现在，我们来看看这些进程的ID及其父进程ID：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>$ ps -ef | grep defunct | more
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>$ ps -ef | grep defunct | more
 </code></pre></div>
 
-
 <p>以上命令的输出如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>UID PID PPID ...
-<span style="color: #008000">---------------------------------------------------------------</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>UID PID PPID ...
+---------------------------------------------------------------
 
 kenno 8328 6757 0 Mar22 ? 00<span style="border: 1px solid #FF0000">:</span>00<span style="border: 1px solid #FF0000">:</span>00 [mono] &lt;defunct&gt;
 kenno 8522 6757 0 Mar22 ? 00<span style="border: 1px solid #FF0000">:</span>00<span style="border: 1px solid #FF0000">:</span>01 [mono] &lt;defunct&gt;
@@ -115,7 +112,6 @@ kenno 25822 25808 0 Mar27 ? 00<span style="border: 1px solid #FF0000">:</span>00
 kenno 28383 28366 0 Mar27 ? 00<span style="border: 1px solid #FF0000">:</span>00<span style="border: 1px solid #FF0000">:</span>00 [ruby] &lt;defunct&gt;
 kenno 18803 18320 0 Apr02 ? 00<span style="border: 1px solid #FF0000">:</span>00<span style="border: 1px solid #FF0000">:</span>00 [ruby] &lt;defunct&gt;
 </code></pre></div>
-
 
 <ul>
 <li>UID：用户ID</li>
@@ -132,7 +128,7 @@ kenno 18803 18320 0 Apr02 ? 00<span style="border: 1px solid #FF0000">:</span>00
 <hr>
 <p><strong>译注</strong></p>
 <p>执行命令 <code>ps aux | grep defunct</code>，如果进程为defunct，则其第8列为 <code>Z</code> 。如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">work</span>     13391  0.1  0.0      0     0 pts/0    Z    10<span style="border: 1px solid #FF0000">:</span>50   0<span style="border: 1px solid #FF0000">:</span>23 [python] &lt;defunct&gt;
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">work</span>     13391  0.1  0.0      0     0 pts/0    Z    10<span style="border: 1px solid #FF0000">:</span>50   0<span style="border: 1px solid #FF0000">:</span>23 [python] &lt;defunct&gt;
 <span style="color: #0000ff">work</span>     13393  0.0  0.0      0     0 pts/0    Z    10<span style="border: 1px solid #FF0000">:</span>50   0<span style="border: 1px solid #FF0000">:</span>15 [python] &lt;defunct&gt;
 <span style="color: #0000ff">work</span>     13394  0.0  0.0      0     0 pts/0    Z    10<span style="border: 1px solid #FF0000">:</span>50   0<span style="border: 1px solid #FF0000">:</span>15 [python] &lt;defunct&gt;
 <span style="color: #0000ff">work</span>     13395  0.1  0.0      0     0 pts/0    Z    10<span style="border: 1px solid #FF0000">:</span>50   0<span style="border: 1px solid #FF0000">:</span>28 [python] &lt;defunct&gt;

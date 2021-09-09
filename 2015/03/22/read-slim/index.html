@@ -4,8 +4,8 @@
 
         <title>Slim源码阅读笔记</title>
         <meta charset="utf-8" />
-        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="有趣的技术 Full Atom Feed" />
-        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="有趣的技术 Full RSS Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="数据与智能 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="数据与智能 Full RSS Feed" />
 
 
         <!-- Mobile viewport optimized: j.mp/bplateviewport -->
@@ -37,7 +37,7 @@
         <div class="row">
 
           <header id="banner" class="body">
-                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">有趣的技术 <strong></strong></a></h1>
+                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">数据与智能 <strong></strong></a></h1>
           </header><!-- /#banner -->
 
             <div id="navigation" class="navbar row">
@@ -92,15 +92,14 @@
 当系统/应用需要使用某个依赖组件时，容器根据配置信息构建一个组件对象返回给系统/应用。</p>
 <p>对于Web框架来说，基于Ioc容器可以将框架的功能拆解成多个组件，按需配置调用。</p>
 <p>Slim的IoC容器类为：<code>\Slim\Helper\Set</code>，以单例request为例，当调用request对象时<code>$app-&gt;request</code>，先触发Slim类的魔术方法<code>__get</code>，其实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>public function __get($name)
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>public function __get($name)
 {
     return $this-&gt;container-&gt;get($name);
 }
 </code></pre></div>
 
-
 <p>而容器类Set的get方法实现如下：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
  * Get data value with key
  * @param  string $key     The data key
  * @param  mixed  $default The value to return if data key does not exist
@@ -120,9 +119,8 @@ public function get($key, $default = null)
 }
 </code></pre></div>
 
-
 <p>我们再来看看单例组件的实现，以request为例：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>// 注册单例组件request
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>// 注册单例组件request
 $this-&gt;container-&gt;singleton(&#39;request&#39;, function ($c) {
     // request组件的实例化依赖于environment组件，
     // 而environment组件包含了$_SERVER以及进程标准输入的数据
@@ -130,9 +128,8 @@ $this-&gt;container-&gt;singleton(&#39;request&#39;, function ($c) {
 });
 </code></pre></div>
 
-
 <p>其中<code>singleton</code>方法的实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
  * Ensure a value or object will remain globally unique
  * @param  string   $key   The value or object name
  * @param  \Closure $value The closure that defines the object
@@ -153,13 +150,12 @@ public function singleton($key, $value)
 }
 </code></pre></div>
 
-
 <h4>中间件</h4>
 <p>Slim中的中间件分两种：应用级中间件、路由级中间件。</p>
 <p>应用中间件基于Rack协议实现，可以在应用对象调用之前或之后检查、分析、或修改应用环境变量、请求对象、响应对象。</p>
 <p>每个中间件类都继承自抽象类Middleware，且需要实现其抽象方法call。所有注册的中间件组成一个中间件栈，其结构类似于一个洋葱，先注册的中间件在里层，后注册的在外层，最里层的是应用对象自身，请求从外到里逐层进行处理，任何一层都可以根据条件直接响应请求或递归调用往里一层/下一个中间件。</p>
 <p>以中间件SessionCookie与MethodOverride为例，其call方法实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>// 中间件SessionCookie
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>// 中间件SessionCookie
 public function call()
 {
     // 加载session数据
@@ -193,10 +189,9 @@ public function call()
 }
 </code></pre></div>
 
-
 <hr>
 <p>路由级中间件可以是任何可被调用的东西（<code>is_callable</code>返回<code>true</code>）。在相关路由的回调触发之前，会逐个调用绑定到这个路由的所有路由级中间件，代码实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>// 路由类Route的dispatch方法：
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>// 路由类Route的dispatch方法：
 /**
  * Dispatch route
  *
@@ -219,10 +214,9 @@ public function dispatch()
 }
 </code></pre></div>
 
-
 <h4>路由匹配</h4>
 <p>先来看看Slim应用对象的call方法：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
  * Call
  *
  * This method finds and iterates all route objects that match the current request URI.
@@ -276,9 +270,8 @@ public function call()
 }
 </code></pre></div>
 
-
 <p>其中用于路由匹配的Router类的getMatchedRoutes方法实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
  * Return route objects that match the given HTTP method and URI
  * @param  string               $httpMethod   The HTTP method to match against
  * @param  string               $resourceUri  The resource URI to match against
@@ -306,9 +299,8 @@ public function getMatchedRoutes($httpMethod, $resourceUri, $reload = false)
 }
 </code></pre></div>
 
-
 <p>其中用于PATH_INFO匹配的Route类的matches方法实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
  * Matches URI?
  *
  * Parse this route&#39;s pattern, and then compare it to an HTTP resource URI
@@ -361,9 +353,8 @@ public function matches($resourceUri)
 }
 </code></pre></div>
 
-
 <p>其中正则搜索替换的回调方法matchesCallback的实现如下所示：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>/**
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
  * Convert a URL parameter (e.g. &quot;:id&quot;, &quot;:id+&quot;) into a regular expression
  * @param  array $m URL parameters
  * @return string       Regular expression for URL parameter
@@ -383,7 +374,6 @@ protected function matchesCallback($m)
     return &#39;(?P&lt;&#39; . $m[1] . &#39;&gt;[^/]+)&#39;;
 }
 </code></pre></div>
-
 
 <hr>
 <h4>实践</h4>

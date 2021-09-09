@@ -4,8 +4,8 @@
 
         <title>PHP最佳实践（译）</title>
         <meta charset="utf-8" />
-        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="有趣的技术 Full Atom Feed" />
-        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="有趣的技术 Full RSS Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="数据与智能 Full Atom Feed" />
+        <link href="http://youngsterxyf.github.io/feeds/rss.xml" type="application/rss+xml" rel="alternate" title="数据与智能 Full RSS Feed" />
 
 
         <!-- Mobile viewport optimized: j.mp/bplateviewport -->
@@ -37,7 +37,7 @@
         <div class="row">
 
           <header id="banner" class="body">
-                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">有趣的技术 <strong></strong></a></h1>
+                  <h1 style='font-family: "FZZJ-HGXSJW";'><a href="../../../..">数据与智能 <strong></strong></a></h1>
           </header><!-- /#banner -->
 
             <div id="navigation" class="navbar row">
@@ -135,7 +135,7 @@ PHP的悠久历史所造成的一些易混淆或不明确的低层次任务。</
 <p>对密码进行哈希最安全的方法是使用bcrypt算法。开源的phpass库以一个易于使用的类来提供
 该功能。</p>
 <p><strong>示例</strong></p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">&lt;?php</span>
 <span style="color: #008000">// Include the phpass library</span>
 <span style="color: #0000ff">require_once</span>(<span style="color: #a31515">&#39;phpass-03/PasswordHash.php&#39;</span>)
 
@@ -155,7 +155,6 @@ $hasher-&gt;CheckPassword(<span style="color: #a31515">&#39;my super cool passwo
 <span style="color: #0000ff">?&gt;</span>
 </code></pre></div>
 
-
 <p><strong>陷阱</strong></p>
 <ul>
 <li>许多资源可能推荐你在哈希之前对你的密码“加盐”。想法很好，但phpass在HashPassword()函数中已经对你的密码“加盐”了，这意味着你不需要自己“加盐”。</li>
@@ -172,53 +171,52 @@ $hasher-&gt;CheckPassword(<span style="color: #a31515">&#39;my super cool passwo
 <p>你应该使用PDO的预处理语句函数来帮助防范SQL注入攻击。使用函数<a href="http://php.net/manual/en/pdostatement.bindvalue.php">bindValue</a>来确保你的SQL免于一级SQL注入攻击。（虽然并不是100%安全的，查看进一步阅读获取更多细节。）在以前，这必须使用一些“魔术引号(magic
 quotes)”函数的组合来实现。PDO使得那堆东西不再需要。</p>
 <p><strong>示例</strong></p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
-<span style="color: #0000ff">try</span>{
-    <span style="color: #008000">// Create a new connection.</span>
-    <span style="color: #008000">// You&#39;ll probably want to replace hostname with localhost in the first parameter.</span>
-    <span style="color: #008000">// The PDO options we pass do the following:</span>
-    <span style="color: #008000">// \PDO::ATTR_ERRMODE enables exceptions for errors.  This is optional but can be handy.</span>
-    <span style="color: #008000">// \PDO::ATTR_PERSISTENT disables persistent connections, which can cause concurrency issues in certain cases.  See &quot;Gotchas&quot;.</span>
-    <span style="color: #008000">// \PDO::MYSQL_ATTR_INIT_COMMAND alerts the connection that we&#39;ll be passing UTF-8 data.</span>
-    <span style="color: #008000">// This may not be required depending on your configuration, but it&#39;ll save you headaches down the road</span>
-    <span style="color: #008000">// if you&#39;re trying to store Unicode strings in your database.  See &quot;Gotchas&quot;.</span>
-    $link = <span style="color: #0000ff">new</span> \PDO( <span style="color: #a31515">&#39;mysql:host=your-hostname;dbname=your-db&#39;</span>, 
-                        <span style="color: #a31515">&#39;your-username&#39;</span>, 
-                        <span style="color: #a31515">&#39;your-password&#39;</span>, 
-                        <span style="color: #0000ff">array</span>(
-                            \PDO::ATTR_ERRMODE =&gt; \PDO::ERRMODE_EXCEPTION, 
-                            \PDO::ATTR_PERSISTENT =&gt; <span style="color: #0000ff">false</span>, 
-                            \PDO::MYSQL_ATTR_INIT_COMMAND =&gt; <span style="color: #a31515">&#39;set names utf8mb4&#39;</span>
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #BC7A00">&lt;?php</span>
+<span style="color: #008000; font-weight: bold">try</span>{
+    <span style="color: #408080; font-style: italic">// Create a new connection.</span>
+    <span style="color: #408080; font-style: italic">// You&#39;ll probably want to replace hostname with localhost in the first parameter.</span>
+    <span style="color: #408080; font-style: italic">// The PDO options we pass do the following:</span>
+    <span style="color: #408080; font-style: italic">// \PDO::ATTR_ERRMODE enables exceptions for errors.  This is optional but can be handy.</span>
+    <span style="color: #408080; font-style: italic">// \PDO::ATTR_PERSISTENT disables persistent connections, which can cause concurrency issues in certain cases.  See &quot;Gotchas&quot;.</span>
+    <span style="color: #408080; font-style: italic">// \PDO::MYSQL_ATTR_INIT_COMMAND alerts the connection that we&#39;ll be passing UTF-8 data.</span>
+    <span style="color: #408080; font-style: italic">// This may not be required depending on your configuration, but it&#39;ll save you headaches down the road</span>
+    <span style="color: #408080; font-style: italic">// if you&#39;re trying to store Unicode strings in your database.  See &quot;Gotchas&quot;.</span>
+    <span style="color: #19177C">$link</span> <span style="color: #666666">=</span> <span style="color: #008000; font-weight: bold">new</span> \PDO( <span style="color: #BA2121">&#39;mysql:host=your-hostname;dbname=your-db&#39;</span>, 
+                        <span style="color: #BA2121">&#39;your-username&#39;</span>, 
+                        <span style="color: #BA2121">&#39;your-password&#39;</span>, 
+                        <span style="color: #008000; font-weight: bold">array</span>(
+                            \PDO<span style="color: #666666">::</span><span style="color: #7D9029">ATTR_ERRMODE</span> <span style="color: #666666">=&gt;</span> \PDO<span style="color: #666666">::</span><span style="color: #7D9029">ERRMODE_EXCEPTION</span>, 
+                            \PDO<span style="color: #666666">::</span><span style="color: #7D9029">ATTR_PERSISTENT</span> <span style="color: #666666">=&gt;</span> <span style="color: #008000; font-weight: bold">false</span>, 
+                            \PDO<span style="color: #666666">::</span><span style="color: #7D9029">MYSQL_ATTR_INIT_COMMAND</span> <span style="color: #666666">=&gt;</span> <span style="color: #BA2121">&#39;set names utf8mb4&#39;</span>
                         )
                     );
 
-    $handle = $link-&gt;prepare(<span style="color: #a31515">&#39;select Username from Users where UserId = ? or Username = ? limit ?&#39;</span>);
+    <span style="color: #19177C">$handle</span> <span style="color: #666666">=</span> <span style="color: #19177C">$link</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">prepare</span>(<span style="color: #BA2121">&#39;select Username from Users where UserId = ? or Username = ? limit ?&#39;</span>);
 
-    <span style="color: #008000">// PHP bug: if you don&#39;t specify PDO::PARAM_INT, PDO may enclose the argument in quotes.</span>
-    <span style="color: #008000">// This can mess up some MySQL queries that don&#39;t expect integers to be quoted.</span>
-    <span style="color: #008000">// See: https://bugs.php.net/bug.php?id=44639</span>
-    <span style="color: #008000">// If you&#39;re not sure whether the value you&#39;re passing is an integer, use the is_int() function.</span>
-    $handle-&gt;bindValue(1, 100, PDO::PARAM_INT);
-    $handle-&gt;bindValue(2, <span style="color: #a31515">&#39;Bilbo Baggins&#39;</span>);
-    $handle-&gt;bindValue(3, 5, PDO::PARAM_INT);
+    <span style="color: #408080; font-style: italic">// PHP bug: if you don&#39;t specify PDO::PARAM_INT, PDO may enclose the argument in quotes.</span>
+    <span style="color: #408080; font-style: italic">// This can mess up some MySQL queries that don&#39;t expect integers to be quoted.</span>
+    <span style="color: #408080; font-style: italic">// See: https://bugs.php.net/bug.php?id=44639</span>
+    <span style="color: #408080; font-style: italic">// If you&#39;re not sure whether the value you&#39;re passing is an integer, use the is_int() function.</span>
+    <span style="color: #19177C">$handle</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">bindValue</span>(<span style="color: #666666">1</span>, <span style="color: #666666">100</span>, PDO<span style="color: #666666">::</span><span style="color: #7D9029">PARAM_INT</span>);
+    <span style="color: #19177C">$handle</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">bindValue</span>(<span style="color: #666666">2</span>, <span style="color: #BA2121">&#39;Bilbo Baggins&#39;</span>);
+    <span style="color: #19177C">$handle</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">bindValue</span>(<span style="color: #666666">3</span>, <span style="color: #666666">5</span>, PDO<span style="color: #666666">::</span><span style="color: #7D9029">PARAM_INT</span>);
 
-    $handle-&gt;execute();
+    <span style="color: #19177C">$handle</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">execute</span>();
 
-    <span style="color: #008000">// Using the fetchAll() method might be too resource-heavy if you&#39;re selecting a truly massive amount of rows.</span>
-    <span style="color: #008000">// If that&#39;s the case, you can use the fetch() method and loop through each result row one by one.</span>
-    <span style="color: #008000">// You can also return arrays and other things instead of objects.  See the PDO documentation for details.</span>
-    $result = $handle-&gt;fetchAll(\PDO::FETCH_OBJ);
+    <span style="color: #408080; font-style: italic">// Using the fetchAll() method might be too resource-heavy if you&#39;re selecting a truly massive amount of rows.</span>
+    <span style="color: #408080; font-style: italic">// If that&#39;s the case, you can use the fetch() method and loop through each result row one by one.</span>
+    <span style="color: #408080; font-style: italic">// You can also return arrays and other things instead of objects.  See the PDO documentation for details.</span>
+    <span style="color: #19177C">$result</span> <span style="color: #666666">=</span> <span style="color: #19177C">$handle</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">fetchAll</span>(\PDO<span style="color: #666666">::</span><span style="color: #7D9029">FETCH_OBJ</span>);
 
-    <span style="color: #0000ff">foreach</span>($result <span style="color: #0000ff">as</span> $row){
-        <span style="color: #0000ff">print</span>($row-&gt;Username);
+    <span style="color: #008000; font-weight: bold">foreach</span>(<span style="color: #19177C">$result</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #19177C">$row</span>){
+        <span style="color: #008000; font-weight: bold">print</span>(<span style="color: #19177C">$row</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">Username</span>);
     }
 }
-<span style="color: #0000ff">catch</span>(\PDOException $ex){
-    <span style="color: #0000ff">print</span>($ex-&gt;getMessage());
+<span style="color: #008000; font-weight: bold">catch</span>(\PDOException <span style="color: #19177C">$ex</span>){
+    <span style="color: #008000; font-weight: bold">print</span>(<span style="color: #19177C">$ex</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">getMessage</span>());
 }
-<span style="color: #0000ff">?&gt;</span>
+<span style="color: #BC7A00">?&gt;</span>
 </code></pre></div>
-
 
 <p><strong>陷阱</strong></p>
 <ul>
@@ -274,24 +272,23 @@ Overfilow这个问题</a>。</li>
 <p>处理这个问题的正确方法是唯一地命名你的自动加载函数，然后使用<code>spl_autoload_register()</code>函数
 来注册它。该函数允许定义多个<code>__autoload()</code>这样的函数，因此你不必担心其他代码的<code>__autoload()</code>函数。</p>
 <p><strong>示例</strong></p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
-<span style="color: #008000">// First, define your auto-load function</span>
-<span style="color: #0000ff">function</span> MyAutoload($className){
-    <span style="color: #0000ff">include_once</span>($className . <span style="color: #a31515">&#39;.php&#39;</span>);
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #BC7A00">&lt;?php</span>
+<span style="color: #408080; font-style: italic">// First, define your auto-load function</span>
+<span style="color: #008000; font-weight: bold">function</span> <span style="color: #0000FF">MyAutoload</span>(<span style="color: #19177C">$className</span>){
+    <span style="color: #008000; font-weight: bold">include_once</span>(<span style="color: #19177C">$className</span> <span style="color: #666666">.</span> <span style="color: #BA2121">&#39;.php&#39;</span>);
 }
 
-<span style="color: #008000">// Next, register it with PHP</span>
-spl_autoload_register(<span style="color: #a31515">&#39;MyAutoload&#39;</span>);
+<span style="color: #408080; font-style: italic">// Next, register it with PHP</span>
+<span style="color: #008000">spl_autoload_register</span>(<span style="color: #BA2121">&#39;MyAutoload&#39;</span>);
 
-<span style="color: #008000">// Try it out!</span>
-<span style="color: #008000">// Since we haven&#39;t included a file defining the MyClass object, our</span>
-<span style="color: #008000">// auto-loader will kick in and include MyClass.php.</span>
-<span style="color: #008000">// For this example, assume the MyClass class is defined in the MyClass.php</span>
-<span style="color: #008000">// file.</span>
-$var = <span style="color: #0000ff">new</span> MyClass();
-<span style="color: #0000ff">?&gt;</span>
+<span style="color: #408080; font-style: italic">// Try it out!</span>
+<span style="color: #408080; font-style: italic">// Since we haven&#39;t included a file defining the MyClass object, our</span>
+<span style="color: #408080; font-style: italic">// auto-loader will kick in and include MyClass.php.</span>
+<span style="color: #408080; font-style: italic">// For this example, assume the MyClass class is defined in the MyClass.php</span>
+<span style="color: #408080; font-style: italic">// file.</span>
+<span style="color: #19177C">$var</span> <span style="color: #666666">=</span> <span style="color: #008000; font-weight: bold">new</span> MyClass();
+<span style="color: #BC7A00">?&gt;</span>
 </code></pre></div>
-
 
 <p><strong>进一步阅读</strong></p>
 <ul>
@@ -329,35 +326,34 @@ $var = <span style="color: #0000ff">new</span> MyClass();
 <li>define()可以在if()代码块中调用，但const不行。</li>
 </ol>
 <p><strong>示例</strong></p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
-<span style="color: #008000">// Let&#39;s see how the two methods treat namespaces</span>
-<span style="color: #0000ff">namespace</span> MiddleEarth\Creatures\Dwarves;
-<span style="color: #0000ff">const</span> GIMLI_ID = 1;
-define(<span style="color: #a31515">&#39;MiddleEarth\Creatures\Elves\LEGOLAS_ID&#39;</span>, 2);
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #BC7A00">&lt;?php</span>
+<span style="color: #408080; font-style: italic">// Let&#39;s see how the two methods treat namespaces</span>
+<span style="color: #008000; font-weight: bold">namespace</span> MiddleEarth\Creatures\Dwarves;
+<span style="color: #008000; font-weight: bold">const</span> <span style="color: #880000">GIMLI_ID</span> <span style="color: #666666">=</span> <span style="color: #666666">1</span>;
+<span style="color: #008000">define</span>(<span style="color: #BA2121">&#39;MiddleEarth\Creatures\Elves\LEGOLAS_ID&#39;</span>, <span style="color: #666666">2</span>);
 
-<span style="color: #0000ff">echo</span>(\MiddleEarth\Creatures\Dwarves\GIMLI_ID);  <span style="color: #008000">// 1</span>
-<span style="color: #0000ff">echo</span>(\MiddleEarth\Creatures\Elves\LEGOLAS_ID);  <span style="color: #008000">// 2; note that we used define()</span>
+<span style="color: #008000; font-weight: bold">echo</span>(\MiddleEarth\Creatures\Dwarves\GIMLI_ID);  <span style="color: #408080; font-style: italic">// 1</span>
+<span style="color: #008000; font-weight: bold">echo</span>(\MiddleEarth\Creatures\Elves\LEGOLAS_ID);  <span style="color: #408080; font-style: italic">// 2; note that we used define()</span>
 
-<span style="color: #008000">// Now let&#39;s declare some bit-shifted constants representing ways to enter Mordor.</span>
-define(<span style="color: #a31515">&#39;TRANSPORT_METHOD_SNEAKING&#39;</span>, 1 &lt;&lt; 0); <span style="color: #008000">// OK!</span>
-<span style="color: #0000ff">const</span> TRANSPORT_METHOD_WALKING = 1 &lt;&lt; 1; <span style="color: #008000">//Compile error! const can&#39;t use expressions as values</span>
+<span style="color: #408080; font-style: italic">// Now let&#39;s declare some bit-shifted constants representing ways to enter Mordor.</span>
+<span style="color: #008000">define</span>(<span style="color: #BA2121">&#39;TRANSPORT_METHOD_SNEAKING&#39;</span>, <span style="color: #666666">1</span> <span style="color: #666666">&lt;&lt;</span> <span style="color: #666666">0</span>); <span style="color: #408080; font-style: italic">// OK!</span>
+<span style="color: #008000; font-weight: bold">const</span> <span style="color: #880000">TRANSPORT_METHOD_WALKING</span> <span style="color: #666666">=</span> <span style="color: #666666">1</span> <span style="color: #666666">&lt;&lt;</span> <span style="color: #666666">1</span>; <span style="color: #408080; font-style: italic">//Compile error! const can&#39;t use expressions as values</span>
 
-<span style="color: #008000">// Next, conditional constants.</span>
-define(<span style="color: #a31515">&#39;HOBBITS_FRODO_ID&#39;</span>, 1);
+<span style="color: #408080; font-style: italic">// Next, conditional constants.</span>
+<span style="color: #008000">define</span>(<span style="color: #BA2121">&#39;HOBBITS_FRODO_ID&#39;</span>, <span style="color: #666666">1</span>);
 
-<span style="color: #0000ff">if</span>($isGoingToMordor){
-    define(<span style="color: #a31515">&#39;TRANSPORT_METHOD&#39;</span>, TRANSPORT_METHOD_SNEAKING); <span style="color: #008000">// OK!</span>
-    <span style="color: #0000ff">const</span> PARTY_LEADER_ID = HOBBITS_FRODO_ID <span style="color: #008000">// Compile error: const can&#39;t be used in an if block</span>
+<span style="color: #008000; font-weight: bold">if</span>(<span style="color: #19177C">$isGoingToMordor</span>){
+    <span style="color: #008000">define</span>(<span style="color: #BA2121">&#39;TRANSPORT_METHOD&#39;</span>, TRANSPORT_METHOD_SNEAKING); <span style="color: #408080; font-style: italic">// OK!</span>
+    <span style="color: #008000; font-weight: bold">const</span> <span style="color: #880000">PARTY_LEADER_ID</span> <span style="color: #666666">=</span> HOBBITS_FRODO_ID <span style="color: #408080; font-style: italic">// Compile error: const can&#39;t be used in an if block</span>
 }
 
-<span style="color: #008000">// Finally, class constants</span>
-<span style="color: #0000ff">class</span> <span style="color: #2b91af">OneRing</span>{
-    <span style="color: #0000ff">const</span> MELTING_POINT_DEGREES = 1000000; <span style="color: #008000">// OK!</span>
-    define(<span style="color: #a31515">&#39;SHOW_ELVISH_DEGREES&#39;</span>, 200); <span style="color: #008000">// Compile error: can&#39;t use define() within a class</span>
+<span style="color: #408080; font-style: italic">// Finally, class constants</span>
+<span style="color: #008000; font-weight: bold">class</span> <span style="color: #0000FF; font-weight: bold">OneRing</span>{
+    <span style="color: #008000; font-weight: bold">const</span> <span style="color: #880000">MELTING_POINT_DEGREES</span> <span style="color: #666666">=</span> <span style="color: #666666">1000000</span>; <span style="color: #408080; font-style: italic">// OK!</span>
+    <span style="color: #008000">define</span>(<span style="color: #BA2121">&#39;SHOW_ELVISH_DEGREES&#39;</span>, <span style="color: #666666">200</span>); <span style="color: #408080; font-style: italic">// Compile error: can&#39;t use define() within a class</span>
 }
-<span style="color: #0000ff">?&gt;</span>
+<span style="color: #BC7A00">?&gt;</span>
 </code></pre></div>
-
 
 <p>因为define()更加灵活，你应该使用它以避免一些令人头疼的事情，除非你明确地需要类
 常量。使用const通常会产生更加可读的代码，但是以牺牲灵活性为代价的。</p>
@@ -382,9 +378,8 @@ APC是PHP项目官方支持的，最为活跃，也最容易安装。它也提�
 的持久化键-值对存储，因此你应使用它。</p>
 <p><strong>安装APC</strong></p>
 <p>在Ubuntu 12.04上你可以通过在终端中执行以下命令来安装APC：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>user@localhost: sudo apt-get install php-apc
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>user@localhost: sudo apt-get install php-apc
 </code></pre></div>
-
 
 <p>除此之外，不需要进一步的配置。</p>
 <p><strong>将APC作为一个持久化键-值存储系统来使用</strong></p>
@@ -393,26 +388,25 @@ APC是集成到PHP核心的，因此你不需要在服务器上维护另一个�
 上的工作很活跃。但从另一方面来说，APC并不是一个分布式缓存，如果你需要这个特性，你就
 必须使用memcached了。</p>
 <p><strong>示例</strong></p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
-<span style="color: #008000">// Store some values in the APC cache.  We can optionally pass a time-to-live, </span>
-<span style="color: #008000">// but in this example the values will live forever until they&#39;re garbage-collected by APC.</span>
-apc_store(<span style="color: #a31515">&#39;username-1532&#39;</span>, <span style="color: #a31515">&#39;Frodo Baggins&#39;</span>);
-apc_store(<span style="color: #a31515">&#39;username-958&#39;</span>, <span style="color: #a31515">&#39;Aragorn&#39;</span>);
-apc_store(<span style="color: #a31515">&#39;username-6389&#39;</span>, <span style="color: #a31515">&#39;Gandalf&#39;</span>);
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #BC7A00">&lt;?php</span>
+<span style="color: #408080; font-style: italic">// Store some values in the APC cache.  We can optionally pass a time-to-live, </span>
+<span style="color: #408080; font-style: italic">// but in this example the values will live forever until they&#39;re garbage-collected by APC.</span>
+<span style="color: #008000">apc_store</span>(<span style="color: #BA2121">&#39;username-1532&#39;</span>, <span style="color: #BA2121">&#39;Frodo Baggins&#39;</span>);
+<span style="color: #008000">apc_store</span>(<span style="color: #BA2121">&#39;username-958&#39;</span>, <span style="color: #BA2121">&#39;Aragorn&#39;</span>);
+<span style="color: #008000">apc_store</span>(<span style="color: #BA2121">&#39;username-6389&#39;</span>, <span style="color: #BA2121">&#39;Gandalf&#39;</span>);
 
-<span style="color: #008000">// After storing these values, any PHP script can access them, no matter when it&#39;s run!</span>
-$value = apc_fetch(<span style="color: #a31515">&#39;username-958&#39;</span>, $success);
-<span style="color: #0000ff">if</span>($success === <span style="color: #0000ff">true</span>)
-    <span style="color: #0000ff">print</span>($value); <span style="color: #008000">// Aragorn</span>
+<span style="color: #408080; font-style: italic">// After storing these values, any PHP script can access them, no matter when it&#39;s run!</span>
+<span style="color: #19177C">$value</span> <span style="color: #666666">=</span> <span style="color: #008000">apc_fetch</span>(<span style="color: #BA2121">&#39;username-958&#39;</span>, <span style="color: #19177C">$success</span>);
+<span style="color: #008000; font-weight: bold">if</span>(<span style="color: #19177C">$success</span> <span style="color: #666666">===</span> <span style="color: #008000; font-weight: bold">true</span>)
+    <span style="color: #008000; font-weight: bold">print</span>(<span style="color: #19177C">$value</span>); <span style="color: #408080; font-style: italic">// Aragorn</span>
 
-$value = apc_fetch(<span style="color: #a31515">&#39;username-1&#39;</span>, $success); <span style="color: #008000">// $success will be set to boolean false, because this key doesn&#39;t exist.</span>
-<span style="color: #0000ff">if</span>($success !== <span style="color: #0000ff">true</span>) <span style="color: #008000">// Note the !==, this checks for true boolean false, not &quot;falsey&quot; values like 0 or empty string.</span>
-    <span style="color: #0000ff">print</span>(<span style="color: #a31515">&#39;Key not found&#39;</span>);
+<span style="color: #19177C">$value</span> <span style="color: #666666">=</span> <span style="color: #008000">apc_fetch</span>(<span style="color: #BA2121">&#39;username-1&#39;</span>, <span style="color: #19177C">$success</span>); <span style="color: #408080; font-style: italic">// $success will be set to boolean false, because this key doesn&#39;t exist.</span>
+<span style="color: #008000; font-weight: bold">if</span>(<span style="color: #19177C">$success</span> <span style="color: #666666">!==</span> <span style="color: #008000; font-weight: bold">true</span>) <span style="color: #408080; font-style: italic">// Note the !==, this checks for true boolean false, not &quot;falsey&quot; values like 0 or empty string.</span>
+    <span style="color: #008000; font-weight: bold">print</span>(<span style="color: #BA2121">&#39;Key not found&#39;</span>);
 
-apc_delete(<span style="color: #a31515">&#39;username-958&#39;</span>); <span style="color: #008000">// This key will no longer be available.</span>
-<span style="color: #0000ff">?&gt;</span>
+<span style="color: #008000">apc_delete</span>(<span style="color: #BA2121">&#39;username-958&#39;</span>); <span style="color: #408080; font-style: italic">// This key will no longer be available.</span>
+<span style="color: #BC7A00">?&gt;</span>
 </code></pre></div>
-
 
 <p><strong>陷阱</strong></p>
 <ul>
@@ -441,9 +435,8 @@ APC得到PHP项目的支持，具备很多和Memcached相同的功能，并且�
 <p>在安装Memcached服务器之后，需要安装Memcached客户端库。没有该库，PHP脚本就没法与
 Memcached服务器通信。</p>
 <p>在Ubuntu 12.04上，你可以使用如下命令来安装Memcached客户端库：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>user@localhost: sudo apt-get install php5-memcached
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>user@localhost: sudo apt-get install php5-memcached
 </code></pre></div>
-
 
 <p><strong>使用APC作为替代</strong></p>
 <p>查看<a href="https://phpbestpractices.org/#opcode-cache">opcode缓存一节</a>阅读更多与使用APC作为
@@ -484,16 +477,15 @@ Apache将请求发送到这些端口来处理PHP的执行。由于这些库限�
 <p>如下示例是针对Apache 2.2.22的，但PHP-FPM也能用于其他web服务器如Nginx。</p>
 <p><strong>安装PHP-FPM和Apache</strong></p>
 <p>在Ubuntu 12.04上你可以使用如下命令安装PHP-FPM和Apache：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>user@localhost: sudo apt-get install apache2-mpm-worker
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>user@localhost: sudo apt-get install apache2-mpm-worker
 libapache2-mod-fastcgi php5-fpm
 user@localhost: sudo a2enmod actions alias fastcgi
 </code></pre></div>
 
-
 <p>注意我们<em>必须</em>使用apache2-mpm-worker，而不是apache2-mpm-prefork或apache2-mpm-threaded。</p>
 <p>接下来配置Aapache虚拟主机将PHP请求路由到PHP-FPM进程。将如下配置语句放入Apache
 配置文件（在Ubuntu 12.04上默认配置文件是/etc/apache2/sites-available/default）。</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>&lt;VirtualHost *:80&gt;
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>&lt;VirtualHost *:80&gt;
     AddHandler php5-fcgi .php
     Action php5-fcgi /php5-fcgi
     Alias /php5-fcgi /usr/lib/cgi-bin/php5-fcgi
@@ -501,12 +493,10 @@ user@localhost: sudo a2enmod actions alias fastcgi
 &lt;/VirtualHost&gt;
 </code></pre></div>
 
-
 <p>最后，重启Apache和FPM进程：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code>user@localhost: sudo service apache2 restart &amp;&amp; sudo service php5-fpm
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>user@localhost: sudo service apache2 restart &amp;&amp; sudo service php5-fpm
 restart
 </code></pre></div>
-
 
 <p><strong>进一步阅读</strong></p>
 <ul>
@@ -527,38 +517,37 @@ restart
 成熟的开源库，为安全地发送邮件提供一个易用的接口。它关注可能陷阱，这样你可以专注
 于更重要的事情。</p>
 <p><strong>示例</strong></p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
-<span style="color: #008000">// Include the PHPMailer library</span>
-<span style="color: #0000ff">require_once</span>(<span style="color: #a31515">&#39;phpmailer-5.1/class.phpmailer.php&#39;</span>);
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #BC7A00">&lt;?php</span>
+<span style="color: #408080; font-style: italic">// Include the PHPMailer library</span>
+<span style="color: #008000; font-weight: bold">require_once</span>(<span style="color: #BA2121">&#39;phpmailer-5.1/class.phpmailer.php&#39;</span>);
 
-<span style="color: #008000">// Passing &#39;true&#39; enables exceptions.  This is optional and defaults to false.</span>
-$mailer = <span style="color: #0000ff">new</span> PHPMailer(<span style="color: #0000ff">true</span>);
+<span style="color: #408080; font-style: italic">// Passing &#39;true&#39; enables exceptions.  This is optional and defaults to false.</span>
+<span style="color: #19177C">$mailer</span> <span style="color: #666666">=</span> <span style="color: #008000; font-weight: bold">new</span> PHPMailer(<span style="color: #008000; font-weight: bold">true</span>);
 
-<span style="color: #008000">// Send a mail from Bilbo Baggins to Gandalf the Grey</span>
+<span style="color: #408080; font-style: italic">// Send a mail from Bilbo Baggins to Gandalf the Grey</span>
 
-<span style="color: #008000">// Set up to, from, and the message body.  The body doesn&#39;t have to be HTML;</span>
-<span style="color: #008000">// check the PHPMailer documentation for details.</span>
-$mailer-&gt;Sender = <span style="color: #a31515">&#39;bbaggins@example.com&#39;</span>;
-$mailer-&gt;AddReplyTo(<span style="color: #a31515">&#39;bbaggins@example.com&#39;</span>, <span style="color: #a31515">&#39;Bilbo Baggins&#39;</span>);
-$mailer-&gt;SetFrom(<span style="color: #a31515">&#39;bbaggins@example.com&#39;</span>, <span style="color: #a31515">&#39;Bilbo Baggins&#39;</span>);
-$mailer-&gt;AddAddress(<span style="color: #a31515">&#39;gandalf@example.com&#39;</span>);
-$mailer-&gt;Subject = <span style="color: #a31515">&#39;The finest weed in the South Farthing&#39;</span>;
-$mailer-&gt;MsgHTML(<span style="color: #a31515">&#39;&lt;p&gt;You really must try it, Gandalf!&lt;/p&gt;&lt;p&gt;-Bilbo&lt;/p&gt;&#39;</span>);
+<span style="color: #408080; font-style: italic">// Set up to, from, and the message body.  The body doesn&#39;t have to be HTML;</span>
+<span style="color: #408080; font-style: italic">// check the PHPMailer documentation for details.</span>
+<span style="color: #19177C">$mailer</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">Sender</span> <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;bbaggins@example.com&#39;</span>;
+<span style="color: #19177C">$mailer</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">AddReplyTo</span>(<span style="color: #BA2121">&#39;bbaggins@example.com&#39;</span>, <span style="color: #BA2121">&#39;Bilbo Baggins&#39;</span>);
+<span style="color: #19177C">$mailer</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">SetFrom</span>(<span style="color: #BA2121">&#39;bbaggins@example.com&#39;</span>, <span style="color: #BA2121">&#39;Bilbo Baggins&#39;</span>);
+<span style="color: #19177C">$mailer</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">AddAddress</span>(<span style="color: #BA2121">&#39;gandalf@example.com&#39;</span>);
+<span style="color: #19177C">$mailer</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">Subject</span> <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;The finest weed in the South Farthing&#39;</span>;
+<span style="color: #19177C">$mailer</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">MsgHTML</span>(<span style="color: #BA2121">&#39;&lt;p&gt;You really must try it, Gandalf!&lt;/p&gt;&lt;p&gt;-Bilbo&lt;/p&gt;&#39;</span>);
 
-<span style="color: #008000">// Set up our connection information.</span>
-$mailer-&gt;IsSMTP();
-$mailer-&gt;SMTPAuth = <span style="color: #0000ff">true</span>;
-$mailer-&gt;SMTPSecure = <span style="color: #a31515">&#39;ssl&#39;</span>;
-$mailer-&gt;Port = 465;
-$mailer-&gt;Host = <span style="color: #a31515">&#39;my smpt host&#39;</span>;
-$mailer-&gt;Username = <span style="color: #a31515">&#39;my smtp username&#39;</span>;
-$mailer-&gt;Password = <span style="color: #a31515">&#39;my smtp password&#39;</span>;
+<span style="color: #408080; font-style: italic">// Set up our connection information.</span>
+<span style="color: #19177C">$mailer</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">IsSMTP</span>();
+<span style="color: #19177C">$mailer</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">SMTPAuth</span> <span style="color: #666666">=</span> <span style="color: #008000; font-weight: bold">true</span>;
+<span style="color: #19177C">$mailer</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">SMTPSecure</span> <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;ssl&#39;</span>;
+<span style="color: #19177C">$mailer</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">Port</span> <span style="color: #666666">=</span> <span style="color: #666666">465</span>;
+<span style="color: #19177C">$mailer</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">Host</span> <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;my smpt host&#39;</span>;
+<span style="color: #19177C">$mailer</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">Username</span> <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;my smtp username&#39;</span>;
+<span style="color: #19177C">$mailer</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">Password</span> <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;my smtp password&#39;</span>;
 
-<span style="color: #008000">// All done!</span>
-$mailer-&gt;Send();
-<span style="color: #0000ff">?&gt;</span>
+<span style="color: #408080; font-style: italic">// All done!</span>
+<span style="color: #19177C">$mailer</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">Send</span>();
+<span style="color: #BC7A00">?&gt;</span>
 </code></pre></div>
-
 
 <h2>验证邮件地址</h2>
 <h3>使用<a href="http://php.net/manual/en/function.filter-var.php">filter_var()</a>函数</h3>
@@ -566,15 +555,14 @@ $mailer-&gt;Send();
 你可以在网上找到一些声称可以解决该问题的复杂的正则表达式，但是最简单的方法是使用
 PHP的内建<code>filter_var()</code>函数。</p>
 <p><strong>示例</strong></p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
-filter_var(<span style="color: #a31515">&#39;sgamgee@example.com&#39;</span>, FILTER_VALIDATE_EMAIL);
-<span style="color: #008000">//Returns &quot;sgamgee@example.com&quot;. This is a valid email address.</span>
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #BC7A00">&lt;?php</span>
+<span style="color: #008000">filter_var</span>(<span style="color: #BA2121">&#39;sgamgee@example.com&#39;</span>, FILTER_VALIDATE_EMAIL);
+<span style="color: #408080; font-style: italic">//Returns &quot;sgamgee@example.com&quot;. This is a valid email address.</span>
 
-filter_var(<span style="color: #a31515">&#39;sauron@mordor&#39;</span>, FILTER_VALIDATE_EMAIL);
-<span style="color: #008000">// Returns boolean false! This is *not* a valid email address.</span>
-<span style="color: #0000ff">?&gt;</span>
+<span style="color: #008000">filter_var</span>(<span style="color: #BA2121">&#39;sauron@mordor&#39;</span>, FILTER_VALIDATE_EMAIL);
+<span style="color: #408080; font-style: italic">// Returns boolean false! This is *not* a valid email address.</span>
+<span style="color: #BC7A00">?&gt;</span>
 </code></pre></div>
-
 
 <p><strong>进一步阅读</strong></p>
 <ul>
@@ -605,18 +593,17 @@ PHP的内建<a href="http://php.net/manual/en/function.htmlentities.php">htmlent
 <p>htmlentities()不同于类似功能的函数<a href="http://php.net/manual/en/function.htmlspecialchars.php">htmlspecialchars()</a>，
 它会编码所有适用的HTML实体，而不仅仅是一个小的子集。</p>
 <p><strong>示例</strong></p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
-<span style="color: #008000">// Oh no!  The user has submitted malicious HTML, and we have to display it in our web app!</span>
-$evilHtml = <span style="color: #a31515">&#39;&lt;div onclick=&quot;xss();&quot;&gt;Mua-ha-ha!  Twiddling my evil mustache...&lt;/div&gt;&#39;</span>;
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #BC7A00">&lt;?php</span>
+<span style="color: #408080; font-style: italic">// Oh no!  The user has submitted malicious HTML, and we have to display it in our web app!</span>
+<span style="color: #19177C">$evilHtml</span> <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;&lt;div onclick=&quot;xss();&quot;&gt;Mua-ha-ha!  Twiddling my evil mustache...&lt;/div&gt;&#39;</span>;
 
-<span style="color: #008000">// Use the ENT_QUOTES flag to make sure both single and double quotes are escaped.</span>
-<span style="color: #008000">// Use the UTF-8 character encoding if you&#39;ve stored the text as UTF-8 (as you should have).</span>
-<span style="color: #008000">// See the UTF-8 section in this document for more details.</span>
-$safeHtml = htmlentities($evilHtml, ENT_QUOTES, <span style="color: #a31515">&#39;UTF-8&#39;</span>);
-<span style="color: #008000">// $safeHtml is now fully escaped HTML.  You can output $safeHtml to your users without fear!</span>
-<span style="color: #0000ff">?&gt;</span>
+<span style="color: #408080; font-style: italic">// Use the ENT_QUOTES flag to make sure both single and double quotes are escaped.</span>
+<span style="color: #408080; font-style: italic">// Use the UTF-8 character encoding if you&#39;ve stored the text as UTF-8 (as you should have).</span>
+<span style="color: #408080; font-style: italic">// See the UTF-8 section in this document for more details.</span>
+<span style="color: #19177C">$safeHtml</span> <span style="color: #666666">=</span> <span style="color: #008000">htmlentities</span>(<span style="color: #19177C">$evilHtml</span>, ENT_QUOTES, <span style="color: #BA2121">&#39;UTF-8&#39;</span>);
+<span style="color: #408080; font-style: italic">// $safeHtml is now fully escaped HTML.  You can output $safeHtml to your users without fear!</span>
+<span style="color: #BC7A00">?&gt;</span>
 </code></pre></div>
-
 
 <p><strong>对于复杂需求的净化</strong></p>
 <p>对于很多web应用来说，简单地转义HTML是不够的。你可能想完全去除任何HTML，或者允许
@@ -634,21 +621,20 @@ Purifier高度可定制，允许你为HTML的一个子集建立白名单来允�
 通常也复杂而不易理解。以下示例是一个基本的使用配置。查看<a href="http://htmlpurifier.org/docs">文档</a>
 阅读HTML Purifier提供的更多更高级的特性。</p>
 <p><strong>示例</strong></p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
-<span style="color: #008000">// Include the HTML Purifier library</span>
-<span style="color: #0000ff">require_once</span>(<span style="color: #a31515">&#39;htmlpurifier-4.4.0/HTMLPurifier.auto.php&#39;</span>);
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #BC7A00">&lt;?php</span>
+<span style="color: #408080; font-style: italic">// Include the HTML Purifier library</span>
+<span style="color: #008000; font-weight: bold">require_once</span>(<span style="color: #BA2121">&#39;htmlpurifier-4.4.0/HTMLPurifier.auto.php&#39;</span>);
 
-<span style="color: #008000">// Oh no!  The user has submitted malicious HTML, and we have to display it in our web app!</span>
-$evilHtml = <span style="color: #a31515">&#39;&lt;div onclick=&quot;xss();&quot;&gt;Mua-ha-ha!  Twiddling my evil mustache...&lt;/div&gt;&#39;</span>;
+<span style="color: #408080; font-style: italic">// Oh no!  The user has submitted malicious HTML, and we have to display it in our web app!</span>
+<span style="color: #19177C">$evilHtml</span> <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;&lt;div onclick=&quot;xss();&quot;&gt;Mua-ha-ha!  Twiddling my evil mustache...&lt;/div&gt;&#39;</span>;
 
-<span style="color: #008000">// Set up the HTML Purifier object with the default configuration.</span>
-$purifier = <span style="color: #0000ff">new</span> HTMLPurifier(HTMLPurifier_Config::createDefault());
+<span style="color: #408080; font-style: italic">// Set up the HTML Purifier object with the default configuration.</span>
+<span style="color: #19177C">$purifier</span> <span style="color: #666666">=</span> <span style="color: #008000; font-weight: bold">new</span> HTMLPurifier(HTMLPurifier_Config<span style="color: #666666">::</span><span style="color: #7D9029">createDefault</span>());
 
-$safeHtml = $purifier-&gt;purify($evilHtml);
-<span style="color: #008000">// $safeHtml is now sanitized.  You can output $safeHtml to your users without fear!</span>
-<span style="color: #0000ff">?&gt;</span>
+<span style="color: #19177C">$safeHtml</span> <span style="color: #666666">=</span> <span style="color: #19177C">$purifier</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">purify</span>(<span style="color: #19177C">$evilHtml</span>);
+<span style="color: #408080; font-style: italic">// $safeHtml is now sanitized.  You can output $safeHtml to your users without fear!</span>
+<span style="color: #BC7A00">?&gt;</span>
 </code></pre></div>
-
 
 <p><strong>陷阱</strong></p>
 <ul>
@@ -711,62 +697,61 @@ utf8mb4`。这是至关重要的。示例
 来确保你的PHP脚本输出UTF-8字符串到浏览器。并且在HTML页面的<code>&lt;head&gt;</code>标签块中包含
 <a href="http://htmlpurifier.org/docs/enduser-utf8.html">字符集<code>&lt;meta&gt;</code>标签块</a>。</p>
 <p><strong>示例</strong></p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
-<span style="color: #008000">// Tell PHP that we&#39;re using UTF-8 strings until the end of the script</span>
-mb_internal_encoding(<span style="color: #a31515">&#39;UTF-8&#39;</span>);
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #BC7A00">&lt;?php</span>
+<span style="color: #408080; font-style: italic">// Tell PHP that we&#39;re using UTF-8 strings until the end of the script</span>
+<span style="color: #008000">mb_internal_encoding</span>(<span style="color: #BA2121">&#39;UTF-8&#39;</span>);
 
-<span style="color: #008000">// Tell PHP that we&#39;ll be outputting UTF-8 to the browser</span>
-mb_http_output(<span style="color: #a31515">&#39;UTF-8&#39;</span>);
+<span style="color: #408080; font-style: italic">// Tell PHP that we&#39;ll be outputting UTF-8 to the browser</span>
+<span style="color: #008000">mb_http_output</span>(<span style="color: #BA2121">&#39;UTF-8&#39;</span>);
 
-<span style="color: #008000">// Our UTF-8 test string</span>
-$string = <span style="color: #a31515">&#39;Aš galiu valgyti stiklą ir jis manęs nežeidžia&#39;</span>;
+<span style="color: #408080; font-style: italic">// Our UTF-8 test string</span>
+<span style="color: #19177C">$string</span> <span style="color: #666666">=</span> <span style="color: #BA2121">&#39;Aš galiu valgyti stiklą ir jis manęs nežeidžia&#39;</span>;
 
-<span style="color: #008000">// Transform the string in some way with a multibyte function</span>
-$string = mb_substr($string, 0, 10);
+<span style="color: #408080; font-style: italic">// Transform the string in some way with a multibyte function</span>
+<span style="color: #19177C">$string</span> <span style="color: #666666">=</span> <span style="color: #008000">mb_substr</span>(<span style="color: #19177C">$string</span>, <span style="color: #666666">0</span>, <span style="color: #666666">10</span>);
 
-<span style="color: #008000">// Connect to a database to store the transformed string</span>
-<span style="color: #008000">// See the PDO example in this document for more information</span>
-<span style="color: #008000">// Note the `set names utf8mb4` commmand!</span>
-$link = <span style="color: #0000ff">new</span> \PDO(   <span style="color: #a31515">&#39;mysql:host=your-hostname;dbname=your-db&#39;</span>,
-                    <span style="color: #a31515">&#39;your-username&#39;</span>,
-                    <span style="color: #a31515">&#39;your-password&#39;</span>,
-                    <span style="color: #0000ff">array</span>(
-                        \PDO::ATTR_ERRMODE =&gt; \PDO::ERRMODE_EXCEPTION,
-                        \PDO::ATTR_PERSISTENT =&gt; <span style="color: #0000ff">false</span>,
-                        \PDO::MYSQL_ATTR_INIT_COMMAND =&gt; <span style="color: #a31515">&#39;set names utf8mb4&#39;</span>
+<span style="color: #408080; font-style: italic">// Connect to a database to store the transformed string</span>
+<span style="color: #408080; font-style: italic">// See the PDO example in this document for more information</span>
+<span style="color: #408080; font-style: italic">// Note the `set names utf8mb4` commmand!</span>
+<span style="color: #19177C">$link</span> <span style="color: #666666">=</span> <span style="color: #008000; font-weight: bold">new</span> \PDO(   <span style="color: #BA2121">&#39;mysql:host=your-hostname;dbname=your-db&#39;</span>,
+                    <span style="color: #BA2121">&#39;your-username&#39;</span>,
+                    <span style="color: #BA2121">&#39;your-password&#39;</span>,
+                    <span style="color: #008000; font-weight: bold">array</span>(
+                        \PDO<span style="color: #666666">::</span><span style="color: #7D9029">ATTR_ERRMODE</span> <span style="color: #666666">=&gt;</span> \PDO<span style="color: #666666">::</span><span style="color: #7D9029">ERRMODE_EXCEPTION</span>,
+                        \PDO<span style="color: #666666">::</span><span style="color: #7D9029">ATTR_PERSISTENT</span> <span style="color: #666666">=&gt;</span> <span style="color: #008000; font-weight: bold">false</span>,
+                        \PDO<span style="color: #666666">::</span><span style="color: #7D9029">MYSQL_ATTR_INIT_COMMAND</span> <span style="color: #666666">=&gt;</span> <span style="color: #BA2121">&#39;set names utf8mb4&#39;</span>
                     )
                 );
 
-<span style="color: #008000">// Store our transformed string as UTF-8 in our database</span>
-<span style="color: #008000">// Assume our DB and tables are in the utf8mb4 character set and collation</span>
-$handle = $link-&gt;prepare(<span style="color: #a31515">&#39;insert into Sentences (Id, Body) values (?, ?)&#39;</span>);
-$handle-&gt;bindValue(1, 1, PDO::PARAM_INT);
-$handle-&gt;bindValue(2, $string);
-$handle-&gt;execute();
+<span style="color: #408080; font-style: italic">// Store our transformed string as UTF-8 in our database</span>
+<span style="color: #408080; font-style: italic">// Assume our DB and tables are in the utf8mb4 character set and collation</span>
+<span style="color: #19177C">$handle</span> <span style="color: #666666">=</span> <span style="color: #19177C">$link</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">prepare</span>(<span style="color: #BA2121">&#39;insert into Sentences (Id, Body) values (?, ?)&#39;</span>);
+<span style="color: #19177C">$handle</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">bindValue</span>(<span style="color: #666666">1</span>, <span style="color: #666666">1</span>, PDO<span style="color: #666666">::</span><span style="color: #7D9029">PARAM_INT</span>);
+<span style="color: #19177C">$handle</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">bindValue</span>(<span style="color: #666666">2</span>, <span style="color: #19177C">$string</span>);
+<span style="color: #19177C">$handle</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">execute</span>();
 
-<span style="color: #008000">// Retrieve the string we just stored to prove it was stored correctly</span>
-$handle = $link-&gt;prepare(<span style="color: #a31515">&#39;select * from Sentences where Id = ?&#39;</span>);
-$handle-&gt;bindValue(1, 1, PDO::PARAM_INT);
-$handle-&gt;execute();
+<span style="color: #408080; font-style: italic">// Retrieve the string we just stored to prove it was stored correctly</span>
+<span style="color: #19177C">$handle</span> <span style="color: #666666">=</span> <span style="color: #19177C">$link</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">prepare</span>(<span style="color: #BA2121">&#39;select * from Sentences where Id = ?&#39;</span>);
+<span style="color: #19177C">$handle</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">bindValue</span>(<span style="color: #666666">1</span>, <span style="color: #666666">1</span>, PDO<span style="color: #666666">::</span><span style="color: #7D9029">PARAM_INT</span>);
+<span style="color: #19177C">$handle</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">execute</span>();
 
-<span style="color: #008000">// Store the result into an object that we&#39;ll output later in our HTML</span>
-$result = $handle-&gt;fetchAll(\PDO::FETCH_OBJ);
-<span style="color: #0000ff">?&gt;</span>&lt;!doctype html&gt;
+<span style="color: #408080; font-style: italic">// Store the result into an object that we&#39;ll output later in our HTML</span>
+<span style="color: #19177C">$result</span> <span style="color: #666666">=</span> <span style="color: #19177C">$handle</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">fetchAll</span>(\PDO<span style="color: #666666">::</span><span style="color: #7D9029">FETCH_OBJ</span>);
+<span style="color: #BC7A00">?&gt;</span>&lt;!doctype html&gt;
 &lt;html&gt;
     &lt;head&gt;
         &lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; charset=UTF-8&quot; /&gt;
         &lt;title&gt;UTF-8 test page&lt;/title&gt;
     &lt;/head&gt;
     &lt;body&gt;
-        <span style="color: #0000ff">&lt;?php</span>
-        <span style="color: #0000ff">foreach</span>($result <span style="color: #0000ff">as</span> $row){
-            <span style="color: #0000ff">print</span>($row-&gt;Body);  <span style="color: #008000">// This should correctly output our transformed UTF-8 string to the browser</span>
+        <span style="color: #BC7A00">&lt;?php</span>
+        <span style="color: #008000; font-weight: bold">foreach</span>(<span style="color: #19177C">$result</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #19177C">$row</span>){
+            <span style="color: #008000; font-weight: bold">print</span>(<span style="color: #19177C">$row</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">Body</span>);  <span style="color: #408080; font-style: italic">// This should correctly output our transformed UTF-8 string to the browser</span>
         }
-        <span style="color: #0000ff">?&gt;</span>
+        <span style="color: #BC7A00">?&gt;</span>
     &lt;/body&gt;
 &lt;/html&gt;
 </code></pre></div>
-
 
 <p><strong>进一步阅读</strong></p>
 <ul>
@@ -787,35 +772,34 @@ $result = $handle-&gt;fetchAll(\PDO::FETCH_OBJ);
 该类封装了老式日期函数所有功能，甚至更多，在一个易于使用的类中，并且使得时区转换更加容易。
 在PHP中始终使用DateTime类来创建，比较，改变以及展示日期。</p>
 <p><strong>示例</strong></p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
-<span style="color: #008000">// Construct a new UTC date.  Always specify UTC unless you really know what you&#39;re doing!</span>
-$date = <span style="color: #0000ff">new</span> DateTime(<span style="color: #a31515">&#39;2011-05-04 05:00:00&#39;</span>, <span style="color: #0000ff">new</span> DateTimeZone(<span style="color: #a31515">&#39;UTC&#39;</span>));
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #BC7A00">&lt;?php</span>
+<span style="color: #408080; font-style: italic">// Construct a new UTC date.  Always specify UTC unless you really know what you&#39;re doing!</span>
+<span style="color: #19177C">$date</span> <span style="color: #666666">=</span> <span style="color: #008000; font-weight: bold">new</span> DateTime(<span style="color: #BA2121">&#39;2011-05-04 05:00:00&#39;</span>, <span style="color: #008000; font-weight: bold">new</span> DateTimeZone(<span style="color: #BA2121">&#39;UTC&#39;</span>));
 
-<span style="color: #008000">// Add ten days to our initial date</span>
-$date-&gt;add(<span style="color: #0000ff">new</span> DateInterval(<span style="color: #a31515">&#39;P10D&#39;</span>));
+<span style="color: #408080; font-style: italic">// Add ten days to our initial date</span>
+<span style="color: #19177C">$date</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">add</span>(<span style="color: #008000; font-weight: bold">new</span> DateInterval(<span style="color: #BA2121">&#39;P10D&#39;</span>));
 
-<span style="color: #0000ff">echo</span>($date-&gt;format(<span style="color: #a31515">&#39;Y-m-d h:i:s&#39;</span>)); <span style="color: #008000">// 2011-05-14 05:00:00</span>
+<span style="color: #008000; font-weight: bold">echo</span>(<span style="color: #19177C">$date</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">format</span>(<span style="color: #BA2121">&#39;Y-m-d h:i:s&#39;</span>)); <span style="color: #408080; font-style: italic">// 2011-05-14 05:00:00</span>
 
-<span style="color: #008000">// Sadly we don&#39;t have a Middle Earth timezone</span>
-<span style="color: #008000">// Convert our UTC date to the PST (or PDT, depending) time zone</span>
-$date-&gt;setTimezone(<span style="color: #0000ff">new</span> DateTimeZone(<span style="color: #a31515">&#39;America/Los_Angeles&#39;</span>));
+<span style="color: #408080; font-style: italic">// Sadly we don&#39;t have a Middle Earth timezone</span>
+<span style="color: #408080; font-style: italic">// Convert our UTC date to the PST (or PDT, depending) time zone</span>
+<span style="color: #19177C">$date</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">setTimezone</span>(<span style="color: #008000; font-weight: bold">new</span> DateTimeZone(<span style="color: #BA2121">&#39;America/Los_Angeles&#39;</span>));
 
-<span style="color: #008000">// Note that if you run this line yourself, it might differ by an hour depending on daylight savings</span>
-<span style="color: #0000ff">echo</span>($date-&gt;format(<span style="color: #a31515">&#39;Y-m-d h:i:s&#39;</span>)); <span style="color: #008000">// 2011-05-13 10:00:00</span>
+<span style="color: #408080; font-style: italic">// Note that if you run this line yourself, it might differ by an hour depending on daylight savings</span>
+<span style="color: #008000; font-weight: bold">echo</span>(<span style="color: #19177C">$date</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">format</span>(<span style="color: #BA2121">&#39;Y-m-d h:i:s&#39;</span>)); <span style="color: #408080; font-style: italic">// 2011-05-13 10:00:00</span>
 
-$later = <span style="color: #0000ff">new</span> DateTime(<span style="color: #a31515">&#39;2012-05-20&#39;</span>, <span style="color: #0000ff">new</span> DateTimeZone(<span style="color: #a31515">&#39;UTC&#39;</span>));
+<span style="color: #19177C">$later</span> <span style="color: #666666">=</span> <span style="color: #008000; font-weight: bold">new</span> DateTime(<span style="color: #BA2121">&#39;2012-05-20&#39;</span>, <span style="color: #008000; font-weight: bold">new</span> DateTimeZone(<span style="color: #BA2121">&#39;UTC&#39;</span>));
 
-<span style="color: #008000">// Compare two dates</span>
-<span style="color: #0000ff">if</span>($date &lt; $later)
-    <span style="color: #0000ff">echo</span>(<span style="color: #a31515">&#39;Yup, you can compare dates using these easy operators!&#39;</span>);
+<span style="color: #408080; font-style: italic">// Compare two dates</span>
+<span style="color: #008000; font-weight: bold">if</span>(<span style="color: #19177C">$date</span> <span style="color: #666666">&lt;</span> <span style="color: #19177C">$later</span>)
+    <span style="color: #008000; font-weight: bold">echo</span>(<span style="color: #BA2121">&#39;Yup, you can compare dates using these easy operators!&#39;</span>);
 
-<span style="color: #008000">// Find the difference between two dates</span>
-$difference = $date-&gt;diff($later);
+<span style="color: #408080; font-style: italic">// Find the difference between two dates</span>
+<span style="color: #19177C">$difference</span> <span style="color: #666666">=</span> <span style="color: #19177C">$date</span><span style="color: #666666">-&gt;</span><span style="color: #7D9029">diff</span>(<span style="color: #19177C">$later</span>);
 
-<span style="color: #0000ff">echo</span>(<span style="color: #a31515">&#39;The 2nd date is &#39;</span> . $difference[<span style="color: #a31515">&#39;days&#39;</span>] . <span style="color: #a31515">&#39; later than 1st date.&#39;</span>);
-<span style="color: #0000ff">?&gt;</span>
+<span style="color: #008000; font-weight: bold">echo</span>(<span style="color: #BA2121">&#39;The 2nd date is &#39;</span> <span style="color: #666666">.</span> <span style="color: #19177C">$difference</span>[<span style="color: #BA2121">&#39;days&#39;</span>] <span style="color: #666666">.</span> <span style="color: #BA2121">&#39; later than 1st date.&#39;</span>);
+<span style="color: #BC7A00">?&gt;</span>
 </code></pre></div>
-
 
 <p><strong>陷阱</strong></p>
 <ul>
@@ -846,33 +830,32 @@ DateTime类型数据列的默认值）会产生一个无意义的日期，而不
 这不同于PHP宽松类型世界里的<em>相等</em>。它也比is_null()和is_bool()要快一些，并且有些人
 认为这比使用函数来做比较更干净些。</p>
 <p><strong>示例</strong></p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><code><span style="color: #0000ff">&lt;?php</span>
-$x = 0;
-$y = <span style="color: #0000ff">null</span>;
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #BC7A00">&lt;?php</span>
+<span style="color: #19177C">$x</span> <span style="color: #666666">=</span> <span style="color: #666666">0</span>;
+<span style="color: #19177C">$y</span> <span style="color: #666666">=</span> <span style="color: #008000; font-weight: bold">null</span>;
 
-<span style="color: #008000">// Is $x null?</span>
-<span style="color: #0000ff">if</span>($x == <span style="color: #0000ff">null</span>)
-    <span style="color: #0000ff">print</span>(<span style="color: #a31515">&#39;Oops! $x is 0, not null!&#39;</span>);
+<span style="color: #408080; font-style: italic">// Is $x null?</span>
+<span style="color: #008000; font-weight: bold">if</span>(<span style="color: #19177C">$x</span> <span style="color: #666666">==</span> <span style="color: #008000; font-weight: bold">null</span>)
+    <span style="color: #008000; font-weight: bold">print</span>(<span style="color: #BA2121">&#39;Oops! $x is 0, not null!&#39;</span>);
 
-<span style="color: #008000">// Is $y null?</span>
-<span style="color: #0000ff">if</span>(is_null($y))
-    <span style="color: #0000ff">print</span>(<span style="color: #a31515">&#39;Great, but could be faster.&#39;</span>);
+<span style="color: #408080; font-style: italic">// Is $y null?</span>
+<span style="color: #008000; font-weight: bold">if</span>(<span style="color: #008000">is_null</span>(<span style="color: #19177C">$y</span>))
+    <span style="color: #008000; font-weight: bold">print</span>(<span style="color: #BA2121">&#39;Great, but could be faster.&#39;</span>);
 
-<span style="color: #0000ff">if</span>($y === <span style="color: #0000ff">null</span>)
-    <span style="color: #0000ff">print</span>(<span style="color: #a31515">&#39;Perfect!&#39;</span>);
+<span style="color: #008000; font-weight: bold">if</span>(<span style="color: #19177C">$y</span> <span style="color: #666666">===</span> <span style="color: #008000; font-weight: bold">null</span>)
+    <span style="color: #008000; font-weight: bold">print</span>(<span style="color: #BA2121">&#39;Perfect!&#39;</span>);
 
-<span style="color: #008000">// Does the string abc contain the character a?</span>
-<span style="color: #0000ff">if</span>(strpos(<span style="color: #a31515">&#39;abc&#39;</span>, <span style="color: #a31515">&#39;a&#39;</span>))
-    <span style="color: #008000">// GOTCHA!  strpos returns 0, indicating it wishes to return the position of the first character.</span>
-    <span style="color: #008000">// But PHP interpretes 0 as false, so we never reach this print statement!</span>
-    <span style="color: #0000ff">print</span>(<span style="color: #a31515">&#39;Found it!&#39;</span>);
+<span style="color: #408080; font-style: italic">// Does the string abc contain the character a?</span>
+<span style="color: #008000; font-weight: bold">if</span>(<span style="color: #008000">strpos</span>(<span style="color: #BA2121">&#39;abc&#39;</span>, <span style="color: #BA2121">&#39;a&#39;</span>))
+    <span style="color: #408080; font-style: italic">// GOTCHA!  strpos returns 0, indicating it wishes to return the position of the first character.</span>
+    <span style="color: #408080; font-style: italic">// But PHP interpretes 0 as false, so we never reach this print statement!</span>
+    <span style="color: #008000; font-weight: bold">print</span>(<span style="color: #BA2121">&#39;Found it!&#39;</span>);
 
-<span style="color: #008000">//Solution: use !== (the opposite of ===) to see if strpos() returns 0, or boolean false.   </span>
-<span style="color: #0000ff">if</span>(strpos(<span style="color: #a31515">&#39;abc&#39;</span>, <span style="color: #a31515">&#39;a&#39;</span>) !== <span style="color: #0000ff">false</span>)
-    <span style="color: #0000ff">print</span>(<span style="color: #a31515">&#39;Found it for real this time!&#39;</span>);
-<span style="color: #0000ff">?&gt;</span>
+<span style="color: #408080; font-style: italic">//Solution: use !== (the opposite of ===) to see if strpos() returns 0, or boolean false.   </span>
+<span style="color: #008000; font-weight: bold">if</span>(<span style="color: #008000">strpos</span>(<span style="color: #BA2121">&#39;abc&#39;</span>, <span style="color: #BA2121">&#39;a&#39;</span>) <span style="color: #666666">!==</span> <span style="color: #008000; font-weight: bold">false</span>)
+    <span style="color: #008000; font-weight: bold">print</span>(<span style="color: #BA2121">&#39;Found it for real this time!&#39;</span>);
+<span style="color: #BC7A00">?&gt;</span>
 </code></pre></div>
-
 
 <p><strong>陷阱</strong></p>
 <ul>

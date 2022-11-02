@@ -70,31 +70,11 @@
                     </h2>
                 </header>
                 <footer class="post-info">
-                    <abbr class="published" title="2015-11-16T00:00:00+08:00"> 2015-11-16 Mon </abbr>
+                    <abbr class="published" title="2015-11-16T00:00:00+08:00"> 2015-11-16 一 </abbr>
 <address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
                 <div class="entry-content"> <p>上周五早上9点多，我还在上班的路上，接到技术leader的电话：线上突然出故障了；接着发来一张故障信息页面截图：</p>
 <p><img alt="system-fault-err-page" src="https://i.loli.net/2020/06/14/L4fVgPGAb3Whznr.png"></p>
-<p>截图包含的信息是：数据库中没找到数据表<code>Users</code>。</p>
-<p>但同事检查过数据库，Users数据表是存在的。</p>
-<hr>
-<p>我快速地回忆了一下最近的代码发布和环境变更 - 前一天有个同事对线上机器做了点改动。因此，让同事赶紧检查一下之前的改动是否有问题，经检查确认改动没有问题，而且稍微思考一下就应该明白不是配置的问题，如果是配置的问题，那么问题应该早就出现了，而不是在早上9点多时候才发生。</p>
-<hr>
-<p>我翻了翻手机中最近收到的几条告警短信，去除重复告警短信，只有两条告警：</p>
-<ul>
-<li>某台Web服务器上出现大量的500错误</li>
-<li>某台数据库服务器的磁盘使用率为98.99%</li>
-</ul>
-<p>由此可以推测两个故障原因：</p>
-<ol>
-<li>那台Web服务器上应用的数据库配置有问题 - 但检查之后确认没有问题</li>
-<li>由于那台数据库服务器磁盘满导致的问题，虽然一时还想不到其中的关联 - 同事在检查之后，确认那台机器的磁盘确实已满，但通过内网的数据库管理后台，可以正常访问数据库，所以认为应该不是磁盘满导致的问题</li>
-</ol>
-<p>如此，一时我也没想明白故障的原因。</p>
-<hr>
-<p>接着，同事发来消息：只有登录用户才会遇到这个问题！</p>
-<p>这时，基于之前的线索，基本能断定故障原因是 - 数据库服务器磁盘满。为什么呢？</p>
-<ol>
-<li>数据库管理后台默认是<strong>只读</strong>：读数据表列表、数据表结构、单个表的若干条数据 …</li></ol> </div><!-- /.entry-content -->
+<p>截图包含的信息是：数 …</p> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2015/11/16/another-system-fault/" rel="bookmark" title="Permalink to 又一次系统故障">阅读全文</a></div>
                 <div class="row tag-row">
                     <span>标签: </span>
@@ -111,28 +91,10 @@
                     </h2>
                 </header>
                 <footer class="post-info">
-                    <abbr class="published" title="2015-10-02T00:00:00+08:00"> 2015-10-02 Fri </abbr>
+                    <abbr class="published" title="2015-10-02T00:00:00+08:00"> 2015-10-02 五 </abbr>
 <address class="vcard author">By <a class="url fn" href="../author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
                 <div class="entry-content"> <p>前段时间，工作中遭遇一次故障，虽然不算什么“疑难杂症”，倒也花了不少时间才真正找到故障的原因，故也值得记录一下。</p>
-<p>为方便读者快速理解故障，先给出系统大致的架构图：</p>
-<p><img alt="gxt-tech-arch" src="https://i.loli.net/2020/06/14/2ZBQgfPqMUnhVzY.png"></p>
-<p>其中，</p>
-<ol>
-<li>每台Web服务器上开启12个PHP-FPM实例，并配置到Nginx的upstream，每个实例最多可以开启10个子进程</li>
-<li>“Database Proxy”的代理规则为：写操作及事务中的所有SQL操作都交给主MySQL处理，其余的读操作都交给任意一台从MySQL处理</li>
-</ol>
-<hr>
-<p>故障所表现的现象包括：</p>
-<p>1.大量请求响应为502，但每次故障发生时，错误响应一般集中在一台Web服务器，如下图所示：</p>
-<p><img alt="nginx-502-error" src="https://i.loli.net/2020/06/14/cPmFMn8gKZdzVoB.png"></p>
-<p><img alt="nginx-server-502-count" src="https://i.loli.net/2020/06/14/CSRj4ILYVlU21Es.jpg"></p>
-<p>2.（一台或多台）MySQL数据库服务器CPU使用率飙升（但并非总是一起表现故障），如下图所示：</p>
-<p><img alt="mysql-slave-server-idle" src="https://i.loli.net/2020/06/14/H5gqL8BeQpKXOla.png"></p>
-<hr>
-<p>故障刚开始出现时，重启/关闭出现故障现象的MySQL服务，或将出现故障的Web服务器上所有PHP-FPM重启，也能解一时的问题，但治不了本，故障还是频繁出现。</p>
-<p>在故障发生时，从相关服务器上收集到的信息如下所示：</p>
-<p>1.出现故障现象的Web服务器 - CPU使用率、内存使用率等系统指标均正常，但PHP-FPM子进程数达到上限（12 x 10 = 120），并且PHP-FPM进程与数据库代理服务器之间的网络连接数量较多（与PHP-FPM子进程数大致相当）</p>
-<p>2.出现故障现象的MySQL服务器 …</p> </div><!-- /.entry-content -->
+<p>为 …</p> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="../2015/10/02/note-of-a-system-fault/" rel="bookmark" title="Permalink to 记一次系统故障">阅读全文</a></div>
                 <div class="row tag-row">
                     <span>标签: </span>

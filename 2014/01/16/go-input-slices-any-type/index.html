@@ -68,7 +68,7 @@
             </header>
             <footer class="post-info">
               <abbr class="published" title="2014-01-16T00:00:00+08:00">
-                2014-01-16 Thu
+                2014-01-16 四
               </abbr>
               <address class="vcard author">
                 By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
@@ -86,20 +86,20 @@ o := Student{Name: <span style="color: #a31515">&quot;Ahmet&quot;</span>}
 </code></pre></div>
 
 <p>我们假设你需要一个可以接收任意类型slices的函数，如果考虑如下这样实现：</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000; font-weight: bold">func</span> Method(in []<span style="color: #008000; font-weight: bold">interface</span>{}){<span style="color: #666666">...</span>}
-<span style="color: #666666">...</span>
-slice <span style="color: #666666">:=</span> []<span style="color: #B00040">int</span>{<span style="color: #666666">1</span>, <span style="color: #666666">2</span>, <span style="color: #666666">3</span>}
-Method(slice)   <span style="color: #408080; font-style: italic">// 抛出错误</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">func</span> Method(in []<span style="color: #0000ff">interface</span>{}){...}
+...
+slice := []<span style="color: #2b91af">int</span>{1, 2, 3}
+Method(slice)   <span style="color: #008000">// 抛出错误</span>
 </code></pre></div>
 
 <p>这样的代码会抛出编译错误，因为<code>[]int</code>不是<code>[]interface{}</code>。那么该如何解决这个问题呢？你可以要求<code>Method</code>的使用者先把slices
 转换为<code>[]interface{}</code>类型。也就是说他们必须借助于如下类似函数将他们的<code>[]AnyType</code>类型参数转换为<code>[]interface{}</code>类型：</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000; font-weight: bold">func</span> conv(in []AnyType) (out []<span style="color: #008000; font-weight: bold">interface</span>{}) {
-    out = <span style="color: #008000">make</span>([]<span style="color: #008000; font-weight: bold">interface</span>{}, <span style="color: #008000">len</span>(in))
-    <span style="color: #008000; font-weight: bold">for</span> i, v <span style="color: #666666">:=</span> <span style="color: #008000; font-weight: bold">range</span> in {
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">func</span> conv(in []AnyType) (out []<span style="color: #0000ff">interface</span>{}) {
+    out = make([]<span style="color: #0000ff">interface</span>{}, len(in))
+    <span style="color: #0000ff">for</span> i, v := <span style="color: #0000ff">range</span> in {
         out[i] = v
     }
-    <span style="color: #008000; font-weight: bold">return</span>
+    <span style="color: #0000ff">return</span>
 }
 </code></pre></div>
 
@@ -107,26 +107,26 @@ Method(slice)   <span style="color: #408080; font-style: italic">// 抛出错误
 那么他们就必须编写N个<code>conv</code>函数。</p>
 <p>对此，我们该怎么办呢？使用<strong>reflection</strong>（反射）呀！实现一个函数以<code>interface{}</code>（可以赋任意类型的值）为输入参数类型，在函数内部
 将这个输入参数转换为一个slice，然后用于我们<code>Method</code>函数。如下所示：</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000; font-weight: bold">func</span> takeSliceArg(arg <span style="color: #008000; font-weight: bold">interface</span>{}) (out []<span style="color: #008000; font-weight: bold">interface</span>{}, ok <span style="color: #B00040">bool</span>) {
-    slice, success <span style="color: #666666">:=</span> takeArg(arg, reflect.Slice)
-    <span style="color: #008000; font-weight: bold">if</span> !success {
-        ok = <span style="color: #008000; font-weight: bold">false</span>
-        <span style="color: #008000; font-weight: bold">return</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">func</span> takeSliceArg(arg <span style="color: #0000ff">interface</span>{}) (out []<span style="color: #0000ff">interface</span>{}, ok <span style="color: #2b91af">bool</span>) {
+    slice, success := takeArg(arg, reflect.Slice)
+    <span style="color: #0000ff">if</span> !success {
+        ok = <span style="color: #0000ff">false</span>
+        <span style="color: #0000ff">return</span>
     }
-    c <span style="color: #666666">:=</span> slice.Len()
-    out = <span style="color: #008000">make</span>([]<span style="color: #008000; font-weight: bold">interface</span>{}, c)
-    <span style="color: #008000; font-weight: bold">for</span> i <span style="color: #666666">:=</span> <span style="color: #666666">0</span>; i &lt; c; i<span style="color: #666666">++</span> {
+    c := slice.Len()
+    out = make([]<span style="color: #0000ff">interface</span>{}, c)
+    <span style="color: #0000ff">for</span> i := 0; i &lt; c; i++ {
         out[i] = slice.Index(i).Interface()
     }
-    <span style="color: #008000; font-weight: bold">return</span> out, <span style="color: #008000; font-weight: bold">true</span>
+    <span style="color: #0000ff">return</span> out, <span style="color: #0000ff">true</span>
 }
 
-<span style="color: #008000; font-weight: bold">func</span> takeArg(arg <span style="color: #008000; font-weight: bold">interface</span>{}, kind reflect.Kind) (val reflect.Value, ok <span style="color: #B00040">bool</span>) {
+<span style="color: #0000ff">func</span> takeArg(arg <span style="color: #0000ff">interface</span>{}, kind reflect.Kind) (val reflect.Value, ok <span style="color: #2b91af">bool</span>) {
     val = reflect.ValueOf(arg)
-    <span style="color: #008000; font-weight: bold">if</span> val.Kind() <span style="color: #666666">==</span> kind {
-        ok = <span style="color: #008000; font-weight: bold">true</span>
+    <span style="color: #0000ff">if</span> val.Kind() == kind {
+        ok = <span style="color: #0000ff">true</span>
     }
-    <span style="color: #008000; font-weight: bold">return</span>
+    <span style="color: #0000ff">return</span>
 }
 </code></pre></div>
 

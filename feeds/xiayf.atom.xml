@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>数据与智能 - xiayf</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/xiayf.atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2020-07-14T00:00:00+08:00</updated><subtitle></subtitle><entry><title>Disruptor 等待策略引发的 CPU 负载异常问题</title><link href="http://youngsterxyf.github.io/2020/07/14/disruptor-waitstrategy-cpu-busy/" rel="alternate"></link><published>2020-07-14T00:00:00+08:00</published><updated>2020-07-14T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2020-07-14:/2020/07/14/disruptor-waitstrategy-cpu-busy/</id><summary type="html">&lt;h2&gt;背景&lt;/h2&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>数据与智能 - xiayf</title><link href="http://youngsterxyf.github.io/" rel="alternate"></link><link href="http://youngsterxyf.github.io/feeds/xiayf.atom.xml" rel="self"></link><id>http://youngsterxyf.github.io/</id><updated>2020-07-14T00:00:00+08:00</updated><entry><title>Disruptor 等待策略引发的 CPU 负载异常问题</title><link href="http://youngsterxyf.github.io/2020/07/14/disruptor-waitstrategy-cpu-busy/" rel="alternate"></link><published>2020-07-14T00:00:00+08:00</published><updated>2020-07-14T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2020-07-14:/2020/07/14/disruptor-waitstrategy-cpu-busy/</id><summary type="html">&lt;h2&gt;背景&lt;/h2&gt;
 &lt;p&gt;工作中，我负责的系统是一个数据流处理服务 - 以流水线（pipeline）的形式分多级异步处理：&lt;/p&gt;
 &lt;p&gt;&lt;img alt="" src="https://i.loli.net/2020/07/14/ONwUsrlhLmIq8BW.jpg"&gt;&lt;/p&gt;
-&lt;p&gt;其中的 队列 实际使用的是 &lt;a href="https://github.com/LMAX-Exchange/disruptor"&gt;Disruptor&lt;/a&gt;，多生产者单消费者模式：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%;"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ThreadFactory factory = &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; ThreadFactoryBuilder().setNameFormat(name).setDaemon(&lt;span style="color: #0000ff"&gt;true&lt;/span&gt;).build();
-Disruptor&amp;lt;Event&amp;lt;T&amp;gt;&amp;gt;  disruptor = &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; Disruptor&amp;lt;&amp;gt;(Event&amp;lt;T&amp;gt;::&lt;span style="color: #0000ff"&gt;new&lt;/span&gt;, bufferSize, factory, ProducerType.MULTI, &lt;span style="color: #0000ff"&gt;new&lt;/span&gt; SleepingWaitStrategy());
-disruptor.handleEventsWith((Event&amp;lt;T&amp;gt; event, &lt;span style="color: #2b91af"&gt;long&lt;/span&gt; sequence, &lt;span style="color: #2b91af"&gt;boolean&lt;/span&gt; endOfBatch) -&amp;gt; {
-    consumer.accept(event.value, endOfBatch);
-    event …&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</summary><content type="html">&lt;h2&gt;背景&lt;/h2&gt;
+&lt;p&gt;其中的 队列 实际使用的是 &lt;a href="https://github.com/LMAX-Exchange/disruptor"&gt;Disruptor&lt;/a&gt;，多生 …&lt;/p&gt;</summary><content type="html">&lt;h2&gt;背景&lt;/h2&gt;
 &lt;p&gt;工作中，我负责的系统是一个数据流处理服务 - 以流水线（pipeline）的形式分多级异步处理：&lt;/p&gt;
 &lt;p&gt;&lt;img alt="" src="https://i.loli.net/2020/07/14/ONwUsrlhLmIq8BW.jpg"&gt;&lt;/p&gt;
 &lt;p&gt;其中的 队列 实际使用的是 &lt;a href="https://github.com/LMAX-Exchange/disruptor"&gt;Disruptor&lt;/a&gt;，多生产者单消费者模式：&lt;/p&gt;
@@ -115,10 +110,7 @@ disruptor.handleEventsWith((Event&amp;lt;T&amp;gt; event, &lt;span style="color:
 &lt;li&gt;上下文切换耗时多少？&lt;a href="https://blog.tsunanet.net/2010/11/how-long-does-it-take-to-make-context.html"&gt;How long does it take to make a context switch?&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;LockSupport.parkNanos(100)&lt;/code&gt; 真的就是睡眠 100 纳秒吗？&lt;a href="https://hazelcast.com/blog/locksupport-parknanos-under-the-hood-and-the-curious-case-of-parking/"&gt;LockSupport.parkNanos() Under the Hood and the Curious Case of Parking&lt;/a&gt;&lt;/li&gt;
 &lt;/ol&gt;</content><category term="其他"></category><category term="问题排查"></category><category term="Java"></category><category term="Disruptor"></category></entry><entry><title>如何剖析 JVM 应用（译）</title><link href="http://youngsterxyf.github.io/2020/07/13/how-to-profile-jvm-applications/" rel="alternate"></link><published>2020-07-13T00:00:00+08:00</published><updated>2020-07-13T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2020-07-13:/2020/07/13/how-to-profile-jvm-applications/</id><summary type="html">&lt;p&gt;原文链接：&lt;a href="https://www.lightbend.com/blog/profiling-jvm-applications"&gt;How to profile JVM applications&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;Hi 大家好。工具团队（tooling team）近期的一个关注点是改进 sbt 贡献流程（ improvement of the contribution process to sbt）。我们一直在思考的另一个事情是 sbt 的性能。为一举解决这两件事情，我调研了 Jason Zaugg、Johannes Rudolph 这些人如何剖析 JVM 应用，这篇文章即是调研结果。&lt;/p&gt;
-&lt;p&gt;这里论述的技术应该可以应用于Java 和 Scala，也基本与你使用的工具无关。&lt;/p&gt;
-&lt;h2&gt;火焰图（使用 async-profiler 生成）&lt;/h2&gt;
-&lt;p&gt;剖析 JVM 应用的方式有多种，但新晋热门是Netflix 高级性能架构师（Senior Performance Architect …&lt;/p&gt;</summary><content type="html">&lt;p&gt;原文链接：&lt;a href="https://www.lightbend.com/blog/profiling-jvm-applications"&gt;How to profile JVM applications&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Hi 大家好。工具团队（tooling team）近期的一个关注点是改进 sbt 贡献流程（ improvement of the contribution process to sbt）。我们一直在思考的 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;原文链接：&lt;a href="https://www.lightbend.com/blog/profiling-jvm-applications"&gt;How to profile JVM applications&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Hi 大家好。工具团队（tooling team）近期的一个关注点是改进 sbt 贡献流程（ improvement of the contribution process to sbt）。我们一直在思考的另一个事情是 sbt 的性能。为一举解决这两件事情，我调研了 Jason Zaugg、Johannes Rudolph 这些人如何剖析 JVM 应用，这篇文章即是调研结果。&lt;/p&gt;
 &lt;p&gt;这里论述的技术应该可以应用于Java 和 Scala，也基本与你使用的工具无关。&lt;/p&gt;
 &lt;h2&gt;火焰图（使用 async-profiler 生成）&lt;/h2&gt;
@@ -248,17 +240,7 @@ source ~/.py3/bin/activate
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;3、安装主题包&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%;"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;git clone https://github.com/youngsterxyf/my-pelican-themes.git ~/github/youngsterxyf/my-pelican-themes
-pelican-themes -i ~/github/youngsterxyf/my-pelican-themes/my-gum
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;4、构建&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%;"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;make html
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;hr&gt;
-&lt;p&gt;另，更新艺术字体或字集：&lt;/p&gt;
-&lt;p&gt;(1 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;好记性不如烂笔头。&lt;/p&gt;
+&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%;"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;git …&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</summary><content type="html">&lt;p&gt;好记性不如烂笔头。&lt;/p&gt;
 &lt;p&gt;1、Python 虚拟环境&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%;"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;virtualenv -p python3 ~/.py3
 source ~/.py3/bin/activate
@@ -294,12 +276,7 @@ pelican-themes -i ~/github/youngsterxyf/my-pelican-themes
 &lt;p&gt;(5) 重新构建生成博客&lt;/p&gt;</content><category term="其他"></category></entry><entry><title>读文笔记：Kafka 官方设计文档</title><link href="http://youngsterxyf.github.io/2019/10/13/reading-kafka-design/" rel="alternate"></link><published>2019-10-13T00:00:00+08:00</published><updated>2019-10-13T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-10-13:/2019/10/13/reading-kafka-design/</id><summary type="html">&lt;p&gt;原文：&lt;a href="http://kafka.apache.org/documentation/#design"&gt;http://kafka.apache.org/documentation/#design&lt;/a&gt;&lt;/p&gt;
 &lt;h2&gt;数据持久化&lt;/h2&gt;
 &lt;h4&gt;不用惧怕文件系统&lt;/h4&gt;
-&lt;p&gt;磁盘的读写速度，取决于如何读写。对于线性读写方式，操作系统做了充分的优化：提前读 - 预取若干数据块，滞后写 - 将小的逻辑写操作合并成一个大的物理写操作。&lt;/p&gt;
-&lt;p&gt;&lt;a href="http://queue.acm.org/detail.cfm?id=1563874"&gt;研究&lt;/a&gt;表明：&lt;a href="http://deliveryimages.acm.org/10.1145/1570000/1563874/jacobs3.jpg"&gt;顺序读写磁盘（sequential disk access）的速度有些时候比随机访问内存还要快&lt;/a&gt;。&lt;/p&gt;
-&lt;p&gt;现代操作系统激进地尽可能将空闲内存用作磁盘缓存。所有磁盘读写都经过操作系统提供的统一缓存。这个特性没法轻易关闭，除非直接 I/O （direct I/O），因此，如果程序在用户进程中进行数据缓存，缓存的数据通常也是和操作系统页缓存重复的，缓存两遍，没啥意义，也浪费内存。&lt;/p&gt;
-&lt;p&gt;而且，Kafka 是构建在 JVM 之上的，了解 Java 内存使用方式的人应该都知道：&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;对象的内存开销非常高，通常是实际数据大小的2倍（甚至更多 …&lt;/li&gt;&lt;/ol&gt;</summary><content type="html">&lt;p&gt;原文：&lt;a href="http://kafka.apache.org/documentation/#design"&gt;http://kafka.apache.org/documentation/#design&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;磁盘的读写速度，取决于如何读写。对于线性读写方式，操作系统做了充 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;原文：&lt;a href="http://kafka.apache.org/documentation/#design"&gt;http://kafka.apache.org/documentation/#design&lt;/a&gt;&lt;/p&gt;
 &lt;h2&gt;数据持久化&lt;/h2&gt;
 &lt;h4&gt;不用惧怕文件系统&lt;/h4&gt;
 &lt;p&gt;磁盘的读写速度，取决于如何读写。对于线性读写方式，操作系统做了充分的优化：提前读 - 预取若干数据块，滞后写 - 将小的逻辑写操作合并成一个大的物理写操作。&lt;/p&gt;
@@ -394,14 +371,7 @@ pelican-themes -i ~/github/youngsterxyf/my-pelican-themes
 &lt;p&gt;在组协调器接收到一个 OffsetCommitRequest 请求后，会将请求数据写到一个特殊的&lt;a href="http://kafka.apache.org/documentation/#compaction"&gt;经压实的（compacted）&lt;/a&gt; Kafka topic - &lt;em&gt;__consumer_offsets&lt;/em&gt;。在目标分区的所有副本都确认收到了，协调器才会向消费者发送进度提交成功的响应。这个 topic 的消息日志数据会定期进行压实（compact），因为只需要为每个分区维护最新的消费进度。协调器也会在内存中缓存消费进度，方便快速响应消费进度查询请求。&lt;/p&gt;
 &lt;p&gt;注：如果消费者/消费组特别多（例如：我们广告引擎服务，读取正排消息 topic，一个机器实例就是一个 consumer group，数量在几百到几千不等），那么组协调器的压力会比较大，那么确保组协调器的角色均匀分配到集群的所有 broker，比较关键。另外，&lt;em&gt;__consumer_offsets&lt;/em&gt; 这个 topic 的分区数量不能太少，最好和 broker 数量相同或者整数倍数量。&lt;/p&gt;</content><category term="其他"></category><category term="文章"></category><category term="笔记"></category><category term="经典"></category><category term="Kafka"></category><category term="进行中"></category></entry><entry><title>读文笔记：Photon - Fault-tolerant and Scalable Joining of Continuous Data Streams</title><link href="http://youngsterxyf.github.io/2019/10/10/reading-photon/" rel="alternate"></link><published>2019-10-10T00:00:00+08:00</published><updated>2019-10-10T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-10-10:/2019/10/10/reading-photon/</id><summary type="html">&lt;p&gt;原文：&lt;a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//pubs/archive/41318.pdf"&gt;Photon: Fault-tolerant and Scalable Joining of Continuous Data Streams&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Photon 是谷歌广告系统中用于 join 广告曝光日志流和点击日志流的一套系统。&lt;/p&gt;
-&lt;p&gt;数据流 join 为什么没用 flink 这类通用的流式处理框架？&lt;/p&gt;
-&lt;p&gt;数据流 join，特别是广告数据流 join，技术上难在哪里？&lt;/p&gt;
-&lt;p&gt;任一条流都可能乱序或延迟，广告点击涉及计费的问题，计费不能多算广告主的钱，也要尽可能避免漏计费，降低广告收入损失。&lt;/p&gt;
-&lt;hr&gt;
-&lt;p&gt;该系统在谷歌生产环境中每分钟处理百万级的事件，端到端延迟小于 10 秒（注：对于广告实时竞价的广告主而言，这个延迟的长短很重要）。&lt;/p&gt;
-&lt;p&gt;广告曝光、点击整体流程为：&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;用户搜索某个关键词时，谷歌的服务器会返回广告和搜索结果。广告服务器会将广告 query 和结果数据作为日志发送到多个日志数据中心（multiple logs-datacenters），最终持久化存储在 GFS 上。每次 query …&lt;/li&gt;&lt;/ol&gt;</summary><content type="html">&lt;p&gt;原文：&lt;a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//pubs/archive/41318.pdf"&gt;Photon: Fault-tolerant and Scalable Joining of Continuous Data Streams&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;数据流 join 为什么没用 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;原文：&lt;a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//pubs/archive/41318.pdf"&gt;Photon: Fault-tolerant and Scalable Joining of Continuous Data Streams&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Photon 是谷歌广告系统中用于 join 广告曝光日志流和点击日志流的一套系统。&lt;/p&gt;
 &lt;p&gt;数据流 join 为什么没用 flink 这类通用的流式处理框架？&lt;/p&gt;
 &lt;p&gt;数据流 join，特别是广告数据流 join，技术上难在哪里？&lt;/p&gt;
@@ -457,13 +427,7 @@ pelican-themes -i ~/github/youngsterxyf/my-pelican-themes
 &lt;p&gt;基于时间局部性，EventStore 内部分 2 层，第一层为 CacheEventStore - 一个类似 Memcached 的 KV 内存映射，K 是 query_id，V 是曝光日志内容，基于一致性哈希算法根据 query_id 进行分片，缓存几分钟最新的曝光日志数据，可以命中 90% 左右的查询请求。&lt;/p&gt;
 &lt;p&gt;如果 CacheEventStore 查询 miss，则交于第二层 LogsEventStore 来处理。LogsEventStore 对 query_id 和 曝光日志所在的日志文件及目标起始行（因为日志文件数据大致按时间戳有序，根据 query_id 中的时间戳大致可以知道查询的起始行）建立索引（实际存储在 BigTable 中），查询时，先根据 query_id，查到目标日志文件和起始行，然后从日志文件中读取原始曝光日志内容。&lt;/p&gt;</content><category term="其他"></category><category term="论文"></category><category term="笔记"></category></entry><entry><title>读文笔记：日志 - 每个软件工程师都应该了解的实时数据统一抽象</title><link href="http://youngsterxyf.github.io/2019/10/10/reading-the-log/" rel="alternate"></link><published>2019-10-10T00:00:00+08:00</published><updated>2019-10-10T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-10-10:/2019/10/10/reading-the-log/</id><summary type="html">&lt;p&gt;原文：&lt;a href="https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying"&gt;The Log: What every software engineer should know about real-time data's unifying abstraction&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;一句话概括，这篇文章细说了 Kafka 的本质原理、解决的问题、适用性等。&lt;/p&gt;
-&lt;p&gt;Kafka 本质上是提供日志数据流。&lt;/p&gt;
-&lt;p&gt;日志是客观世界的事件记录。&lt;/p&gt;
-&lt;blockquote&gt;
-&lt;p&gt;A log is perhaps the simplest possible storage abstraction. It is an append-only, totally-ordered sequence of records ordered by time.&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;日志数据的特点是：只增不改，自带时间戳，数据存储的先后顺序即（大致）是实际发生的时间先后顺序。&lt;/p&gt;
-&lt;p&gt;数据库可以基于日志来还原历史操作行为 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;原文：&lt;a href="https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying"&gt;The Log: What every software engineer should know about real-time data's unifying abstraction&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Kafka 本质上是提供日 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;原文：&lt;a href="https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying"&gt;The Log: What every software engineer should know about real-time data's unifying abstraction&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;一句话概括，这篇文章细说了 Kafka 的本质原理、解决的问题、适用性等。&lt;/p&gt;
 &lt;p&gt;Kafka 本质上是提供日志数据流。&lt;/p&gt;
 &lt;p&gt;日志是客观世界的事件记录。&lt;/p&gt;
@@ -502,12 +466,7 @@ pelican-themes -i ~/github/youngsterxyf/my-pelican-themes
 &lt;p&gt;对于实现高吞吐能力，除了分片，Kakfa 还充分利用了攒批处理：生产者可以批量发送，中间人将数据攒批写入磁盘日志文件 等等。&lt;/p&gt;
 &lt;p&gt;此外，由于涉及大量的磁盘文件和网络之间数据读写，Kafka 还充分利用操作系统内核的零拷贝传输能力。&lt;/p&gt;</content><category term="其他"></category><category term="论文"></category><category term="笔记"></category></entry><entry><title>Lucene 查询解析器语法（译）</title><link href="http://youngsterxyf.github.io/2019/09/04/lucene-query-parser-syntax/" rel="alternate"></link><published>2019-09-04T00:00:00+08:00</published><updated>2019-09-04T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-09-04:/2019/09/04/lucene-query-parser-syntax/</id><summary type="html">&lt;p&gt;原文：&lt;a href="http://lucene.apache.org/core/8_2_0/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#package.description"&gt;Query Parser Syntax&lt;/a&gt;&lt;/p&gt;
 &lt;h2&gt;概览&lt;/h2&gt;
-&lt;p&gt;Lucene 除了提供 API 方便开发者创建查询请求，还通过一个查询解析器（一个词法分析器，使用 JavaCC 将一个字符串翻译成一个 Lucene 查询）提供一种功能丰富的查询语言。&lt;/p&gt;
-&lt;p&gt;一般来说，查询解析器支持的语法在不同发布版本之间可能会有变化。当前这个文档页面描述的是当前这个发布版本的语法。如果你正在使用一个不同版本的 Lucene，请参考该版本自带的 docs/queryparsersyntax.html 文档。&lt;/p&gt;
-&lt;p&gt;在选择使用这个查询解析器之前，请考虑以下 3 点：&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;如果你准备以编程的方式生成一个查询字符串，然后使用查询解析器来解析它。那么，你应该认真考虑一下是否应该直接使用查询 API 来构建查询。换句话说，查询解析器专门用于人类输入的文本，而不是程序生成的文本。&lt;/li&gt;
-&lt;li&gt;不可分词（untokenized）的域（译者注：抱歉，此处没太理解）最好直接添加到查询中，而不是通过查询解析器来解析。如果一个域的值是通过应用自动生成的，那么应该为这个域自动生成查询子句 …&lt;/li&gt;&lt;/ol&gt;</summary><content type="html">&lt;p&gt;原文：&lt;a href="http://lucene.apache.org/core/8_2_0/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#package.description"&gt;Query Parser Syntax&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Lucene 除了提供 API 方便开发者创建查询请求，还通过一个查询解析器（一个词法分析器，使用 JavaCC 将一个字符串 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;原文：&lt;a href="http://lucene.apache.org/core/8_2_0/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#package.description"&gt;Query Parser Syntax&lt;/a&gt;&lt;/p&gt;
 &lt;h2&gt;概览&lt;/h2&gt;
 &lt;p&gt;Lucene 除了提供 API 方便开发者创建查询请求，还通过一个查询解析器（一个词法分析器，使用 JavaCC 将一个字符串翻译成一个 Lucene 查询）提供一种功能丰富的查询语言。&lt;/p&gt;
 &lt;p&gt;一般来说，查询解析器支持的语法在不同发布版本之间可能会有变化。当前这个文档页面描述的是当前这个发布版本的语法。如果你正在使用一个不同版本的 Lucene，请参考该版本自带的 docs/queryparsersyntax.html 文档。&lt;/p&gt;
@@ -667,21 +626,7 @@ pelican-themes -i ~/github/youngsterxyf/my-pelican-themes
 
 &lt;p&gt;在特殊字符之前加 &lt;code&gt;\&lt;/code&gt; 来转义。例如，使用如下查询语句来搜索 &lt;code&gt;(1+1):2&lt;/code&gt;：&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%;"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;\(1\+1\)\:2
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content><category term="其他"></category><category term="翻译"></category><category term="Lucene"></category><category term="ElasticSearch"></category><category term="Kibana"></category></entry><entry><title>一个 Python 小项目的小结</title><link href="http://youngsterxyf.github.io/2019/08/14/a-python-project-summary/" rel="alternate"></link><published>2019-08-14T00:00:00+08:00</published><updated>2019-08-14T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-08-14:/2019/08/14/a-python-project-summary/</id><summary type="html">&lt;p&gt;前段时间临时接手一个 Python 小项目，这个项目实现的类似一个管控平台，其中核心功能是为算法同学提供机器学习模型训练任务的全流程管理，平台后端基于 Flask 框架实现，前端基于 Ant Design Pro 实现。&lt;/p&gt;
-&lt;p&gt;代码稍微有些乱，所以做了部分代码的重构，在此做点经验小结。&lt;/p&gt;
-&lt;h3&gt;1、并行化或异步化&lt;/h3&gt;
-&lt;p&gt;部分请求处理逻辑，由于比较耗时，故使用线程池来加速，或者使用独立线程异步处理，或者先存储一个中间状态，由后台定时任务来完成实际的处理工作。对于异步处理结果，前端通过轮询来获取。&lt;/p&gt;
-&lt;p&gt;线程池的使用，主要使用 map 方法：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%;"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;from&lt;/span&gt; multiprocessing.dummy &lt;span style="color: #0000ff"&gt;import&lt;/span&gt; Pool
-
-input_list = [...]
-pool: Pool = Pool(len(input_list))
-pool.map(func, input_list)
-pool.close()
-pool.join()
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;独立线程异步处理 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;前段时间临时接手一个 Python 小项目，这个项目实现的类似一个管控平台，其中核心功能是为算法同学提供机器学习模型训练任务的全流程管理，平台后端基于 Flask 框架实现，前端基于 Ant Design Pro 实现。&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content><category term="其他"></category><category term="翻译"></category><category term="Lucene"></category><category term="ElasticSearch"></category><category term="Kibana"></category></entry><entry><title>一个 Python 小项目的小结</title><link href="http://youngsterxyf.github.io/2019/08/14/a-python-project-summary/" rel="alternate"></link><published>2019-08-14T00:00:00+08:00</published><updated>2019-08-14T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-08-14:/2019/08/14/a-python-project-summary/</id><summary type="html">&lt;p&gt;前段时间临时接手一个 Python 小项目，这个项目实现的类似一个管控平台，其中核心功能是为算法同学提供机器学习模型训 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;前段时间临时接手一个 Python 小项目，这个项目实现的类似一个管控平台，其中核心功能是为算法同学提供机器学习模型训练任务的全流程管理，平台后端基于 Flask 框架实现，前端基于 Ant Design Pro 实现。&lt;/p&gt;
 &lt;p&gt;代码稍微有些乱，所以做了部分代码的重构，在此做点经验小结。&lt;/p&gt;
 &lt;h3&gt;1、并行化或异步化&lt;/h3&gt;
 &lt;p&gt;部分请求处理逻辑，由于比较耗时，故使用线程池来加速，或者使用独立线程异步处理，或者先存储一个中间状态，由后台定时任务来完成实际的处理工作。对于异步处理结果，前端通过轮询来获取。&lt;/p&gt;
@@ -930,8 +875,7 @@ LOG_FORMAT = &lt;span style="color: #a31515"&gt;&amp;#39;%(asctime)-15s - %(leve
 &lt;p&gt;其中为了方便本地开发测试，允许本地开发环境跨域访问测试环境（最好不要直接跨越访问生产环境），并且自动区分，corsFetch 调用方无感知。&lt;/p&gt;</content><category term="其他"></category><category term="总结"></category><category term="Python"></category></entry><entry><title>Reactor 官方文档翻译简化版</title><link href="http://youngsterxyf.github.io/2019/06/26/simplified-reactor-doc-zh/" rel="alternate"></link><published>2019-06-26T00:00:00+08:00</published><updated>2019-06-26T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-06-26:/2019/06/26/simplified-reactor-doc-zh/</id><summary type="html">&lt;p&gt;原文：&lt;a href="https://projectreactor.io/docs/core/release/reference/"&gt;Reactor 3 Reference Guide&lt;/a&gt;&lt;/p&gt;
 &lt;h3&gt;1. 起步&lt;/h3&gt;
 &lt;h4&gt;1.1 Reactor 简介&lt;/h4&gt;
-&lt;p&gt;Reactor 是为 JVM 准备的一个完全非阻塞的反应式编程基础组件，支持高效的需求管理（以管理“反压”的形式），直接与 Java 8 的函数式 API 集成，尤其是 &lt;code&gt;CompletableFuture&lt;/code&gt;、&lt;code&gt;Stream&lt;/code&gt; 以及 &lt;code&gt;Duration&lt;/code&gt;，提供可组合的异步序列 API - &lt;code&gt;Flux&lt;/code&gt;（适用于 N 个元素的序列）和 &lt;code&gt;Mono&lt;/code&gt;（适用于 0 或 1个元素的序列）--- 并且全面地（extensively）实现了 &lt;a href="https://www.reactive-streams.org/"&gt;反应式流（Reative Streams）&lt;/a&gt; 规范。&lt;/p&gt;
-&lt;p&gt;借助 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;原文：&lt;a href="https://projectreactor.io/docs/core/release/reference/"&gt;Reactor 3 Reference Guide&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Reactor 是为 JVM 准备的一个完全非阻塞的反应式编程基础组件，支持高效的需求管理（以管理 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;原文：&lt;a href="https://projectreactor.io/docs/core/release/reference/"&gt;Reactor 3 Reference Guide&lt;/a&gt;&lt;/p&gt;
 &lt;h3&gt;1. 起步&lt;/h3&gt;
 &lt;h4&gt;1.1 Reactor 简介&lt;/h4&gt;
 &lt;p&gt;Reactor 是为 JVM 准备的一个完全非阻塞的反应式编程基础组件，支持高效的需求管理（以管理“反压”的形式），直接与 Java 8 的函数式 API 集成，尤其是 &lt;code&gt;CompletableFuture&lt;/code&gt;、&lt;code&gt;Stream&lt;/code&gt; 以及 &lt;code&gt;Duration&lt;/code&gt;，提供可组合的异步序列 API - &lt;code&gt;Flux&lt;/code&gt;（适用于 N 个元素的序列）和 &lt;code&gt;Mono&lt;/code&gt;（适用于 0 或 1个元素的序列）--- 并且全面地（extensively）实现了 &lt;a href="https://www.reactive-streams.org/"&gt;反应式流（Reative Streams）&lt;/a&gt; 规范。&lt;/p&gt;
@@ -1661,10 +1605,7 @@ main -&amp;gt; 10
 &lt;/div&gt;</content><category term="其他"></category><category term="翻译"></category><category term="Reactor"></category><category term="Reactive"></category></entry><entry><title>Java System.getProperty VS. System.getenv（译）</title><link href="http://youngsterxyf.github.io/2019/06/25/java-prop-env/" rel="alternate"></link><published>2019-06-25T00:00:00+08:00</published><updated>2019-06-25T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-06-25:/2019/06/25/java-prop-env/</id><summary type="html">&lt;p&gt;原文：&lt;a href="https://www.baeldung.com/java-system-get-property-vs-system-getenv"&gt;Java System.getProperty vs System.getenv&lt;/a&gt;&lt;/p&gt;
 &lt;h2&gt;1、简介&lt;/h2&gt;
 &lt;p&gt;Java 应用代码中会自动引入 &lt;code&gt;java.lang&lt;/code&gt; 包。这个包包含很多常用的类，包括 &lt;code&gt;NullPointerException&lt;/code&gt;、&lt;code&gt;Object&lt;/code&gt;、&lt;code&gt;Math&lt;/code&gt;、&lt;code&gt;String&lt;/code&gt; 等等。&lt;/p&gt;
-&lt;p&gt;其中 &lt;code&gt;java.lang.System&lt;/code&gt; 类是一个 final 类，这意味着开发者无法继承它，其所有方法都是静态的（static）。&lt;/p&gt;
-&lt;p&gt;System 类中有两个方法，分别来&lt;strong&gt;读取系统属性（system properties）和环境变量（environment variables）&lt;/strong&gt;，下面我们来看看这两者的区别。&lt;/p&gt;
-&lt;h2&gt;2、使用 System.getProperty()&lt;/h2&gt;
-&lt;p&gt;Java 平台使用一个 &lt;code&gt;Properties&lt;/code&gt; 对象来提供&lt;strong&gt;本地系统相关的信息和配置 …&lt;/strong&gt;&lt;/p&gt;</summary><content type="html">&lt;p&gt;原文：&lt;a href="https://www.baeldung.com/java-system-get-property-vs-system-getenv"&gt;Java System.getProperty vs System.getenv&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;其中 &lt;code&gt;java.lang.System&lt;/code&gt; 类 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;原文：&lt;a href="https://www.baeldung.com/java-system-get-property-vs-system-getenv"&gt;Java System.getProperty vs System.getenv&lt;/a&gt;&lt;/p&gt;
 &lt;h2&gt;1、简介&lt;/h2&gt;
 &lt;p&gt;Java 应用代码中会自动引入 &lt;code&gt;java.lang&lt;/code&gt; 包。这个包包含很多常用的类，包括 &lt;code&gt;NullPointerException&lt;/code&gt;、&lt;code&gt;Object&lt;/code&gt;、&lt;code&gt;Math&lt;/code&gt;、&lt;code&gt;String&lt;/code&gt; 等等。&lt;/p&gt;
 &lt;p&gt;其中 &lt;code&gt;java.lang.System&lt;/code&gt; 类是一个 final 类，这意味着开发者无法继承它，其所有方法都是静态的（static）。&lt;/p&gt;
@@ -1730,18 +1671,7 @@ Process process = pb.start();
 &lt;p&gt;原文是这么写的，但我认为这句话有问题。系统属性明明可以在应用运行时通过命令行参数指定，也可以将属性文件打包到应用包中，在运行时加载（通过 &lt;code&gt;System.getProperties().load&lt;/code&gt; 方法）。&amp;#160;&lt;a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text"&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
-&lt;/div&gt;</content><category term="其他"></category><category term="翻译"></category><category term="Java"></category></entry><entry><title>Java 单测伴侣 - mockito</title><link href="http://youngsterxyf.github.io/2019/06/17/mockito/" rel="alternate"></link><published>2019-06-17T00:00:00+08:00</published><updated>2019-06-17T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-06-17:/2019/06/17/mockito/</id><summary type="html">&lt;p&gt;其实工作以来，我很少写测试/单测代码，一方面是大部分互联网公司团队对测试的要求不高，另一方面是想写好测试代码还挺难的，挺花时间，其中最麻烦的是待测代码可能会访问外部资源（比如数据库、HTTP API），如果不能方便地进模拟访问这些外部资源，那么测试起来会非常麻烦。&lt;/p&gt;
-&lt;p&gt;但，对于复杂逻辑，如果不经过严格测试，发布到生产环境，又有些不放心，没底气，或者在代码重构时，如果没有覆盖全面的测试，很难评估代码变动带来的影响。&lt;/p&gt;
-&lt;p&gt;直到遇到 &lt;a href="https://site.mockito.org/"&gt;mockito&lt;/a&gt;，我才觉得是时候认真写写测试代码了。&lt;/p&gt;
-&lt;hr&gt;
-&lt;p&gt;&lt;a href="https://site.mockito.org/"&gt;mockito&lt;/a&gt; 提供两种对象模拟方式：&lt;strong&gt;mock&lt;/strong&gt; 和 &lt;strong&gt;spy&lt;/strong&gt;。&lt;/p&gt;
-&lt;p&gt;简单来说，mock 模拟的对象是一个完全假的对象，只是具备指定类型的接口，以 &lt;code&gt;java.util.List&lt;/code&gt; 为例：&lt;/p&gt;
-&lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%;"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span style="color: #0000ff"&gt;import static&lt;/span&gt; org.mockito.Mockito.mock;
-
-List mockedList = mock(List.class);
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;虽然 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;其实工作以来，我很少写测试/单测代码，一方面是大部分互联网公司团队对测试的要求不高，另一方面是想写好测试代码还挺难的，挺花时间，其中最麻烦的是待测代码可能会访问外部资源（比如数据库、HTTP API），如果不能方便地进模拟访问这些外部资源，那么测试起来会非常麻烦。&lt;/p&gt;
+&lt;/div&gt;</content><category term="其他"></category><category term="翻译"></category><category term="Java"></category></entry><entry><title>Java 单测伴侣 - mockito</title><link href="http://youngsterxyf.github.io/2019/06/17/mockito/" rel="alternate"></link><published>2019-06-17T00:00:00+08:00</published><updated>2019-06-17T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2019-06-17:/2019/06/17/mockito/</id><summary type="html">&lt;p&gt;其实工作以来，我很少写测试/单测代码，一方面是大部分互联网公司团队对测试的要求不高，另一方面是想写好测试代码 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;其实工作以来，我很少写测试/单测代码，一方面是大部分互联网公司团队对测试的要求不高，另一方面是想写好测试代码还挺难的，挺花时间，其中最麻烦的是待测代码可能会访问外部资源（比如数据库、HTTP API），如果不能方便地进模拟访问这些外部资源，那么测试起来会非常麻烦。&lt;/p&gt;
 &lt;p&gt;但，对于复杂逻辑，如果不经过严格测试，发布到生产环境，又有些不放心，没底气，或者在代码重构时，如果没有覆盖全面的测试，很难评估代码变动带来的影响。&lt;/p&gt;
 &lt;p&gt;直到遇到 &lt;a href="https://site.mockito.org/"&gt;mockito&lt;/a&gt;，我才觉得是时候认真写写测试代码了。&lt;/p&gt;
 &lt;hr&gt;
@@ -2102,16 +2032,7 @@ false_then_run() {
     (&lt;span style="color: #a31515"&gt;${&lt;/span&gt;condition&lt;span style="color: #a31515"&gt;}&lt;/span&gt;)
     &lt;span style="color: #0000ff"&gt;if&lt;/span&gt; [ $? -ne 0 ]
     &lt;span style="color: #0000ff"&gt;then&lt;/span&gt;
-        (&lt;span style="color: #a31515"&gt;${&lt;/span&gt;action&lt;span style="color: #a31515"&gt;}&lt;/span&gt;)
-    &lt;span style="color: #0000ff"&gt;else&lt;/span&gt;
-        echo &lt;span style="color: #a31515"&gt;&amp;quot;&amp;#39;&lt;/span&gt;$1&lt;span style="color: #a31515"&gt;&amp;#39; is true, don&amp;#39;t run &amp;#39;&lt;/span&gt;$2&lt;span style="color: #a31515"&gt;&amp;#39;&amp;quot;&lt;/span&gt;
-    &lt;span style="color: #0000ff"&gt;fi&lt;/span&gt;
-}
-
-map() {
-    &lt;span style="color: #0000ff"&gt;for&lt;/span&gt; item &lt;span style="color: #0000ff"&gt;in&lt;/span&gt; $2
-    &lt;span style="color: #0000ff"&gt;do&lt;/span&gt;
-        ($1 …&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</summary><content type="html">&lt;p&gt;使用丑陋的编程语言也能写出漂亮的代码。&lt;/p&gt;
+        (&lt;span style="color: #a31515"&gt;${&lt;/span&gt;action …&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</summary><content type="html">&lt;p&gt;使用丑陋的编程语言也能写出漂亮的代码。&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%;"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;true_then_run() {
     condition=$1
     action=$2
@@ -2193,8 +2114,7 @@ sum() {
     &amp;lt;protobuf.output.directory&amp;gt;${project.build.directory}/generated-sources&amp;lt;/protobuf.output.directory&amp;gt;
     &lt;span style="color: #008000"&gt;&amp;lt;!-- library versions --&amp;gt;&lt;/span&gt;
     &amp;lt;build-helper-maven-plugin.version&amp;gt;3.0.0&amp;lt;/build-helper-maven-plugin.version&amp;gt;
-    &amp;lt;maven-antrun-plugin.version&amp;gt;1.8&amp;lt;/maven-antrun-plugin.version&amp;gt;
-    &amp;lt;maven-dependency-plugin.version&amp;gt;3.0.2&amp;lt;/maven-dependency-plugin.version …&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</summary><content type="html">&lt;p&gt;1.pom.xml 中添加如下属性配置：&lt;/p&gt;
+    &amp;lt;maven-antrun-plugin.version&amp;gt;1.8&amp;lt;/maven-antrun-plugin …&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</summary><content type="html">&lt;p&gt;1.pom.xml 中添加如下属性配置：&lt;/p&gt;
 &lt;div class="highlight" style="background: #ffffff"&gt;&lt;pre style="line-height: 125%;"&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&amp;lt;properties&amp;gt;
     &lt;span style="color: #008000"&gt;&amp;lt;!-- protobuf paths --&amp;gt;&lt;/span&gt;
     &amp;lt;protobuf.input.directory&amp;gt;${project.basedir}/src/main/protobuf&amp;lt;/protobuf.input.directory&amp;gt;
@@ -2324,9 +2244,7 @@ sum() {
 
 &lt;p&gt;&lt;strong&gt;参考资料&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;http://vlkan.com/blog/post/2015/11/27/maven-protobuf/&lt;/p&gt;
-&lt;p&gt;http://www.chendan.me/2017/07/02/maven-protobuf/&lt;/p&gt;</content><category term="其他"></category><category term="java"></category><category term="maven"></category><category term="protobuf"></category></entry><entry><title>《Python 编程之美》译者序</title><link href="http://youngsterxyf.github.io/2018/04/01/the-python-guide/" rel="alternate"></link><published>2018-04-01T00:00:00+08:00</published><updated>2018-04-01T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2018-04-01:/2018/04/01/the-python-guide/</id><summary type="html">&lt;p&gt;从毕业至今，在互联网行业从事软件研发工作，将近五年。这五年间，做过后端开发、前端开发、大数据处理等，使用过的编程语言包括：Python、PHP、Go、Java、JavaScript 等。&lt;/p&gt;
-&lt;p&gt;虽说编程语言各异，但我使用它们来写各种项目的代码却一直坚持两点：代码可读性和自解释性/自文档性（self-documentation）。这很大程度上应该是受到 Python 语言设计哲学的影响 - 追求简单易读易懂的代码。&lt;/p&gt;
-&lt;p&gt;很多人可能会认为这两点其实是一点 - 代码可读性，但我想做点区分：代码可读性突出对代码阅读者视觉上的影响，是否存在不必要的理解干扰，比如：必要的空行、变量定义与使用之间的距离、函数体/逻辑分支是否过长、逻辑表达是否直观等等。可读性高的代码通常都非常漂亮、赏心悦目。自解释性代码则更突出语义层面，比如：变量名称/函数名称/类名是否恰当、函数/方法/API 是否单一职责、工程目录结构/包/模块拆分是否符合“高内聚低耦合”原则等等 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;从毕业至今，在互联网行业从事软件研发工作，将近五年。这五年间，做过后端开发、前端开发、大数据处理等，使用过的编程语言包括：Python、PHP、Go、Java、JavaScript 等。&lt;/p&gt;
+&lt;p&gt;http://www.chendan.me/2017/07/02/maven-protobuf/&lt;/p&gt;</content><category term="其他"></category><category term="java"></category><category term="maven"></category><category term="protobuf"></category></entry><entry><title>《Python 编程之美》译者序</title><link href="http://youngsterxyf.github.io/2018/04/01/the-python-guide/" rel="alternate"></link><published>2018-04-01T00:00:00+08:00</published><updated>2018-04-01T00:00:00+08:00</updated><author><name>xiayf</name></author><id>tag:youngsterxyf.github.io,2018-04-01:/2018/04/01/the-python-guide/</id><summary type="html">&lt;p&gt;从毕业至今，在互联网行业从事软件研发工作，将近五年。这五年间，做过后端开发、前端开发、大数据处理等，使用过的编程语 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;从毕业至今，在互联网行业从事软件研发工作，将近五年。这五年间，做过后端开发、前端开发、大数据处理等，使用过的编程语言包括：Python、PHP、Go、Java、JavaScript 等。&lt;/p&gt;
 &lt;p&gt;虽说编程语言各异，但我使用它们来写各种项目的代码却一直坚持两点：代码可读性和自解释性/自文档性（self-documentation）。这很大程度上应该是受到 Python 语言设计哲学的影响 - 追求简单易读易懂的代码。&lt;/p&gt;
 &lt;p&gt;很多人可能会认为这两点其实是一点 - 代码可读性，但我想做点区分：代码可读性突出对代码阅读者视觉上的影响，是否存在不必要的理解干扰，比如：必要的空行、变量定义与使用之间的距离、函数体/逻辑分支是否过长、逻辑表达是否直观等等。可读性高的代码通常都非常漂亮、赏心悦目。自解释性代码则更突出语义层面，比如：变量名称/函数名称/类名是否恰当、函数/方法/API 是否单一职责、工程目录结构/包/模块拆分是否符合“高内聚低耦合”原则等等。长期追求这两点，可以极大地提升个人，特别是团队的工作效率和工作质量。&lt;/p&gt;
 &lt;p&gt;本书作者 Kenneth Reitz 于 2011 年发布 Requests 这个 HTTP 请求工具库，提出“for humans”的理念，强调软件/工具库应该对人类友好易用，这一理念本质上是对 Python 哲学（特别是上述两点）的一种引申和发扬。之后 Reitz 在一些 Python大会上做技术分享，宣扬“for humans”理念，对 Python 社区产生巨大影响。我在第一次用过 Requests 库之后，便很少使用 Python 标准库中的 urllib 和 urllib2，现在标准库文档中也特别建议开发者使用 Requests。&lt;/p&gt;

@@ -70,31 +70,11 @@
                     </h2>
                 </header>
                 <footer class="post-info">
-                    <abbr class="published" title="2015-11-16T00:00:00+08:00"> 2015-11-16 Mon </abbr>
+                    <abbr class="published" title="2015-11-16T00:00:00+08:00"> 2015-11-16 一 </abbr>
 <address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
                 <div class="entry-content"> <p>上周五早上9点多，我还在上班的路上，接到技术leader的电话：线上突然出故障了；接着发来一张故障信息页面截图：</p>
 <p><img alt="system-fault-err-page" src="https://i.loli.net/2020/06/14/L4fVgPGAb3Whznr.png"></p>
-<p>截图包含的信息是：数据库中没找到数据表<code>Users</code>。</p>
-<p>但同事检查过数据库，Users数据表是存在的。</p>
-<hr>
-<p>我快速地回忆了一下最近的代码发布和环境变更 - 前一天有个同事对线上机器做了点改动。因此，让同事赶紧检查一下之前的改动是否有问题，经检查确认改动没有问题，而且稍微思考一下就应该明白不是配置的问题，如果是配置的问题，那么问题应该早就出现了，而不是在早上9点多时候才发生。</p>
-<hr>
-<p>我翻了翻手机中最近收到的几条告警短信，去除重复告警短信，只有两条告警：</p>
-<ul>
-<li>某台Web服务器上出现大量的500错误</li>
-<li>某台数据库服务器的磁盘使用率为98.99%</li>
-</ul>
-<p>由此可以推测两个故障原因：</p>
-<ol>
-<li>那台Web服务器上应用的数据库配置有问题 - 但检查之后确认没有问题</li>
-<li>由于那台数据库服务器磁盘满导致的问题，虽然一时还想不到其中的关联 - 同事在检查之后，确认那台机器的磁盘确实已满，但通过内网的数据库管理后台，可以正常访问数据库，所以认为应该不是磁盘满导致的问题</li>
-</ol>
-<p>如此，一时我也没想明白故障的原因。</p>
-<hr>
-<p>接着，同事发来消息：只有登录用户才会遇到这个问题！</p>
-<p>这时，基于之前的线索，基本能断定故障原因是 - 数据库服务器磁盘满。为什么呢？</p>
-<ol>
-<li>数据库管理后台默认是<strong>只读</strong>：读数据表列表、数据表结构、单个表的若干条数据 …</li></ol> </div><!-- /.entry-content -->
+<p>截图包含的信息是：数 …</p> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="./2015/11/16/another-system-fault/" rel="bookmark" title="Permalink to 又一次系统故障">阅读全文</a></div>
                 <div class="row tag-row">
                     <span>标签: </span>
@@ -111,28 +91,10 @@
                     </h2>
                 </header>
                 <footer class="post-info">
-                    <abbr class="published" title="2015-10-02T00:00:00+08:00"> 2015-10-02 Fri </abbr>
+                    <abbr class="published" title="2015-10-02T00:00:00+08:00"> 2015-10-02 五 </abbr>
 <address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
                 <div class="entry-content"> <p>前段时间，工作中遭遇一次故障，虽然不算什么“疑难杂症”，倒也花了不少时间才真正找到故障的原因，故也值得记录一下。</p>
-<p>为方便读者快速理解故障，先给出系统大致的架构图：</p>
-<p><img alt="gxt-tech-arch" src="https://i.loli.net/2020/06/14/2ZBQgfPqMUnhVzY.png"></p>
-<p>其中，</p>
-<ol>
-<li>每台Web服务器上开启12个PHP-FPM实例，并配置到Nginx的upstream，每个实例最多可以开启10个子进程</li>
-<li>“Database Proxy”的代理规则为：写操作及事务中的所有SQL操作都交给主MySQL处理，其余的读操作都交给任意一台从MySQL处理</li>
-</ol>
-<hr>
-<p>故障所表现的现象包括：</p>
-<p>1.大量请求响应为502，但每次故障发生时，错误响应一般集中在一台Web服务器，如下图所示：</p>
-<p><img alt="nginx-502-error" src="https://i.loli.net/2020/06/14/cPmFMn8gKZdzVoB.png"></p>
-<p><img alt="nginx-server-502-count" src="https://i.loli.net/2020/06/14/CSRj4ILYVlU21Es.jpg"></p>
-<p>2.（一台或多台）MySQL数据库服务器CPU使用率飙升（但并非总是一起表现故障），如下图所示：</p>
-<p><img alt="mysql-slave-server-idle" src="https://i.loli.net/2020/06/14/H5gqL8BeQpKXOla.png"></p>
-<hr>
-<p>故障刚开始出现时，重启/关闭出现故障现象的MySQL服务，或将出现故障的Web服务器上所有PHP-FPM重启，也能解一时的问题，但治不了本，故障还是频繁出现。</p>
-<p>在故障发生时，从相关服务器上收集到的信息如下所示：</p>
-<p>1.出现故障现象的Web服务器 - CPU使用率、内存使用率等系统指标均正常，但PHP-FPM子进程数达到上限（12 x 10 = 120），并且PHP-FPM进程与数据库代理服务器之间的网络连接数量较多（与PHP-FPM子进程数大致相当）</p>
-<p>2.出现故障现象的MySQL服务器 …</p> </div><!-- /.entry-content -->
+<p>为 …</p> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="./2015/10/02/note-of-a-system-fault/" rel="bookmark" title="Permalink to 记一次系统故障">阅读全文</a></div>
                 <div class="row tag-row">
                     <span>标签: </span>
@@ -149,18 +111,9 @@
                     </h2>
                 </header>
                 <footer class="post-info">
-                    <abbr class="published" title="2015-09-15T00:00:00+08:00"> 2015-09-15 Tue </abbr>
+                    <abbr class="published" title="2015-09-15T00:00:00+08:00"> 2015-09-15 二 </abbr>
 <address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
-                <div class="entry-content"> <p>前两天遇到一个PHP代码的bug，分析的结果是：因为要处理的数据量过大，内存分配超出了限制（<code>php.ini</code>中配置项<code>memory_limit</code>，默认是128M）。长期使用Python/PHP做Web开发，对于内存使用关注较少，这个事情让我重新关注起代码的内存占用问题，所以为工作中使用的测试开发环境配置Xhprof，进行性能数据收集分析（注：我们项目是用PHP开发的）。之所以选择Xhprof，是因为比较轻量，对性能影响较小，甚至可以一定方式用于生产环境，安装使用也方便。</p>
-<h3>安装</h3>
-<p>Xhprof是一个PHP扩展，安装方式与一般PHP扩展一致。</p>
-<p>1.从<a href="https://pecl.php.net/package/xhprof">这里</a>下载最新的源码包。假设解压缩后的文件夹为xhprof</p>
-<p>2.编译安装</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>cd xhprof/extension
-/path/to/php/bin/phpize
-./configure --with-php-config=/path/to/php/bin/php-config
-make
-make install …</code></pre></div> </div><!-- /.entry-content -->
+                <div class="entry-content"> <p>前两天遇到一个PHP代码的bug，分析的结果是：因为要处理的数据量过大，内存分配超出了限制（<code>php.ini</code>中配置项<code>memory_limit</code>，默认是128M）。长期使用Python …</p> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="./2015/09/15/xhprof-installation-and-usage/" rel="bookmark" title="Permalink to Xhprof安装与使用">阅读全文</a></div>
                 <div class="row tag-row">
                     <span>标签: </span>
@@ -178,12 +131,10 @@ make install …</code></pre></div> </div><!-- /.entry-content -->
                     </h2>
                 </header>
                 <footer class="post-info">
-                    <abbr class="published" title="2015-09-14T00:00:00+08:00"> 2015-09-14 Mon </abbr>
+                    <abbr class="published" title="2015-09-14T00:00:00+08:00"> 2015-09-14 一 </abbr>
 <address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
                 <div class="entry-content"> <h3>概述</h3>
-<p>PHP区分“错误”（Error）和“异常”（Exception）。“错误”通常是由PHP内部函数抛出，表示运行时问题，当然也可以通过函数<code>trigger_error</code>或<code>user_error</code>抛出一个用户级别的error/warning/notice信息。但在引入面向对象之后，相比使用<code>trigger_error</code>抛出错误，使用throw抛出异常更常用。</p>
-<p>对于“错误”，PHP允许配置报告哪些级别/类型错误、是否（向用户）展示错误、是否对错误记录日志、错误日志记到哪，分别对应php.ini中的配置项：<code>error_reporting</code>、<code>display_errors</code>、<code>log_errors</code>、<code>error_log</code>。详细信息见<a href="http://php.net/manual/zh/language.errors.basics.php">这里</a>。</p>
-<p>对于应用程序内层调用抛出的“异常”，一般可以在外层中使用try...catch来捕获并自定义处理过程。但对于“错误”（PHP运行时抛出或者应用程序使用trigger_error抛出的）或者对于-无法使用try...catch来捕获可能的异常/为了做到即使忘记捕获的异常也能得到自定义处理-的情况，该怎么办 …</p> </div><!-- /.entry-content -->
+<p>PHP区分“错误”（Error）和“异常”（Exception）。“错误”通常是由PHP内部函数抛出，表示运行时问题，当然也可以通过函数<code>trigger_error</code>或<code>user_error</code>抛出一个用户级别的error/warning/notice信息。但在 …</p> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="./2015/09/14/read-yii-code-10/" rel="bookmark" title="Permalink to Yii源码阅读笔记 - 错误/异常处理">阅读全文</a></div>
                 <div class="row tag-row">
                     <span>标签: </span>
@@ -202,26 +153,11 @@ make install …</code></pre></div> </div><!-- /.entry-content -->
                     </h2>
                 </header>
                 <footer class="post-info">
-                    <abbr class="published" title="2015-09-11T00:00:00+08:00"> 2015-09-11 Fri </abbr>
+                    <abbr class="published" title="2015-09-11T00:00:00+08:00"> 2015-09-11 五 </abbr>
 <address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
                 <div class="entry-content"> <p>原文：<a href="http://chriskiehl.com/article/parallelism-in-one-line/">Parallelism in one line</a></p>
 <p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
-<p>在并行处理能力方面，Python的声名并不太好。不考虑关于线程和GIL（多数情况下是合理的）的标准论据，我认为Python中关于并行的真正问题并不是一个技术问题，而是教学问题。围绕Python线程和多进程的常见教程，一般都写得不错，但也令人乏味 - 激烈非凡，对日常真正有用的东西却很少涉及。</p>
-<h4>沿袭的例子</h4>
-<p>在DuckDuckGo（DDG）中搜索“Python多线程教程”，简单调查一下排在前面的结果，就会发现它们给出的都是同样基于Class + Queue的示例。</p>
-<p><em>介绍threading/multiprocessing、生产者/消费者的真实示例代码：</em></p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000"># coding: utf-8</span>
-<span style="color: #008000"># Example.py</span>
-<span style="color: #a31515">&#39;&#39;&#39;</span>
-<span style="color: #a31515">标准的多线程生产者/消费者模式</span>
-<span style="color: #a31515">&#39;&#39;&#39;</span>
-
-<span style="color: #0000ff">import</span> time 
-<span style="color: #0000ff">import</span> threading 
-<span style="color: #0000ff">import</span> Queue 
-
-<span style="color: #0000ff">class</span> <span style="color: #2b91af">Consumer</span>(threading.Thread): 
-  <span style="color: #0000ff">def</span> __init__(self …</code></pre></div> </div><!-- /.entry-content -->
+<p>在并行处理能力方面，Python的声名并不太好。不考虑关于线程和GIL（多数情况下是合理的）的标准论据，我认为Python中关于并行的真正问题并不是一个技术问题，而是教学 …</p> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="./2015/09/11/parallelism-in-one-line/" rel="bookmark" title="Permalink to 一行式并行方案（译）">阅读全文</a></div>
                 <div class="row tag-row">
                     <span>标签: </span>
@@ -239,24 +175,11 @@ make install …</code></pre></div> </div><!-- /.entry-content -->
                     </h2>
                 </header>
                 <footer class="post-info">
-                    <abbr class="published" title="2015-09-05T00:00:00+08:00"> 2015-09-05 Sat </abbr>
+                    <abbr class="published" title="2015-09-05T00:00:00+08:00"> 2015-09-05 六 </abbr>
 <address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
                 <div class="entry-content"> <p>一看题目貌似本文要准备吐槽PHP，但遇到“坑”主要是因为个人经验不足。</p>
 <h4>JSON反序列化 json_decode</h4>
-<p>函数 <code>json_decode</code> 默认反序列化的结果是对象。Python党在做PHP开发用到这个方法时，很可能会跳进这个坑，认为结果应该是个数组，因为Python中json.loads返回的是一个字典。 <code>json_decode</code> 的第二个参数 $assoc 可用来指定反序列化的结果为数组。</p>
-<p>文档：<a href="http://php.net/manual/zh/function.json-decode.php">http://php.net/manual/zh/function.json-decode.php</a></p>
-<hr>
-<h4>数组序列化</h4>
-<p>Python党初学PHP，可能类比于Python的列表和字典，认为PHP中明确区分索引数组和关联数组。但：</p>
-<blockquote>
-<p>PHP 实际并不区分索引数组和关联数组，都是一种有序映射。</p>
-</blockquote>
-<p>虽然很多时候索引数组和关联数组在表现上是不一样的，比如对以下两个数组进行序列化：</p>
-<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #0000ff">&lt;?php</span>
-$arrA = <span style="color: #0000ff">array</span>(<span style="color: #a31515">&#39;a&#39;</span>, <span style="color: #a31515">&#39;b&#39;</span>, <span style="color: #a31515">&#39;c&#39;</span>);
-<span style="color: #0000ff">echo</span> json_encode($arrA) . <span style="color: #a31515">&quot;\n&quot;</span>;
-
-$arrB = <span style="color: #0000ff">array</span>(<span style="color: #a31515">&#39;a …</span></code></pre></div> </div><!-- /.entry-content -->
+<p>函数 <code>json_decode</code> 默认反序列化的结果是对象。Python党在做PHP开发用到这个方法时，很可能 …</p> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="./2015/09/05/php-trap-and-tip/" rel="bookmark" title="Permalink to 那些Python党踩过的PHP坑">阅读全文</a></div>
                 <div class="row tag-row">
                     <span>标签: </span>
@@ -273,7 +196,7 @@ $arrB = <span style="color: #0000ff">array</span>(<span style="color: #a31515">&
                     </h2>
                 </header>
                 <footer class="post-info">
-                    <abbr class="published" title="2015-06-02T00:00:00+08:00"> 2015-06-02 Tue </abbr>
+                    <abbr class="published" title="2015-06-02T00:00:00+08:00"> 2015-06-02 二 </abbr>
 <address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
                 <div class="entry-content"> <p>原文：<a href="http://quotes.cat-v.org/programming/">Programming Quotes</a></p>
 <p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
@@ -281,7 +204,7 @@ $arrB = <span style="color: #0000ff">array</span>(<span style="color: #a31515">&
 <li><strong>C.A.R. Hoare, The 1980 ACM Turing Award Lecture</strong></li>
 </ul>
 <blockquote>
-<p>There are two ways of constructing a software design: One way is to make it so simple that there are obviously no deficiencies and the other way is to make it so complicated that there …</p></blockquote> </div><!-- /.entry-content -->
+<p>There are two ways of constructing a software design: One way is to make it so simple that there are obviously no deficiencies and the other way is to make it so complicated …</p></blockquote> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="./2015/06/02/programming-quotes/" rel="bookmark" title="Permalink to 编程名言集锦（译）">阅读全文</a></div>
                 <div class="row tag-row">
                     <span>标签: </span>
@@ -298,22 +221,14 @@ $arrB = <span style="color: #0000ff">array</span>(<span style="color: #a31515">&
                     </h2>
                 </header>
                 <footer class="post-info">
-                    <abbr class="published" title="2015-05-20T00:00:00+08:00"> 2015-05-20 Wed </abbr>
+                    <abbr class="published" title="2015-05-20T00:00:00+08:00"> 2015-05-20 三 </abbr>
 <address class="vcard author">By <a class="url fn" href="./author/youngsterxyf.html">youngsterxyf</a></address>                </footer><!-- /.post-info -->
                 <div class="entry-content"> <p>原文：<a href="http://www.nada.kth.se/~snilsson/concurrency/">Fundamentals of concurrent programming</a></p>
 <p>译者：<a href="https://github.com/youngsterxyf">youngsterxyf</a></p>
 <p>本文是一篇并发编程方面的入门文章，以<a href="http://golang.org/">Go语言</a>编写示例代码，内容涵盖：</p>
 <ul>
 <li>运行期并发线程（goroutines）</li>
-<li>基本的同步技术（管道和锁）</li>
-<li>Go语言中基本的并发模式</li>
-<li>死锁和数据竞争</li>
-<li>并行计算</li>
-</ul>
-<p>在开始阅读本文之前，你应该知道如何编写简单的Go程序。如果你熟悉的是C/C++、Java或Python之类的语言，那么 <a href="http://tour.golang.org/welcome/1">Go语言之旅</a> 能提供所有必要的背景知识。也许你还有兴趣读一读 <a href="http://code.google.com/p/go-wiki/wiki/GoForCPPProgrammers">为C++程序员准备的Go语言教程</a> 或 <a href="http://www.nada.kth.se/~snilsson/go_for_java_programmers/">为Java程序员准备的Go语言教程</a>。</p>
-<h4>1. 运行期线程</h4>
-<p>Go允许使用<code>go</code>语句开启一个新的运行期线程，即 <a href="http://golang.org/ref/spec#Go_statements">goroutine</a>，以一个不同的、新创建的goroutine来执行一个函数。同一个程序中的所有goroutine共享同一个地址空间。</p>
-<p>Goroutine非常轻量，除了为之分配的栈空间，其所占用的内存空间微乎其微。并且其栈空间在开始时非常小，之后随着堆存储空间的按需分配或释放而变化。内部实现上，goroutine会在多个操作系统线程上多路复用。如果一个goroutine阻塞了一个操作系统线程 …</p> </div><!-- /.entry-content -->
+<li>基本的同步 …</li></ul> </div><!-- /.entry-content -->
                 <div class="medium primary btn"><a href="./2015/05/20/fundamentals-of-concurrent-programming/" rel="bookmark" title="Permalink to Go并发编程基础（译）">阅读全文</a></div>
                 <div class="row tag-row">
                     <span>标签: </span>

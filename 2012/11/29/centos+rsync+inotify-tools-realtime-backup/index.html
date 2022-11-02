@@ -68,7 +68,7 @@
             </header>
             <footer class="post-info">
               <abbr class="published" title="2012-11-29T00:00:00+08:00">
-                2012-11-29 Thu
+                2012-11-29 四
               </abbr>
               <address class="vcard author">
                 By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
@@ -87,12 +87,12 @@
 
 <p>2.
 主服务器上安装inotify-tools:</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>sudo yum install inotify-tools
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>sudo yum install inotify-tools
 </code></pre></div>
 
 <p>3.
 备份服务器上添加配置文件/etc/rsyncd.conf</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>readonly=no
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>readonly=no
 chroot=no
 uid=root
 gid=root
@@ -116,77 +116,77 @@ path=/home/yongfeng/apps/website3.com/webroot/upload
 </code></pre></div>
 
 <p>以及配置文件/etc/rsync.pass</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>tongbu:somesecurepassword
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>tongbu:somesecurepassword
 </code></pre></div>
 
 <p>给密码文件赋权:</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>sudo chmod <span style="color: #666666">400</span> /etc/rsync.pass
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>sudo chmod 400 /etc/rsync.pass
 </code></pre></div>
 
 <p>（注：tongbu就是用户名，与rsyncd.conf中auth users的值一致。somesecurepassword是密码，会在后面主服务器上的配置密码文件用到）</p>
 <p>4.
 在备份服务器上创建需要的目录:</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>sudo mkdir -p /home/yongfeng/apps/website1.org/webroot/upload
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>sudo mkdir -p /home/yongfeng/apps/website1.org/webroot/upload
 sudo mkdir -p /home/yongfeng/apps/website2.com/webroot/upload
 sudo mkdir -p /home/yongfeng/apps/website3.com/webroot/upload
 </code></pre></div>
 
 <p>5.
 在主服务器上添加配置文件/etc/rsync-client.pass：</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>somesecurepassword
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>somesecurepassword
 </code></pre></div>
 
 <p>赋权限:</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>chmod <span style="color: #666666">600</span> /etc/rsync-client.pass
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>chmod 600 /etc/rsync-client.pass
 </code></pre></div>
 
 <p>6.
 在主服务器上添加要执行的脚本/home/autoscript/rsyncInotify.sh:</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #408080; font-style: italic">#!/bin/sh</span>
-src<span style="color: #666666">[0]=</span><span style="color: #BA2121">&#39;/var/www/apps/website1.org/webroot/upload,website1&#39;</span>
-src<span style="color: #666666">[1]=</span><span style="color: #BA2121">&#39;/var/www/apps/website2.com/webroot/upload,website2&#39;</span>
-src<span style="color: #666666">[2]=</span><span style="color: #BA2121">&#39;/var/www/apps/website3.com/webroot/upload,website3&#39;</span>
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000">#!/bin/sh</span>
+src[0]=<span style="color: #a31515">&#39;/var/www/apps/website1.org/webroot/upload,website1&#39;</span>
+src[1]=<span style="color: #a31515">&#39;/var/www/apps/website2.com/webroot/upload,website2&#39;</span>
+src[2]=<span style="color: #a31515">&#39;/var/www/apps/website3.com/webroot/upload,website3&#39;</span>
 
-<span style="color: #008000; font-weight: bold">for</span> item <span style="color: #008000; font-weight: bold">in</span> <span style="color: #BB6688; font-weight: bold">${</span><span style="color: #19177C">src</span>[@]<span style="color: #BB6688; font-weight: bold">}</span>; <span style="color: #008000; font-weight: bold">do</span>
-    <span style="color: #19177C">fromdir</span><span style="color: #666666">=</span><span style="color: #BA2121">`</span><span style="color: #008000">echo</span> <span style="color: #19177C">$item</span> | awk -F<span style="color: #BA2121">&quot;,&quot;</span> <span style="color: #BA2121">&#39;{print $1}&#39;`</span>
-    <span style="color: #19177C">module</span><span style="color: #666666">=</span><span style="color: #BA2121">`</span><span style="color: #008000">echo</span> <span style="color: #19177C">$item</span> | awk -F<span style="color: #BA2121">&quot;,&quot;</span> <span style="color: #BA2121">&#39;{print $2}&#39;`</span>
+<span style="color: #0000ff">for</span> item <span style="color: #0000ff">in</span> <span style="color: #a31515">${</span>src[@]<span style="color: #a31515">}</span>; <span style="color: #0000ff">do</span>
+    fromdir=<span style="color: #a31515">`</span>echo $item | awk -F<span style="color: #a31515">&quot;,&quot;</span> <span style="color: #a31515">&#39;{print $1}&#39;`</span>
+    module=<span style="color: #a31515">`</span>echo $item | awk -F<span style="color: #a31515">&quot;,&quot;</span> <span style="color: #a31515">&#39;{print $2}&#39;`</span>
 
-    /usr/bin/inotifywait -mrq --timefmt <span style="color: #BA2121">&#39;%d/%m/%y %H:%M&#39;</span> --format <span style="color: #BA2121">&#39;%T%w%f&#39;</span> --event modify,delete,move,create,attrib <span style="color: #BB6688; font-weight: bold">${</span><span style="color: #19177C">fromdir</span><span style="color: #BB6688; font-weight: bold">}</span> | <span style="color: #008000; font-weight: bold">while</span> <span style="color: #008000">read</span> file event
-    <span style="color: #008000; font-weight: bold">do</span>
-        <span style="color: #008000">echo</span> <span style="color: #19177C">$event</span><span style="color: #BA2121">&#39;-&#39;</span><span style="color: #19177C">$file</span>
-        rsync -avz --delete --password-file<span style="color: #666666">=</span>/etc/rsync-client.pass <span style="color: #BB6688; font-weight: bold">${</span><span style="color: #19177C">fromdir</span><span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">&#39;/&#39;</span> tongbu@0.0.0.0::<span style="color: #BB6688; font-weight: bold">${</span><span style="color: #19177C">module</span><span style="color: #BB6688; font-weight: bold">}</span>
-        <span style="color: #008000">echo</span> <span style="color: #BA2121">&quot;*******************************&quot;</span>
-    <span style="color: #008000; font-weight: bold">done</span> &amp;
-<span style="color: #008000; font-weight: bold">done</span>
+    /usr/bin/inotifywait -mrq --timefmt <span style="color: #a31515">&#39;%d/%m/%y %H:%M&#39;</span> --format <span style="color: #a31515">&#39;%T%w%f&#39;</span> --event modify,delete,move,create,attrib <span style="color: #a31515">${</span>fromdir<span style="color: #a31515">}</span> | <span style="color: #0000ff">while</span> read file event
+    <span style="color: #0000ff">do</span>
+        echo $event<span style="color: #a31515">&#39;-&#39;</span>$file
+        rsync -avz --delete --password-file=/etc/rsync-client.pass <span style="color: #a31515">${</span>fromdir<span style="color: #a31515">}&#39;/&#39;</span> tongbu@0.0.0.0::<span style="color: #a31515">${</span>module<span style="color: #a31515">}</span>
+        echo <span style="color: #a31515">&quot;*******************************&quot;</span>
+    <span style="color: #0000ff">done</span> &amp;
+<span style="color: #0000ff">done</span>
 </code></pre></div>
 
 <p>赋可执行权限:</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>sudo chmod +x rsyncInotify.sh
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>sudo chmod +x rsyncInotify.sh
 </code></pre></div>
 
 <p>7.
 在备份服务器的防火墙中添加规则以允许rsync服务请求---可通过直接编辑文件/etc/sysconfig/iptables，在文件中添加一行内容：</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>-A INPUT -s 1.1.1.1 -p tcp -m tcp --dport 873 -j ACCEPT
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>-A INPUT -s 1.1.1.1 -p tcp -m tcp --dport 873 -j ACCEPT
 </code></pre></div>
 
 <p>8.
 备份服务器启动rsync服务:</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>sudo /usr/bin/rsync --daemon
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>sudo /usr/bin/rsync --daemon
 </code></pre></div>
 
 <p>9.
 主服务器启动rsync+inotify服务:</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>sudo /home/autoscript/tongbu/rsyncInotify.sh
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>sudo /home/autoscript/tongbu/rsyncInotify.sh
 </code></pre></div>
 
 <p>10.
 在备份服务器上将rsync服务设置为开机自启动服务---直接编辑配置文件/etc/rc.d/rc.local，添加一行内容：</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/usr/bin/rsync --daemon
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>/usr/bin/rsync --daemon
 </code></pre></div>
 
 <p>11.
 在主服务器上将rsyncInotify.sh设置为开始自启动---直接编辑配置文件/etc/rc.d/rc.local，添加一行内容：</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/home/autoscript/tongbu/rsyncInotify.sh &gt;&gt; /home/autoscript/tongbu/tongbu.log
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>/home/autoscript/tongbu/rsyncInotify.sh &gt;&gt; /home/autoscript/tongbu/tongbu.log
 </code></pre></div>
 
 <p><strong>存在的问题</strong></p>

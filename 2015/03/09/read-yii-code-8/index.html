@@ -68,7 +68,7 @@
             </header>
             <footer class="post-info">
               <abbr class="published" title="2015-03-09T00:00:00+08:00">
-                2015-03-09 Mon
+                2015-03-09 一
               </abbr>
               <address class="vcard author">
                 By <a class="url fn" href="../../../../author/youngsterxyf.html">youngsterxyf</a>
@@ -82,7 +82,7 @@ Yii::trace($message, $category);
 </code></pre></div>
 
 <p>两者的区别在于后者依赖于应用开启调试模式，即定义常量YII_DEBUG：</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>defined(&#39;YII_DEBUG&#39;) or define(&#39;YII_DEBUG&#39;, true);
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>defined(&#39;YII_DEBUG&#39;) or define(&#39;YII_DEBUG&#39;, true);
 </code></pre></div>
 
 <p>Yii::log方法的调用需要指定message的level和category。category是格式为“xxx.yyy.zzz”的路径别名字符串，比如日志是在yii/framework/web/CController类中记录的，那么category为“system.web.CController”。level应为以下几种之一：</p>
@@ -94,7 +94,7 @@ Yii::trace($message, $category);
 <li>error：用于记录重大错误日志</li>
 </ul>
 <p>要想日志真的输出到文件、邮件、web页面等地方，还得为应用添加如下配置：</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>array(
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>array(
     ......
     &#39;preload&#39;=&gt;array(&#39;log&#39;),
     &#39;components&#39;=&gt;array(
@@ -123,7 +123,7 @@ Yii::trace($message, $category);
 <p>至于为什么需要对log组件进行preload，即预先实例化，后边再说。</p>
 <h3>分析</h3>
 <p>先来看看Yii::log和Yii::trace的实现：</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>/**
  * Writes a trace message.
  * This method will only log a message when the application is in debug mode.
  * @param string $msg message to be logged
@@ -173,7 +173,7 @@ public static function log($msg,$level=CLogger::LEVEL_INFO,$category=&#39;applic
 </code></pre></div>
 
 <p>CLogger类的log方法实现如下所示：</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>/**
  * Logs a message.
  * Messages logged by this method may be retrieved back via {@link getLogs}.
  * @param string $message message to be logged
@@ -197,7 +197,7 @@ public function log($message,$level=&#39;info&#39;,$category=&#39;application&#3
 </code></pre></div>
 
 <p>CLogger类的flush方法实现如下所示：</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>/**
  * Removes all recorded messages from the memory.
  * This method will raise an {@link onFlush} event.
  * The attached event handlers can process the log messages before they are removed.
@@ -229,7 +229,7 @@ public function onFlush($event)
 </code></pre></div>
 
 <p>CComponent类的raiseEvent方法实现如下所示：</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>/**
  * Raises an event.
  * This method represents the happening of an event. It invokes
  * all attached handlers for the event.
@@ -283,7 +283,7 @@ public function raiseEvent($name,$event)
 <p>那么这些$handle是在哪里绑定事件的呢？</p>
 <p>既然log组件对应的是CLogRouter类，那么来看看其实现。</p>
 <p>类CLogRouter继承自类CApplicationComponent。根据<a href="http://youngsterxyf.github.io/2014/11/13/read-yii-code-3/">Yii源码阅读笔记 - 组件集成</a>一文，可知组件初始化时实例化对象会调用init方法来完成一些初始化操作，类CLogRouter的init方法实现如下所示：</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>/**
  * Initializes this application component.
  * This method is required by the IApplicationComponent interface.
  */
@@ -305,7 +305,7 @@ public function init()
 </code></pre></div>
 
 <p>而类CLogRouter的方法collectLogs和processLogs实现如下所示：</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>/**
  * Collects log messages from a logger.
  * This method is an event handler to the {@link CLogger::onFlush} event.
  * @param CEvent $event event parameter
@@ -344,7 +344,7 @@ public function processLogs($event)
 </code></pre></div>
 
 <p>以类CWebLogRoute为例来看看日志路由类的方法collectLogs，该方法定义于类CLogRoute中，实现如下所示：</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>/**
  * Retrieves filtered log messages from logger for further processing.
  * @param CLogger $logger logger instance
  * @param boolean $processLogs whether to process the logs after they are collected from the logger
@@ -368,7 +368,7 @@ public function collectLogs($logger, $processLogs=false)
 </code></pre></div>
 
 <p>而类CWebLogRoute的processLogs方法实现如下所示：</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>/**
  * Displays the log messages.
  * @param array $logs list of log messages
  */
@@ -413,7 +413,7 @@ protected function render($view,$data)
 
 <p>从上述代码可以知道日志路由类是将日志信息按照一定格式显示在实际请求页面内容的下方。</p>
 <p>再来看看方法init中调用的两个attachEventHandler，它们的定义是同一个，定义在类CComponent中（类CLogger直接继承自类CComponent），实现如下所示：</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>public function attachEventHandler($name,$handler)
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>public function attachEventHandler($name,$handler)
 {
     // 将事件处理器$handler加到处理器列表中，在事件发生时会逐个处理器触发执行
     $this-&gt;getEventHandlers($name)-&gt;add($handler);
@@ -421,7 +421,7 @@ protected function render($view,$data)
 </code></pre></div>
 
 <p>其中方法EventHandlers的实现如下所示：</p>
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>/**
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%;"><span></span><code>/**
  * Returns the list of attached event handlers for an event.
  * @param string $name the event name
  * @return CList list of attached event handlers for the event

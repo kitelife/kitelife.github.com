@@ -99,21 +99,21 @@
 <p>⑥ The OS adds an entry to the page table that maps the virtual address to the new physical address.</p>
 <p>⑦ The initiating CPU core also caches this entry in its local translation lookaside buffer (TLB) to accelerate future accesses.</p>
 <p>不过论文作者认为 mmap 存在一些数据安全性和系统性性能问题，为解决这些问题而引入的工程成本会抵消掉简单性：</p>
-<p>1、事务安全性（Transactional Safety）：由于透明的页式调度机制，操作系统可能会任意时刻将一个脏页刷到二级存储中，不管写事务是否已提交。DBMS 无法组织这种内存数据刷出，并且发生时也不会接收到任何信号。所以基于 mmap 的数据库系统只能采用复杂的协议来确保（写/更新）事务安全，手段上大概分3种：操作系统写时复制、用户空间写时复制、影子页管理（shadow paging）</p>
-<p>2、I/O 停顿（I/O Stalls）：</p>
+<p><strong>1、事务安全性（Transactional Safety）</strong>：由于透明的页式调度机制，操作系统可能会任意时刻将一个脏页刷到二级存储中，不管写事务是否已提交。DBMS 无法组织这种内存数据刷出，并且发生时也不会接收到任何信号。所以基于 mmap 的数据库系统只能采用复杂的协议来确保（写/更新）事务安全，手段上大概分3种：操作系统写时复制、用户空间写时复制、影子页管理（shadow paging）</p>
+<p><strong>2、I/O 停顿（I/O Stalls）</strong>：</p>
 <ul>
 <li>mmap 不支持异步读；自己搞缓冲池的话，可以使用异步 I/O（比如 libaio、io_uring）来避免查询时阻塞线程</li>
-<li>对于 mmap，因为操作系统会自动/透明地剔除一些内存页，这样可能导致 - 如果某些只读查询命中了已被剔除的内存页，就会无法预知地触发阻塞性的页错误/缺页处理
-  解决方案：1、使用 mlock，不过操作系统对一个进程能锁住的内存页数量有限制；2、使用 madvise 的 MADV_SEQUENTIAL 标记，仅能问题的一部分；3、使用额外的线程来进行内存页预取，避免主线程被阻塞，不过会引入较大的复杂性</li>
+<li>对于 mmap，因为操作系统会自动/透明地剔除一些内存页，这样可能导致 - 如果某些只读查询命中了已被剔除的内存页，就会无法预知地触发阻塞性的页错误/缺页处理</li>
 </ul>
-<p>3、错误处理：</p>
+<p>解决方案：1、使用 mlock，不过操作系统对一个进程能锁住的内存页数量有限制；2、使用 madvise 的 MADV_SEQUENTIAL 标记，仅能问题的一部分；3、使用额外的线程来进行内存页预取，避免主线程被阻塞，不过会引入较大的复杂性</p>
+<p><strong>3、错误处理</strong>：</p>
 <p>DBMS 的核心职责之一是确保数据完整性 - 比如：校验磁盘数据是否有损坏</p>
 <ul>
 <li>使用 mmap，DBMS 需要在每次内存页访问时检查校验和（checksum），因为内存页一次访问之后操作系统可能会将该页驱逐到磁盘</li>
 <li>如果 DBMS 是使用非内存安全的编程语言编写的，就有可能在指针操作时损坏内存页内容，所以需要在内存页刷到二级存储之前进行错误检测，mmap 会默默地将损坏的内存页持久化到二级存储</li>
 <li>使用 mmap 也更难优雅地进行 I/O 错误处理，和 mmap 内存交互的任何代码都可能抛出 SIGBUS 信号，DBMS 必须使用信号处理器（signal handlers）来处理 ❓</li>
 </ul>
-<p>4、性能问题（最重大）：</p>
+<p><strong>4、性能问题（最重大）</strong>：</p>
 <ul>
 <li>大家普遍认为 mmap 性能优于传统文件 I/O（read/write），因为它避免两个开销：(1) 显式调用 read/write 系统调用的开销 (2) mmap 会返回指向操作系统页缓存的页指针，因此避免了到用户内存空间的一次内存拷贝，也因此降低了内存占用；由此，大家也认为在 SSD 上 mmap 的性能优势会进一步扩大。</li>
 <li>不过实验测试发现：对于高带宽的二级存储设备（比如 SSD），DBMS 管理的数据量大于内存空间时，操作系统的页驱逐机制（page eviction mechanisms）多线程扩展性比较差（备注：因为 SSD I/O 带宽大、访问速度快，页驱逐机制就可能成了瓶颈）（we have found that the OS’s page eviction mechanisms cannot scale beyond a few threads for larger-thanmemory DBMS workloads on high-bandwidth secondary storage devices. We believe that one of the main reasons these performance issues have gone largely unnoticed is due to historically limited file I/O bandwidth）。瓶颈源于3个因素：<ul>
@@ -185,29 +185,29 @@
 <p>Value Log 也需要 GC，清理掉无用的 Value 值。LSM 树的 Compaction 主要是为了提升查找/检索的性能/效率，控制读放大，减少内存/磁盘空间占用是次要的。Value Log 的 GC 则主要是为了减少内存/磁盘空间占用。</p>
 <p>为了实现在线的轻量级 GC，Value Log 中也存储了 Key，</p>
 <p><img alt="" src="https://s2.loli.net/2022/11/16/JMKxWiaCovyhgr8.jpg"></p>
-<p>tail 指向 Value Log 有效值范围内时序上最先写入的那个 value 的位置</p>
-<p>head 指向 Value Log 中下一个新 value 写入的位置</p>
+<p>tail 指向 Value Log 有效值范围内时序上最先写入的那个 value 的位置。</p>
+<p>head 指向 Value Log 中下一个新 value 写入的位置。</p>
 <p>tail 和 head 及其对应的位置信息均作为 kv 存入 LSM 树中（head 的指向什么时候会更新？：每次有新值写入的时候都更新？还是在 GC 的过程中才会更新？）</p>
 <p>GC 的流程为：</p>
 <p>① 从 tail 指向的位置开始顺序扫描一块数据，根据其中的 key 检索 LSM 树，确认当前 value 是否有效（没有被删除也没有被覆盖）</p>
 <p>② 如果有效则插入到 head 指向的位置，head 指向移动到下一个位置；如果无效，则直接丢弃</p>
 <p>③ 一块数据处理完成后，移动 tail 指向到下一个位置，释放/回收原来数据块的存储空间；然后继续循环处理</p>
-<p>疑问：1. GC 过程中每次向 head 插入有效值时，是否先要从 LSM 树中查询最新指向的位置？2. 在根据 key 从 LSM 树查询后将有效值写入 head 位置前，有新数据写入的话，怎么处理？GC 期间是否要停止正常的写操作？还是说对某个临界区加锁？ </p>
+<p><strong>疑问</strong>：1. GC 过程中每次向 head 插入有效值时，是否先要从 LSM 树中查询最新指向的位置？2. 在根据 key 从 LSM 树查询后将有效值写入 head 位置前，有新数据写入的话，怎么处理？GC 期间是否要停止正常的写操作？还是说对某个临界区加锁？ </p>
 <p>LSM 树原理：</p>
 <p><img alt="" src="https://s2.loli.net/2022/11/16/k6cHFOUluo1Ibfp.jpg"></p>
 <p><img alt="" src="https://s2.loli.net/2022/11/16/17WubUhqSpCjMr5.jpg"></p>
 <p><img alt="" src="https://s2.loli.net/2022/11/16/Tomk3VOEs7jduQl.jpg"></p>
 <p><a href="https://zhuanlan.zhihu.com/p/181498475">LSM树详解 - 知乎 (zhihu.com)</a></p>
-<p>## 4、<a href="http://www.vldb.org/pvldb/vol14/p364-didona.pdf">Toward a Better Understanding and Evaluation of Tree Structures on Flash SSDs（VLDB）</a></p>
+<h2>4、<a href="http://www.vldb.org/pvldb/vol14/p364-didona.pdf">Toward a Better Understanding and Evaluation of Tree Structures on Flash SSDs（VLDB）</a></h2>
 <p>PTS - Persistent tree data structure</p>
 <p>使用 LSM 树（RocksDB）和 B+ 树（WiredTiger）来分析 SSD 基准测试（Benchmarking）中可能踩到的 7 个坑（pitfall）：</p>
-<p>（1）Running short tests / 测试过于短平快 ⚡️</p>
+<p><strong>（1）Running short tests / 测试过于短平快</strong> ⚡️</p>
 <p>随着使用时间的增加，SSD 的性能会一定的动态变化。</p>
 <p>Because both the PTS and SSD performance vary over time, short-lived tests are unable to capture how the systems will behave under a continuous（non-bursty）workload.</p>
 <p><img alt="" src="https://s2.loli.net/2022/11/16/HSuzIeC8itjndGw.jpg"></p>
 <p>WA-A（应用/存储系统的写放大） increases over time while the levels of the LSM-Tree fills up, and its curve flattens once the layout of the LSM tree has stabilized.</p>
 <p>WA-D（SSD 设备的写放大） increases over time because of the effect of garbage collection.</p>
-<p>（2）Ignoring the device write amplification (WA-D) / 忽视了 SSD 设备本身的写放大 ⚡️</p>
+<p><strong>（2）Ignoring the device write amplification (WA-D) / 忽视了 SSD 设备本身的写放大</strong> ⚡️</p>
 <ul>
 <li>WA-D directly affects the throughput of the device, which strongly correlates with the application-level throughput.</li>
 <li>WA-D is an essential measure of the I/O efficiency of a PTS. 端到端的写放大倍数应该是 WA-A 乘以 WA-D</li>
@@ -217,7 +217,7 @@
 </ul>
 </li>
 </ul>
-<p>（3）Ignoring the internal state of the SSD / 忽视了 SSD 的初始内部状态 ⚡️</p>
+<p><strong>（3）Ignoring the internal state of the SSD / 忽视了 SSD 的初始内部状态</strong> ⚡️</p>
 <p><img alt="" src="https://s2.loli.net/2022/11/16/pFyqSCVZnrHB1g9.jpg"></p>
 <blockquote>
 <p><strong>Trim(Discard)的出现主要是为了提高GC的效率以及减少写入放大的发生，最大作用是清空待删除的无效数据</strong>。在SSD执行读、擦、写步骤的时候，预先把擦除的步骤先做了，这样才能发挥出SSD的性能，通常SSD掉速很大一部分原因就是待删除的无效数据太多，每次写入的时候主控都要先做清空处理，所以性能受到了限制。</p>
@@ -225,16 +225,16 @@
 <p>The steady-state performance of a PTS can greatly differ depending on the initial state of the drive, this is surprising.</p>
 <p>This phenomenon is caused by how the LBA (logic block address)  access patterns of RocksDB and WiredTiger intertwine with the SSD garbage collection mechanism as a function of the initial state the drive.</p>
 <p>WiredTiger only writes to a limited portion of the logical block address space.</p>
-<p>（4）Ignore the dataset size / 忽视了数据集大小</p>
+<p><strong>（4）Ignore the dataset size / 忽视了数据集大小</strong></p>
 <p><img alt="" src="https://s2.loli.net/2022/11/16/SlVWJfP5rO7xpNQ.jpg"></p>
 <p>The amount of data stored by the SSD changes its behavior and affects overall performance.</p>
 <p>The performance degradation brought by the larger dataset is primarily due to the idiosyncrasies（特质/特点） of the SSD: larger datasets lead to more valid pages in each flash block, which increases the amount of data being relocated upon performing garbage collection, i.e., the WA-D</p>
-<p>（5）Ignoring the extra storage capacity a PTS needs to manage data and store additional meta-data / 未考虑空间放大（Space amplification）</p>
+<p><strong>（5）Ignoring the extra storage capacity a PTS needs to manage data and store additional meta-data / 未考虑空间放大（Space amplification）</strong></p>
 <p>涉及存储成本</p>
-<p>（6）Ignoring SSD over-provisioning</p>
+<p><strong>（6）Ignoring SSD over-provisioning</strong></p>
 <p>成本与性能之间的权衡折中 - 可以预留一部分 SSD 空间给 SSD 做 GC 使用，这部分空间对文件系统不可见。</p>
 <p><img alt="" src="https://s2.loli.net/2022/11/16/YEFp5g69mnqBe3w.jpg"></p>
-<p>（7）Ignoring the effect of the underlying storage technology on performance </p>
+<p><strong>（7）Ignoring the effect of the underlying storage technology on performance</strong></p>
 <h2>5、SSD 原理相关资料</h2>
 <ul>
 <li><a href="https://zhuanlan.zhihu.com/p/102089411">浅谈分布式存储之SSD基本原理 - 知乎 (zhihu.com)</a></li>

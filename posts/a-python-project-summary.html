@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta property="og:title" content="BitPacking">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://blog.xiayf.cn/">
+    <meta property="og:site_name" content="BitPacking">
+    <meta property="og:description" content="精进，求诸己身">
+
+    <title>BitPacking</title>
+    <meta name="description" content="精进，求诸己身">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <link rel="stylesheet" href="/static/main.css">
+    <link rel="canonical" href="https://blog.xiayf.cn/">
+</head>
+
+<body>
+<header class="site-header">
+    <div class="wrapper">
+        <a class="site-title" href="/">BitPacking</a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg viewBox="0 0 18 15">
+                    <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                <a class="page-link" href="/pages/about.html">关于我</a>
+                
+                <a class="page-link" href="/pages/works.html">作品</a>
+                
+                <a class="page-link" href="/rss.xml">RSS</a>
+                
+            </div>
+        </nav>
+    </div>
+</header>
+
+<div class="page-content">
+    <div class="wrapper">
+        
+<div class="post">
+    <header class="post-header">
+        <h1 class="post-title">一个 Python 小项目的小结</h1>
+        <p class="post-meta">2019-08-14</p>
+    </header>
+    <article class="post-content">
+        <p>前段时间临时接手一个 Python 小项目，这个项目实现的类似一个管控平台，其中核心功能是为算法同学提供机器学习模型训练任务的全流程管理，平台后端基于 Flask 框架实现，前端基于 Ant Design Pro 实现。</p>
+<p>代码稍微有些乱，所以做了部分代码的重构，在此做点经验小结。</p>
+<h3>1、并行化或异步化</h3>
+<p>部分请求处理逻辑，由于比较耗时，故使用线程池来加速，或者使用独立线程异步处理，或者先存储一个中间状态，由后台定时任务来完成实际的处理工作。对于异步处理结果，前端通过轮询来获取。</p>
+<p>线程池的使用，主要使用 map 方法：</p>
+<pre class="language-python"><code>from multiprocessing.dummy import Pool
+
+input_list = [...]
+pool: Pool = Pool(len(input_list))
+pool.map(func, input_list)
+pool.close()
+pool.join()</code></pre>
+<p>独立线程异步处理：</p>
+<pre class="language-python"><code>import multiprocessing
+
+p = multiprocessing.Process(target=func, args=(...))
+p.start()</code></pre>
+<p>定时任务，基于 apscheduler 库实现：</p>
+<pre class="language-python"><code>from apscheduler.schedulers.background
+import BackgroundScheduler
+
+scheduler = BackgroundScheduler()
+scheduler.add_join(func, &apos;interval&apos;, seconds=1)
+scheduler.start()</code></pre>
+<p>因为对于 Python 应用，通常会使用 gunicorn 这种 WSGI HTTP 服务器以多进程启动多个应用实例，提升请求吞吐能力。但是对于定时任务我们希望只有一个实例，对此，如果使用 gunicorn，可以基于它的 preload 机制来实现：</p>
+<pre class="language-python"><code># wsgi.py
+import app
+
+if __name__ == &quot;__main__&quot;:
+    app.run()</code></pre>
+<pre class="language-text"><code># 注意其中的 --preload 参数
+gunicorn --workers=4 --preload --log-level=info --access-logfile=access.log -b 0.0.0.0:8080 wsgi:app</code></pre>
+<p>preload 机制简单来说，就是 import app 类所在的模块及其依赖的各个模块（import 过程中会执行其中的语句），然后 fork 出多个进程，每个进程都执行 app.run()。</p>
+<h4>2、实现一些通用方案对异常进行捕获或重试</h4>
+<pre class="language-python"><code>def exception_try(times: int = 3, sleep_then_try_seconds=None):
+    def decorator(f):
+        def wrapper(*args, **kwargs):
+            count = 0
+            exception = None
+            while count &lt; times:
+                try:
+                    return f(*args, **kwargs)
+                except Exception as e:
+                    exception = e
+                    count += 1
+                    logging.exception(&quot;Try {} times&quot;.format(count))
+                    if (sleep_then_try_seconds is not None) and count &lt; times:
+                        time.sleep(sleep_then_try_seconds)
+            raise exception
+        return wrapper
+    return decorator</code></pre>
+<pre class="language-python"><code>@exception_try(times=3, sleep_then_try_seconds=0.5)
+def connect(self):
+    return pymysql.connect(host=self.host, user=self.user, password=self.password, db=self.db, charset=self.charset)</code></pre>
+<p>这个装饰器方法用于实现异常重试，并且可以指定重试的时间间隔，实际使用下来效果较好。而且也不会因为 <code>try...except</code> 导致大块代码缩进。</p>
+<p><strong>确保数据库连接关闭（其它类似资源也可以这样实现）</strong></p>
+<pre class="language-python"><code>def with_db(db: Connection, exception_callback=None):
+    def decorator(f):
+        def db_context(*a, **kw):
+            try:
+                return f(db, *a, **kw)
+            except Exception as e:
+                logging.exception(str(e))
+                if exception_callback is not None:
+                    exception_callback(e)
+            finally:
+                try:
+                    db.close()
+                except:
+                    pass
+        return db_context
+
+    return decorator</code></pre>
+<pre class="language-python"><code># 将 conf.db.connect() 对象作为 delete_task_from_job_queue 的第一个参数注入，task_id 这个参数以不定参数的方式传入 delete_task_from_job_queue
+with_db(conf.db.connect())(delete_task_from_job_queue)(task_id)</code></pre>
+<p>这个装饰器方法用于确保数据库连接在异常发生也能正常关闭，防止资源泄露。</p>
+<h4>3、循环等待或超时</h4>
+<pre class="language-python"><code>class TimeoutCondition(object):
+
+    def __init__(self, condition_func, timeout_seconds):
+        self.condition = condition_func
+        self.timeout = timeout_seconds
+        self.begin = None
+        self.timeout_false = True
+        self.cond_true = True
+
+    def __bool__(self):
+        if self.begin is None:
+            self.begin = timeit.default_timer()
+        self.cond_true = self.condition()
+        self.timeout_false = self.timeout &lt;= 0 or (timeit.default_timer() - self.begin) &lt; self.timeout
+        return self.cond_true and self.timeout_false
+
+    def is_timeout(self):
+        return self.cond_true and not self.timeout_false</code></pre>
+<pre class="language-python"><code>cond = TimeoutCondition(lambda : len(service_list) == 0, 5)
+while cond:
+    time.sleep(1)
+    service_list = get_service_list()
+if cond.is_timeout():
+    return None, None</code></pre>
+<p><code>TimeoutCondition</code> 用于实现循环等待某个条件满足，但为了避免死循环，所以加一个超时条件判断。实例化参数第一个是原始的条件判断 lambda 语句，第二个是一个超时设置。另外，借助魔术方法 <code>__bool__</code>，让 TimeoutCondtion 的实例用起来像是一个布尔变量，调用 <code>is_timeout()</code> 方法可以区分循环等待退出是因为原始条件满足，还是超时退出的。</p>
+<h4>4、按部署环境配置应用的行为</h4>
+<p>应用在不同的环境（开发、测试、生产）中应该允许加载不同的配置，配置不同的行为。</p>
+<p>当前应用处于什么环境，可以通过环境变量来配置，应用初始化时最先检测当前处于什么环境，之后的初始化流程就可以依据环境配置来加载配置，定制应用行为。</p>
+<pre class="language-python"><code># conf/__init__.py
+class AppConfig(object):
+    app_env = os.getenv(&apos;APP_ENV&apos;, &apos;development&apos;)
+    is_prod = app_env == &apos;production&apos;
+    is_dev = app_env == &apos;development&apos;
+    is_testing = app_env == &apos;testing&apos;
+    
+    # 其余应用配置项
+    ...
+
+conf = AppConfig()
+
+
+def _load_config_by_env(env: str):
+    &apos;&apos;&apos;
+    不同环境加载不同的配置文件
+    配置目录结构：
+    conf/
+        __init__.py
+        development.py
+        production.py
+        testing.py
+    &apos;&apos;&apos;
+    module = importlib.import_module(&apos;conf.{}&apos;.format(env))
+    if not hasattr(module, &apos;Config&apos;):
+        logging.warning(&apos;Not find {} config&apos;.format(env))
+        return
+    for name, value in getattr(module, &apos;Config&apos;).__dict__.items():
+        if name.startswith(&apos;__&apos;):
+            continue
+        conf.__dict__[name] = value</code></pre>
+<pre class="language-python"><code># 根据环境配置日志级别
+log_level = logging.INFO if conf.is_prod else logging.DEBUG
+logging.basicConfig(format=consts.LOG_FORMAT, level=log_level)</code></pre>
+<h4>5、方便排查问题的日志输出</h4>
+<p>日志是问题排查的主要信息来源，所以日志记录得好不好，很关键。</p>
+<pre class="language-python"><code># https://github.com/python/cpython/blob/3.7/Lib/logging/__init__.py#L457
+# 日志时间 - 日志级别 - 代码文件路径 - 行号 - 进程 ID - 线程名称 - 日志内容
+LOG_FORMAT = &apos;%(asctime)-15s - %(levelname)s - %(pathname)s - %(lineno)d - %(process)d - %(threadName)s - %(message)s&apos;</code></pre>
+<h4>6、API 规范与异常提示</h4>
+<p>为了统一前端 API 响应处理，有必要对 API 响应体的结构指定标准。以我个人的习惯，所有从应用代码中返回的响应，HTTP 状态码都应该是 200，具体当前 API 请求成功还是失败，如果失败，失败的原因是什么都应该包含在响应体中，响应体大致的结构为：</p>
+<pre class="language-json"><code>{
+    &quot;code&quot;: ...,
+    &quot;msg&quot;: &quot;...&quot;,
+    &quot;data&quot;: ...
+}</code></pre>
+<p>code 表示请求处理失败时，data 字段可选，code 表示请求处理成功时，msg 字段可选。</p>
+<p>前端配合对响应体进行统一检测和提示：</p>
+<pre class="language-javascript"><code>import { notification } from &apos;antd&apos;;
+
+function defaultHTTPCodeHandler(response) {
+  if (response.status &gt;= 400) {
+    // 注意 clone
+    response.clone().text().then(respBody =&gt; {
+      notification.error({message: &apos;API 异常响应&apos;, description: `${response.status}, ${respBody}`, duration: null});
+      console.log(`${response.status}, ${respBody}`);
+    });
+  }
+}
+
+function defaultMsgCodeHandler(response) {
+  if (response.status === 200) {
+    // 注意 clone
+    response.clone().json().then(jsonBody =&gt; {
+      // 0、200、10000 都属于成功响应
+      if (jsonBody !== undefined &amp;&amp; jsonBody.code !== undefined &amp;&amp; jsonBody.code !== 0 &amp;&amp; jsonBody.code !== 200 &amp;&amp; jsonBody.code != 10000) {
+        notification.error({message: &apos;请求失败&apos;, description: `${jsonBody.code}, ${jsonBody.msg}`, duration: null});
+        console.log(`${jsonBody.code}, ${jsonBody.msg}`);
+      }
+    });
+  }
+}</code></pre>
+<p>并且统一封装发起请求的逻辑：</p>
+<pre class="language-javascript"><code>export function corsFetch(url, init, httpCodeCallback, msgCodeCallback) {
+  const host = myHost();
+  let urlPrefix = host;
+  // 自带 host，则不额外补充 host 前缀
+  if (url.startsWith(&quot;http://&quot;) || url.startsWith(&quot;https://&quot;)) {
+    urlPrefix = &apos;&apos;;
+  }
+  const httpCodeHandler = httpCodeCallback === undefined ? defaultHTTPCodeHandler : httpCodeCallback;
+  const msgCodeHandler = msgCodeCallback === undefined ? defaultMsgCodeHandler : msgCodeCallback;
+  // 对于线上环境或者测试环境，不跨域
+  if (host === PROD_ENV_HOST || host === TEST_ENV_HOST) {
+    const promise = fetch(urlPrefix + url, init);
+    promise.then((response) =&gt; httpCodeHandler(response));
+    promise.then((response) =&gt; msgCodeHandler(response));
+    return promise;
+  }
+  // 对于本地测试环境，跨域访问预发环境 API 数据，方便测试
+  let corsInit = {
+    credentials: &apos;include&apos;,
+    mode: &apos;cors&apos;,
+    redirect: &apos;follow&apos;,
+  };
+  if (init !== undefined) {
+    corsInit = { ...corsInit, ...init };
+  }
+  if (urlPrefix !== &apos;&apos;) {
+    urlPrefix = TEST_ENV_HOST;
+  }
+  const promise = fetch(urlPrefix + url, corsInit);
+  promise.then((response) =&gt; httpCodeHandler(response));
+  promise.then((response) =&gt; msgCodeHandler(response));
+  return promise;
+}</code></pre>
+<p>其中为了方便本地开发测试，允许本地开发环境跨域访问测试环境（最好不要直接跨越访问生产环境），并且自动区分，corsFetch 调用方无感知。</p>
+    </article>
+</div>
+
+    </div>
+</div>
+
+<footer class="site-footer">
+    <div class="wrapper">
+        <div class="footer-col-wrapper">
+            <div class="footer-col  footer-col-1">
+                <ul class="social-media-list">
+                    <li>
+                        <a href="https://github.com/kitelife">
+                            <span class="icon  icon--github">
+                                <svg viewBox="0 0 16 16">
+                                    <path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                                </svg>
+                            </span>
+                            <span class="username">kitelife</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="footer-col  footer-col-2">
+                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
+                    <img alt="Creative Commons License" src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-sa.svg">
+                </a>
+            </div>
+
+            <div class="footer-col  footer-col-3">
+                <p class="text">精进，求诸己身</p>
+            </div>
+        </div>
+    </div>
+</footer>
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        },
+        svg: {
+            fontCache: 'global'
+        }
+    };
+</script>
+<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</body>
+</html>

@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta property="og:title" content="BitPacking">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://blog.xiayf.cn/">
+    <meta property="og:site_name" content="BitPacking">
+    <meta property="og:description" content="精进，求诸己身">
+
+    <title>BitPacking</title>
+    <meta name="description" content="精进，求诸己身">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <link rel="stylesheet" href="/static/main.css">
+    <link rel="canonical" href="https://blog.xiayf.cn/">
+</head>
+
+<body>
+<header class="site-header">
+    <div class="wrapper">
+        <a class="site-title" href="/">BitPacking</a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg viewBox="0 0 18 15">
+                    <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                <a class="page-link" href="/pages/about.html">关于我</a>
+                
+                <a class="page-link" href="/pages/works.html">作品</a>
+                
+                <a class="page-link" href="/rss.xml">RSS</a>
+                
+            </div>
+        </nav>
+    </div>
+</header>
+
+<div class="page-content">
+    <div class="wrapper">
+        
+<div class="post">
+    <header class="post-header">
+        <h1 class="post-title">Java 单测伴侣 - mockito</h1>
+        <p class="post-meta">2019-06-17</p>
+    </header>
+    <article class="post-content">
+        <p>其实工作以来，我很少写测试/单测代码，一方面是大部分互联网公司团队对测试的要求不高，另一方面是想写好测试代码还挺难的，挺花时间，其中最麻烦的是待测代码可能会访问外部资源（比如数据库、HTTP API），如果不能方便地进模拟访问这些外部资源，那么测试起来会非常麻烦。</p>
+<p>但，对于复杂逻辑，如果不经过严格测试，发布到生产环境，又有些不放心，没底气，或者在代码重构时，如果没有覆盖全面的测试，很难评估代码变动带来的影响。</p>
+<p>直到遇到 <a href='https://site.mockito.org/'>mockito</a>，我才觉得是时候认真写写测试代码了。</p>
+<hr>
+<p><a href='https://site.mockito.org/'>mockito</a> 提供两种对象模拟方式：<strong>mock</strong> 和 <strong>spy</strong>。</p>
+<p>简单来说，mock 模拟的对象是一个完全假的对象，只是具备指定类型的接口，以 <code>java.util.List</code> 为例：</p>
+<pre class="language-java"><code>import static org.mockito.Mockito.mock;
+
+List mockedList = mock(List.class);</code></pre>
+<p>虽然 List 是一个 interface，也可以模拟出一个对象实例，这个 mockedList 对象具备 List 接口定义的所有方法，但所有方法都不具备实际的行为操作，对于有返回值的方法，则默认返回方法返回类型的默认值，没有返回值的方法，则纯粹是一个空方法。比如：</p>
+<pre class="language-java"><code>// mockedList 并不会真的把 1 存下来
+mockedList.add(1);
+// 所以，size() 返回默认值，输出 0
+System.out.println(mockedList.size());
+// 输出 null
+System.out.println(mockedList.get(0));
+// 输出 null
+System.out.println(mockedList.get(1));</code></pre>
+<p>对于模拟出来的对象，可以任意指定其方法的返回值，比如：</p>
+<pre class="language-java"><code>import static org.mockito.Mockito.when;
+
+// 调用 size() 方法时，返回 10
+when(mockedList.size()).willReturn(10);
+when(mockedList.get(0)).willReturn(&quot;Hello World!&quot;);
+when(mockedList.get(1)).thenReturn(&quot;您好！&quot;);
+
+// 输出 10
+System.out.println(mockedList.size());
+// 输出 Hello World!
+System.out.println(mockedList.get(0));
+// 输出 您好！
+System.out.println(mockedList.get(1));</code></pre>
+<p>当然我们写测试代码时，并不会使用 System.out.println，然后看输出，而是使用<strong>断言</strong>：</p>
+<pre class="language-java"><code>import static org.junit.Assert.assertEquals;
+
+assertEquals(10, mockedList.size());
+assertEquals(&quot;Hello World!&quot;, mockedList.get(0));
+assertEquals(&quot;您好！&quot;, mockedList.get(1));</code></pre>
+<p>断言方法非常多，不仅仅只是 assertEquals。</p>
+<p>对于同一个方法，可以模拟多次调用返回不同的值：</p>
+<pre class="language-java"><code>// 会覆盖之前 mock 的行为：when(mockedList.size()).willReturn(10);
+// 或者这么写：when(mockedList.size()).willReturn(0, -1, 10);
+when(mockedList.size()).thenReturn(0).thenReturn(-1).thenReturn(10);
+assertEquals(0, mockedList.size());
+assertEquals(-1, mockedList.size());
+assertEquals(10, mockedList.size());
+// 第 3 次之后的 mockedList.size() 调用都返回 10
+assertEquals(10, mockedList.size());
+
+Iterator iterator = mock(Iterator.class);
+// 或者这么写：when(iterator.next()).thenReturn(0, 1, 10, 1000);
+when(iterator.next()).thenReturn(0).thenReturn(1).thenReturn(10).thenReturn(1000);
+assertEquals(0, iterator.next());
+assertEquals(1, iterator.next());
+assertEquals(10, iterator.next());
+assertEquals(1000, iterator.next());
+// 第 4 次之后的 iterator.next() 调用都返回 1000
+assertEquals(1000, iterator.next());</code></pre>
+<p>还可以模拟异常抛出：</p>
+<pre class="language-java"><code>List mockedList = mock(List.class);
+
+when(mockedList.get(-1000)).thenThrow(new RuntimeException(&quot;参数异常！&quot;));
+try {
+    mockedList.get(-1000);
+} catch (Exception e) {
+    assertTrue(e instanceof RuntimeException);
+    assertEquals(&quot;参数异常！&quot;, e.getMessage());
+}</code></pre>
+<p>也可以基于复杂的逻辑来构造返回值：</p>
+<pre class="language-java"><code>import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+
+List&lt;Integer&gt; mockedList = mock(List.class);
+when(mockedList.get(anyInt())).thenAnswer(new EchoAnswer());
+
+assertTrue(1 == mockedList.get(1));
+assertTrue(10 == mockedList.get(10));
+
+public class EchoAnswer implements Answer&lt;Integer&gt; {
+
+    public Integer answer(InvocationOnMock var) {
+        return var.getArgument(0);
+    }
+}</code></pre>
+<p>除了 <code>when(...).thenReturn(...)</code> 风格的测试模拟方式，还有 BDD（Behavior Driven Development 行为驱动开发）风格的：</p>
+<pre class="language-java"><code>import static org.mockito.BDDMockito.given;
+
+// given
+given(mockedList.get(0)).willReturn(100);
+// when
+int v = (int) mockedList.get(0);
+// then
+assertEquals(100, v);</code></pre>
+<p>如果方法没有返回值，或者其它奇葩的需求，则没法使用 when.thenReturn / willReturn 这样的模拟方法，可以使用 <code>doReturn(...).when(...)...</code>：</p>
+<pre class="language-java"><code>import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.doReturn;
+
+ArrayList mockedList = mock(ArrayList.class);
+// clear 方法无返回值
+doThrow(new RuntimeException(&quot;清除失败&quot;)).when(mockedList).clear();
+
+try {
+    mockedList.clear();
+} catch (Exception e) {
+    assertTrue(e instanceof RuntimeException);
+    assertEquals(&quot;清除失败&quot;, e.getMessage());
+}
+
+// 没有意义，因为没法使用 断言 来验证，实际运行时会抛异常
+doReturn(10).when(mockedList).clear();</code></pre>
+<p>从示例代码可以看出，<code>doReturn(...).when(...)....</code> 不会做类型校验，mockedList.clear() 返回值类型为 void，但我们模拟让其返回 10；所以，正常情况应该尽可能使用 <code>when(...).thenReturn(...)</code> 或 <code>given(...).willReturn(...)</code>。</p>
+<hr>
+<p>前述代码示例中，模拟方法的参数都做了硬编码，实际情况通常都不是这么测试，而是模拟方法的参数符合一定的要求即可，比如：在某个范围之内、符合类型的任何值：</p>
+<pre class="language-java"><code>import static org.mockito.Mockito.anyInt;
+
+/*
+以任何 int 类型的参数调用 mockedList.get 方法，都返回 100
+
+如果写成 when(mockedList.get(0)).thenReturn(100)，则只有以 0 为参数调用 mockedList.get 方法，才会返回100，其他参数值，返回的都是默认值 0
+*/
+when(mockedList.get(anyInt())).thenReturn(100);
+
+assertEquals(100, mockedList.get(0));
+assertEquals(100, mockedList.get(1000));</code></pre>
+<p>可用的参数匹配器，见 org.mockito.ArgumentMatchers 类的静态方法列表，也可以自己实现 ArgumentMatcher 接口：</p>
+<pre class="language-java"><code>package org.mockito;
+
+public interface ArgumentMatcher&lt;T&gt; {
+    boolean matches(T var1);
+}</code></pre>
+<pre class="language-java"><code>import org.mockito.ArgumentMatcher;
+import static org.mockito.Mockito.intThat;
+
+when(mockedList.get(intThat(new LimitedInt()))).thenReturn(10);
+
+assertEquals(null, mockedList.get(-1));
+assertEquals(10, mockedList.get(1));
+assertEquals(10, mockedList.get(99));
+assertEquals(null, mockedList.get(100));
+
+public class LimitedInt implements ArgumentMatcher&lt;Integer&gt; {
+
+    public boolean matches(Integer var) {
+        return var &gt; 0 &amp;&amp; var &lt; 100;
+    }
+}</code></pre>
+<p>如果被模拟的方法包含多个参数，那么这些参数要么全部使用匹配器，要么全部不使用。</p>
+<hr>
+<p>模拟某些类（A）的方法，通常会将 mock 出来的对象注入到依赖该类实例的其他类（B）中，来替代真实的依赖，这种方式的目的是为了测试类 B 的行为是否符合预期。</p>
+<p>另一个测试需求是，测试某个类 A' 在某个上下文环境中的行为是否符合预期，比如： A' 的某个方法是否被调用过、调用过几次、调用参数是否符合预期、几个方法之间的调用次序是否符合预期、方法调用耗时是否符合预期等等。</p>
+<pre class="language-java"><code>import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verifyZeroInteractions;
+
+List mocked = mock(List.class);
+
+Caller caller = new Caller();
+caller.setList(mocked);
+
+// 调用 0 次
+caller.run(0);
+// 验证是否从来没调用过 mocked.size()
+verify(mocked, never()).size();
+// 验证 没有和 mocked 产生过任何交互
+// 因为 Caller.run 中调用了 list.isEmpty()，实际产生了交互，所以这行测试会失败
+verifyZeroInteractions(mocked);
+
+// 调用 10 次
+caller.run(10);
+// 验证是否调用 mocked.size() 10 次
+verify(mocked, times(10)).size();
+
+// 再调用一次
+caller.run(1);
+// 所以是 11 次了
+verify(mocked, times(11)).size();
+
+@Data
+public class Caller {
+    List list;
+
+    public void run(int count) {
+        for (int idx=0; idx &lt; count; idx++) {
+            list.size();
+        }
+        //
+        list.isEmpty();
+    }
+}</code></pre>
+<pre class="language-java"><code>List mocked = mock(List.class);
+
+mocked.add(1);
+mocked.add(2);
+
+verify(mocked).add(1);
+
+// 是否有其他交互没有验证过？因为 mocked 还调用过 mocked.add(2)，所以这句测试会失败
+verifyNoMoreInteractions(mocked);</code></pre>
+<pre class="language-java"><code>import org.mockito.InOrder;
+
+// 也可以验证调用次序
+List mocked1 = mock(List.class);
+List mocked2 = mock(List.class);
+
+mocked1.size();
+mocked1.isEmpty();
+mocked2.isEmpty();
+
+// 会记录 mocked1、mocked2 中方法的调用/交互次序，要求：与 mocked1 的交互先于 mocked2
+InOrder inOrder = inOrder(mocked1, mocked2);
+// mocked1、mocked2 的交互顺序必须和 inOrder.verify 之间的顺序一致
+inOrder.verify(mocked1).size();
+inOrder.verify(mocked1).isEmpty();
+inOrder.verify(mocked2).isEmpty();</code></pre>
+<hr>
+<p>也可以验证某个方法被调用时所使用的参数是否符合预期：</p>
+<pre class="language-java"><code>import org.mockito.ArgumentCaptor;
+
+List mockedlist = mock(List.class);
+
+Caller caller = new Caller();
+caller.setList(mockedlist);
+caller.run();
+
+// 捕获 mockedList.add 的调用参数
+ArgumentCaptor&lt;Integer&gt; argumentCaptor = ArgumentCaptor.forClass(Integer.class);
+verify(mockedlist).add(argumentCaptor.capture());
+assertTrue(100 == argumentCaptor.getValue());
+
+@Data
+public class Caller {
+    List list;
+
+    public void run() {
+        list.add(100);
+    }
+}</code></pre>
+<hr>
+<p>前面的内容都是以 mock 为例，我们再来说说 spy，与 mock 的区别：</p>
+<p>mock 出来的对象是一个完全假的对象，但 spy 通常是基于一个具体的类或类实例，对其篡改某些方法，对于被篡改方法之外的方法，其行为都和调用真实对象的方法一样，不过并没有调用真实对象的方法，也不会对真实对象产生影响：</p>
+<pre class="language-java"><code>// 基于一个实际的类实例
+List&lt;Integer&gt; realList = new ArrayList&lt;&gt;(10);
+List&lt;Integer&gt; spy = spy(realList);
+        
+spy.add(1);
+
+// 被窃听的对象并没有发生变化
+assertEquals(0, realList.size());
+// 间谍对象确实将 1 存了下来
+assertEquals(1, spy.size());
+// 这句会抛出 java.lang.IndexOutOfBoundsException，因为 realList 还是为空
+assertTrue(1 == realList.get(0));
+assertTrue(1 == spy.get(0));</code></pre>
+<p>也可以基于一个具体的类来构造 spy，但这样无法使用带参数的构造方法，也无法指定类型参数：</p>
+<pre class="language-java"><code>List&lt;Integer&gt; = spy(ArrayList.class);
+assertEquals(0, spy.size());
+spy.add(100);
+assertEquals(1, spy.size());
+assertTrue(100 == spy.get(0));
+
+// 篡改方法
+when(spy.size()).thenReturn(-1);
+assertEquals(-1, spy.size());</code></pre>
+<p>实际上，mock 也可以基于具体的类来构造，这时可以指定某些方法实际调用具体类的方法。</p>
+<hr>
+<p>除了使用 mock、spy 方法来构造模拟对象，还可以通过注解来构造，但这样的话得指定 JUnit 的 Runner 为 <code>org.mockito.junit.MockitoJUnitRunner</code>：</p>
+<pre class="language-java"><code>import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.junit.MockitoJUnitRunner;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.mockito.Mockito.when;
+import static org.junit.Assert.assertTrue;
+
+@RunWith(MockitoJUnitRunner.class)
+public class testTester {
+
+    @Mock
+    private List&lt;Integer&gt; mocked;
+
+    @Spy
+    private ArrayList&lt;Integer&gt; spyed;
+
+    @Test
+    public void test() {
+        when(mocked.isEmpty()).thenReturn(false);
+        when(spyed.isEmpty()).thenReturn(false);
+
+        assertTrue(!mocked.isEmpty());
+        assertTrue(!spyed.isEmpty());
+
+        mocked.add(0);
+        spyed.add(0);
+
+        assertTrue(0 == mocked.size());
+        assertTrue(1 == spyed.size());
+    }
+}</code></pre>
+    </article>
+</div>
+
+    </div>
+</div>
+
+<footer class="site-footer">
+    <div class="wrapper">
+        <div class="footer-col-wrapper">
+            <div class="footer-col  footer-col-1">
+                <ul class="social-media-list">
+                    <li>
+                        <a href="https://github.com/kitelife">
+                            <span class="icon  icon--github">
+                                <svg viewBox="0 0 16 16">
+                                    <path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                                </svg>
+                            </span>
+                            <span class="username">kitelife</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="footer-col  footer-col-2">
+                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
+                    <img alt="Creative Commons License" src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-sa.svg">
+                </a>
+            </div>
+
+            <div class="footer-col  footer-col-3">
+                <p class="text">精进，求诸己身</p>
+            </div>
+        </div>
+    </div>
+</footer>
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        },
+        svg: {
+            fontCache: 'global'
+        }
+    };
+</script>
+<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</body>
+</html>

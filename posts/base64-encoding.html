@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta property="og:title" content="BitPacking">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://blog.xiayf.cn/">
+    <meta property="og:site_name" content="BitPacking">
+    <meta property="og:description" content="精进，求诸己身">
+
+    <title>BitPacking</title>
+    <meta name="description" content="精进，求诸己身">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <link rel="stylesheet" href="/static/main.css">
+    <link rel="canonical" href="https://blog.xiayf.cn/">
+</head>
+
+<body>
+<header class="site-header">
+    <div class="wrapper">
+        <a class="site-title" href="/">BitPacking</a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg viewBox="0 0 18 15">
+                    <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                <a class="page-link" href="/pages/about.html">关于我</a>
+                
+                <a class="page-link" href="/pages/works.html">作品</a>
+                
+                <a class="page-link" href="/rss.xml">RSS</a>
+                
+            </div>
+        </nav>
+    </div>
+</header>
+
+<div class="page-content">
+    <div class="wrapper">
+        
+<div class="post">
+    <header class="post-header">
+        <h1 class="post-title">Base64编码原理与应用</h1>
+        <p class="post-meta">2016-01-24</p>
+    </header>
+    <article class="post-content">
+        <p>2015年，我们在青云平台上实现了“百度云观测”应用。青云应用本质上是一个iframe，在向iframe服务方发送的请求中会携带一些数据，青云平台会使用<code>Base64 URL</code>对这些数据进行编码，其提供的编码解码算法示例如下：</p>
+<pre class="language-php"><code>// php版本
+function base64_URL_encode($data) {
+  return rtrim(strtr(base64_encode($data), &apos;+/&apos;, &apos;-_&apos;), &apos;=&apos;);
+}
+function base64_URL_decode($data) {
+  return base64_decode(str_pad(strtr($data, &apos;-_&apos;, &apos;+/&apos;), 
+                            strlen($data) % 4, &apos;=&apos;, STR_PAD_RIGHT));
+}</code></pre>
+<p>可以看出，<code>Base64 URL</code> 是标准Base64编码的一个变种，分别用 <code>-</code>、<code>_</code> 替换标准Base64编码结果中的 <code>+</code> 、 <code>/</code> ，并删除结果最后的 <code>=</code> 。</p>
+<p>在实现 “百度云观测” 青云应用时，我在想：</p>
+<ul><li>为什么要使用Base64编码？</li>
+<li>Base64编码算法是什么样的？</li></ul>
+<p>本文是围绕这两个问题思考和实践的结果。</p>
+<p>我认为，理解Base64或其他类似编码的关键有两点：</p>
+<ol><li>计算机最终存储和执行的是01二进制序列，这个二进制序列的含义则由解码程序/解释程序决定</li>
+<li>很多场景下的数据传输要求数据只能由简单通用的字符组成，比如HTTP协议要求请求的首行和请求头都必须是ASCII编码</li></ol>
+<p>以青云应用为例，简单解释这两点。青云平台通过POST一个表单来获取iframe，表单有 <code>payload</code> 和 <code>signature</code> 两项， <code>payload</code> 原本是一个JSON对象，其中的键值可能包含一些特殊字符，比如 <code>&amp;</code>、<code>/</code> 等，由于青云设计的一种通用的请求交互方案，需要考虑iframe服务方服务器端的各种可能实现，有些服务器端实现没有考虑表单值有这些特殊字符，或者POST请求被中间服务器转换成GET请求再次发出，对于URL来说，<code>&amp;</code>、<code>/</code>都是具有特殊含义的字符，所以需要对请求数据进行特殊编码避免这些字符出现 - 数据发送方对数据按规则进行编码，接收方对应地按规则解码数据。</p>
+<h2>Base64编码原理</h2>
+<p>Base64编码之所以称为Base64，是因为其使用64个字符来对任意数据进行编码，同理有Base32、Base16编码。标准Base64编码使用的64个字符为：</p>
+<img src='https://i.loli.net/2020/06/14/XHFMRvxfez4OVtr.jpg' title='' alt='' width='500'>
+<p>这64个字符是各种字符编码（比如ASCII编码）所使用字符的子集，基本，并且可打印。唯一有点特殊的是最后两个字符，因对最后两个字符的选择不同，Base64编码又有很多变种，比如Base64 URL编码。</p>
+<p>Base64编码本质上是一种将二进制数据转成文本数据的方案。对于非二进制数据，是先将其转换成二进制形式，然后每连续6比特（2的6次方=64）计算其十进制值，根据该值在上面的索引表中找到对应的字符，最终得到一个文本字符串。</p>
+<p>假设我们要对 <code>Hello!</code> 进行Base64编码，按照ASCII表，其转换过程如下图所示：</p>
+<img src='https://i.loli.net/2020/06/14/tJnClQsjc4WMGhB.jpg' title='' alt='' width='100%'>
+<p>可知 <code>Hello!</code> 的Base64编码结果为 <code>SGVsbG8h</code> ，原始字符串长度为6个字符，编码后长度为8个字符，每3个原始字符经Base64编码成4个字符，编码前后长度比4/3，这个长度比很重要 - 比原始字符串长度短，则需要使用更大的编码字符集，这并不我们想要的；长度比越大，则需要传输越多的字符，传输时间越长。Base64应用广泛的原因是在字符集大小与长度比之间取得一个较好的平衡，适用于各种场景。</p>
+<p>是不是觉得Base64编码原理很简单？</p>
+<p>但这里需要注意一个点：Base64编码是每3个原始字符编码成4个字符，如果原始字符串长度不能被3整除，那怎么办？使用0值来补充原始字符串。</p>
+<p>以 <code>Hello!!</code> 为例，其转换过程为：</p>
+<img src='https://i.loli.net/2020/06/14/5URB8nVis9ljwYe.jpg' title='' alt='' width='100%'>
+<p><em>注：图表中蓝色背景的二进制0值是额外补充的。</em></p>
+<p><code>Hello!!</code> Base64编码的结果为 <code>SGVsbG8hIQAA</code> 。最后2个零值只是为了Base64编码而补充的，在原始字符中并没有对应的字符，那么Base64编码结果中的最后两个字符 <code>AA</code> 实际不带有效信息，所以需要特殊处理，以免解码错误。</p>
+<p>标准Base64编码通常用 <code>=</code> 字符来替换最后的 <code>A</code>，即编码结果为 <code>SGVsbG8hIQ==</code>。因为 <code>=</code> 字符并不在Base64编码索引表中，其意义在于结束符号，在Base64解码时遇到 <code>=</code> 时即可知道一个Base64编码字符串结束。</p>
+<p>如果Base64编码字符串不会相互拼接再传输，那么最后的 <code>=</code> 也可以省略，解码时如果发现Base64编码字符串长度不能被4整除，则先补充 <code>=</code> 字符，再解码即可。</p>
+<p>为了理解Base64编码解码过程，个人实现了一个非常简陋的Base64编码解码程序，见：<a href='https://github.com/youngsterxyf/xiaBase64'>youngsterxyf/xiaBase64</a>。</p>
+<p>由于Base64应用广泛，所以很多编程语言的标准库都内置Base64编码解码包，如：</p>
+<ul><li>PHP：<a href='http://php.net/manual/en/function.base64-encode.php'>base64_encode</a>、<a href='http://php.net/manual/en/function.base64-decode.php'>base64_decode</a></li>
+<li>Python：<a href='https://docs.python.org/2/library/base64.html'>base64包</a></li>
+<li>Go：<a href='https://golang.org/pkg/encoding/base64/'>encoding/base64</a></li>
+<li>...</li></ul>
+<h2>Base64编码应用</h2>
+<p>本文开始提到的青云应用例子只是Base64编码的应用场景之一。由于Base64编码在字符集大小与编码后数据长度之间做了较好的平衡，以及Base64编码变种形式的多样，使得Base64编码的应用场景非常广泛。下面举2个常用常见的例子。</p>
+<h3>HTML内嵌Base64编码图片</h3>
+<p>前端在实现页面时，对于一些简单图片，通常会选择将图片内容直接内嵌在页面中，避免不必要的外部资源加载，增大页面加载时间，但是图片数据是二进制数据，该怎么嵌入呢？<a href='http://caniuse.com/#search=Data%20URI'>绝大多数现代浏览器</a>都支持一种名为 <code>Data URLs</code> 的特性，允许使用Base64对图片或其他文件的二进制数据进行编码，将其作为文本字符串嵌入网页中。以百度搜索首页为例，其中语音搜索的图标是个背景图片，其内容以 <code>Data URLs</code> 形式直接写在css中，这个css内容又直接嵌在HTML页面中，如下图所示：</p>
+<img src='https://i.loli.net/2020/06/14/oa6rsPSwgMzv87l.jpg' title='' alt='' width='100%'>
+<p><code>Data URLs</code> 格式为：<code>url(data:文件类型;编码方式,编码后的文件内容)</code>。</p>
+<p>当然，也可以直接基于image标签嵌入图片，如下所示：</p>
+<pre class="language-html"><code>&lt;img alt=&quot;Embedded Image&quot; src=&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIA...&quot; /&gt;</code></pre>
+<p>但请注意：如果图片较大，图片的色彩层次比较丰富，则不适合使用这种方式，因为其Base64编码后的字符串非常大，会明显增大HTML页面，影响加载速度。</p>
+<h3>MIME（多用途互联网邮件扩展）</h3>
+<p>我们的电子邮件系统，一般是使用SMTP（简单邮件传输协议）将邮件从客户端发往服务器端，邮件客户端使用POP3（邮局协议，第3版本）或IMAP（交互邮件访问协议）从服务器端获取邮件。</p>
+<p>SMTP协议一开始是基于纯ASCII文本的，对于二进制文件（比如邮件附件中的图像、声音等）的处理并不好，所以后来新增MIME标准来编码二进制文件，使其能够通过SMTP协议传输。</p>
+<p>举例来说，我给自己发封邮件，正文为空，带一个名为hello.txt的附件，内容为 <code>您好！世界！</code>。导出邮件源码，其关键部分如下图所示：</p>
+<img src='https://i.loli.net/2020/06/14/c8wIeoij9HWt4Ph.jpg' title='' alt='' width='600'>
+<p><code>MIME-Version: 1.0</code>：表示当前使用MIME标准1.0版本。</p>
+<p><code>Content-Type: text/plain; name=&quot;hello.txt&quot;</code>：表示附件文件名为 <code>hello.txt</code> ，格式为纯文本。</p>
+<p><code>Content-Transfer-Encoding: base64</code>：表示附件文件内容使用base64编码后传输。</p>
+<p><code>5oKo5aW977yM5LiW55WM77yB</code>：则是文件内容 <code>您好，世界！</code> Base64编码后的结果。</p>
+<p>不过，MIME使用的不是标准Base64编码。</p>
+<h2>切忌误用</h2>
+<p>可能会有人在不理解Base64编码的情况下，将其误用于数据加密或数据校验。</p>
+<p>Base64是一种数据编码方式，目的是让数据符合传输协议的要求。标准Base64编码解码无需额外信息即完全可逆，即使你自己自定义字符集设计一种类Base64的编码方式用于数据加密，在多数场景下也较容易破解。</p>
+<p>对于数据加密应该使用专门的<strong>目前还没有有效方式快速破解的</strong>加密算法。比如：对称加密算法<code>AES-128-CBC</code>，对称加密需要密钥，只要密钥没有泄露，通常难以破解；也可以使用非对称加密算法，如 <code>RSA</code>，利用极大整数因数分解的计算量极大这一特点，使得使用公钥加密的数据，只有使用私钥才能快速解密。</p>
+<p>对于数据校验，也应该使用专门的消息认证码生成算法，如 <code>HMAC</code> - 一种使用单向散列函数构造消息认证码的方法，其过程是不可逆的、唯一确定的，并且使用密钥来生成认证码，其目的是防止数据在传输过程中被篡改或伪造。将原始数据与认证码一起传输，数据接收端将原始数据使用相同密钥和相同算法再次生成认证码，与原有认证码进行比对，校验数据的合法性。</p>
+<p>那么针对各大网站被脱库的问题，请问应该怎么存储用户的登录密码？</p>
+<p>答案是：在注册时，根据用户设置的登录密码，生成其消息认证码，然后存储用户名和消息认证码，不存储原始密码。每次用户登录时，根据登录密码，生成消息认证码，与数据库中存储的消息认证码进行比对，以确认是否为有效用户，这样即使网站被脱库，用户的原始密码也不会泄露，不会为用户使用的其他网站带来账号风险。</p>
+<p>当然，使用的消息认证码算法其哈希碰撞的概率应该极低才行，目前一般在HMAC算法中使用SHA256。对于这种方式需要注意一点：防止用户使用弱密码，否则也可能会被暴力破解。现在的网站一般要求用户密码6个字符以上，并且同时有数字和大小写字母，甚至要求有特殊字符。</p>
+<p>另外，也可以使用加入随机salt的哈希算法来存储校验用户密码。这里暂不细述。</p>
+<h2>总结</h2>
+<p>Base64兼顾字符集大小和编码后数据长度，并且可以灵活替换字符集的最后两个字符，以应对多样的需求，使其适用场景非常广泛。</p>
+<p>当然，很多场景下有多种编码方式可选择，并非Base64编码不可，视需求，权衡利弊而定。</p>
+    </article>
+</div>
+
+    </div>
+</div>
+
+<footer class="site-footer">
+    <div class="wrapper">
+        <div class="footer-col-wrapper">
+            <div class="footer-col  footer-col-1">
+                <ul class="social-media-list">
+                    <li>
+                        <a href="https://github.com/kitelife">
+                            <span class="icon  icon--github">
+                                <svg viewBox="0 0 16 16">
+                                    <path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                                </svg>
+                            </span>
+                            <span class="username">kitelife</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="footer-col  footer-col-2">
+                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
+                    <img alt="Creative Commons License" src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-sa.svg">
+                </a>
+            </div>
+
+            <div class="footer-col  footer-col-3">
+                <p class="text">精进，求诸己身</p>
+            </div>
+        </div>
+    </div>
+</footer>
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        },
+        svg: {
+            fontCache: 'global'
+        }
+    };
+</script>
+<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</body>
+</html>

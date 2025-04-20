@@ -63,7 +63,7 @@
 <h2>实体、引用、索引（Objects，References，The Index）</h2>
 <p>要理解Git内部构造的核心，我们应理解三个东西： <strong>实体</strong>、<strong>引用</strong>、 <strong>索引</strong>。</p>
 <p>我发现这个模型非常优雅。用一个小小的图表就能完全展现，也易于理解记忆。</p>
-<img src='../assets/git-internals/big-picture.png' title='Big Picture' alt='Big Picture' width='500'>
+<img src='../assets/git-internals/big-picture.png' title='Big Picture' alt='Big Picture' width='500'/>
 <h3>实体</h3>
 <p>你提交到一个Git代码仓库中的所有文件，包括每个提交的说明信息（the commit info）都在目录 <code>.git/objects/</code>中存储为<strong>实体</strong>。</p>
 <p>一个实体以一个40字符长度的字符串（该实体内容的SHA1哈希值）来标识。</p>
@@ -86,7 +86,7 @@
 <p>我们来演练一个简单的示例，创建一个Git代码仓库，提交一些文件，看看幕后<code>.git</code>目录中都发生了些什么。</p>
 <h3>初始化新的代码仓库</h3>
 <pre class="language-text"><code>$ git init canai</code></pre>
-<img src='../assets/git-internals/init.png' title='初始化代码仓库后' alt='初始化代码仓库后' width='500'>
+<img src='../assets/git-internals/init.png' title='初始化代码仓库后' alt='初始化代码仓库后' width='500'/>
 <p>发生了什么呢？</p>
 <ul><li>创建了空目录<code>.git/objects/</code>和<code>.git/refs/</code>。</li>
 <li>还没有索引（Index）文件。</li>
@@ -96,7 +96,7 @@ ref: refs/heads/master</code></pre>
 <h3>添加新文件</h3>
 <pre class="language-text"><code>$ echo &quot;A roti canai project.&quot; &gt;&gt; README
 $ git add README</code></pre>
-<img src='../assets/git-internals/new-file.png' title='添加新文件后' alt='添加新文件后' width='500'>
+<img src='../assets/git-internals/new-file.png' title='添加新文件后' alt='添加新文件后' width='500'/>
 <p>发生了什么呢？</p>
 <ul><li>创建了索引（Index）文件。它有一个SHA1哈希值指向一个blob实体。</li></ul>
 <pre class="language-text"><code>$ git ls-files --stage
@@ -110,7 +110,7 @@ A roti canai project.</code></pre>
 [master (root-commit) d9976cf] first commit
 1 files changed, 1 insertions(+), 0 deletions(-)
 create mode 100644 README</code></pre>
-<img src='../assets/git-internals/first-commit.png' title='首次提交后' alt='首次提交后' width='500'>
+<img src='../assets/git-internals/first-commit.png' title='首次提交后' alt='首次提交后' width='500'/>
 <p>发生了什么呢？</p>
 <ul><li>创建了分支‘master’引用，指向‘master’分支中最新的commit实体。</li></ul>
 <pre class="language-text"><code>$ cat .git/refs/heads/master 
@@ -130,7 +130,7 @@ $ git ls-tree 0ff699
 <h3>添加一个修改过的文件</h3>
 <pre class="language-text"><code>$ echo &quot;Welcome everyone.&quot; &gt;&gt; README
 $ git add README</code></pre>
-<img src='../assets/git-internals/modified-file.png' title='添加一个修改过的文件后' alt='添加一个修改过的文件后' width='500'>
+<img src='../assets/git-internals/modified-file.png' title='添加一个修改过的文件后' alt='添加一个修改过的文件后' width='500'/>
 <p>发生了什么呢？</p>
 <ul><li>更新了索引（Index）文件。注意到了吗？它记录了一个新blob。</li></ul>
 <pre class="language-text"><code>$ git ls-files --stage
@@ -144,7 +144,7 @@ Welcome everyone.</code></pre>
 <pre class="language-text"><code>$ mkdir doc
 $ echo &quot;[[TBD]] manual toc&quot; &gt;&gt; doc/manual.txt
 $ git add doc</code></pre>
-<img src='../assets/git-internals/subdir.png' title='向子目录添加文件后' alt='向子目录添加文件后' width='500'>
+<img src='../assets/git-internals/subdir.png' title='向子目录添加文件后' alt='向子目录添加文件后' width='500'/>
 <p>发生了什么呢？</p>
 <ul><li>更新了索引（Index）文件。</li></ul>
 <pre class="language-text"><code>$ git ls-files --stage
@@ -159,7 +159,7 @@ $ git cat-file blob ea283
 [master 556eaf3] second commit
  2 files changed, 2 insertions(+), 0 deletions(-)
  create mode 100644 doc/manual.txt</code></pre>
-<img src='../assets/git-internals/second-commit.png' title='第二次提交后' alt='第二次提交后' width='500'>
+<img src='../assets/git-internals/second-commit.png' title='第二次提交后' alt='第二次提交后' width='500'/>
 <p>发生了什么呢？</p>
 <ul><li>更新了分支“master”引用，指向该分支中最新的commit实体。</li></ul>
 <pre class="language-text"><code>$ cat .git/refs/heads/master 
@@ -181,7 +181,7 @@ second commit</code></pre>
 100644 blob ea283e4fb22719fad512405d41dffa050cd16f9a  manual.txt</code></pre>
 <h3>添加一个注释标签（annotated tag）</h3>
 <pre class="language-text"><code>$ git tag -a -m&apos;this is annotated tag&apos; v0.1 d9976</code></pre>
-<img src='../assets/git-internals/annotated-tag.png' title='添加一个注释标签后' alt='添加一个注释标签后' width='500'>
+<img src='../assets/git-internals/annotated-tag.png' title='添加一个注释标签后' alt='添加一个注释标签后' width='500'/>
 <p>发生了什么呢？</p>
 <ul><li>创建了一个标签引用，指向一个tag实体。</li></ul>
 <pre class="language-text"><code>$ cat .git/refs/tags/v0.1 
@@ -196,7 +196,7 @@ tagger Huiming Teo &lt;huiming@favoritemedium.com&gt; 1306744918 +0800
 this is annotated tag</code></pre>
 <h3>添加一个新的（轻量的）标签</h3>
 <pre class="language-text"><code>$ git tag root-commit d9976</code></pre>
-<img src='../assets/git-internals/new-tag.png' title='添加一个新的轻量标签后' alt='添加一个新的轻量标签后' width='500'>
+<img src='../assets/git-internals/new-tag.png' title='添加一个新的轻量标签后' alt='添加一个新的轻量标签后' width='500'/>
 <p>发生了什么呢？</p>
 <ul><li>创建了一个标签引用，指向一个commit实体。</li></ul>
 <pre class="language-text"><code>$ cat .git/refs/tags/root-commit 
@@ -215,11 +215,11 @@ d9976cfe0430557885d162927dd70186d0f521e8</code></pre>
 <footer class="site-footer">
     <div class="wrapper">
         <div class="footer-col-wrapper">
-            <div class="footer-col  footer-col-1">
+            <div class="footer-col footer-col-1">
                 <ul class="social-media-list">
                     <li>
-                        <a href="https://github.com/kitelife">
-                            <span class="icon  icon--github">
+                        <a href="https://github.com/kitelife" target="_blank">
+                            <span class="icon icon--github">
                                 <svg viewBox="0 0 16 16">
                                     <path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
                                 </svg>
@@ -227,17 +227,22 @@ d9976cfe0430557885d162927dd70186d0f521e8</code></pre>
                             <span class="username">kitelife</span>
                         </a>
                     </li>
+                    <li>
+                        <a href="https://maimai.cn/profile/detail?dstu=39580141" target="_blank">
+                            <span class="icon icon--maimai">
+                                <img src="https://maimai.cn/favicon.ico" width="16"/>
+                            </span>
+                            <span class="username">Xiayf</span>
+                        </a>
+                    </li>
                 </ul>
             </div>
-
-            <div class="footer-col  footer-col-2">
-                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
+            <div class="footer-col footer-col-2"></div>
+            <div class="footer-col footer-col-3"></div>
+            <div class="footer-col footer-col-4">
+                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">
                     <img alt="Creative Commons License" src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-sa.svg">
                 </a>
-            </div>
-
-            <div class="footer-col  footer-col-3">
-                <p class="text">精进，求诸己身</p>
             </div>
         </div>
     </div>

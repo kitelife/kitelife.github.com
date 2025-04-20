@@ -57,7 +57,7 @@
 <p>多数嵌入（embedding）模型会输出 $float32$ 数值精度的向量。这个精度虽然提供了信息高保真，但在真正重要的信息之外也带来一些资源浪费。对于给定的数据集，嵌入不可能在单个维度需要20亿种取值，特别是对于高维度向量而言（比如：386维及以上）。量化以一种有损的方式对向量进行编码，轻微降低信息保真而明显地降低存储空间占用。</p>
 <h2>理解标量量化的分桶</h2>
 <p>标量量化使用更小的数据类型对向量每一维的取值进行分桶。本文的余下部分将假设将 $float32$ 量化到 $int8$ 。为了准确地对值进行分桶，不能简单地将值四舍五入到最近的整数。许多模型输出向量的维度取值空间为 $[-1.0, 1.0]$，如果简单粗暴地四舍五入处理，那么 0.123 和 0.321 这两个不同的向量维度取值都会向下取整到 0。最终，一个向量仅会使用 $int8$ 可用 255 个桶中的2个桶，这样就丢失太多信息了。</p>
-<img src='../assets/float32-to-int8-buckets.jpeg' title='float32-to-int8-buckets.jpeg' alt='float32-to-int8-buckets.jpeg' width='500'>
+<img src='../assets/float32-to-int8-buckets.jpeg' title='float32-to-int8-buckets.jpeg' alt='float32-to-int8-buckets.jpeg' width='500'/>
 <blockquote><p>图1：量化目标图解 - 将 -1.0 到 1.0 之间的连续值分桶到离散的 $int8$ 数值。</p></blockquote>
 <p>这种数值转换背后的数学原理并不太复杂。我们可以先计算浮点数取值区间的最小和最大值，然后使用 <a href='https://en.wikipedia.org/wiki/Feature_scaling#Rescaling_(min-max_normalization'>最小-最大归一化</a>) 对值进行线性变换（linearly shift）。</p>
 <p style="text-align: center">$$int8\approx \frac{127}{max-min} \  \times \left( float32-min \right)$$</p>
@@ -65,7 +65,7 @@
 <blockquote><p>图2：$int8$ 和 $float32$ 之间的变换公式。注意：这两个变换是有损的，并不是精确变换。下面的例子中，仅使用 $int8$ 取值空间的正数部分。Lucene 的实现也是这样的。</p></blockquote>
 <h2>标量量化的统计视角</h2>
 <p><a href='https://en.wikipedia.org/wiki/Quantile'>分位点（quantile）</a> 是指数值分布的一个切片，这个切片包含一定数量比例的值。例如：一种浮点数取值分布下 99% 的值落在 $[-0.75, 0.86]$ 这个分位点区间内，小于 $-0.75$ 和大于 $0.86$ 的值都被视为离群值/异常值（outliers），因此将 $-0.75$ 和 $0.86$ 分别视为实际的最小值和最大值。如果量化时将离群值包含在内，就意味着那些最常见的值可用的桶偏少了，可用桶少了也就意味着精度更差，信息损失更多。</p>
-<img src='../assets/quantile.jpeg' title='' alt='' width='500'>
+<img src='../assets/quantile.jpeg' title='' alt='' width='500'/>
 <blockquote><p>图3:图解 99%  <a href='https://en.wikipedia.org/wiki/Confidence_interval'>置信区间(confidence interval)</a>及对应的分位点数值，即 99% 的值落在 $[-0.75, 0.86]$ 这个范围内。</p></blockquote>
 <p>不错，我们现在知道如何对浮点值进行量化了，那么又应该如何计算两个量化后向量的距离呢？就像常规的<a href='https://en.wikipedia.org/wiki/Dot_product'>点积</a>计算一样简单吗？</p>
 <h2>标量量化的代数视角</h2>
@@ -94,11 +94,11 @@
 <footer class="site-footer">
     <div class="wrapper">
         <div class="footer-col-wrapper">
-            <div class="footer-col  footer-col-1">
+            <div class="footer-col footer-col-1">
                 <ul class="social-media-list">
                     <li>
-                        <a href="https://github.com/kitelife">
-                            <span class="icon  icon--github">
+                        <a href="https://github.com/kitelife" target="_blank">
+                            <span class="icon icon--github">
                                 <svg viewBox="0 0 16 16">
                                     <path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
                                 </svg>
@@ -106,17 +106,22 @@
                             <span class="username">kitelife</span>
                         </a>
                     </li>
+                    <li>
+                        <a href="https://maimai.cn/profile/detail?dstu=39580141" target="_blank">
+                            <span class="icon icon--maimai">
+                                <img src="https://maimai.cn/favicon.ico" width="16"/>
+                            </span>
+                            <span class="username">Xiayf</span>
+                        </a>
+                    </li>
                 </ul>
             </div>
-
-            <div class="footer-col  footer-col-2">
-                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
+            <div class="footer-col footer-col-2"></div>
+            <div class="footer-col footer-col-3"></div>
+            <div class="footer-col footer-col-4">
+                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">
                     <img alt="Creative Commons License" src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-sa.svg">
                 </a>
-            </div>
-
-            <div class="footer-col  footer-col-3">
-                <p class="text">精进，求诸己身</p>
             </div>
         </div>
     </div>

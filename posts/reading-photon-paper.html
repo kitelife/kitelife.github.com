@@ -63,7 +63,7 @@
 <ol><li>用户搜索某个关键词时，谷歌的服务器会返回广告和搜索结果。广告服务器会将广告 query 和结果数据作为日志发送到多个日志数据中心（multiple logs-datacenters），最终持久化存储在 GFS 上。每次 query 都会被赋予一个唯一性 ID <em>query_id</em></li>
 <li>对于搜索结果中的广告，用户可能会点击。广告点击会触发一次请求，谷歌的后端服务器将请求重定向到广告主的网站。在重定向之前，谷歌服务器会将点击事件记录到日志中，发送到多个日志数据中心。点击事件日志中包含广告曝光的 query_id，点击事件也会被赋予一个唯一性 ID <em>click_id</em></li></ol>
 <p>计费是在点击之后，但计费所需要的广告出价等信息是在曝光请求中记录的，出于数据敏感性、带宽、请求处理延迟等多方面的考量，计费相关的信息并不会返回到用户客户端，也就是说点击请求中不会包含计费直接相关的信息，需要将 点击日志 和 曝光日志 做一次 join，得到一条完整的上下文日志，才方便做后续计费等处理。</p>
-<img src='https://i.loli.net/2020/06/14/EDOy6VKxeJUcgAW.jpg' title='' alt='' width='500'>
+<img src='https://i.loli.net/2020/06/14/EDOy6VKxeJUcgAW.jpg' title='' alt='' width='500'/>
 <p>论文中提了到该系统解决了几个技术挑战点：</p>
 <ol><li>仅处理一次语义（exactly-once semantics）：实际上达到的是 最多处理一次语义 （At most once），也就是绝对不能多算钱，然后尽可能避免少算钱</li>
 <li>自动化的跨数据中心容错：也就是多数据中心部署，如果有一个数据中心不可用（比如 网络问题），也不会影响系统正常处理数据</li>
@@ -80,12 +80,12 @@
 <p>IdRegistry 的角色至关重要，所以将其实现为一个基于 Paxos 协议的分布式系统，根据 CAP 原则，可用性（此处是指<strong>吞吐能力</strong>）受限。解决方案是：</p>
 <p>1、提高单机处理能力：服务端攒批处理，尽可能减少网络往返次数导致的等待（特别是：由于 IdRegistry 是跨地域分布式，部署上节点之间最大延迟是 100ms 左右）</p>
 <p>2、分片（Sharding）：根据 click_id 进行分片，但如果是固定分片，那么随着以后业务量增大，不好扩展。Photon 使用了一种基于时间段动态分片方案，这个方案基于 click_id 自带时间戳。大致逻辑是：使用一个配置，内容大致如下：</p>
-<img src='https://i.loli.net/2020/06/14/VRlgr2CoD8zw7Mm.jpg' title='' alt='' width='500'>
+<img src='https://i.loli.net/2020/06/14/VRlgr2CoD8zw7Mm.jpg' title='' alt='' width='500'/>
 <p>对于每个 click 日志，先根据 click_id 中的时间戳，判断分片数，并计算对应的分片 id。</p>
-<img src='https://i.loli.net/2020/06/14/JMWyQvrDZCaAEdH.jpg' title='' alt='' width='500'>
+<img src='https://i.loli.net/2020/06/14/JMWyQvrDZCaAEdH.jpg' title='' alt='' width='500'/>
 <hr>
 <p>系统的模块关系图如下所示：</p>
-<img src='https://i.loli.net/2020/06/14/zghk6oVaqZ5uEs3.jpg' title='' alt='' width='500'>
+<img src='https://i.loli.net/2020/06/14/zghk6oVaqZ5uEs3.jpg' title='' alt='' width='500'/>
 <p>Photon 的 Dispatcher 模块并没有以 Kafka 这种消息队列作为输入，而是直接监听文件系统中的日志文件变更，这一点有点奇怪，不是特别理解。</p>
 <p>Joiner 负责实际的 join 工作，由于 3、4 都比较耗时，所以为了尽可能减少 Joiner 的工作量，Dispatcher 将点击事件日志发送给 Joiner，会先到 IdRegistry 中查一下该事件是否已被处理过，从而起到过滤作用。因多数据中心部署，实际过滤比为：$ \frac{N-1}{N} $。</p>
 <p>为了确保 Joiner 高可用，Joiner 是无状态的，向 Dispatcher 提供 RPC 接口，Joiner 内部有限流，以保证不会因为单个 Joiner 负载过大，导致处理时延增大。Dispatcher 调用 Joiner 失败后会重试，重试使用的是指数退避算法。但处理失败的点击事件，是另外存储在 GFS 上，应该是由另外的线程来负责重试，不会影响正常的事件处理。</p>
@@ -110,11 +110,11 @@
 <footer class="site-footer">
     <div class="wrapper">
         <div class="footer-col-wrapper">
-            <div class="footer-col  footer-col-1">
+            <div class="footer-col footer-col-1">
                 <ul class="social-media-list">
                     <li>
-                        <a href="https://github.com/kitelife">
-                            <span class="icon  icon--github">
+                        <a href="https://github.com/kitelife" target="_blank">
+                            <span class="icon icon--github">
                                 <svg viewBox="0 0 16 16">
                                     <path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
                                 </svg>
@@ -122,17 +122,22 @@
                             <span class="username">kitelife</span>
                         </a>
                     </li>
+                    <li>
+                        <a href="https://maimai.cn/profile/detail?dstu=39580141" target="_blank">
+                            <span class="icon icon--maimai">
+                                <img src="https://maimai.cn/favicon.ico" width="16"/>
+                            </span>
+                            <span class="username">Xiayf</span>
+                        </a>
+                    </li>
                 </ul>
             </div>
-
-            <div class="footer-col  footer-col-2">
-                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
+            <div class="footer-col footer-col-2"></div>
+            <div class="footer-col footer-col-3"></div>
+            <div class="footer-col footer-col-4">
+                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">
                     <img alt="Creative Commons License" src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-sa.svg">
                 </a>
-            </div>
-
-            <div class="footer-col  footer-col-3">
-                <p class="text">精进，求诸己身</p>
             </div>
         </div>
     </div>

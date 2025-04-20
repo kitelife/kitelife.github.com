@@ -4,8 +4,8 @@
         <description>精进，求诸己身</description>
         <link>https://blog.xiayf.cn/</link>
         <atom:link href="https://blog.xiayf.cn/rss.xml" rel="self" type="application/rss+xml"/>
-        <pubDate>2025-04-21T00:26:00.680132+08:00</pubDate>
-        <lastBuildDate>2025-04-21T00:26:00.680132+08:00</lastBuildDate>
+        <pubDate>2025-04-21T01:50:31.365181+08:00</pubDate>
+        <lastBuildDate>2025-04-21T01:50:31.365181+08:00</lastBuildDate>
         <generator>LingDong</generator>
         
         <item>
@@ -15,7 +15,7 @@
 &lt;p&gt;多数嵌入（embedding）模型会输出 $float32$ 数值精度的向量。这个精度虽然提供了信息高保真，但在真正重要的信息之外也带来一些资源浪费。对于给定的数据集，嵌入不可能在单个维度需要20亿种取值，特别是对于高维度向量而言（比如：386维及以上）。量化以一种有损的方式对向量进行编码，轻微降低信息保真而明显地降低存储空间占用。&lt;/p&gt;
 &lt;h2&gt;理解标量量化的分桶&lt;/h2&gt;
 &lt;p&gt;标量量化使用更小的数据类型对向量每一维的取值进行分桶。本文的余下部分将假设将 $float32$ 量化到 $int8$ 。为了准确地对值进行分桶，不能简单地将值四舍五入到最近的整数。许多模型输出向量的维度取值空间为 $[-1.0, 1.0]$，如果简单粗暴地四舍五入处理，那么 0.123 和 0.321 这两个不同的向量维度取值都会向下取整到 0。最终，一个向量仅会使用 $int8$ 可用 255 个桶中的2个桶，这样就丢失太多信息了。&lt;/p&gt;
-&lt;img src=&apos;../assets/float32-to-int8-buckets.jpeg&apos; title=&apos;float32-to-int8-buckets.jpeg&apos; alt=&apos;float32-to-int8-buckets.jpeg&apos; width=&apos;500&apos;&gt;
+&lt;img src=&apos;../assets/float32-to-int8-buckets.jpeg&apos; title=&apos;float32-to-int8-buckets.jpeg&apos; alt=&apos;float32-to-int8-buckets.jpeg&apos; width=&apos;500&apos;/&gt;
 &lt;blockquote&gt;&lt;p&gt;图1：量化目标图解 - 将 -1.0 到 1.0 之间的连续值分桶到离散的 $int8$ 数值。&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p&gt;这种数值转换背后的数学原理并不太复杂。我们可以先计算浮点数取值区间的最小和最大值，然后使用 &lt;a href=&apos;https://en.wikipedia.org/wiki/Feature_scaling#Rescaling_(min-max_normalization&apos;&gt;最小-最大归一化&lt;/a&gt;) 对值进行线性变换（linearly shift）。&lt;/p&gt;
 &lt;p style=&quot;text-align: center&quot;&gt;$$int8\approx \frac{127}{max-min} \  \times \left( float32-min \right)$$&lt;/p&gt;
@@ -23,7 +23,7 @@
 &lt;blockquote&gt;&lt;p&gt;图2：$int8$ 和 $float32$ 之间的变换公式。注意：这两个变换是有损的，并不是精确变换。下面的例子中，仅使用 $int8$ 取值空间的正数部分。Lucene 的实现也是这样的。&lt;/p&gt;&lt;/blockquote&gt;
 &lt;h2&gt;标量量化的统计视角&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&apos;https://en.wikipedia.org/wiki/Quantile&apos;&gt;分位点（quantile）&lt;/a&gt; 是指数值分布的一个切片，这个切片包含一定数量比例的值。例如：一种浮点数取值分布下 99% 的值落在 $[-0.75, 0.86]$ 这个分位点区间内，小于 $-0.75$ 和大于 $0.86$ 的值都被视为离群值/异常值（outliers），因此将 $-0.75$ 和 $0.86$ 分别视为实际的最小值和最大值。如果量化时将离群值包含在内，就意味着那些最常见的值可用的桶偏少了，可用桶少了也就意味着精度更差，信息损失更多。&lt;/p&gt;
-&lt;img src=&apos;../assets/quantile.jpeg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;&gt;
+&lt;img src=&apos;../assets/quantile.jpeg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;/&gt;
 &lt;blockquote&gt;&lt;p&gt;图3:图解 99%  &lt;a href=&apos;https://en.wikipedia.org/wiki/Confidence_interval&apos;&gt;置信区间(confidence interval)&lt;/a&gt;及对应的分位点数值，即 99% 的值落在 $[-0.75, 0.86]$ 这个范围内。&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p&gt;不错，我们现在知道如何对浮点值进行量化了，那么又应该如何计算两个量化后向量的距离呢？就像常规的&lt;a href=&apos;https://en.wikipedia.org/wiki/Dot_product&apos;&gt;点积&lt;/a&gt;计算一样简单吗？&lt;/p&gt;
 &lt;h2&gt;标量量化的代数视角&lt;/h2&gt;
@@ -64,7 +64,7 @@
 &lt;p&gt;这个特性也是相对比较直观的，不过如果你没有理解的话可能会觉得有点奇怪。其想法是将 IVF 阶段的一些信息加入到乘积量化器中，借此提升准确性（因此这个概念是建立在数据集分区技术之上的）。&lt;/p&gt;
 &lt;p&gt;先定义一下什么是“残差”向量。暂时抛开乘积量化器不谈（因为它会增大理解的困难，后面我们再把它加回来）。假设我们要做标准的暴力 k-NN 搜索，不过是用数据集分区技术来削减待搜索向量的数量。&lt;/p&gt;
 &lt;p&gt;假设我们是用 k-means 将数据集聚类成 100 个聚类（或者叫“数据集分区”）。给定数据集中的一个向量，其残差即是它相对于所属分区的质心的偏移（offset）。也就是，将数据集中的这个向量与其所属聚类的质心的向量相减。质心即是聚类的均值，那么对一组点均减去它们的均值会发生什么？现在这些点就围绕着 0 点了。如下是一个简单的二维示例：&lt;/p&gt;
-&lt;img src=&apos;../assets/residuals_one_partition.png&apos; title=&apos;residuals_one_partition.png&apos; alt=&apos;residuals_one_partition.png&apos; width=&apos;800&apos;&gt;
+&lt;img src=&apos;../assets/residuals_one_partition.png&apos; title=&apos;residuals_one_partition.png&apos; alt=&apos;residuals_one_partition.png&apos; width=&apos;800&apos;/&gt;
 &lt;p&gt;开始有趣起来了。假设将一个数据集分区中的所有向量都替换为各自的残差向量，怎么从这个数据集分区中找到查询向量的最近邻？先计算查询向量的残差（相对于分区质心的偏移），然后对这个数据集分区的所有残差向量做最近邻搜索，得到的结果与使用原始向量做搜索是一样的！&lt;/p&gt;
 &lt;p&gt;基于上面的图示，凭直觉可能就能理解，不过还是再看看下面的等式加深理解。&apos;x&apos; 和 &apos;y&apos; 这两个向量的长度为 &apos;n&apos;，它们的 L2 距离计算公式为：&lt;/p&gt;
 &lt;p style=&quot;text-align: center&quot;&gt;$$dist_{L2}\left( x,y \right) =\sqrt{\sum_{i}^{n} \left( x_{i}-y_{i} \right)^{2}}$$&lt;/p&gt;
@@ -75,7 +75,7 @@
 &lt;p&gt;可能你之前就使用过这种等价关系，均值归一化（对向量减去均值）是一种常见的预处理技术。&lt;/p&gt;
 &lt;p&gt;不过目前为止说的都是单个分区内的计算。将不同分区内的向量做比较又会是什么情况呢？仍然管用，只要针对每个分区分别计算查询向量的残差即可。&lt;/p&gt;
 &lt;p&gt;下面这个图解中包含两个数据集分区。计算残差之后，两个分区的所有点都围绕在 0 点周围了。不过现在是有两个查询向量的残差 - 一个是与蓝色点集（分区 1）比较得到的，另一个是与绿色点集（分区 2）比较得到的。&lt;/p&gt;
-&lt;img src=&apos;../assets/residuals_two_partitions.png&apos; title=&apos;residuals_two_partitions.png&apos; alt=&apos;residuals_two_partitions.png&apos; width=&apos;800&apos;&gt;
+&lt;img src=&apos;../assets/residuals_two_partitions.png&apos; title=&apos;residuals_two_partitions.png&apos; alt=&apos;residuals_two_partitions.png&apos; width=&apos;800&apos;/&gt;
 &lt;p&gt;前面解释过查询向量和数据库向量之间的距离，使用原始向量计算和使用残差向量计算，结果是一样的，还记得吧？&lt;/p&gt;
 &lt;p&gt;很有意思，不过目前为止还是无用功 - 尚未改变结果的准确性也没有减少计算成本。现在将 PQ 重新放进来一起考虑，就会发现好处在哪了。&lt;/p&gt;
 &lt;p&gt;在训练乘积量化器之前，先计算数据集所有分区所有向量的残差向量。残差向量集合保持原有分区（不会合并在一起），不过现在所有残差向量都围绕着 0 点，相对紧凑地聚集在一起。我们抛弃掉原始的数据集向量，只存储残差向量集。&lt;/p&gt;
@@ -99,19 +99,19 @@
 &lt;p&gt;乘积量化器方法的作者们是信号处理和压缩技术背景的，所以如果你是机器学习方向的，可能对他们的用词和术语比较陌生。不过，如果你熟悉 k-means 聚类（且摒弃所有压缩命名法的词汇），使用一个示例你就能轻松理解乘积量化器的基础知识。之后，我们再回头来看压缩技术相关术语。&lt;/p&gt;
 &lt;h2&gt;数据集压缩&lt;/h2&gt;
 &lt;p&gt;假设你有一个 50,000 张的图片集，使用一个卷积神经网络（CNN）完成一些特征的抽取。这样你现在就得到一个 50,000个特征向量的数据集，每个特征向量有 1024 维。&lt;/p&gt;
-&lt;img src=&apos;../assets/image_vectors.png&apos; title=&apos;image_vectors.png&apos; alt=&apos;image_vectors.png&apos; width=&apos;300&apos;&gt;
+&lt;img src=&apos;../assets/image_vectors.png&apos; title=&apos;image_vectors.png&apos; alt=&apos;image_vectors.png&apos; width=&apos;300&apos;/&gt;
 &lt;p&gt;我们要做的第一件事情就是压缩数据集。向量的数量保持不变，但是可以减少每个向量需要的存储空间。注意：我们要做的事情不同于“降维（dimensionality reduction）”！这是因为压缩后的向量中的值其实是符号而不是数值，所以不能直接比较压缩后的向量。&lt;/p&gt;
 &lt;p&gt;压缩数据集有两大好处：（1）内存访问耗时通常是处理速度的限制因素，（2）对大数据集而言内存容量是个问题。&lt;/p&gt;
 &lt;p&gt;压缩的原理如下所述：对于我们的示例数据集，将所有向量一起切成8个子向量，每个子向量的长度为 128（8个子向量 $\times$ 每个子向量128维 = 原始向量的 1024 维）。这样就将数据集分成8个矩阵，每个矩阵大小为 $[50K \times 128]$。&lt;/p&gt;
-&lt;img src=&apos;../assets/vector_slice.png&apos; title=&apos;vector_slice.png&apos; alt=&apos;vector_slice.png&apos; width=&apos;500&apos;&gt;
+&lt;img src=&apos;../assets/vector_slice.png&apos; title=&apos;vector_slice.png&apos; alt=&apos;vector_slice.png&apos; width=&apos;500&apos;/&gt;
 &lt;p&gt;然后对这8个矩阵的每一个单独进行 k-means 聚类，k = 256。这样，对于向量的8个子段的每1个都存在256个质心 - 一共8组质心，每组包含256个质心。&lt;/p&gt;
-&lt;img src=&apos;../assets/kmeans_clustering.png&apos; title=&apos;kmeans_clustering.png&apos; alt=&apos;kmeans_clustering.png&apos; width=&apos;500&apos;&gt;
+&lt;img src=&apos;../assets/kmeans_clustering.png&apos; title=&apos;kmeans_clustering.png&apos; alt=&apos;kmeans_clustering.png&apos; width=&apos;500&apos;/&gt;
 &lt;p&gt;这些质心类似于“原型”。它们代表数据集子向量中最常见的模式。&lt;/p&gt;
 &lt;p&gt;可以使用这些质心来压缩向量数据集 - 使用最接近/最相似的置信来替代向量中对应的每个子部分，从而得到一个不同于原始向量的一个新向量，不过它们之间应该还是相近的。&lt;/p&gt;
 &lt;p&gt;这样我们就能更加高效地存储这些向量 - 不用存储原始的浮点数值，只要存储聚类中心 ID 即可 - 对每个子向量，找到最近的质心，存储该质心的 ID。每个向量也就被替换为8个质心 ID 的一个序列。&lt;/p&gt;
 &lt;p&gt;注意：对于8个子部分矩阵的每一个学习到的质心集合是不同的。使用最近质心 id 替换子向量时，只能与对应子部分的 256 个质心做比较。&lt;/p&gt;
 &lt;p&gt;每个子部分只有 256 个质心，所以仅需 8 比特就能存储一个质心 ID。每个向量，原本包含 1024 个 32 浮点数（4,096 字节），现在仅是 8 个 8 比特整数的序列（每个向量只要8字节的存储空间！）。&lt;/p&gt;
-&lt;img src=&apos;../assets/compression.png&apos; title=&apos;compression.png&apos; alt=&apos;compression.png&apos; width=&apos;100%&apos;&gt;
+&lt;img src=&apos;../assets/compression.png&apos; title=&apos;compression.png&apos; alt=&apos;compression.png&apos; width=&apos;100%&apos;/&gt;
 &lt;h2&gt;最近邻搜索&lt;/h2&gt;
 &lt;p&gt;很棒！向量经过压缩了。不过无法对经过压缩的向量直接计算 L2 距离 - 质心 ID 之间的距离是任意且没有实际意义的！（这就是压缩与降维的不同之处）&lt;/p&gt;
 &lt;p&gt;接下来说说怎么进行最近邻搜索，虽仍是穷举搜索（与所有向量计算距离并排序），不过可以更高效地计算距离 - 只需进行表查找以及某种加法即可。&lt;/p&gt;
@@ -138,7 +138,7 @@
         <item>
             <title>团队开发流程规范</title>
             <description>&lt;p&gt;&lt;em&gt;本文原是针对实际工作中团队的情况编写的一份流程规范说明，隐去敏感信息之后存放于此。&lt;/em&gt;&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2023/04/05/wQ9bOaXyNiCjh5H.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;&gt;
+&lt;img src=&apos;https://s2.loli.net/2023/04/05/wQ9bOaXyNiCjh5H.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;/&gt;
 &lt;p&gt;开发流程规范 是一种团队文化，也是服务和业务稳定性的基本保障线。&lt;/p&gt;
 &lt;h2&gt;一、文档&lt;/h2&gt;
 &lt;blockquote&gt;&lt;p&gt;共识：“谋定而后动”&lt;/p&gt;&lt;/blockquote&gt;
@@ -397,7 +397,7 @@ AllowAllParametersOfDeclarationOnNextLine: false&lt;/code&gt;&lt;/pre&gt;
 &lt;li&gt;跟踪脏页以及将脏页写入磁盘 🤔&lt;/li&gt;
 &lt;li&gt;相比 read/write 系统调用，mmap 不需要将内存页从内核空间拷贝到用户空间，而是直接从操作系统的内存页缓存中直接访问内存页，有一定的性能优势&lt;/li&gt;&lt;/ul&gt;
 &lt;p&gt;MMAP 相关 POSIX API：mmap、madvise、mlock、msync。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2022/11/16/U7xMgzj36dZDGaO.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;&gt;
+&lt;img src=&apos;https://s2.loli.net/2022/11/16/U7xMgzj36dZDGaO.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;/&gt;
 &lt;p&gt;① A program calls mmap and receives a pointer to the memory-mapped file contents.&lt;/p&gt;
 &lt;p&gt;② The OS reserves part of the program’s virtual address space but does not load any part of the file.&lt;/p&gt;
 &lt;p&gt;③ The program accesses the file’s contents using the pointer.&lt;/p&gt;
@@ -426,9 +426,9 @@ AllowAllParametersOfDeclarationOnNextLine: false&lt;/code&gt;&lt;/pre&gt;
 &lt;li&gt;&lt;a href=&apos;https://www.kernel.org/doc/html/v4.18/core-api/cachetlb.html&apos;&gt;Cache and TLB Flushing Under Linux — The Linux Kernel documentation&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;
 &lt;p&gt;实验分析：&lt;/p&gt;
 &lt;p&gt;As a baseline, we used the fio storage benchmarking tool (v3.25) with direct I/O (O_DIRECT) to bypass the OS page cache. Our analysis focused exclusively on read-only workloads, which represent the best-case scenario for mmap-based DBMSs.&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2022/11/16/FlAJqH8E4K1UWvp.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;&gt;
-&lt;img src=&apos;https://s2.loli.net/2022/11/16/qhz3OQHlgaZ2YMn.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;600&apos;&gt;
-&lt;img src=&apos;https://s2.loli.net/2022/11/16/oczkfgLw9EMR1ue.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;600&apos;&gt;
+&lt;img src=&apos;https://s2.loli.net/2022/11/16/FlAJqH8E4K1UWvp.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2022/11/16/qhz3OQHlgaZ2YMn.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;600&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2022/11/16/oczkfgLw9EMR1ue.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;600&apos;/&gt;
 &lt;p&gt;那么，到底要不要使用 mmap 呢？直接使用 ssd？还是自己搞一个 buffer pool？&lt;/p&gt;
 &lt;p&gt;论文作者给出这样的结论：&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;以下情况不要使用 mmap：
@@ -441,7 +441,7 @@ AllowAllParametersOfDeclarationOnNextLine: false&lt;/code&gt;&lt;/pre&gt;
 &lt;li&gt;希望将一个产品快速推向市场，也不关注数据一致性或者长期的工程技术债&lt;/li&gt;
 &lt;li&gt;Otherwise, never 🤣🙃&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;
 &lt;p&gt;彩蛋：论文的奇数页页眉  😂&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2022/11/16/AIqHKTC213FYaxX.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100&apos;&gt;
+&lt;img src=&apos;https://s2.loli.net/2022/11/16/AIqHKTC213FYaxX.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100&apos;/&gt;
 &lt;h2&gt;2、&lt;a href=&apos;https://ayende.com/blog/196161-C/re-are-you-sure-you-want-to-use-mmap-in-your-database-management-system&apos;&gt;re: Are You Sure You Want to Use MMAP in Your Database Management System? &lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;本文作者认为自己实现一个内存分页管理器/缓冲池比较复杂，使用 mmap 来实现存储系统会很快。&lt;/p&gt;
 &lt;p&gt;不过吐槽了原论文没有给出可供选择的替代方案，基准测试和结论之间也没太多相关性（compares apples to camels），也低估了自己实现一个替代 mmap 的缓冲池的复杂性。&lt;/p&gt;
@@ -460,17 +460,17 @@ AllowAllParametersOfDeclarationOnNextLine: false&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;WiscKey 是一个基于 LSM (Log Structured Merge)树的 KV 存储引擎，针对 SSD 的随机读和顺序读性能特点，将 Key 和 Value 分开存储，以尽可能缩小 I/O 放大问题，提升性能。&lt;/p&gt;
 &lt;p&gt;Value 存放在 Log 文件中，LSM 树仅存储 Key 和 Value 在 Log 文件的位置以及长度/大小。&lt;/p&gt;
 &lt;p&gt;对于 Value 比较大的应用场景，性能优势明显。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2022/11/16/y84VKqJZWMSjBu7.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;&gt;
+&lt;img src=&apos;https://s2.loli.net/2022/11/16/y84VKqJZWMSjBu7.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;/&gt;
 &lt;p&gt;因为 LSM 树不存储 Value 本身，通常比较小，可以全部放在内存中，所以不考虑获取 Value 的值，点查和范围查找速度非常快。&lt;/p&gt;
 &lt;p&gt;LSM 树比较小，所以 Compaction 次数少，速度快（特别是如果整个 LSM 都放在内存中的话）。Compaction 过程中不需要读写 Value 的值，所以 I/O 放大倍数要小很多。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2022/11/16/2tvp5LROXG4UYrw.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;&gt;
+&lt;img src=&apos;https://s2.loli.net/2022/11/16/2tvp5LROXG4UYrw.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;/&gt;
 &lt;p&gt;点查过程，从 LSM 树中获取 Value 的位置和大小后，需要从 Value Log 中获取 Value 值。因为 LSM 树小，所以读放大倍数小，综合起来看，WiscKey 点查的性能优势依旧明显。&lt;/p&gt;
 &lt;p&gt;范围查找/遍历过程，先从 LSM 树中获得目标范围内的所有 Value 的位置和大小，放入队列，使用多线程进行并发预取，利用 SSD 随机读的吞吐能力随并发树近线性增长的特点。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2022/11/16/APbQlhq3nWsf47j.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;&gt;
-&lt;img src=&apos;https://s2.loli.net/2022/11/16/j357k6XMfYO2udm.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;400&apos;&gt;
+&lt;img src=&apos;https://s2.loli.net/2022/11/16/APbQlhq3nWsf47j.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2022/11/16/j357k6XMfYO2udm.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;400&apos;/&gt;
 &lt;p&gt;Value Log 也需要 GC，清理掉无用的 Value 值。LSM 树的 Compaction 主要是为了提升查找/检索的性能/效率，控制读放大，减少内存/磁盘空间占用是次要的。Value Log 的 GC 则主要是为了减少内存/磁盘空间占用。&lt;/p&gt;
 &lt;p&gt;为了实现在线的轻量级 GC，Value Log 中也存储了 Key，&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2022/11/16/JMKxWiaCovyhgr8.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;&gt;
+&lt;img src=&apos;https://s2.loli.net/2022/11/16/JMKxWiaCovyhgr8.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;/&gt;
 &lt;p&gt;tail 指向 Value Log 有效值范围内时序上最先写入的那个 value 的位置。&lt;/p&gt;
 &lt;p&gt;head 指向 Value Log 中下一个新 value 写入的位置。&lt;/p&gt;
 &lt;p&gt;tail 和 head 及其对应的位置信息均作为 kv 存入 LSM 树中（head 的指向什么时候会更新？：每次有新值写入的时候都更新？还是在 GC 的过程中才会更新？）&lt;/p&gt;
@@ -480,9 +480,9 @@ AllowAllParametersOfDeclarationOnNextLine: false&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;③ 一块数据处理完成后，移动 tail 指向到下一个位置，释放/回收原来数据块的存储空间；然后继续循环处理&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;疑问&lt;/strong&gt;：1. GC 过程中每次向 head 插入有效值时，是否先要从 LSM 树中查询最新指向的位置？2. 在根据 key 从 LSM 树查询后将有效值写入 head 位置前，有新数据写入的话，怎么处理？GC 期间是否要停止正常的写操作？还是说对某个临界区加锁？&lt;/p&gt;
 &lt;p&gt;LSM 树原理：&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2022/11/16/k6cHFOUluo1Ibfp.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;&gt;
-&lt;img src=&apos;https://s2.loli.net/2022/11/16/17WubUhqSpCjMr5.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;&gt;
-&lt;img src=&apos;https://s2.loli.net/2022/11/16/Tomk3VOEs7jduQl.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;&gt;
+&lt;img src=&apos;https://s2.loli.net/2022/11/16/k6cHFOUluo1Ibfp.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2022/11/16/17WubUhqSpCjMr5.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2022/11/16/Tomk3VOEs7jduQl.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;/&gt;
 &lt;p&gt;&lt;a href=&apos;https://zhuanlan.zhihu.com/p/181498475&apos;&gt;LSM树详解 - 知乎 (zhihu.com)&lt;/a&gt;&lt;/p&gt;
 &lt;h2&gt;4、&lt;a href=&apos;http://www.vldb.org/pvldb/vol14/p364-didona.pdf&apos;&gt;Toward a Better Understanding and Evaluation of Tree Structures on Flash SSDs（VLDB）&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;PTS - Persistent tree data structure&lt;/p&gt;
@@ -490,7 +490,7 @@ AllowAllParametersOfDeclarationOnNextLine: false&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;&lt;strong&gt;（1）Running short tests / 测试过于短平快&lt;/strong&gt; ⚡️&lt;/p&gt;
 &lt;p&gt;随着使用时间的增加，SSD 的性能会一定的动态变化。&lt;/p&gt;
 &lt;p&gt;Because both the PTS and SSD performance vary over time, short-lived tests are unable to capture how the systems will behave under a continuous（non-bursty）workload.&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2022/11/16/HSuzIeC8itjndGw.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;&gt;
+&lt;img src=&apos;https://s2.loli.net/2022/11/16/HSuzIeC8itjndGw.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;/&gt;
 &lt;p&gt;WA-A（应用/存储系统的写放大） increases over time while the levels of the LSM-Tree fills up, and its curve flattens once the layout of the LSM tree has stabilized.&lt;/p&gt;
 &lt;p&gt;WA-D（SSD 设备的写放大） increases over time because of the effect of garbage collection.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;（2）Ignoring the device write amplification (WA-D) / 忽视了 SSD 设备本身的写放大&lt;/strong&gt; ⚡️&lt;/p&gt;
@@ -500,20 +500,20 @@ AllowAllParametersOfDeclarationOnNextLine: false&lt;/code&gt;&lt;/pre&gt;
 &lt;ul&gt;&lt;li&gt;A low WA-D indicates that a PTS generates a write access that does not incur much garbage collection overhead in the SSD.&lt;/li&gt;
 &lt;li&gt;以前大家可能认为 LSM 树（顺序写）相比 B+ 树（随机写）对 SSD 更友好，但实测 WA-D 颠覆了这个认知&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;
 &lt;p&gt;&lt;strong&gt;（3）Ignoring the internal state of the SSD / 忽视了 SSD 的初始内部状态&lt;/strong&gt; ⚡️&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2022/11/16/pFyqSCVZnrHB1g9.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;&gt;
+&lt;img src=&apos;https://s2.loli.net/2022/11/16/pFyqSCVZnrHB1g9.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;/&gt;
 &lt;blockquote&gt;&lt;p&gt;&lt;strong&gt;Trim(Discard)的出现主要是为了提高GC的效率以及减少写入放大的发生，最大作用是清空待删除的无效数据&lt;/strong&gt;。在SSD执行读、擦、写步骤的时候，预先把擦除的步骤先做了，这样才能发挥出SSD的性能，通常SSD掉速很大一部分原因就是待删除的无效数据太多，每次写入的时候主控都要先做清空处理，所以性能受到了限制。&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p&gt;The steady-state performance of a PTS can greatly differ depending on the initial state of the drive, this is surprising.&lt;/p&gt;
 &lt;p&gt;This phenomenon is caused by how the LBA (logic block address)  access patterns of RocksDB and WiredTiger intertwine with the SSD garbage collection mechanism as a function of the initial state the drive.&lt;/p&gt;
 &lt;p&gt;WiredTiger only writes to a limited portion of the logical block address space.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;（4）Ignore the dataset size / 忽视了数据集大小&lt;/strong&gt;&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2022/11/16/SlVWJfP5rO7xpNQ.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;&gt;
+&lt;img src=&apos;https://s2.loli.net/2022/11/16/SlVWJfP5rO7xpNQ.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;/&gt;
 &lt;p&gt;The amount of data stored by the SSD changes its behavior and affects overall performance.&lt;/p&gt;
 &lt;p&gt;The performance degradation brought by the larger dataset is primarily due to the idiosyncrasies（特质/特点） of the SSD: larger datasets lead to more valid pages in each flash block, which increases the amount of data being relocated upon performing garbage collection, i.e., the WA-D&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;（5）Ignoring the extra storage capacity a PTS needs to manage data and store additional meta-data / 未考虑空间放大（Space amplification）&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;涉及存储成本&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;（6）Ignoring SSD over-provisioning&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;成本与性能之间的权衡折中 - 可以预留一部分 SSD 空间给 SSD 做 GC 使用，这部分空间对文件系统不可见。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2022/11/16/YEFp5g69mnqBe3w.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;&gt;
+&lt;img src=&apos;https://s2.loli.net/2022/11/16/YEFp5g69mnqBe3w.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;/&gt;
 &lt;p&gt;&lt;strong&gt;（7）Ignoring the effect of the underlying storage technology on performance&lt;/strong&gt;&lt;/p&gt;
 &lt;h2&gt;5、SSD 原理相关资料&lt;/h2&gt;
 &lt;ul&gt;&lt;li&gt;&lt;a href=&apos;https://zhuanlan.zhihu.com/p/102089411&apos;&gt;浅谈分布式存储之SSD基本原理 - 知乎 (zhihu.com)&lt;/a&gt;&lt;/li&gt;
@@ -655,7 +655,7 @@ AllowAllParametersOfDeclarationOnNextLine: false&lt;/code&gt;&lt;/pre&gt;
 &lt;ol&gt;&lt;li&gt;用户搜索某个关键词时，谷歌的服务器会返回广告和搜索结果。广告服务器会将广告 query 和结果数据作为日志发送到多个日志数据中心（multiple logs-datacenters），最终持久化存储在 GFS 上。每次 query 都会被赋予一个唯一性 ID &lt;em&gt;query_id&lt;/em&gt;&lt;/li&gt;
 &lt;li&gt;对于搜索结果中的广告，用户可能会点击。广告点击会触发一次请求，谷歌的后端服务器将请求重定向到广告主的网站。在重定向之前，谷歌服务器会将点击事件记录到日志中，发送到多个日志数据中心。点击事件日志中包含广告曝光的 query_id，点击事件也会被赋予一个唯一性 ID &lt;em&gt;click_id&lt;/em&gt;&lt;/li&gt;&lt;/ol&gt;
 &lt;p&gt;计费是在点击之后，但计费所需要的广告出价等信息是在曝光请求中记录的，出于数据敏感性、带宽、请求处理延迟等多方面的考量，计费相关的信息并不会返回到用户客户端，也就是说点击请求中不会包含计费直接相关的信息，需要将 点击日志 和 曝光日志 做一次 join，得到一条完整的上下文日志，才方便做后续计费等处理。&lt;/p&gt;
-&lt;img src=&apos;https://i.loli.net/2020/06/14/EDOy6VKxeJUcgAW.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;&gt;
+&lt;img src=&apos;https://i.loli.net/2020/06/14/EDOy6VKxeJUcgAW.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;/&gt;
 &lt;p&gt;论文中提了到该系统解决了几个技术挑战点：&lt;/p&gt;
 &lt;ol&gt;&lt;li&gt;仅处理一次语义（exactly-once semantics）：实际上达到的是 最多处理一次语义 （At most once），也就是绝对不能多算钱，然后尽可能避免少算钱&lt;/li&gt;
 &lt;li&gt;自动化的跨数据中心容错：也就是多数据中心部署，如果有一个数据中心不可用（比如 网络问题），也不会影响系统正常处理数据&lt;/li&gt;
@@ -672,12 +672,12 @@ AllowAllParametersOfDeclarationOnNextLine: false&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;IdRegistry 的角色至关重要，所以将其实现为一个基于 Paxos 协议的分布式系统，根据 CAP 原则，可用性（此处是指&lt;strong&gt;吞吐能力&lt;/strong&gt;）受限。解决方案是：&lt;/p&gt;
 &lt;p&gt;1、提高单机处理能力：服务端攒批处理，尽可能减少网络往返次数导致的等待（特别是：由于 IdRegistry 是跨地域分布式，部署上节点之间最大延迟是 100ms 左右）&lt;/p&gt;
 &lt;p&gt;2、分片（Sharding）：根据 click_id 进行分片，但如果是固定分片，那么随着以后业务量增大，不好扩展。Photon 使用了一种基于时间段动态分片方案，这个方案基于 click_id 自带时间戳。大致逻辑是：使用一个配置，内容大致如下：&lt;/p&gt;
-&lt;img src=&apos;https://i.loli.net/2020/06/14/VRlgr2CoD8zw7Mm.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;&gt;
+&lt;img src=&apos;https://i.loli.net/2020/06/14/VRlgr2CoD8zw7Mm.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;/&gt;
 &lt;p&gt;对于每个 click 日志，先根据 click_id 中的时间戳，判断分片数，并计算对应的分片 id。&lt;/p&gt;
-&lt;img src=&apos;https://i.loli.net/2020/06/14/JMWyQvrDZCaAEdH.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;&gt;
+&lt;img src=&apos;https://i.loli.net/2020/06/14/JMWyQvrDZCaAEdH.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;/&gt;
 &lt;hr&gt;
 &lt;p&gt;系统的模块关系图如下所示：&lt;/p&gt;
-&lt;img src=&apos;https://i.loli.net/2020/06/14/zghk6oVaqZ5uEs3.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;&gt;
+&lt;img src=&apos;https://i.loli.net/2020/06/14/zghk6oVaqZ5uEs3.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;/&gt;
 &lt;p&gt;Photon 的 Dispatcher 模块并没有以 Kafka 这种消息队列作为输入，而是直接监听文件系统中的日志文件变更，这一点有点奇怪，不是特别理解。&lt;/p&gt;
 &lt;p&gt;Joiner 负责实际的 join 工作，由于 3、4 都比较耗时，所以为了尽可能减少 Joiner 的工作量，Dispatcher 将点击事件日志发送给 Joiner，会先到 IdRegistry 中查一下该事件是否已被处理过，从而起到过滤作用。因多数据中心部署，实际过滤比为：$ \frac{N-1}{N} $。&lt;/p&gt;
 &lt;p&gt;为了确保 Joiner 高可用，Joiner 是无状态的，向 Dispatcher 提供 RPC 接口，Joiner 内部有限流，以保证不会因为单个 Joiner 负载过大，导致处理时延增大。Dispatcher 调用 Joiner 失败后会重试，重试使用的是指数退避算法。但处理失败的点击事件，是另外存储在 GFS 上，应该是由另外的线程来负责重试，不会影响正常的事件处理。&lt;/p&gt;
@@ -1269,9 +1269,9 @@ assertThat(results).containsExactly( // 8
 &lt;p&gt;Reactor 项目的主要成果是 &lt;code&gt;reactor-core&lt;/code&gt; - 一个遵循&lt;a href=&apos;https://www.reactive-streams.org/&apos;&gt;反应式流&lt;/a&gt;规范并支持 Java 8 的反应式编程库。&lt;/p&gt;
 &lt;p&gt;Reactor 引入 2 个可组合的反应式类型（实现了 &lt;code&gt;Publisher&lt;/code&gt; 接口并且提供丰富的算子）： &lt;code&gt;Flux&lt;/code&gt; 和 &lt;code&gt;Mono&lt;/code&gt;。一个 &lt;code&gt;Flux&lt;/code&gt; 对象代表包含 0 到 N 个元素的反应式序列，&lt;code&gt;Mono&lt;/code&gt; 对象代表单值或空（0或1个元素）的结果。&lt;/p&gt;
 &lt;h3&gt;3.1 Flux - 0-N 个值的异步序列&lt;/h3&gt;
-&lt;img src=&apos;https://i.loli.net/2020/06/14/oKMX4rTvUViZRHj.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;&gt;
+&lt;img src=&apos;https://i.loli.net/2020/06/14/oKMX4rTvUViZRHj.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;/&gt;
 &lt;h3&gt;3.2 Mono - 包含 0 或 1 个值的异步结果&lt;/h3&gt;
-&lt;img src=&apos;https://i.loli.net/2020/06/14/8WxGgH9UkcQwuX4.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;&gt;
+&lt;img src=&apos;https://i.loli.net/2020/06/14/8WxGgH9UkcQwuX4.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;/&gt;
 &lt;h3&gt;3.3 创建一个 Flux 或 Mono 并进行订阅的一些简单方法&lt;/h3&gt;
 &lt;p&gt;&lt;code&gt;Flux&lt;/code&gt; 和 &lt;code&gt;Mono&lt;/code&gt; 的类中包含大量的工厂方法，上手使用 Reactor 最简单的方式是从中选择一个用起来。&lt;/p&gt;
 &lt;p&gt;例如，创建一个 &lt;code&gt;String&lt;/code&gt; 序列，可以逐个列举出这些字符串，或者将这些字符串放到一个集合中，然后基于这个集合创建一个 Flux，如下所示：&lt;/p&gt;
@@ -1961,16 +1961,16 @@ function base64_URL_decode($data) {
 &lt;p&gt;以青云应用为例，简单解释这两点。青云平台通过POST一个表单来获取iframe，表单有 &lt;code&gt;payload&lt;/code&gt; 和 &lt;code&gt;signature&lt;/code&gt; 两项， &lt;code&gt;payload&lt;/code&gt; 原本是一个JSON对象，其中的键值可能包含一些特殊字符，比如 &lt;code&gt;&amp;amp;&lt;/code&gt;、&lt;code&gt;/&lt;/code&gt; 等，由于青云设计的一种通用的请求交互方案，需要考虑iframe服务方服务器端的各种可能实现，有些服务器端实现没有考虑表单值有这些特殊字符，或者POST请求被中间服务器转换成GET请求再次发出，对于URL来说，&lt;code&gt;&amp;amp;&lt;/code&gt;、&lt;code&gt;/&lt;/code&gt;都是具有特殊含义的字符，所以需要对请求数据进行特殊编码避免这些字符出现 - 数据发送方对数据按规则进行编码，接收方对应地按规则解码数据。&lt;/p&gt;
 &lt;h2&gt;Base64编码原理&lt;/h2&gt;
 &lt;p&gt;Base64编码之所以称为Base64，是因为其使用64个字符来对任意数据进行编码，同理有Base32、Base16编码。标准Base64编码使用的64个字符为：&lt;/p&gt;
-&lt;img src=&apos;https://i.loli.net/2020/06/14/XHFMRvxfez4OVtr.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;&gt;
+&lt;img src=&apos;https://i.loli.net/2020/06/14/XHFMRvxfez4OVtr.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;/&gt;
 &lt;p&gt;这64个字符是各种字符编码（比如ASCII编码）所使用字符的子集，基本，并且可打印。唯一有点特殊的是最后两个字符，因对最后两个字符的选择不同，Base64编码又有很多变种，比如Base64 URL编码。&lt;/p&gt;
 &lt;p&gt;Base64编码本质上是一种将二进制数据转成文本数据的方案。对于非二进制数据，是先将其转换成二进制形式，然后每连续6比特（2的6次方=64）计算其十进制值，根据该值在上面的索引表中找到对应的字符，最终得到一个文本字符串。&lt;/p&gt;
 &lt;p&gt;假设我们要对 &lt;code&gt;Hello!&lt;/code&gt; 进行Base64编码，按照ASCII表，其转换过程如下图所示：&lt;/p&gt;
-&lt;img src=&apos;https://i.loli.net/2020/06/14/tJnClQsjc4WMGhB.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;&gt;
+&lt;img src=&apos;https://i.loli.net/2020/06/14/tJnClQsjc4WMGhB.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;/&gt;
 &lt;p&gt;可知 &lt;code&gt;Hello!&lt;/code&gt; 的Base64编码结果为 &lt;code&gt;SGVsbG8h&lt;/code&gt; ，原始字符串长度为6个字符，编码后长度为8个字符，每3个原始字符经Base64编码成4个字符，编码前后长度比4/3，这个长度比很重要 - 比原始字符串长度短，则需要使用更大的编码字符集，这并不我们想要的；长度比越大，则需要传输越多的字符，传输时间越长。Base64应用广泛的原因是在字符集大小与长度比之间取得一个较好的平衡，适用于各种场景。&lt;/p&gt;
 &lt;p&gt;是不是觉得Base64编码原理很简单？&lt;/p&gt;
 &lt;p&gt;但这里需要注意一个点：Base64编码是每3个原始字符编码成4个字符，如果原始字符串长度不能被3整除，那怎么办？使用0值来补充原始字符串。&lt;/p&gt;
 &lt;p&gt;以 &lt;code&gt;Hello!!&lt;/code&gt; 为例，其转换过程为：&lt;/p&gt;
-&lt;img src=&apos;https://i.loli.net/2020/06/14/5URB8nVis9ljwYe.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;&gt;
+&lt;img src=&apos;https://i.loli.net/2020/06/14/5URB8nVis9ljwYe.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;/&gt;
 &lt;p&gt;&lt;em&gt;注：图表中蓝色背景的二进制0值是额外补充的。&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;Hello!!&lt;/code&gt; Base64编码的结果为 &lt;code&gt;SGVsbG8hIQAA&lt;/code&gt; 。最后2个零值只是为了Base64编码而补充的，在原始字符中并没有对应的字符，那么Base64编码结果中的最后两个字符 &lt;code&gt;AA&lt;/code&gt; 实际不带有效信息，所以需要特殊处理，以免解码错误。&lt;/p&gt;
 &lt;p&gt;标准Base64编码通常用 &lt;code&gt;=&lt;/code&gt; 字符来替换最后的 &lt;code&gt;A&lt;/code&gt;，即编码结果为 &lt;code&gt;SGVsbG8hIQ==&lt;/code&gt;。因为 &lt;code&gt;=&lt;/code&gt; 字符并不在Base64编码索引表中，其意义在于结束符号，在Base64解码时遇到 &lt;code&gt;=&lt;/code&gt; 时即可知道一个Base64编码字符串结束。&lt;/p&gt;
@@ -1985,7 +1985,7 @@ function base64_URL_decode($data) {
 &lt;p&gt;本文开始提到的青云应用例子只是Base64编码的应用场景之一。由于Base64编码在字符集大小与编码后数据长度之间做了较好的平衡，以及Base64编码变种形式的多样，使得Base64编码的应用场景非常广泛。下面举2个常用常见的例子。&lt;/p&gt;
 &lt;h3&gt;HTML内嵌Base64编码图片&lt;/h3&gt;
 &lt;p&gt;前端在实现页面时，对于一些简单图片，通常会选择将图片内容直接内嵌在页面中，避免不必要的外部资源加载，增大页面加载时间，但是图片数据是二进制数据，该怎么嵌入呢？&lt;a href=&apos;http://caniuse.com/#search=Data%20URI&apos;&gt;绝大多数现代浏览器&lt;/a&gt;都支持一种名为 &lt;code&gt;Data URLs&lt;/code&gt; 的特性，允许使用Base64对图片或其他文件的二进制数据进行编码，将其作为文本字符串嵌入网页中。以百度搜索首页为例，其中语音搜索的图标是个背景图片，其内容以 &lt;code&gt;Data URLs&lt;/code&gt; 形式直接写在css中，这个css内容又直接嵌在HTML页面中，如下图所示：&lt;/p&gt;
-&lt;img src=&apos;https://i.loli.net/2020/06/14/oa6rsPSwgMzv87l.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;&gt;
+&lt;img src=&apos;https://i.loli.net/2020/06/14/oa6rsPSwgMzv87l.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;/&gt;
 &lt;p&gt;&lt;code&gt;Data URLs&lt;/code&gt; 格式为：&lt;code&gt;url(data:文件类型;编码方式,编码后的文件内容)&lt;/code&gt;。&lt;/p&gt;
 &lt;p&gt;当然，也可以直接基于image标签嵌入图片，如下所示：&lt;/p&gt;
 &lt;pre class=&quot;language-html&quot;&gt;&lt;code&gt;&amp;amp;lt;img alt=&amp;amp;quot;Embedded Image&amp;amp;quot; src=&amp;amp;quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIA...&amp;amp;quot; /&amp;amp;gt;&lt;/code&gt;&lt;/pre&gt;
@@ -1994,7 +1994,7 @@ function base64_URL_decode($data) {
 &lt;p&gt;我们的电子邮件系统，一般是使用SMTP（简单邮件传输协议）将邮件从客户端发往服务器端，邮件客户端使用POP3（邮局协议，第3版本）或IMAP（交互邮件访问协议）从服务器端获取邮件。&lt;/p&gt;
 &lt;p&gt;SMTP协议一开始是基于纯ASCII文本的，对于二进制文件（比如邮件附件中的图像、声音等）的处理并不好，所以后来新增MIME标准来编码二进制文件，使其能够通过SMTP协议传输。&lt;/p&gt;
 &lt;p&gt;举例来说，我给自己发封邮件，正文为空，带一个名为hello.txt的附件，内容为 &lt;code&gt;您好！世界！&lt;/code&gt;。导出邮件源码，其关键部分如下图所示：&lt;/p&gt;
-&lt;img src=&apos;https://i.loli.net/2020/06/14/c8wIeoij9HWt4Ph.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;600&apos;&gt;
+&lt;img src=&apos;https://i.loli.net/2020/06/14/c8wIeoij9HWt4Ph.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;600&apos;/&gt;
 &lt;p&gt;&lt;code&gt;MIME-Version: 1.0&lt;/code&gt;：表示当前使用MIME标准1.0版本。&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;Content-Type: text/plain; name=&amp;quot;hello.txt&amp;quot;&lt;/code&gt;：表示附件文件名为 &lt;code&gt;hello.txt&lt;/code&gt; ，格式为纯文本。&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;Content-Transfer-Encoding: base64&lt;/code&gt;：表示附件文件内容使用base64编码后传输。&lt;/p&gt;
@@ -2215,7 +2215,7 @@ function base64_URL_decode($data) {
 &lt;h2&gt;实体、引用、索引（Objects，References，The Index）&lt;/h2&gt;
 &lt;p&gt;要理解Git内部构造的核心，我们应理解三个东西： &lt;strong&gt;实体&lt;/strong&gt;、&lt;strong&gt;引用&lt;/strong&gt;、 &lt;strong&gt;索引&lt;/strong&gt;。&lt;/p&gt;
 &lt;p&gt;我发现这个模型非常优雅。用一个小小的图表就能完全展现，也易于理解记忆。&lt;/p&gt;
-&lt;img src=&apos;../assets/git-internals/big-picture.png&apos; title=&apos;Big Picture&apos; alt=&apos;Big Picture&apos; width=&apos;500&apos;&gt;
+&lt;img src=&apos;../assets/git-internals/big-picture.png&apos; title=&apos;Big Picture&apos; alt=&apos;Big Picture&apos; width=&apos;500&apos;/&gt;
 &lt;h3&gt;实体&lt;/h3&gt;
 &lt;p&gt;你提交到一个Git代码仓库中的所有文件，包括每个提交的说明信息（the commit info）都在目录 &lt;code&gt;.git/objects/&lt;/code&gt;中存储为&lt;strong&gt;实体&lt;/strong&gt;。&lt;/p&gt;
 &lt;p&gt;一个实体以一个40字符长度的字符串（该实体内容的SHA1哈希值）来标识。&lt;/p&gt;
@@ -2238,7 +2238,7 @@ function base64_URL_decode($data) {
 &lt;p&gt;我们来演练一个简单的示例，创建一个Git代码仓库，提交一些文件，看看幕后&lt;code&gt;.git&lt;/code&gt;目录中都发生了些什么。&lt;/p&gt;
 &lt;h3&gt;初始化新的代码仓库&lt;/h3&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ git init canai&lt;/code&gt;&lt;/pre&gt;
-&lt;img src=&apos;../assets/git-internals/init.png&apos; title=&apos;初始化代码仓库后&apos; alt=&apos;初始化代码仓库后&apos; width=&apos;500&apos;&gt;
+&lt;img src=&apos;../assets/git-internals/init.png&apos; title=&apos;初始化代码仓库后&apos; alt=&apos;初始化代码仓库后&apos; width=&apos;500&apos;/&gt;
 &lt;p&gt;发生了什么呢？&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;创建了空目录&lt;code&gt;.git/objects/&lt;/code&gt;和&lt;code&gt;.git/refs/&lt;/code&gt;。&lt;/li&gt;
 &lt;li&gt;还没有索引（Index）文件。&lt;/li&gt;
@@ -2248,7 +2248,7 @@ ref: refs/heads/master&lt;/code&gt;&lt;/pre&gt;
 &lt;h3&gt;添加新文件&lt;/h3&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ echo &amp;amp;quot;A roti canai project.&amp;amp;quot; &amp;amp;gt;&amp;amp;gt; README
 $ git add README&lt;/code&gt;&lt;/pre&gt;
-&lt;img src=&apos;../assets/git-internals/new-file.png&apos; title=&apos;添加新文件后&apos; alt=&apos;添加新文件后&apos; width=&apos;500&apos;&gt;
+&lt;img src=&apos;../assets/git-internals/new-file.png&apos; title=&apos;添加新文件后&apos; alt=&apos;添加新文件后&apos; width=&apos;500&apos;/&gt;
 &lt;p&gt;发生了什么呢？&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;创建了索引（Index）文件。它有一个SHA1哈希值指向一个blob实体。&lt;/li&gt;&lt;/ul&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ git ls-files --stage
@@ -2262,7 +2262,7 @@ A roti canai project.&lt;/code&gt;&lt;/pre&gt;
 [master (root-commit) d9976cf] first commit
 1 files changed, 1 insertions(+), 0 deletions(-)
 create mode 100644 README&lt;/code&gt;&lt;/pre&gt;
-&lt;img src=&apos;../assets/git-internals/first-commit.png&apos; title=&apos;首次提交后&apos; alt=&apos;首次提交后&apos; width=&apos;500&apos;&gt;
+&lt;img src=&apos;../assets/git-internals/first-commit.png&apos; title=&apos;首次提交后&apos; alt=&apos;首次提交后&apos; width=&apos;500&apos;/&gt;
 &lt;p&gt;发生了什么呢？&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;创建了分支‘master’引用，指向‘master’分支中最新的commit实体。&lt;/li&gt;&lt;/ul&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ cat .git/refs/heads/master 
@@ -2282,7 +2282,7 @@ $ git ls-tree 0ff699
 &lt;h3&gt;添加一个修改过的文件&lt;/h3&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ echo &amp;amp;quot;Welcome everyone.&amp;amp;quot; &amp;amp;gt;&amp;amp;gt; README
 $ git add README&lt;/code&gt;&lt;/pre&gt;
-&lt;img src=&apos;../assets/git-internals/modified-file.png&apos; title=&apos;添加一个修改过的文件后&apos; alt=&apos;添加一个修改过的文件后&apos; width=&apos;500&apos;&gt;
+&lt;img src=&apos;../assets/git-internals/modified-file.png&apos; title=&apos;添加一个修改过的文件后&apos; alt=&apos;添加一个修改过的文件后&apos; width=&apos;500&apos;/&gt;
 &lt;p&gt;发生了什么呢？&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;更新了索引（Index）文件。注意到了吗？它记录了一个新blob。&lt;/li&gt;&lt;/ul&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ git ls-files --stage
@@ -2296,7 +2296,7 @@ Welcome everyone.&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ mkdir doc
 $ echo &amp;amp;quot;[[TBD]] manual toc&amp;amp;quot; &amp;amp;gt;&amp;amp;gt; doc/manual.txt
 $ git add doc&lt;/code&gt;&lt;/pre&gt;
-&lt;img src=&apos;../assets/git-internals/subdir.png&apos; title=&apos;向子目录添加文件后&apos; alt=&apos;向子目录添加文件后&apos; width=&apos;500&apos;&gt;
+&lt;img src=&apos;../assets/git-internals/subdir.png&apos; title=&apos;向子目录添加文件后&apos; alt=&apos;向子目录添加文件后&apos; width=&apos;500&apos;/&gt;
 &lt;p&gt;发生了什么呢？&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;更新了索引（Index）文件。&lt;/li&gt;&lt;/ul&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ git ls-files --stage
@@ -2311,7 +2311,7 @@ $ git cat-file blob ea283
 [master 556eaf3] second commit
  2 files changed, 2 insertions(+), 0 deletions(-)
  create mode 100644 doc/manual.txt&lt;/code&gt;&lt;/pre&gt;
-&lt;img src=&apos;../assets/git-internals/second-commit.png&apos; title=&apos;第二次提交后&apos; alt=&apos;第二次提交后&apos; width=&apos;500&apos;&gt;
+&lt;img src=&apos;../assets/git-internals/second-commit.png&apos; title=&apos;第二次提交后&apos; alt=&apos;第二次提交后&apos; width=&apos;500&apos;/&gt;
 &lt;p&gt;发生了什么呢？&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;更新了分支“master”引用，指向该分支中最新的commit实体。&lt;/li&gt;&lt;/ul&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ cat .git/refs/heads/master 
@@ -2333,7 +2333,7 @@ second commit&lt;/code&gt;&lt;/pre&gt;
 100644 blob ea283e4fb22719fad512405d41dffa050cd16f9a  manual.txt&lt;/code&gt;&lt;/pre&gt;
 &lt;h3&gt;添加一个注释标签（annotated tag）&lt;/h3&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ git tag -a -m&amp;amp;apos;this is annotated tag&amp;amp;apos; v0.1 d9976&lt;/code&gt;&lt;/pre&gt;
-&lt;img src=&apos;../assets/git-internals/annotated-tag.png&apos; title=&apos;添加一个注释标签后&apos; alt=&apos;添加一个注释标签后&apos; width=&apos;500&apos;&gt;
+&lt;img src=&apos;../assets/git-internals/annotated-tag.png&apos; title=&apos;添加一个注释标签后&apos; alt=&apos;添加一个注释标签后&apos; width=&apos;500&apos;/&gt;
 &lt;p&gt;发生了什么呢？&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;创建了一个标签引用，指向一个tag实体。&lt;/li&gt;&lt;/ul&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ cat .git/refs/tags/v0.1 
@@ -2348,7 +2348,7 @@ tagger Huiming Teo &amp;amp;lt;huiming@favoritemedium.com&amp;amp;gt; 1306744918
 this is annotated tag&lt;/code&gt;&lt;/pre&gt;
 &lt;h3&gt;添加一个新的（轻量的）标签&lt;/h3&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ git tag root-commit d9976&lt;/code&gt;&lt;/pre&gt;
-&lt;img src=&apos;../assets/git-internals/new-tag.png&apos; title=&apos;添加一个新的轻量标签后&apos; alt=&apos;添加一个新的轻量标签后&apos; width=&apos;500&apos;&gt;
+&lt;img src=&apos;../assets/git-internals/new-tag.png&apos; title=&apos;添加一个新的轻量标签后&apos; alt=&apos;添加一个新的轻量标签后&apos; width=&apos;500&apos;/&gt;
 &lt;p&gt;发生了什么呢？&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;创建了一个标签引用，指向一个commit实体。&lt;/li&gt;&lt;/ul&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ cat .git/refs/tags/root-commit 
@@ -2395,7 +2395,7 @@ d9976cfe0430557885d162927dd70186d0f521e8&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;经过网络查找，发现第一种方案与第二种方案都有现成的工具。&lt;/p&gt;
 &lt;p&gt;第一种方案：&lt;a href=&apos;https://github.com/ariya/phantomjs&apos;&gt;phantomjs&lt;/a&gt;可以完成，phantomjs包含了webkit，所以解释JS什么的就不再是个问题了，它有个&lt;a href=&apos;https://github.com/ariya/phantomjs/wiki/Screen-Capture&apos;&gt;Screen Capture&lt;/a&gt;的功能模块支持将网页完整地转换成图片格式，但由于要做很多额外的工作，所以效率比较低。&lt;/p&gt;
 &lt;p&gt;第二种方案是从Highcharts的&lt;a href=&apos;http://www.highcharts.com/demo/&apos;&gt;Demo&lt;/a&gt;中挖掘出来的，如图所示：&lt;/p&gt;
-&lt;img src=&apos;../assets/highchartjsdemo.png&apos; title=&apos;highchartjs_demo&apos; alt=&apos;highchartjs_demo&apos; width=&apos;100%&apos;&gt;
+&lt;img src=&apos;../assets/highchartjsdemo.png&apos; title=&apos;highchartjs_demo&apos; alt=&apos;highchartjs_demo&apos; width=&apos;100%&apos;/&gt;
 &lt;p&gt;Demo中可以输出多种图片格式，通过chrome浏览器的开发者工具可以发现其实现是向服务器export.highcharts.com发送一个请求，请求中包含网页中生成的SVG矢量图数据、目标图片格式等信息，服务器对该请求进行处理后返回目标格式图片。那么服务器端是如何将SVG转换成图片格式的呢？在Highcharts的&lt;a href=&apos;http://docs.highcharts.com/&apos;&gt;文档&lt;/a&gt;中有个名为&lt;code&gt;Export module&lt;/code&gt;的部分，其中说明了实现原理以及如何搭建这样的一个格式转换服务器。从文档可以看出这个实现方法的核心是借助了&lt;a href=&apos;http://xmlgraphics.apache.org/batik/tools/rasterizer.html&apos;&gt;batik-rasterizer.jar&lt;/a&gt;这个Java工具包，它能将SVG转换成图片或PDF格式。&lt;/p&gt;
 &lt;p&gt;从上述该问题解决方案的寻找过程可以看出，&lt;strong&gt;很多时候并不是问题有多复杂或有多难，而是我们根本没有明确业务需求，没有搞清楚真正需要解决的问题，而对模糊的问题描述自以为是地作出一些假设，然后蒙头去解决错误的问题，从而浪费了很多时间&lt;/strong&gt;。&lt;/p&gt;</description>
         </item>

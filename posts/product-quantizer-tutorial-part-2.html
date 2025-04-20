@@ -69,7 +69,7 @@
 <p>这个特性也是相对比较直观的，不过如果你没有理解的话可能会觉得有点奇怪。其想法是将 IVF 阶段的一些信息加入到乘积量化器中，借此提升准确性（因此这个概念是建立在数据集分区技术之上的）。</p>
 <p>先定义一下什么是“残差”向量。暂时抛开乘积量化器不谈（因为它会增大理解的困难，后面我们再把它加回来）。假设我们要做标准的暴力 k-NN 搜索，不过是用数据集分区技术来削减待搜索向量的数量。</p>
 <p>假设我们是用 k-means 将数据集聚类成 100 个聚类（或者叫“数据集分区”）。给定数据集中的一个向量，其残差即是它相对于所属分区的质心的偏移（offset）。也就是，将数据集中的这个向量与其所属聚类的质心的向量相减。质心即是聚类的均值，那么对一组点均减去它们的均值会发生什么？现在这些点就围绕着 0 点了。如下是一个简单的二维示例：</p>
-<img src='../assets/residuals_one_partition.png' title='residuals_one_partition.png' alt='residuals_one_partition.png' width='800'>
+<img src='../assets/residuals_one_partition.png' title='residuals_one_partition.png' alt='residuals_one_partition.png' width='800'/>
 <p>开始有趣起来了。假设将一个数据集分区中的所有向量都替换为各自的残差向量，怎么从这个数据集分区中找到查询向量的最近邻？先计算查询向量的残差（相对于分区质心的偏移），然后对这个数据集分区的所有残差向量做最近邻搜索，得到的结果与使用原始向量做搜索是一样的！</p>
 <p>基于上面的图示，凭直觉可能就能理解，不过还是再看看下面的等式加深理解。'x' 和 'y' 这两个向量的长度为 'n'，它们的 L2 距离计算公式为：</p>
 <p style="text-align: center">$$dist_{L2}\left( x,y \right) =\sqrt{\sum_{i}^{n} \left( x_{i}-y_{i} \right)^{2}}$$</p>
@@ -80,7 +80,7 @@
 <p>可能你之前就使用过这种等价关系，均值归一化（对向量减去均值）是一种常见的预处理技术。</p>
 <p>不过目前为止说的都是单个分区内的计算。将不同分区内的向量做比较又会是什么情况呢？仍然管用，只要针对每个分区分别计算查询向量的残差即可。</p>
 <p>下面这个图解中包含两个数据集分区。计算残差之后，两个分区的所有点都围绕在 0 点周围了。不过现在是有两个查询向量的残差 - 一个是与蓝色点集（分区 1）比较得到的，另一个是与绿色点集（分区 2）比较得到的。</p>
-<img src='../assets/residuals_two_partitions.png' title='residuals_two_partitions.png' alt='residuals_two_partitions.png' width='800'>
+<img src='../assets/residuals_two_partitions.png' title='residuals_two_partitions.png' alt='residuals_two_partitions.png' width='800'/>
 <p>前面解释过查询向量和数据库向量之间的距离，使用原始向量计算和使用残差向量计算，结果是一样的，还记得吧？</p>
 <p>很有意思，不过目前为止还是无用功 - 尚未改变结果的准确性也没有减少计算成本。现在将 PQ 重新放进来一起考虑，就会发现好处在哪了。</p>
 <p>在训练乘积量化器之前，先计算数据集所有分区所有向量的残差向量。残差向量集合保持原有分区（不会合并在一起），不过现在所有残差向量都围绕着 0 点，相对紧凑地聚集在一起。我们抛弃掉原始的数据集向量，只存储残差向量集。</p>
@@ -99,11 +99,11 @@
 <footer class="site-footer">
     <div class="wrapper">
         <div class="footer-col-wrapper">
-            <div class="footer-col  footer-col-1">
+            <div class="footer-col footer-col-1">
                 <ul class="social-media-list">
                     <li>
-                        <a href="https://github.com/kitelife">
-                            <span class="icon  icon--github">
+                        <a href="https://github.com/kitelife" target="_blank">
+                            <span class="icon icon--github">
                                 <svg viewBox="0 0 16 16">
                                     <path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
                                 </svg>
@@ -111,17 +111,22 @@
                             <span class="username">kitelife</span>
                         </a>
                     </li>
+                    <li>
+                        <a href="https://maimai.cn/profile/detail?dstu=39580141" target="_blank">
+                            <span class="icon icon--maimai">
+                                <img src="https://maimai.cn/favicon.ico" width="16"/>
+                            </span>
+                            <span class="username">Xiayf</span>
+                        </a>
+                    </li>
                 </ul>
             </div>
-
-            <div class="footer-col  footer-col-2">
-                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
+            <div class="footer-col footer-col-2"></div>
+            <div class="footer-col footer-col-3"></div>
+            <div class="footer-col footer-col-4">
+                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">
                     <img alt="Creative Commons License" src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-sa.svg">
                 </a>
-            </div>
-
-            <div class="footer-col  footer-col-3">
-                <p class="text">精进，求诸己身</p>
             </div>
         </div>
     </div>

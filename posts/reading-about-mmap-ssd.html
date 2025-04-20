@@ -65,7 +65,7 @@
 <li>跟踪脏页以及将脏页写入磁盘 🤔</li>
 <li>相比 read/write 系统调用，mmap 不需要将内存页从内核空间拷贝到用户空间，而是直接从操作系统的内存页缓存中直接访问内存页，有一定的性能优势</li></ul>
 <p>MMAP 相关 POSIX API：mmap、madvise、mlock、msync。</p>
-<img src='https://s2.loli.net/2022/11/16/U7xMgzj36dZDGaO.jpg' title='' alt='' width='100%'>
+<img src='https://s2.loli.net/2022/11/16/U7xMgzj36dZDGaO.jpg' title='' alt='' width='100%'/>
 <p>① A program calls mmap and receives a pointer to the memory-mapped file contents.</p>
 <p>② The OS reserves part of the program’s virtual address space but does not load any part of the file.</p>
 <p>③ The program accesses the file’s contents using the pointer.</p>
@@ -94,9 +94,9 @@
 <li><a href='https://www.kernel.org/doc/html/v4.18/core-api/cachetlb.html'>Cache and TLB Flushing Under Linux — The Linux Kernel documentation</a></li></ul></li></ul></li></ul>
 <p>实验分析：</p>
 <p>As a baseline, we used the fio storage benchmarking tool (v3.25) with direct I/O (O_DIRECT) to bypass the OS page cache. Our analysis focused exclusively on read-only workloads, which represent the best-case scenario for mmap-based DBMSs.</p>
-<img src='https://s2.loli.net/2022/11/16/FlAJqH8E4K1UWvp.jpg' title='' alt='' width='100%'>
-<img src='https://s2.loli.net/2022/11/16/qhz3OQHlgaZ2YMn.jpg' title='' alt='' width='600'>
-<img src='https://s2.loli.net/2022/11/16/oczkfgLw9EMR1ue.jpg' title='' alt='' width='600'>
+<img src='https://s2.loli.net/2022/11/16/FlAJqH8E4K1UWvp.jpg' title='' alt='' width='100%'/>
+<img src='https://s2.loli.net/2022/11/16/qhz3OQHlgaZ2YMn.jpg' title='' alt='' width='600'/>
+<img src='https://s2.loli.net/2022/11/16/oczkfgLw9EMR1ue.jpg' title='' alt='' width='600'/>
 <p>那么，到底要不要使用 mmap 呢？直接使用 ssd？还是自己搞一个 buffer pool？</p>
 <p>论文作者给出这样的结论：</p>
 <ul><li>以下情况不要使用 mmap：
@@ -109,7 +109,7 @@
 <li>希望将一个产品快速推向市场，也不关注数据一致性或者长期的工程技术债</li>
 <li>Otherwise, never 🤣🙃</li></ul></li></ul>
 <p>彩蛋：论文的奇数页页眉  😂</p>
-<img src='https://s2.loli.net/2022/11/16/AIqHKTC213FYaxX.jpg' title='' alt='' width='100'>
+<img src='https://s2.loli.net/2022/11/16/AIqHKTC213FYaxX.jpg' title='' alt='' width='100'/>
 <h2>2、<a href='https://ayende.com/blog/196161-C/re-are-you-sure-you-want-to-use-mmap-in-your-database-management-system'>re: Are You Sure You Want to Use MMAP in Your Database Management System? </a></h2>
 <p>本文作者认为自己实现一个内存分页管理器/缓冲池比较复杂，使用 mmap 来实现存储系统会很快。</p>
 <p>不过吐槽了原论文没有给出可供选择的替代方案，基准测试和结论之间也没太多相关性（compares apples to camels），也低估了自己实现一个替代 mmap 的缓冲池的复杂性。</p>
@@ -128,17 +128,17 @@
 <p>WiscKey 是一个基于 LSM (Log Structured Merge)树的 KV 存储引擎，针对 SSD 的随机读和顺序读性能特点，将 Key 和 Value 分开存储，以尽可能缩小 I/O 放大问题，提升性能。</p>
 <p>Value 存放在 Log 文件中，LSM 树仅存储 Key 和 Value 在 Log 文件的位置以及长度/大小。</p>
 <p>对于 Value 比较大的应用场景，性能优势明显。</p>
-<img src='https://s2.loli.net/2022/11/16/y84VKqJZWMSjBu7.jpg' title='' alt='' width='500'>
+<img src='https://s2.loli.net/2022/11/16/y84VKqJZWMSjBu7.jpg' title='' alt='' width='500'/>
 <p>因为 LSM 树不存储 Value 本身，通常比较小，可以全部放在内存中，所以不考虑获取 Value 的值，点查和范围查找速度非常快。</p>
 <p>LSM 树比较小，所以 Compaction 次数少，速度快（特别是如果整个 LSM 都放在内存中的话）。Compaction 过程中不需要读写 Value 的值，所以 I/O 放大倍数要小很多。</p>
-<img src='https://s2.loli.net/2022/11/16/2tvp5LROXG4UYrw.jpg' title='' alt='' width='500'>
+<img src='https://s2.loli.net/2022/11/16/2tvp5LROXG4UYrw.jpg' title='' alt='' width='500'/>
 <p>点查过程，从 LSM 树中获取 Value 的位置和大小后，需要从 Value Log 中获取 Value 值。因为 LSM 树小，所以读放大倍数小，综合起来看，WiscKey 点查的性能优势依旧明显。</p>
 <p>范围查找/遍历过程，先从 LSM 树中获得目标范围内的所有 Value 的位置和大小，放入队列，使用多线程进行并发预取，利用 SSD 随机读的吞吐能力随并发树近线性增长的特点。</p>
-<img src='https://s2.loli.net/2022/11/16/APbQlhq3nWsf47j.jpg' title='' alt='' width='500'>
-<img src='https://s2.loli.net/2022/11/16/j357k6XMfYO2udm.jpg' title='' alt='' width='400'>
+<img src='https://s2.loli.net/2022/11/16/APbQlhq3nWsf47j.jpg' title='' alt='' width='500'/>
+<img src='https://s2.loli.net/2022/11/16/j357k6XMfYO2udm.jpg' title='' alt='' width='400'/>
 <p>Value Log 也需要 GC，清理掉无用的 Value 值。LSM 树的 Compaction 主要是为了提升查找/检索的性能/效率，控制读放大，减少内存/磁盘空间占用是次要的。Value Log 的 GC 则主要是为了减少内存/磁盘空间占用。</p>
 <p>为了实现在线的轻量级 GC，Value Log 中也存储了 Key，</p>
-<img src='https://s2.loli.net/2022/11/16/JMKxWiaCovyhgr8.jpg' title='' alt='' width='500'>
+<img src='https://s2.loli.net/2022/11/16/JMKxWiaCovyhgr8.jpg' title='' alt='' width='500'/>
 <p>tail 指向 Value Log 有效值范围内时序上最先写入的那个 value 的位置。</p>
 <p>head 指向 Value Log 中下一个新 value 写入的位置。</p>
 <p>tail 和 head 及其对应的位置信息均作为 kv 存入 LSM 树中（head 的指向什么时候会更新？：每次有新值写入的时候都更新？还是在 GC 的过程中才会更新？）</p>
@@ -148,9 +148,9 @@
 <p>③ 一块数据处理完成后，移动 tail 指向到下一个位置，释放/回收原来数据块的存储空间；然后继续循环处理</p>
 <p><strong>疑问</strong>：1. GC 过程中每次向 head 插入有效值时，是否先要从 LSM 树中查询最新指向的位置？2. 在根据 key 从 LSM 树查询后将有效值写入 head 位置前，有新数据写入的话，怎么处理？GC 期间是否要停止正常的写操作？还是说对某个临界区加锁？</p>
 <p>LSM 树原理：</p>
-<img src='https://s2.loli.net/2022/11/16/k6cHFOUluo1Ibfp.jpg' title='' alt='' width='500'>
-<img src='https://s2.loli.net/2022/11/16/17WubUhqSpCjMr5.jpg' title='' alt='' width='500'>
-<img src='https://s2.loli.net/2022/11/16/Tomk3VOEs7jduQl.jpg' title='' alt='' width='500'>
+<img src='https://s2.loli.net/2022/11/16/k6cHFOUluo1Ibfp.jpg' title='' alt='' width='500'/>
+<img src='https://s2.loli.net/2022/11/16/17WubUhqSpCjMr5.jpg' title='' alt='' width='500'/>
+<img src='https://s2.loli.net/2022/11/16/Tomk3VOEs7jduQl.jpg' title='' alt='' width='500'/>
 <p><a href='https://zhuanlan.zhihu.com/p/181498475'>LSM树详解 - 知乎 (zhihu.com)</a></p>
 <h2>4、<a href='http://www.vldb.org/pvldb/vol14/p364-didona.pdf'>Toward a Better Understanding and Evaluation of Tree Structures on Flash SSDs（VLDB）</a></h2>
 <p>PTS - Persistent tree data structure</p>
@@ -158,7 +158,7 @@
 <p><strong>（1）Running short tests / 测试过于短平快</strong> ⚡️</p>
 <p>随着使用时间的增加，SSD 的性能会一定的动态变化。</p>
 <p>Because both the PTS and SSD performance vary over time, short-lived tests are unable to capture how the systems will behave under a continuous（non-bursty）workload.</p>
-<img src='https://s2.loli.net/2022/11/16/HSuzIeC8itjndGw.jpg' title='' alt='' width='500'>
+<img src='https://s2.loli.net/2022/11/16/HSuzIeC8itjndGw.jpg' title='' alt='' width='500'/>
 <p>WA-A（应用/存储系统的写放大） increases over time while the levels of the LSM-Tree fills up, and its curve flattens once the layout of the LSM tree has stabilized.</p>
 <p>WA-D（SSD 设备的写放大） increases over time because of the effect of garbage collection.</p>
 <p><strong>（2）Ignoring the device write amplification (WA-D) / 忽视了 SSD 设备本身的写放大</strong> ⚡️</p>
@@ -168,20 +168,20 @@
 <ul><li>A low WA-D indicates that a PTS generates a write access that does not incur much garbage collection overhead in the SSD.</li>
 <li>以前大家可能认为 LSM 树（顺序写）相比 B+ 树（随机写）对 SSD 更友好，但实测 WA-D 颠覆了这个认知</li></ul></li></ul>
 <p><strong>（3）Ignoring the internal state of the SSD / 忽视了 SSD 的初始内部状态</strong> ⚡️</p>
-<img src='https://s2.loli.net/2022/11/16/pFyqSCVZnrHB1g9.jpg' title='' alt='' width='100%'>
+<img src='https://s2.loli.net/2022/11/16/pFyqSCVZnrHB1g9.jpg' title='' alt='' width='100%'/>
 <blockquote><p><strong>Trim(Discard)的出现主要是为了提高GC的效率以及减少写入放大的发生，最大作用是清空待删除的无效数据</strong>。在SSD执行读、擦、写步骤的时候，预先把擦除的步骤先做了，这样才能发挥出SSD的性能，通常SSD掉速很大一部分原因就是待删除的无效数据太多，每次写入的时候主控都要先做清空处理，所以性能受到了限制。</p></blockquote>
 <p>The steady-state performance of a PTS can greatly differ depending on the initial state of the drive, this is surprising.</p>
 <p>This phenomenon is caused by how the LBA (logic block address)  access patterns of RocksDB and WiredTiger intertwine with the SSD garbage collection mechanism as a function of the initial state the drive.</p>
 <p>WiredTiger only writes to a limited portion of the logical block address space.</p>
 <p><strong>（4）Ignore the dataset size / 忽视了数据集大小</strong></p>
-<img src='https://s2.loli.net/2022/11/16/SlVWJfP5rO7xpNQ.jpg' title='' alt='' width='100%'>
+<img src='https://s2.loli.net/2022/11/16/SlVWJfP5rO7xpNQ.jpg' title='' alt='' width='100%'/>
 <p>The amount of data stored by the SSD changes its behavior and affects overall performance.</p>
 <p>The performance degradation brought by the larger dataset is primarily due to the idiosyncrasies（特质/特点） of the SSD: larger datasets lead to more valid pages in each flash block, which increases the amount of data being relocated upon performing garbage collection, i.e., the WA-D</p>
 <p><strong>（5）Ignoring the extra storage capacity a PTS needs to manage data and store additional meta-data / 未考虑空间放大（Space amplification）</strong></p>
 <p>涉及存储成本</p>
 <p><strong>（6）Ignoring SSD over-provisioning</strong></p>
 <p>成本与性能之间的权衡折中 - 可以预留一部分 SSD 空间给 SSD 做 GC 使用，这部分空间对文件系统不可见。</p>
-<img src='https://s2.loli.net/2022/11/16/YEFp5g69mnqBe3w.jpg' title='' alt='' width='100%'>
+<img src='https://s2.loli.net/2022/11/16/YEFp5g69mnqBe3w.jpg' title='' alt='' width='100%'/>
 <p><strong>（7）Ignoring the effect of the underlying storage technology on performance</strong></p>
 <h2>5、SSD 原理相关资料</h2>
 <ul><li><a href='https://zhuanlan.zhihu.com/p/102089411'>浅谈分布式存储之SSD基本原理 - 知乎 (zhihu.com)</a></li>
@@ -197,11 +197,11 @@
 <footer class="site-footer">
     <div class="wrapper">
         <div class="footer-col-wrapper">
-            <div class="footer-col  footer-col-1">
+            <div class="footer-col footer-col-1">
                 <ul class="social-media-list">
                     <li>
-                        <a href="https://github.com/kitelife">
-                            <span class="icon  icon--github">
+                        <a href="https://github.com/kitelife" target="_blank">
+                            <span class="icon icon--github">
                                 <svg viewBox="0 0 16 16">
                                     <path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
                                 </svg>
@@ -209,17 +209,22 @@
                             <span class="username">kitelife</span>
                         </a>
                     </li>
+                    <li>
+                        <a href="https://maimai.cn/profile/detail?dstu=39580141" target="_blank">
+                            <span class="icon icon--maimai">
+                                <img src="https://maimai.cn/favicon.ico" width="16"/>
+                            </span>
+                            <span class="username">Xiayf</span>
+                        </a>
+                    </li>
                 </ul>
             </div>
-
-            <div class="footer-col  footer-col-2">
-                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
+            <div class="footer-col footer-col-2"></div>
+            <div class="footer-col footer-col-3"></div>
+            <div class="footer-col footer-col-4">
+                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">
                     <img alt="Creative Commons License" src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-sa.svg">
                 </a>
-            </div>
-
-            <div class="footer-col  footer-col-3">
-                <p class="text">精进，求诸己身</p>
             </div>
         </div>
     </div>

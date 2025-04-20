@@ -72,16 +72,16 @@ function base64_URL_decode($data) {
 <p>以青云应用为例，简单解释这两点。青云平台通过POST一个表单来获取iframe，表单有 <code>payload</code> 和 <code>signature</code> 两项， <code>payload</code> 原本是一个JSON对象，其中的键值可能包含一些特殊字符，比如 <code>&amp;</code>、<code>/</code> 等，由于青云设计的一种通用的请求交互方案，需要考虑iframe服务方服务器端的各种可能实现，有些服务器端实现没有考虑表单值有这些特殊字符，或者POST请求被中间服务器转换成GET请求再次发出，对于URL来说，<code>&amp;</code>、<code>/</code>都是具有特殊含义的字符，所以需要对请求数据进行特殊编码避免这些字符出现 - 数据发送方对数据按规则进行编码，接收方对应地按规则解码数据。</p>
 <h2>Base64编码原理</h2>
 <p>Base64编码之所以称为Base64，是因为其使用64个字符来对任意数据进行编码，同理有Base32、Base16编码。标准Base64编码使用的64个字符为：</p>
-<img src='https://i.loli.net/2020/06/14/XHFMRvxfez4OVtr.jpg' title='' alt='' width='500'>
+<img src='https://i.loli.net/2020/06/14/XHFMRvxfez4OVtr.jpg' title='' alt='' width='500'/>
 <p>这64个字符是各种字符编码（比如ASCII编码）所使用字符的子集，基本，并且可打印。唯一有点特殊的是最后两个字符，因对最后两个字符的选择不同，Base64编码又有很多变种，比如Base64 URL编码。</p>
 <p>Base64编码本质上是一种将二进制数据转成文本数据的方案。对于非二进制数据，是先将其转换成二进制形式，然后每连续6比特（2的6次方=64）计算其十进制值，根据该值在上面的索引表中找到对应的字符，最终得到一个文本字符串。</p>
 <p>假设我们要对 <code>Hello!</code> 进行Base64编码，按照ASCII表，其转换过程如下图所示：</p>
-<img src='https://i.loli.net/2020/06/14/tJnClQsjc4WMGhB.jpg' title='' alt='' width='100%'>
+<img src='https://i.loli.net/2020/06/14/tJnClQsjc4WMGhB.jpg' title='' alt='' width='100%'/>
 <p>可知 <code>Hello!</code> 的Base64编码结果为 <code>SGVsbG8h</code> ，原始字符串长度为6个字符，编码后长度为8个字符，每3个原始字符经Base64编码成4个字符，编码前后长度比4/3，这个长度比很重要 - 比原始字符串长度短，则需要使用更大的编码字符集，这并不我们想要的；长度比越大，则需要传输越多的字符，传输时间越长。Base64应用广泛的原因是在字符集大小与长度比之间取得一个较好的平衡，适用于各种场景。</p>
 <p>是不是觉得Base64编码原理很简单？</p>
 <p>但这里需要注意一个点：Base64编码是每3个原始字符编码成4个字符，如果原始字符串长度不能被3整除，那怎么办？使用0值来补充原始字符串。</p>
 <p>以 <code>Hello!!</code> 为例，其转换过程为：</p>
-<img src='https://i.loli.net/2020/06/14/5URB8nVis9ljwYe.jpg' title='' alt='' width='100%'>
+<img src='https://i.loli.net/2020/06/14/5URB8nVis9ljwYe.jpg' title='' alt='' width='100%'/>
 <p><em>注：图表中蓝色背景的二进制0值是额外补充的。</em></p>
 <p><code>Hello!!</code> Base64编码的结果为 <code>SGVsbG8hIQAA</code> 。最后2个零值只是为了Base64编码而补充的，在原始字符中并没有对应的字符，那么Base64编码结果中的最后两个字符 <code>AA</code> 实际不带有效信息，所以需要特殊处理，以免解码错误。</p>
 <p>标准Base64编码通常用 <code>=</code> 字符来替换最后的 <code>A</code>，即编码结果为 <code>SGVsbG8hIQ==</code>。因为 <code>=</code> 字符并不在Base64编码索引表中，其意义在于结束符号，在Base64解码时遇到 <code>=</code> 时即可知道一个Base64编码字符串结束。</p>
@@ -96,7 +96,7 @@ function base64_URL_decode($data) {
 <p>本文开始提到的青云应用例子只是Base64编码的应用场景之一。由于Base64编码在字符集大小与编码后数据长度之间做了较好的平衡，以及Base64编码变种形式的多样，使得Base64编码的应用场景非常广泛。下面举2个常用常见的例子。</p>
 <h3>HTML内嵌Base64编码图片</h3>
 <p>前端在实现页面时，对于一些简单图片，通常会选择将图片内容直接内嵌在页面中，避免不必要的外部资源加载，增大页面加载时间，但是图片数据是二进制数据，该怎么嵌入呢？<a href='http://caniuse.com/#search=Data%20URI'>绝大多数现代浏览器</a>都支持一种名为 <code>Data URLs</code> 的特性，允许使用Base64对图片或其他文件的二进制数据进行编码，将其作为文本字符串嵌入网页中。以百度搜索首页为例，其中语音搜索的图标是个背景图片，其内容以 <code>Data URLs</code> 形式直接写在css中，这个css内容又直接嵌在HTML页面中，如下图所示：</p>
-<img src='https://i.loli.net/2020/06/14/oa6rsPSwgMzv87l.jpg' title='' alt='' width='100%'>
+<img src='https://i.loli.net/2020/06/14/oa6rsPSwgMzv87l.jpg' title='' alt='' width='100%'/>
 <p><code>Data URLs</code> 格式为：<code>url(data:文件类型;编码方式,编码后的文件内容)</code>。</p>
 <p>当然，也可以直接基于image标签嵌入图片，如下所示：</p>
 <pre class="language-html"><code>&lt;img alt=&quot;Embedded Image&quot; src=&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIA...&quot; /&gt;</code></pre>
@@ -105,7 +105,7 @@ function base64_URL_decode($data) {
 <p>我们的电子邮件系统，一般是使用SMTP（简单邮件传输协议）将邮件从客户端发往服务器端，邮件客户端使用POP3（邮局协议，第3版本）或IMAP（交互邮件访问协议）从服务器端获取邮件。</p>
 <p>SMTP协议一开始是基于纯ASCII文本的，对于二进制文件（比如邮件附件中的图像、声音等）的处理并不好，所以后来新增MIME标准来编码二进制文件，使其能够通过SMTP协议传输。</p>
 <p>举例来说，我给自己发封邮件，正文为空，带一个名为hello.txt的附件，内容为 <code>您好！世界！</code>。导出邮件源码，其关键部分如下图所示：</p>
-<img src='https://i.loli.net/2020/06/14/c8wIeoij9HWt4Ph.jpg' title='' alt='' width='600'>
+<img src='https://i.loli.net/2020/06/14/c8wIeoij9HWt4Ph.jpg' title='' alt='' width='600'/>
 <p><code>MIME-Version: 1.0</code>：表示当前使用MIME标准1.0版本。</p>
 <p><code>Content-Type: text/plain; name=&quot;hello.txt&quot;</code>：表示附件文件名为 <code>hello.txt</code> ，格式为纯文本。</p>
 <p><code>Content-Transfer-Encoding: base64</code>：表示附件文件内容使用base64编码后传输。</p>
@@ -132,11 +132,11 @@ function base64_URL_decode($data) {
 <footer class="site-footer">
     <div class="wrapper">
         <div class="footer-col-wrapper">
-            <div class="footer-col  footer-col-1">
+            <div class="footer-col footer-col-1">
                 <ul class="social-media-list">
                     <li>
-                        <a href="https://github.com/kitelife">
-                            <span class="icon  icon--github">
+                        <a href="https://github.com/kitelife" target="_blank">
+                            <span class="icon icon--github">
                                 <svg viewBox="0 0 16 16">
                                     <path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
                                 </svg>
@@ -144,17 +144,22 @@ function base64_URL_decode($data) {
                             <span class="username">kitelife</span>
                         </a>
                     </li>
+                    <li>
+                        <a href="https://maimai.cn/profile/detail?dstu=39580141" target="_blank">
+                            <span class="icon icon--maimai">
+                                <img src="https://maimai.cn/favicon.ico" width="16"/>
+                            </span>
+                            <span class="username">Xiayf</span>
+                        </a>
+                    </li>
                 </ul>
             </div>
-
-            <div class="footer-col  footer-col-2">
-                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
+            <div class="footer-col footer-col-2"></div>
+            <div class="footer-col footer-col-3"></div>
+            <div class="footer-col footer-col-4">
+                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">
                     <img alt="Creative Commons License" src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-sa.svg">
                 </a>
-            </div>
-
-            <div class="footer-col  footer-col-3">
-                <p class="text">精进，求诸己身</p>
             </div>
         </div>
     </div>

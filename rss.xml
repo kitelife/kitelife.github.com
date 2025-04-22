@@ -4,8 +4,8 @@
         <description>精进，求诸己身</description>
         <link>https://blog.xiayf.cn/</link>
         <atom:link href="https://blog.xiayf.cn/rss.xml" rel="self" type="application/rss+xml"/>
-        <pubDate>2025-04-21T02:13:25.770875+08:00</pubDate>
-        <lastBuildDate>2025-04-21T02:13:25.770875+08:00</lastBuildDate>
+        <pubDate>2025-04-22T13:33:39.02286+08:00</pubDate>
+        <lastBuildDate>2025-04-22T13:33:39.02286+08:00</lastBuildDate>
         <generator>LingDong</generator>
         
         <item>
@@ -628,45 +628,6 @@ AllowAllParametersOfDeclarationOnNextLine: false&lt;/code&gt;&lt;/pre&gt;
         </item>
         
         <item>
-            <title>读文笔记：日志 - 每个软件工程师都应该了解的实时数据统一抽象</title>
-            <description>&lt;p&gt;原文：&lt;a href=&apos;https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying&apos;&gt;The Log: What every software engineer should know about real-time data&apos;s unifying abstraction&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;一句话概括，这篇文章细说了 Kafka 的本质原理、解决的问题、适用性等。&lt;/p&gt;
-&lt;p&gt;Kafka 本质上是提供日志数据流。&lt;/p&gt;
-&lt;p&gt;日志是客观世界的事件记录。&lt;/p&gt;
-&lt;blockquote&gt;&lt;p&gt;A log is perhaps the simplest possible storage abstraction. It is an append-only, totally-ordered sequence of records ordered by time.&lt;/p&gt;&lt;/blockquote&gt;
-&lt;p&gt;日志数据的特点是：只增不改，自带时间戳，数据存储的先后顺序即（大致）是实际发生的时间先后顺序。&lt;/p&gt;
-&lt;p&gt;数据库可以基于日志来还原历史操作行为，并最终生成最新状态，主从同步就是这么干的。&lt;/p&gt;
-&lt;p&gt;对于分布式系统而言，日志可以解决 2 个问题：按序改变状态和分发数据（ordering changes and distributing data）。&lt;/p&gt;
-&lt;p&gt;状态机复制原则：&lt;/p&gt;
-&lt;blockquote&gt;&lt;p&gt;If two identical, deterministic processes begin in the same state and get the same inputs in the same order, they will produce the same output and end in the same state.&lt;/p&gt;&lt;/blockquote&gt;
-&lt;p&gt;分布式系统中各个节点可以依据日志来同步状态，达到（最终）一致性。并且，可以依据节点处理到哪行日志即可确定/表达该节点的状态。&lt;/p&gt;
-&lt;p&gt;（日志）事件流（events）和数据表（tables）是一体两面（a facinating duality）：数据表的变更操作即是一个日志事件流，基于日志事件流可以生成数据表，并将其状态不断更新到最新，数据表的状态是日志事件流的在某个时间点的切面。&lt;/p&gt;
-&lt;blockquote&gt;&lt;p&gt;events -&gt; table -&gt; events = events &lt;-&gt; table&lt;/p&gt;&lt;/blockquote&gt;
-&lt;blockquote&gt;&lt;p&gt;The magic of the log is that if it is a complete log of changes, it holds not only the contents of the final version of the table, but also allows recreating all other versions that might have existed. It is, effectively, a sort of backup of every previous state of the table.&lt;/p&gt;&lt;/blockquote&gt;
-&lt;p&gt;源码版本控制系统（比如 git）也是基于日志实现的分布式系统，一次 commit 相当于一次日志记录。&lt;/p&gt;
-&lt;hr&gt;
-&lt;p&gt;对于互联网/金融等行业的公司来说，数据是重要资产，如何尽可能发挥数据的潜在价值为公司增收，至关重要。因为管理、技术上的原因，公司通常分多个业务部门，各业务部门提供若干服务，各个服务都会产出数据，这些数据很可能需要跨部门跨服务流通，流通的速度越快，周期越短，收益越大。&lt;/p&gt;
-&lt;p&gt;以前，数据的处理方式主要是批处理，并不是因为没有流处理的技术，而是数据流通的基础设施跟不上，没做到持续的数据流。&lt;strong&gt;（注：这个说法，我个人只部分认同，很多时候，批处理的时延和收益可以满足大部分需求，实时流处理的边际效益可能并不明显）&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;流式处理是批处理的泛化形式（stream processing is a generalization of batch processing, and, given the prevalence of real-time data, a very important generalization）。&lt;/p&gt;
-&lt;p&gt;为了避免因数据流通导致各个服务之间的直接耦合，新增一个统一的数据通道中间服务，各个服务只管对数据通道进行写入或读出，不用关心数据是哪个服务写入的，或者哪些服务在消费/使用自己产出的数据。&lt;strong&gt;（解耦）&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;另外，消费者消费数据的速率可能不一样，也可能会经历异常重启等情况，让消费者来控制速率，并且多个消费者之间不会相互干扰，会更好。&lt;/p&gt;
-&lt;p&gt;基于数据流通的需求和日志的理念，Linkedin 设计开发了 Kafka。&lt;/p&gt;
-&lt;p&gt;因为日志数据量可能会很大，日志数据本质上是有序串行的，如果支持数据分片，分片之间并行消费，分片内日志数据全局有序，数据流通的吞吐能力就可以无限扩展。&lt;/p&gt;
-&lt;hr&gt;
-&lt;p&gt;基于 Kafka 这类数据管道，服务之间可以实现多级串联。（注：我们现在做的服务就是这么干）&lt;/p&gt;
-&lt;p&gt;这种分布式系统架构中，至少涉及 producer（生产者）、broker（中间人）、consumer（消费者）三个角色，角色之间在某些工作上如何分工也是值得思考的：&lt;/p&gt;
-&lt;p&gt;生产者产生的数据应该是什么样的？ - 统一格式/编码、方便解析&lt;/p&gt;
-&lt;p&gt;中间人（kafka）需要解决什么问题？- 对于单个生产者写入的数据，保证按写入顺序有序地分发给消费者；解决数据高可用，高吞吐能力；支持回溯/重复消费（因此数据需要保留指定时间长度），从而消费者出问题后可以从头消费数据恢复状态。因为支持很多消费者消费同一个数据流，所以平均下来，Kafka 服务的成本会比较低。&lt;/p&gt;
-&lt;p&gt;消费者按各自的需求进行数据转换存储。&lt;/p&gt;
-&lt;hr&gt;
-&lt;p&gt;对于实现高吞吐能力，除了分片，Kakfa 还充分利用了攒批处理：生产者可以批量发送，中间人将数据攒批写入磁盘日志文件 等等。&lt;/p&gt;
-&lt;p&gt;此外，由于涉及大量的磁盘文件和网络之间数据读写，Kafka 还充分利用操作系统内核的零拷贝传输能力。&lt;/p&gt;</description>
-            <pubDate>2019-10-10</pubDate>
-            <link>https://blog.xiayf.cn/posts/reading-the-log-article.html</link>
-            <guid isPermaLink="true">https://blog.xiayf.cn/posts/reading-the-log-article.html</guid>
-        </item>
-        
-        <item>
             <title>读文笔记：Photon - Fault-tolerant and Scalable Joining of Continuous Data Streams</title>
             <description>&lt;p&gt;原文：&lt;a href=&apos;https://static.googleusercontent.com/media/research.google.com/zh-CN//pubs/archive/41318.pdf&apos;&gt;Photon: Fault-tolerant and Scalable Joining of Continuous Data Streams&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Photon 是谷歌广告系统中用于 join 广告曝光日志流和点击日志流的一套系统。&lt;/p&gt;
@@ -720,6 +681,45 @@ AllowAllParametersOfDeclarationOnNextLine: false&lt;/code&gt;&lt;/pre&gt;
             <pubDate>2019-10-10</pubDate>
             <link>https://blog.xiayf.cn/posts/reading-photon-paper.html</link>
             <guid isPermaLink="true">https://blog.xiayf.cn/posts/reading-photon-paper.html</guid>
+        </item>
+        
+        <item>
+            <title>读文笔记：日志 - 每个软件工程师都应该了解的实时数据统一抽象</title>
+            <description>&lt;p&gt;原文：&lt;a href=&apos;https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying&apos;&gt;The Log: What every software engineer should know about real-time data&apos;s unifying abstraction&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;一句话概括，这篇文章细说了 Kafka 的本质原理、解决的问题、适用性等。&lt;/p&gt;
+&lt;p&gt;Kafka 本质上是提供日志数据流。&lt;/p&gt;
+&lt;p&gt;日志是客观世界的事件记录。&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;A log is perhaps the simplest possible storage abstraction. It is an append-only, totally-ordered sequence of records ordered by time.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p&gt;日志数据的特点是：只增不改，自带时间戳，数据存储的先后顺序即（大致）是实际发生的时间先后顺序。&lt;/p&gt;
+&lt;p&gt;数据库可以基于日志来还原历史操作行为，并最终生成最新状态，主从同步就是这么干的。&lt;/p&gt;
+&lt;p&gt;对于分布式系统而言，日志可以解决 2 个问题：按序改变状态和分发数据（ordering changes and distributing data）。&lt;/p&gt;
+&lt;p&gt;状态机复制原则：&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;If two identical, deterministic processes begin in the same state and get the same inputs in the same order, they will produce the same output and end in the same state.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p&gt;分布式系统中各个节点可以依据日志来同步状态，达到（最终）一致性。并且，可以依据节点处理到哪行日志即可确定/表达该节点的状态。&lt;/p&gt;
+&lt;p&gt;（日志）事件流（events）和数据表（tables）是一体两面（a facinating duality）：数据表的变更操作即是一个日志事件流，基于日志事件流可以生成数据表，并将其状态不断更新到最新，数据表的状态是日志事件流的在某个时间点的切面。&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;events -&gt; table -&gt; events = events &lt;-&gt; table&lt;/p&gt;&lt;/blockquote&gt;
+&lt;blockquote&gt;&lt;p&gt;The magic of the log is that if it is a complete log of changes, it holds not only the contents of the final version of the table, but also allows recreating all other versions that might have existed. It is, effectively, a sort of backup of every previous state of the table.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p&gt;源码版本控制系统（比如 git）也是基于日志实现的分布式系统，一次 commit 相当于一次日志记录。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;对于互联网/金融等行业的公司来说，数据是重要资产，如何尽可能发挥数据的潜在价值为公司增收，至关重要。因为管理、技术上的原因，公司通常分多个业务部门，各业务部门提供若干服务，各个服务都会产出数据，这些数据很可能需要跨部门跨服务流通，流通的速度越快，周期越短，收益越大。&lt;/p&gt;
+&lt;p&gt;以前，数据的处理方式主要是批处理，并不是因为没有流处理的技术，而是数据流通的基础设施跟不上，没做到持续的数据流。&lt;strong&gt;（注：这个说法，我个人只部分认同，很多时候，批处理的时延和收益可以满足大部分需求，实时流处理的边际效益可能并不明显）&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;流式处理是批处理的泛化形式（stream processing is a generalization of batch processing, and, given the prevalence of real-time data, a very important generalization）。&lt;/p&gt;
+&lt;p&gt;为了避免因数据流通导致各个服务之间的直接耦合，新增一个统一的数据通道中间服务，各个服务只管对数据通道进行写入或读出，不用关心数据是哪个服务写入的，或者哪些服务在消费/使用自己产出的数据。&lt;strong&gt;（解耦）&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;另外，消费者消费数据的速率可能不一样，也可能会经历异常重启等情况，让消费者来控制速率，并且多个消费者之间不会相互干扰，会更好。&lt;/p&gt;
+&lt;p&gt;基于数据流通的需求和日志的理念，Linkedin 设计开发了 Kafka。&lt;/p&gt;
+&lt;p&gt;因为日志数据量可能会很大，日志数据本质上是有序串行的，如果支持数据分片，分片之间并行消费，分片内日志数据全局有序，数据流通的吞吐能力就可以无限扩展。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;基于 Kafka 这类数据管道，服务之间可以实现多级串联。（注：我们现在做的服务就是这么干）&lt;/p&gt;
+&lt;p&gt;这种分布式系统架构中，至少涉及 producer（生产者）、broker（中间人）、consumer（消费者）三个角色，角色之间在某些工作上如何分工也是值得思考的：&lt;/p&gt;
+&lt;p&gt;生产者产生的数据应该是什么样的？ - 统一格式/编码、方便解析&lt;/p&gt;
+&lt;p&gt;中间人（kafka）需要解决什么问题？- 对于单个生产者写入的数据，保证按写入顺序有序地分发给消费者；解决数据高可用，高吞吐能力；支持回溯/重复消费（因此数据需要保留指定时间长度），从而消费者出问题后可以从头消费数据恢复状态。因为支持很多消费者消费同一个数据流，所以平均下来，Kafka 服务的成本会比较低。&lt;/p&gt;
+&lt;p&gt;消费者按各自的需求进行数据转换存储。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;对于实现高吞吐能力，除了分片，Kakfa 还充分利用了攒批处理：生产者可以批量发送，中间人将数据攒批写入磁盘日志文件 等等。&lt;/p&gt;
+&lt;p&gt;此外，由于涉及大量的磁盘文件和网络之间数据读写，Kafka 还充分利用操作系统内核的零拷贝传输能力。&lt;/p&gt;</description>
+            <pubDate>2019-10-10</pubDate>
+            <link>https://blog.xiayf.cn/posts/reading-the-log-article.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/reading-the-log-article.html</guid>
         </item>
         
         <item>
@@ -1982,6 +1982,31 @@ public class testTester {
         </item>
         
         <item>
+            <title>《精通Python设计模式》译者序</title>
+            <description>&lt;p&gt;在我读大学那几年，设计模式可谓火极一时，各大公司校招面试也几乎都会考设计模式，反观现在，则似乎很少有人聊设计模式的话题。是因为设计模式过时了吗？还是只是一个错误的概念？从个人这几年的开发经验来看，答案是否定的，设计模式并未过时，更不是一个错误的概念。从曾经的“红极一时”到如今的“门可罗雀”，只是说明软件开发行业以更加客观理性的态度来看待设计模式。软件开发领域的技术概念也似乎总是遵循这样的流行度变迁，最终一次又一次地证明不存在“银弹”。&lt;/p&gt;
+&lt;p&gt;正确看待设计模式的前提是明白什么是设计模式。正如本书一开始就强调的：“设计模式的本质是在已有的方案之上发现更好的方案（而不是全新发明）”，这是一种务实的态度，设计模式并非是一种高大上或者神秘的东西，而是一些常见的软件工程设计问题的最佳实践方案。&lt;/p&gt;
+&lt;p&gt;那么应该如何学习设计模式？个人认为软件开发技术的学习都应该以实践为前提，只有理解实践过程中遇到的种种问题，才能明白那些技术的本质和目的是什么，每种新技术都是因某个/某些问题而出现的，软件开发高手一般都反对新手一开始就一股脑地学习设计模式。有些新手学了点设计模式的理论后，甚至在软件开发过程中生搬硬套，结果是适得其反。因此，软件开发人员应该在积累了一定的开发经验，再系统地学习设计模式，效果往往也能事半功倍。&lt;/p&gt;
+&lt;p&gt;现在有些积累一定开发经验的软件开发人员，在谈起设计模式时，一脸鄙夷。我想这也不是一种客观务实的态度。软件开发不是简单的累积代码，在实现业务功能的同时应该仔细考虑如何控制软件的复杂度。软件的复杂度分为两个层面：业务逻辑复杂度和代码实现复杂度。对同一个业务系统，不同的软件开发人员会有不同的实现，复杂度也不同，相应地实现的易理解性、可维护性、可扩展性也不同。软件开发人员应该不断学习如何控制软件的复杂度，学习并恰当地使用设计模式是应对软件复杂度的有效方法。&lt;/p&gt;
+&lt;p&gt;然而，设计模式并非是固定不变的（如，《设计模式-可复用面向对象软件的基础》一书总结的23种模式），使用不同的编程语言来编写代码，需要学习的设计模式也不一样。一方面因为软件开发领域迅猛发展，一些新的软件工程问题也随之出现，另一方面则是新的语言新的平台会把一些常见设计模式吸收为内置特性。所以，软件开发人员因以实际问题为驱动，不断更新设计模式方面的知识。&lt;/p&gt;
+&lt;p&gt;本书以Python编程语言为例，针对目前的软件开发领域，分三大类讲解了16种常用设计模式。使用Python语言编写示例代码，我认为作者主要是考虑到Python的抽象层次高、应用范围广，读者不会被一些实现细节的干扰，从而能快速直接地掌握模式的要领。&lt;/p&gt;
+&lt;p&gt;全书始终保持务实的态度，列举了大量现实生活的例子和软件开发的例子，并为每个模式提供完整可运行的示例代码。虽然看起来在书中完整地给出所有示例代码，似乎没什么必要，但个人认为作者的用意是希望读者能动手照示例代码写一遍并运行起来看结果，实践为王，加强学习的效果。&lt;/p&gt;
+&lt;p&gt;虽然是示例，作者还是坚持以地道的Python风格编写代码，以此说明不同语言不同平台要求软件开发人员学习的设计模式也有所不同。另外，开发人员也能从示例代码中学习到一些Python语言的高级特性，所以把本书当做Python开发进阶书籍也无不可。&lt;/p&gt;
+&lt;p&gt;本书是个人正式翻译的第一本书。虽然以前翻译过很多文章，有些译文还有点影响，但毕竟与正式出版的有些不同，所以接手本书的翻译工作，我内心是有些忐忑的。我把翻译过程分为以下几个阶段进行：&lt;/p&gt;
+&lt;ol&gt;&lt;li&gt;大致地预读一遍全书，整体上把握原书内容&lt;/li&gt;
+&lt;li&gt;将原书翻译成初稿，此阶段基本保证译文的正确性&lt;/li&gt;
+&lt;li&gt;通读审校初稿，此阶段确保译文的流畅性，以及用词和逻辑的一致性&lt;/li&gt;
+&lt;li&gt;对着译稿，翻译相关图表中的单词；整理示例代码，并确保运行无误&lt;/li&gt;&lt;/ol&gt;
+&lt;p&gt;希望通过这种方式基本保证译稿的质量。但因为个人精力有限能力不足，译稿中可能还是有些疏漏甚至错误之处，敬请原谅，也请将问题反馈给出版社，以便在下一版本中更正。&lt;/p&gt;
+&lt;p&gt;另外，本书的示例代码已经存到Github的一个代码库（见&lt;a href=&apos;https://github.com/youngsterxyf/mpdp-code&apos;&gt;https://github.com/youngsterxyf/mpdp-code&lt;/a&gt;）中，如有需要，可下载。&lt;/p&gt;
+&lt;p&gt;因个人私事，本书推延了一段时间才得以翻译完成，感谢图灵朱巍老师的体谅。译书是件费时费力的事情，感谢妻子郑荣的体谅和支持，也感谢公司领导贾磊和同事的支持，谢谢！&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;夏永锋&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;于上海百度研发中心&lt;/em&gt;&lt;/p&gt;</description>
+            <pubDate>2016-07-01</pubDate>
+            <link>https://blog.xiayf.cn/posts/mpdp.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/mpdp.html</guid>
+        </item>
+        
+        <item>
             <title>Base64编码原理与应用</title>
             <description>&lt;p&gt;2015年，我们在青云平台上实现了“百度云观测”应用。青云应用本质上是一个iframe，在向iframe服务方发送的请求中会携带一些数据，青云平台会使用&lt;code&gt;Base64 URL&lt;/code&gt;对这些数据进行编码，其提供的编码解码算法示例如下：&lt;/p&gt;
 &lt;pre class=&quot;language-php&quot;&gt;&lt;code&gt;// php版本
@@ -2057,6 +2082,27 @@ function base64_URL_decode($data) {
             <pubDate>2016-01-24</pubDate>
             <link>https://blog.xiayf.cn/posts/base64-encoding.html</link>
             <guid isPermaLink="true">https://blog.xiayf.cn/posts/base64-encoding.html</guid>
+        </item>
+        
+        <item>
+            <title>基于 Github 的 pull request 流程做开源贡献</title>
+            <description>&lt;p&gt;最近给 &lt;a href=&apos;https://github.com/astaxie/beego&apos;&gt;beego&lt;/a&gt; 提了几个 pull request （简称PR），都已被接受。在使用pull request的过程中，遇到了一点小问题，才知以前并非真的理解这个流程，故在此做点记录整理。&lt;/p&gt;
+&lt;p&gt;我以 &lt;a href=&apos;https://github.com/astaxie/beego&apos;&gt;beego&lt;/a&gt; 为例，将pull request的整体使用流程绘图如下：&lt;/p&gt;
+&lt;img src=&apos;https://i.loli.net/2020/06/14/yFkLXVAHKxmwjq9.jpg&apos; title=&apos;fork-pull-request&apos; alt=&apos;fork-pull-request&apos; width=&apos;100%&apos;/&gt;
+&lt;p&gt;beego代码库有两个长期分支 &lt;code&gt;master&lt;/code&gt; 和 &lt;code&gt;develop&lt;/code&gt;，&lt;code&gt;master&lt;/code&gt;为稳定分支，&lt;code&gt;develop&lt;/code&gt;为开发分支，所有PR都要求提交到 &lt;code&gt;develop&lt;/code&gt; 分支。&lt;/p&gt;
+&lt;ol&gt;&lt;li&gt;先将 &lt;a href=&apos;https://github.com/astaxie/beego&apos;&gt;astaxie/beego&lt;/a&gt; 代码库 fork 一份到自己的名下（如我的 &lt;a href=&apos;https://github.com/youngsterxyf/beego&apos;&gt;youngsterxyf/beego&lt;/a&gt;）。&lt;/li&gt;
+&lt;li&gt;把 &lt;a href=&apos;https://github.com/youngsterxyf/beego&apos;&gt;youngsterxyf/beego&lt;/a&gt; clone 到本地机器上做开发。因为PR要提到 &lt;a href=&apos;https://github.com/astaxie/beego&apos;&gt;astaxie/beego&lt;/a&gt; 的 develop 分支，所以最好对应地在你fork的代码库的 develop 分支做开发。在本地开发测试完成后，将commit push到 &lt;a href=&apos;https://github.com/youngsterxyf/beego&apos;&gt;youngsterxyf/beego&lt;/a&gt; 。&lt;/li&gt;
+&lt;li&gt;在 &lt;a href=&apos;https://github.com/youngsterxyf/beego&apos;&gt;youngsterxyf/beego&lt;/a&gt; 页面点击 “New pull request”，会跳转到 &lt;a href=&apos;https://github.com/astaxie/beego&apos;&gt;astaxie/beego&lt;/a&gt; 创建一个新的PR，在页面中需要选择&lt;code&gt;base fork&lt;/code&gt;的目标分支（这里为 &lt;a href=&apos;https://github.com/astaxie/beego&apos;&gt;astaxie/beego&lt;/a&gt; 的 develop 分支）和&lt;code&gt;head fork&lt;/code&gt;的目标分支（这里为 &lt;a href=&apos;https://github.com/youngsterxyf/beego&apos;&gt;youngsterxyf/beego&lt;/a&gt; 的 develop 分支）。PR提交后，等待 &lt;a href=&apos;https://github.com/astaxie/beego&apos;&gt;astaxie/beego&lt;/a&gt; 代码库的协作者来review我的PR。&lt;/li&gt;
+&lt;li&gt;如果其他人也给 &lt;a href=&apos;https://github.com/astaxie/beego&apos;&gt;astaxie/beego&lt;/a&gt; 提了PR（或者直接在 develop 上做了变更），我会把 &lt;a href=&apos;https://github.com/youngsterxyf/beego&apos;&gt;youngsterxyf/beego&lt;/a&gt; 的 develop 分支同步到最新状态，便于我进行新的开发，同步的流程为：
+&lt;ol&gt;&lt;li&gt;在本地代码库添加一个新的remote，名为 &lt;code&gt;beego&lt;/code&gt; ： &lt;code&gt;git remote add beego https://github.com/astaxie/beego.git&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;在 &lt;code&gt;develop&lt;/code&gt; 分支上执行 &lt;code&gt;git pull beego develop&lt;/code&gt;，这会获取 &lt;a href=&apos;https://github.com/astaxie/beego&apos;&gt;astaxie/beego&lt;/a&gt; develop 分支最新的状态，并 merge 到本地代码库的 develop 分支&lt;/li&gt;
+&lt;li&gt;将本地代码库的 develop 分支 push 到 &lt;a href=&apos;https://github.com/youngsterxyf/beego&apos;&gt;youngsterxyf/beego&lt;/a&gt; ：&lt;code&gt;git push origin develop&lt;/code&gt;&lt;/li&gt;&lt;/ol&gt;&lt;/li&gt;
+&lt;li&gt;在发布新的版本时, &lt;a href=&apos;https://github.com/astaxie/beego&apos;&gt;astaxie/beego&lt;/a&gt; 的 &lt;code&gt;develop&lt;/code&gt; 分支会先 merge 到其 master 分支，然后打上新的 tag 。这时我也会把 &lt;a href=&apos;https://github.com/youngsterxyf/beego&apos;&gt;youngsterxyf/beego&lt;/a&gt; 的 master 分支同步到最新状态，流程与 develop 分支相同。&lt;/li&gt;&lt;/ol&gt;
+&lt;hr&gt;
+&lt;p&gt;在第3步中，如果发现&lt;code&gt;base fork&lt;/code&gt;的目标分支和&lt;code&gt;head fork&lt;/code&gt;的目标分支之间有代码冲突，则需要先在本地代码库对应的分支上解决这个冲突，然后 push 到 &lt;a href=&apos;https://github.com/youngsterxyf/beego&apos;&gt;youngsterxyf/beego&lt;/a&gt; ，再提PR。&lt;/p&gt;</description>
+            <pubDate>2016-01-18</pubDate>
+            <link>https://blog.xiayf.cn/posts/github-fork-pull-request.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/github-fork-pull-request.html</guid>
         </item>
         
         <item>
@@ -2202,6 +2248,511 @@ function base64_URL_decode($data) {
         </item>
         
         <item>
+            <title>Go并发编程基础（译）</title>
+            <description>&lt;p&gt;原文：&lt;a href=&apos;http://www.nada.kth.se/~snilsson/concurrency/&apos;&gt;Fundamentals of concurrent programming&lt;/a&gt;&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;译注：原文章链接已失效，作者重新写了一篇内容相近的文章 &lt;a href=&apos;https://yourbasic.org/golang/concurrent-programming/&apos;&gt;Concurrent programming&lt;/a&gt;&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p&gt;本文是一篇并发编程方面的入门文章，以&lt;a href=&apos;http://golang.org/&apos;&gt;Go语言&lt;/a&gt;编写示例代码，内容涵盖：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;运行期并发线程（goroutines）&lt;/li&gt;
+&lt;li&gt;基本的同步技术（管道和锁）&lt;/li&gt;
+&lt;li&gt;Go语言中基本的并发模式&lt;/li&gt;
+&lt;li&gt;死锁和数据竞争&lt;/li&gt;
+&lt;li&gt;并行计算&lt;/li&gt;&lt;/ul&gt;
+&lt;p&gt;在开始阅读本文之前，你应该知道如何编写简单的Go程序。如果你熟悉的是C/C++、Java或Python之类的语言，那么 &lt;a href=&apos;http://tour.golang.org/welcome/1&apos;&gt;Go语言之旅&lt;/a&gt; 能提供所有必要的背景知识。也许你还有兴趣读一读 &lt;a href=&apos;http://code.google.com/p/go-wiki/wiki/GoForCPPProgrammers&apos;&gt;为C++程序员准备的Go语言教程&lt;/a&gt; 或 &lt;a href=&apos;http://www.nada.kth.se/~snilsson/go_for_java_programmers/&apos;&gt;为Java程序员准备的Go语言教程&lt;/a&gt;。&lt;/p&gt;
+&lt;h3&gt;1. 运行期线程&lt;/h3&gt;
+&lt;p&gt;Go允许使用&lt;code&gt;go&lt;/code&gt;语句开启一个新的运行期线程，即 &lt;a href=&apos;http://golang.org/ref/spec#Go_statements&apos;&gt;goroutine&lt;/a&gt;，以一个不同的、新创建的goroutine来执行一个函数。同一个程序中的所有goroutine共享同一个地址空间。&lt;/p&gt;
+&lt;p&gt;Goroutine非常轻量，除了为之分配的栈空间，其所占用的内存空间微乎其微。并且其栈空间在开始时非常小，之后随着堆存储空间的按需分配或释放而变化。内部实现上，goroutine会在多个操作系统线程上多路复用。如果一个goroutine阻塞了一个操作系统线程，例如：等待输入，这个线程上的其他goroutine就会迁移到其他线程，这样能继续运行。开发者并不需要关心/担心这些细节。&lt;/p&gt;
+&lt;p&gt;下面所示程序会输出“Hello from main goroutine”。也可能会输出“Hello from another goroutine”，具体依赖于两个goroutine哪个先结束。&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;func main() {
+    go fmt.Println(&amp;amp;quot;Hello from another goroutine&amp;amp;quot;)
+    fmt.Println(&amp;amp;quot;Hello from main goroutine&amp;amp;quot;)
+
+    // 至此，程序运行结束，
+    // 所有活跃的goroutine被杀死
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;接下来的这个程序，多数情况下，会输出“Hello from main goroutine”和“Hello from another goroutine”，输出的顺序不确定。但还有另一个可能性是：第二个goroutine运行得极其慢，在程序结束之前都没来得及输出相应的消息。&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;func main() {
+    go fmt.Println(&amp;amp;quot;Hello from another goroutine&amp;amp;quot;)
+    fmt.Println(&amp;amp;quot;Hello from main goroutine&amp;amp;quot;)
+
+    time.Sleep(time.Second)        // 等待1秒，等另一个goroutine结束
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;下面则是一个相对更加实际的示例，其中定义了一个函数使用并发来推迟触发一个事件。&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;// 函数Publish在给定时间过期后打印text字符串到标准输出
+// 该函数并不会阻塞而是立即返回
+func Publish(text string, delay time.Duration) {
+    go func() {
+        time.Sleep(delay)
+        fmt.Println(&amp;amp;quot;BREAKING NEWS:&amp;amp;quot;, text)
+    }()    // 注意这里的括号。必须调用匿名函数
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;你可能会这样使用&lt;code&gt;Publish&lt;/code&gt;函数：&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;func main() {
+    Publish(&amp;amp;quot;A goroutine starts a new thread of execution.&amp;amp;quot;, 5*time.Second)
+    fmt.Println(&amp;amp;quot;Let’s hope the news will published before I leave.&amp;amp;quot;)
+
+    // 等待发布新闻
+    time.Sleep(10 * time.Second)
+
+    fmt.Println(&amp;amp;quot;Ten seconds later: I’m leaving now.&amp;amp;quot;)
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;这个程序，绝大多数情况下，会输出以下三行，顺序固定，每行输出之间相隔5秒。&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ go run publish1.go
+Let’s hope the news will published before I leave.
+BREAKING NEWS: A goroutine starts a new thread of execution.
+Ten seconds later: I’m leaving now.&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;一般来说，通过睡眠的方式来编排线程之间相互等待是不太可能的。下一章节会介绍Go语言中的一种同步机制 - 管道，并演示如何使用管道让一个goroutine等待另一个goroutine。&lt;/p&gt;
+&lt;h3&gt;2. 管道（channel）&lt;/h3&gt;
+&lt;img src=&apos;https://yourbasic.org/golang/sushi-conveyor-belt.jpg&apos; title=&apos;Sushi conveyor belt&apos; alt=&apos;Sushi conveyor belt&apos; width=&apos;100%&apos;/&gt;
+&lt;p&gt;&lt;a href=&apos;http://golang.org/ref/spec#Channel_types&apos;&gt;管道&lt;/a&gt;是Go语言的一个构件，提供一种机制用于两个goroutine之间通过传递一个指定类型的值来同步运行和通讯。操作符&lt;code&gt;&amp;lt;-&lt;/code&gt;用于指定管道的方向，发送或接收。如果未指定方向，则为双向管道。&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;chan Sushi        // 可用来发送和接收Sushi类型的值
+chan&amp;amp;lt;- float64    // 仅可用来发送float64类型的值
+&amp;amp;lt;-chan int        // 仅可用来接收int类型的值&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;管道是引用类型，基于make函数来分配。&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;ic := make(chan int)    // 不带缓冲的int类型管道
+wc := make(chan *Work, 10)    // 带缓冲的Work类型指针管道&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;如果通过管道发送一个值，则将&lt;code&gt;&amp;lt;-&lt;/code&gt;作为二元操作符使用。通过管道接收一个值，则将其作为一元操作符使用：&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;ic &amp;amp;lt;- 3        // 往管道发送3
+work := &amp;amp;lt;-wc    // 从管道接收一个指向Work类型值的指针&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;如果管道不带缓冲，发送方会阻塞直到接收方从管道中接收了值。如果管道带缓冲，发送方则会阻塞直到发送的值被拷贝到缓冲区内；如果缓冲区已满，则意味着需要等待直到某个接收方获取到一个值。接收方在有值可以接收之前会一直阻塞。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;关闭管道（Close）&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&apos;http://golang.org/ref/spec#Close&apos;&gt;close&lt;/a&gt; 函数标志着不会再往某个管道发送值。在调用&lt;code&gt;close&lt;/code&gt;之后，并且在之前发送的值都被接收后，接收操作会返回一个零值，不会阻塞。一个多返回值的接收操作会额外返回一个布尔值用来指示返回的值是否发送操作传递的。&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;ch := make(chan string)
+go func() {
+    ch &amp;amp;lt;- &amp;amp;quot;Hello!&amp;amp;quot;
+    close(ch)
+}()
+fmt.Println(&amp;amp;lt;-ch)    // 输出字符串&amp;amp;quot;Hello!&amp;amp;quot;
+fmt.Println(&amp;amp;lt;-ch)    // 输出零值 - 空字符串&amp;amp;quot;&amp;amp;quot;，不会阻塞
+fmt.Println(&amp;amp;lt;-ch)    // 再次打印输出空字符串&amp;amp;quot;&amp;amp;quot;
+v, ok := &amp;amp;lt;-ch        // 变量v的值为空字符串&amp;amp;quot;&amp;amp;quot;，变量ok的值为false&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;一个带有&lt;code&gt;range&lt;/code&gt;子句的&lt;code&gt;for&lt;/code&gt;语句会依次读取发往管道的值，直到该管道关闭：&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;func main() {
+    // 译注：要想运行该示例，需要先定义类型Sushi，如type Sushi string
+    var ch &amp;amp;lt;-chan Sushi = Producer()
+    for s := range ch {
+        fmt.Println(&amp;amp;quot;Consumed&amp;amp;quot;, s)
+    }
+}
+
+func Producer() &amp;amp;lt;-chan Sushi {
+    ch := make(chan Sushi)
+    go func(){
+        ch &amp;amp;lt;- Sushi(&amp;amp;quot;海老握り&amp;amp;quot;)    // Ebi nigiri
+        ch &amp;amp;lt;- Sushi(&amp;amp;quot;鮪とろ握り&amp;amp;quot;) // Toro nigiri
+        close(ch)
+    }()
+    return ch
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;3. 同步&lt;/h3&gt;
+&lt;p&gt;下一个示例中，我们让&lt;code&gt;Publish&lt;/code&gt;函数返回一个管道 - 用于在发布text变量值时广播一条消息：&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;// 在给定时间过期时，Publish函数会打印text变量值到标准输出
+// 在text变量值发布后，该函数会关闭管道wait
+func Publish(text string, delay time.Duration) (wait &amp;amp;lt;-chan struct{}) {
+    ch := make(chan struct{})
+    go func() {
+        time.Sleep(delay)
+        fmt.Println(&amp;amp;quot;BREAKING NEWS:&amp;amp;quot;, text)
+        close(ch)    // 广播 - 一个关闭的管道都会发送一个零值
+    }()
+    return ch
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;注意：我们使用了一个空结构体的管道：&lt;code&gt;struct{}&lt;/code&gt;。这明确地指明该管道仅用于发信号，而不是传递数据。&lt;/p&gt;
+&lt;p&gt;我们可能会这样使用这个函数：&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;func main() {
+    wait := Publish(&amp;amp;quot;Channels let goroutines communicate.&amp;amp;quot;, 5*time.Second)
+    fmt.Println(&amp;amp;quot;Waiting for the news...&amp;amp;quot;)
+    &amp;amp;lt;-wait
+    fmt.Println(&amp;amp;quot;The news is out, time to leave.&amp;amp;quot;)
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;这个程序会按指定的顺序输出以下三行内容。最后一行在新闻（news）一出就会立即输出。&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ go run publish2.go
+Waiting for the news...
+BREAKING NEWS: Channels let goroutines communicate.
+The news is out, time to leave.&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;4. 死锁&lt;/h3&gt;
+&lt;img src=&apos;https://yourbasic.org/golang/traffic-jam.jpg&apos; title=&apos;traffic jam&apos; alt=&apos;traffic jam&apos; width=&apos;100%&apos;/&gt;
+&lt;p&gt;现在我们在&lt;code&gt;Publish&lt;/code&gt;函数中引入一个bug：&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;func Publish(text string, delay time.Duration) (wait &amp;amp;lt;-chan struct{}) {
+    ch := make(chan struct{})
+    go func() {
+        time.Sleep(delay)
+        fmt.Println(&amp;amp;quot;BREAKING NEWS:&amp;amp;quot;, text)
+        // 译注：注意这里将close函数调用注释掉了
+        //close(ch)
+    }()
+    return ch
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;主程序还是像之前一样开始运行：输出第一行，然后等待5秒，这时&lt;code&gt;Publish&lt;/code&gt;函数开启的goroutine会输出突发新闻（breaking news），然后退出，留下主goroutine独自等待。&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;func main() {
+    wait := Publish(&amp;amp;quot;Channels let goroutines communicate.&amp;amp;quot;, 5*time.Second)
+    fmt.Println(&amp;amp;quot;Waiting for the news...&amp;amp;quot;)
+    // 译注：注意下面这一句
+    &amp;amp;lt;-wait
+    fmt.Println(&amp;amp;quot;The news is out, time to leave.&amp;amp;quot;)
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;此刻之后，程序无法再继续往下执行。众所周知，这种情形即为死锁。&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;死锁是线程之间相互等待，其中任何一个都无法向前运行的情形。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p&gt;Go语言对于运行时的死锁检测具备良好的支持。当没有任何goroutine能够往前执行的情形发生时，Go程序通常会提供详细的错误信息。以下就是我们的问题程序的输出：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;Waiting for the news...
+BREAKING NEWS: Channels let goroutines communicate.
+fatal error: all goroutines are asleep - deadlock!
+
+goroutine 1 [chan receive]:
+main.main()
+    .../goroutineStop.go:11 +0xf6
+
+goroutine 2 [syscall]:
+created by runtime.main
+    .../go/src/pkg/runtime/proc.c:225
+
+goroutine 4 [timer goroutine (idle)]:
+created by addtimer
+    .../go/src/pkg/runtime/ztime_linux_amd64.c:73&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;大多数情况下找出Go程序中造成死锁的原因都比较容易，那么剩下的就是如何解决这个bug了。&lt;/p&gt;
+&lt;h3&gt;5. 数据竞争（data race）&lt;/h3&gt;
+&lt;p&gt;死锁也许听起来令人挺忧伤的，但伴随并发编程真正灾难性的错误其实是数据竞争，相当常见，也可能非常难于调试。&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;当两个线程并发地访问同一个变量，并且其中至少一个访问是写操作时，数据竞争就发生了。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p&gt;下面的这个函数就有数据竞争问题，其行为是未定义的。例如，可能输出数值1。代码之后是一个可能性解释，试图搞清楚这一切是如何发生得。&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;func race() {
+    wait := make(chan struct{})
+    n := 0
+    go func() {
+        // 译注：注意下面这一行
+        n++ // 一次访问: 读, 递增, 写
+        close(wait)
+    }()
+    // 译注：注意下面这一行
+    n++ // 另一次冲突的访问
+    &amp;amp;lt;-wait
+    fmt.Println(n) // 输出：未指定
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;代码中的两个goroutine（假设命名为&lt;code&gt;g1&lt;/code&gt;和&lt;code&gt;g2&lt;/code&gt;）参与了一次竞争，我们无法获知操作会以何种顺序发生。以下是诸多可能中的一种：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;&lt;code&gt;g1&lt;/code&gt; 从 &lt;code&gt;n&lt;/code&gt; 中获取值0&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;g2&lt;/code&gt; 从 &lt;code&gt;n&lt;/code&gt; 中获取值0&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;g1&lt;/code&gt; 将值从0增大到1&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;g1&lt;/code&gt; 将1写到 &lt;code&gt;n&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;g2&lt;/code&gt; 将值从0增大到1&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;g2&lt;/code&gt; 将1写到 &lt;code&gt;n&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;程序输出 n 的值，当前为1&lt;/li&gt;&lt;/ul&gt;
+&lt;p&gt;“数据竞争（data race）”这名字有点误导的嫌疑。不仅操作的顺序是未定义的，其实根本没有任何保证（no guarantees whatsoever）。编译器和硬件为了得到更好的性能，经常都会对代码进行上下内外的顺序变换。如果你看到一个线程处于中间行为状态时，那么当时的场景可能就像下图所示的一样：&lt;/p&gt;
+&lt;img src=&apos;https://yourbasic.org/golang/mid-action.jpg&apos; title=&apos;mid action&apos; alt=&apos;mid action&apos; width=&apos;100%&apos;/&gt;
+&lt;p&gt;避免数据竞争的唯一方式是线程间同步访问所有的共享可变数据。有几种方式能够实现这一目标。Go语言中，通常是使用管道或者锁。（&lt;a href=&apos;http://golang.org/pkg/sync/&apos;&gt;sync&lt;/a&gt;和&lt;a href=&apos;http://golang.org/pkg/sync/atomic/&apos;&gt;sync/atomic&lt;/a&gt;包中还有更低层次的机制可供使用，但本文中不做讨论）。&lt;/p&gt;
+&lt;p&gt;Go语言中，处理并发数据访问的推荐方式是使用管道从一个goroutine中往下一个goroutine传递实际的数据。有格言说得好：“不要通过共享内存来通讯，而是通过通讯来共享内存”。&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;func sharingIsCaring() {
+    ch := make(chan int)
+    go func() {
+        n := 0 // 仅为一个goroutine可见的局部变量.
+        n++
+        ch &amp;amp;lt;- n // 数据从一个goroutine离开...
+    }()
+    n := &amp;amp;lt;-ch   // ...然后安全到达另一个goroutine.
+    n++
+    fmt.Println(n) // 输出: 2
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;以上代码中的管道肩负双重责任 - 从一个goroutine将数据传递到另一个goroutine，并且起到同步的作用：发送方goroutine会等待另一个goroutine接收数据，接收方goroutine也会等待另一个goroutine发送数据。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&apos;http://golang.org/ref/mem&apos;&gt;Go语言内存模型&lt;/a&gt; - 要保证一个goroutine中对一个变量的读操作得到的值正好是另一个goroutine中对同一个变量写操作产生的值，条件相当复杂，但goroutine之间只要通过管道来共享所有可变数据，那么就能远离数据竞争了。&lt;/p&gt;
+&lt;h3&gt;6. 互斥锁&lt;/h3&gt;
+&lt;img src=&apos;https://yourbasic.org/golang/lock.jpg&apos; title=&apos;lock&apos; alt=&apos;lock&apos; width=&apos;100%&apos;/&gt;
+&lt;p&gt;有时，通过显式加锁，而不是使用管道，来同步数据访问，可能更加便捷。Go语言标准库为这一目的提供了一个互斥锁 - &lt;a href=&apos;http://golang.org/pkg/sync/#Mutex&apos;&gt;sync.Mutex&lt;/a&gt;。&lt;/p&gt;
+&lt;p&gt;要想这类加锁起效的话，关键之处在于：所有对共享数据的访问，不管读写，仅当goroutine持有锁才能操作。一个goroutine出错就足以破坏掉一个程序，引入数据竞争。&lt;/p&gt;
+&lt;p&gt;因此，应该设计一个自定义数据结构，具备明确的API，确保所有的同步都在数据结构内部完成。下例中，我们构建了一个安全、易于使用的并发数据结构，&lt;code&gt;AtomicInt&lt;/code&gt;，用于存储一个整型值。任意数量的goroutine都能通过&lt;code&gt;Add&lt;/code&gt;和&lt;code&gt;Value&lt;/code&gt;方法安全地访问这个数值。&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;// AtomicInt是一个并发数据结构，持有一个整数值
+// 该数据结构的零值为0
+type AtomicInt struct {
+    mu sync.Mutex // 锁，一次仅能被一个goroutine持有。
+    n  int
+}
+
+// Add方法作为一个原子操作将n加到AtomicInt
+func (a *AtomicInt) Add(n int) {
+    a.mu.Lock() // 等待锁释放，然后持有它
+    a.n += n
+    a.mu.Unlock() // 释放锁
+}
+
+// Value方法返回a的值
+func (a *AtomicInt) Value() int {
+    a.mu.Lock()
+    n := a.n
+    a.mu.Unlock()
+    return n
+}
+
+func lockItUp() {
+    wait := make(chan struct{})
+    var n AtomicInt
+    go func() {
+        n.Add(1) // 一个访问
+        close(wait)
+    }()
+    n.Add(1) // 另一个并发访问
+    &amp;amp;lt;-wait
+    fmt.Println(n.Value()) // 输出: 2
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;7. 检测数据竞争&lt;/h3&gt;
+&lt;p&gt;竞争有时非常难于检测。下例中的这个函数有一个数据竞争问题，执行这个程序时会输出&lt;code&gt;55555&lt;/code&gt;。尝试一下，也许你会得到一个不同的结果。（&lt;a href=&apos;http://golang.org/pkg/sync/#WaitGroup&apos;&gt;sync.WaitGroup&lt;/a&gt;是Go语言标准库的一部分；用于等待一组goroutine结束运行。）&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;func race() {
+    var wg sync.WaitGroup
+    wg.Add(5)
+    // 译注：注意下面这行代码中的i++
+    for i := 0; i &amp;amp;lt; 5; i++ {
+        go func() {
+            // 注意下一行代码会输出什么？为什么？
+            fmt.Print(i) // 6个goroutine共享变量i
+            wg.Done()
+        }()
+    }
+    wg.Wait() // 等待所有（5个）goroutine运行结束
+    fmt.Println()
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;对于输出&lt;code&gt;55555&lt;/code&gt;，一个貌似合理的解释是：执行&lt;code&gt;i++&lt;/code&gt;的goroutine在其他goroutine执行打印语句之前就完成了5次&lt;code&gt;i++&lt;/code&gt;操作。实际上变量&lt;code&gt;i&lt;/code&gt;更新后的值为其他goroutine所见纯属巧合。&lt;/p&gt;
+&lt;p&gt;一个简单的解决方案是：使用一个局部变量，然后当开启新的goroutine时，将数值作为参数传递：&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;func correct() {
+    var wg sync.WaitGroup
+    wg.Add(5)
+    for i := 0; i &amp;amp;lt; 5; i++ {
+        go func(n int) { // 使用局部变量
+            fmt.Print(n)
+            wg.Done()
+        }(i)
+    }
+    wg.Wait()
+    fmt.Println()
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;这次代码就对了，程序会输出期望的结果，如：&lt;code&gt;24031&lt;/code&gt;。注意：goroutine之间的运行顺序是不确定的。&lt;/p&gt;
+&lt;p&gt;仍旧使用闭包，但能够避免数据竞争也是可能的，必须小心翼翼地让每个goroutine使用一个独有的变量。&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;func alsoCorrect() {
+    var wg sync.WaitGroup
+    wg.Add(5)
+    for i := 0; i &amp;amp;lt; 5; i++ {
+        n := i // 为每个闭包创建一个独有的变量
+        go func() {
+            fmt.Print(n)
+            wg.Done()
+        }()
+    }
+    wg.Wait()
+    fmt.Println()
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;数据竞争自动检测&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;一般来说，不太可能能够自动检测发现所有可能的数据竞争情况，但Go（从版本1.1开始）有一个强大的&lt;a href=&apos;http://tip.golang.org/doc/articles/race_detector.html&apos;&gt;数据竞争检测器&lt;/a&gt;。&lt;/p&gt;
+&lt;p&gt;这个工具用起来也很简单：只要在使用&lt;code&gt;go&lt;/code&gt;命令时加上&lt;code&gt;-race&lt;/code&gt;标记即可。开启检测器运行上面的程序会给出清晰且信息量大的输出：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ go run -race raceClosure.go
+Race:
+==================
+WARNING: DATA RACE
+Read by goroutine 2:
+    main.func·001()
+      ../raceClosure.go:22 +0x65
+
+Previous write by goroutine 0:
+    main.race()
+        ../raceClosure.go:20 +0x19b
+    main.main()
+        ../raceClosure.go:10 +0x29
+    runtime.main()
+        ../go/src/pkg/runtime/proc.c:248 +0x91
+
+Goroutine 2 (running) created at:
+    main.race()
+      ../raceClosure.go:24 +0x18b
+    main.main()
+      ../raceClosure.go:10 +0x29
+     runtime.main()
+      ../go/src/pkg/runtime/proc.c:248 +0x91
+
+==================
+55555
+Correct:
+01234
+Also correct:
+01324
+Found 1 data race(s)
+exit status 66&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;该工具发现一处数据竞争，包含：一个goroutine在第20行对一个变量进行写操作，跟着另一个goroutine在第22行对同一个变量进行了未同步的读操作。&lt;/p&gt;
+&lt;p&gt;注意：竞争检测器只能发现在运行期确实发生的数据竞争（译注：我也不太理解这话，请指导）&lt;/p&gt;
+&lt;h3&gt;8. Select语句&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&apos;http://golang.org/ref/spec#Select_statements&apos;&gt;select语句&lt;/a&gt;是Go语言并发工具集中的终极工具。select用于从一组可能的通讯中选择一个进一步处理。如果任意一个通讯都可以进一步处理，则从中随机选择一个，执行对应的语句。否则，如果又没有默认分支（default case），select语句则会阻塞，直到其中一个通讯完成。&lt;/p&gt;
+&lt;p&gt;以下是一个玩具示例，演示&lt;code&gt;select&lt;/code&gt;语句如何用于实现一个随机数生成器：&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;// RandomBits函数 返回一个管道，用于产生一个比特随机序列
+func RandomBits() &amp;amp;lt;-chan int {
+    ch := make(chan int)
+    go func() {
+        for {
+            select {
+            case ch &amp;amp;lt;- 0: // 注意：分支没有对应的处理语句
+            case ch &amp;amp;lt;- 1:
+            }
+        }
+    }()
+    return ch
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;下面是相对更加实际一点的例子：如何使用select语句为一个操作设置一个时间限制。代码会输出变量news的值或者超时消息，具体依赖于两个接收语句哪个先执行：&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;select {
+case news := &amp;amp;lt;-NewsAgency:
+    fmt.Println(news)
+case &amp;amp;lt;-time.After(time.Minute):
+    fmt.Println(&amp;amp;quot;Time out: no news in one minute.&amp;amp;quot;)
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;函数 &lt;a href=&apos;http://golang.org/pkg/time/#After&apos;&gt;time.After&lt;/a&gt; 是Go语言标准库的一部分；它会在等待指定时间后将当前的时间发送到返回的管道中。&lt;/p&gt;
+&lt;h3&gt;9. 综合所有示例&lt;/h3&gt;
+&lt;p&gt;花点时间认真研究一下这个示例。如果你完全理解，也就对Go语言中并发的应用方式有了全面的掌握。&lt;/p&gt;
+&lt;p&gt;这个程序演示了如何将管道用于被任意数量的goroutine发送和接收数据，也演示了如何将select语句用于从多个通讯中选择一个。&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;func main() {
+    people := []string{&amp;amp;quot;Anna&amp;amp;quot;, &amp;amp;quot;Bob&amp;amp;quot;, &amp;amp;quot;Cody&amp;amp;quot;, &amp;amp;quot;Dave&amp;amp;quot;, &amp;amp;quot;Eva&amp;amp;quot;}
+    match := make(chan string, 1) // 为一个未匹配的发送操作提供空间
+    wg := new(sync.WaitGroup)
+    wg.Add(len(people))
+    for _, name := range people {
+        go Seek(name, match, wg)
+    }
+    wg.Wait()
+    select {
+    case name := &amp;amp;lt;-match:
+        fmt.Printf(&amp;amp;quot;No one received %s’s message.\n&amp;amp;quot;, name)
+    default:
+        // 没有待处理的发送操作
+    }
+}
+
+// 函数Seek 发送一个name到match管道或从match管道接收一个peer，结束时通知wait group
+func Seek(name string, match chan string, wg *sync.WaitGroup) {
+    select {
+    case peer := &amp;amp;lt;-match:
+        fmt.Printf(&amp;amp;quot;%s sent a message to %s.\n&amp;amp;quot;, peer, name)
+    case match &amp;amp;lt;- name:
+        // 等待某个goroutine接收我的消息
+    }
+    wg.Done()
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;示例输出：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ go run matching.go
+Cody sent a message to Bob.
+Anna sent a message to Eva.
+No one received Dave’s message.&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;10. 并行计算&lt;/h3&gt;
+&lt;p&gt;并发的一个应用是将一个大的计算切分成一些工作单元，调度到不同的CPU上同时地计算。&lt;/p&gt;
+&lt;p&gt;将计算分布到多个CPU上更多是一门艺术，而不是一门科学。以下是一些经验法则：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;每个工作单元应该花费大约100微秒到1毫秒的时间用于计算。如果单元粒度太小，切分问题以及调度子问题的管理开销可能就会太大。如果单元粒度太大，整个计算也许不得不等待一个慢的工作项结束。这种缓慢可能因为多种原因而产生，比如：调度、其他进程的中断或者糟糕的内存布局。（注意：工作单元的数目是不依赖于CPU的数目的）&lt;/li&gt;
+&lt;li&gt;尽可能减小共享的数据量。并发写操作的代价非常大，特别是如果goroutine运行在不同的CPU上。读操作之间的数据共享则通常不会是个问题。&lt;/li&gt;
+&lt;li&gt;数据访问尽量利用良好的局部性。如果数据能保持在缓存中，数据加载和存储将会快得多得多，这对于写操作也格外地重要。&lt;/li&gt;&lt;/ul&gt;
+&lt;p&gt;下面的这个示例展示如何切分一个开销很大的计算并将其分布在所有可用的CPU上进行计算。先看一下有待优化的代码：&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;type Vector []float64
+
+// 函数Convolve 计算 w = u * v，其中 w[k] = Σ u[i]*v[j], i + j = k
+// 先决条件：len(u) &amp;amp;gt; 0, len(v) &amp;amp;gt; 0
+func Convolve(u, v Vector) (w Vector) {
+    n := len(u) + len(v) - 1
+    w = make(Vector, n)
+
+    for k := 0; k &amp;amp;lt; n; k++ {
+        w[k] = mul(u, v, k)
+    }
+    return
+}
+
+// 函数mul 返回 Σ u[i]*v[j], i + j = k.
+func mul(u, v Vector, k int) (res float64) {
+    n := min(k+1, len(u))
+    j := min(k, len(v)-1)
+    for i := k - j; i &amp;amp;lt; n; i, j = i+1, j-1 {
+        res += u[i] * v[j]
+    }
+    return
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;思路很简单：确定合适大小的工作单元，然后在不同的goroutine中执行每个工作单元。以下是并发版本的 &lt;code&gt;Convolve&lt;/code&gt;：&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;func Convolve(u, v Vector) (w Vector) {
+    n := len(u) + len(v) - 1
+    w = make(Vector, n)
+
+    // 将 w 切分成花费 ~100μs-1ms 用于计算的工作单元
+    size := max(1, 1&amp;amp;lt;&amp;amp;lt;20/n)
+
+    wg := new(sync.WaitGroup)
+    wg.Add(1 + (n-1)/size)
+    for i := 0; i &amp;amp;lt; n &amp;amp;amp;&amp;amp;amp; i &amp;amp;gt;= 0; i += size { // 整型溢出后 i &amp;amp;lt; 0
+        j := i + size
+        if j &amp;amp;gt; n || j &amp;amp;lt; 0 { // 整型溢出后 j &amp;amp;lt; 0
+            j = n
+        }
+
+        // 这些goroutine共享内存，但是只读
+        go func(i, j int) {
+            for k := i; k &amp;amp;lt; j; k++ {
+                w[k] = mul(u, v, k)
+            }
+            wg.Done()
+        }(i, j)
+    }
+    wg.Wait()
+    return
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;工作单元定义之后，通常情况下最好将调度工作交给运行时和操作系统。然而，对于 &lt;code&gt;Go 1.*&lt;/code&gt; 你也许需要告诉运行时希望多少个goroutine来同时地运行代码。&lt;/p&gt;
+&lt;pre class=&quot;language-golang&quot;&gt;&lt;code&gt;func init() {
+    numcpu := runtime.NumCPU()
+    runtime.GOMAXPROCS(numcpu) // 尝试使用所有可用的CPU
+}&lt;/code&gt;&lt;/pre&gt;</description>
+            <pubDate>2015-05-20</pubDate>
+            <link>https://blog.xiayf.cn/posts/fundamentals-of-concurrent-programming.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/fundamentals-of-concurrent-programming.html</guid>
+        </item>
+        
+        <item>
+            <title>又是一年</title>
+            <description>&lt;p&gt;又是一年，依照惯例，得写一篇总结和计划。当然计划更多的只是一种自我鼓励，现实总是一次又一次地证明“计划赶不上变化”。&lt;/p&gt;
+&lt;p&gt;我的2014，可能用三个关键词就能概括：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;结婚&lt;/li&gt;
+&lt;li&gt;换工作&lt;/li&gt;
+&lt;li&gt;众成技术聚乐部&lt;/li&gt;&lt;/ul&gt;
+&lt;h3&gt;结婚&lt;/h3&gt;
+&lt;p&gt;继13年领证，14年把婚礼也办了。由于两家离得远，婚礼也就分两次办。之间还补拍了婚纱照。虽然于我这些流程显得有点折腾，但重要的是大家都是很开心，也不希望老婆以后会有丁点遗憾。&lt;/p&gt;
+&lt;p&gt;希望以后的日子总能努力让老婆开心幸福。&lt;/p&gt;
+&lt;h3&gt;换工作&lt;/h3&gt;
+&lt;p&gt;工作的时间并不长，本没想这么快换工作，何况我还是一个挺念旧的人。但还是那句话“计划赶不上变化”，不得已主动离职跳槽。&lt;/p&gt;
+&lt;p&gt;对于目前的工作还比较满意，能做些自己喜欢做的事情，工作氛围也还不错。&lt;/p&gt;
+&lt;p&gt;对于自己的要求就是踏踏实实做工作搞技术，不急不躁。&lt;/p&gt;
+&lt;h3&gt;&lt;a href=&apos;http://happytechgroup.github.io/&apos;&gt;众成技术聚乐部&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;参加过各种大大小小的会议，总觉得水太多，但如果始终自己一个人蒙头研究技术，也有可能落得个“闭门造车”、“目光短浅”的下场，技术的“理”也是越辩越明，所以找了三五同学朋友搞起自己的技术沙龙，&lt;/p&gt;
+&lt;p&gt;名为“众成技术聚乐部”，之所以为“众成”，是希望&lt;strong&gt;众人成就众人&lt;/strong&gt;，大家相互成就，之所以为“聚乐部”而不是“俱乐部”，是认为大家一起讨论分享技术应该是一件乐呵的事情，不要搞得那么严肃苦逼。&lt;/p&gt;
+&lt;p&gt;聚乐部至今已搞了5次聚会，一个月一次，从我个人的角度来看，效果不错，虽然很多地方还有待改进。感谢所有成员的付出！&lt;/p&gt;
+&lt;h3&gt;其他&lt;/h3&gt;
+&lt;p&gt;技术上，相比上一年，有了些许进步 - 借着“众成”的技术分享，简单阅读了leveldb（Go语言版）的源码、Memcached源码等；为了把工作做得更好，又仔细地阅读了Yii框架源码，并写了&lt;a href=&apos;http://youngsterxyf.github.io/tag/yii.html&apos;&gt;系列文章&lt;/a&gt;。&lt;/p&gt;
+&lt;p&gt;在写博客一事上，2014年我也不算太偷懒，共写了26篇，虽然文章质量不咋地，远远未达到自己的要求，但一切贵在坚持，不是么？&lt;/p&gt;
+&lt;p&gt;阅读方面，书目如下：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;淘宝技术这十年 （3星，成为大牛也是要看机遇的）&lt;/li&gt;
+&lt;li&gt;Web容量规划的艺术 （4星）&lt;/li&gt;
+&lt;li&gt;世界是数字的 （5星，计算机科普）&lt;/li&gt;
+&lt;li&gt;三体（三册）（1、2册5星，第3册4星）&lt;/li&gt;
+&lt;li&gt;20个月赚130亿 - YouTube创始人陈士骏自传 （4星，好吧，这翻译的书名真俗气，但其实是本挺不错的书）&lt;/li&gt;
+&lt;li&gt;PHP精粹-编写高效PHP代码 （3星，仔细阅读了前半部分，快速浏览了后半部分）&lt;/li&gt;
+&lt;li&gt;MacTalk - 人生元编程 (3星，电子书，大致过了一遍）&lt;/li&gt;
+&lt;li&gt;编写高质量代码：改进Python程序的91个建议 （4星，需再读一遍）&lt;/li&gt;
+&lt;li&gt;文明之光（两册，5星，有态度的浓缩的世界文明史）&lt;/li&gt;
+&lt;li&gt;了不起的Node.js（2星，浏览了一遍）&lt;/li&gt;
+&lt;li&gt;Pro Git （4星，Git资料中的No.1）&lt;/li&gt;
+&lt;li&gt;演讲之禅：一位技术演讲家的自白 （4星，每个技术人都应该多演讲，所以推荐每个技术人都读一下这本书）&lt;/li&gt;
+&lt;li&gt;高性能PHP应用开发 （3星）&lt;/li&gt;
+&lt;li&gt;翻译漫谈：怎样翻译更地道 （4星，未读完）&lt;/li&gt;
+&lt;li&gt;最璀璨的银河：刘慈欣经典作品集 （4星，读完三体，意犹未尽，故找来大刘的中短篇集读读）&lt;/li&gt;
+&lt;li&gt;数据之巅 （5星，数据思维，有点震撼到我，推荐，需再读一遍）&lt;/li&gt;
+&lt;li&gt;大型网站技术架构:核心原理与案例分析 (4星，虽然没什么新东西，但系统地科普了Web架构方面的东西，还是值得一读的)&lt;/li&gt;&lt;/ul&gt;
+&lt;p&gt;从书目可以看出，技术相关的还是缺乏深度和专注。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h3&gt;2015 ...&lt;/h3&gt;
+&lt;ul&gt;&lt;li&gt;做好工作，多思考，多做实在的事情&lt;/li&gt;
+&lt;li&gt;继续搞好众成技术聚乐部&lt;/li&gt;
+&lt;li&gt;坚持写博客，向深度发展&lt;/li&gt;
+&lt;li&gt;选择一两个优秀开源项目，读源码、写博客、做分享，旨在提高系统设计能力和编码能力&lt;/li&gt;
+&lt;li&gt;读有想法、有深度的书&lt;/li&gt;
+&lt;li&gt;考驾照 （别笑，哈哈）&lt;/li&gt;
+&lt;li&gt;以讲师的身份参加一次技术会议&lt;/li&gt;&lt;/ul&gt;
+&lt;p&gt;&lt;em&gt;（额，“计划”本不该多说，但貌似还是说多了点...）&lt;/em&gt;&lt;/p&gt;</description>
+            <pubDate>2015-01-03</pubDate>
+            <link>https://blog.xiayf.cn/posts/the-2014-is-gone.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/the-2014-is-gone.html</guid>
+        </item>
+        
+        <item>
             <title>面向分布式系统工程师的分布式系统理论（译）</title>
             <description>&lt;p&gt;原文：&lt;a href=&apos;http://the-paper-trail.org/blog/distributed-systems-theory-for-the-distributed-systems-engineer/&apos;&gt;Distributed systems theory for the distributed systems engineer&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Gwen Shapira，大腕级的解决方案架构师（SA），如今 Cloudera 的全职工程师，在&lt;a href=&apos;https://twitter.com/gwenshap/status/497203248332165121&apos;&gt; Twitter 上提的一个问题&lt;/a&gt;引起了我的思考。&lt;/p&gt;
@@ -2251,6 +2802,164 @@ function base64_URL_decode($data) {
             <pubDate>2014-08-10</pubDate>
             <link>https://blog.xiayf.cn/posts/ds-4-dse.html</link>
             <guid isPermaLink="true">https://blog.xiayf.cn/posts/ds-4-dse.html</guid>
+        </item>
+        
+        <item>
+            <title>仓库作业机器监控系统设计与实现</title>
+            <description>&lt;p&gt;近期在参与一个仓库作业机器监控项目。该项目的需求背景是：公司的电商业务在全国各地有多处或大或小的仓库，仓库的作业人员（没有IT技术背景）经常反馈/投诉作业机器断网、断电、连不了服务等问题。实际情况经常与反馈的不一致，但运维侧并没有数据可以证明，所以才有了这个项目的需求。&lt;/p&gt;
+&lt;p&gt;该项目第一期的目标仅是&lt;em&gt;收集、展示作业机器某些监控指标数据，以便在快速定位解决问题，或至少有数据可查&lt;/em&gt;。&lt;/p&gt;
+&lt;p&gt;为了避免大量监控数据上报影响到生产系统的网络服务，系统采用如下结构：&lt;/p&gt;
+&lt;img src=&apos;../assets/inner_warehouse_monitor.png&apos; title=&apos;inner_warehouse_monitor&apos; alt=&apos;inner_warehouse_monitor&apos; width=&apos;600&apos;/&gt;
+&lt;ol&gt;&lt;li&gt;实现一个 agent 用于在仓库作业 PC 或作业 PDA 上获取机器的监控数据；&lt;/li&gt;
+&lt;li&gt;在仓库本地服务器上实现一个数据收集处理服务，提供 API 给 agent 上传监控数据；数据收集处理服务会将接收到的数据持久化到数据库，提供给仓库本地服务器上的 webApp 进行数据展示等；&lt;/li&gt;
+&lt;li&gt;中心服务器可以调用各个仓库本地服务器上的 webApp 提供的数据查询接口（数据用于定位、发现问题）；定期按需对各个仓库本地服务器上的数据进行归档。&lt;/li&gt;&lt;/ol&gt;
+&lt;p&gt;这样，主要的工作都集中在&lt;strong&gt;作业机器上的 agent&lt;/strong&gt; 和&lt;strong&gt;数据收集处理服务、webApp&lt;/strong&gt;。这其中最关键的又是&lt;strong&gt;数据收集处理服务&lt;/strong&gt;。考虑到需要多地部署运维仓库本地服务器，而且某些大仓库作业机器的数目目前已多达800-1000，我们做了如下技术选型：&lt;/p&gt;
+&lt;ol&gt;&lt;li&gt;Golang 实现 agent、数据收集处理服务、webApp；&lt;/li&gt;
+&lt;li&gt;以 SQLite 作为数据库来存储agent上报的所有数据；&lt;/li&gt;
+&lt;li&gt;以 &lt;a href=&apos;http://bitly.github.io/nsq/&apos;&gt;NSQ&lt;/a&gt; 作为异步消息队列中间件；&lt;/li&gt;&lt;/ol&gt;
+&lt;p&gt;选用 Golang 的理由是：可以静态编译，部署简单，只需将编译好的可执行二进制程序丢到服务器上跑起来就可以了。&lt;/p&gt;
+&lt;p&gt;选用 SQLite 的理由是：不必像 MySQL 那样安装 server 程序，无需额外部署维护。当然 SQLite 的文件锁会大大影响数据库读写性能，我们通过尽可能拆分数据库，将不同的指标数据存储在不同的 SQLite DB 文件中，甚至将每台作业机器每个指标的每天的数据分别存储在不同的 DB 文件中，来尽可能减小文件锁的性能影响，目前看来效果还不错。&lt;/p&gt;
+&lt;p&gt;选择 NSQ 的理由是：Golang 实现、分布式、伸缩性好、性能高、支持 HTTP/TCP 协议、自带web管理界面等。&lt;/p&gt;
+&lt;p&gt;详细的系统结构图如下所示：&lt;/p&gt;
+&lt;img src=&apos;../assets/inner_warehouse_monitor-arch.png&apos; title=&apos;inner_warehouse_monitor-arch&apos; alt=&apos;inner_warehouse_monitor-arch&apos; width=&apos;600&apos;/&gt;
+&lt;p&gt;NSQ 支持多 topic（不同 topic 的数据不同），topic 又可以有多个 channel（同一个 topic 的所有channel中的数据相同，以多播的方式实现，每个 channel 在 client 中有一个对应的处理流程来处理 channel 中的数据）。我们将作业机器不同的监控指标数据作为不同 topic 传入 NSQ，多数指标数据只需持久化到数据库以备后用，所以这些 topic 仅需一个 channel。&lt;/p&gt;
+&lt;p&gt;webApp 基于 Beego 框架实现，避免重复造轮子、工作量小。webApp中的数据展示采用 HighCharts、Raphael 实现，兼容性好。&lt;/p&gt;
+&lt;p&gt;对于机器指标数据，其实不应该使用关系型数据库来存储，因为这种数据的特点是：写入之后只读不改、时间序列的、几乎没有关系型的读取操作、连续批量数据读取，所以开源监控系统如 Cacti、Ganglia 等均使用 RRDtool 来读写指标数据。所以如上所述，我们将指标数据的存储尽可能地拆分成多个文件以提高读写性能而不会造成其他问题。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;系统的工作流程如下所述：&lt;/p&gt;
+&lt;ol&gt;&lt;li&gt;作业机器上的 agent 启动后会先向 NSQ 的 register topic 发送一个注册消息，NSQ Client 根据该注册消息在 register 数据表中将该作业机器的状态改为“正常运行中”；&lt;/li&gt;
+&lt;li&gt;然后，agent 定期上报监控数据到 NSQ，NSQ Client 中各种数据的处理流程将数据持久化到 SQLite 数据库文件；&lt;/li&gt;
+&lt;li&gt;用户访问/中心服务器调用API时，webApp 读取 SQLite 数据库；&lt;/li&gt;
+&lt;li&gt;有一个 Goroutine 针对注册过的作业机器定期检测3分钟以内是否收到过其上报的心跳数据，若未收到，则将机器状态从“正常运行中”改成“运行异常”，若收到，则将“运行异常”改为“正常运行中”；&lt;/li&gt;
+&lt;li&gt;作业机器在正常关机时会向 NSQ 的 register topic 发送一个正常关机的消息，Client 读取到该消息后，会将该机器在 register 数据表中的状态改为“已正常关机”。&lt;/li&gt;&lt;/ol&gt;
+&lt;p&gt;目前，系统工作良好。之后会对系统做压测，如果出现瓶颈，估计可能还是数据存储，这样的话我们可能会尝试 RRDtool 或 &lt;a href=&apos;http://influxdb.org/&apos;&gt;InfluxDB&lt;/a&gt;。&lt;/p&gt;</description>
+            <pubDate>2013-11-29</pubDate>
+            <link>https://blog.xiayf.cn/posts/inner-warehouse-monitor-system.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/inner-warehouse-monitor-system.html</guid>
+        </item>
+        
+        <item>
+            <title>读书笔记：Just For Fun - The Story of an Accidental Revolutionary</title>
+            <description>&lt;p&gt;前些天偶然在图灵社区上看到&lt;a href=&apos;http://www.ituring.com.cn/book/1115?q=%E8%B6%8A%E7%8E%A9%E8%B6%8A%E5%A4%A7&apos;&gt;这本书的出版计划&lt;/a&gt;，才猛然想起之前看过一两个章节，遂再次找到该书的&lt;a href=&apos;http://ishare.iask.sina.com.cn/f/14439267.html&apos;&gt;中文电子版&lt;/a&gt;（&lt;em&gt;原谅我&lt;/em&gt;）（关于该电子版，我不清楚其来源。中国青年出版社出过该书的中文版，译名为《乐者为王》，不知该电子版即为该中文版，还是开源爱好者自己翻译。不过翻译质量不高，应该不是正式出版的），花了一天左右时间看完。&lt;/p&gt;
+&lt;p&gt;本书由 Linus Torvalds 和 David Diamond 合著，书写方式是 Linus 自述，穿插 David Diamond 的一些采访旁白，主要讲述 Linus 如何偶然地成为信息时代的一个革命者（The Story of an Accidental Revolutionary）。Linus 在书中表达了对 Linux 这一伟大的开源项目的看法、对于人生意义、事物发展规律等问题的个人理解。以下是书中让我印象比较深刻的几处内容：&lt;/p&gt;
+&lt;h2&gt;生活的意义&lt;/h2&gt;
+&lt;p&gt;对于这一哲学性的问题，估计现在很多人见到都会发笑。本书以这个问题的讨论开始，并以这个问题结尾。Linus并没有直接地回答，而是举例说明人类社会的事物发展都必然经过三个阶段---生存、社会秩序、娱乐，那么生活的意义就是促成这一发展过程：&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;李纳斯：这个答案基本上简单而漂亮。 它不会给你的生活以任何意义，但可以告诉你将发生什么。&lt;/p&gt;
+&lt;p&gt;有三件事具有生命的意义。它们是你生活当中所有事情的动机，包括你所做的任何事情和一个生命体该做的所有事情。&lt;/p&gt;
+&lt;p&gt;第一是生存，第二是社会秩序，第三是娱乐。生活中所有的事情都是按这个顺序发展的。娱乐之后便一无所的。&lt;/p&gt;
+&lt;p&gt;因此从某种意义上说，这意味着生活的意义就是要达到第三个阶段。你一旦达到了第三个阶段，就算成功了。但首先要越过前两个阶段。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p&gt;我认为这一理解是非常漂亮的。对于该问题（我为什么而活？），以前我也思考了很多，但最后的答案竟然是---活着本来就是没有意义的，一切意义都是人为地赋予。答案很悲观，Linus 的答案本质上也是如此，只不过避免了直接面对该问题，以顺从事物发展规律作为生活的意义，对我有所启发，也让我多了些生活的“正能量”。&lt;/p&gt;
+&lt;p&gt;对于未来的预言，特别是计算机行业的发展，Linus 同样并没有直接回答问题，同样地以此作为回答：人们并不是真的需要计算机（包含网络等等），而是需要基于计算机实现生存、社会秩序、娱乐三个目标，那么未来的一切、计算机行业的发展必然是更好地帮助人们实现这三个目标。&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;关于娱乐，有本书《娱乐至死》表达了对人类社会发展泛娱乐化、特别是教育趋向娱乐化的担忧。从另一角度佐证了 Linus 的看法，只不过一消极悲观，一积极乐观。&lt;/em&gt;&lt;/p&gt;
+&lt;h2&gt;与Andrew S. Tanenbaum的争论&lt;/h2&gt;
+&lt;p&gt;这一事件在 Wikipedia 上还有专门的词条-&lt;a href=&apos;http://en.wikipedia.org/wiki/Tanenbaum%E2%80%93Torvalds_debate&apos;&gt;Tanenbaum-Torvalds debate&lt;/a&gt;。以前也关注过该事件，但把问题的重心放在了“微内核（Micro kernel）”和“宏内核（Monolithic kernel）”的优缺点上，看了该书之后才真正理解 Linus 的选择，并赞同他的看法。&lt;/p&gt;
+&lt;p&gt;这一争论的原文见&lt;a href=&apos;https://groups.google.com/forum/#!topic/comp.os.minix/wlhw16QWltI%5B1-25-false%5D&apos;&gt;邮件列表&lt;/a&gt;。&lt;/p&gt;
+&lt;p&gt;对于 Tanenbaum 提出的问题，Linus 做了如下回答：&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;安德鲁塔南鲍姆写道：&lt;/p&gt;
+&lt;p&gt;&gt;我在美国待了几个星期，所以没来得及对Linux做多少评论(不是说如果我在，我就会说什么)。但是，Linux 确实值得一评。我现在就有话要说。&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
+&lt;p&gt;&gt;正如你们所知，MINIX 只是我的爱好，每当晚上我写烦了书，如果当时没有什么战争、 革命、 直播的参议院听政会，我就会摆弄 MINIX。我的真正职业是大学教授和操作系统领域中的研究人员。&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
+&lt;p&gt;你用这个作为 MINIX 局限性的借口？对不起，但是你输了。我的借口比你的还多，而 Linux 在很多领域还是胜 MINIX 一筹。更别说 MINIX 的大部分似乎是由布鲁斯?伊文斯编写的了。&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
+&lt;p&gt;反驳一：你说你把 MINIX 当作爱好来玩――那么，请问是谁在拿 MINIX 挣钱呢？又是谁在免费发送 Linux 呢？再来谈谈爱好。让 MINIX 能免费获得，我对 MINIX 的最大抱怨就会消失。Linux 在很大程度上对我是一个爱好(但是一个很严肃的爱好，最棒的一种爱好)。我没有从我的爱好中赚一分钱，它也不是我在大学要修的课程之一。我是纯粹用我自己的时间，在自己的机器上做出来的。&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
+&lt;p&gt;反驳二：你是教授和研究人员。这真是一个 MINIX 出现核心缺陷的好借口。我只能希望 Amoeba 不会像 MINIX 那样垮掉。&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
+&lt;p&gt;&gt;1.微内核对 Monolithic system&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
+&lt;p&gt;没错，Linux 是 Monolithic 的，我同意微内核是好一点儿。 如果不是你的话题有争议性，我可能会同意你的大部分意见。从理论角度(及审美角度)而言，Linux 输了。如果 GNU 的 kernel 在去年春天就已完善的话，我可能就不会开始这个工程。而事实是，GNU 还没有完善，也远非如此。如果现在就已实现的这一点而论，Linux才大获全胜。&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
+&lt;p&gt;&gt;MINIX 是一个基于微内核的系统。Linux 是 Monolithic 的系统。&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
+&lt;p&gt;如果这是判断一个 kernel 好坏的唯一标准，你的观点就对了。但你没提到的是，MINIX 在微内核方面的表现并不出色，而且对核内真正的多任务操作仍存在着问题。 如果我做的是一个在多线程文件系统上有问题的 OS 的话，我就不会这么快来责备别人。而事实上，我竭尽所能来使人们忘记软件设计者在此问题上的惨败。(是的，我知道 MINIX 拥有众多黑客支持者，但他们只是黑客。而布鲁斯?伊文斯告诉我有很多可以竞争的机会。)&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
+&lt;p&gt;&gt;2.可移植性&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
+&lt;p&gt;“可移植性是给那些写不出新程序的人们准备的。”&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
+&lt;p&gt;――我，现在刚说的，口出狂言&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
+&lt;p&gt;事实上，Linux 比 MINIX 更具有可移植性。 “你说什么？”我听见你说。 是真的――但却不是在你所说的意义上。我使 Linux 尽量符合标准(我当时手边并没有 POSIX 标准)。 把程序移植到 Linux 上比到 MINIX 上要容易得多。&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
+&lt;p&gt;我同意，可移植性是个好东西，但是只有在它确实有意义的地方才是个令人向往的特性。没有必要专门使一个操作系统太具有可移植性：能粘到可移植的 API 上就行了。操作系统的实质就是利用硬件的特点，并将其隐藏在一层高级的系统调用后面。而 Linux 就是如此，它比任何 kernel 都更多地利用了386的特性。当然这使得kernel确实不可移植，但是这也使设计大为简化，是一个可以接受的权宜之计，因为这首先保证了 Linux 的诞生。我也同意，Linux 又太不具有可移植性了。去年一月我拥有了自己的386，而 Linux 系统的创建在一定程度上成为了一个让我认识386的项目。如果要成为一个真正的项目，必须能够在可移植性方面做一些事情。 但是，我最初的设计思想就是没有考虑到可移植性，如果我这样说并不是太过分地为自己辩护。去年四月我开始这个项目时，认为不会有什么人会真的使用它。我很高兴我的这个想法错了。 随着我对源代码的发布，每个人都可以免费来装截 Linux，哪怕还不是很方便。&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
+&lt;p&gt;李纳斯&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
+&lt;p&gt;附：很抱歉我有时言辞过激。如果你没有其他的操作系统可供选择的话，MINIX 已经挺好的了。如果你有五到十个386机器闲着没用，那么 Amoeba 也会不错，只是我确定无疑是没有的。我一般不会勃然大怒，但是在涉及到 Linux 的问题时，我是有点容易感情用事。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p&gt;这一反驳非常精彩，并且有说服力！特别是对于“可移植性”问题的说明，值得每个程序员阅读。&lt;/p&gt;
+&lt;h2&gt;知识产权&lt;/h2&gt;
+&lt;p&gt;关于知识产权，通常有两种截然不同的观点：&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;有些人认为，专利和劳动保险形式的知识产权法规是自由世界的祸害，信息提供者(IP)法规并不仅仅是训导，实际上简直就是罪恶，应该尽快地加以铲除。 另一些人认为整个世界经济实际上是由知识产权所驱动的。这些人想通过他们的努力来加强IP法规的法律地位。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p&gt;而 Linus 是这么认为：&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;对于许多人，包括对我自己而言，知识产权是有关人类的创造活动的规则，是关于那些使我们成为人类――而不是动物(当然，这本身是一件好事)的活动的规则。正是在这个意义上，“知识产权”这一名称本身就是一种侮辱。 它并不是如有形财产那样可以出售，它是创造性活动本身，这是人类所能够做到的最伟大的事情。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;blockquote&gt;&lt;p&gt;那种创造――不管它是以绘画、 音乐、 雕塑、 菱或是程序的方式出现，都应当受到尊重：创造者和他所创造的事物之间有着你所无法切断的密切联系。这就像母亲与孩子之间的联系，或者如同中国菜与味精之间的联系。 但是与此同时，它却又是世界上每一个人都应当分享的事物，因为它是属于人类共同的。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;blockquote&gt;&lt;p&gt;你拥有你所创造的东西就意味着你可以控制它的使用。 例如，你有权将这一艺术成果出售给其他人，而且在这个问题上，除了美国国税局以外，任何人都不会说什么。 但是，它其实并不仅仅是钱的问题，而是其他人在同样的问题上陷于困惑时帮他们解决了问题，省却了时间与精力。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;blockquote&gt;&lt;p&gt;许多要求加强知识产权立法的讨论是基于这样一种观点，即：给创造者和艺术家以更多的“保护”。而人们似乎不曾、或者说是从未意识到，这样一种强有力的权利导致一些人剥夺了另一些人的权利。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;blockquote&gt;&lt;p&gt;我热爱版权。我只是认为没必要将版权所有者的权利无限扩大。不要扩大到将消费者的权利都被剥夺殆尽。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;blockquote&gt;&lt;p&gt;很显然，只有极少的个人获得了专利。 另一方面，公司却获得了大量的专利。这些专利是他们用来对付其他公司的有力武器，可以威胁别人因专利侵权而要面临起诉。现今的专利系统基本上可以说是信息提供者这间的冷战，而不是他们之前的核战争。目前这种情况也不见得比过去的冷战好。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;blockquote&gt;&lt;p&gt;如果你想避免专利申请过程中的麻烦，你可以采用更为厉害的手段：商业秘密。商业秘密的优点在于，你不必担心什么商业秘密办公室或者类似的机构：你只需要将其封存起来，然后就不必顾虑那么多了。&lt;/p&gt;
+&lt;p&gt;过去人们一直是这样做的，实际上这也就是法规之所以被引入的原因所在。为了鼓励个人和公司公开其秘密，专利法允许在一定期限内保护市场――如果你公开你所拥有的秘密的话。一个针锋相对的基本形式是：你告诉大家你是如何做成某事的，那么我们就允许你拥有一定年限的特殊权利。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;blockquote&gt;&lt;p&gt;在专利产生之前，人们会充满猜忌地保守他们自己的技术优势，一直到将它们带入坟墓。很显然，那是不利于技术进步的，因为有前途的技术从来没有向其他人公开过。对于专利特权的承诺使得专利成为将秘密告诉大家的一种强有力的刺激，因为你再也不用担心你的竞争对手会发现你在做什么了。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;blockquote&gt;&lt;p&gt;然而，那是过去，现在情形不同了。 如今，即使是商业秘密也有了法律保护，尽管它们的理由世人无法理解。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;blockquote&gt;&lt;p&gt;很大程度上，在这场知识产权战争中寻求和平的解决之道正是公开源代码所努力的目标。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;blockquote&gt;&lt;p&gt;同一事物的另一面在于，的确，知识产权可能是不公平的，的确，知识产权法规在很大程度上将其目标定位于大公司而不是消费者权利，甚至也不是个人著作者或创新者。 然而其主体是积极有利的。知识产权集中于强有力的权利之上，与之相对应的事实是这一强有力的武器在市场上是如此的有效。 核武器是冷战时代的终极力量，同样的原因使得知识产权在技术战争时代里大受欢迎。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;blockquote&gt;&lt;p&gt;虽然大量的新措施使非法使用他人的知识产权变得更加困难，但同时也使得合法使用他人的知识产权变得更加困难。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p&gt;&lt;em&gt;原谅我喋喋不休地摘录了这么多内容，但其实书中这部分的内容还有很多精彩之处。&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;知识产权本来的目的是保护创造者的基本权利，以促进创新和分享，但知识产权如果走过了头（例如如今的专利战争）就会导致创新难以普及，他人无法合法合理地使用这些创新。开源运动则鼓励充分地开放分享创新，同时通过各种形式许可证来保护创造者的基本权利，这也就意味着开源运动的理念不仅只是影响计算机行业，也会对所有行业产生巨大的正面影响。&lt;/p&gt;
+&lt;p&gt;人类社会的发展是一个积累的过程，创新知识的分享越充分，积累也就越快，人类社会的发展也就越快。这也是我欣赏支持黑客精神和开源运动的缘由。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;&lt;strong&gt;关于书名的翻译&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;这本书的书名，中国青年出版社的版本是译为《乐者为王》，而将要出版的人民邮电出版社的版本貌似要译为《越玩越大-我和 Linux 的故事》（正式出版前的暂译名？）。对于这两个译名我都不满意。原书取名《Just For Fun --- The Story of an Accidental Revolutionary》，我想应该是考虑了两点：&lt;/p&gt;
+&lt;ol&gt;&lt;li&gt;Linus 非常看重尊重自己的兴趣。其实 Linux 就是始于它的个人兴趣，也因此 Linux 到如今的发展及其造成的广泛影响也是当初Linus没有料想也不可能料想到的，人生往往如此，很多事情都是 Accidental 的；&lt;/li&gt;
+&lt;li&gt;Linus 认为任何人类社会事物发展的终极阶段就是---娱乐，那么生活的意义就是不断努力为达到这一终极阶段而贡献自己的一份力量。&lt;/li&gt;&lt;/ol&gt;
+&lt;p&gt;对于第二点，该书的最后一节中作者做了明确的说明：&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;对了，就是这三件事：生存、你在社会中的位置、还有快乐。&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
+&lt;p&gt;这三件事就是我们正在做着的事情。 任何其他的事物，都是社会学家可能会称之为“突发行为”的东西，它们源于那些规则更为简单的行为模式。&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
+&lt;p&gt;然而事情不仅仅是“这就是激励人生活的事物”。如果情形是这样的话，那它们也就不会成为关于生命的理论了。令人感兴趣的，这三种激励因素有着内在的次序，而这一次序表明了生命的所在。事情并不仅仅是，我们人类被这三种事物所驱使――对于人类以外的其他生命行为也是如此。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;blockquote&gt;&lt;p&gt;这一次序是：生存；社会交往；寻找乐趣。&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
+&lt;p&gt;它也是进化的次序。这就是我们选择了“Just for Fun”作为本书名称的原因。&lt;/p&gt;
+&lt;p&gt;因为我们曾经所做的一切事情，似乎最终都是为了我们自己的乐趣。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p&gt;译名《乐者为王》虽然简练，却不能明确地表达这两层意思。《越玩越大-我和Linux的故事》则跟闹着玩似的。&lt;/p&gt;
+&lt;p&gt;为什么不直译为《只为乐趣》呢？&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;关于本书，阮一峰也写过一篇阅读笔记，见&lt;a href=&apos;http://www.ruanyifeng.com/blog/2012/09/linus_torvalds.html&apos;&gt;《Linus Torvalds 自传》摘录&lt;/a&gt;。&lt;/p&gt;</description>
+            <pubDate>2013-11-07</pubDate>
+            <link>https://blog.xiayf.cn/posts/reading-just-for-fun.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/reading-just-for-fun.html</guid>
+        </item>
+        
+        <item>
+            <title>搭建高可用负载均衡组件及缓存DNS</title>
+            <description>&lt;p&gt;该项工作，如题所示，主要分为两部分：高可用负载均衡组件、缓存 DNS。&lt;/p&gt;
+&lt;h2&gt;高可用负载均衡组件&lt;/h2&gt;
+&lt;p&gt;需求：优化业务系统架构中某些关键环节，针对 TCP 层数据流量进行负载均衡，并保证服务的高可用。&lt;/p&gt;
+&lt;p&gt;技术选型：HAProxy + Keepalived，这对组合比较常见成熟。&lt;/p&gt;
+&lt;p&gt;另外，由于 HAProxy 的负载均衡任务可能比较多，靠人工修改配置来增删改任务不方便可靠，所以实现了一个简单的 HAProxy 管理系统，&lt;/p&gt;
+&lt;p&gt;以后经实际使用验证和完善会开放源码。&lt;/p&gt;
+&lt;img src=&apos;../assets/high-availability-load-balancer.png&apos; title=&apos;high availability load balancer&apos; alt=&apos;high availability load balancer&apos; width=&apos;100%&apos;/&gt;
+&lt;h2&gt;缓存 DNS&lt;/h2&gt;
+&lt;p&gt;先以 www.qq.com 为例，解释一下域名解析过程：&lt;/p&gt;
+&lt;img src=&apos;../assets/resolve-qq-com.jpg&apos; title=&apos;resolve qq.com&apos; alt=&apos;resolve qq.com&apos; width=&apos;600&apos;/&gt;
+&lt;ol&gt;&lt;li&gt;用户向 Local DNS 发起 &lt;code&gt;www.qq.com.&lt;/code&gt; 查询请求；&lt;/li&gt;
+&lt;li&gt;Local DNS 向根服务器发起 &lt;code&gt;com.&lt;/code&gt; 查询请求；&lt;/li&gt;
+&lt;li&gt;根服务器向 Local DNS 返回 &lt;code&gt;com.&lt;/code&gt; 解析记录；&lt;/li&gt;
+&lt;li&gt;Local DNS 向 &lt;code&gt;com.&lt;/code&gt; 权威服务器发起 &lt;code&gt;qq.com.&lt;/code&gt; 查询请求；&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;com.&lt;/code&gt; 权威服务器向 Local DNS 返回 &lt;code&gt;qq.com.&lt;/code&gt; 解析记录；&lt;/li&gt;
+&lt;li&gt;Local DNS向 &lt;code&gt;qq.com.&lt;/code&gt; 权威服务器发起 &lt;code&gt;www.qq.com.&lt;/code&gt; 查询请求；&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;qq.com.&lt;/code&gt; 权威服务器向 Local DNS 返回 &lt;code&gt;www.qq.com.&lt;/code&gt; 解析记录；&lt;/li&gt;
+&lt;li&gt;Local DNS 向用户返回 &lt;code&gt;www.qq.com&lt;/code&gt; 解析记录。&lt;/li&gt;&lt;/ol&gt;
+&lt;p&gt;Local DNS 一般由网络运营商（如电信、网通等）提供。&lt;/p&gt;
+&lt;p&gt;缓存 DNS 处于用户端（这是一个相对的概念）与 local DNS 之间，利用 DNS 服务器软件的缓存功能以及缓存 DNS 与用户端的近距离特点来加速域名解析。&lt;/p&gt;
+&lt;p&gt;也可以在缓存 DNS 上按需求进行域名劫持。运营商为了牟利，也会在 local DNS 上进行域名劫持，这对于各大互联网公司对外提供的服务来说是个很大的问题。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;在完成该工作后，我编写了一份安装配置文档，方便其他同事参考。文档见： &lt;a href=&apos;../assets/high-availability-load-balancer-and-dns.pdf&apos;&gt;HAProxy+HAProxyConsole+Keepalived+BIND安装配置文档.pdf&lt;/a&gt;。&lt;/p&gt;</description>
+            <pubDate>2013-10-16</pubDate>
+            <link>https://blog.xiayf.cn/posts/ha-lb-and-dns.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/ha-lb-and-dns.html</guid>
         </item>
         
         <item>
@@ -2494,6 +3203,317 @@ d9976cfe0430557885d162927dd70186d0f521e8&lt;/code&gt;&lt;/pre&gt;
             <pubDate>2013-01-18</pubDate>
             <link>https://blog.xiayf.cn/posts/review12-lookinto13.html</link>
             <guid isPermaLink="true">https://blog.xiayf.cn/posts/review12-lookinto13.html</guid>
+        </item>
+        
+        <item>
+            <title>装饰器与函数式 Python（译）</title>
+            <description>&lt;p&gt;原文：&lt;a href=&apos;http://www.brianholdefehr.com/decorators-and-functional-python&apos;&gt;Decorators and Functional Python&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;装饰器是Python的一大特色。除了在语言中的原本用处，还帮助我们以一种有趣的方式（函数式）进行思考。&lt;/p&gt;
+&lt;p&gt;我打算自底向上解释装饰器如何工作。首先解释几个话题以帮助理解装饰器。然后，深入一点探索几个简单的装饰器以及它们如何工作。最后，讨论一些更高级的使用装饰器的方式，比如：传递可选参数给装饰器或者串接几个装饰器。&lt;/p&gt;
+&lt;p&gt;首先以我能想到的最简单的方式来定义Python函数是什么。基于该定义，我们可以类似的简单方式来定义装饰器。&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;函数是一个完成特定任务的可复用代码块。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p&gt;好的，那么装饰器又是什么呢？&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;装饰器是一个修改其他函数的函数。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p&gt;现在在装饰器的定义上进行详述，先解释一些先决条件。&lt;/p&gt;
+&lt;h2&gt;函数是一等对象&lt;/h2&gt;
+&lt;p&gt;Python中，所有东西都是对象。这意味着可以通过名字引用函数，以及像其他对象那样传递。例如：&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;def traveling_function():
+    print &amp;amp;quot;Here I am!&amp;amp;quot;
+
+function_dict = {
+    &amp;amp;quot;func&amp;amp;quot;: traveling_function
+}
+
+trav_func = function_dict[&amp;amp;apos;func&amp;amp;apos;]
+trav_func()
+# &amp;amp;gt;&amp;amp;gt; Here I am!&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;traveling_function&lt;/code&gt; 被赋值给 &lt;code&gt;function_dict&lt;/code&gt; 字典中键 &lt;code&gt;func&lt;/code&gt; 的值，仍旧可以正常调用。&lt;/p&gt;
+&lt;h2&gt;一等函数允许高阶函数&lt;/h2&gt;
+&lt;p&gt;我们可以像其他对象那样传递函数。可以将函数作为值传递给字典，放在列表中，或者作为对象的属性进行赋值。那为什么不能作为参数传给另一个函数呢？当然可以！如果一个函数接受另一个函数作为其参数或者返回另一个函数，则称之为高阶函数。&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;def self_absorbed_function():
+    return &amp;amp;quot;I&amp;amp;apos;m an amazing function!&amp;amp;quot;
+
+def printer(func):
+    print &amp;amp;quot;The function passed to me says: &amp;amp;quot; + func()
+
+# Call `printer` and give it `self_absorbed_function` as an argument
+printer(self_absorbed_function)
+# &amp;amp;gt;&amp;amp;gt;&amp;amp;gt; The function passed to me says: I&amp;amp;apos;m an amazing function!&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;现在你也看到函数可以作为参数传给另一个函数，而且传给函数的函数还可以调用。这允许我们创建一些有意思的函数，例如装饰器。&lt;/p&gt;
+&lt;h2&gt;装饰器基础&lt;/h2&gt;
+&lt;p&gt;本质上，装饰器就是一个以另一个函数为参数的函数。大多数情况下，它们会返回所包装函数的一个修改版本。来看个我们能想到的最简单的装饰器---同一性（identity）装饰器，或许对我们理解装饰器的工作原理有所帮助。&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;def identity_decorator(func):
+    def wrapper():
+        func()
+    return wrapper
+
+def a_function():
+    print &amp;amp;quot;I&amp;amp;apos;m a normal function.&amp;amp;quot;
+
+# `decorated_function` 是 `identity_function` 返回的函数，也就是嵌套函数 `wrapper`
+decorated_function = identity_function(a_function)
+
+# 如下调用 `identity_function` 返回的函数
+decorated_function()
+# &amp;amp;gt;&amp;amp;gt;&amp;amp;gt; I&amp;amp;apos;m a normal function&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;这里， &lt;code&gt;identity_decorator&lt;/code&gt; 根本没有修改它包装的函数，只是简单地返回一个函数（wrapper），这个函数在被调用之时，会去调用原来作为 &lt;code&gt;identity_decorator&lt;/code&gt; 参数的函数。这是个没有用处的装饰器！&lt;/p&gt;
+&lt;p&gt;关于 &lt;code&gt;identity_decorator&lt;/code&gt; 的有趣之处是 &lt;code&gt;wrapper&lt;/code&gt; 能够访问变量 &lt;code&gt;func&lt;/code&gt; ，即使 &lt;code&gt;func&lt;/code&gt; 并非是它的参数。这归因于闭包。&lt;/p&gt;
+&lt;h2&gt;闭包&lt;/h2&gt;
+&lt;blockquote&gt;&lt;p&gt;闭包是一个花哨的术语，意为声明一个函数时，该函数会维持一个指向声明所处词法环境的引用。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p&gt;上例中定义的函数 &lt;code&gt;wrapper&lt;/code&gt; 能够在其局部作用域（local scope）中访问 &lt;code&gt;func&lt;/code&gt;。这意味着在 &lt;code&gt;wrapper&lt;/code&gt; （返回并赋值给变量 &lt;code&gt;decorated_function&lt;/code&gt; ）的整个生命周期内，它都可以访问 &lt;code&gt;func&lt;/code&gt; 变量。一旦 &lt;code&gt;identity_decorator&lt;/code&gt;返回，那么访问 &lt;code&gt;func&lt;/code&gt; 的唯一方式就是通过 &lt;code&gt;decorated_function&lt;/code&gt; 。 &lt;code&gt;func&lt;/code&gt; 只作为一个变量存在于 &lt;code&gt;decorated_function&lt;/code&gt; 作用域环境的内部。&lt;/p&gt;
+&lt;h2&gt;一个简单的装饰器&lt;/h2&gt;
+&lt;p&gt;现在我们来创建一个确实有点用的装饰器。这个装饰器所做的就是记录它所修改的函数被调用了多少次。&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;def logging_decorator(func):
+    def wrapper():
+        wrapper.count += 1
+        print &amp;amp;quot;The function I modify has been called {0} time(s)&amp;amp;quot;.format(wrapper.count)
+        func()
+    wrapper.count = 0
+    return wrapper
+
+def a_function():
+    print &amp;amp;quot;I&amp;amp;apos;m a normal function.&amp;amp;quot;
+
+modified_function = logging_decorator(a_function)
+
+modified_function()
+# &amp;amp;gt;&amp;amp;gt;&amp;amp;gt; The function I modify has been called 1 time(s).
+# &amp;amp;gt;&amp;amp;gt;&amp;amp;gt; I&amp;amp;apos;m a normal function.
+
+modified_function()
+# &amp;amp;gt;&amp;amp;gt;&amp;amp;gt; The function I modify has been called 2 time(s).
+# &amp;amp;gt;&amp;amp;gt;&amp;amp;gt; I&amp;amp;apos;m a normal function.&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;我们说装饰器会修改函数，这样来想对理解也是有帮助的。但如例子所见， &lt;code&gt;logging_decorator&lt;/code&gt; 返回的是一个类似于 &lt;code&gt;a_function&lt;/code&gt; 的新函数，只是多了一个日志特性。&lt;/p&gt;
+&lt;p&gt;上例中， &lt;code&gt;logging_decorator&lt;/code&gt; 不仅接受一个函数作为参数，并且返回一个函数， &lt;code&gt;wrapper&lt;/code&gt; 。每次 &lt;code&gt;logging_decorator&lt;/code&gt; 返回的函数得到调用，它就对 &lt;code&gt;wrapper.count&lt;/code&gt; 的值加1，打印出来，然后调用 &lt;code&gt;logging_decorator&lt;/code&gt; 包装的函数。&lt;/p&gt;
+&lt;p&gt;你也许正疑惑为什么我们的计数器是 &lt;code&gt;wrapper&lt;/code&gt; 的一个属性而不是一个普通的变量。难道 &lt;code&gt;wrapper&lt;/code&gt; 的闭包环境不是让我们访问在其局部作用域中声明的任意变量么？是的，但有个问题。Python中，闭包允许对其函数作用域链中任一变量的进行任意读操作，但只允许对可变对象（列表、字典、等等）进行写操作。整数在Python中是非可变对象，因此我们不能修改 &lt;code&gt;wrapper&lt;/code&gt; 内部整型变量的值。相反，我们将计数器作为 &lt;code&gt;wrapper&lt;/code&gt; 的一个属性---一个可变对象，因此可以随我们自己增大它的值。&lt;/p&gt;
+&lt;h2&gt;装饰器语法&lt;/h2&gt;
+&lt;p&gt;在前一个例子中，我们看到可以将一个函数作为参数传给装饰器，从而使用装饰器函数对该函数进行包装。然而，Python还有一个语法模式使得这一切更加直观，更容易阅读，一旦你熟悉了装饰器。&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;# In the previous example, we used our decorator function by passing the
+# function we wanted to modify to it, and assigning the result to a variable
+def some_function():
+    print &amp;amp;quot;I&amp;amp;apos;m happiest when decorated.&amp;amp;quot;
+
+# Here we will make the assigned variable the same name as the wrapped function
+some_function = logging_decorator(some_function)&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;# We can achieve the exact same thing with this syntax:
+@logging_decorator
+def some_function():
+    print &amp;amp;quot;I&amp;amp;apos;m happiest when decorated&amp;amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;使用装饰器语法，鸟瞰其中发生的事情：&lt;/p&gt;
+&lt;ol&gt;&lt;li&gt;解释器到达被装饰的函数，编译 &lt;code&gt;some_function&lt;/code&gt;，并将其命名为 &apos;some_function&apos;。&lt;/li&gt;
+&lt;li&gt;然后将该函数传递给装饰行中指定的装饰器函数（ &lt;code&gt;logging_function&lt;/code&gt; ）。&lt;/li&gt;
+&lt;li&gt;装饰器函数（通常是用来包装原函数的另一个函数）的返回值取代原来的函数（&lt;code&gt;some_function&lt;/code&gt; ），绑定到变量名 &lt;code&gt;some_function&lt;/code&gt; 。&lt;/li&gt;&lt;/ol&gt;
+&lt;p&gt;将这些步骤记住，让我们来更清晰地解释 &lt;code&gt;identity_decorator&lt;/code&gt; 。&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;def identity_decorator(func):
+    # Everything here happens when the decorator LOADS and is passed
+    # the function as decribed in step 2 above
+    def wrapper():
+        # Things here happen each time the final wrapped function gets CALLED
+        func()
+    return wrapper&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;希望那些注释有助于理解。每次调用被包装的函数，仅执行装饰器返回的函数中的指令。返回函数之外的指令仅执行一次---上述步骤2中描述的：装饰器首次接收到传递给它的待包装函数之时。&lt;/p&gt;
+&lt;p&gt;在观察更多的有意思的装饰器之前，我想再解释一样东西。&lt;/p&gt;
+&lt;h2&gt;&lt;code&gt;*args&lt;/code&gt; 与 &lt;code&gt;**kwargs&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;以前你也许有时会把这两者相混淆了。让我们一次性地讨论它们。&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;通过在形参列表中使用 &lt;code&gt;*args&lt;/code&gt; 语法，python函数能够接收可变数量的位置参数(positional arguments)。 &lt;code&gt;*args&lt;/code&gt; 会将所有没有关键字的参数放入一个参数元组中，在函数里可以访问元组中的参数。相反，将 &lt;code&gt;*args&lt;/code&gt; 用于函数调用时的实参列表之时，它会将参数元组展开成一系列的位置参数。&lt;/li&gt;&lt;/ul&gt;
+&lt;hr&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;def function_with_many_arguments(*args):
+    print args
+
+# `args` within the function will be a tuple of any arguments we pass
+# which can be used within the function like any other tuple
+function_with_many_arguments(&amp;amp;apos;hello&amp;amp;apos;, 123, True)
+# &amp;amp;gt;&amp;amp;gt;&amp;amp;gt; (&amp;amp;apos;hello&amp;amp;apos;, 123, True)&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;def function_with_3_parameters(num, boolean, string):
+    print &amp;amp;quot;num is &amp;amp;quot; + str(num)
+    print &amp;amp;quot;boolean is &amp;amp;quot; + str(boolean)
+    print &amp;amp;quot;string is &amp;amp;quot; + string
+
+arg_list = [1, False, &amp;amp;apos;decorators&amp;amp;apos;]
+
+# arg_list will be expanded into 3 positional arguments by the `*` symbol
+function_with_3_parameters(*arg_list)
+# &amp;amp;gt;&amp;amp;gt;&amp;amp;gt; num is 1
+# &amp;amp;gt;&amp;amp;gt;&amp;amp;gt; boolean is False
+# &amp;amp;gt;&amp;amp;gt;&amp;amp;gt; string is decorators&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;重述一遍：在形参列表中， &lt;code&gt;*args&lt;/code&gt;会将一系列的参数压缩进一个名为&apos;args&apos;的元组，而在实参列表中， &lt;code&gt;*args&lt;/code&gt; 会将一个可迭代的参数数据结构展开为一系列的位置实参应用于函数。&lt;/p&gt;
+&lt;p&gt;如你所见在实参展开的例子中， &lt;code&gt;*&lt;/code&gt; 符号可与&apos;args&apos;之外的名字一起使用。当压缩/展开一般的参数列表，使用 &lt;code&gt;*args&lt;/code&gt; 的形式仅仅是一种惯例。&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;&lt;code&gt;**kwargs&lt;/code&gt; 与 &lt;code&gt;*args&lt;/code&gt; 的行为类似，但用于关键字参数而非位置参数。如果在函数的形参列表中使用 &lt;code&gt;**kwargs&lt;/code&gt; ，它会收集函数收到的所有额外关键字参数，放入一个字典中。如果用于函数的实参列表，它会将一个字典展开为一系列的关键字参数。&lt;/li&gt;&lt;/ul&gt;
+&lt;hr&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;def funtion_with_many_keyword_args(**kwargs):
+    print kwargs
+
+function_with_many_keyword_args(a=&amp;amp;apos;apples&amp;amp;apos;, b=&amp;amp;apos;bananas&amp;amp;apos;, c=&amp;amp;apos;cantalopes&amp;amp;apos;)
+# &amp;amp;gt;&amp;amp;gt; {&amp;amp;apos;a&amp;amp;apos;:&amp;amp;apos;apples&amp;amp;apos;, &amp;amp;apos;b&amp;amp;apos;:&amp;amp;apos;bananas&amp;amp;apos;, &amp;amp;apos;c&amp;amp;apos;:&amp;amp;apos;cantalopes&amp;amp;apos;}&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;def multiply_name(count=0, name=&amp;amp;apos;&amp;amp;apos;):
+    print name * count
+
+arg_dict = {&amp;amp;apos;count&amp;amp;apos;: 3, &amp;amp;apos;name&amp;amp;apos;: &amp;amp;apos;Brian&amp;amp;apos;}
+
+multiply_name(**arg_dict)
+# &amp;amp;gt;&amp;amp;gt; BrianBrianBrian&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;既然你理解了 &lt;code&gt;*args&lt;/code&gt; 与 &lt;code&gt;**kwargs&lt;/code&gt; 的工作原理，那么我们就继续研究一个你会发现很有用的装饰器。&lt;/p&gt;
+&lt;h2&gt;缓存制表（Memoization）&lt;/h2&gt;
+&lt;p&gt;缓存制表是避免潜在的昂贵的重复计算的一种方法，通过缓存函数每次执行的结果来实现。这样，下一次函数以相同的参数执行，就可以从缓存中获取返回结果，不需要再次计算结果。&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;from functools import wraps
+
+def memoize(func):
+    cache = {}
+
+    @wraps(func)
+    def wrapper(*args):
+        if args not in cache:
+            cache[args] = func(*args)
+        return cache[args]
+    return wrapper
+
+@memoize
+def an_expensive_function(arg1, arg2, arg3):
+    ...&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;你可能注意到了示例代码中一个奇怪的 &lt;code&gt;@wraps&lt;/code&gt; 装饰器。在完整地讨论 &lt;code&gt;memoize&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;之前我将简要地解释这个装饰器。&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;使用装饰器的一个副作用是被包装的函数失去了本来有的 &lt;code&gt;__name__&lt;/code&gt; ， &lt;code&gt;__doc__&lt;/code&gt; ， 以及 &lt;code&gt;__module__&lt;/code&gt; 属性。 &lt;code&gt;wraps&lt;/code&gt; 函数是一个包装另一个装饰器返回的函数的装饰器，将那三个属性的值恢复为函数未装饰之时的值。例如： 如果不使用 &lt;code&gt;wraps&lt;/code&gt; 装饰器， &lt;code&gt;an_expensive_function&lt;/code&gt; 的名字（通过 &lt;code&gt;an_expensive_function.__name__&lt;/code&gt; 可以看到）将是 &apos;wrapper&apos; 。&lt;/li&gt;&lt;/ul&gt;
+&lt;p&gt;我认为 &lt;code&gt;memoize&lt;/code&gt; 是一个很好的装饰器用例。它服务于一个很多函数都需要的目的，通过将它创建为一个通用装饰器，我们可以将它的功能应用于任一能够从其中获益的函数。这就避免了在多种不同的场合重复实现这个功能。因为不需要重复自己，所以我们的代码更容易维护，并且更容易阅读和理解。只要读一个单词你就能立刻理解函数使用了缓存制表。&lt;/p&gt;
+&lt;p&gt;需要提醒的是：缓存制表仅适用于纯函数。也就是说给定一个特定的参数设置，函数确定总会产生相同的结果。如果函数依赖于不作为参数传递的全局变量、I/O、或者其它任意可能影响返回值的东西，缓存制表会产生令人迷惑的结果！并且，一个纯函数不会有任何副作用。因此，如果你的函数会增大一个计数器，或者调用另一个对象的方法，或者其它任意不在函数的返回结果中表示的东西，当结果是从缓存中返回时，副作用操作并不会得到执行。&lt;/p&gt;
+&lt;h2&gt;类的装饰器&lt;/h2&gt;
+&lt;p&gt;最初，我们说装饰器是一个修改另一个函数的函数，但其实它们可以用于修改类或者方法。对类进行装饰并不常见，但某些情况下作为元类(metaclass)的一个替代，类的装饰器是一个有用的工具。&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;foo = [&amp;amp;apos;important&amp;amp;apos;, &amp;amp;apos;foo&amp;amp;apos;, &amp;amp;apos;stuff&amp;amp;apos;]
+
+def add_foo(klass):
+    klass.foo = foo
+    return klass
+
+
+@add_foo
+class Person(object):
+    pass
+
+brian = Person()
+
+print brian.foo
+# &amp;amp;gt;&amp;amp;gt; [&amp;amp;apos;important&amp;amp;apos;, &amp;amp;apos;foo&amp;amp;apos;, &amp;amp;apos;stuff&amp;amp;apos;]&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;现在，类 &lt;code&gt;Person&lt;/code&gt; 的任一对象都有一个超级重要的 &lt;code&gt;foo&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;属性！注意，因为我们装饰的是一个类，所以装饰器返回的不是一个函数，而是一个类。更新一下装饰器的定义：&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;装饰器是一个修改函数、或方法、或类的函数。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;h2&gt;装饰器类&lt;/h2&gt;
+&lt;p&gt;事实证明我早先对你隐瞒了一些其它事情。不仅装饰器可以装饰一个类，并且装饰器也可以是一个类！对于装饰器的唯一要求就是它的返回值必须可调用(callable)。这意味着装饰器必须实现 &lt;code&gt;__call__&lt;/code&gt; 魔术方法，当你调用一个对象时，会隐式调用这个方法。函数当然是隐式设置这个方法的。我们重新将 &lt;code&gt;identity_decorator&lt;/code&gt; 创建为一个类来看看它是如何工作的。&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;class IdentityDecorator(object):
+    def __init__(self, func):
+        self.func = func
+
+    def __call__(self):
+        self.func()
+
+
+@IdentityDecorator
+def a_function():
+    print &amp;amp;quot;I&amp;amp;apos;m a normal function.&amp;amp;quot;
+
+a_function()
+# &amp;amp;gt;&amp;amp;gt; I&amp;amp;apos;m a normal function.&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;如下是上例中发生的事情：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;当 &lt;code&gt;IdentityDecorator&lt;/code&gt; 装饰 &lt;code&gt;a_function&lt;/code&gt; 时，它的行为就和装饰器函数一样。这个代码片段等价于上例中的装饰器语法： &lt;code&gt;a_function = IdentityDecorator(a_function)&lt;/code&gt; 。调用（实例化）该装饰器类时，需将其装饰的函数作为一个实参传递给它。&lt;/li&gt;
+&lt;li&gt;实例化 &lt;code&gt;IdentityDecorator&lt;/code&gt; 之时，会以被装饰的函数作为实参调用初始化函数 &lt;code&gt;__init__&lt;/code&gt; 。本例中，初始化函数所做的事情就是将被装饰函数赋值给一个属性，这样之后就可以通过其它方法进行调用。&lt;/li&gt;
+&lt;li&gt;最后，调用 &lt;code&gt;a_function&lt;/code&gt; （实际上是返回的包装了 &lt;code&gt;a_function&lt;/code&gt; 的 &lt;code&gt;IdentityDecorator&lt;/code&gt; 对象）之时，会调用对象的 &lt;code&gt;__call__&lt;/code&gt; 方法。这仅是一个同一性装饰器，所以方法只是简单地调用了该类所装饰的函数。&lt;/li&gt;&lt;/ul&gt;
+&lt;p&gt;再次更新一下我们对装饰器的定义！&lt;/p&gt;
+&lt;blockquote&gt;&lt;p&gt;装饰器是一个修改函数、方法或者类的可调用对象。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;h2&gt;带参数的装饰器&lt;/h2&gt;
+&lt;p&gt;有时，需要根据不同的情况改变装饰器的行为。你可以通过传参来做到这一点。&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;from functools import wraps
+
+def argumentative_decorator(gift):
+    def func_wrapper(func):
+        @wraps(func)
+        def returned_wrapper(*args, **kwargs):
+             print &amp;amp;quot;I don&amp;amp;apos;t like this &amp;amp;quot; + gift + &amp;amp;quot;you gave me!&amp;amp;quot;
+             return func(gift, *args, **kwargs)
+        return returned_wrapper
+    return func_wrapper
+
+@argumentative_decorator(&amp;amp;quot;sweater&amp;amp;quot;)
+def grateful_function(gift):
+    print &amp;amp;quot;I love the &amp;amp;quot; + gift + &amp;amp;quot;!Thank you!&amp;amp;quot;
+
+grateful_function()
+# &amp;amp;gt;&amp;amp;gt; I don&amp;amp;apos;t like this sweater you gave me!
+# &amp;amp;gt;&amp;amp;gt; I love the sweater! Thank you!&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;我们来看看如果不使用装饰器语法这个装饰器函数是如何工作的：&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;# If we tried to invoke without an argument:
+grateful_function = argumentative_function(grateful_function)
+
+# But when given an argument, the pattern changes to:
+grateful_function = argumentative_decorator(&amp;amp;quot;sweater&amp;amp;quot;)(grateful_function)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;需要注意的地方是：当给定参数，首先仅以那些参数调用装饰器---被包装的函数并不在参数中。装饰器调用返回后，装饰器要包装的函数被传递给装饰器初始调用返回的函数（本例中，为 &lt;code&gt;argumentative_decorator(&amp;quot;sweater&amp;quot;)&lt;/code&gt; 的返回值）。&lt;/p&gt;
+&lt;p&gt;逐步地：&lt;/p&gt;
+&lt;ol&gt;&lt;li&gt;解释器到达被装饰函数之处，编译 &lt;code&gt;grateful_function&lt;/code&gt; ，并将其绑定到名字&apos;grateful_function&apos;。&lt;/li&gt;
+&lt;li&gt;传递参数&quot;sweater&quot;调用 &lt;code&gt;argumentative_decorator&lt;/code&gt; ，返回 &lt;code&gt;func_wrapper&lt;/code&gt; 。&lt;/li&gt;
+&lt;li&gt;以 &lt;code&gt;grateful_function&lt;/code&gt; 为参调用 &lt;code&gt;func_wrapper&lt;/code&gt; ，返回 &lt;code&gt;returned_wrapper&lt;/code&gt; 。&lt;/li&gt;
+&lt;li&gt;最后， &lt;code&gt;returned_wrapper&lt;/code&gt; 取代原来的函数 &lt;code&gt;grateful_function&lt;/code&gt; ，并绑定到名字&apos;grateful_function&apos; 。&lt;/li&gt;&lt;/ol&gt;
+&lt;p&gt;我想这一过程相比没有装饰器参数理解起来更难一点，但是如果你花些时间将其理解通透，我希望是有意义的。&lt;/p&gt;
+&lt;h2&gt;带可选参数的装饰器&lt;/h2&gt;
+&lt;p&gt;有多种方式让装饰器接受可选参数。根据你是想使用位置参数、关键字参数还是两者皆是，需要使用稍微不同的模式。如下我将展示一种接受一个可选关键字参数的方式：&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;from functools import wraps
+
+GLOBAL_NAME = &amp;amp;quot;Brian&amp;amp;quot;
+
+def print_name(function=None, name=GLOBAL_NAME):
+    def actual_decorator(function):
+        @wraps(function)
+        def returned_func(*args, **kwargs):
+            print &amp;amp;quot;My name is &amp;amp;quot; + name
+            return function(*args, **kwargs)
+        return returned_func
+
+    if not function:    # User passed in a name argument
+        def waiting_for_func(function):
+            return actual_decorator(function)
+        return waiting_for_func
+
+    else:
+        return actual_decorator(function)
+
+@print_name
+def a_function():
+    print &amp;amp;quot;I like the name!&amp;amp;quot;
+
+@print_name(name=&amp;amp;apos;Matt&amp;amp;apos;)
+def another_function():
+    print &amp;amp;quot;Hey, that&amp;amp;apos;s new!&amp;amp;quot;
+
+a_function()
+# &amp;amp;gt;&amp;amp;gt; My name is Brian
+# &amp;amp;gt;&amp;amp;gt; I like that name!
+
+another_function()
+# &amp;amp;gt;&amp;amp;gt; My name is Matt
+# &amp;amp;gt;&amp;amp;gt; Hey, that&amp;amp;apos;s new!&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;如果我们传递关键字参数 &lt;code&gt;name&lt;/code&gt; 给 &lt;code&gt;print_name&lt;/code&gt;，那么它的行为就与前一个例子中的 &lt;code&gt;argumentative_decorator&lt;/code&gt; 相似。即，首先以 &lt;code&gt;name&lt;/code&gt; 为参调用 &lt;code&gt;print_name&lt;/code&gt; 。然后，将待包装的函数传递给首次调用返回的函数。&lt;/p&gt;
+&lt;p&gt;如果我们没有提供 &lt;code&gt;name&lt;/code&gt; 实参， &lt;code&gt;print_name&lt;/code&gt; 的行为就与前面我们看到的不带参数的装饰器一样。装饰器仅以待包装的函数作为唯一的参数进行调用。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;print_name&lt;/code&gt; 支持两种可能性。它会检查是否收到作为参数的被包装函数。如果没有，则返回函数&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;waiting_for_func&lt;/code&gt;，该函数可以被包装函数作为参数进行调用。如果收到被包装函数作为参数，则跳过中间步骤，直接调用 &lt;code&gt;actual_decorator&lt;/code&gt; 。&lt;/p&gt;
+&lt;h2&gt;串接装饰器&lt;/h2&gt;
+&lt;p&gt;现在来探索一下今天要讲的最后一个装饰器的特性：串接。你可以在任意给定的函数之上堆叠使用多个装饰器， 这种构建函数的方式与使用多重继承构建类相类似。不过最好不要疯狂使用这种特性。&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;@print_name(&amp;amp;apos;Sam&amp;amp;apos;)
+@logging_decorator
+def some_function():
+    print &amp;amp;quot;I&amp;amp;apos;m the wrapped function!&amp;amp;quot;
+
+some_function()
+# &amp;amp;gt;&amp;amp;gt; My name is Sam
+# &amp;amp;gt;&amp;amp;gt; The function I modify has been called 1 time(s).
+# &amp;amp;gt;&amp;amp;gt; I&amp;amp;apos;m the wrapped function!&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;当你串接使用装饰器时，它们堆叠的顺序是自底向上的。将被包装的函数 &lt;code&gt;some_function&lt;/code&gt; 经编译后传递给它之上的第一个装饰器（ &lt;code&gt;logging_decorator&lt;/code&gt; ）。然后第一个装饰器的返回值被传递给第二个装饰器。依此逐个应用链上每个装饰器。&lt;/p&gt;
+&lt;p&gt;因为我们使用的两个装饰器都是 &lt;code&gt;print&lt;/code&gt; 一个值，然后执行传递给它们的函数，这意味着当调用被包装函数时，链中的最后一个装饰器 &lt;code&gt;print_name&lt;/code&gt; 打印输出中的第一行。&lt;/p&gt;
+&lt;h2&gt;总结&lt;/h2&gt;
+&lt;p&gt;我认为装饰器最大的好处之一在于让你能够从更高的抽象层次进行思考。假如你开始阅读一个函数定义，看到有一个 &lt;code&gt;memoize&lt;/code&gt; 装饰器，你立刻就能明白你正在看的是一个使用缓存制表的函数。如果缓存制表的代码包含在函数体内，就会需要额外的脑力进行解析，并且会有引入误解的可能。使用装饰器也允许代码复用，从而节省时间、简化调试，并且使得重构更加容易。&lt;/p&gt;
+&lt;p&gt;玩玩装饰器也是一种很好的学习函数式概念（如高阶函数与闭包）的方式。&lt;/p&gt;
+&lt;p&gt;我希望本文阅读起来很愉快，并且内容翔实。&lt;/p&gt;</description>
+            <pubDate>2013-01-04</pubDate>
+            <link>https://blog.xiayf.cn/posts/decorators-and-functional-python.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/decorators-and-functional-python.html</guid>
         </item>
         
         <item>

@@ -4,8 +4,8 @@
         <description>精进，求诸己身</description>
         <link>https://blog.xiayf.cn/</link>
         <atom:link href="https://blog.xiayf.cn/rss.xml" rel="self" type="application/rss+xml"/>
-        <pubDate>2025-04-23T00:03:26.774576+08:00</pubDate>
-        <lastBuildDate>2025-04-23T00:03:26.774576+08:00</lastBuildDate>
+        <pubDate>2025-05-01T13:16:22.338911+08:00</pubDate>
+        <lastBuildDate>2025-05-01T13:16:22.338911+08:00</lastBuildDate>
         <generator>LingDong</generator>
         
         <item>
@@ -142,6 +142,230 @@
             <pubDate>2025-01-09</pubDate>
             <link>https://blog.xiayf.cn/posts/product-quantizer-tutorial-part-1.html</link>
             <guid isPermaLink="true">https://blog.xiayf.cn/posts/product-quantizer-tutorial-part-1.html</guid>
+        </item>
+        
+        <item>
+            <title>Arrow 列存格式-序列化与进程间通信（译）</title>
+            <description>&lt;p&gt;原文：&lt;a href=&apos;https://arrow.apache.org/docs/format/Columnar.html#serialization-and-interprocess-communication-ipc&apos;&gt;Arrow Columnar Format-Serialization and Interprocess Communication (IPC)&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;序列化与进程间通信(IPC)&lt;/h2&gt;
+&lt;p&gt;本列存格式定义中，序列化数据的基本单元是“成批记录（record batch）”。语义上，一个成批记录是若干数组的一个有序集合，一个数组对应一个字段列（field），这些数组的长度相同，但数据类型可能不同。一个成批记录中字段列的名称和类型信息共同形成该批的 &lt;em&gt;schema&lt;/em&gt;。&lt;/p&gt;
+&lt;p&gt;本小节，我们将定义一种协议，约定如何将若干记录批序列化成一个二进制载荷的流，以及如何无需内存拷贝就能从这些载荷重建出记录批。&lt;/p&gt;
+&lt;p&gt;本列存进程间通信协议使用如下这些类型的二进制消息格式来构建一个单向流的定义：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;Schema&lt;/li&gt;
+&lt;li&gt;RecordBatch&lt;/li&gt;
+&lt;li&gt;DictionaryBatch&lt;/li&gt;&lt;/ul&gt;
+&lt;p&gt;这种我们称之为进程间通信密封消息的格式，包含一个经序列化的 Flatbuffer 类型元数据，后接一个可选的消息体。在描述如何序列化如上三种进程间通信消息类型之前，我们先定义清楚这种消息格式。&lt;/p&gt;
+&lt;h3&gt;密封消息格式&lt;/h3&gt;
+&lt;p&gt;对于简单的流式序列化和基于文件的序列化，我们为进程间通信定义一种“密封的”消息格式。这种消息，仅需检查消息的元数据，就能“被反序列化”成内存中的 Arrow 数组对象，无需对实际数据进行拷贝或移动。&lt;/p&gt;
+&lt;p&gt;这种密封二进制消息格式如下所述：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;一个 32 比特长度的再开始标识。其值为 &lt;code&gt;0xFFFFFFFF&lt;/code&gt;，表示重新开始一个有效消息。这一部分是在版本 0.15.0 引入的，部分原因是为了解决 Flatbuffers 要求8字节对齐的问题。&lt;/li&gt;
+&lt;li&gt;消息元数据部分的大小，32 比特长度，小端编码。&lt;/li&gt;
+&lt;li&gt;消息元数据，类型为 &lt;a href=&apos;&quot;https://github.com/apache/arrow/blob/main/format/Message.fbs&quot;&apos;&gt;Message.fbs&lt;/a&gt;文件中定义的 &lt;code&gt;Message&lt;/code&gt; 类型。&lt;/li&gt;
+&lt;li&gt;消息体，其长度必须是8字节的倍数。&lt;/li&gt;&lt;/ul&gt;
+&lt;p&gt;语义上，消息格式形如：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;&amp;amp;lt;再开始标识: 0xFFFFFFFF&amp;amp;gt;
+&amp;amp;lt;元数据大小: int32&amp;amp;gt;
+&amp;amp;lt;flatbuffer 序列化的元数据: bytes&amp;amp;gt;
+&amp;amp;lt;填充&amp;amp;gt;
+&amp;amp;lt;消息体&amp;amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;经序列化的完整消息，长度必须是8字节的倍数，这样消息可以跨多个流实现内存重定位（译注：怎么理解？）。否则，元数据和消息体之间填充量是不确定的。&lt;/p&gt;
+&lt;p&gt;“元数据大小” 等于 &lt;code&gt;Message&lt;/code&gt; 类型的大小加上填充的大小。“flatbuffer 序列化的元数据”即是一个 Flatbuffer &lt;code&gt;Message&lt;/code&gt; 类型的值序列化后的结果，其内部包含如下部分：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;版本号&lt;/li&gt;
+&lt;li&gt;特定的消息类型值（&lt;code&gt;Schema&lt;/code&gt;、&lt;code&gt;RecordBatch&lt;/code&gt;、&lt;code&gt;DictionaryBatch&lt;/code&gt; 三者之一）&lt;/li&gt;
+&lt;li&gt;消息体的大小&lt;/li&gt;
+&lt;li&gt;应用设置的“自定义元数据”字段。&lt;/li&gt;&lt;/ul&gt;
+&lt;p&gt;在读取一个输入流时，通常先解析 &lt;code&gt;Message&lt;/code&gt; 元数据，经验证后获取到消息体的大小，然后读取消息体。&lt;/p&gt;
+&lt;h3&gt;Schema 消息&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&apos;&quot;https://github.com/apache/arrow/blob/main/format/Schema.fbs&quot;&apos;&gt;Schema.fbs&lt;/a&gt; 这个 Flatbuffers 文件包含所有内置类型的定义，以及用于表达一个给定成批记录 schema 的 &lt;code&gt;Schema&lt;/code&gt; 元数据类型。schema 是若干字段列（&lt;code&gt;Field&lt;/code&gt;）定义的有序序列，每个字段列定义包含列名称和列数据类型。&lt;code&gt;Schema&lt;/code&gt; 类型的值经序列化后不会包含任何数据缓冲区，仅包含类型元数据。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Field&lt;/code&gt; 这个 Flatbuffers 类型包含单个数组的的元数据，包括如下信息：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;字段列的名称&lt;/li&gt;
+&lt;li&gt;字段列的数据类型&lt;/li&gt;
+&lt;li&gt;该字段列语义上是否可以为 null。这个和数组的物理内存布局无关，一些系统会明确区分可为 null 的字段列和不可为 null 的字段列，我们希望保留这个元数据以便完整无缺地表达 schema&lt;/li&gt;
+&lt;li&gt;对于嵌套类型，还包含一组子类型 &lt;code&gt;Field&lt;/code&gt; 元数据&lt;/li&gt;
+&lt;li&gt;一个名为 &lt;code&gt;dictionary&lt;/code&gt; 的属性，标识当前字段列是否字典编码过的。如果是的话，会有一个字典“id” 赋值于此，如此便可为这个字段列匹配后续的字典编码的 IPC 消息。&lt;/li&gt;&lt;/ul&gt;
+&lt;p&gt;另外，我们还提供 schema 级别和字段列级别的 &lt;code&gt;custom_metadata&lt;/code&gt; 属性字段，方便应用系统插入自己的应用元数据，以此自定义行为。&lt;/p&gt;
+&lt;h3&gt;RecordBatch 消息&lt;/h3&gt;
+&lt;p&gt;一个 RecordBatch 消息包含若干实际的数据缓冲区，其物理内存布局由 schema 决定。这种消息的元数据提供了每个缓冲区的位置和大小信息，如此，使用指针计算就能重建出那些数组数据结构，也无需内存拷贝。&lt;/p&gt;
+&lt;p&gt;成批记录的序列化后形式如下所示：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;“消息头部”部分，定义见 &lt;a href=&apos;&quot;https://github.com/apache/arrow/blob/main/format/Message.fbs&quot;&apos;&gt;Message.fbs&lt;/a&gt; 中的 &lt;code&gt;RecordBatch&lt;/code&gt; 类型。&lt;/li&gt;
+&lt;li&gt;“消息体”部分，若干内存缓冲区的一个平铺序列，依次逐个写入，中间加上适当的填充以确保8字节对齐。&lt;/li&gt;&lt;/ul&gt;
+&lt;p&gt;数据头部包含如下信息：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;成批记录中，每个平铺字段列的长度和 null 值的数量。&lt;/li&gt;
+&lt;li&gt;成批记录消息体中每个“缓冲区”的内存偏移位置和长度。&lt;/li&gt;&lt;/ul&gt;
+&lt;p&gt;这些字段列信息和缓冲区是对成批记录中的字段列按照原有顺序进行深度优先遍历平铺得到的。例如，我们来看看如下 schema：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;col1: Struct&amp;amp;lt;a: Int32, b: List&amp;amp;lt;item: Int64&amp;amp;gt;, c: Float64&amp;amp;gt;
+col2: Utf8&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;其平铺版本如下所示：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;FieldNode 0: Struct name=&amp;amp;apos;col1&amp;amp;apos;
+FieldNode 1: Int32 name=&amp;amp;apos;a&amp;amp;apos;
+FieldNode 2: List name=&amp;amp;apos;b&amp;amp;apos;
+FieldNode 3: Int64 name=&amp;amp;apos;item&amp;amp;apos;
+FieldNode 4: Float64 name=&amp;amp;apos;c&amp;amp;apos;
+FieldNode 5: Utf8 name=&amp;amp;apos;col2&amp;amp;apos;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;对应生成的缓冲区平铺序列，则如下所示（参考上面的表定义）：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;buffer 0: field 0 validity
+buffer 1: field 1 validity
+buffer 2: field 1 values
+buffer 3: field 2 validity
+buffer 4: field 2 offsets
+buffer 5: field 3 validity
+buffer 6: field 3 values
+buffer 7: field 4 validity
+buffer 8: field 4 values
+buffer 9: field 5 validity
+buffer 10: field 5 offsets
+buffer 11: field 5 data&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;Buffer&lt;/code&gt; 的 Flatbuffers 值描述了每块内存的位置和大小，按照前文定义的密封消息格式进行解析。&lt;/p&gt;
+&lt;h3&gt;可变数量缓冲区（Variadic buffers）&lt;/h3&gt;
+&lt;blockquote&gt;&lt;p&gt;Arrow 列存格式 1.4 版本新增。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p&gt;诸如 Utf8View 这些类型，使用不定数量的缓冲区来表现。按照预先顺序拍平的逻辑 schema 中的这类字段列在 RecordBatch 的&lt;code&gt;variadicBufferCounts&lt;/code&gt; 属性中都对应一个值来表示当前 RecordBatch 中属于那个字段列的缓冲区的数量。&lt;/p&gt;
+&lt;p&gt;例如，来看看如下 schema：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;col1: Struct&amp;amp;lt;a: Int32, b: BinaryView, c: Float64&amp;amp;gt;
+col2: Utf8View&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;其中有两个字段列是有可变数量缓冲区的，因此 RecordBatch 的 &lt;code&gt;variadicBufferCounts&lt;/code&gt; 属性中对应有2个值。若该 schema 的一个 RecordBatch 中 &lt;code&gt;variadicBufferCounts = [3, 2]&lt;/code&gt;，那么平铺的缓冲区序列如下所示：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;buffer 0:  col1    validity
+buffer 1:  col1.a  validity
+buffer 2:  col1.a  values
+buffer 3:  col1.b  validity
+buffer 4:  col1.b  views
+buffer 5:  col1.b  data
+buffer 6:  col1.b  data
+buffer 7:  col1.b  data
+buffer 8:  col1.c  validity
+buffer 9:  col1.c  values
+buffer 10: col2    validity
+buffer 11: col2    views
+buffer 12: col2    data
+buffer 13: col2    data&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;压缩&lt;/h3&gt;
+&lt;p&gt;对于成批记录的消息体缓冲区内容有3种压缩方式可选：不压缩、使用 &lt;code&gt;lz4&lt;/code&gt; 压缩、使用 &lt;code&gt;zstd&lt;/code&gt; 压缩。消息体中平铺的缓冲区序列，每个缓冲区需要使用相同的压缩编码方式单独压缩。压缩处理后的缓冲区序列中某些缓冲区可能没有被压缩（例如，某些缓冲区经压缩后其大小不会明显变小）。&lt;/p&gt;
+&lt;p&gt;RecordBatch “消息头”中的 &lt;code&gt;compression&lt;/code&gt; 属性用于标记使用的压缩类型，该属性可选，默认值为不压缩。&lt;/p&gt;
+&lt;p&gt;对缓冲区进行压缩或不进行压缩，区别之处在：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;如果 &lt;a href=&apos;&quot;https://arrow.apache.org/docs/format/Columnar.html#ipc-recordbatch-message&quot;&apos;&gt;RecordBatch 消息&lt;/a&gt;中缓冲区经过压缩
+&lt;ul&gt;&lt;li&gt;“消息头”中除了包含成批记录消息体中每个压缩过的缓冲区的大小和内存偏移量之外，还会包含使用的压缩类型。&lt;/li&gt;
+&lt;li&gt;“消息体”包含经过压缩的缓冲区平铺序列，序列中每个缓冲区的起始8个字节存储缓冲区未经压缩时的长度，这个长度是小端字节序编码的64比特有符号整数。如果这个长度为 &lt;code&gt;-1&lt;/code&gt;，则表示当前 buffer 实际未经压缩。&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;
+&lt;ul&gt;&lt;li&gt;如果 &lt;a href=&apos;&quot;https://arrow.apache.org/docs/format/Columnar.html#ipc-recordbatch-message&quot;&apos;&gt;RecordBatch 消息&lt;/a&gt;中缓冲区未经压缩
+&lt;ul&gt;&lt;li&gt;“消息头”中仅包含成批记录消息体中每个未经压缩缓冲区的大小和内存偏移量。&lt;/li&gt;
+&lt;li&gt;“消息体”则简单地包含未经压缩缓冲区的平铺序列。&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;
+&lt;h3&gt;&lt;a href=&apos;&quot;https://en.wikipedia.org/wiki/Endianness&quot;&apos;&gt;字节序&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Arrow 列存格式默认使用小端序字节编码。&lt;/p&gt;
+&lt;p&gt;Schema 序列化后的元数据中包含一个 &lt;code&gt;endianness&lt;/code&gt; 属性，表示成批记录使用哪种字节序编码。通常就是生成该 RecordBatch 的系统使用的字节序。该属性的主要用处是确保在使用相同字节序的系统之间传输成批记录数据。如果系统在读取 Schema 时发现字节序和自己不匹配，则应该报错。&lt;/p&gt;
+&lt;h3&gt;IPC 流式编码格式&lt;/h3&gt;
+&lt;p&gt;我们为成批记录序列提供了一种流式编码协议或者说“格式”，其表现为一个密封消息序列，每个密封消息都遵循前文所属的格式。流中，先放入 schema，后面放入的所有成批记录 schema 都是同一个。如果 schema 中任一字段列使用字典编码，那么流中会包含一个或多个 &lt;code&gt;DictionaryBatch&lt;/code&gt; 消息。&lt;code&gt;DictionaryBatch&lt;/code&gt; 消息和 &lt;code&gt;RecordBatch&lt;/code&gt; 消息可能会交织出现，但是 &lt;code&gt;RecordBatch&lt;/code&gt; 中使用的所有字典 id 都应该在其前面的 &lt;code&gt;DictionaryBatch&lt;/code&gt; 消息中定义好。&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;&amp;amp;lt;SCHEMA&amp;amp;gt;
+&amp;amp;lt;DICTIONARY 0&amp;amp;gt;
+...
+&amp;amp;lt;DICTIONARY k - 1&amp;amp;gt;
+&amp;amp;lt;RECORD BATCH 0&amp;amp;gt;
+...
+&amp;amp;lt;DICTIONARY x DELTA&amp;amp;gt;
+...
+&amp;amp;lt;DICTIONARY y DELTA&amp;amp;gt;
+...
+&amp;amp;lt;RECORD BATCH n - 1&amp;amp;gt;
+&amp;amp;lt;EOS [optional]: 0xFFFFFFFF 0x00000000&amp;amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;blockquote&gt;&lt;p&gt;注解：&lt;/p&gt;
+&lt;p&gt;字典和数据成批记录交织出现的规则有一个特殊情况 - 如果字典成批记录中的向量完全为空，那么数据列所使用的字典可能会出现首个数据成批记录的后面。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p&gt;实现一个流读取器，在读取每条消息后，需要先读取接下来的8个字节来确定流是否继续以及下一条消息的元数据大小。一旦读到了消息的 flatbuffer 编码元数据，就可以继续读取消息体部分了。&lt;/p&gt;
+&lt;p&gt;流写入器，可以写入 4字节的再开始标识（&lt;code&gt;0xFFFFFFFF&lt;/code&gt;）拼接上4字节的元数据长度 0（&lt;code&gt;0x00000000&lt;/code&gt;） 来标识流结束（EOS），或者简单关闭流接口。对于流格式，我们推荐使用 “.arrows” 文件扩展名，虽然许多情况下流并不会存为文件。&lt;/p&gt;
+&lt;h3&gt;IPC 文件格式&lt;/h3&gt;
+&lt;p&gt;我们定义一种支持随机访问的“文件格式”，作为流式编码格式的一种扩展。文件的起始和末尾均是一个魔术字符串 &lt;code&gt;ARROW1&lt;/code&gt;(加上填充)。起始魔术字符串之后紧跟是流式编码格式的内容，之后在末尾魔术字符串之前，先写入一个尾部（footer） - 包含 schema（流式编码格式的一部分） 的一个拷贝，加上文件中每个数据块的内存偏移量和大小信息。这样就能够随机访问文件中的任一成批记录。可以查看 &lt;a href=&apos;&quot;https://github.com/apache/arrow/blob/main/format/File.fbs&quot;&apos;&gt;File.fbs&lt;/a&gt; 文件了解文件尾部的定义细节。&lt;/p&gt;
+&lt;p&gt;语义上，文件格式如下所示：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;&amp;amp;lt;magic number &amp;amp;quot;ARROW1&amp;amp;quot;&amp;amp;gt;
+&amp;amp;lt;empty padding bytes [to 8 byte boundary]&amp;amp;gt;
+&amp;amp;lt;STREAMING FORMAT with EOS&amp;amp;gt;
+&amp;amp;lt;FOOTER&amp;amp;gt;
+&amp;amp;lt;FOOTER SIZE: int32&amp;amp;gt;
+&amp;amp;lt;magic number &amp;amp;quot;ARROW1&amp;amp;quot;&amp;amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;这个文件格式并不要求 &lt;code&gt;RecordBatch&lt;/code&gt; 中使用的字典 id 要定义在前面的 &lt;code&gt;DictionaryBatch&lt;/code&gt; 中，主要这些 id 定义在文件的某处即可。此外，每个字典 ID 如果存在多个非增量字典也是无效的（比如：不支持字典覆盖替换）。增量字典按照他们在文件尾部中出现的顺序应用生效。以这种格式创建的文件推荐使用 “.arrow” 文件扩展名。请注意这种格式创建的文件有时也被称为“Feature V2”，使用 “.feature” 文件扩展名，这个名称和扩展名源自“Feature （V1）” - Arrow 项目早期为 Python（Pandas） 和 R 语言的语言无关快速数据框（data frame）存储做的一个概念验证。&lt;/p&gt;
+&lt;p&gt;另附 - File.fbs 中 Footer 定义：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;include &amp;amp;quot;Schema.fbs&amp;amp;quot;;
+
+namespace org.apache.arrow.flatbuf;
+
+/// ----------------------------------------------------------------------
+/// Arrow 文件元数据
+///
+
+table Footer {
+  version: org.apache.arrow.flatbuf.MetadataVersion;
+  schema: org.apache.arrow.flatbuf.Schema;
+  dictionaries: [ Block ];
+  recordBatches: [ Block ];
+  /// 用户自定义元数据
+  custom_metadata: [ KeyValue ];
+}
+
+struct Block {
+  /// Index to the start of the RecordBlock (note this is past the Message header)
+  offset: long;
+  /// Length of the metadata
+  metaDataLength: int;
+  /// Length of the data (this is aligned so there can be a gap between this and
+  /// the metadata).
+  bodyLength: long;
+}
+
+root_type Footer;&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;字典编码消息&lt;/h3&gt;
+&lt;p&gt;字典是以成批记录序列的形式写入流或者文件格式的，其成批记录中仅包含单个字段列。因此，一个字典成批记录序列的完整语义 schema 包括所有字典带的 schema。所以必须先从字典成批记录的 schema 中读取字典类型信息，才能正确地对字典数据进行解析翻译：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;table DictionaryBatch {
+  id: long;
+  data: RecordBatch;
+  isDelta: boolean = false;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;字典消息元数据中的字典 &lt;code&gt;id&lt;/code&gt; 可以在数据成批记录的 schema 中被多次引用，因此同一个字典可以被多个数据字段列使用。可以阅读&lt;a href=&apos;&quot;https://arrow.apache.org/docs/format/Columnar.html#dictionary-encoded-layout&quot;&apos;&gt;字典编码内存布局&lt;/a&gt;一节了解字典编码数据的语义。&lt;/p&gt;
+&lt;p&gt;字典 &lt;code&gt;isDelta&lt;/code&gt; 标志位允许对前面存在的字典进行扩展，以便支持后续成批记录的解析。如果一个字典成批记录的 &lt;code&gt;isDelta&lt;/code&gt; 设置为真（true），则表示它的向量数据应该和前面同 id 的字典成批记录拼接在一起。假设对一列数据进行流式编码，该列数据为一个字符串列表 &lt;code&gt;[&amp;quot;A&amp;quot;, &amp;quot;B&amp;quot;, &amp;quot;C&amp;quot;, &amp;quot;B&amp;quot;, &amp;quot;D&amp;quot;, &amp;quot;C&amp;quot;, &amp;quot;E&amp;quot;, &amp;quot;A&amp;quot;]&lt;/code&gt;，其增量（delta）字典成批记录的形式可能如下所示：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;&amp;amp;lt;SCHEMA&amp;amp;gt;
+&amp;amp;lt;DICTIONARY 0&amp;amp;gt;
+(0) &amp;amp;quot;A&amp;amp;quot;
+(1) &amp;amp;quot;B&amp;amp;quot;
+(2) &amp;amp;quot;C&amp;amp;quot;
+
+&amp;amp;lt;RECORD BATCH 0&amp;amp;gt;
+0
+1
+2
+1
+
+&amp;amp;lt;DICTIONARY 0 DELTA&amp;amp;gt;
+(3) &amp;amp;quot;D&amp;amp;quot;
+(4) &amp;amp;quot;E&amp;amp;quot;
+
+&amp;amp;lt;RECORD BATCH 1&amp;amp;gt;
+3
+2
+4
+0
+EOS&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;或者，如果 &lt;code&gt;isDelta&lt;/code&gt; 被设置为假（false），那么同 ID 的字典，后面的会覆盖替换前面的。同样使用如上的例子，对应编码形式可能如下所示：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;&amp;amp;lt;SCHEMA&amp;amp;gt;
+&amp;amp;lt;DICTIONARY 0&amp;amp;gt;
+(0) &amp;amp;quot;A&amp;amp;quot;
+(1) &amp;amp;quot;B&amp;amp;quot;
+(2) &amp;amp;quot;C&amp;amp;quot;
+
+&amp;amp;lt;RECORD BATCH 0&amp;amp;gt;
+0
+1
+2
+1
+
+&amp;amp;lt;DICTIONARY 0&amp;amp;gt;
+(0) &amp;amp;quot;A&amp;amp;quot;
+(1) &amp;amp;quot;C&amp;amp;quot;
+(2) &amp;amp;quot;D&amp;amp;quot;
+(3) &amp;amp;quot;E&amp;amp;quot;
+
+&amp;amp;lt;RECORD BATCH 1&amp;amp;gt;
+2
+1
+3
+0
+EOS&lt;/code&gt;&lt;/pre&gt;</description>
+            <pubDate>2024-12-07</pubDate>
+            <link>https://blog.xiayf.cn/posts/arrow-ipc.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/arrow-ipc.html</guid>
         </item>
         
         <item>
@@ -2796,7 +3020,7 @@ func mul(u, v Vector, k int) (res float64) {
 &lt;h4&gt;真实系统&lt;/h4&gt;
 &lt;p&gt;最重要的练习是重复地阅读新兴的、真实系统的描述，并尝试评价它们的设计决策。一遍又一遍地这样去做。一些建议：&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Google:&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;&lt;a href=&apos;http://static.googleusercontent.com/media/research.google.com/en/us/archive/gfs-sosp2003.pdf&apos;&gt;GFS&lt;/a&gt;、&lt;a href=&apos;http://static.googleusercontent.com/media/research.google.com/en/us/archive/spanner-osdi2012.pdf&apos;&gt;Spanner&lt;/a&gt;、&lt;a href=&apos;http://static.googleusercontent.com/media/research.google.com/en/us/pubs/archive/41344.pdf&apos;&gt;F1&lt;/a&gt;、&lt;a href=&apos;http://static.googleusercontent.com/media/research.google.com/en/us/archive/chubby-osdi06.pdf&apos;&gt;Chubby&lt;/a&gt;、&lt;a href=&apos;http://static.googleusercontent.com/media/research.google.com/en/us/archive/bigtable-osdi06.pdf&apos;&gt;BigTable&lt;/a&gt;、&lt;a href=&apos;http://static.googleusercontent.com/media/research.google.com/en/us/pubs/archive/41378.pdf&apos;&gt;MillWheel&lt;/a&gt;、&lt;a href=&apos;http://eurosys2013.tudos.org/wp-content/uploads/2013/paper/Schwarzkopf.pdf&apos;&gt;Omega&lt;/a&gt;、&lt;a href=&apos;http://static.googleusercontent.com/media/research.google.com/en/us/pubs/archive/36356.pdf&apos;&gt;Dapper&lt;/a&gt;、&lt;a href=&apos;http://www.cs.utexas.edu/users/lorenzo/corsi/cs380d/papers/paper2-1.pdf&apos;&gt;Paxos Made Live&lt;/a&gt;、&lt;a href=&apos;http://cacm.acm.org/magazines/2013/2/160173-the-tail-at-scale/abstract&apos;&gt;The Tail At Scale&lt;/a&gt;。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&apos;http://static.googleusercontent.com/media/research.google.com/en/us/archive/gfs-sosp2003.pdf&apos;&gt;GFS&lt;/a&gt;、&lt;a href=&apos;http://static.googleusercontent.com/media/research.google.com/en/us/archive/spanner-osdi2012.pdf&apos;&gt;Spanner&lt;/a&gt;、&lt;a href=&apos;http://static.googleusercontent.com/media/research.google.com/en/us/pubs/archive/41344.pdf&apos;&gt;F1&lt;/a&gt;、&lt;a href=&apos;http://static.googleusercontent.com/media/research.google.com/en/us/archive/chubby-osdi06.pdf&apos;&gt;Chubby&lt;/a&gt;、&lt;a href=&apos;http://static.googleusercontent.com/media/research.google.com/en/us/archive/bigtable-osdi06.pdf&apos;&gt;BigTable&lt;/a&gt;、&lt;a href=&apos;http://static.googleusercontent.com/media/research.google.com/en/us/pubs/archive/41378.pdf&apos;&gt;MillWheel&lt;/a&gt;、&lt;a href=&apos;http://eurosys2013.tudos.org/wp-content/uploads/2013/paper/Schwarzkopf.pdf&apos;&gt;Omega&lt;/a&gt;、&lt;a href=&apos;http://static.googleusercontent.com/media/research.google.com/en/us/pubs/archive/36356.pdf&apos;&gt;Dapper&lt;/a&gt;、&lt;a href=&apos;http://www.cs.utexas.edu/users/lorenzo/corsi/cs380d/papers/paper2-1.pdf&apos;&gt;Paxos Made Live&lt;/a&gt;、&lt;a href=&apos;http://cacm.acm.org/magazines/2013/2/160173-the-tail-at-scale/abstract&apos;&gt;The Tail At Scale&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Not Google:&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;&lt;a href=&apos;http://research.microsoft.com/en-us/projects/dryad/eurosys07.pdf&apos;&gt;Dryad&lt;/a&gt;、&lt;a href=&apos;https://www.cs.cornell.edu/projects/ladis2009/papers/lakshman-ladis2009.pdf&apos;&gt;Cassandra&lt;/a&gt;、&lt;a href=&apos;http://ceph.com/papers/weil-ceph-osdi06.pdf&apos;&gt;Ceph&lt;/a&gt;、&lt;a href=&apos;https://ramcloud.stanford.edu/wiki/display/ramcloud/RAMCloud+Papers&apos;&gt;RAMCloud&lt;/a&gt;、&lt;a href=&apos;http://hyperdex.org/papers/&apos;&gt;HyperDex&lt;/a&gt;、&lt;a href=&apos;http://www.mpi-sws.org/~druschel/courses/ds/papers/cooper-pnuts.pdf&apos;&gt;PNUTS&lt;/a&gt;&lt;/p&gt;</description>
             <pubDate>2014-08-10</pubDate>

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta property="og:title" content="BitPacking">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://blog.xiayf.cn/">
+    <meta property="og:site_name" content="BitPacking">
+    <meta property="og:description" content="精进，求诸己身">
+
+    <title>BitPacking</title>
+    <meta name="description" content="精进，求诸己身">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <link rel="stylesheet" href="/static/main.css">
+    <link rel="canonical" href="https://blog.xiayf.cn/">
+    
+    <link crossorigin="" rel="shortcut icon" type="image/x-icon" href="/assets/bits_small.ico">
+    
+</head>
+
+<body>
+<header class="site-header">
+    <div class="wrapper">
+        <a class="site-title" href="/">BitPacking</a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg viewBox="0 0 18 15">
+                    <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                <a class="page-link" href="/pages/about.html">关于我</a>
+                
+                <a class="page-link" href="/pages/works.html">作品</a>
+                
+                <a class="page-link" href="/rss.xml">RSS</a>
+                
+            </div>
+        </nav>
+    </div>
+</header>
+
+<div class="page-content">
+    <div class="wrapper">
+        
+<div class="post">
+    <header class="post-header">
+        <h1 class="post-title">Arrow 列存格式-序列化与进程间通信（译）</h1>
+        <p class="post-meta">2024-12-07</p>
+    </header>
+    <article class="post-content">
+        <p>原文：<a href='https://arrow.apache.org/docs/format/Columnar.html#serialization-and-interprocess-communication-ipc'>Arrow Columnar Format-Serialization and Interprocess Communication (IPC)</a></p>
+<h2>序列化与进程间通信(IPC)</h2>
+<p>本列存格式定义中，序列化数据的基本单元是“成批记录（record batch）”。语义上，一个成批记录是若干数组的一个有序集合，一个数组对应一个字段列（field），这些数组的长度相同，但数据类型可能不同。一个成批记录中字段列的名称和类型信息共同形成该批的 <em>schema</em>。</p>
+<p>本小节，我们将定义一种协议，约定如何将若干记录批序列化成一个二进制载荷的流，以及如何无需内存拷贝就能从这些载荷重建出记录批。</p>
+<p>本列存进程间通信协议使用如下这些类型的二进制消息格式来构建一个单向流的定义：</p>
+<ul><li>Schema</li>
+<li>RecordBatch</li>
+<li>DictionaryBatch</li></ul>
+<p>这种我们称之为进程间通信密封消息的格式，包含一个经序列化的 Flatbuffer 类型元数据，后接一个可选的消息体。在描述如何序列化如上三种进程间通信消息类型之前，我们先定义清楚这种消息格式。</p>
+<h3>密封消息格式</h3>
+<p>对于简单的流式序列化和基于文件的序列化，我们为进程间通信定义一种“密封的”消息格式。这种消息，仅需检查消息的元数据，就能“被反序列化”成内存中的 Arrow 数组对象，无需对实际数据进行拷贝或移动。</p>
+<p>这种密封二进制消息格式如下所述：</p>
+<ul><li>一个 32 比特长度的再开始标识。其值为 <code>0xFFFFFFFF</code>，表示重新开始一个有效消息。这一部分是在版本 0.15.0 引入的，部分原因是为了解决 Flatbuffers 要求8字节对齐的问题。</li>
+<li>消息元数据部分的大小，32 比特长度，小端编码。</li>
+<li>消息元数据，类型为 <a href='"https://github.com/apache/arrow/blob/main/format/Message.fbs"'>Message.fbs</a>文件中定义的 <code>Message</code> 类型。</li>
+<li>消息体，其长度必须是8字节的倍数。</li></ul>
+<p>语义上，消息格式形如：</p>
+<pre class="language-text"><code>&lt;再开始标识: 0xFFFFFFFF&gt;
+&lt;元数据大小: int32&gt;
+&lt;flatbuffer 序列化的元数据: bytes&gt;
+&lt;填充&gt;
+&lt;消息体&gt;</code></pre>
+<p>经序列化的完整消息，长度必须是8字节的倍数，这样消息可以跨多个流实现内存重定位（译注：怎么理解？）。否则，元数据和消息体之间填充量是不确定的。</p>
+<p>“元数据大小” 等于 <code>Message</code> 类型的大小加上填充的大小。“flatbuffer 序列化的元数据”即是一个 Flatbuffer <code>Message</code> 类型的值序列化后的结果，其内部包含如下部分：</p>
+<ul><li>版本号</li>
+<li>特定的消息类型值（<code>Schema</code>、<code>RecordBatch</code>、<code>DictionaryBatch</code> 三者之一）</li>
+<li>消息体的大小</li>
+<li>应用设置的“自定义元数据”字段。</li></ul>
+<p>在读取一个输入流时，通常先解析 <code>Message</code> 元数据，经验证后获取到消息体的大小，然后读取消息体。</p>
+<h3>Schema 消息</h3>
+<p><a href='"https://github.com/apache/arrow/blob/main/format/Schema.fbs"'>Schema.fbs</a> 这个 Flatbuffers 文件包含所有内置类型的定义，以及用于表达一个给定成批记录 schema 的 <code>Schema</code> 元数据类型。schema 是若干字段列（<code>Field</code>）定义的有序序列，每个字段列定义包含列名称和列数据类型。<code>Schema</code> 类型的值经序列化后不会包含任何数据缓冲区，仅包含类型元数据。</p>
+<p><code>Field</code> 这个 Flatbuffers 类型包含单个数组的的元数据，包括如下信息：</p>
+<ul><li>字段列的名称</li>
+<li>字段列的数据类型</li>
+<li>该字段列语义上是否可以为 null。这个和数组的物理内存布局无关，一些系统会明确区分可为 null 的字段列和不可为 null 的字段列，我们希望保留这个元数据以便完整无缺地表达 schema</li>
+<li>对于嵌套类型，还包含一组子类型 <code>Field</code> 元数据</li>
+<li>一个名为 <code>dictionary</code> 的属性，标识当前字段列是否字典编码过的。如果是的话，会有一个字典“id” 赋值于此，如此便可为这个字段列匹配后续的字典编码的 IPC 消息。</li></ul>
+<p>另外，我们还提供 schema 级别和字段列级别的 <code>custom_metadata</code> 属性字段，方便应用系统插入自己的应用元数据，以此自定义行为。</p>
+<h3>RecordBatch 消息</h3>
+<p>一个 RecordBatch 消息包含若干实际的数据缓冲区，其物理内存布局由 schema 决定。这种消息的元数据提供了每个缓冲区的位置和大小信息，如此，使用指针计算就能重建出那些数组数据结构，也无需内存拷贝。</p>
+<p>成批记录的序列化后形式如下所示：</p>
+<ul><li>“消息头部”部分，定义见 <a href='"https://github.com/apache/arrow/blob/main/format/Message.fbs"'>Message.fbs</a> 中的 <code>RecordBatch</code> 类型。</li>
+<li>“消息体”部分，若干内存缓冲区的一个平铺序列，依次逐个写入，中间加上适当的填充以确保8字节对齐。</li></ul>
+<p>数据头部包含如下信息：</p>
+<ul><li>成批记录中，每个平铺字段列的长度和 null 值的数量。</li>
+<li>成批记录消息体中每个“缓冲区”的内存偏移位置和长度。</li></ul>
+<p>这些字段列信息和缓冲区是对成批记录中的字段列按照原有顺序进行深度优先遍历平铺得到的。例如，我们来看看如下 schema：</p>
+<pre class="language-text"><code>col1: Struct&lt;a: Int32, b: List&lt;item: Int64&gt;, c: Float64&gt;
+col2: Utf8</code></pre>
+<p>其平铺版本如下所示：</p>
+<pre class="language-text"><code>FieldNode 0: Struct name=&apos;col1&apos;
+FieldNode 1: Int32 name=&apos;a&apos;
+FieldNode 2: List name=&apos;b&apos;
+FieldNode 3: Int64 name=&apos;item&apos;
+FieldNode 4: Float64 name=&apos;c&apos;
+FieldNode 5: Utf8 name=&apos;col2&apos;</code></pre>
+<p>对应生成的缓冲区平铺序列，则如下所示（参考上面的表定义）：</p>
+<pre class="language-text"><code>buffer 0: field 0 validity
+buffer 1: field 1 validity
+buffer 2: field 1 values
+buffer 3: field 2 validity
+buffer 4: field 2 offsets
+buffer 5: field 3 validity
+buffer 6: field 3 values
+buffer 7: field 4 validity
+buffer 8: field 4 values
+buffer 9: field 5 validity
+buffer 10: field 5 offsets
+buffer 11: field 5 data</code></pre>
+<p><code>Buffer</code> 的 Flatbuffers 值描述了每块内存的位置和大小，按照前文定义的密封消息格式进行解析。</p>
+<h3>可变数量缓冲区（Variadic buffers）</h3>
+<blockquote><p>Arrow 列存格式 1.4 版本新增。</p></blockquote>
+<p>诸如 Utf8View 这些类型，使用不定数量的缓冲区来表现。按照预先顺序拍平的逻辑 schema 中的这类字段列在 RecordBatch 的<code>variadicBufferCounts</code> 属性中都对应一个值来表示当前 RecordBatch 中属于那个字段列的缓冲区的数量。</p>
+<p>例如，来看看如下 schema：</p>
+<pre class="language-text"><code>col1: Struct&lt;a: Int32, b: BinaryView, c: Float64&gt;
+col2: Utf8View</code></pre>
+<p>其中有两个字段列是有可变数量缓冲区的，因此 RecordBatch 的 <code>variadicBufferCounts</code> 属性中对应有2个值。若该 schema 的一个 RecordBatch 中 <code>variadicBufferCounts = [3, 2]</code>，那么平铺的缓冲区序列如下所示：</p>
+<pre class="language-text"><code>buffer 0:  col1    validity
+buffer 1:  col1.a  validity
+buffer 2:  col1.a  values
+buffer 3:  col1.b  validity
+buffer 4:  col1.b  views
+buffer 5:  col1.b  data
+buffer 6:  col1.b  data
+buffer 7:  col1.b  data
+buffer 8:  col1.c  validity
+buffer 9:  col1.c  values
+buffer 10: col2    validity
+buffer 11: col2    views
+buffer 12: col2    data
+buffer 13: col2    data</code></pre>
+<h3>压缩</h3>
+<p>对于成批记录的消息体缓冲区内容有3种压缩方式可选：不压缩、使用 <code>lz4</code> 压缩、使用 <code>zstd</code> 压缩。消息体中平铺的缓冲区序列，每个缓冲区需要使用相同的压缩编码方式单独压缩。压缩处理后的缓冲区序列中某些缓冲区可能没有被压缩（例如，某些缓冲区经压缩后其大小不会明显变小）。</p>
+<p>RecordBatch “消息头”中的 <code>compression</code> 属性用于标记使用的压缩类型，该属性可选，默认值为不压缩。</p>
+<p>对缓冲区进行压缩或不进行压缩，区别之处在：</p>
+<ul><li>如果 <a href='"https://arrow.apache.org/docs/format/Columnar.html#ipc-recordbatch-message"'>RecordBatch 消息</a>中缓冲区经过压缩
+<ul><li>“消息头”中除了包含成批记录消息体中每个压缩过的缓冲区的大小和内存偏移量之外，还会包含使用的压缩类型。</li>
+<li>“消息体”包含经过压缩的缓冲区平铺序列，序列中每个缓冲区的起始8个字节存储缓冲区未经压缩时的长度，这个长度是小端字节序编码的64比特有符号整数。如果这个长度为 <code>-1</code>，则表示当前 buffer 实际未经压缩。</li></ul></li></ul>
+<ul><li>如果 <a href='"https://arrow.apache.org/docs/format/Columnar.html#ipc-recordbatch-message"'>RecordBatch 消息</a>中缓冲区未经压缩
+<ul><li>“消息头”中仅包含成批记录消息体中每个未经压缩缓冲区的大小和内存偏移量。</li>
+<li>“消息体”则简单地包含未经压缩缓冲区的平铺序列。</li></ul></li></ul>
+<h3><a href='"https://en.wikipedia.org/wiki/Endianness"'>字节序</a></h3>
+<p>Arrow 列存格式默认使用小端序字节编码。</p>
+<p>Schema 序列化后的元数据中包含一个 <code>endianness</code> 属性，表示成批记录使用哪种字节序编码。通常就是生成该 RecordBatch 的系统使用的字节序。该属性的主要用处是确保在使用相同字节序的系统之间传输成批记录数据。如果系统在读取 Schema 时发现字节序和自己不匹配，则应该报错。</p>
+<h3>IPC 流式编码格式</h3>
+<p>我们为成批记录序列提供了一种流式编码协议或者说“格式”，其表现为一个密封消息序列，每个密封消息都遵循前文所属的格式。流中，先放入 schema，后面放入的所有成批记录 schema 都是同一个。如果 schema 中任一字段列使用字典编码，那么流中会包含一个或多个 <code>DictionaryBatch</code> 消息。<code>DictionaryBatch</code> 消息和 <code>RecordBatch</code> 消息可能会交织出现，但是 <code>RecordBatch</code> 中使用的所有字典 id 都应该在其前面的 <code>DictionaryBatch</code> 消息中定义好。</p>
+<pre class="language-text"><code>&lt;SCHEMA&gt;
+&lt;DICTIONARY 0&gt;
+...
+&lt;DICTIONARY k - 1&gt;
+&lt;RECORD BATCH 0&gt;
+...
+&lt;DICTIONARY x DELTA&gt;
+...
+&lt;DICTIONARY y DELTA&gt;
+...
+&lt;RECORD BATCH n - 1&gt;
+&lt;EOS [optional]: 0xFFFFFFFF 0x00000000&gt;</code></pre>
+<blockquote><p>注解：</p>
+<p>字典和数据成批记录交织出现的规则有一个特殊情况 - 如果字典成批记录中的向量完全为空，那么数据列所使用的字典可能会出现首个数据成批记录的后面。</p></blockquote>
+<p>实现一个流读取器，在读取每条消息后，需要先读取接下来的8个字节来确定流是否继续以及下一条消息的元数据大小。一旦读到了消息的 flatbuffer 编码元数据，就可以继续读取消息体部分了。</p>
+<p>流写入器，可以写入 4字节的再开始标识（<code>0xFFFFFFFF</code>）拼接上4字节的元数据长度 0（<code>0x00000000</code>） 来标识流结束（EOS），或者简单关闭流接口。对于流格式，我们推荐使用 “.arrows” 文件扩展名，虽然许多情况下流并不会存为文件。</p>
+<h3>IPC 文件格式</h3>
+<p>我们定义一种支持随机访问的“文件格式”，作为流式编码格式的一种扩展。文件的起始和末尾均是一个魔术字符串 <code>ARROW1</code>(加上填充)。起始魔术字符串之后紧跟是流式编码格式的内容，之后在末尾魔术字符串之前，先写入一个尾部（footer） - 包含 schema（流式编码格式的一部分） 的一个拷贝，加上文件中每个数据块的内存偏移量和大小信息。这样就能够随机访问文件中的任一成批记录。可以查看 <a href='"https://github.com/apache/arrow/blob/main/format/File.fbs"'>File.fbs</a> 文件了解文件尾部的定义细节。</p>
+<p>语义上，文件格式如下所示：</p>
+<pre class="language-text"><code>&lt;magic number &quot;ARROW1&quot;&gt;
+&lt;empty padding bytes [to 8 byte boundary]&gt;
+&lt;STREAMING FORMAT with EOS&gt;
+&lt;FOOTER&gt;
+&lt;FOOTER SIZE: int32&gt;
+&lt;magic number &quot;ARROW1&quot;&gt;</code></pre>
+<p>这个文件格式并不要求 <code>RecordBatch</code> 中使用的字典 id 要定义在前面的 <code>DictionaryBatch</code> 中，主要这些 id 定义在文件的某处即可。此外，每个字典 ID 如果存在多个非增量字典也是无效的（比如：不支持字典覆盖替换）。增量字典按照他们在文件尾部中出现的顺序应用生效。以这种格式创建的文件推荐使用 “.arrow” 文件扩展名。请注意这种格式创建的文件有时也被称为“Feature V2”，使用 “.feature” 文件扩展名，这个名称和扩展名源自“Feature （V1）” - Arrow 项目早期为 Python（Pandas） 和 R 语言的语言无关快速数据框（data frame）存储做的一个概念验证。</p>
+<p>另附 - File.fbs 中 Footer 定义：</p>
+<pre class="language-text"><code>include &quot;Schema.fbs&quot;;
+
+namespace org.apache.arrow.flatbuf;
+
+/// ----------------------------------------------------------------------
+/// Arrow 文件元数据
+///
+
+table Footer {
+  version: org.apache.arrow.flatbuf.MetadataVersion;
+  schema: org.apache.arrow.flatbuf.Schema;
+  dictionaries: [ Block ];
+  recordBatches: [ Block ];
+  /// 用户自定义元数据
+  custom_metadata: [ KeyValue ];
+}
+
+struct Block {
+  /// Index to the start of the RecordBlock (note this is past the Message header)
+  offset: long;
+  /// Length of the metadata
+  metaDataLength: int;
+  /// Length of the data (this is aligned so there can be a gap between this and
+  /// the metadata).
+  bodyLength: long;
+}
+
+root_type Footer;</code></pre>
+<h3>字典编码消息</h3>
+<p>字典是以成批记录序列的形式写入流或者文件格式的，其成批记录中仅包含单个字段列。因此，一个字典成批记录序列的完整语义 schema 包括所有字典带的 schema。所以必须先从字典成批记录的 schema 中读取字典类型信息，才能正确地对字典数据进行解析翻译：</p>
+<pre class="language-text"><code>table DictionaryBatch {
+  id: long;
+  data: RecordBatch;
+  isDelta: boolean = false;
+}</code></pre>
+<p>字典消息元数据中的字典 <code>id</code> 可以在数据成批记录的 schema 中被多次引用，因此同一个字典可以被多个数据字段列使用。可以阅读<a href='"https://arrow.apache.org/docs/format/Columnar.html#dictionary-encoded-layout"'>字典编码内存布局</a>一节了解字典编码数据的语义。</p>
+<p>字典 <code>isDelta</code> 标志位允许对前面存在的字典进行扩展，以便支持后续成批记录的解析。如果一个字典成批记录的 <code>isDelta</code> 设置为真（true），则表示它的向量数据应该和前面同 id 的字典成批记录拼接在一起。假设对一列数据进行流式编码，该列数据为一个字符串列表 <code>[&quot;A&quot;, &quot;B&quot;, &quot;C&quot;, &quot;B&quot;, &quot;D&quot;, &quot;C&quot;, &quot;E&quot;, &quot;A&quot;]</code>，其增量（delta）字典成批记录的形式可能如下所示：</p>
+<pre class="language-text"><code>&lt;SCHEMA&gt;
+&lt;DICTIONARY 0&gt;
+(0) &quot;A&quot;
+(1) &quot;B&quot;
+(2) &quot;C&quot;
+
+&lt;RECORD BATCH 0&gt;
+0
+1
+2
+1
+
+&lt;DICTIONARY 0 DELTA&gt;
+(3) &quot;D&quot;
+(4) &quot;E&quot;
+
+&lt;RECORD BATCH 1&gt;
+3
+2
+4
+0
+EOS</code></pre>
+<p>或者，如果 <code>isDelta</code> 被设置为假（false），那么同 ID 的字典，后面的会覆盖替换前面的。同样使用如上的例子，对应编码形式可能如下所示：</p>
+<pre class="language-text"><code>&lt;SCHEMA&gt;
+&lt;DICTIONARY 0&gt;
+(0) &quot;A&quot;
+(1) &quot;B&quot;
+(2) &quot;C&quot;
+
+&lt;RECORD BATCH 0&gt;
+0
+1
+2
+1
+
+&lt;DICTIONARY 0&gt;
+(0) &quot;A&quot;
+(1) &quot;C&quot;
+(2) &quot;D&quot;
+(3) &quot;E&quot;
+
+&lt;RECORD BATCH 1&gt;
+2
+1
+3
+0
+EOS</code></pre>
+    </article>
+</div>
+
+    </div>
+</div>
+
+<footer class="site-footer">
+    <div class="wrapper">
+        <div class="footer-col-wrapper">
+            <div class="footer-col footer-col-1">
+                <ul class="social-media-list">
+                    <li>
+                        <a href="https://github.com/kitelife" target="_blank">
+                            <span class="icon icon--github">
+                                <svg viewBox="0 0 16 16">
+                                    <path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                                </svg>
+                            </span>
+                            <span class="username">kitelife</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://maimai.cn/profile/detail?dstu=39580141" target="_blank">
+                            <span class="icon icon--maimai">
+                                <img src="https://maimai.cn/favicon.ico" width="16"/>
+                            </span>
+                            <span class="username">Xiayf</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="footer-col footer-col-2"></div>
+            <div class="footer-col footer-col-3"></div>
+            <div class="footer-col footer-col-4">
+                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">
+                    <img alt="Creative Commons License" src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-sa.svg">
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        },
+        svg: {
+            fontCache: 'global'
+        }
+    };
+</script>
+<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</body>
+</html>

@@ -4,8 +4,8 @@
         <description>精进，求诸己身</description>
         <link>https://blog.xiayf.cn/</link>
         <atom:link href="https://blog.xiayf.cn/rss.xml" rel="self" type="application/rss+xml"/>
-        <pubDate>2025-05-01T13:16:22.338911+08:00</pubDate>
-        <lastBuildDate>2025-05-01T13:16:22.338911+08:00</lastBuildDate>
+        <pubDate>2025-05-01T22:43:23.225268+08:00</pubDate>
+        <lastBuildDate>2025-05-01T22:43:23.225268+08:00</lastBuildDate>
         <generator>LingDong</generator>
         
         <item>
@@ -1829,7 +1829,7 @@ new Thread(() -&amp;amp;gt; flux.subscribe(System.out::println)); // 5 &lt;/code
 &lt;p&gt;&lt;em&gt;以后有空再翻译&lt;/em&gt;&lt;/p&gt;
 &lt;h3&gt;4.3 使用 ParallelFlux 并行化处理&lt;/h3&gt;
 &lt;p&gt;如今多核架构已是下里巴人，相应地，轻松实现并行化工作的工具手段很关键。Reactor 提供了一个特殊类型 - &lt;code&gt;ParallelFlux&lt;/code&gt; - 帮助实现并行化处理。&lt;code&gt;ParallelFlux&lt;/code&gt; 提供的算子是为并行化工作优化过的。&lt;/p&gt;
-&lt;p&gt;对任意 &lt;code&gt;Flux&lt;/code&gt; 实例调用 &lt;code&gt;parallel()&lt;/code&gt;算子就能得到一个 &lt;code&gt;ParallelFlux&lt;/code&gt; 实例。这个方法本身并不能实现并行化工作，而是将工作负载拆分到多个“轨道”（默认“轨道”数量等于 CPU 核数）[^1]。&lt;/p&gt;
+&lt;p&gt;对任意 &lt;code&gt;Flux&lt;/code&gt; 实例调用 &lt;code&gt;parallel()&lt;/code&gt;算子就能得到一个 &lt;code&gt;ParallelFlux&lt;/code&gt; 实例。这个方法本身并不能实现并行化工作，而是将工作负载拆分到多个“轨道”（默认“轨道”数量等于 CPU 核数）&lt;sup id=&quot;fnref:1&quot;&gt;&lt;a href=&quot;#fn:1&quot; class=&quot;footnote&quot; rel=&quot;footnote&quot; role=&quot;doc-noteref&quot;&gt;[^1]&lt;/a&gt;&lt;/sup&gt;。&lt;/p&gt;
 &lt;p&gt;为了告知产出的 ParallelFlux 实例每个“轨道”在哪执行（以及如何并行执行“轨道”），则必须使用 &lt;code&gt;runOn(Scheduler)&lt;/code&gt;。注意：对于并行工作，推荐使用一个专用调度器 - &lt;code&gt;Schedulers.parallel()&lt;/code&gt;。&lt;/p&gt;
 &lt;p&gt;对比如下两个示例，第一个示例的代码如下所示：&lt;/p&gt;
 &lt;pre class=&quot;language-java&quot;&gt;&lt;code&gt;Flux.range(1, 10)
@@ -1863,12 +1863,13 @@ parallel-1 -&amp;amp;gt; 7
 parallel-1 -&amp;amp;gt; 9
 parallel-2 -&amp;amp;gt; 8
 parallel-2 -&amp;amp;gt; 10&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;如果数据序列[^2]已经在并行化处理，而你又想将其转回一个 “常规的” &lt;code&gt;Flux&lt;/code&gt; 实例，然后串行执行算子链余下的部分，则可以使用 &lt;code&gt;ParallelFlux&lt;/code&gt; 的 &lt;code&gt;sequential()&lt;/code&gt; 方法。&lt;/p&gt;
+&lt;p&gt;如果数据序列&lt;sup id=&quot;fnref:2&quot;&gt;&lt;a href=&quot;#fn:2&quot; class=&quot;footnote&quot; rel=&quot;footnote&quot; role=&quot;doc-noteref&quot;&gt;[^2]&lt;/a&gt;&lt;/sup&gt;已经在并行化处理，而你又想将其转回一个 “常规的” &lt;code&gt;Flux&lt;/code&gt; 实例，然后串行执行算子链余下的部分，则可以使用 &lt;code&gt;ParallelFlux&lt;/code&gt; 的 &lt;code&gt;sequential()&lt;/code&gt; 方法。&lt;/p&gt;
 &lt;p&gt;注意：如果直接使用一个 &lt;code&gt;Subscriber&lt;/code&gt; 类型参数而不是 lambda 表达式来调用 &lt;code&gt;subscribe&lt;/code&gt; 方法，那么内部实现会隐式地调用 &lt;code&gt;sequential()&lt;/code&gt; 方法。&lt;/p&gt;
-&lt;p&gt;由此也要注意：&lt;code&gt;subscribe(Subscriber&amp;lt;T&amp;gt;)&lt;/code&gt; 会合并所有数据“轨道”，而 &lt;code&gt;subscribe(Consumer&amp;lt;T&amp;gt;)&lt;/code&gt; 是运行所有的数据“轨道”。如果以 lambda 表达式调用 &lt;code&gt;subscribe&lt;/code&gt; 方法，那么每个 lambda 表达式都会被复制成多个实例（数量等于“轨道”数量）去执行[^3]。&lt;/p&gt;
-&lt;p&gt;[^1]: 译注：这里的“轨道”其实不太直白。在实现上，&lt;code&gt;ParallelFlux&lt;/code&gt; 会将最后 &lt;code&gt;subscribe&lt;/code&gt; 的 onNext 回调按并行度（默认等于 CPU 核数 N）复制成 N 个，那么最终调用 ParallelFlux 的 N 个 Subscriber，从 ParallelFlux 实例到一个 Subscriber 的数据流路径可以理解为一个“轨道”，ParallelFlux 在接收到上游消息后按照 round-robin 方式选择一个 Subscriber 调用其 &lt;code&gt;onNext&lt;/code&gt; 下发消息，但 &lt;code&gt;onNext&lt;/code&gt; 是运行在什么线程上，是由 runOn 算子决定的，如果不使用 runOn 算子，那么所有 Subscriber 的 &lt;code&gt;onNext&lt;/code&gt; 方法调用都是同步运行在主线程上的。&lt;/p&gt;
-&lt;p&gt;[^2]: 译注：原文中用了多个词来表达相近的意思：sequence（序列）、stream（流）、flow（流），阅读时可以相互替代理解。此外，还有 event（事件）、data（数据）、message（消息），在当前上下文中，可以看成是等价的。&lt;/p&gt;
-&lt;p&gt;[^3]: 译注：这话写得真蠢。详细解释见脚注 1。&lt;/p&gt;</description>
+&lt;p&gt;由此也要注意：&lt;code&gt;subscribe(Subscriber&amp;lt;T&amp;gt;)&lt;/code&gt; 会合并所有数据“轨道”，而 &lt;code&gt;subscribe(Consumer&amp;lt;T&amp;gt;)&lt;/code&gt; 是运行所有的数据“轨道”。如果以 lambda 表达式调用 &lt;code&gt;subscribe&lt;/code&gt; 方法，那么每个 lambda 表达式都会被复制成多个实例（数量等于“轨道”数量）去执行&lt;sup id=&quot;fnref:3&quot;&gt;&lt;a href=&quot;#fn:3&quot; class=&quot;footnote&quot; rel=&quot;footnote&quot; role=&quot;doc-noteref&quot;&gt;[^3]&lt;/a&gt;&lt;/sup&gt;。&lt;/p&gt;
+&lt;hr&gt;
+&lt;div class=&quot;footnotes&quot; role=&quot;doc-endnotes&quot;&gt;&lt;ol&gt;&lt;li id=&quot;fn:1&quot;&gt;&lt;p&gt;译注：这里的“轨道”其实不太直白。在实现上，&lt;code&gt;ParallelFlux&lt;/code&gt; 会将最后 &lt;code&gt;subscribe&lt;/code&gt; 的 onNext 回调按并行度（默认等于 CPU 核数 N）复制成 N 个，那么最终调用 ParallelFlux 的 N 个 Subscriber，从 ParallelFlux 实例到一个 Subscriber 的数据流路径可以理解为一个“轨道”，ParallelFlux 在接收到上游消息后按照 round-robin 方式选择一个 Subscriber 调用其 &lt;code&gt;onNext&lt;/code&gt; 下发消息，但 &lt;code&gt;onNext&lt;/code&gt; 是运行在什么线程上，是由 runOn 算子决定的，如果不使用 runOn 算子，那么所有 Subscriber 的 &lt;code&gt;onNext&lt;/code&gt; 方法调用都是同步运行在主线程上的。&lt;a href=&quot;#fnref:1&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;↩&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li id=&quot;fn:2&quot;&gt;&lt;p&gt;译注：原文中用了多个词来表达相近的意思：sequence（序列）、stream（流）、flow（流），阅读时可以相互替代理解。此外，还有 event（事件）、data（数据）、message（消息），在当前上下文中，可以看成是等价的。&lt;a href=&quot;#fnref:2&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;↩&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li id=&quot;fn:3&quot;&gt;&lt;p&gt;译注：这话写得真蠢。详细解释见脚注 1。&lt;a href=&quot;#fnref:3&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;↩&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;&lt;/ol&gt;&lt;/div&gt;</description>
             <pubDate>2019-06-26</pubDate>
             <link>https://blog.xiayf.cn/posts/simplified-reactor-doc-zh.html</link>
             <guid isPermaLink="true">https://blog.xiayf.cn/posts/simplified-reactor-doc-zh.html</guid>

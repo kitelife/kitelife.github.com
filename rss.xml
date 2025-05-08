@@ -4,8 +4,8 @@
         <description>精进，求诸己身</description>
         <link>https://blog.xiayf.cn/</link>
         <atom:link href="https://blog.xiayf.cn/rss.xml" rel="self" type="application/rss+xml"/>
-        <pubDate>2025-05-08T23:55:25.117568+08:00</pubDate>
-        <lastBuildDate>2025-05-08T23:55:25.117568+08:00</lastBuildDate>
+        <pubDate>2025-05-09T00:09:24.61249+08:00</pubDate>
+        <lastBuildDate>2025-05-09T00:09:24.61249+08:00</lastBuildDate>
         <generator>LingDong</generator>
         
         <item>
@@ -622,7 +622,7 @@ AllowAllParametersOfDeclarationOnNextLine: false&lt;/code&gt;&lt;/pre&gt;
         </item>
         
         <item>
-            <title>读文笔记：关于 MMAP 与 SSD</title>
+            <title>读文：关于 MMAP 与 SSD</title>
             <description>&lt;p&gt;设计一种存储，第一要明确应用场景和存储系统的工作负载，第二要了解底层硬件的特点。&lt;/p&gt;
 &lt;h2&gt;1、&lt;a href=&apos;https://db.cs.cmu.edu/mmap-cidr2022/&apos;&gt;Are You Sure You Want to Use MMAP in Your Database Management System? &lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;MMAP（Memory-mapped file I/O）是操作系统提供的一种功能特性 - 将二级存储（磁盘、SSD）上一个文件的内容映射到程序/进程的地址空间，然后程序就可以以指针访问内存页的方式来访问文件内容。当程序访问到某个内存页时，操作系统就会自动将对应文件内容加载到该内存页中，当内存用满了，也会自动剔除某些内存页。&lt;/p&gt;
@@ -823,7 +823,8 @@ disruptor.handleEventsWith((Event&amp;amp;lt;T&amp;amp;gt; event, long sequence,
     return counter;
 }&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;&lt;a href=&apos;https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/locks/LockSupport.html#parkNanos-long-&apos;&gt;LockSupport.parkNanos&lt;/a&gt; 方法的作用简单而言即让当前线程睡眠 sleepTimeNs 纳秒。&lt;/p&gt;
-&lt;p&gt;Disruptor 作为一个任务队列，自带一个线程池，线程池的线程工厂即构造方法传入的 factory，线程数量等于 &lt;a href=&apos;https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/dsl/Disruptor.java#L165&apos;&gt;disruptor.handleEventsWith&lt;/a&gt; 调用时传入的回调方法数量，handleEventsWith 的参数数量不定（&lt;code&gt;public final EventHandlerGroup&amp;lt;T&amp;gt; handleEventsWith(final EventHandler&amp;lt;? super T&amp;gt;... handlers)&lt;/code&gt;）。&lt;/p&gt;
+&lt;p&gt;Disruptor 作为一个任务队列，自带一个线程池，线程池的线程工厂即构造方法传入的 factory，线程数量等于 &lt;a href=&apos;https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/dsl/Disruptor.java#L165&apos;&gt;disruptor.handleEventsWith&lt;/a&gt; 调用时传入的回调方法数量，handleEventsWith 的参数数量不定:&lt;/p&gt;
+&lt;pre class=&quot;language-java&quot;&gt;&lt;code&gt;public final EventHandlerGroup&amp;amp;lt;T&amp;amp;gt; handleEventsWith(final EventHandler&amp;amp;lt;? super T&amp;amp;gt;... handlers)`&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;18个 Disruptor 实例，每个实例有一个消费者线程，消费者线程不断检查队列中是否有新的 &lt;code&gt;Event&amp;lt;T&amp;gt;&lt;/code&gt; 任务需要处理，如果有，则调用 EventHandler 回调方法进行处理，否则睡眠 sleepTimeNs 纳秒。&lt;/p&gt;
 &lt;p&gt;到此，结合监控指标，可以大致猜测：由于 sleepTimeNs 较小，导致多个线程的状态不断在 &lt;code&gt;运行&lt;/code&gt;、&lt;code&gt;睡眠&lt;/code&gt;、&lt;code&gt;等待调度&lt;/code&gt; 之间切换，线程上下文切换非常频繁。&lt;/p&gt;
 &lt;p&gt;围绕 LockSupport.parkNanos 编写一个测试程序，来复现这个问题：&lt;/p&gt;
@@ -949,7 +950,7 @@ Flame graph SVG written to DTRACE_FLAME_OUTPUT=&amp;amp;apos;/Users/xxx/work/qui
 &lt;img src=&apos;https://i.loli.net/2020/07/13/93YyjxR5ATS1Dnq.png&apos; title=&apos;flamegraph-3&apos; alt=&apos;flamegraph-3&apos; width=&apos;100%&apos;/&gt;
 &lt;h2&gt;Flamescope&lt;/h2&gt;
 &lt;p&gt;Netflix 公司近期发布了一个新的火焰图可视化工具 - &lt;a href=&apos;https://medium.com/netflix-techblog/netflix-flamescope-a57ca19d47bb&apos;&gt;Flamescope&lt;/a&gt;，可以将火焰图过滤限制在一个特定的时间范围内。&lt;/p&gt;
-&lt;img src=&apos;https://i.loli.net/2020/07/13/djm2hkvC98irQu7.png&apos; title=&apos;FlameScope&apos; alt=&apos;FlameScope&apos; width=&apos;100%&apos;/&gt;
+&lt;img src=&apos;https://i.loli.net/2020/07/13/djm2hkvC98irQu7.png&apos; title=&apos;FlameScope&apos; alt=&apos;FlameScope&apos; width=&apos;400&apos;/&gt;
 &lt;p&gt;Martin Spier 和 Brendan Gregg 为研究扰动以及其他时间相关的问题（perturbations and other time-based issues）而开发了这个工具。常规的火焰图是聚合了所有堆栈追踪抽样数据，如果系统中发生了一个短时小故障，就会被深埋于其他追踪信息中，这个工具就是为了解决这个问题。&lt;/p&gt;
 &lt;h2&gt;JMH (sbt-jmh)&lt;/h2&gt;
 &lt;p&gt;因为 JIT 存在预热等特点，增大了基准测试的困难。JMH 会将相同的测试运行多次，消除 JIT 预热等特点造成的影响，从而更准确地测量代码的性能。&lt;/p&gt;
@@ -971,7 +972,7 @@ Flame graph SVG written to DTRACE_FLAME_OUTPUT=&amp;amp;apos;/Users/xxx/work/qui
         </item>
         
         <item>
-            <title>读文笔记：Kafka 官方设计文档</title>
+            <title>读文：Kafka 官方设计文档</title>
             <description>&lt;p&gt;原文：&lt;a href=&apos;http://kafka.apache.org/documentation/#design&apos;&gt;http://kafka.apache.org/documentation/#design&lt;/a&gt;&lt;/p&gt;
 &lt;h2&gt;数据持久化&lt;/h2&gt;
 &lt;h4&gt;不用惧怕文件系统&lt;/h4&gt;
@@ -1058,7 +1059,7 @@ Flame graph SVG written to DTRACE_FLAME_OUTPUT=&amp;amp;apos;/Users/xxx/work/qui
         </item>
         
         <item>
-            <title>读文笔记：Photon - Fault-tolerant and Scalable Joining of Continuous Data Streams</title>
+            <title>读文：Photon - Fault-tolerant and Scalable Joining of Continuous Data Streams</title>
             <description>&lt;p&gt;原文：&lt;a href=&apos;https://static.googleusercontent.com/media/research.google.com/zh-CN//pubs/archive/41318.pdf&apos;&gt;Photon: Fault-tolerant and Scalable Joining of Continuous Data Streams&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Photon 是谷歌广告系统中用于 join 广告曝光日志流和点击日志流的一套系统。&lt;/p&gt;
 &lt;p&gt;数据流 join 为什么没用 flink 这类通用的流式处理框架？&lt;/p&gt;
@@ -1114,7 +1115,7 @@ Flame graph SVG written to DTRACE_FLAME_OUTPUT=&amp;amp;apos;/Users/xxx/work/qui
         </item>
         
         <item>
-            <title>读文笔记：日志 - 每个软件工程师都应该了解的实时数据统一抽象</title>
+            <title>读文：日志 - 每个软件工程师都应该了解的实时数据统一抽象</title>
             <description>&lt;p&gt;原文：&lt;a href=&apos;https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying&apos;&gt;The Log: What every software engineer should know about real-time data&apos;s unifying abstraction&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;一句话概括，这篇文章细说了 Kafka 的本质原理、解决的问题、适用性等。&lt;/p&gt;
 &lt;p&gt;Kafka 本质上是提供日志数据流。&lt;/p&gt;
@@ -1487,7 +1488,7 @@ function defaultMsgCodeHandler(response) {
         </item>
         
         <item>
-            <title>Reactor 官方文档翻译简化版</title>
+            <title>Reactor 官方文档（简译）</title>
             <description>&lt;p&gt;原文：&lt;a href=&apos;https://projectreactor.io/docs/core/release/reference/&apos;&gt;Reactor 3 Reference Guide&lt;/a&gt;&lt;/p&gt;
 &lt;h2&gt;1. 起步&lt;/h2&gt;
 &lt;h3&gt;1.1 Reactor 简介&lt;/h3&gt;
@@ -3270,7 +3271,7 @@ func mul(u, v Vector, k int) (res float64) {
         </item>
         
         <item>
-            <title>读书笔记：Just For Fun - The Story of an Accidental Revolutionary</title>
+            <title>读书：Just For Fun - The Story of an Accidental Revolutionary</title>
             <description>&lt;p&gt;前些天偶然在图灵社区上看到&lt;a href=&apos;http://www.ituring.com.cn/book/1115?q=%E8%B6%8A%E7%8E%A9%E8%B6%8A%E5%A4%A7&apos;&gt;这本书的出版计划&lt;/a&gt;，才猛然想起之前看过一两个章节，遂再次找到该书的&lt;a href=&apos;http://ishare.iask.sina.com.cn/f/14439267.html&apos;&gt;中文电子版&lt;/a&gt;（&lt;em&gt;原谅我&lt;/em&gt;）（关于该电子版，我不清楚其来源。中国青年出版社出过该书的中文版，译名为《乐者为王》，不知该电子版即为该中文版，还是开源爱好者自己翻译。不过翻译质量不高，应该不是正式出版的），花了一天左右时间看完。&lt;/p&gt;
 &lt;p&gt;本书由 Linus Torvalds 和 David Diamond 合著，书写方式是 Linus 自述，穿插 David Diamond 的一些采访旁白，主要讲述 Linus 如何偶然地成为信息时代的一个革命者（The Story of an Accidental Revolutionary）。Linus 在书中表达了对 Linux 这一伟大的开源项目的看法、对于人生意义、事物发展规律等问题的个人理解。以下是书中让我印象比较深刻的几处内容：&lt;/p&gt;
 &lt;h2&gt;生活的意义&lt;/h2&gt;

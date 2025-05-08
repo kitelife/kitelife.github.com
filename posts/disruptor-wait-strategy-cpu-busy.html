@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta property="og:title" content="BitPacking">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://blog.xiayf.cn/">
+    <meta property="og:site_name" content="BitPacking">
+    <meta property="og:description" content="精进，求诸己身">
+
+    <title>BitPacking</title>
+    <meta name="description" content="精进，求诸己身">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <link rel="stylesheet" href="/static/main.css">
+    <link rel="canonical" href="https://blog.xiayf.cn/">
+    
+    <link crossorigin="" rel="shortcut icon" type="image/x-icon" href="/assets/bits_small.ico">
+    
+</head>
+
+<body>
+<header class="site-header">
+    <div class="wrapper">
+        <a class="site-title" href="/">BitPacking</a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg viewBox="0 0 18 15">
+                    <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                <a class="page-link" href="/pages/about.html">关于我</a>
+                
+                <a class="page-link" href="/pages/works.html">作品</a>
+                
+                <a class="page-link" href="/rss.xml">RSS</a>
+                
+            </div>
+        </nav>
+    </div>
+</header>
+
+<div class="page-content">
+    <div class="wrapper">
+        
+<div class="post">
+    <header class="post-header">
+        <h1 class="post-title">Disruptor 等待策略引发的 CPU 负载异常问题</h1>
+        <p class="post-meta">2020-07-14</p>
+    </header>
+    <article class="post-content">
+        <h2>背景</h2>
+<p>工作中，我负责的系统是一个数据流处理服务 - 以流水线（pipeline）的形式分多级异步处理：</p>
+<img src='https://i.loli.net/2020/07/14/ONwUsrlhLmIq8BW.jpg' title='' alt='' width='100%'/>
+<p>其中的 队列 实际使用的是 <a href='https://github.com/LMAX-Exchange/disruptor'>Disruptor</a>，多生产者单消费者模式：</p>
+<pre class="language-java"><code>ThreadFactory factory = new ThreadFactoryBuilder().setNameFormat(name).setDaemon(true).build();
+Disruptor&lt;Event&lt;T&gt;&gt;  disruptor = new Disruptor&lt;&gt;(Event&lt;T&gt;::new, bufferSize, factory, ProducerType.MULTI, new SleepingWaitStrategy());
+disruptor.handleEventsWith((Event&lt;T&gt; event, long sequence, boolean endOfBatch) -&gt; {
+    consumer.accept(event.value, endOfBatch);
+    event.value = null;
+});</code></pre>
+<p>服务运行在 k8s 集群上，每个容器节点上可能会运行多个 pipeline，也即意味着单个节点上会存在多个 disruptor 实例。</p>
+<h2>现象</h2>
+<p>近期突然收到测试环境很多节点（生产环境也有少量节点）的 CPU 使用率告警 - CPU 使用率持续 5 分钟以上超过 90%，如下其中一个任务节点的 CPU 使用率监控图：</p>
+<img src='https://i.loli.net/2020/07/14/XJVsiMI3b9m5dlB.jpg' title='' alt='' width='100%'/>
+<img src='https://i.loli.net/2020/07/14/2YwPQAqaICr879x.jpg' title='' alt='' width='100%'/>
+<p><code>cpu.busy = cpu.system + cpu.user + 软/硬中断</code></p>
+<p>注意其中 <code>cpu.system</code> 比 <code>cpu.user</code> 高不少，<code>cpu.busy</code> 又比 <code>cpu.system</code> 高不少。也即 CPU 时间片资源主要消耗在 内核态 和中断逻辑上（对于这些任务而言 <code>cpu.user</code> 指标也是异常的）。</p>
+<p>这些节点运行的任务，几乎没有数据需要处理，也就是说几乎是空跑的。从线程数量监控以及 jstack 输出的堆栈跟踪信息，也未发现明显异常。</p>
+<h2>原因排查</h2>
+<p>将测试环境的任务在本地环境运行起来，并基于 <a href='https://www.lightbend.com/blog/profiling-jvm-applications'>How to profile JVM applications</a> 一文中提到的火焰图工具，产出对应 JVM 应用的火焰图：</p>
+<img src='https://i.loli.net/2020/07/14/zQMWsBeKbuZLamN.jpg' title='' alt='' width='100%'/>
+<p>从图中可以大致看出其中 <code>com/lmax/disruptor/SleepingWaitStrategy:::waitFor</code> / <code>jdk/internal/misc/Unsafe:::park</code> 比较可疑，在调用栈中耗时最长。</p>
+<p>从项目源码和 jstack 输出的堆栈跟踪信息可以看到，测试任务中大致涉及 18个 disruptor 实例，均使用 <code>SleepingWaitStrategy</code> 等待策略，该策略的 <a href='https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/SleepingWaitStrategy.java#L56'>waitFor</a> 方法实现如下所示：</p>
+<pre class="language-java"><code>public long waitFor(final long sequence, Sequence cursor, final Sequence dependentSequence, final SequenceBarrier barrier) throws AlertException {
+    long availableSequence;
+    // 默认 200
+    int counter = retries;
+
+    while ((availableSequence = dependentSequence.get()) &lt; sequence) {
+      counter = applyWaitMethod(barrier, counter);
+    }
+
+    return availableSequence;
+}</code></pre>
+<p>waitFor 方法中核心调用了 <a href='https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/SleepingWaitStrategy.java#L76'>applyWaitMethod</a> ：</p>
+<pre class="language-java"><code>private int applyWaitMethod(final SequenceBarrier barrier, int counter) throws AlertException {
+    barrier.checkAlert();
+
+    if (counter &gt; 100)
+    {
+        --counter;
+    }
+    else if (counter &gt; 0)
+    {
+        --counter;
+        Thread.yield();
+    }
+    else
+    {
+        // sleepTimeNs 默认 100
+        // 间接调用  jdk/internal/misc/Unsafe:::park 方法
+        LockSupport.parkNanos(sleepTimeNs);
+    }
+
+    return counter;
+}</code></pre>
+<p><a href='https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/locks/LockSupport.html#parkNanos-long-'>LockSupport.parkNanos</a> 方法的作用简单而言即让当前线程睡眠 sleepTimeNs 纳秒。</p>
+<p>Disruptor 作为一个任务队列，自带一个线程池，线程池的线程工厂即构造方法传入的 factory，线程数量等于 <a href='https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/dsl/Disruptor.java#L165'>disruptor.handleEventsWith</a> 调用时传入的回调方法数量，handleEventsWith 的参数数量不定（<code>public final EventHandlerGroup&lt;T&gt; handleEventsWith(final EventHandler&lt;? super T&gt;... handlers)</code>）。</p>
+<p>18个 Disruptor 实例，每个实例有一个消费者线程，消费者线程不断检查队列中是否有新的 <code>Event&lt;T&gt;</code> 任务需要处理，如果有，则调用 EventHandler 回调方法进行处理，否则睡眠 sleepTimeNs 纳秒。</p>
+<p>到此，结合监控指标，可以大致猜测：由于 sleepTimeNs 较小，导致多个线程的状态不断在 <code>运行</code>、<code>睡眠</code>、<code>等待调度</code> 之间切换，线程上下文切换非常频繁。</p>
+<p>围绕 LockSupport.parkNanos 编写一个测试程序，来复现这个问题：</p>
+<pre class="language-java"><code>import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.locks.LockSupport;
+
+public class Test {
+
+  public static void main(String[] args) throws InterruptedException {
+    ExecutorService tp = Executors.newFixedThreadPool(18);
+    for (int idx = 0; idx &lt; 18; idx++) {
+      tp.submit(() -&gt; {
+        while (true) {
+          LockSupport.parkNanos(100);
+        }
+      });
+    }
+    CountDownLatch wg = new CountDownLatch(1);
+    wg.await();
+  }
+}</code></pre>
+<p>在 3.2 GHz 6-Core Intel Core i7 配置 macOS 系统中，这个测试程序可以稳定地将 CPU 使用率控制在 700%+，如下 <code>top -pid [测试程序的进程 id]</code> 命令的输出：</p>
+<img src='https://i.loli.net/2020/07/14/Z6jixvuWY1yTnL4.jpg' title='' alt='' width='100%'/>
+<p>其中 CSW 为线程上下文切换的次数。</p>
+<p>既然问题原因在于多个线程频繁睡眠导致，那么解决方案也比较简单：</p>
+<ol><li>使用更大的值来替换 sleepTimeNs 默认值：<code>new Disruptor&lt;&gt;(Event&lt;T&gt;::new, bufferSize, factory, ProducerType.MULTI, new SleepingWaitStrategy(200, 1000 * 1000 / 10)); // 0.1 ms</code></li>
+<li>使用其他等待策略（WaitStrategy），比如：<code>com.lmax.disruptor.BlockingWaitStrategy</code></li></ol>
+<p>不过解决方案也有微小的负作用 - 部分新任务/<code>Event&lt;T&gt;</code>实例的处理时延会增大，但在我们的数据流处理场景下，这点时延增大对业务完全没有影响。</p>
+<p>不过，这个问题应该是一直存在，为什么近期才收到告警，为什么以前从监控上未发现？</p>
+<ol><li>为什么近期才收到告警？因为这个监控告警是近期公司监控平台才统一配置的</li>
+<li>为什么以前从监控上未发现？因为公司切换了新的监控平台，老的监控平台没有 cpu.busy 这个指标，而这些没什么数据要处理的任务长时间不需要开发维护，也就未得到及时关注。</li></ol>
+<h2>扩展资料</h2>
+<ol><li>上下文切换耗时多少？<a href='https://blog.tsunanet.net/2010/11/how-long-does-it-take-to-make-context.html'>How long does it take to make a context switch?</a></li>
+<li><code>LockSupport.parkNanos(100)</code> 真的就是睡眠 100 纳秒吗？<a href='https://hazelcast.com/blog/locksupport-parknanos-under-the-hood-and-the-curious-case-of-parking/'>LockSupport.parkNanos() Under the Hood and the Curious Case of Parking</a></li></ol>
+    </article>
+</div>
+
+    </div>
+</div>
+
+<footer class="site-footer">
+    <div class="wrapper">
+        <div class="footer-col-wrapper">
+            <div class="footer-col footer-col-1">
+                <ul class="social-media-list">
+                    <li>
+                        <a href="https://github.com/kitelife" target="_blank">
+                            <span class="icon icon--github">
+                                <svg viewBox="0 0 16 16">
+                                    <path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                                </svg>
+                            </span>
+                            <span class="username">kitelife</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://maimai.cn/profile/detail?dstu=39580141" target="_blank">
+                            <span class="icon icon--maimai">
+                                <img src="https://maimai.cn/favicon.ico" width="16"/>
+                            </span>
+                            <span class="username">Xiayf</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="footer-col footer-col-2"></div>
+            <div class="footer-col footer-col-3"></div>
+            <div class="footer-col footer-col-4">
+                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">
+                    <img alt="Creative Commons License" src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-sa.svg">
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        },
+        svg: {
+            fontCache: 'global'
+        }
+    };
+</script>
+<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</body>
+</html>

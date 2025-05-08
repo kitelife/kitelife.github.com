@@ -602,7 +602,7 @@ new Thread(() -&gt; flux.subscribe(System.out::println)); // 5 </code></pre>
 <p><em>以后有空再翻译</em></p>
 <h3>4.3 使用 ParallelFlux 并行化处理</h3>
 <p>如今多核架构已是下里巴人，相应地，轻松实现并行化工作的工具手段很关键。Reactor 提供了一个特殊类型 - <code>ParallelFlux</code> - 帮助实现并行化处理。<code>ParallelFlux</code> 提供的算子是为并行化工作优化过的。</p>
-<p>对任意 <code>Flux</code> 实例调用 <code>parallel()</code>算子就能得到一个 <code>ParallelFlux</code> 实例。这个方法本身并不能实现并行化工作，而是将工作负载拆分到多个“轨道”（默认“轨道”数量等于 CPU 核数）<sup id="fnref:1"><a href="#fn:1" class="footnote" rel="footnote" role="doc-noteref">[^1]</a></sup>。</p>
+<p>对任意 <code>Flux</code> 实例调用 <code>parallel()</code>算子就能得到一个 <code>ParallelFlux</code> 实例。这个方法本身并不能实现并行化工作，而是将工作负载拆分到多个“轨道”（默认“轨道”数量等于 CPU 核数）<sup id="fnref:1"><a href="#fn:1" class="footnote" rel="footnote" role="doc-noteref">[1]</a></sup>。</p>
 <p>为了告知产出的 ParallelFlux 实例每个“轨道”在哪执行（以及如何并行执行“轨道”），则必须使用 <code>runOn(Scheduler)</code>。注意：对于并行工作，推荐使用一个专用调度器 - <code>Schedulers.parallel()</code>。</p>
 <p>对比如下两个示例，第一个示例的代码如下所示：</p>
 <pre class="language-java"><code>Flux.range(1, 10)
@@ -636,9 +636,9 @@ parallel-1 -&gt; 7
 parallel-1 -&gt; 9
 parallel-2 -&gt; 8
 parallel-2 -&gt; 10</code></pre>
-<p>如果数据序列<sup id="fnref:2"><a href="#fn:2" class="footnote" rel="footnote" role="doc-noteref">[^2]</a></sup>已经在并行化处理，而你又想将其转回一个 “常规的” <code>Flux</code> 实例，然后串行执行算子链余下的部分，则可以使用 <code>ParallelFlux</code> 的 <code>sequential()</code> 方法。</p>
+<p>如果数据序列<sup id="fnref:2"><a href="#fn:2" class="footnote" rel="footnote" role="doc-noteref">[2]</a></sup>已经在并行化处理，而你又想将其转回一个 “常规的” <code>Flux</code> 实例，然后串行执行算子链余下的部分，则可以使用 <code>ParallelFlux</code> 的 <code>sequential()</code> 方法。</p>
 <p>注意：如果直接使用一个 <code>Subscriber</code> 类型参数而不是 lambda 表达式来调用 <code>subscribe</code> 方法，那么内部实现会隐式地调用 <code>sequential()</code> 方法。</p>
-<p>由此也要注意：<code>subscribe(Subscriber&lt;T&gt;)</code> 会合并所有数据“轨道”，而 <code>subscribe(Consumer&lt;T&gt;)</code> 是运行所有的数据“轨道”。如果以 lambda 表达式调用 <code>subscribe</code> 方法，那么每个 lambda 表达式都会被复制成多个实例（数量等于“轨道”数量）去执行<sup id="fnref:3"><a href="#fn:3" class="footnote" rel="footnote" role="doc-noteref">[^3]</a></sup>。</p>
+<p>由此也要注意：<code>subscribe(Subscriber&lt;T&gt;)</code> 会合并所有数据“轨道”，而 <code>subscribe(Consumer&lt;T&gt;)</code> 是运行所有的数据“轨道”。如果以 lambda 表达式调用 <code>subscribe</code> 方法，那么每个 lambda 表达式都会被复制成多个实例（数量等于“轨道”数量）去执行<sup id="fnref:3"><a href="#fn:3" class="footnote" rel="footnote" role="doc-noteref">[3]</a></sup>。</p>
 <hr>
 <div class="footnotes" role="doc-endnotes"><ol><li id="fn:1"><p>译注：这里的“轨道”其实不太直白。在实现上，<code>ParallelFlux</code> 会将最后 <code>subscribe</code> 的 onNext 回调按并行度（默认等于 CPU 核数 N）复制成 N 个，那么最终调用 ParallelFlux 的 N 个 Subscriber，从 ParallelFlux 实例到一个 Subscriber 的数据流路径可以理解为一个“轨道”，ParallelFlux 在接收到上游消息后按照 round-robin 方式选择一个 Subscriber 调用其 <code>onNext</code> 下发消息，但 <code>onNext</code> 是运行在什么线程上，是由 runOn 算子决定的，如果不使用 runOn 算子，那么所有 Subscriber 的 <code>onNext</code> 方法调用都是同步运行在主线程上的。<a href="#fnref:1" class="reversefootnote" role="doc-backlink">↩</a></p></li>
 <li id="fn:2"><p>译注：原文中用了多个词来表达相近的意思：sequence（序列）、stream（流）、flow（流），阅读时可以相互替代理解。此外，还有 event（事件）、data（数据）、message（消息），在当前上下文中，可以看成是等价的。<a href="#fnref:2" class="reversefootnote" role="doc-backlink">↩</a></p></li>

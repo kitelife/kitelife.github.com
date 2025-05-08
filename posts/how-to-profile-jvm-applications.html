@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta property="og:title" content="BitPacking">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://blog.xiayf.cn/">
+    <meta property="og:site_name" content="BitPacking">
+    <meta property="og:description" content="精进，求诸己身">
+
+    <title>BitPacking</title>
+    <meta name="description" content="精进，求诸己身">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <link rel="stylesheet" href="/static/main.css">
+    <link rel="canonical" href="https://blog.xiayf.cn/">
+    
+    <link crossorigin="" rel="shortcut icon" type="image/x-icon" href="/assets/bits_small.ico">
+    
+</head>
+
+<body>
+<header class="site-header">
+    <div class="wrapper">
+        <a class="site-title" href="/">BitPacking</a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg viewBox="0 0 18 15">
+                    <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                <a class="page-link" href="/pages/about.html">关于我</a>
+                
+                <a class="page-link" href="/pages/works.html">作品</a>
+                
+                <a class="page-link" href="/rss.xml">RSS</a>
+                
+            </div>
+        </nav>
+    </div>
+</header>
+
+<div class="page-content">
+    <div class="wrapper">
+        
+<div class="post">
+    <header class="post-header">
+        <h1 class="post-title">如何剖析 JVM 应用（译）</h1>
+        <p class="post-meta">2020-07-13</p>
+    </header>
+    <article class="post-content">
+        <p>原文：<a href='https://www.lightbend.com/blog/profiling-jvm-applications'>How to profile JVM applications</a></p>
+<p>Hi 大家好。工具团队（tooling team）近期的一个关注点是改进 sbt 贡献流程（ improvement of the contribution process to sbt）。我们一直在思考的另一个事情是 sbt 的性能。为一举解决这两件事情，我调研了 Jason Zaugg、Johannes Rudolph 这些人如何剖析 JVM 应用，这篇文章即是调研结果。</p>
+<p>这里论述的技术应该可以应用于Java 和 Scala，也基本与你使用的工具无关。</p>
+<h2>火焰图（使用 async-profiler 生成）</h2>
+<p>剖析 JVM 应用的方式有多种，但新晋热门是Netflix 高级性能架构师（Senior Performance Architect）Brendan Gregg 发明的<strong>火焰图</strong>。开发者先收集堆栈踪迹抽样数据（stack trace samples），然后将其处理成一张交互式的 svg 图。若要快速了解火焰图，可阅读如下链接资料：</p>
+<ul><li><a href='https://www.youtube.com/watch?v=ugRrFdda_JQ'>Using FlameGraphs To Illuminate The JVM by Nitsan Wakart</a></li>
+<li><a href='https://www.youtube.com/watch?v=D53T1Ejig1Q'>USENIX ATC ’17: Visualizing Performance with Flame Graphs</a></li></ul>
+<p>我推荐的第一个火焰图工具是  Andrei Pangin 发起的 async-profiler，在 macOS 和 Linux 操作系统环境下均可使用，上手使用也更简单。</p>
+<ol><li>下载安装器 <a href='https://github.com/jvm-profiling-tools/async-profiler/releases/tag/v1.2'>async-profiler 1.2</a></li>
+<li>假设你的系统中存在一个命令查找路径 <code>$HOME/bin</code>，在 <code>$HOME/bin</code> 目录下创建符号链接指向 <code>build/</code> 和 <code>profiler.sh</code></li></ol>
+<pre class="language-bash"><code>ln -s ~/App/async-profiler/profiler.sh $HOME/bin/profiler.sh
+ln -s ~/App/async-profiler/build $HOME/bin/build</code></pre>
+<p>接下来，关闭所有 Java 应用，以及任何可能影响剖析过程的东西，比如 Slack，然后在终端程序（terminal）中运行你的应用。对于我而言，则是尝试剖析 <code>sbt</code> 的初始化加载过程：</p>
+<pre class="language-text"><code>$ sbt exit</code></pre>
+<p>在另一个终端中，运行：</p>
+<pre class="language-text"><code>$ jps
+92746 sbt-launch.jar
+92780 Jps</code></pre>
+<p>由此我们知道应用的进程 ID。对于我而言，目标进程 ID 是 <code>92746</code>。在应用运行的同时，运行如下命令：</p>
+<pre class="language-text"><code>$ profiler.sh -d 60 &lt;process id&gt;
+Started [cpu] profiling
+--- Execution profile ---
+Total samples:         31602
+Non-Java:              3239 (10.25%)
+GC active:             46 (0.15%)
+Unknown (native):      14667 (46.41%)
+Not walkable (native): 3 (0.01%)
+Unknown (Java):        433 (1.37%)
+Not walkable (Java):   8 (0.03%)
+Thread exit:           1 (0.00%)
+Deopt:                 9 (0.03%)
+
+Frame buffer usage:    55.658%
+
+Total: 1932000000 (6.11%)  samples: 1932
+  [ 0] java.lang.ClassLoader$NativeLibrary.load
+  [ 1] java.lang.ClassLoader.loadLibrary0
+  [ 2] java.lang.ClassLoader.loadLibrary
+  [ 3] java.lang.Runtime.loadLibrary0
+  [ 4] java.lang.System.loadLibrary
+....</code></pre>
+<p>命令会输出一大堆有用的堆栈跟踪信息（stacktraces），为将这些信息可视化为一张火焰图，运行如下命令：</p>
+<pre class="language-text"><code>profiler.sh -d 60 -f /tmp/flamegraph.svg &lt;process id&gt;</code></pre>
+<p>命令最后应该会产出文件 <code>/tmp/flamegraph.svg</code>。</p>
+<img src='https://i.loli.net/2020/07/13/dZVkB9xq2Gy6NfA.png' title='flamegraph' alt='flamegraph' width='100%'/>
+<p>你自己来体验一下 <a href='https://downloads.lightbend.com/website/blog/2019/flamegraph.svg?_ga=2.187105832.1642569835.1594378538-197429397.1594378538'>flamegraph.svg</a> 输出的信息。</p>
+<h2>火焰图（使用 perf-map-agent 生成）</h2>
+<p>虽然 async-profiler 上手使用很简单，但火焰图真正有趣之处在于可以混合展现 JVM 堆栈追踪和原生代码（native code）堆栈跟踪信息，让开发者可以看到 CPU 实际消耗在程序的何处。Lightbend 公司的 Johannes Rudolph 为此写了一个工具 - <a href='https://github.com/jvm-profiling-tools/perf-map-agent'>perf-map-agent</a>。该工具在 macOS 环境下会使用 <code>dtrace</code>，在 Linux 环境下会使用 <code>perf</code>。如果你想确认瓶颈是否出现在原生代码中，这个工具会特别有用。</p>
+<p>我们先要编译 <a href='https://github.com/jvm-profiling-tools/perf-map-agent'>perf-map-agent</a>。对于 macOS 环境，在运行 <code>cmake .</code> 之前需要先设置 <code>JAVA_HOME</code> 环境变量：</p>
+<pre class="language-text"><code>$ cd work
+$ git clone https://github.com/brendangregg/FlameGraph.git
+
+$ git clone https://github.com/jvm-profiling-tools/perf-map-agent.git
+$ cd perf-map-agent
+$ export JAVA_HOME=$(/usr/libexec/java_home)
+$ cmake .
+-- The C compiler identification is AppleClang 9.0.0.9000039
+-- The CXX compiler identification is AppleClang 9.0.0.9000039
+...
+$ make</code></pre>
+<p>在一个新的终端中，带 <code>-XX:+PreserveFramePointer</code> 标记参数运行 sbt：</p>
+<pre class="language-text"><code>$ sbt -J-Dsbt.launcher.standby=20s -J-XX:+PreserveFramePointer exit</code></pre>
+<p>在另一个终端中运行：</p>
+<pre class="language-text"><code>$ cd quicktest/
+$ export JAVA_HOME=$(/usr/libexec/java_home)
+$ export FLAMEGRAPH_DIR=$HOME/work/FlameGraph
+$ jps
+94592 Jps
+94549 sbt-launch.jar
+$ $HOME/work/perf-map-agent/bin/dtrace-java-flames 94549
+dtrace: system integrity protection is on, some features will not be available
+
+dtrace: description &apos;profile-99 &apos; matched 2 probes
+Flame graph SVG written to DTRACE_FLAME_OUTPUT=&apos;/Users/xxx/work/quicktest/flamegraph-94549.svg&apos;.</code></pre>
+<p>理论上这样会产出更全面的火焰图，不过对于 <code>sbt exit</code>，产出的火焰图看起来可能有点凌乱。</p>
+<img src='https://i.loli.net/2020/07/13/s9BbWAnluTPwE3J.png' title='flamegraph-2' alt='flamegraph-2' width='100%'/>
+<p>如果 sbt 操作已经经过即时编译器优化（the operations are already JITed），或者操作比较特殊（the operation is more specific），那么火焰图的效果会更好。为了得到效果更好的火焰图，我们可以将相同的操作多重复几次：</p>
+<pre class="language-text"><code>$ sbt -J-Dsbt.launcher.standby=20s -J-XX:+PreserveFramePointer reload reload reload reload exit</code></pre>
+<p>这样就可以产出程序的稳定态火焰图，逐步放大火焰图，就可以找到执行的热点路径。</p>
+<img src='https://i.loli.net/2020/07/13/93YyjxR5ATS1Dnq.png' title='flamegraph-3' alt='flamegraph-3' width='100%'/>
+<h2>Flamescope</h2>
+<p>Netflix 公司近期发布了一个新的火焰图可视化工具 - <a href='https://medium.com/netflix-techblog/netflix-flamescope-a57ca19d47bb'>Flamescope</a>，可以将火焰图过滤限制在一个特定的时间范围内。</p>
+<img src='https://i.loli.net/2020/07/13/djm2hkvC98irQu7.png' title='FlameScope' alt='FlameScope' width='100%'/>
+<p>Martin Spier 和 Brendan Gregg 为研究扰动以及其他时间相关的问题（perturbations and other time-based issues）而开发了这个工具。常规的火焰图是聚合了所有堆栈追踪抽样数据，如果系统中发生了一个短时小故障，就会被深埋于其他追踪信息中，这个工具就是为了解决这个问题。</p>
+<h2>JMH (sbt-jmh)</h2>
+<p>因为 JIT 存在预热等特点，增大了基准测试的困难。JMH 会将相同的测试运行多次，消除 JIT 预热等特点造成的影响，从而更准确地测量代码的性能。</p>
+<p>对于 sbt 用户而言，Lightbend 公司 Konrad Malawski 编写的 <a href='https://github.com/ktoso/sbt-jmh'>sbt-jmh</a> 进一步简化了 JMH 测试。并且它也集成了 async-profiler。</p>
+<h2>VisualVM</h2>
+<p>我也想提一下传统的 JVM 剖析工具。因为 <a href='https://visualvm.github.io/'>VisualVM</a> 开源了，所以就来说说它。</p>
+<p>1、先打开 VisualVM</p>
+<p>2、在一个终端中启动 sbt</p>
+<p>3、从 VisualVM 界面的 Local 应用目录下应该可以看到 <code>xsbt.boot.Boot</code></p>
+<img src='https://i.loli.net/2020/07/13/EB7vsuo1HjaTtQw.jpg' title='' alt='' width='100%'/>
+<p>4、打开它，选择 抽样功能（sampler） 或 剖析功能（profiler），在你想要开始的时间点点击 CPU 按钮</p>
+<img src='https://i.loli.net/2020/07/13/aoiIDfMKw9pjY4Z.jpg' title='' alt='' width='100%'/>
+<p>如果你对 <a href='https://www.yourkit.com/'>YourKit</a> 比较熟悉，也可以使用它，用法比较相似。</p>
+<h2>总结</h2>
+<p>火焰图对堆栈跟踪抽样数据进行可视化，方便识别应用代码中的热点路径。也有助于确认代码变更是否实际影响了应用性能。</p>
+    </article>
+</div>
+
+    </div>
+</div>
+
+<footer class="site-footer">
+    <div class="wrapper">
+        <div class="footer-col-wrapper">
+            <div class="footer-col footer-col-1">
+                <ul class="social-media-list">
+                    <li>
+                        <a href="https://github.com/kitelife" target="_blank">
+                            <span class="icon icon--github">
+                                <svg viewBox="0 0 16 16">
+                                    <path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                                </svg>
+                            </span>
+                            <span class="username">kitelife</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://maimai.cn/profile/detail?dstu=39580141" target="_blank">
+                            <span class="icon icon--maimai">
+                                <img src="https://maimai.cn/favicon.ico" width="16"/>
+                            </span>
+                            <span class="username">Xiayf</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="footer-col footer-col-2"></div>
+            <div class="footer-col footer-col-3"></div>
+            <div class="footer-col footer-col-4">
+                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">
+                    <img alt="Creative Commons License" src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-sa.svg">
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        },
+        svg: {
+            fontCache: 'global'
+        }
+    };
+</script>
+<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</body>
+</html>

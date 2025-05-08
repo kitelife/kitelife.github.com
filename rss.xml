@@ -4,8 +4,8 @@
         <description>精进，求诸己身</description>
         <link>https://blog.xiayf.cn/</link>
         <atom:link href="https://blog.xiayf.cn/rss.xml" rel="self" type="application/rss+xml"/>
-        <pubDate>2025-05-01T22:43:23.225268+08:00</pubDate>
-        <lastBuildDate>2025-05-01T22:43:23.225268+08:00</lastBuildDate>
+        <pubDate>2025-05-08T23:55:25.117568+08:00</pubDate>
+        <lastBuildDate>2025-05-08T23:55:25.117568+08:00</lastBuildDate>
         <generator>LingDong</generator>
         
         <item>
@@ -762,6 +762,212 @@ AllowAllParametersOfDeclarationOnNextLine: false&lt;/code&gt;&lt;/pre&gt;
             <pubDate>2022-09-14</pubDate>
             <link>https://blog.xiayf.cn/posts/reading-about-mmap-ssd.html</link>
             <guid isPermaLink="true">https://blog.xiayf.cn/posts/reading-about-mmap-ssd.html</guid>
+        </item>
+        
+        <item>
+            <title>Disruptor 等待策略引发的 CPU 负载异常问题</title>
+            <description>&lt;h2&gt;背景&lt;/h2&gt;
+&lt;p&gt;工作中，我负责的系统是一个数据流处理服务 - 以流水线（pipeline）的形式分多级异步处理：&lt;/p&gt;
+&lt;img src=&apos;https://i.loli.net/2020/07/14/ONwUsrlhLmIq8BW.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;/&gt;
+&lt;p&gt;其中的 队列 实际使用的是 &lt;a href=&apos;https://github.com/LMAX-Exchange/disruptor&apos;&gt;Disruptor&lt;/a&gt;，多生产者单消费者模式：&lt;/p&gt;
+&lt;pre class=&quot;language-java&quot;&gt;&lt;code&gt;ThreadFactory factory = new ThreadFactoryBuilder().setNameFormat(name).setDaemon(true).build();
+Disruptor&amp;amp;lt;Event&amp;amp;lt;T&amp;amp;gt;&amp;amp;gt;  disruptor = new Disruptor&amp;amp;lt;&amp;amp;gt;(Event&amp;amp;lt;T&amp;amp;gt;::new, bufferSize, factory, ProducerType.MULTI, new SleepingWaitStrategy());
+disruptor.handleEventsWith((Event&amp;amp;lt;T&amp;amp;gt; event, long sequence, boolean endOfBatch) -&amp;amp;gt; {
+    consumer.accept(event.value, endOfBatch);
+    event.value = null;
+});&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;服务运行在 k8s 集群上，每个容器节点上可能会运行多个 pipeline，也即意味着单个节点上会存在多个 disruptor 实例。&lt;/p&gt;
+&lt;h2&gt;现象&lt;/h2&gt;
+&lt;p&gt;近期突然收到测试环境很多节点（生产环境也有少量节点）的 CPU 使用率告警 - CPU 使用率持续 5 分钟以上超过 90%，如下其中一个任务节点的 CPU 使用率监控图：&lt;/p&gt;
+&lt;img src=&apos;https://i.loli.net/2020/07/14/XJVsiMI3b9m5dlB.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;/&gt;
+&lt;img src=&apos;https://i.loli.net/2020/07/14/2YwPQAqaICr879x.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;/&gt;
+&lt;p&gt;&lt;code&gt;cpu.busy = cpu.system + cpu.user + 软/硬中断&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;注意其中 &lt;code&gt;cpu.system&lt;/code&gt; 比 &lt;code&gt;cpu.user&lt;/code&gt; 高不少，&lt;code&gt;cpu.busy&lt;/code&gt; 又比 &lt;code&gt;cpu.system&lt;/code&gt; 高不少。也即 CPU 时间片资源主要消耗在 内核态 和中断逻辑上（对于这些任务而言 &lt;code&gt;cpu.user&lt;/code&gt; 指标也是异常的）。&lt;/p&gt;
+&lt;p&gt;这些节点运行的任务，几乎没有数据需要处理，也就是说几乎是空跑的。从线程数量监控以及 jstack 输出的堆栈跟踪信息，也未发现明显异常。&lt;/p&gt;
+&lt;h2&gt;原因排查&lt;/h2&gt;
+&lt;p&gt;将测试环境的任务在本地环境运行起来，并基于 &lt;a href=&apos;https://www.lightbend.com/blog/profiling-jvm-applications&apos;&gt;How to profile JVM applications&lt;/a&gt; 一文中提到的火焰图工具，产出对应 JVM 应用的火焰图：&lt;/p&gt;
+&lt;img src=&apos;https://i.loli.net/2020/07/14/zQMWsBeKbuZLamN.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;/&gt;
+&lt;p&gt;从图中可以大致看出其中 &lt;code&gt;com/lmax/disruptor/SleepingWaitStrategy:::waitFor&lt;/code&gt; / &lt;code&gt;jdk/internal/misc/Unsafe:::park&lt;/code&gt; 比较可疑，在调用栈中耗时最长。&lt;/p&gt;
+&lt;p&gt;从项目源码和 jstack 输出的堆栈跟踪信息可以看到，测试任务中大致涉及 18个 disruptor 实例，均使用 &lt;code&gt;SleepingWaitStrategy&lt;/code&gt; 等待策略，该策略的 &lt;a href=&apos;https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/SleepingWaitStrategy.java#L56&apos;&gt;waitFor&lt;/a&gt; 方法实现如下所示：&lt;/p&gt;
+&lt;pre class=&quot;language-java&quot;&gt;&lt;code&gt;public long waitFor(final long sequence, Sequence cursor, final Sequence dependentSequence, final SequenceBarrier barrier) throws AlertException {
+    long availableSequence;
+    // 默认 200
+    int counter = retries;
+
+    while ((availableSequence = dependentSequence.get()) &amp;amp;lt; sequence) {
+      counter = applyWaitMethod(barrier, counter);
+    }
+
+    return availableSequence;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;waitFor 方法中核心调用了 &lt;a href=&apos;https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/SleepingWaitStrategy.java#L76&apos;&gt;applyWaitMethod&lt;/a&gt; ：&lt;/p&gt;
+&lt;pre class=&quot;language-java&quot;&gt;&lt;code&gt;private int applyWaitMethod(final SequenceBarrier barrier, int counter) throws AlertException {
+    barrier.checkAlert();
+
+    if (counter &amp;amp;gt; 100)
+    {
+        --counter;
+    }
+    else if (counter &amp;amp;gt; 0)
+    {
+        --counter;
+        Thread.yield();
+    }
+    else
+    {
+        // sleepTimeNs 默认 100
+        // 间接调用  jdk/internal/misc/Unsafe:::park 方法
+        LockSupport.parkNanos(sleepTimeNs);
+    }
+
+    return counter;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;a href=&apos;https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/locks/LockSupport.html#parkNanos-long-&apos;&gt;LockSupport.parkNanos&lt;/a&gt; 方法的作用简单而言即让当前线程睡眠 sleepTimeNs 纳秒。&lt;/p&gt;
+&lt;p&gt;Disruptor 作为一个任务队列，自带一个线程池，线程池的线程工厂即构造方法传入的 factory，线程数量等于 &lt;a href=&apos;https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/dsl/Disruptor.java#L165&apos;&gt;disruptor.handleEventsWith&lt;/a&gt; 调用时传入的回调方法数量，handleEventsWith 的参数数量不定（&lt;code&gt;public final EventHandlerGroup&amp;lt;T&amp;gt; handleEventsWith(final EventHandler&amp;lt;? super T&amp;gt;... handlers)&lt;/code&gt;）。&lt;/p&gt;
+&lt;p&gt;18个 Disruptor 实例，每个实例有一个消费者线程，消费者线程不断检查队列中是否有新的 &lt;code&gt;Event&amp;lt;T&amp;gt;&lt;/code&gt; 任务需要处理，如果有，则调用 EventHandler 回调方法进行处理，否则睡眠 sleepTimeNs 纳秒。&lt;/p&gt;
+&lt;p&gt;到此，结合监控指标，可以大致猜测：由于 sleepTimeNs 较小，导致多个线程的状态不断在 &lt;code&gt;运行&lt;/code&gt;、&lt;code&gt;睡眠&lt;/code&gt;、&lt;code&gt;等待调度&lt;/code&gt; 之间切换，线程上下文切换非常频繁。&lt;/p&gt;
+&lt;p&gt;围绕 LockSupport.parkNanos 编写一个测试程序，来复现这个问题：&lt;/p&gt;
+&lt;pre class=&quot;language-java&quot;&gt;&lt;code&gt;import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.locks.LockSupport;
+
+public class Test {
+
+  public static void main(String[] args) throws InterruptedException {
+    ExecutorService tp = Executors.newFixedThreadPool(18);
+    for (int idx = 0; idx &amp;amp;lt; 18; idx++) {
+      tp.submit(() -&amp;amp;gt; {
+        while (true) {
+          LockSupport.parkNanos(100);
+        }
+      });
+    }
+    CountDownLatch wg = new CountDownLatch(1);
+    wg.await();
+  }
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;在 3.2 GHz 6-Core Intel Core i7 配置 macOS 系统中，这个测试程序可以稳定地将 CPU 使用率控制在 700%+，如下 &lt;code&gt;top -pid [测试程序的进程 id]&lt;/code&gt; 命令的输出：&lt;/p&gt;
+&lt;img src=&apos;https://i.loli.net/2020/07/14/Z6jixvuWY1yTnL4.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;/&gt;
+&lt;p&gt;其中 CSW 为线程上下文切换的次数。&lt;/p&gt;
+&lt;p&gt;既然问题原因在于多个线程频繁睡眠导致，那么解决方案也比较简单：&lt;/p&gt;
+&lt;ol&gt;&lt;li&gt;使用更大的值来替换 sleepTimeNs 默认值：&lt;code&gt;new Disruptor&amp;lt;&amp;gt;(Event&amp;lt;T&amp;gt;::new, bufferSize, factory, ProducerType.MULTI, new SleepingWaitStrategy(200, 1000 * 1000 / 10)); // 0.1 ms&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;使用其他等待策略（WaitStrategy），比如：&lt;code&gt;com.lmax.disruptor.BlockingWaitStrategy&lt;/code&gt;&lt;/li&gt;&lt;/ol&gt;
+&lt;p&gt;不过解决方案也有微小的负作用 - 部分新任务/&lt;code&gt;Event&amp;lt;T&amp;gt;&lt;/code&gt;实例的处理时延会增大，但在我们的数据流处理场景下，这点时延增大对业务完全没有影响。&lt;/p&gt;
+&lt;p&gt;不过，这个问题应该是一直存在，为什么近期才收到告警，为什么以前从监控上未发现？&lt;/p&gt;
+&lt;ol&gt;&lt;li&gt;为什么近期才收到告警？因为这个监控告警是近期公司监控平台才统一配置的&lt;/li&gt;
+&lt;li&gt;为什么以前从监控上未发现？因为公司切换了新的监控平台，老的监控平台没有 cpu.busy 这个指标，而这些没什么数据要处理的任务长时间不需要开发维护，也就未得到及时关注。&lt;/li&gt;&lt;/ol&gt;
+&lt;h2&gt;扩展资料&lt;/h2&gt;
+&lt;ol&gt;&lt;li&gt;上下文切换耗时多少？&lt;a href=&apos;https://blog.tsunanet.net/2010/11/how-long-does-it-take-to-make-context.html&apos;&gt;How long does it take to make a context switch?&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;LockSupport.parkNanos(100)&lt;/code&gt; 真的就是睡眠 100 纳秒吗？&lt;a href=&apos;https://hazelcast.com/blog/locksupport-parknanos-under-the-hood-and-the-curious-case-of-parking/&apos;&gt;LockSupport.parkNanos() Under the Hood and the Curious Case of Parking&lt;/a&gt;&lt;/li&gt;&lt;/ol&gt;</description>
+            <pubDate>2020-07-14</pubDate>
+            <link>https://blog.xiayf.cn/posts/disruptor-wait-strategy-cpu-busy.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/disruptor-wait-strategy-cpu-busy.html</guid>
+        </item>
+        
+        <item>
+            <title>如何剖析 JVM 应用（译）</title>
+            <description>&lt;p&gt;原文：&lt;a href=&apos;https://www.lightbend.com/blog/profiling-jvm-applications&apos;&gt;How to profile JVM applications&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Hi 大家好。工具团队（tooling team）近期的一个关注点是改进 sbt 贡献流程（ improvement of the contribution process to sbt）。我们一直在思考的另一个事情是 sbt 的性能。为一举解决这两件事情，我调研了 Jason Zaugg、Johannes Rudolph 这些人如何剖析 JVM 应用，这篇文章即是调研结果。&lt;/p&gt;
+&lt;p&gt;这里论述的技术应该可以应用于Java 和 Scala，也基本与你使用的工具无关。&lt;/p&gt;
+&lt;h2&gt;火焰图（使用 async-profiler 生成）&lt;/h2&gt;
+&lt;p&gt;剖析 JVM 应用的方式有多种，但新晋热门是Netflix 高级性能架构师（Senior Performance Architect）Brendan Gregg 发明的&lt;strong&gt;火焰图&lt;/strong&gt;。开发者先收集堆栈踪迹抽样数据（stack trace samples），然后将其处理成一张交互式的 svg 图。若要快速了解火焰图，可阅读如下链接资料：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;&lt;a href=&apos;https://www.youtube.com/watch?v=ugRrFdda_JQ&apos;&gt;Using FlameGraphs To Illuminate The JVM by Nitsan Wakart&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&apos;https://www.youtube.com/watch?v=D53T1Ejig1Q&apos;&gt;USENIX ATC ’17: Visualizing Performance with Flame Graphs&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;
+&lt;p&gt;我推荐的第一个火焰图工具是  Andrei Pangin 发起的 async-profiler，在 macOS 和 Linux 操作系统环境下均可使用，上手使用也更简单。&lt;/p&gt;
+&lt;ol&gt;&lt;li&gt;下载安装器 &lt;a href=&apos;https://github.com/jvm-profiling-tools/async-profiler/releases/tag/v1.2&apos;&gt;async-profiler 1.2&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;假设你的系统中存在一个命令查找路径 &lt;code&gt;$HOME/bin&lt;/code&gt;，在 &lt;code&gt;$HOME/bin&lt;/code&gt; 目录下创建符号链接指向 &lt;code&gt;build/&lt;/code&gt; 和 &lt;code&gt;profiler.sh&lt;/code&gt;&lt;/li&gt;&lt;/ol&gt;
+&lt;pre class=&quot;language-bash&quot;&gt;&lt;code&gt;ln -s ~/App/async-profiler/profiler.sh $HOME/bin/profiler.sh
+ln -s ~/App/async-profiler/build $HOME/bin/build&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;接下来，关闭所有 Java 应用，以及任何可能影响剖析过程的东西，比如 Slack，然后在终端程序（terminal）中运行你的应用。对于我而言，则是尝试剖析 &lt;code&gt;sbt&lt;/code&gt; 的初始化加载过程：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ sbt exit&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;在另一个终端中，运行：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ jps
+92746 sbt-launch.jar
+92780 Jps&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;由此我们知道应用的进程 ID。对于我而言，目标进程 ID 是 &lt;code&gt;92746&lt;/code&gt;。在应用运行的同时，运行如下命令：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ profiler.sh -d 60 &amp;amp;lt;process id&amp;amp;gt;
+Started [cpu] profiling
+--- Execution profile ---
+Total samples:         31602
+Non-Java:              3239 (10.25%)
+GC active:             46 (0.15%)
+Unknown (native):      14667 (46.41%)
+Not walkable (native): 3 (0.01%)
+Unknown (Java):        433 (1.37%)
+Not walkable (Java):   8 (0.03%)
+Thread exit:           1 (0.00%)
+Deopt:                 9 (0.03%)
+
+Frame buffer usage:    55.658%
+
+Total: 1932000000 (6.11%)  samples: 1932
+  [ 0] java.lang.ClassLoader$NativeLibrary.load
+  [ 1] java.lang.ClassLoader.loadLibrary0
+  [ 2] java.lang.ClassLoader.loadLibrary
+  [ 3] java.lang.Runtime.loadLibrary0
+  [ 4] java.lang.System.loadLibrary
+....&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;命令会输出一大堆有用的堆栈跟踪信息（stacktraces），为将这些信息可视化为一张火焰图，运行如下命令：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;profiler.sh -d 60 -f /tmp/flamegraph.svg &amp;amp;lt;process id&amp;amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;命令最后应该会产出文件 &lt;code&gt;/tmp/flamegraph.svg&lt;/code&gt;。&lt;/p&gt;
+&lt;img src=&apos;https://i.loli.net/2020/07/13/dZVkB9xq2Gy6NfA.png&apos; title=&apos;flamegraph&apos; alt=&apos;flamegraph&apos; width=&apos;100%&apos;/&gt;
+&lt;p&gt;你自己来体验一下 &lt;a href=&apos;https://downloads.lightbend.com/website/blog/2019/flamegraph.svg?_ga=2.187105832.1642569835.1594378538-197429397.1594378538&apos;&gt;flamegraph.svg&lt;/a&gt; 输出的信息。&lt;/p&gt;
+&lt;h2&gt;火焰图（使用 perf-map-agent 生成）&lt;/h2&gt;
+&lt;p&gt;虽然 async-profiler 上手使用很简单，但火焰图真正有趣之处在于可以混合展现 JVM 堆栈追踪和原生代码（native code）堆栈跟踪信息，让开发者可以看到 CPU 实际消耗在程序的何处。Lightbend 公司的 Johannes Rudolph 为此写了一个工具 - &lt;a href=&apos;https://github.com/jvm-profiling-tools/perf-map-agent&apos;&gt;perf-map-agent&lt;/a&gt;。该工具在 macOS 环境下会使用 &lt;code&gt;dtrace&lt;/code&gt;，在 Linux 环境下会使用 &lt;code&gt;perf&lt;/code&gt;。如果你想确认瓶颈是否出现在原生代码中，这个工具会特别有用。&lt;/p&gt;
+&lt;p&gt;我们先要编译 &lt;a href=&apos;https://github.com/jvm-profiling-tools/perf-map-agent&apos;&gt;perf-map-agent&lt;/a&gt;。对于 macOS 环境，在运行 &lt;code&gt;cmake .&lt;/code&gt; 之前需要先设置 &lt;code&gt;JAVA_HOME&lt;/code&gt; 环境变量：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ cd work
+$ git clone https://github.com/brendangregg/FlameGraph.git
+
+$ git clone https://github.com/jvm-profiling-tools/perf-map-agent.git
+$ cd perf-map-agent
+$ export JAVA_HOME=$(/usr/libexec/java_home)
+$ cmake .
+-- The C compiler identification is AppleClang 9.0.0.9000039
+-- The CXX compiler identification is AppleClang 9.0.0.9000039
+...
+$ make&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;在一个新的终端中，带 &lt;code&gt;-XX:+PreserveFramePointer&lt;/code&gt; 标记参数运行 sbt：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ sbt -J-Dsbt.launcher.standby=20s -J-XX:+PreserveFramePointer exit&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;在另一个终端中运行：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ cd quicktest/
+$ export JAVA_HOME=$(/usr/libexec/java_home)
+$ export FLAMEGRAPH_DIR=$HOME/work/FlameGraph
+$ jps
+94592 Jps
+94549 sbt-launch.jar
+$ $HOME/work/perf-map-agent/bin/dtrace-java-flames 94549
+dtrace: system integrity protection is on, some features will not be available
+
+dtrace: description &amp;amp;apos;profile-99 &amp;amp;apos; matched 2 probes
+Flame graph SVG written to DTRACE_FLAME_OUTPUT=&amp;amp;apos;/Users/xxx/work/quicktest/flamegraph-94549.svg&amp;amp;apos;.&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;理论上这样会产出更全面的火焰图，不过对于 &lt;code&gt;sbt exit&lt;/code&gt;，产出的火焰图看起来可能有点凌乱。&lt;/p&gt;
+&lt;img src=&apos;https://i.loli.net/2020/07/13/s9BbWAnluTPwE3J.png&apos; title=&apos;flamegraph-2&apos; alt=&apos;flamegraph-2&apos; width=&apos;100%&apos;/&gt;
+&lt;p&gt;如果 sbt 操作已经经过即时编译器优化（the operations are already JITed），或者操作比较特殊（the operation is more specific），那么火焰图的效果会更好。为了得到效果更好的火焰图，我们可以将相同的操作多重复几次：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ sbt -J-Dsbt.launcher.standby=20s -J-XX:+PreserveFramePointer reload reload reload reload exit&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;这样就可以产出程序的稳定态火焰图，逐步放大火焰图，就可以找到执行的热点路径。&lt;/p&gt;
+&lt;img src=&apos;https://i.loli.net/2020/07/13/93YyjxR5ATS1Dnq.png&apos; title=&apos;flamegraph-3&apos; alt=&apos;flamegraph-3&apos; width=&apos;100%&apos;/&gt;
+&lt;h2&gt;Flamescope&lt;/h2&gt;
+&lt;p&gt;Netflix 公司近期发布了一个新的火焰图可视化工具 - &lt;a href=&apos;https://medium.com/netflix-techblog/netflix-flamescope-a57ca19d47bb&apos;&gt;Flamescope&lt;/a&gt;，可以将火焰图过滤限制在一个特定的时间范围内。&lt;/p&gt;
+&lt;img src=&apos;https://i.loli.net/2020/07/13/djm2hkvC98irQu7.png&apos; title=&apos;FlameScope&apos; alt=&apos;FlameScope&apos; width=&apos;100%&apos;/&gt;
+&lt;p&gt;Martin Spier 和 Brendan Gregg 为研究扰动以及其他时间相关的问题（perturbations and other time-based issues）而开发了这个工具。常规的火焰图是聚合了所有堆栈追踪抽样数据，如果系统中发生了一个短时小故障，就会被深埋于其他追踪信息中，这个工具就是为了解决这个问题。&lt;/p&gt;
+&lt;h2&gt;JMH (sbt-jmh)&lt;/h2&gt;
+&lt;p&gt;因为 JIT 存在预热等特点，增大了基准测试的困难。JMH 会将相同的测试运行多次，消除 JIT 预热等特点造成的影响，从而更准确地测量代码的性能。&lt;/p&gt;
+&lt;p&gt;对于 sbt 用户而言，Lightbend 公司 Konrad Malawski 编写的 &lt;a href=&apos;https://github.com/ktoso/sbt-jmh&apos;&gt;sbt-jmh&lt;/a&gt; 进一步简化了 JMH 测试。并且它也集成了 async-profiler。&lt;/p&gt;
+&lt;h2&gt;VisualVM&lt;/h2&gt;
+&lt;p&gt;我也想提一下传统的 JVM 剖析工具。因为 &lt;a href=&apos;https://visualvm.github.io/&apos;&gt;VisualVM&lt;/a&gt; 开源了，所以就来说说它。&lt;/p&gt;
+&lt;p&gt;1、先打开 VisualVM&lt;/p&gt;
+&lt;p&gt;2、在一个终端中启动 sbt&lt;/p&gt;
+&lt;p&gt;3、从 VisualVM 界面的 Local 应用目录下应该可以看到 &lt;code&gt;xsbt.boot.Boot&lt;/code&gt;&lt;/p&gt;
+&lt;img src=&apos;https://i.loli.net/2020/07/13/EB7vsuo1HjaTtQw.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;/&gt;
+&lt;p&gt;4、打开它，选择 抽样功能（sampler） 或 剖析功能（profiler），在你想要开始的时间点点击 CPU 按钮&lt;/p&gt;
+&lt;img src=&apos;https://i.loli.net/2020/07/13/aoiIDfMKw9pjY4Z.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;/&gt;
+&lt;p&gt;如果你对 &lt;a href=&apos;https://www.yourkit.com/&apos;&gt;YourKit&lt;/a&gt; 比较熟悉，也可以使用它，用法比较相似。&lt;/p&gt;
+&lt;h2&gt;总结&lt;/h2&gt;
+&lt;p&gt;火焰图对堆栈跟踪抽样数据进行可视化，方便识别应用代码中的热点路径。也有助于确认代码变更是否实际影响了应用性能。&lt;/p&gt;</description>
+            <pubDate>2020-07-13</pubDate>
+            <link>https://blog.xiayf.cn/posts/how-to-profile-jvm-applications.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/how-to-profile-jvm-applications.html</guid>
         </item>
         
         <item>
@@ -1829,7 +2035,7 @@ new Thread(() -&amp;amp;gt; flux.subscribe(System.out::println)); // 5 &lt;/code
 &lt;p&gt;&lt;em&gt;以后有空再翻译&lt;/em&gt;&lt;/p&gt;
 &lt;h3&gt;4.3 使用 ParallelFlux 并行化处理&lt;/h3&gt;
 &lt;p&gt;如今多核架构已是下里巴人，相应地，轻松实现并行化工作的工具手段很关键。Reactor 提供了一个特殊类型 - &lt;code&gt;ParallelFlux&lt;/code&gt; - 帮助实现并行化处理。&lt;code&gt;ParallelFlux&lt;/code&gt; 提供的算子是为并行化工作优化过的。&lt;/p&gt;
-&lt;p&gt;对任意 &lt;code&gt;Flux&lt;/code&gt; 实例调用 &lt;code&gt;parallel()&lt;/code&gt;算子就能得到一个 &lt;code&gt;ParallelFlux&lt;/code&gt; 实例。这个方法本身并不能实现并行化工作，而是将工作负载拆分到多个“轨道”（默认“轨道”数量等于 CPU 核数）&lt;sup id=&quot;fnref:1&quot;&gt;&lt;a href=&quot;#fn:1&quot; class=&quot;footnote&quot; rel=&quot;footnote&quot; role=&quot;doc-noteref&quot;&gt;[^1]&lt;/a&gt;&lt;/sup&gt;。&lt;/p&gt;
+&lt;p&gt;对任意 &lt;code&gt;Flux&lt;/code&gt; 实例调用 &lt;code&gt;parallel()&lt;/code&gt;算子就能得到一个 &lt;code&gt;ParallelFlux&lt;/code&gt; 实例。这个方法本身并不能实现并行化工作，而是将工作负载拆分到多个“轨道”（默认“轨道”数量等于 CPU 核数）&lt;sup id=&quot;fnref:1&quot;&gt;&lt;a href=&quot;#fn:1&quot; class=&quot;footnote&quot; rel=&quot;footnote&quot; role=&quot;doc-noteref&quot;&gt;[1]&lt;/a&gt;&lt;/sup&gt;。&lt;/p&gt;
 &lt;p&gt;为了告知产出的 ParallelFlux 实例每个“轨道”在哪执行（以及如何并行执行“轨道”），则必须使用 &lt;code&gt;runOn(Scheduler)&lt;/code&gt;。注意：对于并行工作，推荐使用一个专用调度器 - &lt;code&gt;Schedulers.parallel()&lt;/code&gt;。&lt;/p&gt;
 &lt;p&gt;对比如下两个示例，第一个示例的代码如下所示：&lt;/p&gt;
 &lt;pre class=&quot;language-java&quot;&gt;&lt;code&gt;Flux.range(1, 10)
@@ -1863,9 +2069,9 @@ parallel-1 -&amp;amp;gt; 7
 parallel-1 -&amp;amp;gt; 9
 parallel-2 -&amp;amp;gt; 8
 parallel-2 -&amp;amp;gt; 10&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;如果数据序列&lt;sup id=&quot;fnref:2&quot;&gt;&lt;a href=&quot;#fn:2&quot; class=&quot;footnote&quot; rel=&quot;footnote&quot; role=&quot;doc-noteref&quot;&gt;[^2]&lt;/a&gt;&lt;/sup&gt;已经在并行化处理，而你又想将其转回一个 “常规的” &lt;code&gt;Flux&lt;/code&gt; 实例，然后串行执行算子链余下的部分，则可以使用 &lt;code&gt;ParallelFlux&lt;/code&gt; 的 &lt;code&gt;sequential()&lt;/code&gt; 方法。&lt;/p&gt;
+&lt;p&gt;如果数据序列&lt;sup id=&quot;fnref:2&quot;&gt;&lt;a href=&quot;#fn:2&quot; class=&quot;footnote&quot; rel=&quot;footnote&quot; role=&quot;doc-noteref&quot;&gt;[2]&lt;/a&gt;&lt;/sup&gt;已经在并行化处理，而你又想将其转回一个 “常规的” &lt;code&gt;Flux&lt;/code&gt; 实例，然后串行执行算子链余下的部分，则可以使用 &lt;code&gt;ParallelFlux&lt;/code&gt; 的 &lt;code&gt;sequential()&lt;/code&gt; 方法。&lt;/p&gt;
 &lt;p&gt;注意：如果直接使用一个 &lt;code&gt;Subscriber&lt;/code&gt; 类型参数而不是 lambda 表达式来调用 &lt;code&gt;subscribe&lt;/code&gt; 方法，那么内部实现会隐式地调用 &lt;code&gt;sequential()&lt;/code&gt; 方法。&lt;/p&gt;
-&lt;p&gt;由此也要注意：&lt;code&gt;subscribe(Subscriber&amp;lt;T&amp;gt;)&lt;/code&gt; 会合并所有数据“轨道”，而 &lt;code&gt;subscribe(Consumer&amp;lt;T&amp;gt;)&lt;/code&gt; 是运行所有的数据“轨道”。如果以 lambda 表达式调用 &lt;code&gt;subscribe&lt;/code&gt; 方法，那么每个 lambda 表达式都会被复制成多个实例（数量等于“轨道”数量）去执行&lt;sup id=&quot;fnref:3&quot;&gt;&lt;a href=&quot;#fn:3&quot; class=&quot;footnote&quot; rel=&quot;footnote&quot; role=&quot;doc-noteref&quot;&gt;[^3]&lt;/a&gt;&lt;/sup&gt;。&lt;/p&gt;
+&lt;p&gt;由此也要注意：&lt;code&gt;subscribe(Subscriber&amp;lt;T&amp;gt;)&lt;/code&gt; 会合并所有数据“轨道”，而 &lt;code&gt;subscribe(Consumer&amp;lt;T&amp;gt;)&lt;/code&gt; 是运行所有的数据“轨道”。如果以 lambda 表达式调用 &lt;code&gt;subscribe&lt;/code&gt; 方法，那么每个 lambda 表达式都会被复制成多个实例（数量等于“轨道”数量）去执行&lt;sup id=&quot;fnref:3&quot;&gt;&lt;a href=&quot;#fn:3&quot; class=&quot;footnote&quot; rel=&quot;footnote&quot; role=&quot;doc-noteref&quot;&gt;[3]&lt;/a&gt;&lt;/sup&gt;。&lt;/p&gt;
 &lt;hr&gt;
 &lt;div class=&quot;footnotes&quot; role=&quot;doc-endnotes&quot;&gt;&lt;ol&gt;&lt;li id=&quot;fn:1&quot;&gt;&lt;p&gt;译注：这里的“轨道”其实不太直白。在实现上，&lt;code&gt;ParallelFlux&lt;/code&gt; 会将最后 &lt;code&gt;subscribe&lt;/code&gt; 的 onNext 回调按并行度（默认等于 CPU 核数 N）复制成 N 个，那么最终调用 ParallelFlux 的 N 个 Subscriber，从 ParallelFlux 实例到一个 Subscriber 的数据流路径可以理解为一个“轨道”，ParallelFlux 在接收到上游消息后按照 round-robin 方式选择一个 Subscriber 调用其 &lt;code&gt;onNext&lt;/code&gt; 下发消息，但 &lt;code&gt;onNext&lt;/code&gt; 是运行在什么线程上，是由 runOn 算子决定的，如果不使用 runOn 算子，那么所有 Subscriber 的 &lt;code&gt;onNext&lt;/code&gt; 方法调用都是同步运行在主线程上的。&lt;a href=&quot;#fnref:1&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;↩&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
 &lt;li id=&quot;fn:2&quot;&gt;&lt;p&gt;译注：原文中用了多个词来表达相近的意思：sequence（序列）、stream（流）、flow（流），阅读时可以相互替代理解。此外，还有 event（事件）、data（数据）、message（消息），在当前上下文中，可以看成是等价的。&lt;a href=&quot;#fnref:2&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;↩&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;

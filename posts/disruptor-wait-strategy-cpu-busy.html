@@ -113,7 +113,7 @@ disruptor.handleEventsWith((Event&lt;T&gt; event, long sequence, boolean endOfBa
 }</code></pre>
 <p><a href='https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/locks/LockSupport.html#parkNanos-long-'>LockSupport.parkNanos</a> 方法的作用简单而言即让当前线程睡眠 sleepTimeNs 纳秒。</p>
 <p>Disruptor 作为一个任务队列，自带一个线程池，线程池的线程工厂即构造方法传入的 factory，线程数量等于 <a href='https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/dsl/Disruptor.java#L165'>disruptor.handleEventsWith</a> 调用时传入的回调方法数量，handleEventsWith 的参数数量不定:</p>
-<pre class="language-java"><code>public final EventHandlerGroup&lt;T&gt; handleEventsWith(final EventHandler&lt;? super T&gt;... handlers)`</code></pre>
+<pre class="language-java"><code>public final EventHandlerGroup&lt;T&gt; handleEventsWith(final EventHandler&lt;? super T&gt;... handlers)</code></pre>
 <p>18个 Disruptor 实例，每个实例有一个消费者线程，消费者线程不断检查队列中是否有新的 <code>Event&lt;T&gt;</code> 任务需要处理，如果有，则调用 EventHandler 回调方法进行处理，否则睡眠 sleepTimeNs 纳秒。</p>
 <p>到此，结合监控指标，可以大致猜测：由于 sleepTimeNs 较小，导致多个线程的状态不断在 <code>运行</code>、<code>睡眠</code>、<code>等待调度</code> 之间切换，线程上下文切换非常频繁。</p>
 <p>围绕 LockSupport.parkNanos 编写一个测试程序，来复现这个问题：</p>

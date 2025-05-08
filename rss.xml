@@ -4,8 +4,8 @@
         <description>精进，求诸己身</description>
         <link>https://blog.xiayf.cn/</link>
         <atom:link href="https://blog.xiayf.cn/rss.xml" rel="self" type="application/rss+xml"/>
-        <pubDate>2025-05-09T00:09:24.61249+08:00</pubDate>
-        <lastBuildDate>2025-05-09T00:09:24.61249+08:00</lastBuildDate>
+        <pubDate>2025-05-09T00:15:40.442619+08:00</pubDate>
+        <lastBuildDate>2025-05-09T00:15:40.442619+08:00</lastBuildDate>
         <generator>LingDong</generator>
         
         <item>
@@ -824,7 +824,7 @@ disruptor.handleEventsWith((Event&amp;amp;lt;T&amp;amp;gt; event, long sequence,
 }&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;&lt;a href=&apos;https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/locks/LockSupport.html#parkNanos-long-&apos;&gt;LockSupport.parkNanos&lt;/a&gt; 方法的作用简单而言即让当前线程睡眠 sleepTimeNs 纳秒。&lt;/p&gt;
 &lt;p&gt;Disruptor 作为一个任务队列，自带一个线程池，线程池的线程工厂即构造方法传入的 factory，线程数量等于 &lt;a href=&apos;https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/dsl/Disruptor.java#L165&apos;&gt;disruptor.handleEventsWith&lt;/a&gt; 调用时传入的回调方法数量，handleEventsWith 的参数数量不定:&lt;/p&gt;
-&lt;pre class=&quot;language-java&quot;&gt;&lt;code&gt;public final EventHandlerGroup&amp;amp;lt;T&amp;amp;gt; handleEventsWith(final EventHandler&amp;amp;lt;? super T&amp;amp;gt;... handlers)`&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&quot;language-java&quot;&gt;&lt;code&gt;public final EventHandlerGroup&amp;amp;lt;T&amp;amp;gt; handleEventsWith(final EventHandler&amp;amp;lt;? super T&amp;amp;gt;... handlers)&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;18个 Disruptor 实例，每个实例有一个消费者线程，消费者线程不断检查队列中是否有新的 &lt;code&gt;Event&amp;lt;T&amp;gt;&lt;/code&gt; 任务需要处理，如果有，则调用 EventHandler 回调方法进行处理，否则睡眠 sleepTimeNs 纳秒。&lt;/p&gt;
 &lt;p&gt;到此，结合监控指标，可以大致猜测：由于 sleepTimeNs 较小，导致多个线程的状态不断在 &lt;code&gt;运行&lt;/code&gt;、&lt;code&gt;睡眠&lt;/code&gt;、&lt;code&gt;等待调度&lt;/code&gt; 之间切换，线程上下文切换非常频繁。&lt;/p&gt;
 &lt;p&gt;围绕 LockSupport.parkNanos 编写一个测试程序，来复现这个问题：&lt;/p&gt;
@@ -950,7 +950,7 @@ Flame graph SVG written to DTRACE_FLAME_OUTPUT=&amp;amp;apos;/Users/xxx/work/qui
 &lt;img src=&apos;https://i.loli.net/2020/07/13/93YyjxR5ATS1Dnq.png&apos; title=&apos;flamegraph-3&apos; alt=&apos;flamegraph-3&apos; width=&apos;100%&apos;/&gt;
 &lt;h2&gt;Flamescope&lt;/h2&gt;
 &lt;p&gt;Netflix 公司近期发布了一个新的火焰图可视化工具 - &lt;a href=&apos;https://medium.com/netflix-techblog/netflix-flamescope-a57ca19d47bb&apos;&gt;Flamescope&lt;/a&gt;，可以将火焰图过滤限制在一个特定的时间范围内。&lt;/p&gt;
-&lt;img src=&apos;https://i.loli.net/2020/07/13/djm2hkvC98irQu7.png&apos; title=&apos;FlameScope&apos; alt=&apos;FlameScope&apos; width=&apos;400&apos;/&gt;
+&lt;img src=&apos;https://i.loli.net/2020/07/13/djm2hkvC98irQu7.png&apos; title=&apos;FlameScope&apos; alt=&apos;FlameScope&apos; width=&apos;200&apos;/&gt;
 &lt;p&gt;Martin Spier 和 Brendan Gregg 为研究扰动以及其他时间相关的问题（perturbations and other time-based issues）而开发了这个工具。常规的火焰图是聚合了所有堆栈追踪抽样数据，如果系统中发生了一个短时小故障，就会被深埋于其他追踪信息中，这个工具就是为了解决这个问题。&lt;/p&gt;
 &lt;h2&gt;JMH (sbt-jmh)&lt;/h2&gt;
 &lt;p&gt;因为 JIT 存在预热等特点，增大了基准测试的困难。JMH 会将相同的测试运行多次，消除 JIT 预热等特点造成的影响，从而更准确地测量代码的性能。&lt;/p&gt;

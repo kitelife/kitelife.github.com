@@ -55,16 +55,16 @@
         <p class="post-meta">2019-06-17</p>
     </header>
     <article class="post-content">
-        <p>其实工作以来，我很少写测试/单测代码，一方面是大部分互联网公司团队对测试的要求不高，另一方面是想写好测试代码还挺难的，挺花时间，其中最麻烦的是待测代码可能会访问外部资源（比如数据库、HTTP API），如果不能方便地进模拟访问这些外部资源，那么测试起来会非常麻烦。</p>
-<p>但，对于复杂逻辑，如果不经过严格测试，发布到生产环境，又有些不放心，没底气，或者在代码重构时，如果没有覆盖全面的测试，很难评估代码变动带来的影响。</p>
-<p>直到遇到 <a href='https://site.mockito.org/'>mockito</a>，我才觉得是时候认真写写测试代码了。</p>
+        <p class="text-align-justify">其实工作以来，我很少写测试/单测代码，一方面是大部分互联网公司团队对测试的要求不高，另一方面是想写好测试代码还挺难的，挺花时间，其中最麻烦的是待测代码可能会访问外部资源（比如数据库、HTTP API），如果不能方便地进模拟访问这些外部资源，那么测试起来会非常麻烦。</p>
+<p class="text-align-justify">但，对于复杂逻辑，如果不经过严格测试，发布到生产环境，又有些不放心，没底气，或者在代码重构时，如果没有覆盖全面的测试，很难评估代码变动带来的影响。</p>
+<p class="text-align-justify">直到遇到 <a href='https://site.mockito.org/'>mockito</a>，我才觉得是时候认真写写测试代码了。</p>
 <hr>
-<p><a href='https://site.mockito.org/'>mockito</a> 提供两种对象模拟方式：<strong>mock</strong> 和 <strong>spy</strong>。</p>
-<p>简单来说，mock 模拟的对象是一个完全假的对象，只是具备指定类型的接口，以 <code>java.util.List</code> 为例：</p>
+<p class="text-align-justify"><a href='https://site.mockito.org/'>mockito</a> 提供两种对象模拟方式：<strong>mock</strong> 和 <strong>spy</strong>。</p>
+<p class="text-align-justify">简单来说，mock 模拟的对象是一个完全假的对象，只是具备指定类型的接口，以 <code>java.util.List</code> 为例：</p>
 <pre class="language-java"><code>import static org.mockito.Mockito.mock;
 
 List mockedList = mock(List.class);</code></pre>
-<p>虽然 List 是一个 interface，也可以模拟出一个对象实例，这个 mockedList 对象具备 List 接口定义的所有方法，但所有方法都不具备实际的行为操作，对于有返回值的方法，则默认返回方法返回类型的默认值，没有返回值的方法，则纯粹是一个空方法。比如：</p>
+<p class="text-align-justify">虽然 List 是一个 interface，也可以模拟出一个对象实例，这个 mockedList 对象具备 List 接口定义的所有方法，但所有方法都不具备实际的行为操作，对于有返回值的方法，则默认返回方法返回类型的默认值，没有返回值的方法，则纯粹是一个空方法。比如：</p>
 <pre class="language-java"><code>// mockedList 并不会真的把 1 存下来
 mockedList.add(1);
 // 所以，size() 返回默认值，输出 0
@@ -73,7 +73,7 @@ System.out.println(mockedList.size());
 System.out.println(mockedList.get(0));
 // 输出 null
 System.out.println(mockedList.get(1));</code></pre>
-<p>对于模拟出来的对象，可以任意指定其方法的返回值，比如：</p>
+<p class="text-align-justify">对于模拟出来的对象，可以任意指定其方法的返回值，比如：</p>
 <pre class="language-java"><code>import static org.mockito.Mockito.when;
 
 // 调用 size() 方法时，返回 10
@@ -87,14 +87,14 @@ System.out.println(mockedList.size());
 System.out.println(mockedList.get(0));
 // 输出 您好！
 System.out.println(mockedList.get(1));</code></pre>
-<p>当然我们写测试代码时，并不会使用 System.out.println，然后看输出，而是使用<strong>断言</strong>：</p>
+<p class="text-align-justify">当然我们写测试代码时，并不会使用 System.out.println，然后看输出，而是使用<strong>断言</strong>：</p>
 <pre class="language-java"><code>import static org.junit.Assert.assertEquals;
 
 assertEquals(10, mockedList.size());
 assertEquals(&quot;Hello World!&quot;, mockedList.get(0));
 assertEquals(&quot;您好！&quot;, mockedList.get(1));</code></pre>
-<p>断言方法非常多，不仅仅只是 assertEquals。</p>
-<p>对于同一个方法，可以模拟多次调用返回不同的值：</p>
+<p class="text-align-justify">断言方法非常多，不仅仅只是 assertEquals。</p>
+<p class="text-align-justify">对于同一个方法，可以模拟多次调用返回不同的值：</p>
 <pre class="language-java"><code>// 会覆盖之前 mock 的行为：when(mockedList.size()).willReturn(10);
 // 或者这么写：when(mockedList.size()).willReturn(0, -1, 10);
 when(mockedList.size()).thenReturn(0).thenReturn(-1).thenReturn(10);
@@ -113,7 +113,7 @@ assertEquals(10, iterator.next());
 assertEquals(1000, iterator.next());
 // 第 4 次之后的 iterator.next() 调用都返回 1000
 assertEquals(1000, iterator.next());</code></pre>
-<p>还可以模拟异常抛出：</p>
+<p class="text-align-justify">还可以模拟异常抛出：</p>
 <pre class="language-java"><code>List mockedList = mock(List.class);
 
 when(mockedList.get(-1000)).thenThrow(new RuntimeException(&quot;参数异常！&quot;));
@@ -123,7 +123,7 @@ try {
     assertTrue(e instanceof RuntimeException);
     assertEquals(&quot;参数异常！&quot;, e.getMessage());
 }</code></pre>
-<p>也可以基于复杂的逻辑来构造返回值：</p>
+<p class="text-align-justify">也可以基于复杂的逻辑来构造返回值：</p>
 <pre class="language-java"><code>import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
@@ -139,7 +139,7 @@ public class EchoAnswer implements Answer&lt;Integer&gt; {
         return var.getArgument(0);
     }
 }</code></pre>
-<p>除了 <code>when(...).thenReturn(...)</code> 风格的测试模拟方式，还有 BDD（Behavior Driven Development 行为驱动开发）风格的：</p>
+<p class="text-align-justify">除了 <code>when(...).thenReturn(...)</code> 风格的测试模拟方式，还有 BDD（Behavior Driven Development 行为驱动开发）风格的：</p>
 <pre class="language-java"><code>import static org.mockito.BDDMockito.given;
 
 // given
@@ -148,7 +148,7 @@ given(mockedList.get(0)).willReturn(100);
 int v = (int) mockedList.get(0);
 // then
 assertEquals(100, v);</code></pre>
-<p>如果方法没有返回值，或者其它奇葩的需求，则没法使用 when.thenReturn / willReturn 这样的模拟方法，可以使用 <code>doReturn(...).when(...)...</code>：</p>
+<p class="text-align-justify">如果方法没有返回值，或者其它奇葩的需求，则没法使用 when.thenReturn / willReturn 这样的模拟方法，可以使用 <code>doReturn(...).when(...)...</code>：</p>
 <pre class="language-java"><code>import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.doReturn;
 
@@ -165,9 +165,9 @@ try {
 
 // 没有意义，因为没法使用 断言 来验证，实际运行时会抛异常
 doReturn(10).when(mockedList).clear();</code></pre>
-<p>从示例代码可以看出，<code>doReturn(...).when(...)....</code> 不会做类型校验，mockedList.clear() 返回值类型为 void，但我们模拟让其返回 10；所以，正常情况应该尽可能使用 <code>when(...).thenReturn(...)</code> 或 <code>given(...).willReturn(...)</code>。</p>
+<p class="text-align-justify">从示例代码可以看出，<code>doReturn(...).when(...)....</code> 不会做类型校验，mockedList.clear() 返回值类型为 void，但我们模拟让其返回 10；所以，正常情况应该尽可能使用 <code>when(...).thenReturn(...)</code> 或 <code>given(...).willReturn(...)</code>。</p>
 <hr>
-<p>前述代码示例中，模拟方法的参数都做了硬编码，实际情况通常都不是这么测试，而是模拟方法的参数符合一定的要求即可，比如：在某个范围之内、符合类型的任何值：</p>
+<p class="text-align-justify">前述代码示例中，模拟方法的参数都做了硬编码，实际情况通常都不是这么测试，而是模拟方法的参数符合一定的要求即可，比如：在某个范围之内、符合类型的任何值：</p>
 <pre class="language-java"><code>import static org.mockito.Mockito.anyInt;
 
 /*
@@ -179,7 +179,7 @@ when(mockedList.get(anyInt())).thenReturn(100);
 
 assertEquals(100, mockedList.get(0));
 assertEquals(100, mockedList.get(1000));</code></pre>
-<p>可用的参数匹配器，见 org.mockito.ArgumentMatchers 类的静态方法列表，也可以自己实现 ArgumentMatcher 接口：</p>
+<p class="text-align-justify">可用的参数匹配器，见 org.mockito.ArgumentMatchers 类的静态方法列表，也可以自己实现 ArgumentMatcher 接口：</p>
 <pre class="language-java"><code>package org.mockito;
 
 public interface ArgumentMatcher&lt;T&gt; {
@@ -201,10 +201,10 @@ public class LimitedInt implements ArgumentMatcher&lt;Integer&gt; {
         return var &gt; 0 &amp;&amp; var &lt; 100;
     }
 }</code></pre>
-<p>如果被模拟的方法包含多个参数，那么这些参数要么全部使用匹配器，要么全部不使用。</p>
+<p class="text-align-justify">如果被模拟的方法包含多个参数，那么这些参数要么全部使用匹配器，要么全部不使用。</p>
 <hr>
-<p>模拟某些类（A）的方法，通常会将 mock 出来的对象注入到依赖该类实例的其他类（B）中，来替代真实的依赖，这种方式的目的是为了测试类 B 的行为是否符合预期。</p>
-<p>另一个测试需求是，测试某个类 A' 在某个上下文环境中的行为是否符合预期，比如： A' 的某个方法是否被调用过、调用过几次、调用参数是否符合预期、几个方法之间的调用次序是否符合预期、方法调用耗时是否符合预期等等。</p>
+<p class="text-align-justify">模拟某些类（A）的方法，通常会将 mock 出来的对象注入到依赖该类实例的其他类（B）中，来替代真实的依赖，这种方式的目的是为了测试类 B 的行为是否符合预期。</p>
+<p class="text-align-justify">另一个测试需求是，测试某个类 A' 在某个上下文环境中的行为是否符合预期，比如： A' 的某个方法是否被调用过、调用过几次、调用参数是否符合预期、几个方法之间的调用次序是否符合预期、方法调用耗时是否符合预期等等。</p>
 <pre class="language-java"><code>import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.never;
@@ -271,7 +271,7 @@ inOrder.verify(mocked1).size();
 inOrder.verify(mocked1).isEmpty();
 inOrder.verify(mocked2).isEmpty();</code></pre>
 <hr>
-<p>也可以验证某个方法被调用时所使用的参数是否符合预期：</p>
+<p class="text-align-justify">也可以验证某个方法被调用时所使用的参数是否符合预期：</p>
 <pre class="language-java"><code>import org.mockito.ArgumentCaptor;
 
 List mockedlist = mock(List.class);
@@ -294,8 +294,8 @@ public class Caller {
     }
 }</code></pre>
 <hr>
-<p>前面的内容都是以 mock 为例，我们再来说说 spy，与 mock 的区别：</p>
-<p>mock 出来的对象是一个完全假的对象，但 spy 通常是基于一个具体的类或类实例，对其篡改某些方法，对于被篡改方法之外的方法，其行为都和调用真实对象的方法一样，不过并没有调用真实对象的方法，也不会对真实对象产生影响：</p>
+<p class="text-align-justify">前面的内容都是以 mock 为例，我们再来说说 spy，与 mock 的区别：</p>
+<p class="text-align-justify">mock 出来的对象是一个完全假的对象，但 spy 通常是基于一个具体的类或类实例，对其篡改某些方法，对于被篡改方法之外的方法，其行为都和调用真实对象的方法一样，不过并没有调用真实对象的方法，也不会对真实对象产生影响：</p>
 <pre class="language-java"><code>// 基于一个实际的类实例
 List&lt;Integer&gt; realList = new ArrayList&lt;&gt;(10);
 List&lt;Integer&gt; spy = spy(realList);
@@ -309,7 +309,7 @@ assertEquals(1, spy.size());
 // 这句会抛出 java.lang.IndexOutOfBoundsException，因为 realList 还是为空
 assertTrue(1 == realList.get(0));
 assertTrue(1 == spy.get(0));</code></pre>
-<p>也可以基于一个具体的类来构造 spy，但这样无法使用带参数的构造方法，也无法指定类型参数：</p>
+<p class="text-align-justify">也可以基于一个具体的类来构造 spy，但这样无法使用带参数的构造方法，也无法指定类型参数：</p>
 <pre class="language-java"><code>List&lt;Integer&gt; = spy(ArrayList.class);
 assertEquals(0, spy.size());
 spy.add(100);
@@ -319,9 +319,9 @@ assertTrue(100 == spy.get(0));
 // 篡改方法
 when(spy.size()).thenReturn(-1);
 assertEquals(-1, spy.size());</code></pre>
-<p>实际上，mock 也可以基于具体的类来构造，这时可以指定某些方法实际调用具体类的方法。</p>
+<p class="text-align-justify">实际上，mock 也可以基于具体的类来构造，这时可以指定某些方法实际调用具体类的方法。</p>
 <hr>
-<p>除了使用 mock、spy 方法来构造模拟对象，还可以通过注解来构造，但这样的话得指定 JUnit 的 Runner 为 <code>org.mockito.junit.MockitoJUnitRunner</code>：</p>
+<p class="text-align-justify">除了使用 mock、spy 方法来构造模拟对象，还可以通过注解来构造，但这样的话得指定 JUnit 的 Runner 为 <code>org.mockito.junit.MockitoJUnitRunner</code>：</p>
 <pre class="language-java"><code>import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;

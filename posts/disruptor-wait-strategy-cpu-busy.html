@@ -56,28 +56,28 @@
     </header>
     <article class="post-content">
         <h2>背景</h2>
-<p>工作中，我负责的系统是一个数据流处理服务 - 以流水线（pipeline）的形式分多级异步处理：</p>
+<p class="text-align-justify">工作中，我负责的系统是一个数据流处理服务 - 以流水线（pipeline）的形式分多级异步处理：</p>
 <img src='https://i.loli.net/2020/07/14/ONwUsrlhLmIq8BW.jpg' title='' alt='' width='100%'/>
-<p>其中的 队列 实际使用的是 <a href='https://github.com/LMAX-Exchange/disruptor'>Disruptor</a>，多生产者单消费者模式：</p>
+<p class="text-align-justify">其中的 队列 实际使用的是 <a href='https://github.com/LMAX-Exchange/disruptor'>Disruptor</a>，多生产者单消费者模式：</p>
 <pre class="language-java"><code>ThreadFactory factory = new ThreadFactoryBuilder().setNameFormat(name).setDaemon(true).build();
 Disruptor&lt;Event&lt;T&gt;&gt;  disruptor = new Disruptor&lt;&gt;(Event&lt;T&gt;::new, bufferSize, factory, ProducerType.MULTI, new SleepingWaitStrategy());
 disruptor.handleEventsWith((Event&lt;T&gt; event, long sequence, boolean endOfBatch) -&gt; {
     consumer.accept(event.value, endOfBatch);
     event.value = null;
 });</code></pre>
-<p>服务运行在 k8s 集群上，每个容器节点上可能会运行多个 pipeline，也即意味着单个节点上会存在多个 disruptor 实例。</p>
+<p class="text-align-justify">服务运行在 k8s 集群上，每个容器节点上可能会运行多个 pipeline，也即意味着单个节点上会存在多个 disruptor 实例。</p>
 <h2>现象</h2>
-<p>近期突然收到测试环境很多节点（生产环境也有少量节点）的 CPU 使用率告警 - CPU 使用率持续 5 分钟以上超过 90%，如下其中一个任务节点的 CPU 使用率监控图：</p>
+<p class="text-align-justify">近期突然收到测试环境很多节点（生产环境也有少量节点）的 CPU 使用率告警 - CPU 使用率持续 5 分钟以上超过 90%，如下其中一个任务节点的 CPU 使用率监控图：</p>
 <img src='https://i.loli.net/2020/07/14/XJVsiMI3b9m5dlB.jpg' title='' alt='' width='100%'/>
 <img src='https://i.loli.net/2020/07/14/2YwPQAqaICr879x.jpg' title='' alt='' width='100%'/>
-<p><code>cpu.busy = cpu.system + cpu.user + 软/硬中断</code></p>
-<p>注意其中 <code>cpu.system</code> 比 <code>cpu.user</code> 高不少，<code>cpu.busy</code> 又比 <code>cpu.system</code> 高不少。也即 CPU 时间片资源主要消耗在 内核态 和中断逻辑上（对于这些任务而言 <code>cpu.user</code> 指标也是异常的）。</p>
-<p>这些节点运行的任务，几乎没有数据需要处理，也就是说几乎是空跑的。从线程数量监控以及 jstack 输出的堆栈跟踪信息，也未发现明显异常。</p>
+<p class="text-align-justify"><code>cpu.busy = cpu.system + cpu.user + 软/硬中断</code></p>
+<p class="text-align-justify">注意其中 <code>cpu.system</code> 比 <code>cpu.user</code> 高不少，<code>cpu.busy</code> 又比 <code>cpu.system</code> 高不少。也即 CPU 时间片资源主要消耗在 内核态 和中断逻辑上（对于这些任务而言 <code>cpu.user</code> 指标也是异常的）。</p>
+<p class="text-align-justify">这些节点运行的任务，几乎没有数据需要处理，也就是说几乎是空跑的。从线程数量监控以及 jstack 输出的堆栈跟踪信息，也未发现明显异常。</p>
 <h2>原因排查</h2>
-<p>将测试环境的任务在本地环境运行起来，并基于 <a href='https://www.lightbend.com/blog/profiling-jvm-applications'>How to profile JVM applications</a> 一文中提到的火焰图工具，产出对应 JVM 应用的火焰图：</p>
+<p class="text-align-justify">将测试环境的任务在本地环境运行起来，并基于 <a href='https://www.lightbend.com/blog/profiling-jvm-applications'>How to profile JVM applications</a> 一文中提到的火焰图工具，产出对应 JVM 应用的火焰图：</p>
 <img src='https://i.loli.net/2020/07/14/zQMWsBeKbuZLamN.jpg' title='' alt='' width='100%'/>
-<p>从图中可以大致看出其中 <code>com/lmax/disruptor/SleepingWaitStrategy:::waitFor</code> / <code>jdk/internal/misc/Unsafe:::park</code> 比较可疑，在调用栈中耗时最长。</p>
-<p>从项目源码和 jstack 输出的堆栈跟踪信息可以看到，测试任务中大致涉及 18个 disruptor 实例，均使用 <code>SleepingWaitStrategy</code> 等待策略，该策略的 <a href='https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/SleepingWaitStrategy.java#L56'>waitFor</a> 方法实现如下所示：</p>
+<p class="text-align-justify">从图中可以大致看出其中 <code>com/lmax/disruptor/SleepingWaitStrategy:::waitFor</code> / <code>jdk/internal/misc/Unsafe:::park</code> 比较可疑，在调用栈中耗时最长。</p>
+<p class="text-align-justify">从项目源码和 jstack 输出的堆栈跟踪信息可以看到，测试任务中大致涉及 18个 disruptor 实例，均使用 <code>SleepingWaitStrategy</code> 等待策略，该策略的 <a href='https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/SleepingWaitStrategy.java#L56'>waitFor</a> 方法实现如下所示：</p>
 <pre class="language-java"><code>public long waitFor(final long sequence, Sequence cursor, final Sequence dependentSequence, final SequenceBarrier barrier) throws AlertException {
     long availableSequence;
     // 默认 200
@@ -89,7 +89,7 @@ disruptor.handleEventsWith((Event&lt;T&gt; event, long sequence, boolean endOfBa
 
     return availableSequence;
 }</code></pre>
-<p>waitFor 方法中核心调用了 <a href='https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/SleepingWaitStrategy.java#L76'>applyWaitMethod</a> ：</p>
+<p class="text-align-justify">waitFor 方法中核心调用了 <a href='https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/SleepingWaitStrategy.java#L76'>applyWaitMethod</a> ：</p>
 <pre class="language-java"><code>private int applyWaitMethod(final SequenceBarrier barrier, int counter) throws AlertException {
     barrier.checkAlert();
 
@@ -111,12 +111,12 @@ disruptor.handleEventsWith((Event&lt;T&gt; event, long sequence, boolean endOfBa
 
     return counter;
 }</code></pre>
-<p><a href='https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/locks/LockSupport.html#parkNanos-long-'>LockSupport.parkNanos</a> 方法的作用简单而言即让当前线程睡眠 sleepTimeNs 纳秒。</p>
-<p>Disruptor 作为一个任务队列，自带一个线程池，线程池的线程工厂即构造方法传入的 factory，线程数量等于 <a href='https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/dsl/Disruptor.java#L165'>disruptor.handleEventsWith</a> 调用时传入的回调方法数量，handleEventsWith 的参数数量不定:</p>
+<p class="text-align-justify"><a href='https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/locks/LockSupport.html#parkNanos-long-'>LockSupport.parkNanos</a> 方法的作用简单而言即让当前线程睡眠 sleepTimeNs 纳秒。</p>
+<p class="text-align-justify">Disruptor 作为一个任务队列，自带一个线程池，线程池的线程工厂即构造方法传入的 factory，线程数量等于 <a href='https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/dsl/Disruptor.java#L165'>disruptor.handleEventsWith</a> 调用时传入的回调方法数量，handleEventsWith 的参数数量不定:</p>
 <pre class="language-java"><code>public final EventHandlerGroup&lt;T&gt; handleEventsWith(final EventHandler&lt;? super T&gt;... handlers)</code></pre>
-<p>18个 Disruptor 实例，每个实例有一个消费者线程，消费者线程不断检查队列中是否有新的 <code>Event&lt;T&gt;</code> 任务需要处理，如果有，则调用 EventHandler 回调方法进行处理，否则睡眠 sleepTimeNs 纳秒。</p>
-<p>到此，结合监控指标，可以大致猜测：由于 sleepTimeNs 较小，导致多个线程的状态不断在 <code>运行</code>、<code>睡眠</code>、<code>等待调度</code> 之间切换，线程上下文切换非常频繁。</p>
-<p>围绕 LockSupport.parkNanos 编写一个测试程序，来复现这个问题：</p>
+<p class="text-align-justify">18个 Disruptor 实例，每个实例有一个消费者线程，消费者线程不断检查队列中是否有新的 <code>Event&lt;T&gt;</code> 任务需要处理，如果有，则调用 EventHandler 回调方法进行处理，否则睡眠 sleepTimeNs 纳秒。</p>
+<p class="text-align-justify">到此，结合监控指标，可以大致猜测：由于 sleepTimeNs 较小，导致多个线程的状态不断在 <code>运行</code>、<code>睡眠</code>、<code>等待调度</code> 之间切换，线程上下文切换非常频繁。</p>
+<p class="text-align-justify">围绕 LockSupport.parkNanos 编写一个测试程序，来复现这个问题：</p>
 <pre class="language-java"><code>import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -137,14 +137,14 @@ public class Test {
     wg.await();
   }
 }</code></pre>
-<p>在 3.2 GHz 6-Core Intel Core i7 配置 macOS 系统中，这个测试程序可以稳定地将 CPU 使用率控制在 700%+，如下 <code>top -pid [测试程序的进程 id]</code> 命令的输出：</p>
+<p class="text-align-justify">在 3.2 GHz 6-Core Intel Core i7 配置 macOS 系统中，这个测试程序可以稳定地将 CPU 使用率控制在 700%+，如下 <code>top -pid [测试程序的进程 id]</code> 命令的输出：</p>
 <img src='https://i.loli.net/2020/07/14/Z6jixvuWY1yTnL4.jpg' title='' alt='' width='100%'/>
-<p>其中 CSW 为线程上下文切换的次数。</p>
-<p>既然问题原因在于多个线程频繁睡眠导致，那么解决方案也比较简单：</p>
+<p class="text-align-justify">其中 CSW 为线程上下文切换的次数。</p>
+<p class="text-align-justify">既然问题原因在于多个线程频繁睡眠导致，那么解决方案也比较简单：</p>
 <ol><li>使用更大的值来替换 sleepTimeNs 默认值：<code>new Disruptor&lt;&gt;(Event&lt;T&gt;::new, bufferSize, factory, ProducerType.MULTI, new SleepingWaitStrategy(200, 1000 * 1000 / 10)); // 0.1 ms</code></li>
 <li>使用其他等待策略（WaitStrategy），比如：<code>com.lmax.disruptor.BlockingWaitStrategy</code></li></ol>
-<p>不过解决方案也有微小的负作用 - 部分新任务/<code>Event&lt;T&gt;</code>实例的处理时延会增大，但在我们的数据流处理场景下，这点时延增大对业务完全没有影响。</p>
-<p>不过，这个问题应该是一直存在，为什么近期才收到告警，为什么以前从监控上未发现？</p>
+<p class="text-align-justify">不过解决方案也有微小的负作用 - 部分新任务/<code>Event&lt;T&gt;</code>实例的处理时延会增大，但在我们的数据流处理场景下，这点时延增大对业务完全没有影响。</p>
+<p class="text-align-justify">不过，这个问题应该是一直存在，为什么近期才收到告警，为什么以前从监控上未发现？</p>
 <ol><li>为什么近期才收到告警？因为这个监控告警是近期公司监控平台才统一配置的</li>
 <li>为什么以前从监控上未发现？因为公司切换了新的监控平台，老的监控平台没有 cpu.busy 这个指标，而这些没什么数据要处理的任务长时间不需要开发维护，也就未得到及时关注。</li></ol>
 <h2>扩展资料</h2>

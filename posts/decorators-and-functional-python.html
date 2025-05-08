@@ -55,16 +55,16 @@
         <p class="post-meta">2013-01-04</p>
     </header>
     <article class="post-content">
-        <p>原文：<a href='http://www.brianholdefehr.com/decorators-and-functional-python'>Decorators and Functional Python</a></p>
-<p>装饰器是Python的一大特色。除了在语言中的原本用处，还帮助我们以一种有趣的方式（函数式）进行思考。</p>
-<p>我打算自底向上解释装饰器如何工作。首先解释几个话题以帮助理解装饰器。然后，深入一点探索几个简单的装饰器以及它们如何工作。最后，讨论一些更高级的使用装饰器的方式，比如：传递可选参数给装饰器或者串接几个装饰器。</p>
-<p>首先以我能想到的最简单的方式来定义Python函数是什么。基于该定义，我们可以类似的简单方式来定义装饰器。</p>
-<blockquote><p>函数是一个完成特定任务的可复用代码块。</p></blockquote>
-<p>好的，那么装饰器又是什么呢？</p>
-<blockquote><p>装饰器是一个修改其他函数的函数。</p></blockquote>
-<p>现在在装饰器的定义上进行详述，先解释一些先决条件。</p>
+        <p class="text-align-justify">原文：<a href='http://www.brianholdefehr.com/decorators-and-functional-python'>Decorators and Functional Python</a></p>
+<p class="text-align-justify">装饰器是Python的一大特色。除了在语言中的原本用处，还帮助我们以一种有趣的方式（函数式）进行思考。</p>
+<p class="text-align-justify">我打算自底向上解释装饰器如何工作。首先解释几个话题以帮助理解装饰器。然后，深入一点探索几个简单的装饰器以及它们如何工作。最后，讨论一些更高级的使用装饰器的方式，比如：传递可选参数给装饰器或者串接几个装饰器。</p>
+<p class="text-align-justify">首先以我能想到的最简单的方式来定义Python函数是什么。基于该定义，我们可以类似的简单方式来定义装饰器。</p>
+<blockquote><p class="text-align-justify">函数是一个完成特定任务的可复用代码块。</p></blockquote>
+<p class="text-align-justify">好的，那么装饰器又是什么呢？</p>
+<blockquote><p class="text-align-justify">装饰器是一个修改其他函数的函数。</p></blockquote>
+<p class="text-align-justify">现在在装饰器的定义上进行详述，先解释一些先决条件。</p>
 <h2>函数是一等对象</h2>
-<p>Python中，所有东西都是对象。这意味着可以通过名字引用函数，以及像其他对象那样传递。例如：</p>
+<p class="text-align-justify">Python中，所有东西都是对象。这意味着可以通过名字引用函数，以及像其他对象那样传递。例如：</p>
 <pre class="language-python"><code>def traveling_function():
     print &quot;Here I am!&quot;
 
@@ -75,9 +75,9 @@ function_dict = {
 trav_func = function_dict[&apos;func&apos;]
 trav_func()
 # &gt;&gt; Here I am!</code></pre>
-<p><code>traveling_function</code> 被赋值给 <code>function_dict</code> 字典中键 <code>func</code> 的值，仍旧可以正常调用。</p>
+<p class="text-align-justify"><code>traveling_function</code> 被赋值给 <code>function_dict</code> 字典中键 <code>func</code> 的值，仍旧可以正常调用。</p>
 <h2>一等函数允许高阶函数</h2>
-<p>我们可以像其他对象那样传递函数。可以将函数作为值传递给字典，放在列表中，或者作为对象的属性进行赋值。那为什么不能作为参数传给另一个函数呢？当然可以！如果一个函数接受另一个函数作为其参数或者返回另一个函数，则称之为高阶函数。</p>
+<p class="text-align-justify">我们可以像其他对象那样传递函数。可以将函数作为值传递给字典，放在列表中，或者作为对象的属性进行赋值。那为什么不能作为参数传给另一个函数呢？当然可以！如果一个函数接受另一个函数作为其参数或者返回另一个函数，则称之为高阶函数。</p>
 <pre class="language-python"><code>def self_absorbed_function():
     return &quot;I&apos;m an amazing function!&quot;
 
@@ -87,9 +87,9 @@ def printer(func):
 # Call `printer` and give it `self_absorbed_function` as an argument
 printer(self_absorbed_function)
 # &gt;&gt;&gt; The function passed to me says: I&apos;m an amazing function!</code></pre>
-<p>现在你也看到函数可以作为参数传给另一个函数，而且传给函数的函数还可以调用。这允许我们创建一些有意思的函数，例如装饰器。</p>
+<p class="text-align-justify">现在你也看到函数可以作为参数传给另一个函数，而且传给函数的函数还可以调用。这允许我们创建一些有意思的函数，例如装饰器。</p>
 <h2>装饰器基础</h2>
-<p>本质上，装饰器就是一个以另一个函数为参数的函数。大多数情况下，它们会返回所包装函数的一个修改版本。来看个我们能想到的最简单的装饰器---同一性（identity）装饰器，或许对我们理解装饰器的工作原理有所帮助。</p>
+<p class="text-align-justify">本质上，装饰器就是一个以另一个函数为参数的函数。大多数情况下，它们会返回所包装函数的一个修改版本。来看个我们能想到的最简单的装饰器---同一性（identity）装饰器，或许对我们理解装饰器的工作原理有所帮助。</p>
 <pre class="language-python"><code>def identity_decorator(func):
     def wrapper():
         func()
@@ -104,13 +104,13 @@ decorated_function = identity_function(a_function)
 # 如下调用 `identity_function` 返回的函数
 decorated_function()
 # &gt;&gt;&gt; I&apos;m a normal function</code></pre>
-<p>这里， <code>identity_decorator</code> 根本没有修改它包装的函数，只是简单地返回一个函数（wrapper），这个函数在被调用之时，会去调用原来作为 <code>identity_decorator</code> 参数的函数。这是个没有用处的装饰器！</p>
-<p>关于 <code>identity_decorator</code> 的有趣之处是 <code>wrapper</code> 能够访问变量 <code>func</code> ，即使 <code>func</code> 并非是它的参数。这归因于闭包。</p>
+<p class="text-align-justify">这里， <code>identity_decorator</code> 根本没有修改它包装的函数，只是简单地返回一个函数（wrapper），这个函数在被调用之时，会去调用原来作为 <code>identity_decorator</code> 参数的函数。这是个没有用处的装饰器！</p>
+<p class="text-align-justify">关于 <code>identity_decorator</code> 的有趣之处是 <code>wrapper</code> 能够访问变量 <code>func</code> ，即使 <code>func</code> 并非是它的参数。这归因于闭包。</p>
 <h2>闭包</h2>
-<blockquote><p>闭包是一个花哨的术语，意为声明一个函数时，该函数会维持一个指向声明所处词法环境的引用。</p></blockquote>
-<p>上例中定义的函数 <code>wrapper</code> 能够在其局部作用域（local scope）中访问 <code>func</code>。这意味着在 <code>wrapper</code> （返回并赋值给变量 <code>decorated_function</code> ）的整个生命周期内，它都可以访问 <code>func</code> 变量。一旦 <code>identity_decorator</code>返回，那么访问 <code>func</code> 的唯一方式就是通过 <code>decorated_function</code> 。 <code>func</code> 只作为一个变量存在于 <code>decorated_function</code> 作用域环境的内部。</p>
+<blockquote><p class="text-align-justify">闭包是一个花哨的术语，意为声明一个函数时，该函数会维持一个指向声明所处词法环境的引用。</p></blockquote>
+<p class="text-align-justify">上例中定义的函数 <code>wrapper</code> 能够在其局部作用域（local scope）中访问 <code>func</code>。这意味着在 <code>wrapper</code> （返回并赋值给变量 <code>decorated_function</code> ）的整个生命周期内，它都可以访问 <code>func</code> 变量。一旦 <code>identity_decorator</code>返回，那么访问 <code>func</code> 的唯一方式就是通过 <code>decorated_function</code> 。 <code>func</code> 只作为一个变量存在于 <code>decorated_function</code> 作用域环境的内部。</p>
 <h2>一个简单的装饰器</h2>
-<p>现在我们来创建一个确实有点用的装饰器。这个装饰器所做的就是记录它所修改的函数被调用了多少次。</p>
+<p class="text-align-justify">现在我们来创建一个确实有点用的装饰器。这个装饰器所做的就是记录它所修改的函数被调用了多少次。</p>
 <pre class="language-python"><code>def logging_decorator(func):
     def wrapper():
         wrapper.count += 1
@@ -131,11 +131,11 @@ modified_function()
 modified_function()
 # &gt;&gt;&gt; The function I modify has been called 2 time(s).
 # &gt;&gt;&gt; I&apos;m a normal function.</code></pre>
-<p>我们说装饰器会修改函数，这样来想对理解也是有帮助的。但如例子所见， <code>logging_decorator</code> 返回的是一个类似于 <code>a_function</code> 的新函数，只是多了一个日志特性。</p>
-<p>上例中， <code>logging_decorator</code> 不仅接受一个函数作为参数，并且返回一个函数， <code>wrapper</code> 。每次 <code>logging_decorator</code> 返回的函数得到调用，它就对 <code>wrapper.count</code> 的值加1，打印出来，然后调用 <code>logging_decorator</code> 包装的函数。</p>
-<p>你也许正疑惑为什么我们的计数器是 <code>wrapper</code> 的一个属性而不是一个普通的变量。难道 <code>wrapper</code> 的闭包环境不是让我们访问在其局部作用域中声明的任意变量么？是的，但有个问题。Python中，闭包允许对其函数作用域链中任一变量的进行任意读操作，但只允许对可变对象（列表、字典、等等）进行写操作。整数在Python中是非可变对象，因此我们不能修改 <code>wrapper</code> 内部整型变量的值。相反，我们将计数器作为 <code>wrapper</code> 的一个属性---一个可变对象，因此可以随我们自己增大它的值。</p>
+<p class="text-align-justify">我们说装饰器会修改函数，这样来想对理解也是有帮助的。但如例子所见， <code>logging_decorator</code> 返回的是一个类似于 <code>a_function</code> 的新函数，只是多了一个日志特性。</p>
+<p class="text-align-justify">上例中， <code>logging_decorator</code> 不仅接受一个函数作为参数，并且返回一个函数， <code>wrapper</code> 。每次 <code>logging_decorator</code> 返回的函数得到调用，它就对 <code>wrapper.count</code> 的值加1，打印出来，然后调用 <code>logging_decorator</code> 包装的函数。</p>
+<p class="text-align-justify">你也许正疑惑为什么我们的计数器是 <code>wrapper</code> 的一个属性而不是一个普通的变量。难道 <code>wrapper</code> 的闭包环境不是让我们访问在其局部作用域中声明的任意变量么？是的，但有个问题。Python中，闭包允许对其函数作用域链中任一变量的进行任意读操作，但只允许对可变对象（列表、字典、等等）进行写操作。整数在Python中是非可变对象，因此我们不能修改 <code>wrapper</code> 内部整型变量的值。相反，我们将计数器作为 <code>wrapper</code> 的一个属性---一个可变对象，因此可以随我们自己增大它的值。</p>
 <h2>装饰器语法</h2>
-<p>在前一个例子中，我们看到可以将一个函数作为参数传给装饰器，从而使用装饰器函数对该函数进行包装。然而，Python还有一个语法模式使得这一切更加直观，更容易阅读，一旦你熟悉了装饰器。</p>
+<p class="text-align-justify">在前一个例子中，我们看到可以将一个函数作为参数传给装饰器，从而使用装饰器函数对该函数进行包装。然而，Python还有一个语法模式使得这一切更加直观，更容易阅读，一旦你熟悉了装饰器。</p>
 <pre class="language-python"><code># In the previous example, we used our decorator function by passing the
 # function we wanted to modify to it, and assigning the result to a variable
 def some_function():
@@ -148,11 +148,11 @@ some_function = logging_decorator(some_function)</code></pre>
 @logging_decorator
 def some_function():
     print &quot;I&apos;m happiest when decorated&quot;</code></pre>
-<p>使用装饰器语法，鸟瞰其中发生的事情：</p>
+<p class="text-align-justify">使用装饰器语法，鸟瞰其中发生的事情：</p>
 <ol><li>解释器到达被装饰的函数，编译 <code>some_function</code>，并将其命名为 'some_function'。</li>
 <li>然后将该函数传递给装饰行中指定的装饰器函数（ <code>logging_function</code> ）。</li>
 <li>装饰器函数（通常是用来包装原函数的另一个函数）的返回值取代原来的函数（<code>some_function</code> ），绑定到变量名 <code>some_function</code> 。</li></ol>
-<p>将这些步骤记住，让我们来更清晰地解释 <code>identity_decorator</code> 。</p>
+<p class="text-align-justify">将这些步骤记住，让我们来更清晰地解释 <code>identity_decorator</code> 。</p>
 <pre class="language-python"><code>def identity_decorator(func):
     # Everything here happens when the decorator LOADS and is passed
     # the function as decribed in step 2 above
@@ -160,10 +160,10 @@ def some_function():
         # Things here happen each time the final wrapped function gets CALLED
         func()
     return wrapper</code></pre>
-<p>希望那些注释有助于理解。每次调用被包装的函数，仅执行装饰器返回的函数中的指令。返回函数之外的指令仅执行一次---上述步骤2中描述的：装饰器首次接收到传递给它的待包装函数之时。</p>
-<p>在观察更多的有意思的装饰器之前，我想再解释一样东西。</p>
+<p class="text-align-justify">希望那些注释有助于理解。每次调用被包装的函数，仅执行装饰器返回的函数中的指令。返回函数之外的指令仅执行一次---上述步骤2中描述的：装饰器首次接收到传递给它的待包装函数之时。</p>
+<p class="text-align-justify">在观察更多的有意思的装饰器之前，我想再解释一样东西。</p>
 <h2><code>*args</code> 与 <code>**kwargs</code></h2>
-<p>以前你也许有时会把这两者相混淆了。让我们一次性地讨论它们。</p>
+<p class="text-align-justify">以前你也许有时会把这两者相混淆了。让我们一次性地讨论它们。</p>
 <ul><li>通过在形参列表中使用 <code>*args</code> 语法，python函数能够接收可变数量的位置参数(positional arguments)。 <code>*args</code> 会将所有没有关键字的参数放入一个参数元组中，在函数里可以访问元组中的参数。相反，将 <code>*args</code> 用于函数调用时的实参列表之时，它会将参数元组展开成一系列的位置参数。</li></ul>
 <hr>
 <pre class="language-python"><code>def function_with_many_arguments(*args):
@@ -186,8 +186,8 @@ function_with_3_parameters(*arg_list)
 # &gt;&gt;&gt; num is 1
 # &gt;&gt;&gt; boolean is False
 # &gt;&gt;&gt; string is decorators</code></pre>
-<p>重述一遍：在形参列表中， <code>*args</code>会将一系列的参数压缩进一个名为'args'的元组，而在实参列表中， <code>*args</code> 会将一个可迭代的参数数据结构展开为一系列的位置实参应用于函数。</p>
-<p>如你所见在实参展开的例子中， <code>*</code> 符号可与'args'之外的名字一起使用。当压缩/展开一般的参数列表，使用 <code>*args</code> 的形式仅仅是一种惯例。</p>
+<p class="text-align-justify">重述一遍：在形参列表中， <code>*args</code>会将一系列的参数压缩进一个名为'args'的元组，而在实参列表中， <code>*args</code> 会将一个可迭代的参数数据结构展开为一系列的位置实参应用于函数。</p>
+<p class="text-align-justify">如你所见在实参展开的例子中， <code>*</code> 符号可与'args'之外的名字一起使用。当压缩/展开一般的参数列表，使用 <code>*args</code> 的形式仅仅是一种惯例。</p>
 <ul><li><code>**kwargs</code> 与 <code>*args</code> 的行为类似，但用于关键字参数而非位置参数。如果在函数的形参列表中使用 <code>**kwargs</code> ，它会收集函数收到的所有额外关键字参数，放入一个字典中。如果用于函数的实参列表，它会将一个字典展开为一系列的关键字参数。</li></ul>
 <hr>
 <pre class="language-python"><code>def funtion_with_many_keyword_args(**kwargs):
@@ -203,9 +203,9 @@ arg_dict = {&apos;count&apos;: 3, &apos;name&apos;: &apos;Brian&apos;}
 
 multiply_name(**arg_dict)
 # &gt;&gt; BrianBrianBrian</code></pre>
-<p>既然你理解了 <code>*args</code> 与 <code>**kwargs</code> 的工作原理，那么我们就继续研究一个你会发现很有用的装饰器。</p>
+<p class="text-align-justify">既然你理解了 <code>*args</code> 与 <code>**kwargs</code> 的工作原理，那么我们就继续研究一个你会发现很有用的装饰器。</p>
 <h2>缓存制表（Memoization）</h2>
-<p>缓存制表是避免潜在的昂贵的重复计算的一种方法，通过缓存函数每次执行的结果来实现。这样，下一次函数以相同的参数执行，就可以从缓存中获取返回结果，不需要再次计算结果。</p>
+<p class="text-align-justify">缓存制表是避免潜在的昂贵的重复计算的一种方法，通过缓存函数每次执行的结果来实现。这样，下一次函数以相同的参数执行，就可以从缓存中获取返回结果，不需要再次计算结果。</p>
 <pre class="language-python"><code>from functools import wraps
 
 def memoize(func):
@@ -221,13 +221,13 @@ def memoize(func):
 @memoize
 def an_expensive_function(arg1, arg2, arg3):
     ...</code></pre>
-<p>你可能注意到了示例代码中一个奇怪的 <code>@wraps</code> 装饰器。在完整地讨论 <code>memoize</code></p>
-<p>之前我将简要地解释这个装饰器。</p>
+<p class="text-align-justify">你可能注意到了示例代码中一个奇怪的 <code>@wraps</code> 装饰器。在完整地讨论 <code>memoize</code></p>
+<p class="text-align-justify">之前我将简要地解释这个装饰器。</p>
 <ul><li>使用装饰器的一个副作用是被包装的函数失去了本来有的 <code>__name__</code> ， <code>__doc__</code> ， 以及 <code>__module__</code> 属性。 <code>wraps</code> 函数是一个包装另一个装饰器返回的函数的装饰器，将那三个属性的值恢复为函数未装饰之时的值。例如： 如果不使用 <code>wraps</code> 装饰器， <code>an_expensive_function</code> 的名字（通过 <code>an_expensive_function.__name__</code> 可以看到）将是 'wrapper' 。</li></ul>
-<p>我认为 <code>memoize</code> 是一个很好的装饰器用例。它服务于一个很多函数都需要的目的，通过将它创建为一个通用装饰器，我们可以将它的功能应用于任一能够从其中获益的函数。这就避免了在多种不同的场合重复实现这个功能。因为不需要重复自己，所以我们的代码更容易维护，并且更容易阅读和理解。只要读一个单词你就能立刻理解函数使用了缓存制表。</p>
-<p>需要提醒的是：缓存制表仅适用于纯函数。也就是说给定一个特定的参数设置，函数确定总会产生相同的结果。如果函数依赖于不作为参数传递的全局变量、I/O、或者其它任意可能影响返回值的东西，缓存制表会产生令人迷惑的结果！并且，一个纯函数不会有任何副作用。因此，如果你的函数会增大一个计数器，或者调用另一个对象的方法，或者其它任意不在函数的返回结果中表示的东西，当结果是从缓存中返回时，副作用操作并不会得到执行。</p>
+<p class="text-align-justify">我认为 <code>memoize</code> 是一个很好的装饰器用例。它服务于一个很多函数都需要的目的，通过将它创建为一个通用装饰器，我们可以将它的功能应用于任一能够从其中获益的函数。这就避免了在多种不同的场合重复实现这个功能。因为不需要重复自己，所以我们的代码更容易维护，并且更容易阅读和理解。只要读一个单词你就能立刻理解函数使用了缓存制表。</p>
+<p class="text-align-justify">需要提醒的是：缓存制表仅适用于纯函数。也就是说给定一个特定的参数设置，函数确定总会产生相同的结果。如果函数依赖于不作为参数传递的全局变量、I/O、或者其它任意可能影响返回值的东西，缓存制表会产生令人迷惑的结果！并且，一个纯函数不会有任何副作用。因此，如果你的函数会增大一个计数器，或者调用另一个对象的方法，或者其它任意不在函数的返回结果中表示的东西，当结果是从缓存中返回时，副作用操作并不会得到执行。</p>
 <h2>类的装饰器</h2>
-<p>最初，我们说装饰器是一个修改另一个函数的函数，但其实它们可以用于修改类或者方法。对类进行装饰并不常见，但某些情况下作为元类(metaclass)的一个替代，类的装饰器是一个有用的工具。</p>
+<p class="text-align-justify">最初，我们说装饰器是一个修改另一个函数的函数，但其实它们可以用于修改类或者方法。对类进行装饰并不常见，但某些情况下作为元类(metaclass)的一个替代，类的装饰器是一个有用的工具。</p>
 <pre class="language-python"><code>foo = [&apos;important&apos;, &apos;foo&apos;, &apos;stuff&apos;]
 
 def add_foo(klass):
@@ -243,11 +243,11 @@ brian = Person()
 
 print brian.foo
 # &gt;&gt; [&apos;important&apos;, &apos;foo&apos;, &apos;stuff&apos;]</code></pre>
-<p>现在，类 <code>Person</code> 的任一对象都有一个超级重要的 <code>foo</code></p>
-<p>属性！注意，因为我们装饰的是一个类，所以装饰器返回的不是一个函数，而是一个类。更新一下装饰器的定义：</p>
-<blockquote><p>装饰器是一个修改函数、或方法、或类的函数。</p></blockquote>
+<p class="text-align-justify">现在，类 <code>Person</code> 的任一对象都有一个超级重要的 <code>foo</code></p>
+<p class="text-align-justify">属性！注意，因为我们装饰的是一个类，所以装饰器返回的不是一个函数，而是一个类。更新一下装饰器的定义：</p>
+<blockquote><p class="text-align-justify">装饰器是一个修改函数、或方法、或类的函数。</p></blockquote>
 <h2>装饰器类</h2>
-<p>事实证明我早先对你隐瞒了一些其它事情。不仅装饰器可以装饰一个类，并且装饰器也可以是一个类！对于装饰器的唯一要求就是它的返回值必须可调用(callable)。这意味着装饰器必须实现 <code>__call__</code> 魔术方法，当你调用一个对象时，会隐式调用这个方法。函数当然是隐式设置这个方法的。我们重新将 <code>identity_decorator</code> 创建为一个类来看看它是如何工作的。</p>
+<p class="text-align-justify">事实证明我早先对你隐瞒了一些其它事情。不仅装饰器可以装饰一个类，并且装饰器也可以是一个类！对于装饰器的唯一要求就是它的返回值必须可调用(callable)。这意味着装饰器必须实现 <code>__call__</code> 魔术方法，当你调用一个对象时，会隐式调用这个方法。函数当然是隐式设置这个方法的。我们重新将 <code>identity_decorator</code> 创建为一个类来看看它是如何工作的。</p>
 <pre class="language-python"><code>class IdentityDecorator(object):
     def __init__(self, func):
         self.func = func
@@ -262,14 +262,14 @@ def a_function():
 
 a_function()
 # &gt;&gt; I&apos;m a normal function.</code></pre>
-<p>如下是上例中发生的事情：</p>
+<p class="text-align-justify">如下是上例中发生的事情：</p>
 <ul><li>当 <code>IdentityDecorator</code> 装饰 <code>a_function</code> 时，它的行为就和装饰器函数一样。这个代码片段等价于上例中的装饰器语法： <code>a_function = IdentityDecorator(a_function)</code> 。调用（实例化）该装饰器类时，需将其装饰的函数作为一个实参传递给它。</li>
 <li>实例化 <code>IdentityDecorator</code> 之时，会以被装饰的函数作为实参调用初始化函数 <code>__init__</code> 。本例中，初始化函数所做的事情就是将被装饰函数赋值给一个属性，这样之后就可以通过其它方法进行调用。</li>
 <li>最后，调用 <code>a_function</code> （实际上是返回的包装了 <code>a_function</code> 的 <code>IdentityDecorator</code> 对象）之时，会调用对象的 <code>__call__</code> 方法。这仅是一个同一性装饰器，所以方法只是简单地调用了该类所装饰的函数。</li></ul>
-<p>再次更新一下我们对装饰器的定义！</p>
-<blockquote><p>装饰器是一个修改函数、方法或者类的可调用对象。</p></blockquote>
+<p class="text-align-justify">再次更新一下我们对装饰器的定义！</p>
+<blockquote><p class="text-align-justify">装饰器是一个修改函数、方法或者类的可调用对象。</p></blockquote>
 <h2>带参数的装饰器</h2>
-<p>有时，需要根据不同的情况改变装饰器的行为。你可以通过传参来做到这一点。</p>
+<p class="text-align-justify">有时，需要根据不同的情况改变装饰器的行为。你可以通过传参来做到这一点。</p>
 <pre class="language-python"><code>from functools import wraps
 
 def argumentative_decorator(gift):
@@ -288,21 +288,21 @@ def grateful_function(gift):
 grateful_function()
 # &gt;&gt; I don&apos;t like this sweater you gave me!
 # &gt;&gt; I love the sweater! Thank you!</code></pre>
-<p>我们来看看如果不使用装饰器语法这个装饰器函数是如何工作的：</p>
+<p class="text-align-justify">我们来看看如果不使用装饰器语法这个装饰器函数是如何工作的：</p>
 <pre class="language-python"><code># If we tried to invoke without an argument:
 grateful_function = argumentative_function(grateful_function)
 
 # But when given an argument, the pattern changes to:
 grateful_function = argumentative_decorator(&quot;sweater&quot;)(grateful_function)</code></pre>
-<p>需要注意的地方是：当给定参数，首先仅以那些参数调用装饰器---被包装的函数并不在参数中。装饰器调用返回后，装饰器要包装的函数被传递给装饰器初始调用返回的函数（本例中，为 <code>argumentative_decorator(&quot;sweater&quot;)</code> 的返回值）。</p>
-<p>逐步地：</p>
+<p class="text-align-justify">需要注意的地方是：当给定参数，首先仅以那些参数调用装饰器---被包装的函数并不在参数中。装饰器调用返回后，装饰器要包装的函数被传递给装饰器初始调用返回的函数（本例中，为 <code>argumentative_decorator(&quot;sweater&quot;)</code> 的返回值）。</p>
+<p class="text-align-justify">逐步地：</p>
 <ol><li>解释器到达被装饰函数之处，编译 <code>grateful_function</code> ，并将其绑定到名字'grateful_function'。</li>
 <li>传递参数"sweater"调用 <code>argumentative_decorator</code> ，返回 <code>func_wrapper</code> 。</li>
 <li>以 <code>grateful_function</code> 为参调用 <code>func_wrapper</code> ，返回 <code>returned_wrapper</code> 。</li>
 <li>最后， <code>returned_wrapper</code> 取代原来的函数 <code>grateful_function</code> ，并绑定到名字'grateful_function' 。</li></ol>
-<p>我想这一过程相比没有装饰器参数理解起来更难一点，但是如果你花些时间将其理解通透，我希望是有意义的。</p>
+<p class="text-align-justify">我想这一过程相比没有装饰器参数理解起来更难一点，但是如果你花些时间将其理解通透，我希望是有意义的。</p>
 <h2>带可选参数的装饰器</h2>
-<p>有多种方式让装饰器接受可选参数。根据你是想使用位置参数、关键字参数还是两者皆是，需要使用稍微不同的模式。如下我将展示一种接受一个可选关键字参数的方式：</p>
+<p class="text-align-justify">有多种方式让装饰器接受可选参数。根据你是想使用位置参数、关键字参数还是两者皆是，需要使用稍微不同的模式。如下我将展示一种接受一个可选关键字参数的方式：</p>
 <pre class="language-python"><code>from functools import wraps
 
 GLOBAL_NAME = &quot;Brian&quot;
@@ -338,12 +338,12 @@ a_function()
 another_function()
 # &gt;&gt; My name is Matt
 # &gt;&gt; Hey, that&apos;s new!</code></pre>
-<p>如果我们传递关键字参数 <code>name</code> 给 <code>print_name</code>，那么它的行为就与前一个例子中的 <code>argumentative_decorator</code> 相似。即，首先以 <code>name</code> 为参调用 <code>print_name</code> 。然后，将待包装的函数传递给首次调用返回的函数。</p>
-<p>如果我们没有提供 <code>name</code> 实参， <code>print_name</code> 的行为就与前面我们看到的不带参数的装饰器一样。装饰器仅以待包装的函数作为唯一的参数进行调用。</p>
-<p><code>print_name</code> 支持两种可能性。它会检查是否收到作为参数的被包装函数。如果没有，则返回函数</p>
-<p><code>waiting_for_func</code>，该函数可以被包装函数作为参数进行调用。如果收到被包装函数作为参数，则跳过中间步骤，直接调用 <code>actual_decorator</code> 。</p>
+<p class="text-align-justify">如果我们传递关键字参数 <code>name</code> 给 <code>print_name</code>，那么它的行为就与前一个例子中的 <code>argumentative_decorator</code> 相似。即，首先以 <code>name</code> 为参调用 <code>print_name</code> 。然后，将待包装的函数传递给首次调用返回的函数。</p>
+<p class="text-align-justify">如果我们没有提供 <code>name</code> 实参， <code>print_name</code> 的行为就与前面我们看到的不带参数的装饰器一样。装饰器仅以待包装的函数作为唯一的参数进行调用。</p>
+<p class="text-align-justify"><code>print_name</code> 支持两种可能性。它会检查是否收到作为参数的被包装函数。如果没有，则返回函数</p>
+<p class="text-align-justify"><code>waiting_for_func</code>，该函数可以被包装函数作为参数进行调用。如果收到被包装函数作为参数，则跳过中间步骤，直接调用 <code>actual_decorator</code> 。</p>
 <h2>串接装饰器</h2>
-<p>现在来探索一下今天要讲的最后一个装饰器的特性：串接。你可以在任意给定的函数之上堆叠使用多个装饰器， 这种构建函数的方式与使用多重继承构建类相类似。不过最好不要疯狂使用这种特性。</p>
+<p class="text-align-justify">现在来探索一下今天要讲的最后一个装饰器的特性：串接。你可以在任意给定的函数之上堆叠使用多个装饰器， 这种构建函数的方式与使用多重继承构建类相类似。不过最好不要疯狂使用这种特性。</p>
 <pre class="language-python"><code>@print_name(&apos;Sam&apos;)
 @logging_decorator
 def some_function():
@@ -353,12 +353,12 @@ some_function()
 # &gt;&gt; My name is Sam
 # &gt;&gt; The function I modify has been called 1 time(s).
 # &gt;&gt; I&apos;m the wrapped function!</code></pre>
-<p>当你串接使用装饰器时，它们堆叠的顺序是自底向上的。将被包装的函数 <code>some_function</code> 经编译后传递给它之上的第一个装饰器（ <code>logging_decorator</code> ）。然后第一个装饰器的返回值被传递给第二个装饰器。依此逐个应用链上每个装饰器。</p>
-<p>因为我们使用的两个装饰器都是 <code>print</code> 一个值，然后执行传递给它们的函数，这意味着当调用被包装函数时，链中的最后一个装饰器 <code>print_name</code> 打印输出中的第一行。</p>
+<p class="text-align-justify">当你串接使用装饰器时，它们堆叠的顺序是自底向上的。将被包装的函数 <code>some_function</code> 经编译后传递给它之上的第一个装饰器（ <code>logging_decorator</code> ）。然后第一个装饰器的返回值被传递给第二个装饰器。依此逐个应用链上每个装饰器。</p>
+<p class="text-align-justify">因为我们使用的两个装饰器都是 <code>print</code> 一个值，然后执行传递给它们的函数，这意味着当调用被包装函数时，链中的最后一个装饰器 <code>print_name</code> 打印输出中的第一行。</p>
 <h2>总结</h2>
-<p>我认为装饰器最大的好处之一在于让你能够从更高的抽象层次进行思考。假如你开始阅读一个函数定义，看到有一个 <code>memoize</code> 装饰器，你立刻就能明白你正在看的是一个使用缓存制表的函数。如果缓存制表的代码包含在函数体内，就会需要额外的脑力进行解析，并且会有引入误解的可能。使用装饰器也允许代码复用，从而节省时间、简化调试，并且使得重构更加容易。</p>
-<p>玩玩装饰器也是一种很好的学习函数式概念（如高阶函数与闭包）的方式。</p>
-<p>我希望本文阅读起来很愉快，并且内容翔实。</p>
+<p class="text-align-justify">我认为装饰器最大的好处之一在于让你能够从更高的抽象层次进行思考。假如你开始阅读一个函数定义，看到有一个 <code>memoize</code> 装饰器，你立刻就能明白你正在看的是一个使用缓存制表的函数。如果缓存制表的代码包含在函数体内，就会需要额外的脑力进行解析，并且会有引入误解的可能。使用装饰器也允许代码复用，从而节省时间、简化调试，并且使得重构更加容易。</p>
+<p class="text-align-justify">玩玩装饰器也是一种很好的学习函数式概念（如高阶函数与闭包）的方式。</p>
+<p class="text-align-justify">我希望本文阅读起来很愉快，并且内容翔实。</p>
     </article>
 </div>
 

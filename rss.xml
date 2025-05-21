@@ -4,16 +4,16 @@
         <description>精进，求诸己身</description>
         <link>https://blog.xiayf.cn/</link>
         <atom:link href="https://blog.xiayf.cn/rss.xml" rel="self" type="application/rss+xml"/>
-        <pubDate>2025-05-22T00:37:59.73062+08:00</pubDate>
-        <lastBuildDate>2025-05-22T00:37:59.73062+08:00</lastBuildDate>
+        <pubDate>2025-05-22T00:58:22.905851+08:00</pubDate>
+        <lastBuildDate>2025-05-22T00:58:22.905851+08:00</lastBuildDate>
         <generator>LingDong</generator>
         
         <item>
             <title>RaBitQ 二值量化入门（译）</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文:  &lt;a href=&apos;https://www.elastic.co/search-labs/blog/rabitq-explainer-101&apos;&gt;RaBitQ binary quantization 101&lt;/a&gt;&lt;/p&gt;
-&lt;h2&gt;一、引言(Introduction)&lt;/h2&gt;
+&lt;h2&gt;一、引言&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;正如我们之前在 &lt;a href=&apos;https://blog.xiayf.cn/posts/scalar-quantization-101.html&apos;&gt;标量量化入门&lt;/a&gt; 中讨论的那样，大多数嵌入模型输出$float32$类型向量值，这个精度对于表征向量空间来说通常过于冗余。标量量化技术大大减少了表征这些向量所需的存储空间。之前我们也讨论过 &lt;a href=&apos;https://www.elastic.co/search-labs/blog/bit-vectors-in-elasticsearch&apos;&gt;Elasticsearch 中的比特向量&lt;/a&gt;，以及二值量化导致的损失通常是不可接受的。&lt;/p&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;借助 &lt;a href=&apos;https://arxiv.org/pdf/2405.12497&apos;&gt;RaBitQ 论文&lt;/a&gt;中提出的二值量化技术，可以解决将数据简单量化为比特向量（bit vector）过程中所遇到的问题，通过更细致地划分空间以及保留变换的残差实现与标量量化相近的精度质量。相比其他类似技术，比如&lt;a href=&apos;http://hal.archives-ouvertes.fr/docs/00/51/44/62/PDF/paper_hal.pdf&apos;&gt;乘积量化(PQ)&lt;/a&gt;，这些新技术能够实现性能更优的距离计算，通常得到的计算结果也更准，也能实现标量量化通常不可能实现的32倍压缩（32x level of compression）。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;借助 &lt;a href=&apos;https://arxiv.org/pdf/2405.12497&apos;&gt;RaBitQ 论文&lt;/a&gt;中提出的二值量化技术，可以解决将数据简单量化为比特向量（bit vector）过程中所遇到的问题，通过更细致地划分空间以及保留变换的残差，实现与标量量化相近的精度质量。相比其他类似技术，比如&lt;a href=&apos;http://hal.archives-ouvertes.fr/docs/00/51/44/62/PDF/paper_hal.pdf&apos;&gt;乘积量化(PQ)&lt;/a&gt;，这些新技术能够实现性能更优的距离计算，通常得到的计算结果也更准，也能实现标量量化通常不可能实现的32倍压缩（32x level of compression）。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;本文中，我们将解释二值量化的一些核心要素，相关的数学细节请参阅 &lt;a href=&apos;https://arxiv.org/pdf/2405.12497&apos;&gt;RaBitQ 论文&lt;/a&gt;。&lt;/p&gt;
 &lt;h2&gt;二、构建比特向量&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;对于距离计算，可以更高效地预计算某些部分，所以我们对索引构建和查询构造两个环节区分处理。&lt;/p&gt;

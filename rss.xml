@@ -4,9 +4,208 @@
         <description>精进，求诸己身</description>
         <link>https://blog.xiayf.cn/</link>
         <atom:link href="https://blog.xiayf.cn/rss.xml" rel="self" type="application/rss+xml"/>
-        <pubDate>2025-05-09T00:52:19.053459+08:00</pubDate>
-        <lastBuildDate>2025-05-09T00:52:19.053459+08:00</lastBuildDate>
+        <pubDate>2025-05-22T00:37:59.73062+08:00</pubDate>
+        <lastBuildDate>2025-05-22T00:37:59.73062+08:00</lastBuildDate>
         <generator>LingDong</generator>
+        
+        <item>
+            <title>RaBitQ 二值量化入门（译）</title>
+            <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文:  &lt;a href=&apos;https://www.elastic.co/search-labs/blog/rabitq-explainer-101&apos;&gt;RaBitQ binary quantization 101&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;一、引言(Introduction)&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;正如我们之前在 &lt;a href=&apos;https://blog.xiayf.cn/posts/scalar-quantization-101.html&apos;&gt;标量量化入门&lt;/a&gt; 中讨论的那样，大多数嵌入模型输出$float32$类型向量值，这个精度对于表征向量空间来说通常过于冗余。标量量化技术大大减少了表征这些向量所需的存储空间。之前我们也讨论过 &lt;a href=&apos;https://www.elastic.co/search-labs/blog/bit-vectors-in-elasticsearch&apos;&gt;Elasticsearch 中的比特向量&lt;/a&gt;，以及二值量化导致的损失通常是不可接受的。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;借助 &lt;a href=&apos;https://arxiv.org/pdf/2405.12497&apos;&gt;RaBitQ 论文&lt;/a&gt;中提出的二值量化技术，可以解决将数据简单量化为比特向量（bit vector）过程中所遇到的问题，通过更细致地划分空间以及保留变换的残差实现与标量量化相近的精度质量。相比其他类似技术，比如&lt;a href=&apos;http://hal.archives-ouvertes.fr/docs/00/51/44/62/PDF/paper_hal.pdf&apos;&gt;乘积量化(PQ)&lt;/a&gt;，这些新技术能够实现性能更优的距离计算，通常得到的计算结果也更准，也能实现标量量化通常不可能实现的32倍压缩（32x level of compression）。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;本文中，我们将解释二值量化的一些核心要素，相关的数学细节请参阅 &lt;a href=&apos;https://arxiv.org/pdf/2405.12497&apos;&gt;RaBitQ 论文&lt;/a&gt;。&lt;/p&gt;
+&lt;h2&gt;二、构建比特向量&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;对于距离计算，可以更高效地预计算某些部分，所以我们对索引构建和查询构造两个环节区分处理。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;以三个非常简单的二维向量 $v_1$、$v_2$和$v_3$ 的索引构建（indexing）为例，看看如何对他们进行转换和存储，实现查询时的高效距离计算。&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$v_1=[0.56,0.82]$$&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$v_2=[1.23,0.71]$$&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$v_3=[-3.28,2.13]$$&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;我们的目标是将这些向量转换为更小的表征形式，支持：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;以合理的形式快速地估算向量距离&lt;/li&gt;
+&lt;li&gt;也确保空间中的向量分布能够将召回实际的最近邻所需要处理的数据向量总数降下来&lt;/li&gt;&lt;/ul&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;可以通过以下方式实现：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;将每个向量变换移动到超球体内部，对于我们的例子来说，超球体是一个二维圆，单位圆&lt;/li&gt;
+&lt;li&gt;将每个向量分别吸附（snapping）到圆内某个区域的单个代表性点上&lt;/li&gt;
+&lt;li&gt;保留校正因子以便更准确地近似计算每个向量与查询向量之间的距离&lt;/li&gt;&lt;/ul&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;下面分步骤解析这个过程。&lt;/p&gt;
+&lt;h2&gt;三、找一个代表性质心&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;为了划分每一维，需要选择一个枢轴点（pivot point）。为了简化，将选择一个点来转换我们所有的数据向量。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;对于示例向量$v_1$、$v_2$和$v_3$，选择它们的质心作为枢轴点。&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$v_{1}=[0.56,0.82]$$&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$v_{2}=[1.23,0.71]$$&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$v_{3}=[-3.28,2.13]$$&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$c=[(0.56+1.23+-3.28)/3,(0.82+0.71+2.13)/3]$$&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$c=[-0.49, 1.22]$$&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;将所有这些点一起绘制出来：&lt;/p&gt;
+&lt;img src=&apos;../assets/rabitq-101-pic-1.webp&apos; title=&apos;rabitq-101-pic-1&apos; alt=&apos;rabitq-101-pic-1&apos; width=&apos;600&apos;/&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图 1：基于示例向量及其派生质心绘制的二维平面图。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;将残差向量做归一化后，分别命名为 $v_{c1}$、$v_{c2}$和$v_{c3}$。&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$
+\begin{array}{l}
+v_{c1}=(v_{1}-c) /\| v_{1}-c\|\\
+v_{c2}=(v_{2}-c) /\| v_{2}-c\|\\
+v_{c3}=(v_{3}-c) /\| v_{3}-c\|
+\end{array}
+$$&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;对其中一个向量做数学运算：&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$v_{c1}=(v_{1}-c)/\| v_{1}-c\|$$&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$\begin{aligned}
+v_{1}-c&amp;=[0.56,0.82]-[-0.49,1.22]\\
+&amp;=[1.05,-0.39]
+\end{aligned}$$&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$
+\| v_{1}-c\| =1.13
+$$&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$\begin{aligned}
+v_{c1}&amp;=(v_{1}-c)/\| v_{1}-c\|\\
+&amp;=([1.05,-0.39])/\| [1.05,-0.39]\|\\
+&amp;=([1.05,-0.39])/1.13\\
+&amp;=[0.94,-0.35]
+\end{aligned}$$&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;对另外两个向量做同样的数学运算，结果分别为：&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$
+\begin{aligned}v_{c2}&amp;=\left[ 0.96,-0.28 \right]\\ v_{c3}&amp;=\left[ -0.95,0.31 \right]\end{aligned}
+$$&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;下面这个动态图，可以方便我们形象地理解这个转换和归一化过程。&lt;/p&gt;
+&lt;img src=&apos;../assets/rabitq-101-pic-2.gif&apos; title=&apos;rabitq-101-pic-2&apos; alt=&apos;rabitq-101-pic-2&apos; width=&apos;600&apos;/&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图 2：示例向量及其派生质心在单位圆内的变换动画。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;h2&gt;四、仅使用 1 比特&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;将数据向量集中和归一化之后，可以应用标准的&lt;a href=&apos;https://www.elastic.co/search-labs/blog/bit-vectors-in-elasticsearch&apos;&gt;二值量化&lt;/a&gt;编码 - 对于经过转换的向量的每个分量，如果其为负数，则编码为0，正数则编码为1。在我们的二维示例中，即将单位圆分成四个象限，$v_{c1}$、$v_{c2}$和$v_{c3}$对应的二值向量分别变为$r_1=[1,0],r_2=[1,0],r_3=[0,1]$。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;最后将每个数据向量分别吸附（snapping）到对应区域的一个代表性点上，确切来说，这些代表性点为单位圆上与每个轴距离相等的点：$\pm \frac{1}{\sqrt{d}}$ &lt;sup id=&quot;fnref:1&quot;&gt;&lt;a href=&quot;#fn:1&quot; class=&quot;footnote&quot; rel=&quot;footnote&quot; role=&quot;doc-noteref&quot;&gt;[1]&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;将经过的量化的三个向量分别表示为$\overline{v}_1$、$\overline{v}_2$和$\overline{v}_3$。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;那么，以 $v_{c1}$  为例，将其吸附到对应区域中的代表性点 $r_1$，则得到：&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$\begin{aligned}
+\overline{v}_1&amp;=\frac{1}{\sqrt{d}} \left( 2r_{1}-1 \right)\\
+&amp;=\frac{1}{\sqrt{2}} [1,-1]\\
+&amp;=\left[ \frac{1}{\sqrt{2}} ,-\frac{1}{\sqrt{2}} \right]
+\end{aligned}$$&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;如下是 $v_2$和$v_3$ 这2个原始数据向量（译注：也就是 $v_{c2}$ 和 $v_{c3}$）的量化形式：&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$\begin{aligned}
+\overline{v}_2&amp;=\left[ \frac{1}{\sqrt{2}} ,-\frac{1}{\sqrt{2}} \right]\\
+\overline{v}_3&amp;=\left[ -\frac{1}{\sqrt{2}} ,\frac{1}{\sqrt{2}} \right]
+\end{aligned}$$&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;如 &lt;a href=&apos;https://arxiv.org/pdf/2405.12497&apos;&gt;RaBitQ 论文&lt;/a&gt; 所述，选取的这些代表性点具备一些不错的数学性质，与&lt;a href=&apos;http://hal.archives-ouvertes.fr/docs/00/51/44/62/PDF/paper_hal.pdf&apos;&gt;乘积量化（PQ）&lt;/a&gt; 的码本类似（not unlike）。&lt;/p&gt;
+&lt;img src=&apos;../assets/rabitq-101-pic-3.gif&apos; title=&apos;rabitq-101-pic-3&apos; alt=&apos;rabitq-101-pic-3&apos; width=&apos;600&apos;/&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图 3：二值量化后的向量吸附到对应区域中代表性点的过程。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;至此，对于向量的每个分量都有一个1比特的近似值，尽管直接用于计算比较距离有些不太准确（somewhat fuzzy）。显然，在当前这个量化状态下，$\overline{v}_1$和$\overline{v}_2$是相同的，这样不太理想，问题类似于之前讨论将浮点数向量编码为 &lt;a href=&apos;https://www.elastic.co/search-labs/blog/bit-vectors-in-elasticsearch&apos;&gt;ElasticSearch 中的比特向量&lt;/a&gt; 是说的。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;这种方法的优雅之处在于，查询时可以使用类似于点积的东西计算近似距离来快速比较每个数据向量和每个查询向量。后文中讨论处理查询时会详细介绍。&lt;/p&gt;
+&lt;h2&gt;五、问题与方案&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;如上所述，将浮点数向量转换为比特向量时会丢失大量信息。我们需要一些额外的信息来帮助补偿这种损失以及校正距离估算。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;为了恢复保真度（fidelity），我们将每个向量到质心的距离以及向量（例如$v_{c1}$）与其量化形式（例如$\overline{v}_1$）的投影（点积）存储为两个$float32$值。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;到质心的欧式距离比较简单直观，之前在量化每个向量时已经计算过：&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$\begin{aligned}
+\left\| v_{1}-c \right\|&amp;=1.13\\
+\left\| v_{2}-c \right\|&amp;=1.79\\
+\left\| v_{3}-c \right\|&amp;=2.92
+\end{aligned}$$&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;预先计算每个数据向量到质心的距离可以恢复向量的中心化变换。类似地，我们将计算查询向量到质心的距离。直观上，质心充当了一个中介，而不是直接计算查询向量和数据向量之间的距离。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;向量与其量化向量的点积是：&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$\begin{aligned}
+v_{c1}\cdot \bar{v}_{1}&amp;=v_{c1}\cdot \frac{1}{\sqrt{2}} \left( 2r_{1}-1 \right)\\
+&amp;=[0.94,-0.35]\cdot \left[ \frac{1}{\sqrt{2}} ,-\frac{1}{\sqrt{2}} \right]\\
+&amp;=0.90\end{aligned}
+$$&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;另外两个向量的结果为：&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$\begin{aligned}
+v_{c2}\cdot \overline{v}_2&amp;=0.95\\
+v_{c3}\cdot \overline{v}_3&amp;=0.89
+\end{aligned}$$&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;量化向量与原始向量的点积，作为第二个校正因子，捕捉了量化向量与其原始位置的距离。&lt;a href=&apos;https://arxiv.org/pdf/2405.12497&apos;&gt;RaBitQ 论文&lt;/a&gt; 的 3.2 节说明量化数据与查询向量之间以朴素方式（in a naive fashion）计算的点积存在偏差。这个因子正好补偿了它。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;我们做这种量化转换是为了减少数据向量的总大小并降低向量比较的开销。虽然在我们二维示例中，这些校正因子看似很大，但随着向量维度的增加，它们会变得微不足道。例如，一个 1024 维的向量，如果以$float32$形式存储，需要占用 4096 字节。如果以这种比特压缩和校正因子形式存储，只占用 136 字节。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;若想更好地理解我们为什么使用这些因子，请参阅 &lt;a href=&apos;https://arxiv.org/pdf/2405.12497&apos;&gt;RaBitQ 论文&lt;/a&gt;，它详细介绍了涉及的数学知识。&lt;/p&gt;
+&lt;h2&gt;六、查询向量&lt;/h2&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$q=[0.68, -1.72]$$&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;为了能够将我们的量化数据向量与查询向量进行比较，首先必须将查询向量相对于单位圆进行偏移，转换为量化形式。我们将查询向量称为$q$，转换后的向量称为$q_c$，标量量化后的向量称为$\overline{q}$。&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$\begin{aligned}
+q-c&amp;=[(0.68- -0.49),(-1.72-1.22)]\\
+&amp;=[1.17,-2.95]
+\end{aligned}$$&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$\begin{aligned}
+q_{c}&amp;=(q-c)/\| q-c\|\\
+&amp;=[1.17,-2.95]/3.17\\
+&amp;=[0.37,-0.92]
+\end{aligned}$$&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;接下来，我们将查询向量标量量化到4个比特，我们将这个向量称为$\overline{q}$。请注意，我们不是直接量化到比特表示，而是使用一个$int4$标量量化，$\overline{q}$作为 $int4$ 字节数组，用于估计距离。我们可以利用这种非对称量化在不增加额外存储的情况下保留更多信息。&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$lower = -0.92$$&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$upper = 0.37$$&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$\begin{aligned}
+width&amp;=\left( upper-lower \right) /\left( 2^{4}-1 \right)\\
+&amp;=(0.37--0.92)/15\\
+&amp;=0.08
+\end{aligned}$$&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$\begin{aligned}
+\bar{q}&amp;=\lfloor (q_{c}-lower )/width \rfloor\\
+&amp;=\lfloor ([0.37,-0.92]-[-0.92,-0.92])/0.08\rfloor\\
+&amp;=[15,0]
+\end{aligned}$$&lt;/p&gt;
+&lt;img src=&apos;../assets/rabitq-101-pic-4.gif&apos; title=&apos;rabitq-101-pic-4&apos; alt=&apos;rabitq-101-pic-4&apos; width=&apos;600&apos;/&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图 4：对查询向量应用质心转换的过程。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;如您所见，因为我们只有两个维度，我们的量化查询向量由处于$int4$取值范围内两个值组成。对于更长的向量，你会看到各种 $int4$ 值，其中有一个是取值范围的最大值，还有一个是最小值。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;现在可以执行距离计算，对每个索引数据向量与这个查询向量做比较 - 将量化数据向量每一维分别与量化查询向量的对应维相乘，再将所有维的乘积相加。基本上，就是一个普通的点积，但使用的是比特值和字节值（bits and bytes）。&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$\begin{aligned}
+\overline{q} \cdot r_{1}&amp;=\left[ 15,0 \right] \cdot \left[ 1,0 \right]\\
+&amp;=15
+\end{aligned}$$&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;接着应用校正因子来解开（unroll）量化，从而得到一个更准确的距离估计。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;要实现这一点，我们要从量化查询向量中拿到取值范围的上下界（对查询向量做标量量化时衍生出来的）。此外，还需要查询向量到质心的距离。由于前面计算过查询向量与质心之间的距离，此处引用过来即可：&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$\|q-c\| = 3.17$$&lt;/p&gt;
+&lt;h2&gt;七、估算距离&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;好的！我们已经对索引数据向量和查询向量做了量化并收集了校正因子。现在可以计算$v_1$和$q$之间的估计距离了。我们将欧几里得距离计算公式转换为一个具有更多计算友好项的方程：&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$\begin{aligned}dist(v_{1},q)&amp;=\| v_{1}-q\|\\
+&amp;=\sqrt{\| (v_{1}-c)-(q-c)\|^{2}}\\
+&amp;=\sqrt{\| v_{1}-c\|^{2} +\| q-c\|^{2} -2\times \| v_{1}-c\| \times \| q-c\| \times (q_{c}\cdot v_{c1})}
+\end{aligned}$$&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;这种形式中，多数因子，我们之前推导过，比如 $\|v_1−c\|$，明显可以在查询之前提前计算好，或者也不是直接对查询向量和任一给定数据向量（比如 $v_1$） 做比较计算。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;然而我们仍然需要计算$q_c⋅v_{c1}$.。可以利用校正因子和二值量化距离度量$\overline{q}⋅r_1$来合理且快速地估算这个值。下面我们来详细解释一下。&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$q_{c}\cdot v_{c1}\approx (q_{c}\cdot \overline{v}_{1} )/(v_{c1}\cdot \overline{v}_{1} )$$&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;先估算$q_c⋅\overline{v}_1$，这个估算公式本质上是使用之前定义的代表点来解开（unroll）转换：&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$q_{c}\cdot \overline{v}_{1} \approx (lower+width\cdot \overline{q} )\cdot (\frac{1}{\sqrt{d}} (2r_{1}-1))$$&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;具体来说，$(\frac{1}{\sqrt{d}} (2r_{1}-1)$将二值化的数值映射回代表点，$lower+width\cdot \overline{q}$ 则撤销了用于计算标量量化查询向量部分的移位和缩放（shift and scale）。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;可以将这个估算公式重写为更利于计算的形式，如下所示。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;不过，我们先定义几个辅助变量：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;将 $r_1$中 1 的总位数定义为$\overline{v}_{b1}$，当前例子中等于 $1$&lt;/li&gt;
+&lt;li&gt;将 $\overline{q}$&lt;sup id=&quot;fnref:2&quot;&gt;&lt;a href=&quot;#fn:2&quot; class=&quot;footnote&quot; rel=&quot;footnote&quot; role=&quot;doc-noteref&quot;&gt;[2]&lt;/a&gt;&lt;/sup&gt;中所有量化值的总和（total number）定义为$\overline{q}_b$，当前例子中等于 $15$&lt;/li&gt;&lt;/ul&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$\begin{aligned}
+q_{c}\cdot \overline{v}_{1}&amp;\approx \frac{2\times \textit{width}}{\sqrt{d}} \times (\overline{q} \cdot r_{1})+\frac{2\times \textit{lower}}{\sqrt{d}} \times \overline{v}_{b1} -\frac{\textit{width}}{\sqrt{d}} \times \overline{q}_{b} -\sqrt{d} \times \textit{lower}\\
+&amp;\approx \frac{2\times 0.08}{\sqrt{2}} \times 15+\frac{2\times -0.92}{\sqrt{2}} \times 1-\frac{0.08}{\sqrt{2}} \times 15-\sqrt{2} \times -0.92\\
+&amp;\approx 0.92
+\end{aligned}$$&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;利用这个值和$v_{c1}⋅\overline{v}_1$（在对数据向量建索引时预先计算好），代入公式，计算$q_c\cdot v_{c1}$的近似值：&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$\begin{aligned}
+q_{c}\cdot v_{c1}&amp;\approx (q_{c}\cdot \overline{v}_{1} )/(v_{c1}\cdot \overline{v}_{1} )\\
+&amp;\approx 0.92/0.90\\
+&amp;\approx 1.01
+\end{aligned}$$&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;最后，将这个近似值代入前面那个更大的距离公式中（注意：我们使用的是$q_c⋅v_{c1}$的估计值）：&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$\begin{aligned}
+dist(v_{1},q)&amp;=\sqrt{\| v_{1}-c\|^{2} +\| q-c\|^{2} -2\times \| v_{1}-c\| \times \| q-c\| \times (q_{c}\cdot v_{c1})}\\ est\_ dist(v_{1},q)&amp;=\sqrt{1.13^{2}+3.17^{2}-2\times 1.13\times 3.17\times 1.01}
+\end{aligned}$$&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;应用所有校正因子后，我们得到了两个向量之间距离的一个合理的估计值。例如，当前例子中，原始数据向量$v_1$、$v_2$、$v_3$ 与$q$  之间的估计距离与真实距离的比较如下：&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$\begin{aligned}
+est\_ dist(v_{1},q)&amp;=2.02\\
+est\_ dist(v_{2},q)&amp;=1.15\\
+est\_ dist(v_{3},q)&amp;=6.15
+\end{aligned}$$&lt;/p&gt;
+&lt;p style=&quot;text-align: center&quot;&gt;$$\begin{aligned}
+eucl\_ dist(v_{1},q)&amp;=2.55\\
+eucl\_ dist(v_{2},q)&amp;=2.50\\
+eucl\_ dist(v_{3},q)&amp;=5.52
+\end{aligned}$$&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;关于线性代数应用时如何推导或简化的详细信息，请参阅 &lt;a href=&apos;https://arxiv.org/pdf/2405.12497&apos;&gt;RaBitQ 论文&lt;/a&gt;。&lt;/p&gt;
+&lt;h2&gt;八、重新排序&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;从上一节的结果可以看出，这些估计距离确实是估计值。二值量化产出的向量，对其计算出来的向量距离，即使应用额外的校正因子，也仅仅是原始向量之间距离的近似值。实验证明，通过引入一个多阶段过程，可以实现高召回率。这证实了&lt;a href=&apos;https://arxiv.org/pdf/2405.12497&apos;&gt;RaBitQ 论文&lt;/a&gt;中的发现（findings）。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;因此，为了获得高质量的结果，二值量化召回的结果必须使用更精确的距离计算进行重新排序。实际应用中，这个候选子集可以很小，通常使用 100 个或更少的候选者即可实现大型数据集（&gt;1m）&gt;95%的召回率。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;使用 RaBitQ，中间结果在搜索操作过程中会持续重新排序。在我们的实验中，为了实现更可扩展的二值量化，我们将重排序步骤解耦出来。虽然 RaBitQ 能够在搜索过程中通过重新排序来维护更好的前$N$候选列表，代价是需要不断加载完整的$float32$向量，这对于生产环境中一些较大的数据集来说是不可行的。&lt;/p&gt;
+&lt;h2&gt;九、总结&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;哇！你顺利地读完了！这篇博客确实很长。对于这个新算法我们非常兴奋，它可以缓解乘积量化（例如码本构建成本、距离估计慢等）的许多痛点，并提供出色的召回率和检索速度。&lt;/p&gt;
+&lt;hr&gt;
+&lt;div class=&quot;footnotes&quot; role=&quot;doc-endnotes&quot;&gt;&lt;ol&gt;&lt;li id=&quot;fn:1&quot;&gt;&lt;p&gt;译注：没看懂这个公式 😅&lt;a href=&quot;#fnref:1&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;↩&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li id=&quot;fn:2&quot;&gt;&lt;p&gt;译注：原文有误，将 $\overline{q}$ 写成了 $\overline{q}_b$&lt;a href=&quot;#fnref:2&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;↩&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;&lt;/ol&gt;&lt;/div&gt;</description>
+            <pubDate>2025-05-20</pubDate>
+            <link>https://blog.xiayf.cn/posts/rabitq-explainer-101.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/rabitq-explainer-101.html</guid>
+        </item>
         
         <item>
             <title>标量量化入门（译）</title>
@@ -1059,6 +1258,45 @@ Flame graph SVG written to DTRACE_FLAME_OUTPUT=&amp;amp;apos;/Users/xxx/work/qui
         </item>
         
         <item>
+            <title>读文：日志 - 每个软件工程师都应该了解的实时数据统一抽象</title>
+            <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文：&lt;a href=&apos;https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying&apos;&gt;The Log: What every software engineer should know about real-time data&apos;s unifying abstraction&lt;/a&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;一句话概括，这篇文章细说了 Kafka 的本质原理、解决的问题、适用性等。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;Kafka 本质上是提供日志数据流。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;日志是客观世界的事件记录。&lt;/p&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;A log is perhaps the simplest possible storage abstraction. It is an append-only, totally-ordered sequence of records ordered by time.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;日志数据的特点是：只增不改，自带时间戳，数据存储的先后顺序即（大致）是实际发生的时间先后顺序。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;数据库可以基于日志来还原历史操作行为，并最终生成最新状态，主从同步就是这么干的。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;对于分布式系统而言，日志可以解决 2 个问题：按序改变状态和分发数据（ordering changes and distributing data）。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;状态机复制原则：&lt;/p&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;If two identical, deterministic processes begin in the same state and get the same inputs in the same order, they will produce the same output and end in the same state.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;分布式系统中各个节点可以依据日志来同步状态，达到（最终）一致性。并且，可以依据节点处理到哪行日志即可确定/表达该节点的状态。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;（日志）事件流（events）和数据表（tables）是一体两面（a facinating duality）：数据表的变更操作即是一个日志事件流，基于日志事件流可以生成数据表，并将其状态不断更新到最新，数据表的状态是日志事件流的在某个时间点的切面。&lt;/p&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;events -&gt; table -&gt; events = events &lt;-&gt; table&lt;/p&gt;&lt;/blockquote&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;The magic of the log is that if it is a complete log of changes, it holds not only the contents of the final version of the table, but also allows recreating all other versions that might have existed. It is, effectively, a sort of backup of every previous state of the table.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;源码版本控制系统（比如 git）也是基于日志实现的分布式系统，一次 commit 相当于一次日志记录。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;对于互联网/金融等行业的公司来说，数据是重要资产，如何尽可能发挥数据的潜在价值为公司增收，至关重要。因为管理、技术上的原因，公司通常分多个业务部门，各业务部门提供若干服务，各个服务都会产出数据，这些数据很可能需要跨部门跨服务流通，流通的速度越快，周期越短，收益越大。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;以前，数据的处理方式主要是批处理，并不是因为没有流处理的技术，而是数据流通的基础设施跟不上，没做到持续的数据流。&lt;strong&gt;（注：这个说法，我个人只部分认同，很多时候，批处理的时延和收益可以满足大部分需求，实时流处理的边际效益可能并不明显）&lt;/strong&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;流式处理是批处理的泛化形式（stream processing is a generalization of batch processing, and, given the prevalence of real-time data, a very important generalization）。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;为了避免因数据流通导致各个服务之间的直接耦合，新增一个统一的数据通道中间服务，各个服务只管对数据通道进行写入或读出，不用关心数据是哪个服务写入的，或者哪些服务在消费/使用自己产出的数据。&lt;strong&gt;（解耦）&lt;/strong&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;另外，消费者消费数据的速率可能不一样，也可能会经历异常重启等情况，让消费者来控制速率，并且多个消费者之间不会相互干扰，会更好。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;基于数据流通的需求和日志的理念，Linkedin 设计开发了 Kafka。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;因为日志数据量可能会很大，日志数据本质上是有序串行的，如果支持数据分片，分片之间并行消费，分片内日志数据全局有序，数据流通的吞吐能力就可以无限扩展。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;基于 Kafka 这类数据管道，服务之间可以实现多级串联。（注：我们现在做的服务就是这么干）&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;这种分布式系统架构中，至少涉及 producer（生产者）、broker（中间人）、consumer（消费者）三个角色，角色之间在某些工作上如何分工也是值得思考的：&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;生产者产生的数据应该是什么样的？ - 统一格式/编码、方便解析&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;中间人（kafka）需要解决什么问题？- 对于单个生产者写入的数据，保证按写入顺序有序地分发给消费者；解决数据高可用，高吞吐能力；支持回溯/重复消费（因此数据需要保留指定时间长度），从而消费者出问题后可以从头消费数据恢复状态。因为支持很多消费者消费同一个数据流，所以平均下来，Kafka 服务的成本会比较低。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;消费者按各自的需求进行数据转换存储。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;对于实现高吞吐能力，除了分片，Kakfa 还充分利用了攒批处理：生产者可以批量发送，中间人将数据攒批写入磁盘日志文件 等等。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;此外，由于涉及大量的磁盘文件和网络之间数据读写，Kafka 还充分利用操作系统内核的零拷贝传输能力。&lt;/p&gt;</description>
+            <pubDate>2019-10-10</pubDate>
+            <link>https://blog.xiayf.cn/posts/reading-the-log-article.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/reading-the-log-article.html</guid>
+        </item>
+        
+        <item>
             <title>读文：Photon - Fault-tolerant and Scalable Joining of Continuous Data Streams</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文：&lt;a href=&apos;https://static.googleusercontent.com/media/research.google.com/zh-CN//pubs/archive/41318.pdf&apos;&gt;Photon: Fault-tolerant and Scalable Joining of Continuous Data Streams&lt;/a&gt;&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;Photon 是谷歌广告系统中用于 join 广告曝光日志流和点击日志流的一套系统。&lt;/p&gt;
@@ -1112,45 +1350,6 @@ Flame graph SVG written to DTRACE_FLAME_OUTPUT=&amp;amp;apos;/Users/xxx/work/qui
             <pubDate>2019-10-10</pubDate>
             <link>https://blog.xiayf.cn/posts/reading-photon-paper.html</link>
             <guid isPermaLink="true">https://blog.xiayf.cn/posts/reading-photon-paper.html</guid>
-        </item>
-        
-        <item>
-            <title>读文：日志 - 每个软件工程师都应该了解的实时数据统一抽象</title>
-            <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文：&lt;a href=&apos;https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying&apos;&gt;The Log: What every software engineer should know about real-time data&apos;s unifying abstraction&lt;/a&gt;&lt;/p&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;一句话概括，这篇文章细说了 Kafka 的本质原理、解决的问题、适用性等。&lt;/p&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;Kafka 本质上是提供日志数据流。&lt;/p&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;日志是客观世界的事件记录。&lt;/p&gt;
-&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;A log is perhaps the simplest possible storage abstraction. It is an append-only, totally-ordered sequence of records ordered by time.&lt;/p&gt;&lt;/blockquote&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;日志数据的特点是：只增不改，自带时间戳，数据存储的先后顺序即（大致）是实际发生的时间先后顺序。&lt;/p&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;数据库可以基于日志来还原历史操作行为，并最终生成最新状态，主从同步就是这么干的。&lt;/p&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;对于分布式系统而言，日志可以解决 2 个问题：按序改变状态和分发数据（ordering changes and distributing data）。&lt;/p&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;状态机复制原则：&lt;/p&gt;
-&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;If two identical, deterministic processes begin in the same state and get the same inputs in the same order, they will produce the same output and end in the same state.&lt;/p&gt;&lt;/blockquote&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;分布式系统中各个节点可以依据日志来同步状态，达到（最终）一致性。并且，可以依据节点处理到哪行日志即可确定/表达该节点的状态。&lt;/p&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;（日志）事件流（events）和数据表（tables）是一体两面（a facinating duality）：数据表的变更操作即是一个日志事件流，基于日志事件流可以生成数据表，并将其状态不断更新到最新，数据表的状态是日志事件流的在某个时间点的切面。&lt;/p&gt;
-&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;events -&gt; table -&gt; events = events &lt;-&gt; table&lt;/p&gt;&lt;/blockquote&gt;
-&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;The magic of the log is that if it is a complete log of changes, it holds not only the contents of the final version of the table, but also allows recreating all other versions that might have existed. It is, effectively, a sort of backup of every previous state of the table.&lt;/p&gt;&lt;/blockquote&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;源码版本控制系统（比如 git）也是基于日志实现的分布式系统，一次 commit 相当于一次日志记录。&lt;/p&gt;
-&lt;hr&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;对于互联网/金融等行业的公司来说，数据是重要资产，如何尽可能发挥数据的潜在价值为公司增收，至关重要。因为管理、技术上的原因，公司通常分多个业务部门，各业务部门提供若干服务，各个服务都会产出数据，这些数据很可能需要跨部门跨服务流通，流通的速度越快，周期越短，收益越大。&lt;/p&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;以前，数据的处理方式主要是批处理，并不是因为没有流处理的技术，而是数据流通的基础设施跟不上，没做到持续的数据流。&lt;strong&gt;（注：这个说法，我个人只部分认同，很多时候，批处理的时延和收益可以满足大部分需求，实时流处理的边际效益可能并不明显）&lt;/strong&gt;&lt;/p&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;流式处理是批处理的泛化形式（stream processing is a generalization of batch processing, and, given the prevalence of real-time data, a very important generalization）。&lt;/p&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;为了避免因数据流通导致各个服务之间的直接耦合，新增一个统一的数据通道中间服务，各个服务只管对数据通道进行写入或读出，不用关心数据是哪个服务写入的，或者哪些服务在消费/使用自己产出的数据。&lt;strong&gt;（解耦）&lt;/strong&gt;&lt;/p&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;另外，消费者消费数据的速率可能不一样，也可能会经历异常重启等情况，让消费者来控制速率，并且多个消费者之间不会相互干扰，会更好。&lt;/p&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;基于数据流通的需求和日志的理念，Linkedin 设计开发了 Kafka。&lt;/p&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;因为日志数据量可能会很大，日志数据本质上是有序串行的，如果支持数据分片，分片之间并行消费，分片内日志数据全局有序，数据流通的吞吐能力就可以无限扩展。&lt;/p&gt;
-&lt;hr&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;基于 Kafka 这类数据管道，服务之间可以实现多级串联。（注：我们现在做的服务就是这么干）&lt;/p&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;这种分布式系统架构中，至少涉及 producer（生产者）、broker（中间人）、consumer（消费者）三个角色，角色之间在某些工作上如何分工也是值得思考的：&lt;/p&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;生产者产生的数据应该是什么样的？ - 统一格式/编码、方便解析&lt;/p&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;中间人（kafka）需要解决什么问题？- 对于单个生产者写入的数据，保证按写入顺序有序地分发给消费者；解决数据高可用，高吞吐能力；支持回溯/重复消费（因此数据需要保留指定时间长度），从而消费者出问题后可以从头消费数据恢复状态。因为支持很多消费者消费同一个数据流，所以平均下来，Kafka 服务的成本会比较低。&lt;/p&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;消费者按各自的需求进行数据转换存储。&lt;/p&gt;
-&lt;hr&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;对于实现高吞吐能力，除了分片，Kakfa 还充分利用了攒批处理：生产者可以批量发送，中间人将数据攒批写入磁盘日志文件 等等。&lt;/p&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;此外，由于涉及大量的磁盘文件和网络之间数据读写，Kafka 还充分利用操作系统内核的零拷贝传输能力。&lt;/p&gt;</description>
-            <pubDate>2019-10-10</pubDate>
-            <link>https://blog.xiayf.cn/posts/reading-the-log-article.html</link>
-            <guid isPermaLink="true">https://blog.xiayf.cn/posts/reading-the-log-article.html</guid>
         </item>
         
         <item>

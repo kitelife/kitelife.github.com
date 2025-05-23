@@ -4,8 +4,8 @@
         <description>精进，求诸己身</description>
         <link>https://blog.xiayf.cn/</link>
         <atom:link href="https://blog.xiayf.cn/rss.xml" rel="self" type="application/rss+xml"/>
-        <pubDate>2025-05-22T00:58:22.905851+08:00</pubDate>
-        <lastBuildDate>2025-05-22T00:58:22.905851+08:00</lastBuildDate>
+        <pubDate>2025-05-23T18:07:20.17982+08:00</pubDate>
+        <lastBuildDate>2025-05-23T18:07:20.17982+08:00</lastBuildDate>
         <generator>LingDong</generator>
         
         <item>
@@ -568,6 +568,1718 @@ EOS&lt;/code&gt;&lt;/pre&gt;</description>
         </item>
         
         <item>
+            <title>读码：LevelDB - 杂项</title>
+            <description>&lt;h2&gt;10、其他&lt;/h2&gt;
+&lt;h3&gt;10.1 Env&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;leveldb 将 文件系统/时间/线程 等和底层系统相关的操作都抽象封装到 Env 类继承体系中，提升可移植性，默认提供对 Posix 兼容系统（Unix/Linux）的支持。&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;Env* Env::Default() {  
+  static PosixDefaultEnv env_container;  
+  return env_container.env();  
+}
+
+// An implementation of Env that forwards all calls to another Env.  
+// May be useful to clients who wish to override just part of the  
+// functionality of another Env.  
+class EnvWrapper : public Env {}
+// A wrapper that allows injection of errors.  
+class ErrorEnv : public EnvWrapper {}
+class InMemoryEnv : public EnvWrapper {}
+// Special Env used to delay background operations.  
+class SpecialEnv : public EnvWrapper {
+// Test Env to override default Env behavior for testing.  
+class TestEnv : public EnvWrapper {
+
+class PosixEnv : public Env {}&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;10.2 文件锁&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;leveldb 基于文件锁来防止多个进程打开同一个数据库。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;文件锁使用的文件名称为 &lt;code&gt;LOCK&lt;/code&gt;，对这个文件加锁成功之后，才能执行后续的逻辑。&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;assert(db_lock_ == nullptr);
+Status s = env_-&amp;amp;gt;LockFile(LockFileName(dbname_), &amp;amp;amp;db_lock_);  
+if (!s.ok()) {  
+  return s;  
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;// Lock the specified file.  Used to prevent concurrent access to  
+// the same db by multiple processes.  On failure, stores nullptr in  
+// *lock and returns non-OK.  
+//  
+// On success, stores a pointer to the object that represents the  
+// acquired lock in *lock and returns OK.  The caller should call  
+// UnlockFile(*lock) to release the lock.  If the process exits,  
+// the lock will be automatically released.  
+//  
+// If somebody else already holds the lock, finishes immediately  
+// with a failure.  I.e., this call does not wait for existing locks  
+// to go away.  
+//  
+// May create the named file if it does not already exist.  
+virtual Status LockFile(const std::string&amp;amp;amp; fname, FileLock** lock) = 0;&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;原理参见：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;https://man7.org/linux/man-pages/man2/fcntl.2.html 的 “Advisory record locking” 部分&lt;/li&gt;
+&lt;li&gt;&lt;a href=&apos;https://www.cnblogs.com/nufangrensheng/p/3554168.html&apos;&gt;高级 I/O 之记录锁&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;int LockOrUnlock(int fd, bool lock) {  
+  errno = 0;  
+  struct ::flock file_lock_info;  
+  std::memset(&amp;amp;amp;file_lock_info, 0, sizeof(file_lock_info));  
+  file_lock_info.l_type = (lock ? F_WRLCK : F_UNLCK);  
+  file_lock_info.l_whence = SEEK_SET;  
+  file_lock_info.l_start = 0;  
+  file_lock_info.l_len = 0;  // Lock/unlock entire file.  
+  return ::fcntl(fd, F_SETLK, &amp;amp;amp;file_lock_info);  
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;cat client 基于 flock 函数来实现文件锁（Open file description locks (non-POSIX)）。与 leveldb 采用的文件锁方式，区别见 fcntl 文档说明：&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;Open file description locks are advisory byte-range locks whose operation is in most respects identical to the traditional record locks described above.  This lock type is Linux-specific, and available since Linux 3.15.&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;The principal difference between the two lock types is that whereas traditional record locks are associated with a process, open file description locks are associated with the open file description on which they are acquired, much like locks acquired with &lt;a href=&apos;https://man7.org/linux/man-pages/man2/flock.2.html&apos;&gt;flock(2)&lt;/a&gt;.  Consequently (and unlike traditional advisory record locks), open file description locks are inherited across &lt;a href=&apos;https://man7.org/linux/man-pages/man2/fork.2.html&apos;&gt;fork(2)&lt;/a&gt; (and &lt;a href=&apos;https://man7.org/linux/man-pages/man2/clone.2.html&apos;&gt;clone(2)&lt;/a&gt; with &lt;strong&gt;CLONE_FILES&lt;/strong&gt;), and are only automatically released on the last close of the open file description, instead of being released on any close of the file.&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;...&lt;/p&gt;&lt;/blockquote&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;// cat-client中文件锁的实现方式
+
+try {
+  lock_file_name_ = FLAGS_cat_multi_process ? std::to_string(getpid()) + FLAGS_cat_id_lock_file
+                                            : FLAGS_cat_id_lock_file;
+
+  file_lock_ = new FileLock(lock_file_name_);
+  if (!file_lock_-&amp;amp;gt;TryLock()) {
+    throw runtime_error(lock_file_name_ + &amp;amp;quot; is locked by another process&amp;amp;quot;);
+  }
+}
+//
+bool FileLock::TryLock() {
+  //mode_t m = umask(0);
+  fd_ = open(file_name_.c_str(), O_RDWR | O_CREAT, 0666);
+  if (fd_ &amp;amp;gt;= 0 &amp;amp;amp;&amp;amp;amp; flock(fd_, LOCK_EX | LOCK_NB) &amp;amp;lt; 0) {
+    close(fd_);
+    fd_ = -1;
+    return false;
+  }
+  return true;
+}
+
+bool FileLock::Unlock() {
+  if (fd_ &amp;amp;lt; 0) {
+    return true;
+  }
+  remove(file_name_.c_str());
+  close(fd_);
+  fd_ = -1;
+  return true;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;10.3 整数编码&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;定长编码比较简单，使用小端方式，将 32 比特整数拆成 4个 char 存储，将 64 比特整数拆成 8个char 存储。&lt;/p&gt;
+&lt;img src=&apos;../assets/leveldb/fixed-coding.png&apos; title=&apos;leveldb-fixed-coding&apos; alt=&apos;leveldb-fixed-coding&apos; width=&apos;600&apos;/&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;不定长编码稍微有点麻烦，每8个比特需要使用1个比特位来标识当前这个字节是否是最后一个字节，也就是 char 序列中，每个char 只有尾部7个比特用来存储部分值，头部1比特是状态位。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;这意味着：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;无符号32比特整数，一旦大于 $2^{28}-1$，就需要5个字节来存储&lt;/li&gt;
+&lt;li&gt;无符号64比特整数，一旦大于 $2^{56}-1$，就需要9个字节来存储&lt;/li&gt;
+&lt;li&gt;从存储空间来看，就不划算了&lt;/li&gt;&lt;/ul&gt;
+&lt;img src=&apos;../assets/leveldb/varint-coding.png&apos; title=&apos;leveldb-varint-coding&apos; alt=&apos;leveldb-varint-coding&apos; width=&apos;800&apos;/&gt;
+&lt;h3&gt;10.4 文件 ID&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;除了 LOCK / CURRENT / LOG 文件，对于“ldb 数据文件”、“WAL log 文件”、“MANIFEST-版本变更日志文件”都使用整数 id 来命名(固定6个字符宽度)，比如 id 为 123，文件名形式如下：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;ldb 数据文件：&lt;code&gt;000123.ldb&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;WAL log 文件：&lt;code&gt;000123.log&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;MANIFEST-版本变更日志文件：&lt;code&gt;MANIFEST-000123&lt;/code&gt;&lt;/li&gt;&lt;/ul&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;id 全局自增，统一分配：&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;// Allocate and return a new file number  
+uint64_t NewFileNumber() { return next_file_number_++; }&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;这样的好处在于，除非真的需要读取文件时，其他时候的逻辑对于同一种文件类型的不同文件都使用整数 id 来区分，排序/比较等处理逻辑效率更高。&lt;/p&gt;
+&lt;h3&gt;10.5 Slice&lt;/h3&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;&lt;code&gt;Slice&lt;/code&gt; is a simple structure that contains a length and a pointer to an external byte array. Returning a &lt;code&gt;Slice&lt;/code&gt; is a cheaper alternative to returning a &lt;code&gt;std::string&lt;/code&gt; since we do not need to copy potentially large keys and values. In addition, &lt;code&gt;leveldb&lt;/code&gt; methods do not return null-terminated C-style strings since &lt;code&gt;leveldb&lt;/code&gt; keys and values are allowed to contain &apos;\0&apos; bytes.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;h3&gt;10.6 编程技巧&lt;/h3&gt;
+&lt;h4&gt;10.6.1 GUARDED_BY - 线程安全注解&lt;/h4&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;#ifndef GUARDED_BY  
+#define GUARDED_BY(x) THREAD_ANNOTATION_ATTRIBUTE__(guarded_by(x))  
+#endif&lt;/code&gt;&lt;/pre&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;https://clang.llvm.org/docs/ThreadSafetyAnalysis.html&lt;/p&gt;&lt;/blockquote&gt;
+&lt;h4&gt;10.6.2 引用计数&lt;/h4&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;类似 C++11 之后的共享指针，leveldb 对一些类使用引用计数来管理生命周期和资源释放。当一个对象的引用计数归0时，会删除自己（&lt;code&gt;delete this&lt;/code&gt;），触发析构函数，完成资源清理操作。&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;// Increase reference count.  
+void Ref() { ++refs_; }  
+  
+// Drop reference count.  Delete if no more references exist.  
+void Unref() {  
+  --refs_;  
+  assert(refs_ &amp;amp;gt;= 0);  
+  if (refs_ &amp;amp;lt;= 0) {  
+    delete this;  
+  }  
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;参考&amp;推荐&lt;/h2&gt;
+&lt;ul&gt;&lt;li&gt;&lt;a href=&apos;https://github.com/google/leveldb/blob/main/doc/index.md&apos;&gt;leveldb 说明文档&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&apos;https://github.com/google/leveldb/blob/main/doc/impl.md&apos;&gt;leveldb 逻辑实现说明&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&apos;https://github.com/google/leveldb/blob/main/doc/table_format.md&apos;&gt;leveldb ldb 数据文件编码格式&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&apos;https://github.com/google/leveldb/blob/main/doc/log_format.md&apos;&gt;leveldb WAL log 编码格式&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&apos;https://opendatastructures.org/newhtml/ods/latex-saved-html/skiplists.html&apos;&gt;Open Data Structures - Skiplists&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&apos;https://en.wikipedia.org/wiki/Bloom_filter&apos;&gt;Wikipedia - Bloom filter&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&apos;https://man7.org/linux/man-pages/man2/fcntl.2.html&apos;&gt;fcntl(2) — Linux manual page&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;《The Linux Programming Interface》&lt;/li&gt;&lt;/ul&gt;</description>
+            <pubDate>2024-11-23</pubDate>
+            <link>https://blog.xiayf.cn/posts/leveldb-note-5.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/leveldb-note-5.html</guid>
+        </item>
+        
+        <item>
+            <title>读码：LevelDB - 增删改查</title>
+            <description>&lt;h2&gt;9、增删改查&lt;/h2&gt;
+&lt;img src=&apos;../assets/leveldb/lsm.png&apos; title=&apos;lsm&apos; alt=&apos;lsm&apos; width=&apos;800&apos;/&gt;
+&lt;h3&gt;9.1 增删改&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;对于 leveldb（lsm-tree 存储结构）来说，增改操作统一为 put 操作（改也是插入一条新记录），put 操作和删除操作又统一为 write 操作（删除是值为空的写入操作）。write 操作过程为&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、先将操作记录（包括原始键值）写到 WAL log 文件&lt;/li&gt;
+&lt;li&gt;2、将操作记录到内存中可变 Memtable 的跳表结构中&lt;/li&gt;&lt;/ul&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;写入过程非常简单，所以 leveldb 的写入吞吐可以非常高。不过有3个性能调优点可以注意一下：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、写入操作可以指定是同步的（sync）或者异步的，这里说的&lt;u&gt;同步异步是针对 WAL log 文件写入而言的&lt;/u&gt;，需要在吞吐性能和数据一致性之间做好平衡：
+&lt;ul&gt;&lt;li&gt;如果写入操作指定为同步，那么将操作记录到 WAL log 文件后，还要&lt;u&gt;确保文件内容持久化到磁盘&lt;/u&gt;，这个持久化操作对 leveldb 的写入吞吐影响会比较大。&lt;/li&gt;
+&lt;li&gt;如果写入操作指定为&lt;u&gt;非同步，那么对 WAL log 的文件写入，实际只是写到内核的文件缓冲区&lt;/u&gt;。如果写入操作记录到可变 Memtable 并返回写入成功状态给调用方后，内核缓冲区内容刷出到磁盘之前，系统 crash 或者机器掉电都会导致写入数据丢失，存在先写后读的一致性问题。&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;2、leveldb 的实现中，可变 Memtable 对象和不可变 Memtable 对象均只有一个，并且 Memtable 对象的内存占用存在上限阈值，一旦可变 Memtable 写满且不可变 Memtable 还存在（还没来得及 minor compaction 成 $level_0$ 数据文件），那么写入就会被阻塞（详情见[[## 2、写入缓冲与攒批]] 部分解说），那么：
+&lt;ul&gt;&lt;li&gt;可以适当调大 Memtable 内存占用的上限阈值，但也不能调得很大，因为这会导致 compaction 压力会比较大，间接影响读/检索的性能：
+&lt;ul&gt;&lt;li&gt;如果 $level_0$ 文件很多，来不及 major compaction，而这些文件的 key 区间又存在重合，就可能需要检索多个 $level_0$ 文件。&lt;/li&gt;
+&lt;li&gt;major compaction 涉及较多的文件磁盘 I/O，从而可能影响检索时的文件读取。&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;�“不可变 Memtable 对象均只有一个” 如果调整 leveldb 实现支持存在多个 不可变 Memtable 对象，可能存在优化空间；compaction 目前是单线程处理的，如果调整成某种多线程实现，可能也存在优化空间，不过实现起来应该要复杂得多，并且磁盘 I/O 也容易成为检索性能退化的因素。&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;
+&lt;img src=&apos;../assets/leveldb/IO-buffering.png&apos; title=&apos;IO-buffering&apos; alt=&apos;IO-buffering&apos; width=&apos;800&apos;/&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图片摘自《The Linux Programming Interface》一书 244 页。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;对于 WAL log 非同步写入，leveldb 会将内容先写到一块用户态内存缓冲区中，如果缓冲区满，则先调用 &lt;code&gt;write&lt;/code&gt; 系统调用将用户态缓冲区内容写到内核缓冲区（Kernel buffer cache），将内容的剩余部分继续写到用户态内存缓冲区后，就返回；&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;如果是同步写入，则会再将用户态缓冲区内容 &lt;code&gt;write&lt;/code&gt; 到内核缓冲区后，再调用 &lt;code&gt;fsync&lt;/code&gt; 系统调用，将内核缓冲区内容刷到磁盘。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;h3&gt;9.2 查/范围扫描&lt;/h3&gt;
+&lt;h4&gt;9.2.1 快照/snapshot&lt;/h4&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;leveldb 中每个 Put/Delete 操作都被分配了一个序列号（SequenceNum），这个序列号是一种“Lamport 时钟” 或者说 “逻辑时间戳”。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;leveldb 支持对数据库做一个快照，这个快照操作非常轻量 - 就是最新分配分配序列号（LastSequence）。这个快照的含义：序列号小于等于LastSequence的操作都属于这个快照的，大于 LastSequence 的操作则不属于这个快照，是在这个快照发生之后发生的。&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;const Snapshot* DBImpl::GetSnapshot() {  
+  MutexLock l(&amp;amp;amp;mutex_);  
+  return snapshots_.New(versions_-&amp;amp;gt;LastSequence());  
+}
+
+// Abstract handle to particular state of a DB.  
+// A Snapshot is an immutable object and can therefore be safely  
+// accessed from multiple threads without any external synchronization.  
+class LEVELDB_EXPORT Snapshot {  
+ protected:  
+  virtual ~Snapshot();  
+};
+
+// Snapshots are kept in a doubly-linked list in the DB.  
+// Each SnapshotImpl corresponds to a particular sequence number.  
+class SnapshotImpl : public Snapshot {  
+ public:  
+  SnapshotImpl(SequenceNumber sequence_number)  
+      : sequence_number_(sequence_number) {}  
+  
+  SequenceNumber sequence_number() const { return sequence_number_; }  
+  
+ private:   
+  // SnapshotImpl is kept in a doubly-linked circular list. The SnapshotList  
+  // implementation operates on the next/previous fields directly.  SnapshotImpl* prev_;  
+  SnapshotImpl* next_;  
+  
+  const SequenceNumber sequence_number_;
+};&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;code&gt;DBImpl&lt;/code&gt; 对象的 &lt;code&gt;snapshots_&lt;/code&gt; 字段上维护着快照的链表，是避免 compaction 过程清除掉了快照依赖的键值数据。比如，假设一次快照的序列号为 123456，对于 UK 存在序列号 123455 和 序列号 123457 两次操作，对于这次快照而言，序列号 123457 的操作是不可见的，这个快照存在期间的 compaction 过程都需要同时保留 UK 的这两次操作。这个快照释放之后，compaction 就可以把序列号 123455 的操作清除掉。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;因此，快照本身虽然很轻量，不过如果长时间不释放，会导致磁盘空间占用膨胀，对检索性能也会有一定的影响。&lt;/p&gt;
+&lt;h4&gt;9.2.2 点查&lt;/h4&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;指定 key 进行点查的逻辑顺序为：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、从可变 Memtable 的跳表中查找，如果找到就返回给调用方（如果找到的是非删除记录，则返回序列号最大的那个记录的值，且返回状态为默认值“找到”，如果找到的是删除记录，则保留返回值为空，返回状态为“未找到”）&lt;/li&gt;
+&lt;li&gt;2、1 中没找到，则继续从不可变 Memtable 的跳表中查找，如果找到就返回给调用方&lt;/li&gt;
+&lt;li&gt;2、2 中没找到，则从 $level_0$ 开始依次逐层在数据文件中查找，
+&lt;ul&gt;&lt;li&gt;因为 $level_0$ 数据文件的 key 区间可以存在重合，所以在 $level_0$ 层检索可能会涉及多个数据文件&lt;/li&gt;
+&lt;li&gt;$level_1$~$level_n$ 数据文件的 key 区间不会重合，所以根据最新版本维护的对应层数据文件元信息列表找到目标数据文件即可，如果没找到，则到下一层继续检索&lt;/li&gt;
+&lt;li&gt;找到目标数据文件后，先对索引块二分查找找到目标数据块，如果目标数据表是经过压缩的，则需要先经过解压，然后根据数据块中的重置位点列表信息，依次进行 delta 解码遍历&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;点查操作，可以指定一个之前获取的快照信息，如果没有指定，则默认使用最新分配的序列号作为快照，实际查找过程会&lt;u&gt;将快照中的序列号和存储记录中的序列号进行比较，序列号大于快照序列号的记录都会被忽略&lt;/u&gt;。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;查找键（LookupKey）的编码方式：&lt;/p&gt;
+&lt;img src=&apos;../assets/leveldb/lookup-key-encode.png&apos; title=&apos;lookup-key-encode&apos; alt=&apos;lookup-key-encode&apos; width=&apos;600&apos;/&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;与 Memtable 中跳表节点中的 Key 的编码的区别仅在于不包含 value 的长度和 value 值。&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;// A helper class useful for DBImpl::Get()  
+class LookupKey {
+public:
+  // Initialize *this for looking up user_key at a snapshot with  
+  // the specified sequence number.  
+  LookupKey(const Slice&amp;amp;amp; user_key, SequenceNumber sequence);
+
+  // Return a key suitable for lookup in a MemTable.  
+  Slice memtable_key() const { return Slice(start_, end_ - start_); }
+
+  // Return an internal key (suitable for passing to an internal iterator)  
+  Slice internal_key() const { return Slice(kstart_, end_ - kstart_); }
+
+  // Return the user key  
+  Slice user_key() const { return Slice(kstart_, end_ - kstart_ - 8); }
+
+private:
+  // We construct a char array of the form:  
+  //    klength  varint32               &amp;amp;lt;-- start_  
+  //    userkey  char[klength]          &amp;amp;lt;-- kstart_  
+  //    tag      uint64  
+  //                                    &amp;amp;lt;-- end_  
+  // The array is a suitable MemTable key.  
+  // The suffix starting with &amp;amp;quot;userkey&amp;amp;quot; can be used as an InternalKey.  
+  const char* start_;  
+  const char* kstart_;  
+  const char* end_;  
+  char space_[200];  // Avoid allocation for short keys
+}
+
+LookupKey::LookupKey(const Slice&amp;amp;amp; user_key, SequenceNumber s) {  
+  size_t usize = user_key.size();  
+  size_t needed = usize + 13;  // A conservative estimate  
+  char* dst;  
+  if (needed &amp;amp;lt;= sizeof(space_)) {  
+    dst = space_;  
+  } else {  
+    dst = new char[needed];  
+  }  
+  start_ = dst;  
+  dst = EncodeVarint32(dst, usize + 8);  
+  kstart_ = dst;  
+  std::memcpy(dst, user_key.data(), usize);  
+  dst += usize;  
+  EncodeFixed64(dst, PackSequenceAndType(s, kValueTypeForSeek));  
+  dst += 8;  
+  end_ = dst;  
+}
+
+static uint64_t PackSequenceAndType(uint64_t seq, ValueType t) {  
+  assert(seq &amp;amp;lt;= kMaxSequenceNumber);  
+  assert(t &amp;amp;lt;= kValueTypeForSeek);  
+  return (seq &amp;amp;lt;&amp;amp;lt; 8) | t;  
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;h4&gt;9.2.3 全库/范围有序扫描（遍历）&lt;/h4&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;class DB {
+public:
+ // Return a heap-allocated iterator over the contents of the database.  
+ // The result of NewIterator() is initially invalid (caller must  
+ // call one of the Seek methods on the iterator before using it).  
+ //  
+ // Caller should delete the iterator when it is no longer needed.  
+ // The returned iterator should be deleted before this db is deleted.  
+ virtual Iterator* NewIterator(const ReadOptions&amp;amp;amp; options) = 0; // 接口
+}
+
+// 实现
+Iterator* DBImpl::NewIterator(const ReadOptions&amp;amp;amp; options) {  
+  SequenceNumber latest_snapshot;  
+  uint32_t seed;  
+  Iterator* iter = NewInternalIterator(options, &amp;amp;amp;latest_snapshot, &amp;amp;amp;seed);  
+  return NewDBIterator(this, user_comparator(), iter,  
+                       (options.snapshot != nullptr  
+                            ? static_cast&amp;amp;lt;const SnapshotImpl*&amp;amp;gt;(options.snapshot)  
+                                  -&amp;amp;gt;sequence_number()  
+                            : latest_snapshot),  
+                       seed);  
+}
+
+// 迭代器接口定义
+class Iterator {
+public:
+  // An iterator is either positioned at a key/value pair, or  
+  // not valid.  This method returns true iff the iterator is valid.  
+  virtual bool Valid() const = 0;
+
+  // Position at the first key in the source.  The iterator is Valid()  
+  // after this call iff the source is not empty.  
+  virtual void SeekToFirst() = 0;
+
+  // Position at the last key in the source.  The iterator is  
+  // Valid() after this call iff the source is not empty.  
+  virtual void SeekToLast() = 0;
+
+  // Position at the first key in the source that is at or past target.  
+  // The iterator is Valid() after this call iff the source contains  
+  // an entry that comes at or past target.  
+  virtual void Seek(const Slice&amp;amp;amp; target) = 0;
+
+  // Moves to the next entry in the source.  After this call, Valid() is  
+  // true iff the iterator was not positioned at the last entry in the source.  
+  // REQUIRES: Valid()  
+  virtual void Next() = 0;  
+  
+  // Moves to the previous entry in the source.  After this call, Valid() is  
+  // true iff the iterator was not positioned at the first entry in source.  
+  // REQUIRES: Valid()  
+  virtual void Prev() = 0;  
+  
+  // Return the key for the current entry.  The underlying storage for  
+  // the returned slice is valid only until the next modification of  
+  // the iterator.  
+  // REQUIRES: Valid()  
+  virtual Slice key() const = 0;  
+  
+  // Return the value for the current entry.  The underlying storage for  
+  // the returned slice is valid only until the next modification of  
+  // the iterator.  
+  // REQUIRES: Valid() 
+  virtual Slice value() const = 0;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;有序遍历接口的使用方式为：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、调用 NewIterator 接口获得迭代器对象指针 - &lt;code&gt;Iterator* iter&lt;/code&gt;，&lt;code&gt;options&lt;/code&gt; 参数中可以指定快照，如果未指定，则默认以最新分配的序列号为快照。&lt;/li&gt;
+&lt;li&gt;2、调用 迭代器对象指针 的 Seek 相关接口，初始化遍历起始位置状态：
+&lt;ul&gt;&lt;li&gt;SeekToFirst：不指定起始 key，从头部顺序遍历（不断调用 Next）&lt;/li&gt;
+&lt;li&gt;SeekToLast：不指定起始 key，从尾部逆序遍历（不断调用 Prev）&lt;/li&gt;
+&lt;li&gt;Seek：指定起始 key，从起始 key 开始顺序遍历（不断调用 Next）&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;3、调用方根据迭代器的 &lt;code&gt;Valid()&lt;/code&gt; 方法返回判断是否遍历结束，或者根据最新遍历到的 key 值做判断是否要结束遍历。&lt;/li&gt;&lt;/ul&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;有序（顺序）遍历的实现逻辑类似于 compaction 过程的 N 路归并算法，只不过 compaction 涉及的 level 层 和 level+1 层输入数据文件的 N 路归并排序，而有序遍历则涵盖“可变 memtable”/“不可变 memtable”/“$level_0$~$level_n$ 所有层数据文件”数据库完整状态：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、先针对各部分数据创建各自的迭代器：
+&lt;ul&gt;&lt;li&gt;“可变 memtable” 一个迭代器&lt;/li&gt;
+&lt;li&gt;“不可变 memtable” 一个迭代器&lt;/li&gt;
+&lt;li&gt;$level_0$ 层，因为不同文件的 key 区间可能会重合，所以一个文件一个迭代器&lt;/li&gt;
+&lt;li&gt;$level_1$~$level_n$ 层，因为不同文件的 key 区间不会重合，所以一层一个迭代器，同一层的数据文件按照 key 区间从小到大排序后依次遍历即可&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;2、SeekToFirst / Seek 的逻辑，即是让各个迭代器先各自进行 SeekToFirst / Seek，然后对这些迭代器的读到的首个元素进行比较，获得最小的那个记录&lt;/li&gt;
+&lt;li&gt;3、Next 的逻辑，让上次取得最小元素的那个迭代器先 Next 一次，然后对这些迭代器的读到的首个元素进行比较，获得最小的那个记录&lt;/li&gt;
+&lt;li&gt;4、对于 2/3 中取到的最小记录，因为存在快照约束以及同一个 key 可能存在多次写入（Put 或 Delete），所以需要：
+&lt;ul&gt;&lt;li&gt;跳过序列号大于快照序列号的记录&lt;/li&gt;
+&lt;li&gt;同一个 key：如果最后一次写入是 Delete 操作，则跳过该 key 的所有记录；如果最后一次写入是 Put 操作，则跳过最后一次之前的所有记录；从而确保同一个 key 只会遍历返回最新有效的记录。&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;
+&lt;img src=&apos;../assets/leveldb/db-iterator.png&apos; title=&apos;leveldb-db-iterator&apos; alt=&apos;leveldb-db-iterator&apos; width=&apos;830&apos;/&gt;
+&lt;h3&gt;9.4 表缓存 &amp; 块缓存&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;多线程并发对 leveldb 数据库检索（点查/有序遍历）时，有一些数据文件会被频繁访问（多线程之间以及时序上），将这些文件的句柄以及数据索引等元信息缓存起来进行复用，可以提高检索性能，降低资源消耗。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;另外，按照 ldb 文件“块”格式，数据块内容写入文件之前可以先进行压缩，可能存在一些热点数据块，如果每次检索都根据索引&lt;u&gt;从文件中读取数据块并解压&lt;/u&gt;再做进一步查找，对性能和资源开销影响会比较大，所以也可以在数据块级别做缓存。&lt;/p&gt;
+&lt;h4&gt;9.4.1 TableCache - 表缓存&lt;/h4&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;leveldb 中存在两类表/Table，逻辑含义是一致，不过指代的东西不一样：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;MemTable 中的跳表&lt;/li&gt;
+&lt;li&gt;一个 ldb 数据文件打开后关联的内存对象，方便检索&lt;/li&gt;&lt;/ul&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;TableCache 是对“一个 ldb 数据文件打开后关联的内存对象”进行缓存 - 缓存的键为 ldb 数据文件的 id，值为 ldb 数据文件的 Table 对象。实际的缓存实现采用分片/分段 LRU 缓存，提升并发插入/淘汰能力。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;leveldb 实例在版本信息中维护了所有 level ldb 数据文件的元信息 - key 区间最大值最小值、数据文件的 id 等。检索时，&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、先根据 key 匹配到目标数据文件的元信息&lt;/li&gt;
+&lt;li&gt;2、根据元信息中的数据文件 id，去 TableCache 中查找对应的 Table 对象，如果不存在，则先打开数据文件，读取解析 footer / index / meta / meta index 这些索引信息，准备好 Table 对象，缓存到 TableCache 中&lt;/li&gt;
+&lt;li&gt;3、基于 Table 对象继续进行数据文件内的检索流程&lt;/li&gt;&lt;/ul&gt;
+&lt;img src=&apos;/images/13668317937842427369.svg&apos; title=&apos;13668317937842427369&apos; alt=&apos;13668317937842427369&apos;/&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;leveldb 默认参数支持缓存 990 个 Table，ShardedLRUCache 默认分片数为 16，按照公式计算，每个分片支持 缓存 62 个 Table。&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;struct Options {
+  // 省略
+  // Number of open files that can be used by the DB.  You may need to  
+  // increase this if your database has a large working set (budget  
+  // one open file per 2MB of working set).  
+  int max_open_files = 1000;
+  // 省略
+}
+
+const int kNumNonTableCacheFiles = 10;
+
+static int TableCacheSize(const Options&amp;amp;amp; sanitized_options) {  
+  // Reserve ten files or so for other uses and give the rest to TableCache.  
+  return sanitized_options.max_open_files - kNumNonTableCacheFiles;  
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;explicit ShardedLRUCache(size_t capacity) : last_id_(0) {  
+  const size_t per_shard = (capacity + (kNumShards - 1)) / kNumShards;  
+  for (int s = 0; s &amp;amp;lt; kNumShards; s++) {  
+    shard_[s].SetCapacity(per_shard);  
+  }  
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;h4&gt;9.4.2 BlockCache - 块缓存&lt;/h4&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;BlockCache 的缓存实现方案，可以由调用方实现，并在打开 leveldb 数据库时在 Options 参数中指定。如果没有设置，则默认使用和 TableCache 一样的缓存实现 - ShardedLRUCache，可缓存的 key 数量为 &lt;code&gt;8 &amp;lt;&amp;lt; 20&lt;/code&gt;。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;并且需要在检索时的 ReadOptions 参数中指定启用块缓存（默认是启用），才会将块缓存中找不到的数据块读取后插入缓存中。&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;// Should the data read for this iteration be cached in memory?  
+// Callers may wish to set this field to false for bulk scans.  
+bool fill_cache = true;&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;块缓存使用的键为 “缓存 id” 拼接上 数据块在文件中的偏移位置：&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;char cache_key_buffer[16];  
+EncodeFixed64(cache_key_buffer, table-&amp;amp;gt;rep_-&amp;amp;gt;cache_id);  
+EncodeFixed64(cache_key_buffer + 8, handle.offset());  
+Slice key(cache_key_buffer, sizeof(cache_key_buffer));  
+cache_handle = block_cache-&amp;amp;gt;Lookup(key);&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;“缓存 id” 和 Table 对象关联，不同 Table 对象的“缓存 id” 不同，所以“缓存 id” 用于在同一个缓存中区分不同数据文件的数据块。ShardedLRUCache 缓存实现以递增整数的方式分配“缓存 id”：&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;uint64_t NewId() override {  
+  MutexLock l(&amp;amp;amp;id_mutex_);  
+  return ++(last_id_);  
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;compaction 过程会对输入数据文件进行遍历，并且使用的也是同一个 TableCache 实例和各个 Table 实例，如果这个过程也启用块缓存，则会导致大量非热点的数据块缓存起来，对正常检索造成干扰。所以 &lt;u&gt;compaction 过程会将 fill_cache 设置为 false，关闭 compaction 输入遍历的块缓存&lt;/u&gt;。&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;// Control over blocks (user data is stored in a set of blocks, and  
+// a block is the unit of reading from disk).  
+  
+// If non-null, use the specified cache for blocks.  
+// If null, leveldb will automatically create and use an 8MB internal cache.  
+Cache* block_cache = nullptr;  
+  
+// Approximate size of user data packed per block.  Note that the  
+// block size specified here corresponds to uncompressed data.  The  
+// actual size of the unit read from disk may be smaller if  
+// compression is enabled.  This parameter can be changed dynamically.  
+size_t block_size = 4 * 1024;&lt;/code&gt;&lt;/pre&gt;
+&lt;h4&gt;9.4.3 ShardedLRUCache&lt;/h4&gt;
+&lt;img src=&apos;/images/13668317937842427369.svg&apos; title=&apos;13668317937842427369&apos; alt=&apos;13668317937842427369&apos;/&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;HandleTable 是一个“链接法（chaining）” 实现的哈希表，默认初始化 4 个 buckets，每个 bucket 初始值为空指针，指针类型为 &lt;code&gt;LRUHandle*&lt;/code&gt;，即哈希表节点类型。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;HandleTable 中：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;&lt;code&gt;length_&lt;/code&gt;：表示哈希表的当前容量。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;elems_&lt;/code&gt;：表示当前哈希表中存储的元素/节点个数，如果 &lt;code&gt;elems_&lt;/code&gt; 超过 &lt;code&gt;length_&lt;/code&gt;，则按当前容量的2倍扩容。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;list_&lt;/code&gt;：即 bucket 数组。&lt;/li&gt;&lt;/ul&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;LRUHandle 中：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;&lt;code&gt;next_hash&lt;/code&gt; 字段：指向当前节点所在 bucket 链表的下一个节点&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;next&lt;/code&gt; &amp; &lt;code&gt;pre&lt;/code&gt; 字段：指向节点在 LRU 链表中的前置节点和后置节点&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;hash&lt;/code&gt; 字段：存储 key 的哈希值，用于加速在 bucket 链表中遍历查找过程&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;refs&lt;/code&gt;：节点自己的引用计数，初始化时会设置为 1，表示被缓存引用；调用方从缓存中获取到这个节点时，计数会加1；调用方不再使用时会调用 &lt;code&gt;ShardedLRUCache::Release&lt;/code&gt; -&gt; &lt;code&gt;LRUCache::Release&lt;/code&gt; -&gt; &lt;code&gt;LRUCache::Unref&lt;/code&gt; 将计数减1，如果引用计数重新变为1，则表示当前这个节点没有任何调用方在使用，仅缓存持有引用。&lt;/li&gt;&lt;/ul&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;ShardedLRUCache 是一个多分片的 LRU 缓存实现，默认16个分片，通过分段锁来减少并发冲突，提升性能。LRU 缓存的检索(Lookup)或插入(Insert)，都先计算 key 的哈希值，将哈希值的头部4个比特的值作为分片 id，然后在目标分片 LRU 缓存中检索或插入。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;LRUCache 是实际的 LRU 缓存实现，&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;&lt;code&gt;HandleTable table_&lt;/code&gt;： 实际存放缓存项的哈希表。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;LRUHandle in_use_&lt;/code&gt;：如果一个缓存项被某个调用方引用（refs &gt; 1），则会被放入 &lt;code&gt;in_use_&lt;/code&gt; 链表中。这些缓存项不会被 LRU 回收，对于调用方来说是内存安全的。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;LRUHandle lru_&lt;/code&gt;：如果一个缓存项（LRUHandle）不再被任何调用方引用（refs=1），则将从 &lt;code&gt;in_use_&lt;/code&gt; 链表中移除，被放入 &lt;code&gt;lru_&lt;/code&gt; 双向链表中：
+&lt;ul&gt;&lt;li&gt;这些缓存项还被缓存引用，存在 &lt;code&gt;table_&lt;/code&gt; 中&lt;/li&gt;
+&lt;li&gt;最新放入的放在队尾 - 这意味着对头的缓存项是最久未被使用的，当缓存项数量超额时，则从 &lt;code&gt;lru_&lt;/code&gt; 链表的头部开始逐个缓存项回收&lt;/li&gt;
+&lt;li&gt;如果其中的缓存项后来被调用方再次检索引用，则会从 &lt;code&gt;lru_&lt;/code&gt; 中移除，重新放到 &lt;code&gt;in_use_&lt;/code&gt; 队尾&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;// Dummy head of LRU list.  
+// lru.prev is newest entry, lru.next is oldest entry.  
+// Entries have refs==1 and in_cache==true.  
+LRUHandle lru_ GUARDED_BY(mutex_);  
+  
+// Dummy head of in-use list.  
+// Entries are in use by clients, and have refs &amp;amp;gt;= 2 and in_cache==true.  
+LRUHandle in_use_ GUARDED_BY(mutex_);  
+  
+HandleTable table_ GUARDED_BY(mutex_);&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;LRU 缓存的常规使用方式：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、先从缓存中检索（Lookup），如果未检索到，则：&lt;/li&gt;
+&lt;li&gt;2、准备好缓存的键值，插入缓存（Insert），得到缓存项&lt;/li&gt;
+&lt;li&gt;3、使用完缓存项后，释放引用（Release）&lt;/li&gt;&lt;/ul&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;Lookup 过程 - 如果 HandleTable 哈希表中检索到：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;如果缓存项的引用计数为 1，表示当前缓存项仅被 LRU 缓存引用，挂接在 &lt;code&gt;lru_&lt;/code&gt; 链表上，所以将当前缓存项从 &lt;code&gt;lru_&lt;/code&gt; 链表上摘除，挂接到 &lt;code&gt;in_use_&lt;/code&gt; 链表队尾，并将引用计数加1&lt;/li&gt;
+&lt;li&gt;否则将引用计数加1 即可&lt;/li&gt;&lt;/ul&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;Insert 过程 -&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、构建缓存项 - 申请内存，设置各个字段的值，引用计数设置为 1（Insert 会把缓存项返回给调用方使用）。&lt;/li&gt;
+&lt;li&gt;2、将缓存项引用计数加1，并挂接到 &lt;code&gt;in_use_&lt;/code&gt; 的队尾。&lt;/li&gt;
+&lt;li&gt;3、将缓存项插入 HandleTable 哈希表。如果哈希表中已存在相同的 key，则还需要释放缓存自己对原有缓存项的引用。&lt;/li&gt;
+&lt;li&gt;4、如果缓存项数量超额，则从 &lt;code&gt;lru_&lt;/code&gt; 链表的头部开始逐个回收缓存项（因为这些缓存项仅被缓存自己引用，所以可以安全地进行内存回收），直到缓存项数量未超额。&lt;/li&gt;&lt;/ul&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;Release 的过程 -&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、将缓存项的引用计数减1。&lt;/li&gt;
+&lt;li&gt;2、将缓存项从 &lt;code&gt;in_use_&lt;/code&gt; 链表中摘除，挂接到 &lt;code&gt;lru_&lt;/code&gt; 链表队尾。&lt;/li&gt;&lt;/ul&gt;
+&lt;h3&gt;9.5、过滤策略-布隆过滤器&lt;/h3&gt;
+&lt;img src=&apos;../assets/leveldb/Bloom_filter_speed.png&apos; title=&apos;Bloom_filter_speed&apos; alt=&apos;Bloom_filter_speed&apos; width=&apos;600&apos;/&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;过滤器匹配返回 false，就一定不在存储中；如果返回 true，有小概率不对（false positive）&lt;sup id=&quot;fnref:1&quot;&gt;&lt;a href=&quot;#fn:1&quot; class=&quot;footnote&quot; rel=&quot;footnote&quot; role=&quot;doc-noteref&quot;&gt;[1]&lt;/a&gt;&lt;/sup&gt;。&lt;/p&gt;
+&lt;img src=&apos;/images/13668317937842427369.svg&apos; title=&apos;13668317937842427369&apos; alt=&apos;13668317937842427369&apos;/&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;class FilterPolicy {
+public:  
+ virtual ~FilterPolicy();  
+  
+ // Return the name of this policy.  Note that if the filter encoding  
+ // changes in an incompatible way, the name returned by this method
+ // must be changed.  Otherwise, old incompatible filters may be
+ // passed to methods of this type.
+ virtual const char* Name() const = 0;  
+  
+ // keys[0,n-1] contains a list of keys (potentially with duplicates)  
+ // that are ordered according to the user supplied comparator.
+ // Append a filter that summarizes keys[0,n-1] to *dst.
+ //
+ // Warning: do not change the initial contents of *dst.  Instead,
+ // append the newly constructed filter to *dst.
+ virtual void CreateFilter(const Slice* keys, int n,  
+                           std::string* dst) const = 0;  
+  
+ // &amp;amp;quot;filter&amp;amp;quot; contains the data appended by a preceding call to  
+ // CreateFilter() on this class.  This method must return true if
+ // the key was in the list of keys passed to CreateFilter().
+ // This method may return true or false if the key was not on the
+ // list, but it should aim to return false with a high probability.
+ virtual bool KeyMayMatch(const Slice&amp;amp;amp; key, const Slice&amp;amp;amp; filter) const = 0;
+}
+
+// Return a new filter policy that uses a bloom filter with approximately  
+// the specified number of bits per key.  A good value for bits_per_key  
+// is 10, which yields a filter with ~ 1% false positive rate.  
+//  
+// Callers must delete the result after any database that is using the  
+// result has been closed.  
+//  
+// Note: if you are using a custom comparator that ignores some parts  
+// of the keys being compared, you must not use NewBloomFilterPolicy()  
+// and must provide your own FilterPolicy that also ignores the  
+// corresponding parts of the keys.  For example, if the comparator  
+// ignores trailing spaces, it would be incorrect to use a  
+// FilterPolicy (like NewBloomFilterPolicy) that does not ignore  
+// trailing spaces in keys.
+const FilterPolicy* NewBloomFilterPolicy(int bits_per_key);&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;static uint32_t BloomHash(const Slice&amp;amp;amp; key) {  
+  return Hash(key.data(), key.size(), 0xbc9f1d34);  
+}  
+  
+class BloomFilterPolicy : public FilterPolicy {  
+ public:  
+  explicit BloomFilterPolicy(int bits_per_key) : bits_per_key_(bits_per_key) {  
+    // We intentionally round down to reduce probing cost a little bit 
+    /* llama3：
+    在Bloom过滤器中，哈希函数次数 k 是一个重要参数，它决定了过滤器的大小和精度。一般来说，k越大，过滤器越大，但也越准确；反之，k越小，过滤器越小，但也越不准确。
+    在这个实现中，乘以 0.69 的目的是为了计算出一个合适的 k 值，使得过滤器的大小和精度达到一个平衡。具体来说，乘以 0.69 是为了将 bits_per_key 值乘以一个较小的倍数，从而得到一个较小的 k 值。
+    好处是：
+	1、减少过滤器大小：通过乘以 0.69，可以得到一个较小的 k 值，这意味着过滤器的大小也会相应减小。这对于存储和传输过滤器来说是一个重要的考虑因素。
+	2、提高匹配效率：虽然较小的 k 值可能导致过滤器不准确，但在实际应用中，这个影响往往是可以接受的。因为匹配效率会大幅提高，特别是在过滤器大小相对较小时。
+	3、平衡精度和大小：乘以 0.69 的方法可以帮助找到一个合适的 k 值，使得过滤器的大小和精度达到一个平衡。这对于实际应用来说非常重要，因为它可以确保过滤器既能准确又能高效。
+    */
+    k_ = static_cast&amp;amp;lt;size_t&amp;amp;gt;(bits_per_key * 0.69);  // 0.69 =~ ln(2)  
+    if (k_ &amp;amp;lt; 1) k_ = 1;  
+    if (k_ &amp;amp;gt; 30) k_ = 30;  
+  }  
+  
+  const char* Name() const override { return &amp;amp;quot;leveldb.BuiltinBloomFilter2&amp;amp;quot;; }  
+  
+  void CreateFilter(const Slice* keys, int n, std::string* dst) const override {  
+    // Compute bloom filter size (in both bits and bytes)  
+    size_t bits = n * bits_per_key_;  
+  
+    // For small n, we can see a very high false positive rate.  Fix it  
+    // by enforcing a minimum bloom filter length.
+    if (bits &amp;amp;lt; 64) bits = 64;  
+  
+    size_t bytes = (bits + 7) / 8;  
+    bits = bytes * 8;  
+  
+    const size_t init_size = dst-&amp;amp;gt;size();  
+    dst-&amp;amp;gt;resize(init_size + bytes, 0);  
+    dst-&amp;amp;gt;push_back(static_cast&amp;amp;lt;char&amp;amp;gt;(k_));  // Remember # of probes in filter  
+    char* array = &amp;amp;amp;(*dst)[init_size];  
+    for (int i = 0; i &amp;amp;lt; n; i++) {  
+      // Use double-hashing to generate a sequence of hash values.  
+      // See analysis in [Kirsch,Mitzenmacher 2006].
+      uint32_t h = BloomHash(keys[i]);  
+      const uint32_t delta = (h &amp;amp;gt;&amp;amp;gt; 17) | (h &amp;amp;lt;&amp;amp;lt; 15);  // Rotate right 17 bits  
+      for (size_t j = 0; j &amp;amp;lt; k_; j++) {  // 算 k_ 次哈希以及设置 k_ 个比特位
+        const uint32_t bitpos = h % bits;  
+        // 第几个字节？bitpos / 8
+        // 目标字节中的第几个比特？ bitpos % 8
+        array[bitpos / 8] |= (1 &amp;amp;lt;&amp;amp;lt; (bitpos % 8));  
+        h += delta;  // 每次哈希值有变化
+      }  
+    }  
+  }  
+  
+  bool KeyMayMatch(const Slice&amp;amp;amp; key, const Slice&amp;amp;amp; bloom_filter) const override {  
+    const size_t len = bloom_filter.size();  
+    if (len &amp;amp;lt; 2) return false;  
+  
+    const char* array = bloom_filter.data();  
+    const size_t bits = (len - 1) * 8;  
+  
+    // Use the encoded k so that we can read filters generated by  
+    // bloom filters created using different parameters.
+    const size_t k = array[len - 1];  
+    if (k &amp;amp;gt; 30) {  
+      // Reserved for potentially new encodings for short bloom filters.  
+      // Consider it a match.
+      return true;  
+    }  
+  
+    uint32_t h = BloomHash(key);  
+    const uint32_t delta = (h &amp;amp;gt;&amp;amp;gt; 17) | (h &amp;amp;lt;&amp;amp;lt; 15);  // Rotate right 17 bits  
+    for (size_t j = 0; j &amp;amp;lt; k; j++) {  
+      const uint32_t bitpos = h % bits;  
+      if ((array[bitpos / 8] &amp;amp;amp; (1 &amp;amp;lt;&amp;amp;lt; (bitpos % 8))) == 0) return false;  // 任一比特位不匹配，就算不匹配。
+      h += delta;  
+    }  
+    return true;  
+  }  
+  
+ private:  
+  size_t bits_per_key_;  
+  size_t k_;  
+};&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;const int32_t KEY_VALIDATOR_BYTE_SIZE = 128 * 1024 * 1024;  // 128M
+const uint64_t KEY_VALIDATOR_VALUE_MASK = 0x3fffffff;  // 30bit
+const uint64_t KEY_VALIDATOR_BIT_MASK = 0x07;  
+const uint8_t KEY_VALIDATOR_ONE = 1;
+
+const uint8_t KEY_VALIDATOR_LOCK_COUNT = 32;
+const uint8_t KEY_VALIDATOR_LOCK_MASK = KEY_VALIDATOR_LOCK_COUNT - 1;
+
+class KeyValidator {
+public:
+    static KeyValidator&amp;amp;amp; Instance() {
+        static KeyValidator instance;
+        return instance;
+    }
+
+    ~KeyValidator() {
+        if (bitmap_data_) {
+            delete [] bitmap_data_;
+            bitmap_data_ = nullptr;
+        }
+    }
+
+    bool IsInitialized() {
+        return (bitmap_data_ != nullptr);
+    }
+
+    bool Init() {
+        if (!bitmap_data_) {
+            bitmap_data_ = new uint8_t[KEY_VALIDATOR_BYTE_SIZE];
+        }
+        std::memset(bitmap_data_, 0, KEY_VALIDATOR_BYTE_SIZE);
+        // need to catch bad_alloc ?
+        LOG(WARNING) &amp;amp;lt;&amp;amp;lt; &amp;amp;quot;KeyValidator initialized succ.&amp;amp;quot;;
+        return true;
+    }
+
+    bool Update(uint64_t key_id) {
+        if (!bitmap_data_) {
+            LOG(ERROR) &amp;amp;lt;&amp;amp;lt; &amp;amp;quot;bitmap_data not initialized!&amp;amp;quot;;
+            return false;
+        }
+        uint64_t byte_index = 0;
+        uint8_t bit_mask = 0;
+        GetByteIndex(key_id, byte_index, bit_mask);
+        // lock to ensure multi-thread write
+        auto&amp;amp;amp; lock = spin_locks[byte_index &amp;amp;amp; KEY_VALIDATOR_LOCK_MASK];
+        lock.Lock();
+        bitmap_data_[byte_index] |= bit_mask;
+        lock.UnLock();
+        return true;
+    }
+
+    bool IsValid(uint64_t key_id) {
+        if (!bitmap_data_) {
+            LOG(ERROR) &amp;amp;lt;&amp;amp;lt; &amp;amp;quot;bitmap_data not initialized!&amp;amp;quot;;
+            return false;
+        }
+        uint64_t byte_index = 0;
+        uint8_t bit_mask = 0;
+        GetByteIndex(key_id, byte_index, bit_mask);
+        return (bitmap_data_[byte_index] &amp;amp;amp; bit_mask);
+    }
+
+
+    bool GetValidKeys(const std::vector&amp;amp;lt;int64_t&amp;amp;gt;&amp;amp;amp; key_list,
+                std::vector&amp;amp;lt;int64_t&amp;amp;gt;&amp;amp;amp; result) {
+        result.clear();
+        result.reserve(key_list.size());
+        for (auto&amp;amp;amp; key_id : key_list) {
+            if (IsValid(key_id)) {
+                result.push_back(key_id);
+            }
+        }
+        return true;
+    }
+
+private:
+    uint8_t* bitmap_data_ = nullptr;
+    std::vector&amp;amp;lt;psarlib::synchronization::SpinLock&amp;amp;gt; spin_locks;
+
+    KeyValidator()
+    : spin_locks(KEY_VALIDATOR_LOCK_COUNT) {}
+
+    void GetByteIndex(uint64_t key_id, uint64_t&amp;amp;amp; byte_index, uint8_t&amp;amp;amp; bit_mask) {
+        auto value = key_id &amp;amp;amp; KEY_VALIDATOR_VALUE_MASK;
+        byte_index = value &amp;amp;gt;&amp;amp;gt; 3;                          // divide by 8
+        auto bit_index = value &amp;amp;amp; KEY_VALIDATOR_BIT_MASK;  // mod by 8
+        bit_mask = (KEY_VALIDATOR_ONE &amp;amp;lt;&amp;amp;lt; bit_index);
+    }
+};&lt;/code&gt;&lt;/pre&gt;
+&lt;hr&gt;
+&lt;div class=&quot;footnotes&quot; role=&quot;doc-endnotes&quot;&gt;&lt;ol&gt;&lt;li id=&quot;fn:1&quot;&gt;&lt;p&gt;&lt;a href=&apos;https://hur.st/bloomfilter/&apos;&gt;Bloom Filter Calculator&lt;/a&gt;&lt;a href=&quot;#fnref:1&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;↩&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;&lt;/ol&gt;&lt;/div&gt;</description>
+            <pubDate>2024-11-20</pubDate>
+            <link>https://blog.xiayf.cn/posts/leveldb-note-4.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/leveldb-note-4.html</guid>
+        </item>
+        
+        <item>
+            <title>读码：LevelDB - Compaction 流程</title>
+            <description>&lt;h2&gt;6、$level_0$ &amp; $level_1$~$level_n$&lt;/h2&gt;
+&lt;h3&gt;6.1 $level_0$&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;$level_0$ ldb 数据文件，是将内存中不可变 memtable 的数据落到磁盘生成的。&lt;strong&gt;这些数据文件的 key 范围会有重合&lt;/strong&gt;。leveldb 会记录每个 ldb 文件对应的 key 最小值和最大值等元信息。&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;class Version {
+private:
+  // List of files per level  
+  std::vector&amp;amp;lt;FileMetaData*&amp;amp;gt; files_[config::kNumLevels];
+}
+
+struct FileMetaData {  
+  FileMetaData() : refs(0), allowed_seeks(1 &amp;amp;lt;&amp;amp;lt; 30), file_size(0) {}  
+  
+  int refs;  
+  int allowed_seeks;  // Seeks allowed until compaction  
+  uint64_t number;  
+  uint64_t file_size;    // File size in bytes  
+  InternalKey smallest;  // Smallest internal key served by table  
+  InternalKey largest;   // Largest internal key served by table  
+};&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;$level_0$ ldb 文件的数据内容源自：遍历“不可变 memtable” 中跳表的 $L_0$ 层节点，插入“data 块”。跳表的 $L_0$ 层节点链表本就是有序的，第一个节点的 key 即为 最小 key，最后一个节点的 key 即为 最大 key。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;Get key 检索时，对于 $level_0$ 层，先对所有 ldb 文件的最小 key 最大 key 进行比较，匹配到所有目标 ldb 文件，并按文件 id 序号从大到小排序（&lt;u&gt;文件 id 序号越大，说明文件越新&lt;/u&gt;），从最新的目标 ldb 文件开始检索，找到了就返回。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;为了保障检索效率，leveldb 会通过 major compaction 过程尽量控制住 level0 的文件数：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;如果$level_0$ 文件数超过 kL0_CompactionTrigger（=4），就可以触发 compaction。&lt;/li&gt;
+&lt;li&gt;如果 $level_0$ 文件数超过 kL0_SlowdownWritesTrigger（=8），就会对写入进行限速和攒批。&lt;/li&gt;
+&lt;li&gt;如果 $level_0$ 文件数超过 kL0_StopWritesTrigger（=12），写入就会停顿，等待 compaction。&lt;/li&gt;&lt;/ul&gt;
+&lt;h3&gt;6.2 $level_1$~$level_n$&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;$level_1$~$level_n$ 的数据文件是从 $level_0$ 开始逐层 compaction 而来，这些文件：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;同一层内的文件之间 key 的区间不会出现重合，这样可以减少磁盘读取，提升检索效率；不同层的文件之间 key 区间可以重合。 &lt;u&gt;compaction 的逻辑需要保障这个性质&lt;/u&gt;。&lt;/li&gt;
+&lt;li&gt;$level_k$ 文件的内容一定比 $level_{k-1}$ 文件的内容旧，所以如果在 $level_{k-1}$ 层检索有了结果，就不必到 $level_k$ 层检索。&lt;/li&gt;
+&lt;li&gt;在 compaction 过程中对于同一个 key 会尽可能丢掉旧的键值数据，以此，减少磁盘占用，提升检索效率。&lt;/li&gt;&lt;/ul&gt;
+&lt;h2&gt;7、Compaction&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;compaction 过程，作为任务，由一个独立的后台线程来执行。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;compaction 主要分两 2 种：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、“minor compaction” - 内存中的 “不可变 memtable” 转存到 $level_0$ 文件。这个 compaction 优先级更高，所以一旦检测到存在“不可变 memtable”就优先处理。&lt;/li&gt;
+&lt;li&gt;2、“major compaction” - $level_0$ ~ $level_n$ 逐层之间的 compaction。其中 $level_0$ 与 $level_1$ ~ $level_n$ 不同，$level_0$ 数据文件之间 key 区间存在重合，处理逻辑上存在特殊之处。&lt;/li&gt;&lt;/ul&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;“minor compaction” 流程比较简单直接，后续不细说。&lt;/p&gt;
+&lt;h3&gt;7.1 major compaction 触发条件&lt;/h3&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;// We prefer compactions triggered by too much data in a level over  
+// the compactions triggered by seeks.  
+const bool size_compaction = (current_-&amp;amp;gt;compaction_score_ &amp;amp;gt;= 1);  
+const bool seek_compaction = (current_-&amp;amp;gt;file_to_compact_ != nullptr);&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;void VersionSet::Finalize(Version* v) {  
+  // Precomputed best level for next compaction  
+  int best_level = -1;  
+  double best_score = -1;  
+  
+  for (int level = 0; level &amp;amp;lt; config::kNumLevels - 1; level++) {  
+    double score;  
+    if (level == 0) {  
+      // We treat level-0 specially by bounding the number of files  
+      // instead of number of bytes for two reasons:
+      // 
+      // (1) With larger write-buffer sizes, it is nice not to do too
+      // many level-0 compactions.
+      //
+      // (2) The files in level-0 are merged on every read and
+      // therefore we wish to avoid too many files when the individual
+      // file size is small (perhaps because of a small write-buffer
+      // setting, or very high compression ratios, or lots of
+      // overwrites/deletions).
+      score = v-&amp;amp;gt;files_[level].size() /  
+              static_cast&amp;amp;lt;double&amp;amp;gt;(config::kL0_CompactionTrigger);  
+    } else {  
+      // Compute the ratio of current size to size limit.  
+      const uint64_t level_bytes = TotalFileSize(v-&amp;amp;gt;files_[level]);  
+      score =  
+          static_cast&amp;amp;lt;double&amp;amp;gt;(level_bytes) / MaxBytesForLevel(options_, level);  
+    }  
+  
+    if (score &amp;amp;gt; best_score) {  
+      best_level = level;  
+      best_score = score;  
+    }  
+  }  
+  
+  v-&amp;amp;gt;compaction_level_ = best_level;  
+  v-&amp;amp;gt;compaction_score_ = best_score;  
+}
+
+static double MaxBytesForLevel(const Options* options, int level) {  
+  // Note: the result for level zero is not really used since we set  
+  // the level-0 compaction threshold based on number of files.  
+  // Result for both level-0 and level-1
+  double result = 10. * 1048576.0;  
+  while (level &amp;amp;gt; 1) {  
+    result *= 10;  
+    level--;  
+  }  
+  return result;  
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;leveldb 打开/初始化期间或者每次 compaction 结束时都会计算下次 compaction 最应该处理的哪个 level 的数据文件以及紧迫程度（&lt;code&gt;compaction_score_&lt;/code&gt;），不过对于 $level_0$ 和 其他 level 的计算逻辑有区别：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、$level_0$ compaction 紧迫程度，取决于文件数和 compaction 阈值（kL0_CompactionTrigger = 4）的倍数&lt;/li&gt;
+&lt;li&gt;2、其他 level 则取决于文件占用的存储空间和阈值的倍数，level 越大，阈值越大 - $level_1$ 阈值为 &lt;code&gt;10. * 1048576.0&lt;/code&gt; 字节（10MB），相邻层之间的阈值为 10 倍关系。&lt;/li&gt;&lt;/ul&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;bool Version::UpdateStats(const GetStats&amp;amp;amp; stats) {  
+  FileMetaData* f = stats.seek_file;  
+  if (f != nullptr) {  
+    f-&amp;amp;gt;allowed_seeks--;  // allowed_seeks 初始值 1 &amp;amp;lt;&amp;amp;lt; 30
+    if (f-&amp;amp;gt;allowed_seeks &amp;amp;lt;= 0 &amp;amp;amp;&amp;amp;amp; file_to_compact_ == nullptr) {  
+      file_to_compact_ = f;  
+      file_to_compact_level_ = stats.seek_file_level;  
+      return true;  
+    }  
+  }  
+  return false;  
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;每次 Get 检索的最后都会对本次检索涉及的&lt;u&gt;第一个数据文件&lt;/u&gt;进行计数，如果文件的检索次数达到上限，就伺机进行 compaction。不过这个条件触发 compaction 的优先级比较低。&lt;/p&gt;
+&lt;h3&gt;7.2 major compaction 过程&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;不考虑一些细节优化之处，compaction 的核心流程为：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、根据触发条件，确定本次 compaction 对哪个 level 的数据库文件处理，然后进一步确定从 level  和 level+1 层中选择哪些数据库文件 compaction：
+&lt;ul&gt;&lt;li&gt;（1）、最简单的情况是， 如果该 level 是第一次做 compaction，则选择该 level 的第一个数据文件（也就是最先生成的那个），不过：
+&lt;ul&gt;&lt;li&gt;1)、如果之前该 level 做过 major compaction，暂存了状态（处理到哪个最大 key），那么根据暂存状态最大 key 选择下一个数据文件即可，如果没有下一个数据文件了，则从头选择该 level 的第一个数据文件（也就是最先生成的那个）。&lt;/li&gt;
+&lt;li&gt;2)、&lt;code&gt;seek_compaction&lt;/code&gt; 触发的 compaction 是针对特定数据库文件的。&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;(2)、如果 level = 0，因为 $level_0$ 的数据库文件之间 key 的范围可以重合，所以根据 (1) 选定数据文件的 key 最大值和最小值，还需要进一步确定是否应该把 $level_0$ 的其他数据库文件包含进来。&lt;/li&gt;
+&lt;li&gt;(3)、compaction 输出的数据库属于 level+1 层，因为 $level_1$ ~ $level_n$ 同一层的数据库文件之间 key 区间不能有重合，所以还需要根据 (1) 和 (2) 选定的数据库文件的 key 最大值和最小值，确定 level+1 层有哪些数据库文件需要加入到本次 compaction&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;// A Compaction encapsulates information about a compaction.
+class Compaction {
+private:
+  int level_;  // compaction 目标 level
+  uint64_t max_output_file_size_;  // compaction 产生的新文件大小阈值，如果达到阈值，就结束 compaction
+  Version* input_version_;  // 当前对哪个 Version 做 compaction？
+  VersionEdit edit_; // 每次 compaction 会产生一个新的 Version
+
+  // Each compaction reads inputs from &amp;amp;quot;level_&amp;amp;quot; and &amp;amp;quot;level_+1&amp;amp;quot;
+  // compaction 只会在目标层和相邻下一层之间进行
+  std::vector&amp;amp;lt;FileMetaData*&amp;amp;gt; inputs_[2];  // The two sets of inputs
+
+  // State used to check for number of overlapping grandparent files  
+  // (parent == level_ + 1, grandparent == level_ + 2)  
+  std::vector&amp;amp;lt;FileMetaData*&amp;amp;gt; grandparents_;  // 用于判断是否可以将 level 层的文件直接移动到 level+1 层，见 bool Compaction::IsTrivialMove() const
+  size_t grandparent_index_;  // Index in grandparent_starts_  
+  bool seen_key_;             // Some output key has been seen  
+  int64_t overlapped_bytes_;  // Bytes of overlap between current output  
+                            // and grandparent files
+
+  // State for implementing IsBaseLevelForKey  
+  
+  // level_ptrs_ holds indices into input_version_-&amp;amp;gt;levels_: our state  
+  // is that we are positioned at one of the file ranges for each  
+  // higher level than the ones involved in this compaction (i.e. for  
+  // all L &amp;amp;gt;= level_ + 2).  
+  size_t level_ptrs_[config::kNumLevels];
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;Compaction* VersionSet::PickCompaction() {  
+  Compaction* c;  
+  int level;  
+  
+  // We prefer compactions triggered by too much data in a level over  
+  // the compactions triggered by seeks.
+  const bool size_compaction = (current_-&amp;amp;gt;compaction_score_ &amp;amp;gt;= 1);
+  const bool seek_compaction = (current_-&amp;amp;gt;file_to_compact_ != nullptr);  
+  if (size_compaction) {  
+    level = current_-&amp;amp;gt;compaction_level_;  
+    assert(level &amp;amp;gt;= 0);  
+    assert(level + 1 &amp;amp;lt; config::kNumLevels);  
+    c = new Compaction(options_, level);  
+  
+    // Pick the first file that comes after compact_pointer_[level]  
+    for (size_t i = 0; i &amp;amp;lt; current_-&amp;amp;gt;files_[level].size(); i++) {  
+      FileMetaData* f = current_-&amp;amp;gt;files_[level][i];  
+      if (compact_pointer_[level].empty() ||  
+          icmp_.Compare(f-&amp;amp;gt;largest.Encode(), compact_pointer_[level]) &amp;amp;gt; 0) {  
+        c-&amp;amp;gt;inputs_[0].push_back(f);  // 选择该 level 上次 compaction 的文件的下一个文件
+        break;  
+      }  
+    }  
+    if (c-&amp;amp;gt;inputs_[0].empty()) {  
+      // Wrap-around to the beginning of the key space  
+      c-&amp;amp;gt;inputs_[0].push_back(current_-&amp;amp;gt;files_[level][0]);  // 如果该 level 整个 key 空间都 compaction 过，则从头开始选择第一个文件
+    }  
+  } else if (seek_compaction) {  
+    level = current_-&amp;amp;gt;file_to_compact_level_;  
+    c = new Compaction(options_, level);  
+    c-&amp;amp;gt;inputs_[0].push_back(current_-&amp;amp;gt;file_to_compact_);  
+  } else {  
+    return nullptr;  
+  }  
+  
+  c-&amp;amp;gt;input_version_ = current_;  
+  c-&amp;amp;gt;input_version_-&amp;amp;gt;Ref();  
+  
+  // Files in level 0 may overlap each other, so pick up all overlapping ones  
+  if (level == 0) {  
+    InternalKey smallest, largest;  
+    GetRange(c-&amp;amp;gt;inputs_[0], &amp;amp;amp;smallest, &amp;amp;amp;largest);  
+    // Note that the next call will discard the file we placed in  
+    // c-&amp;amp;gt;inputs_[0] earlier and replace it with an overlapping set
+    // which will include the picked file.
+    current_-&amp;amp;gt;GetOverlappingInputs(0, &amp;amp;amp;smallest, &amp;amp;amp;largest, &amp;amp;amp;c-&amp;amp;gt;inputs_[0]);  
+    assert(!c-&amp;amp;gt;inputs_[0].empty());  
+  }  
+  
+  SetupOtherInputs(c);  
+  
+  return c;  
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;ul&gt;&lt;li&gt;2、如果选定的输入文件，仅有一个文件，且是 level 层文件，则直接将这个文件标记在为本次 compaction 后为 level+1 层文件，从而避免了不必要的文件读写。&lt;/li&gt;
+&lt;li&gt;3、否则，对选定好的 level 和 level+1 层数据库文件，打开文件，创建好数据遍历读取的迭代器：
+&lt;ul&gt;&lt;li&gt;(1)、单个文件的遍历读取实际是个两层遍历（&lt;code&gt;TwoLevelIterator&lt;/code&gt;） - 第1层遍历针对“index 块”，第2层遍历针对“data 块”，根据“index 块”得到“data 块”的 offset 和 size，遍历“data 块”，获取实际的键值对数据，一个“data 块” 遍历完了，则从“index 块”获取下一个“data 块”的 offset 和 size 继续遍历。&lt;/li&gt;
+&lt;li&gt;（2）、因为 compaction 输出的数据库文件内容也需要保持按 key 有序的性质，所以 compaction 过程实际是对多个输入文件的有序遍历。不过 $level_0$ 数据库文件的 key 区间可以重合，所以处理方式也有所区别
+&lt;ul&gt;&lt;li&gt;1)、$level_0$ 层的多个数据库文件有序遍历，类似于 N 路归并排序算法 - 每次取 N 个迭代器的头部元素进行比较，取最小的那个元素返回。&lt;/li&gt;
+&lt;li&gt;2)、$level_1$ ~ $level_n$ 层的数据库文件 key 区间不会有重合，所以比较简单，按照 key 区间先做一下排序，然后逐个文件遍历读取就可以。&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;Iterator* VersionSet::MakeInputIterator(Compaction* c) {  
+  ReadOptions options;  
+  options.verify_checksums = options_-&amp;amp;gt;paranoid_checks;  
+  options.fill_cache = false;  
+  
+  // Level-0 files have to be merged together.  For other levels,  
+  // we will make a concatenating iterator per level.  // TODO(opt): use concatenating iterator for level-0 if there is no overlap  
+  const int space = (c-&amp;amp;gt;level() == 0 ? c-&amp;amp;gt;inputs_[0].size() + 1 : 2);  
+  Iterator** list = new Iterator*[space];  
+  int num = 0;  
+  for (int which = 0; which &amp;amp;lt; 2; which++) {  
+    if (!c-&amp;amp;gt;inputs_[which].empty()) {  
+      if (c-&amp;amp;gt;level() + which == 0) {  
+        const std::vector&amp;amp;lt;FileMetaData*&amp;amp;gt;&amp;amp;amp; files = c-&amp;amp;gt;inputs_[which];  
+        for (size_t i = 0; i &amp;amp;lt; files.size(); i++) {  
+          list[num++] = table_cache_-&amp;amp;gt;NewIterator(options, files[i]-&amp;amp;gt;number,  
+                                                  files[i]-&amp;amp;gt;file_size);  
+        }  
+      } else {  
+        // Create concatenating iterator for the files from this level  
+        list[num++] = NewTwoLevelIterator(  
+            new Version::LevelFileNumIterator(icmp_, &amp;amp;amp;c-&amp;amp;gt;inputs_[which]),  
+            &amp;amp;amp;GetFileIterator, table_cache_, options);  
+      }  
+    }  
+  }  
+  assert(num &amp;amp;lt;= space);  
+  Iterator* result = NewMergingIterator(&amp;amp;amp;icmp_, list, num);  
+  delete[] list;  
+  return result;  
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;ul&gt;&lt;li&gt;4、leveldb 基于的 lsm-tree（Log Structured Merge Tree） 结构，并不会对数据进行原地修改和删除 - 同 key 的多次写入（包括删除），都会在结构中增加一条键值记录，检索时以最后一次写入的内容为结果。那么如果系统 workloads 会对相同的 key 存在大量写入，就比较浪费存储空间。所以 compaction 过程中会对同一个 key 多次写入做消除合并，仅保留最后一次写入的（如果最后一次是删除操作，并且 level+2（包括）之后所有层的 key 区间都不会包含这个 key，则最后一次的删除操作也可以消除掉）。&lt;/li&gt;&lt;/ul&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;compaction 的输入遍历是有序的，那么同一个 key 的多次写入记录在遍历时是连续的，并且&lt;code&gt;InternalKeyComparator&lt;/code&gt;比较器的比较逻辑决定了后写入的会被先遍历到。以如下写入序列来解释消除合并逻辑（以 UK 表示用户写入的原始 key，以$IK_k$ 表示带写入序列号的内部 key）：&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&gt; - 假设写入序列为：“PUT $IK_1$” -&gt; “PUT $IK_2$”，那么 compaction 遍历序列为“PUT $IK_2$” -&gt; “PUT $IK_1$”。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&gt;&gt;  - (1) 处理 “PUT $IK_2$” 时，发现前面没处理过 UK 的记录，则保留 “PUT $IK_2$”记录写入输出中，同时设置状态位 - 处理过 UK 的记录&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&gt;&gt;  - (2) 处理 “PUT $IK_1$” 时，发现前面处理过 UK 的记录（并且这条记录不再被任何快照依赖），则直接将 “PUT $IK_1$” 记录丢弃。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&gt; - 假设写入序列为：“PUT $IK_1$” -&gt; “DEL $IK_2$”，那么 compaction 遍历序列为 “DEL $IK_2$” -&gt; “PUT $IK_1$”。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&gt;&gt;  - (1) 处理“DEL $IK_2$” 时，发现前面没处理过 UK 的记录，&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&gt;&gt;&gt;   - 1) 如果 level+2（包括）之后所有层也都不包含 UK 的记录（并且这条记录不再被任何快照依赖），则直接丢弃（&lt;u&gt;从检索性能上来说，可能不丢弃更好一点？&lt;/u&gt;）&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&gt;&gt;&gt;   - 2) 如果 level+2（包括）之后层中包含 UK 的记录，则保留 “DEL $IK_2$”记录写到输出中，同时设置状态位  - 处理过 UK 的记录&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&gt;&gt;  - (2) 处理“PUT $IK_1$” 时，发现前面处理过 UK 的记录，则直接将 “PUT $IK_1$” 记录丢弃。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&gt; - 如果发现当前处理的 IK 的 UK 与前一次处理的 IK 的 UK 不相同，则重置状态位。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;// Handle key/value, add to state, etc.  
+bool drop = false;  
+if (!ParseInternalKey(key, &amp;amp;amp;ikey)) {  
+  // Do not hide error keys  
+  current_user_key.clear();  
+  has_current_user_key = false;  
+  last_sequence_for_key = kMaxSequenceNumber;  
+} else {  
+  if (!has_current_user_key ||  
+      user_comparator()-&amp;amp;gt;Compare(ikey.user_key, Slice(current_user_key)) !=  
+          0) {  
+    // First occurrence of this user key  
+    current_user_key.assign(ikey.user_key.data(), ikey.user_key.size());  
+    has_current_user_key = true;  
+    last_sequence_for_key = kMaxSequenceNumber;  
+  }  
+  
+  if (last_sequence_for_key &amp;amp;lt;= compact-&amp;amp;gt;smallest_snapshot) {  
+    // Hidden by an newer entry for same user key  
+    drop = true;  // (A)  
+  } else if (ikey.type == kTypeDeletion &amp;amp;amp;&amp;amp;amp;  
+             ikey.sequence &amp;amp;lt;= compact-&amp;amp;gt;smallest_snapshot &amp;amp;amp;&amp;amp;amp;  
+             compact-&amp;amp;gt;compaction-&amp;amp;gt;IsBaseLevelForKey(ikey.user_key)) {  
+    // For this user key:  
+    // (1) there is no data in higher levels
+    // (2) data in lower levels will have larger sequence numbers
+    // (3) data in layers that are being compacted here and have
+    //     smaller sequence numbers will be dropped in the next
+    //     few iterations of this loop (by rule (A) above).
+    // Therefore this deletion marker is obsolete and can be dropped.
+    drop = true;  
+  }  
+  
+  last_sequence_for_key = ikey.sequence;  
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;int InternalKeyComparator::Compare(const Slice&amp;amp;amp; akey, const Slice&amp;amp;amp; bkey) const {  
+  // Order by:  
+  //    increasing user key (according to user-supplied comparator)
+  //    decreasing sequence number
+  //    decreasing type (though sequence# should be enough to disambiguate)
+  int r = user_comparator_-&amp;amp;gt;Compare(ExtractUserKey(akey), ExtractUserKey(bkey));  // 先比较用户 key 部分
+  if (r == 0) {  // 如果用户key 相同，则比较序列号，序列号大的排在前面
+    const uint64_t anum = DecodeFixed64(akey.data() + akey.size() - 8);  
+    const uint64_t bnum = DecodeFixed64(bkey.data() + bkey.size() - 8);  
+    if (anum &amp;amp;gt; bnum) {  
+      r = -1;  
+    } else if (anum &amp;amp;lt; bnum) {  
+      r = +1;  
+    }  
+  }  
+  return r;  
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;ul&gt;&lt;li&gt;5、如果 compaction 输出的数据文件大小达到阈值（2MB），则结束该文件的写入，并创建一个新的 ldb 数据文件，继续 compaction 写入。在 compaction 完成时，这些若干个输出的 ldb 数据文件会被标记为新版本的 level+1 层数据文件。&lt;/li&gt;&lt;/ul&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;// Leveldb will write up to this amount of bytes to a file before  
+// switching to a new one.  
+// Most clients should leave this parameter alone.  However if your  
+// filesystem is more efficient with larger files, you could  
+// consider increasing the value.  The downside will be longer  
+// compactions and hence longer latency/performance hiccups.  
+// Another reason to increase this parameter might be when you are  
+// initially populating a large database.  
+size_t max_file_size = 2 * 1024 * 1024;&lt;/code&gt;&lt;/pre&gt;
+&lt;ul&gt;&lt;li&gt;6、一次 compaction 完成后，输入文件的有效内容都已经写到输出文件，如果不考虑其他因素，这些输入文件可以被删除，保留输出文件即可。不过可能存在检索操作依赖这些输入文件，所以不会即刻删除这些输入文件，而是以版本信息在逻辑上维护每一层最新包含哪些文件（以及如果本次 compaction 未能完整地完成，则还需要把处理到 level 的哪个 key 为止记录到版本信息中）。所以&lt;u&gt;每次 compaction 都会产生一个新的逻辑上的数据版本，将这个版本切换为 leveldb 运行时依赖的当前版本（&lt;code&gt;VersionSet::current_&lt;/code&gt;），后续的检索操作就都在这个新版本所包含数据库文件中进行&lt;/u&gt;。另外：
+&lt;ul&gt;&lt;li&gt;1、重新计算下次 compaction 最应该处理的哪个 level 的数据文件以及紧迫程度（&lt;code&gt;compaction_score_&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;2、将新版本信息写入版本描述 MANIFEST 文件中（如果尚不存在，则新建一个），并且如果版本描述 MANIFEST 文件是新创建的，则将该  MANIFEST 文件名存为 CURRENT 文件。这样，如果当前 leveldb 进程挂了或者机器节点宕机，还可以基于 CURRENT 文件指向的  MANIFEST 文件中的版本信息，恢复出最新最新版本状态。&lt;/li&gt;
+&lt;li&gt;3、对当前不再依赖（依赖关系怎么维护的？）的 ldb 文件/MANIFEST 文件/“WAL log” 文件进行删除清理。
+&lt;ul&gt;&lt;li&gt;不被任何版本依赖的 ldb 文件，都可以删除&lt;/li&gt;
+&lt;li&gt;不被当前 CURRENT 文件指向的 MANIFEST 文件，可以删除&lt;/li&gt;
+&lt;li&gt;“WAL log” 文件保留最新的两个即可（memtable 和不可变 memtable 对应的“WAL log”文件）&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;Status DBImpl::InstallCompactionResults(CompactionState* compact) {  
+  mutex_.AssertHeld();  
+  Log(options_.info_log, &amp;amp;quot;Compacted %d@%d + %d@%d files =&amp;amp;gt; %lld bytes&amp;amp;quot;,  
+      compact-&amp;amp;gt;compaction-&amp;amp;gt;num_input_files(0), compact-&amp;amp;gt;compaction-&amp;amp;gt;level(),  
+      compact-&amp;amp;gt;compaction-&amp;amp;gt;num_input_files(1), compact-&amp;amp;gt;compaction-&amp;amp;gt;level() + 1,  
+      static_cast&amp;amp;lt;long long&amp;amp;gt;(compact-&amp;amp;gt;total_bytes));  
+  
+  // Add compaction outputs  
+  compact-&amp;amp;gt;compaction-&amp;amp;gt;AddInputDeletions(compact-&amp;amp;gt;compaction-&amp;amp;gt;edit());  
+  const int level = compact-&amp;amp;gt;compaction-&amp;amp;gt;level();  
+  for (size_t i = 0; i &amp;amp;lt; compact-&amp;amp;gt;outputs.size(); i++) {  
+    const CompactionState::Output&amp;amp;amp; out = compact-&amp;amp;gt;outputs[i];  
+    compact-&amp;amp;gt;compaction-&amp;amp;gt;edit()-&amp;amp;gt;AddFile(level + 1, out.number, out.file_size,  
+                                         out.smallest, out.largest);  
+  }  
+  return versions_-&amp;amp;gt;LogAndApply(compact-&amp;amp;gt;compaction-&amp;amp;gt;edit(), &amp;amp;amp;mutex_);  
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;void DBImpl::RemoveObsoleteFiles() {  
+  mutex_.AssertHeld();  
+  
+  if (!bg_error_.ok()) {  
+    // After a background error, we don&amp;amp;apos;t know whether a new version may  
+    // or may not have been committed, so we cannot safely garbage collect.
+    return;  
+  }  
+  
+  // Make a set of all of the live files  
+  std::set&amp;amp;lt;uint64_t&amp;amp;gt; live = pending_outputs_;  
+  versions_-&amp;amp;gt;AddLiveFiles(&amp;amp;amp;live);  
+  
+  std::vector&amp;amp;lt;std::string&amp;amp;gt; filenames;  
+  env_-&amp;amp;gt;GetChildren(dbname_, &amp;amp;amp;filenames);  // Ignoring errors on purpose  
+  uint64_t number;  
+  FileType type;  
+  std::vector&amp;amp;lt;std::string&amp;amp;gt; files_to_delete;  
+  for (std::string&amp;amp;amp; filename : filenames) {  
+    if (ParseFileName(filename, &amp;amp;amp;number, &amp;amp;amp;type)) {  
+      bool keep = true;  
+      switch (type) {  
+        case kLogFile:  
+          keep = ((number &amp;amp;gt;= versions_-&amp;amp;gt;LogNumber()) ||  
+                  (number == versions_-&amp;amp;gt;PrevLogNumber()));  
+          break;  
+        case kDescriptorFile:  
+          // Keep my manifest file, and any newer incarnations&amp;amp;apos;  
+          // (in case there is a race that allows other incarnations)
+		  keep = (number &amp;amp;gt;= versions_-&amp;amp;gt;ManifestFileNumber());  
+          break;  
+        case kTableFile:  
+          keep = (live.find(number) != live.end());  
+          break;  
+        case kTempFile:  
+          // Any temp files that are currently being written to must  
+          // be recorded in pending_outputs_, which is inserted into &amp;amp;quot;live&amp;amp;quot;
+          keep = (live.find(number) != live.end());  
+          break;  
+        case kCurrentFile:  
+        case kDBLockFile:  
+        case kInfoLogFile:  
+          keep = true;  
+          break;  
+      }  
+  
+      if (!keep) {  
+        files_to_delete.push_back(std::move(filename));  
+        if (type == kTableFile) {  
+          table_cache_-&amp;amp;gt;Evict(number);  
+        }  
+        Log(options_.info_log, &amp;amp;quot;Delete type=%d #%lld\n&amp;amp;quot;, static_cast&amp;amp;lt;int&amp;amp;gt;(type),  
+            static_cast&amp;amp;lt;unsigned long long&amp;amp;gt;(number));  
+      }  
+    }  
+  }  
+  
+  // While deleting all files unblock other threads. All files being deleted  
+  // have unique names which will not collide with newly created files and
+  // are therefore safe to delete while allowing other threads to proceed.
+  mutex_.Unlock();  
+  for (const std::string&amp;amp;amp; filename : files_to_delete) {  
+    env_-&amp;amp;gt;RemoveFile(dbname_ + &amp;amp;quot;/&amp;amp;quot; + filename);  
+  }  
+  mutex_.Lock();  
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;8、版本&lt;/h2&gt;
+&lt;h3&gt;8.1 MANIFEST - descriptor log 文件&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;如前所述，数据版本变更信息（VersionEdit）会持久化存储到 MANIFEST 文件中。MANIFEST 文件内容的编码结构同 WAL log。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;数据版本变更信息包含8个部分：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、用户自定义 key 比较器的名称（如果用户配置的话）&lt;/li&gt;
+&lt;li&gt;2、最新 WAL log 文件的 id&lt;/li&gt;
+&lt;li&gt;3、前一个 WAL log 文件的 id&lt;/li&gt;
+&lt;li&gt;4、下一个可用的文件 id&lt;/li&gt;
+&lt;li&gt;5、下一个可用的序列号&lt;/li&gt;
+&lt;li&gt;6、每个 level 最近一次的 compaction 暂存信息（compaction 遍历的最后一个 key）&lt;/li&gt;
+&lt;li&gt;7、每个 level 可以删除的数据文件的元数据（compaction 的输入文件）&lt;/li&gt;
+&lt;li&gt;8、每个 level 新增的数据文件的元数据（compaction 的输出文件）&lt;/li&gt;&lt;/ul&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;// Tag numbers for serialized VersionEdit.  These numbers are written to  
+// disk and should not be changed.  
+enum Tag {  
+  kComparator = 1,  
+  kLogNumber = 2,  
+  kNextFileNumber = 3,  
+  kLastSequence = 4,  
+  kCompactPointer = 5,  
+  kDeletedFile = 6,  
+  kNewFile = 7,  
+  // 8 was used for large value refs  
+  kPrevLogNumber = 9  
+};
+
+void VersionEdit::EncodeTo(std::string* dst) const {  
+  if (has_comparator_) {  
+    PutVarint32(dst, kComparator);  
+    PutLengthPrefixedSlice(dst, comparator_);  
+  }  
+  if (has_log_number_) {  
+    PutVarint32(dst, kLogNumber);  
+    PutVarint64(dst, log_number_);  
+  }  
+  if (has_prev_log_number_) {  
+    PutVarint32(dst, kPrevLogNumber);  
+    PutVarint64(dst, prev_log_number_);  
+  }  
+  if (has_next_file_number_) {  
+    PutVarint32(dst, kNextFileNumber);  
+    PutVarint64(dst, next_file_number_);  
+  }  
+  if (has_last_sequence_) {  
+    PutVarint32(dst, kLastSequence);  
+    PutVarint64(dst, last_sequence_);  
+  }  
+  
+  for (size_t i = 0; i &amp;amp;lt; compact_pointers_.size(); i++) {  
+    PutVarint32(dst, kCompactPointer);  
+    PutVarint32(dst, compact_pointers_[i].first);  // level  
+    PutLengthPrefixedSlice(dst, compact_pointers_[i].second.Encode());  
+  }  
+  
+  for (const auto&amp;amp;amp; deleted_file_kvp : deleted_files_) {  
+    PutVarint32(dst, kDeletedFile);  
+    PutVarint32(dst, deleted_file_kvp.first);   // level  
+    PutVarint64(dst, deleted_file_kvp.second);  // file number  
+  }  
+  
+  for (size_t i = 0; i &amp;amp;lt; new_files_.size(); i++) {  
+    const FileMetaData&amp;amp;amp; f = new_files_[i].second;  
+    PutVarint32(dst, kNewFile);  
+    PutVarint32(dst, new_files_[i].first);  // level  
+    PutVarint64(dst, f.number);  
+    PutVarint64(dst, f.file_size);  
+    PutLengthPrefixedSlice(dst, f.smallest.Encode());  
+    PutLengthPrefixedSlice(dst, f.largest.Encode());  
+  }  
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;8.2 CURRENT 文件&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;CURRENT 文件中存储的是最新有效的 MANIFEST 文件名。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;数据库打开，恢复状态的流程为：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、从 CURRENT 中获取最新有效的 MANIFEST 文件名&lt;/li&gt;
+&lt;li&gt;2、从最新有效的 MANIFEST 文件中读取到&lt;u&gt;最后一个 VersionEdit 版本信息&lt;/u&gt;&lt;/li&gt;
+&lt;li&gt;3、根据 VersionEdit 版本信息，计算出最新可用的 Version 信息（仅包含每个 level 包含哪些数据文件），并计算该版本下一次 compaction 应该处理哪个 level 的数据文件（&lt;code&gt;compaction_level_&lt;/code&gt;）和紧迫程度（&lt;code&gt;compaction_score_&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;4、将最新可用的 Version 加入到 &lt;code&gt;versions_&lt;/code&gt;（&lt;code&gt;VersionSet&lt;/code&gt;） 的版本链中，并恢复  &lt;code&gt;versions_&lt;/code&gt; 的一些状态信息，以及确定是否复用 CURRENT指向的那个 MANIFEST 文件（如果 MANIFEST 文件大小超过阈值（&lt;code&gt;size_t max_file_size = 2 * 1024 * 1024&lt;/code&gt;） 则不复用，而是创建一个新的）&lt;/li&gt;
+&lt;li&gt;5、根据从“最后一个 VersionEdit 原始版本信息” 恢复到 &lt;code&gt;versions_&lt;/code&gt; 的“前一个 WAL log 文件 id”- &lt;code&gt;min_log&lt;/code&gt; 和“最新一个 WAL log 文件 id” - &lt;code&gt;prev_log&lt;/code&gt;，&lt;u&gt;将文件 id 大于等于 &lt;code&gt;min_log&lt;/code&gt; 或者等于 &lt;code&gt;pre_log&lt;/code&gt; 的所有 WAL log 文件找出来，按照文件 id 从小大到排序， 然后顺序遍历解析，恢复出 memtable 内存状态&lt;/u&gt;，并在最后确保所有内存状态持久化落到 $level_0$ 文件中。
+&lt;ul&gt;&lt;li&gt;“将文件 id 大于等于 &lt;code&gt;min_log&lt;/code&gt; 或者等于 &lt;code&gt;pre_log&lt;/code&gt; 的所有 WAL log 文件找出来，按照文件 id 从小大到排序， 然后顺序遍历解析，恢复出 memtable 内存状态”：这个逻辑也意味着并&lt;strong&gt;不需要&lt;/strong&gt;在创建一个新的 WAL log 文件时就产生一个新的版本，&lt;strong&gt;也不需要&lt;/strong&gt;把最新版本信息持久化写到  MANIFEST 文件 中。因此也不会和 compaction 版本变更存在操作冲突。&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;
+&lt;h3&gt;8.3 VersionEdit &amp; VersionSet &amp; Version&lt;/h3&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;class VersionEdit {
+public:
+  // Add the specified file at the specified number.  
+  // REQUIRES: This version has not been saved (see VersionSet::SaveTo)  
+  // REQUIRES: &amp;amp;quot;smallest&amp;amp;quot; and &amp;amp;quot;largest&amp;amp;quot; are smallest and largest keys in file  
+  void AddFile(int level, uint64_t file, uint64_t file_size,  
+               const InternalKey&amp;amp;amp; smallest, const InternalKey&amp;amp;amp; largest) {  
+    FileMetaData f;  
+    f.number = file;  
+    f.file_size = file_size;  
+    f.smallest = smallest;  
+    f.largest = largest;  
+    new_files_.push_back(std::make_pair(level, f));  
+  }  
+  
+  // Delete the specified &amp;amp;quot;file&amp;amp;quot; from the specified &amp;amp;quot;level&amp;amp;quot;.  
+  void RemoveFile(int level, uint64_t file) {  
+    deleted_files_.insert(std::make_pair(level, file));  
+  }
+
+private:
+  typedef std::set&amp;amp;lt;std::pair&amp;amp;lt;int, uint64_t&amp;amp;gt;&amp;amp;gt; DeletedFileSet;  
+  
+  std::string comparator_;  
+  uint64_t log_number_;  
+  uint64_t prev_log_number_;  
+  uint64_t next_file_number_;  
+  SequenceNumber last_sequence_;  
+  bool has_comparator_;  
+  bool has_log_number_;  
+  bool has_prev_log_number_;  
+  bool has_next_file_number_;  
+  bool has_last_sequence_;  
+  
+  std::vector&amp;amp;lt;std::pair&amp;amp;lt;int, InternalKey&amp;amp;gt;&amp;amp;gt; compact_pointers_;  
+  DeletedFileSet deleted_files_;  
+  std::vector&amp;amp;lt;std::pair&amp;amp;lt;int, FileMetaData&amp;amp;gt;&amp;amp;gt; new_files_;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;VersionEdit 是 Version 版本信息处于编辑/变更的状态，是 Version 版本信息操作的一种日志结构，比如：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;compaction 过程涉及对最新版本的两个 level 可删除文件和新增文件的记录，以及 compaction 暂存状态的记录。&lt;/li&gt;
+&lt;li&gt;持久化记录到 MANIFEST 文件中，用于恢复数据库的状态。&lt;/li&gt;&lt;/ul&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;class VersionSet {
+public:
+  VersionSet(const std::string&amp;amp;amp; dbname, const Options* options,  
+           TableCache* table_cache, const InternalKeyComparator*);
+
+  // Apply *edit to the current version to form a new descriptor that  
+  // is both saved to persistent state and installed as the new  
+  // current version.  Will release *mu while actually writing to the file.  
+  // REQUIRES: *mu is held on entry.  
+  // REQUIRES: no other thread concurrently calls LogAndApply()  
+  Status LogAndApply(VersionEdit* edit, port::Mutex* mu)  
+      EXCLUSIVE_LOCKS_REQUIRED(mu);
+
+  // Recover the last saved descriptor from persistent storage.  
+  Status Recover(bool* save_manifest);
+
+  // Return the current version.  
+  Version* current() const { return current_; }  
+  
+  // Return the current manifest file number  
+  uint64_t ManifestFileNumber() const { return manifest_file_number_; }  
+  
+  // Allocate and return a new file number  
+  uint64_t NewFileNumber() { return next_file_number_++; }
+
+  // Pick level and inputs for a new compaction.  
+  // Returns nullptr if there is no compaction to be done.  
+  // Otherwise returns a pointer to a heap-allocated object that  
+  // describes the compaction.  Caller should delete the result.  
+  Compaction* PickCompaction();
+
+  // Create an iterator that reads over the compaction inputs for &amp;amp;quot;*c&amp;amp;quot;.  
+  // The caller should delete the iterator when no longer needed.  
+  Iterator* MakeInputIterator(Compaction* c);
+
+private:
+  Env* const env_;  
+  const std::string dbname_;  
+  const Options* const options_;  
+  TableCache* const table_cache_;  
+  const InternalKeyComparator icmp_;  
+  uint64_t next_file_number_;  
+  uint64_t manifest_file_number_;  
+  uint64_t last_sequence_;  
+  uint64_t log_number_;  
+  uint64_t prev_log_number_;  // 0 or backing store for memtable being compacted  
+  
+  // Opened lazily  
+  WritableFile* descriptor_file_;  
+  log::Writer* descriptor_log_;  
+  Version dummy_versions_;  // Head of circular doubly-linked list of versions.  
+  Version* current_;        // == dummy_versions_.prev_  
+  
+  // Per-level key at which the next compaction at that level should start.  
+  // Either an empty string, or a valid InternalKey.  
+  std::string compact_pointer_[config::kNumLevels];
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;VersionSet 对象维护着版本双向链表以及其他必要信息，用于支持 compaction 操作、对 $level_0$~$level_n$ 的检索操作 等。&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;class Version {
+public:
+  // Lookup the value for key.  If found, store it in *val and  
+  // return OK.  Else return a non-OK status.  Fills *stats.  
+  // REQUIRES: lock is not held  
+  Status Get(const ReadOptions&amp;amp;amp;, const LookupKey&amp;amp;amp; key, std::string* val,  
+             GetStats* stats);
+
+private:
+  Iterator* NewConcatenatingIterator(const ReadOptions&amp;amp;amp;, int level) const;
+
+  VersionSet* vset_;  // VersionSet to which this Version belongs  
+  Version* next_;     // Next version in linked list  
+  Version* prev_;     // Previous version in linked list  
+  int refs_;          // Number of live refs to this version  
+  
+  // List of files per level  
+  std::vector&amp;amp;lt;FileMetaData*&amp;amp;gt; files_[config::kNumLevels];  
+  
+  // Next file to compact based on seek stats.  
+  FileMetaData* file_to_compact_;  
+  int file_to_compact_level_;  
+  
+  // Level that should be compacted next and its compaction score.  
+  // Score &amp;amp;lt; 1 means compaction is not strictly needed.  These fields  
+  // are initialized by Finalize().  
+  double compaction_score_;  
+  int compaction_level_;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;compaction 的输入文件在 compaction 之后本来是可以删除的，但是&lt;u&gt;这些文件可能被检索/遍历等操作所依赖引用&lt;/u&gt;，所以基于 Version 版本来解决文件粒度的并发操作冲突。只有当一个版本不被任何操作所引用时，才会被释放，只有这个版本依赖的数据文件也才可以被删除。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;和 leveldb 中很多类实现的对象生命周期维护方式一样， Version 也采用引用计数的方式来维护生命周期，如果版本对象的引用计数归零，则自动析构自己，析构的逻辑包括从版本双链表中移除自己（这里可能存在并发冲突吗？），以及移除对各 level 文件元信息的引用。&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;void Version::Ref() { ++refs_; }  
+  
+void Version::Unref() {  
+  assert(this != &amp;amp;amp;vset_-&amp;amp;gt;dummy_versions_);  
+  assert(refs_ &amp;amp;gt;= 1);  
+  --refs_;  
+  if (refs_ == 0) {
+    delete this;  
+  }  
+}
+
+Version::~Version() {  
+  assert(refs_ == 0);  
+  
+  // Remove from linked list  
+  prev_-&amp;amp;gt;next_ = next_;  
+  next_-&amp;amp;gt;prev_ = prev_;  
+  
+  // Drop references to files  
+  for (int level = 0; level &amp;amp;lt; config::kNumLevels; level++) {  
+    for (size_t i = 0; i &amp;amp;lt; files_[level].size(); i++) {  
+      FileMetaData* f = files_[level][i];  
+      assert(f-&amp;amp;gt;refs &amp;amp;gt; 0);  
+      f-&amp;amp;gt;refs--;  
+      if (f-&amp;amp;gt;refs &amp;amp;lt;= 0) {  
+        delete f;  
+      }  
+    }  
+  }  
+}&lt;/code&gt;&lt;/pre&gt;</description>
+            <pubDate>2024-11-15</pubDate>
+            <link>https://blog.xiayf.cn/posts/leveldb-note-3.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/leveldb-note-3.html</guid>
+        </item>
+        
+        <item>
+            <title>读码：LevelDB - ldb 数据文件格式</title>
+            <description>&lt;h2&gt;5、leveldb 数据文件格式 - ldb&lt;/h2&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;&amp;amp;lt;beginning_of_file&amp;amp;gt;
+[data block 1]
+[data block 2]
+...
+[data block N]
+[meta block 1]
+...
+[meta block K]
+[metaindex block]
+[index block]
+[Footer]        (fixed size; starts at file_size - sizeof(Footer))
+&amp;amp;lt;end_of_file&amp;amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;leveldb 文件（文件后缀 &lt;code&gt;.ldb&lt;/code&gt;）内容由 N 个 “data 块” 部分、 K 个 “meta 块” 部分、1个 “metaindex 块” 部分、1个 “index 块”部分、1个 “Footer” 部分依次构成。&lt;/p&gt;
+&lt;img src=&apos;../assets/leveldb/ldb-block-flow.png&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;830&apos;/&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;ldb 数据文件的加载解析流程：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、取文件末尾的 28 个字节，解析出(1) metaindex block 的 offset &amp; size (2) index block 的 offset &amp; size&lt;/li&gt;
+&lt;li&gt;2、根据 metaindex block 的 offset &amp; size 解析出 “过滤策略名称” 和 meta block 的 offset &amp; size
+&lt;ul&gt;&lt;li&gt;根据“过滤策略名称” 实例化过滤策略&lt;/li&gt;
+&lt;li&gt;对于 meta block 的解析，先解析出“第3部分” 和 “第4部分”的值，得到“第1部分”的长度，继而得到“第2️部分”的偏移位置和长度（也即 &lt;code&gt;filter_offsets_&lt;/code&gt; 的内容）&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;3、根据 index block 的 offset &amp; size 解析出所有 data block 的“key 区间”、offset 和 size&lt;/li&gt;&lt;/ul&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;“点查”，对于 ldb 数据文件的检索流程为：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、使用 key，从最新版本中从小到大逐个 level 匹配其文件元数据&lt;/li&gt;
+&lt;li&gt;2、对目标 ldb 文件，使用 key 从 index block 中通过二分查找匹配到目标 data block 的 offset &amp; size&lt;/li&gt;
+&lt;li&gt;3、根据目标 data block 的 offset 对 meta block 的 &lt;code&gt;filter_offsets_&lt;/code&gt; 计算而后取到目标过滤数据块，交给过滤策略实例进行初步的匹配筛选&lt;/li&gt;
+&lt;li&gt;4、如果 3 中没有匹配到，则根据目标 data block 的 offset 计算取到 data block 的“重置位点序列”，继而对 data block 的“键值对序列”进行解析遍历匹配&lt;/li&gt;&lt;/ul&gt;
+&lt;h3&gt;5.1 “Footer”部分&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;长度为固定值 &lt;code&gt;kEncodedLength&lt;/code&gt;（$2 * BlockHandle::kMaxEncodedLength + 8 = 28$）&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;先后存入：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、“metaindex 块”在文件中的偏移位置 offset 和 块大小 size。&lt;/li&gt;
+&lt;li&gt;2、“index” 块在文件中的偏移位置 offset 和 块大小 size。&lt;/li&gt;
+&lt;li&gt;3、将“Footer”长度填充 到 $2 * BlockHandle::kMaxEncodedLength = 20$ 长度。&lt;/li&gt;
+&lt;li&gt;4、以小端序写入一个64比特的魔法数。&lt;/li&gt;&lt;/ul&gt;
+&lt;img src=&apos;../assets/leveldb/ldb-footer.png&apos; title=&apos;ldb-footer&apos; alt=&apos;ldb-footer&apos; width=&apos;600&apos;/&gt;
+&lt;h3&gt;5.2 “块”的格式&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;将键值写入块的内存缓冲区时，每连续 16 （默认值，可配置）个键会进行 delta 编码压缩：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、先计算当前键与前一次写入键的共同前缀长度&lt;/li&gt;
+&lt;li&gt;2、依次写入“键共同前缀长度”、“当前键去掉共同前缀后的长度”、“值的长度”、“当前键去掉共同前缀后的内容”、“值内容”&lt;/li&gt;&lt;/ul&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;如果连续“delta 编码压缩”的键数/写入次数达到阈值 16，则将当前内存缓冲区的大小记录到“重置位点列表”（&lt;code&gt;restarts_&lt;/code&gt;）中。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;将块的内存缓存区内容落到文件的流程：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、把&lt;u&gt;“重置位点列表”中的元素&lt;/u&gt;依次逐个添加到缓冲区尾部。&lt;/li&gt;
+&lt;li&gt;2、将&lt;u&gt;“重置位点”数量&lt;/u&gt;以固定32比特长度添加到缓冲区尾部。&lt;/li&gt;
+&lt;li&gt;3、将缓冲区内容整体做一次通用压缩（可配置 不压缩、snappy 压缩、zstd 压缩）。&lt;/li&gt;
+&lt;li&gt;4、将压缩后的字节序列写入文件后，再将 压缩类型(CompressionType，1字节) 和 “压缩后的字节序列 与 压缩类型” 的 crc32 校验码（4字节）写到文件的尾部。&lt;/li&gt;&lt;/ul&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;enum CompressionType {  
+  // NOTE: do not change the values of existing entries, as these are  
+  // part of the persistent format on disk.
+  kNoCompression = 0x0,  
+  kSnappyCompression = 0x1,  
+  kZstdCompression = 0x2,  
+};&lt;/code&gt;&lt;/pre&gt;
+&lt;img src=&apos;../assets/leveldb/ldb-block-encode.png&apos; title=&apos;ldb-block-encode&apos; alt=&apos;ldb-block-encode&apos; width=&apos;800&apos;/&gt;
+&lt;h3&gt;5.3 “data 块”&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;leveldb 文件中“data 块”数据是按照 key 有序存储的。同一个文件中，块与块之间有序，块之间 key 范围不会有重合，块内内容也是按 key 有序存储。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;因为有序， 使用默认的 BytewiseComparator，delta 编码压缩效果通常会明显。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;对于“data 块”，如果块的内存缓冲区内容大小（通用压缩前的原始内容大小+重置位点数组大小+重置位点数组长度）超过 4KB（可配置，配置项 &lt;code&gt;block_size&lt;/code&gt;），就会将块的内存缓冲区作为一个“data 块”落到文件中。&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;// Approximate size of user data packed per block.  Note that the  
+// block size specified here corresponds to uncompressed data.  The  
+// actual size of the unit read from disk may be smaller if  
+// compression is enabled.  This parameter can be changed dynamically.  
+size_t block_size = 4 * 1024;&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;5.4 “index 块”&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;“index 块” 存储 “data 块” 的索引信息。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;当一个“data 块”从内存缓存区落到文件后，将该“data 块”最后/最大的 key（经存储优化处理后） 作为 键（&lt;u&gt;大致含义-当前块中所有 key 都小于该键，下一个块中所有 key 都大于等于该键&lt;/u&gt;），该“data 块”在文件中的偏移位置 offset 和 块大小 size 打包后作为值，写入“index 块”内存缓冲区。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;当 leveldb 文件的所有“data 块”都写入文件后，会将“index 块”内存缓冲区内容也按照“块”格式写入文件。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;Get key 检索时，&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、先从 “Footer” 部分取出“index 块的” offer 和 size，&lt;/li&gt;
+&lt;li&gt;2、然后在“index 块”进行二分查找，找到目标“data 块”，&lt;/li&gt;
+&lt;li&gt;3、从目标“data 块”中解析出来重置位点数组，继续进行二分查找。&lt;/li&gt;&lt;/ul&gt;
+&lt;h3&gt;5.5 “meta 块” &amp; “metaindex 块”&lt;/h3&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;// A FilterBlockBuilder is used to construct all of the filters for a  
+// particular Table.  It generates a single string which is stored as  
+// a special block in the Table.  
+//  
+// The sequence of calls to FilterBlockBuilder must match the regexp:  
+//      (StartBlock AddKey*)* Finish  
+class FilterBlockBuilder {  
+ public:  
+  explicit FilterBlockBuilder(const FilterPolicy*);  
+  
+  void StartBlock(uint64_t block_offset);  
+  void AddKey(const Slice&amp;amp;amp; key);  
+  Slice Finish();  
+  
+ private:  
+  void GenerateFilter();  
+  
+  const FilterPolicy* policy_;  
+
+  std::string keys_;             // Flattened key contents  
+  std::vector&amp;amp;lt;size_t&amp;amp;gt; start_;    // Starting index in keys_ of each key  
+
+  std::string result_;           // Filter data computed so far  
+  std::vector&amp;amp;lt;Slice&amp;amp;gt; tmp_keys_;  // policy_-&amp;amp;gt;CreateFilter() argument  
+  std::vector&amp;amp;lt;uint32_t&amp;amp;gt; filter_offsets_;  
+};
+
+void FilterBlockBuilder::StartBlock(uint64_t block_offset) {  
+  uint64_t filter_index = (block_offset / kFilterBase);  
+  assert(filter_index &amp;amp;gt;= filter_offsets_.size());  
+  while (filter_index &amp;amp;gt; filter_offsets_.size()) {  
+    GenerateFilter();  
+  }  
+}
+
+void FilterBlockBuilder::AddKey(const Slice&amp;amp;amp; key) {  
+  Slice k = key;  
+  start_.push_back(keys_.size());  
+  keys_.append(k.data(), k.size());  
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;目前的实现，如果 leveldb 文件中存在“meta 块”，应该也只会有一个，即&lt;strong&gt;过滤数据块&lt;/strong&gt;。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;如果 leveldb 数据库开启了检索时过滤策略（FilterPolicy），则对于写入“data 块”的每个 key，都会被记录到 filter 内存缓冲区（&lt;code&gt;FilterBlockBuilder&lt;/code&gt;）中。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;当一个“data 块”刷到文件后，就对 FilterBlockBuilder 中存入的 key 序列算一下“过滤数据”，拼接到 &lt;code&gt;result_&lt;/code&gt; 后面，以及将最新计算的“过滤数据”在 &lt;code&gt;result_&lt;/code&gt; 中的偏移位置存到 &lt;code&gt;filter_offets_&lt;/code&gt; 向量中。&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;准备处理第一个“data 块”时，
+- FilterBlockBuilder 的 filter_offsets_ 为空数组 []， result_ 为空字符串 &amp;amp;quot;&amp;amp;quot;
+- 当第一个“data 块”刷到数据文件后，准备处理第二个“data 块”，因&amp;amp;lt;u&amp;amp;gt;逻辑上&amp;amp;lt;/u&amp;amp;gt;约束每 2KB 数据算一次过滤数据
+	- case-1：如果第一个“data 块”大小 &amp;amp;lt; 4KB（大概率是这样），那么 filter_index = 1，对这个“data 块”的所有 key 算一次过滤数据，result_ 长度为 a， filter_offset_ 将变成 [0],
+	- case-2：如果第一个“data 块”大小 &amp;amp;gt;（=）4KB且&amp;amp;lt; 8KB，那么 filter_index = 2，对这个“data 块”的所有 key 算一次过滤数据，result_ 长度为 a&amp;amp;apos;，filter_offset_ 将变成 [0, a&amp;amp;apos;]
+	- case-3：如果第一个“data 块”大小 &amp;amp;gt;（=）8KB且&amp;amp;lt; 16KB，那么 filter_index = 3，对这个“data 块”的所有 key 算一次过滤数据，result_ 长度为 a&amp;amp;apos;&amp;amp;apos;，filter_offset_ 将变成 [0, a&amp;amp;apos;&amp;amp;apos;, a&amp;amp;apos;&amp;amp;apos;]
+- 如果第二个“data 块”为&amp;amp;lt;u&amp;amp;gt;最后一个&amp;amp;lt;/u&amp;amp;gt;，不管大小多少，刷到数据文件后，对第二个“data 块”的所有 key 算一次过滤数据，result_ 长度为 b
+	- 对于 case-1，filter_offset_ 先填充为 [0, a]，最后会填充为 [0, a, b]
+	- 对于 case-2，filter_offset_ 先填充为 [0, a&amp;amp;apos;, a&amp;amp;apos;]，最后会填充为 [0, a&amp;amp;apos;, a&amp;amp;apos;, b]
+	- 对于 case-3，filter_offset_ 先填充为 [0, a&amp;amp;apos;&amp;amp;apos;, a&amp;amp;apos;&amp;amp;apos;, a&amp;amp;apos;&amp;amp;apos;]，最后会填充为 [0, a&amp;amp;apos;&amp;amp;apos;, a&amp;amp;apos;&amp;amp;apos;, a&amp;amp;apos;&amp;amp;apos;, b]
+- 那么在过滤匹配时，
+	- 对于第一个“data 块”，因其 offset 为 0，所以 filter_offset_ 的 0 &amp;amp;amp; 1 位置的值为区间从 result_ 中去对应的过滤数据
+	- 对于第二个“data 块”，
+		- case-1 时，其 offset &amp;amp;lt; 4KB，以 filter_offset_ 的 1 &amp;amp;amp; 2 位置的值为区间从 result_ 中去对应的过滤数据
+		- case-2 时，其 offset 在 [4KB, 8KB) 区间，以 filter_offset_ 的 2 &amp;amp;amp; 3 位置的值为区间从 result_ 中去对应的过滤数据
+		- case-3 时，其 offset 在 [8KB, 16KB) 区间，以 filter_offset_ 的 3 &amp;amp;amp; 4 位置的值为区间从 result_ 中去对应的过滤数据
+- 所以 FilterBlockBuilder 的处理逻辑会对 filter_offset_ 做一些额外的填充，确保根据“data 块”在文件中的偏移位置 offset，能够正确地找到对应的 过滤数据块。&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;当 leveldb 文件的所有“data 块”都写入文件后，&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、将 &lt;code&gt;filter_offets_&lt;/code&gt; 中的偏移位置数据逐个以 32 比特定长编码后拼接到 &lt;code&gt;result_&lt;/code&gt; 后面，&lt;/li&gt;
+&lt;li&gt;2、接着将“还未拼接偏移位置数据时的 &lt;code&gt;result_&lt;/code&gt; 长度”以 32 比特定长编码后拼接到 &lt;code&gt;result_&lt;/code&gt; 后面，&lt;/li&gt;
+&lt;li&gt;3、然后将 kFilterBaseLg（=11）参数拼接到后面（占用1个字节），&lt;/li&gt;
+&lt;li&gt;4、最后将 &lt;code&gt;result_&lt;/code&gt; 作为“meta 块”的原始数据&lt;strong&gt;不经压缩地&lt;/strong&gt;写入文件中。（&lt;u&gt;这里有点特殊，和其他块不太一样，其他块都是键值对编码写入的&lt;/u&gt;）&lt;/li&gt;&lt;/ul&gt;
+&lt;img src=&apos;../assets/leveldb/ldb-filter-block.png&apos; title=&apos;ldb-filter-block&apos; alt=&apos;ldb-filter-block&apos; width=&apos;800&apos;/&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;并将 过滤策略 名称拼接上前缀&lt;code&gt;filter.&lt;/code&gt; 作为 键，将meta 块（“过滤数据块”）在文件中的偏移位置 offset 和块大小 size 编码后作为值，写入 metaindex 块中。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;打开数据库时，&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、先从 “Footer” 部分读取“metaindex 块”的偏移位置 offset 和 块大小 size&lt;/li&gt;
+&lt;li&gt;2、从“metaindex 块”中解析出使用的“过滤策略”名称，以及过滤数据，初始化过滤策略&lt;/li&gt;&lt;/ul&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;Get key 检索时，对 ldb 文件的“data 块”进行检索时，都先根据过滤策略做一下过滤，从而减少文件的磁盘读取次数。&lt;/p&gt;</description>
+            <pubDate>2024-11-13</pubDate>
+            <link>https://blog.xiayf.cn/posts/leveldb-note-2.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/leveldb-note-2.html</guid>
+        </item>
+        
+        <item>
+            <title>读码：LevelDB - 接口定义与数据写入</title>
+            <description>&lt;h2&gt;0、设计概要&amp;接口定义&lt;/h2&gt;
+&lt;img src=&apos;../assets/leveldb/lsm.png&apos; title=&apos;lsm&apos; alt=&apos;lsm&apos; width=&apos;800&apos;/&gt;
+&lt;img src=&apos;/images/13668317937842427369.svg&apos; title=&apos;13668317937842427369&apos; alt=&apos;13668317937842427369&apos;/&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;基于 DB 类的静态方法 Open 来打开/初始化一个数据库，Open 会实例化一个 DBImpl 对象，调用其私有方法 Recover 来恢复/初始化状态，并将 DBImpl 对象指针赋值给 dbptr 返回给调用方，调用方通过 dbptr 调用 Put/Write/Delete/Get/NewIterator 进行读写操作。&lt;/p&gt;
+&lt;h2&gt;1、WriteBatch&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;Put 和 Delete 是针对单个 key 进行操作，在底层会将键值操作包装成 WriteBatch 对象，然后调用 Write 接口执行实际的操作流程。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;也可以在调用侧实例化 WriteBatch 对象，将一批增删操作都先填充到 WriteBatch 对象，然后直接调用 Write 接口执行一批操作，这样写吞吐应该会更高一点。这批操作是&lt;u&gt;原子的&lt;/u&gt;（一起写成功或者失败）。&lt;/p&gt;
+&lt;img src=&apos;/images/13668317937842427369.svg&apos; title=&apos;13668317937842427369&apos; alt=&apos;13668317937842427369&apos;/&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;//
+typedef uint64_t SequenceNumber; // 虽然序列号使用了的 uint64_t 类型，但是实际只会使用 56 比特，即最大值为 ((0x1ull &amp;amp;lt;&amp;amp;lt; 56) - 1)
+// We leave eight bits empty at the bottom so a type and sequence#  
+// can be packed together into 64-bits.  
+static const SequenceNumber kMaxSequenceNumber = ((0x1ull &amp;amp;lt;&amp;amp;lt; 56) - 1);
+//
+typedef SkipList&amp;amp;lt;const char*, KeyComparator&amp;amp;gt; Table;&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;strong&gt;rep_ 存储结构&lt;/strong&gt;&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;// WriteBatch::rep_ :=  
+//    sequence: fixed64  
+//    count: fixed32  
+//    data: record[count]  
+// record :=  
+//    kTypeValue varstring varstring         |  
+//    kTypeDeletion varstring  
+// varstring :=  
+//    len: varint32  
+//    data: uint8[len]&lt;/code&gt;&lt;/pre&gt;
+&lt;img src=&apos;../assets/leveldb/write_batch.png&apos; title=&apos;write-batch&apos; alt=&apos;write-batch&apos; width=&apos;800&apos;/&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;$SequenceNum$ 是当前 WriteBatch 所有操作的基准序列号，即 WriteBatch 中第一个操作的序列号为 $SequenceNum + 0$ ，第二个操作的序列号为 $SequenceNum + 1$，依次类推。为每次操作分配一个唯一的序列号，是为了方便实现快照能力。后面再解释。&lt;/p&gt;
+&lt;h2&gt;2、写入缓冲与攒批&lt;/h2&gt;
+&lt;img src=&apos;/images/13668317937842427369.svg&apos; title=&apos;13668317937842427369&apos; alt=&apos;13668317937842427369&apos;/&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;leveldb 的 write 写入过程基于 Writer （双端）队列实现缓冲和可能的攒批（合并多个 WriteBatch），提升写入的吞吐性能。攒批的性能空间来自 - 如果写入时发现 level0 文件过多（compaction 未完成，影响读/检索性能），则认为需要对写入进行限速，将写入先在 Write 队列中缓冲，攒 1ms 左右，合并成一个大的 WriteBatch 然后写入 memtable。&lt;/p&gt;
+&lt;img src=&apos;../assets/leveldb/write_deque.png&apos; title=&apos;write-deque&apos; alt=&apos;write-deque&apos; width=&apos;450&apos;/&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;如果本次写入的 Writer 为队列头部，则说明当前写入压力应该不大，可以直接进行写入操作 -&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、先确认写入条件是否满足：
+&lt;ul&gt;&lt;li&gt;(1) level0 文件数是否超过阈值（8），如果超过，说明写入压力有点大（都来不及 minor compaction 啦），则释放互斥锁，当前线程休眠 1ms（攒批的性能空间在这！）&lt;/li&gt;
+&lt;li&gt;（2） 如果当前 memtable 空间已满（默认大小 4MB，可配置），并且前一个 memtable（当前已不可变）还没有被 compaction 落盘或者 level0 文件数操作更大的一个阈值（12），则等待后台 compaction 完成&lt;/li&gt;
+&lt;li&gt;（3） 如果当前 memtable 空间已满，但是前一个 memtable 已被 compaction 且 level0 文件数也不多，则将当前 memtable 切换为不可变 memtable，并申请一个新的 memtable，同时清理掉当前的 WAL log 文件，准备个新的 WAL log 文件。&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;2、遍历 Writer 队列，直到队尾或者遇到一个非异步写入操作或者达到攒批大小阈值，将遍历到的 Writer 中的 WriteBatch 合并成一个 WriteBatch&lt;/li&gt;
+&lt;li&gt;3、将合并后的 WriteBatch 的 &lt;code&gt;rep_&lt;/code&gt; 先写入 WAL log 文件&lt;/li&gt;
+&lt;li&gt;4、然后将 WriteBatch 中的操作按序解析出来，写入 memtable (Put 或 Delete)。&lt;/li&gt;&lt;/ul&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;如果本次写入的 Writer 非队列的头部，等待之前写入队列的线程攒批处理，以及最后被唤醒。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;如果不考虑等待 compaction，整个写入过程最慢的步骤是写 WAL 日志，所以 WriteBatch 设计是为 WAL 日志写入优化的，对于 memtable 写入反而多了一点解析的性能开销。&lt;/p&gt;
+&lt;h2&gt;3、WAL log 文件&lt;/h2&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;static const int kBlockSize = 32768;
+
+// Header is checksum (4 bytes), length (2 bytes), type (1 byte).  
+static const int kHeaderSize = 4 + 2 + 1;&lt;/code&gt;&lt;/pre&gt;
+&lt;img src=&apos;../assets/leveldb/wal_log_format.png&apos; title=&apos;wal-log-format&apos; alt=&apos;wal-log-format&apos; width=&apos;800&apos;/&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;leveldb 会将 WriteBatch 的 &lt;code&gt;rep_&lt;/code&gt; 当作字节序列写入 log 文件中。不过 log 文件存储的单元结构为块（block），块大小为 32768 字节。一个 WriteBatch 的 &lt;code&gt;rep_&lt;/code&gt; 的大小可能大于/等于/小于一个块大小，也就是写入一个 &lt;code&gt;rep_&lt;/code&gt; 可能填不满一个块或者正好填满一个块或者跨多个块。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;如果一次写入后，当前 block 剩余的空间不足以填充下一次写入的头部，则直接将剩余空间以 &lt;code&gt;\x00&lt;/code&gt; 填满。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;这样编码的好处？- 读取解析时，按块大小进行读取，速度更快，顺序解析也方便。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;“WAL log” 的核心作用：写入 memtable 的键值对数据，并没有落盘到 ldb 数据库文件中，如果在 minor compaction 成 $level_0$ 文件之前，机器节点故障，导致 memtable 以及不可变 memtable 中的数据丢失，还可以通过“WAL log” 文件内容来恢复。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;那也意味着，如果一旦不可变 memtable 数据 compaction 到 $level_0$ 文件后，这些数据状态对应的“WAL log” 内容就没没有实际用处了，可以及时清理掉。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;leveldb 写入数据时，如果发现 memtable 占用内存已达到阈值，并且不可变 memtable 数据已被 minor compaction 成 $level_0$ 文件，则会将 memtable 切换成不可变 memtable，同时创建一个新的“WAL log”，并申请一个新的 memtable。不过此时新的不可变 memtable 还没被 minor compaction 成 $level_0$ 文件，所以前一个“WAL log”文件也还要保留，不能删除。&lt;/p&gt;
+&lt;h2&gt;4、MemTable&lt;/h2&gt;
+&lt;img src=&apos;/images/13668317937842427369.svg&apos; title=&apos;13668317937842427369&apos; alt=&apos;13668317937842427369&apos;/&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;typedef SkipList&amp;amp;lt;const char*, KeyComparator&amp;amp;gt; Table;&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;MemTable 是对应一个“WAL log” 文件的内存存储结构。&lt;u&gt;单个 MemTable 内存占用阈值为 4MB(&lt;code&gt;write_buffer_size&lt;/code&gt;)&lt;/u&gt;，当可变 MemTable 的内存占用达到阈值时，就尝试切换成不可变 MemTable，并创建一个新的 WAL log 文件以及对应的可变 MemTable 来承接写入，而不可变 MemTable 的内容等待被 minor compaction 刷成一个 $level_0$ ldb 数据文件。&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;// Amount of data to build up in memory (backed by an unsorted log  
+// on disk) before converting to a sorted on-disk file.  
+//  
+// Larger values increase performance, especially during bulk loads.  
+// Up to two write buffers may be held in memory at the same time,  
+// so you may wish to adjust this parameter to control memory usage.  
+// Also, a larger write buffer will result in a longer recovery time  
+// the next time the database is opened.  
+size_t write_buffer_size = 4 * 1024 * 1024;&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;4.1 Arena&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;Arena 的特点是整块内存申请，整块内存一次性释放，从而优化内存的申请释放开销。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;leveldb 里 Arena 的生命周期与 MemTable 对象保持一致，MemTable 对象的所有 Add 操作涉及的内存分配都在同一 Arena 对象上进行， MemTable 对象切换成不可变状态并存储为 level0 ldb 文件后，Arena 对象的所有内存块随着 MemTable 对象析构而一次性释放。&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;static const int kBlockSize = 4096;&lt;/code&gt;&lt;/pre&gt;
+&lt;img src=&apos;../assets/leveldb/memtable_arena.png&apos; title=&apos;memtable-arena&apos; alt=&apos;memtable-arena&apos; width=&apos;800&apos;/&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;从 Arena 申请内存空间时，如果最新一个可用块的剩余内存大小（&lt;code&gt;alloc_bytes_remaining_&lt;/code&gt;）小于当前申请的内存大小 bytes，则先申请一个新的内存块，然后从新内存块上分配内存空间 - 如果当前申请的内存大小大于整块大小的 1/4，则单独占用一个内存块。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;所以 Arena 内存块大小必须大于实际一次申请的最大内存，并且为减少内存碎片，应该要根据代码中实际的内存分配情况来确定 Arena 内存块大小。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;MemTable 的 Arena 内存块大小只有一种。有些项目中内存分配情况比较复杂的话，其 Arena 设计通常会使用多种内存块大小 ，以此提高灵活性，减少内存碎片浪费。&lt;/p&gt;
+&lt;h3&gt;4.2 Table - 跳表&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;跳表可以兼顾有序链表的快速查找、快速插入/删除、遍历，算法复杂度 $O(logN)$，实现简单。&lt;/p&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;&lt;a href=&apos;https://opendatastructures.org/newhtml/ods/latex-saved-html/skiplists.html&apos;&gt;Open Data Structures - Skiplists&lt;/a&gt;&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;strong&gt;查找过程示意图&lt;/strong&gt;&lt;/p&gt;
+&lt;img src=&apos;../assets/leveldb/skiplist-searchpath.svg&apos; title=&apos;skiplist-search-path&apos; alt=&apos;skiplist-search-path&apos; width=&apos;800&apos;/&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;strong&gt;插入过程示意图&lt;/strong&gt;&lt;/p&gt;
+&lt;img src=&apos;../assets/leveldb/skiplist-add.svg&apos; title=&apos;skiplist-add&apos; alt=&apos;skiplist-add&apos; width=&apos;800&apos;/&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;strong&gt;跳表定义&lt;/strong&gt;&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;template &amp;amp;lt;typename Key, class Comparator&amp;amp;gt;  
+class SkipList {
+public:
+  explicit SkipList(Comparator cmp, Arena* arena);
+  void Insert(const Key&amp;amp;amp; key);
+  bool Contains(const Key&amp;amp;amp; key) const;
+private:
+  Comparator const compare_;  
+  Arena* const arena_;  // Arena used for allocations of nodes  
+  Node* const head_;
+  // Modified only by Insert().  Read racily by readers, but stale  
+  // values are ok.  
+  std::atomic&amp;amp;lt;int&amp;amp;gt; max_height_;  // Height of the entire list  
+  // Read/written only by Insert().  
+  Random rnd_;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;strong&gt;跳表节点定义&lt;/strong&gt;&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;template &amp;amp;lt;typename Key, class Comparator&amp;amp;gt;  
+struct SkipList&amp;amp;lt;Key, Comparator&amp;amp;gt;::Node {
+  explicit Node(const Key&amp;amp;amp; k) : key(k) {}
+  Key const key;
+
+private:
+  // Array of length equal to the node height.  next_[0] is lowest level link.
+  std::atomic&amp;amp;lt;Node*&amp;amp;gt; next_[1];
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;ul&gt;&lt;li&gt;&lt;code&gt;key&lt;/code&gt; 存储节点实际的值&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;next_&lt;/code&gt; 数组中每个指针指向横向的邻居节点&lt;/li&gt;&lt;/ul&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;memtable 对跳表模板实际使用的实际类型为：&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;typedef SkipList&amp;amp;lt;const char*, KeyComparator&amp;amp;gt; Table;&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;对 Key - &lt;code&gt;char*&lt;/code&gt; 的实际编码方式：&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;class MemTableInserter : public WriteBatch::Handler {  
+ public:  
+  SequenceNumber sequence_;  
+  MemTable* mem_;  
+  
+  void Put(const Slice&amp;amp;amp; key, const Slice&amp;amp;amp; value) override {  
+    mem_-&amp;amp;gt;Add(sequence_, kTypeValue, key, value);  // 插入
+    sequence_++;  
+  }  
+  void Delete(const Slice&amp;amp;amp; key) override {  
+    mem_-&amp;amp;gt;Add(sequence_, kTypeDeletion, key, Slice());  // 删除
+    sequence_++;  
+  }  
+};
+
+void MemTable::Add(SequenceNumber s, ValueType type, const Slice&amp;amp;amp; key,  
+                   const Slice&amp;amp;amp; value) {  
+  // Format of an entry is concatenation of:  
+  //  key_size     : varint32 of internal_key.size()
+  //  key bytes    : char[internal_key.size()]
+  //  tag          : uint64((sequence &amp;amp;lt;&amp;amp;lt; 8) | type)
+  //  value_size   : varint32 of value.size()
+  //  value bytes  : char[value.size()]
+  size_t key_size = key.size();  
+  size_t val_size = value.size();  
+  size_t internal_key_size = key_size + 8;  // 另外8字节存储 Tag
+  const size_t encoded_len = VarintLength(internal_key_size) +  
+                             internal_key_size + VarintLength(val_size) +  
+                             val_size;  
+  char* buf = arena_.Allocate(encoded_len);  
+  char* p = EncodeVarint32(buf, internal_key_size);  
+  std::memcpy(p, key.data(), key_size);  
+  p += key_size;  
+  EncodeFixed64(p, (s &amp;amp;lt;&amp;amp;lt; 8) | type);  
+  p += 8;  
+  p = EncodeVarint32(p, val_size);  
+  std::memcpy(p, value.data(), val_size);  
+  assert(p + val_size == buf + encoded_len);  
+  table_.Insert(buf);  
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;img src=&apos;../assets/leveldb/skiplist_node_key.png&apos; title=&apos;skiplist-node-key&apos; alt=&apos;skiplist-node-key&apos; width=&apos;800&apos;/&gt;
+&lt;ul&gt;&lt;li&gt;整数变长编码：“key 长度” 和 “value 长度”正常是32bit（4字节）整数，但 key 和 value 实际可能是比较短的字节序列（比如：长度小于128时，只要1个字节就能存储长度，而不是4字节）。&lt;/li&gt;
+&lt;li&gt;序列号仅使用尾部7个字节：序列号大小不会超过7个字节？确认一下哪里有约束&lt;/li&gt;
+&lt;li&gt;操作/值类型：
+&lt;ul&gt;&lt;li&gt;&lt;code&gt;kTypeValue = 0x1&lt;/code&gt; 表示当前操作为 插入，有对应的值&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;kTypeDeletion = 0x0&lt;/code&gt; 表示当前操作为 删除，无对应的值（或者说值为空）。&lt;u&gt;正常来说，后面无需再编码“value 长度” 和 “value 值”，不过代码实现中似乎还是占用了1个字节来存储“value 长度” 0，可以优化？&lt;/u&gt;。&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;code&gt;KeyComparator&lt;/code&gt; 的定义：&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;struct KeyComparator {  
+  const InternalKeyComparator comparator;  
+  explicit KeyComparator(const InternalKeyComparator&amp;amp;amp; c) : comparator(c) {}  
+  int operator()(const char* a, const char* b) const;  //
+};
+
+int MemTable::KeyComparator::operator()(const char* aptr,  
+                                        const char* bptr) const {  
+  // Internal keys are encoded as length-prefixed strings.  
+  Slice a = GetLengthPrefixedSlice(aptr);  // 取出 internal key（包含 tag）
+  Slice b = GetLengthPrefixedSlice(bptr);  
+  return comparator.Compare(a, b);  
+}
+
+class InternalKeyComparator : public Comparator {  
+ private:  
+  const Comparator* user_comparator_; // 用户可配置自定义的 key 比较器，默认为 BytewiseComparator - 逐个字节比较
+  
+ public:  
+  explicit InternalKeyComparator(const Comparator* c) : user_comparator_(c) {}  
+  const char* Name() const override;  
+  int Compare(const Slice&amp;amp;amp; a, const Slice&amp;amp;amp; b) const override;  
+  void FindShortestSeparator(std::string* start,  
+                             const Slice&amp;amp;amp; limit) const override;  
+  void FindShortSuccessor(std::string* key) const override;  
+  
+  const Comparator* user_comparator() const { return user_comparator_; }  
+  
+  int Compare(const InternalKey&amp;amp;amp; a, const InternalKey&amp;amp;amp; b) const;  
+};
+
+int InternalKeyComparator::Compare(const Slice&amp;amp;amp; akey, const Slice&amp;amp;amp; bkey) const {  
+  // Order by:  
+  //    increasing user key (according to user-supplied comparator)
+  //    decreasing sequence number
+  //    decreasing type (though sequence# should be enough to disambiguate)
+  int r = user_comparator_-&amp;amp;gt;Compare(ExtractUserKey(akey), ExtractUserKey(bkey));  // ExtractUserKey 会忽略 Tag，比较原始 key
+  if (r == 0) {  
+    const uint64_t anum = DecodeFixed64(akey.data() + akey.size() - 8);  // 取出 Tag
+    const uint64_t bnum = DecodeFixed64(bkey.data() + bkey.size() - 8);  // 取出 Tag
+    if (anum &amp;amp;gt; bnum) {  // 比较 Tag（序列号 + 操作类型）
+      r = -1;  
+    } else if (anum &amp;amp;lt; bnum) {  
+      r = +1;  
+    }  
+  }  
+  return r;  
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;实际的比较逻辑为：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;1、先比较原始的 key，小的排在前面&lt;/li&gt;
+&lt;li&gt;2、如果原始 key 相等，则比较序列号，&lt;u&gt;序列号大的排在前面（&lt;strong&gt;有点奇怪？这个逻辑很关键！点查/有序遍历/compaction 同 key 记录去重等依赖这个逻辑&lt;/strong&gt;）&lt;/u&gt;&lt;/li&gt;&lt;/ul&gt;
+&lt;h3&gt;4.3 引用计数&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;MemTable 使用的 引用计数 变量 &lt;code&gt;int refs_&lt;/code&gt;，不是原子变量，所以计数增减都需要加互斥锁。并且因为计数减到小于等于0时， memtable 还需要析构自己，所以必须加锁。&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;// Drop reference count.  Delete if no more references exist.  
+void Unref() {  
+  --refs_;  
+  assert(refs_ &amp;amp;gt;= 0);  
+  if (refs_ &amp;amp;lt;= 0) {  
+    delete this;  
+  }  
+}&lt;/code&gt;&lt;/pre&gt;</description>
+            <pubDate>2024-11-10</pubDate>
+            <link>https://blog.xiayf.cn/posts/leveldb-note-1.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/leveldb-note-1.html</guid>
+        </item>
+        
+        <item>
             <title>团队开发流程规范</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;&lt;em&gt;本文原是针对实际工作中团队的情况编写的一份流程规范说明，隐去敏感信息之后存放于此。&lt;/em&gt;&lt;/p&gt;
 &lt;img src=&apos;https://s2.loli.net/2023/04/05/wQ9bOaXyNiCjh5H.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;100%&apos;/&gt;
@@ -728,7 +2440,7 @@ AllowAllParametersOfDeclarationOnNextLine: false&lt;/code&gt;&lt;/pre&gt;
 &lt;li&gt;（建议）多了解使用基础库 - boost、abseil-cpp 等&lt;/li&gt;&lt;/ul&gt;
 &lt;h2&gt;三、测试&lt;/h2&gt;
 &lt;h3&gt;3.1 单元测试&lt;/h3&gt;
-&lt;ul&gt;&lt;li&gt;明确单元测试与集成测试的区别，&lt;a href=&apos;https://zh.wikipedia.org/wiki/%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95&apos;&gt;单元测试 - 维基百科，自由的百科全书 (wikipedia.org)&lt;/a&gt;&lt;/li&gt;
+&lt;ul&gt;&lt;li&gt;明确单元测试与集成测试的区别，&lt;a href=&apos;https://zh.wikipedia.org/wiki/%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95&apos;&gt;wikipedia - 单元测试&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;单元测试的作用：
 &lt;ul&gt;&lt;li&gt;验证某个逻辑的当前实验是否符合预期&lt;/li&gt;
 &lt;li&gt;更重要的是对以后的代码变更可能造成的非预期影响/破坏进行一定的防御&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;

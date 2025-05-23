@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta property="og:title" content="BitPacking">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://blog.xiayf.cn/">
+    <meta property="og:site_name" content="BitPacking">
+    <meta property="og:description" content="精进，求诸己身">
+
+    <title>BitPacking</title>
+    <meta name="description" content="精进，求诸己身">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <link rel="stylesheet" href="/static/main.css">
+    <link rel="canonical" href="https://blog.xiayf.cn/">
+    
+    <link crossorigin="" rel="shortcut icon" type="image/x-icon" href="/assets/bits_small.ico">
+    
+</head>
+
+<body>
+<header class="site-header">
+    <div class="wrapper">
+        <a class="site-title" href="/">BitPacking</a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg viewBox="0 0 18 15">
+                    <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                <a class="page-link" href="/pages/about.html">关于我</a>
+                
+                <a class="page-link" href="/pages/works.html">作品</a>
+                
+                <a class="page-link" href="/rss.xml">RSS</a>
+                
+            </div>
+        </nav>
+    </div>
+</header>
+
+<div class="page-content">
+    <div class="wrapper">
+        
+<div class="post">
+    <header class="post-header">
+        <h1 class="post-title">读码：LevelDB - ldb 数据文件格式</h1>
+        <p class="post-meta">2024-11-13</p>
+    </header>
+    <article class="post-content">
+        <h2>5、leveldb 数据文件格式 - ldb</h2>
+<pre class="language-text"><code>&lt;beginning_of_file&gt;
+[data block 1]
+[data block 2]
+...
+[data block N]
+[meta block 1]
+...
+[meta block K]
+[metaindex block]
+[index block]
+[Footer]        (fixed size; starts at file_size - sizeof(Footer))
+&lt;end_of_file&gt;</code></pre>
+<p class="text-align-justify">leveldb 文件（文件后缀 <code>.ldb</code>）内容由 N 个 “data 块” 部分、 K 个 “meta 块” 部分、1个 “metaindex 块” 部分、1个 “index 块”部分、1个 “Footer” 部分依次构成。</p>
+<img src='../assets/leveldb/ldb-block-flow.png' title='' alt='' width='830'/>
+<p class="text-align-justify">ldb 数据文件的加载解析流程：</p>
+<ul><li>1、取文件末尾的 28 个字节，解析出(1) metaindex block 的 offset & size (2) index block 的 offset & size</li>
+<li>2、根据 metaindex block 的 offset & size 解析出 “过滤策略名称” 和 meta block 的 offset & size
+<ul><li>根据“过滤策略名称” 实例化过滤策略</li>
+<li>对于 meta block 的解析，先解析出“第3部分” 和 “第4部分”的值，得到“第1部分”的长度，继而得到“第2️部分”的偏移位置和长度（也即 <code>filter_offsets_</code> 的内容）</li></ul></li>
+<li>3、根据 index block 的 offset & size 解析出所有 data block 的“key 区间”、offset 和 size</li></ul>
+<p class="text-align-justify">“点查”，对于 ldb 数据文件的检索流程为：</p>
+<ul><li>1、使用 key，从最新版本中从小到大逐个 level 匹配其文件元数据</li>
+<li>2、对目标 ldb 文件，使用 key 从 index block 中通过二分查找匹配到目标 data block 的 offset & size</li>
+<li>3、根据目标 data block 的 offset 对 meta block 的 <code>filter_offsets_</code> 计算而后取到目标过滤数据块，交给过滤策略实例进行初步的匹配筛选</li>
+<li>4、如果 3 中没有匹配到，则根据目标 data block 的 offset 计算取到 data block 的“重置位点序列”，继而对 data block 的“键值对序列”进行解析遍历匹配</li></ul>
+<h3>5.1 “Footer”部分</h3>
+<p class="text-align-justify">长度为固定值 <code>kEncodedLength</code>（$2 * BlockHandle::kMaxEncodedLength + 8 = 28$）</p>
+<p class="text-align-justify">先后存入：</p>
+<ul><li>1、“metaindex 块”在文件中的偏移位置 offset 和 块大小 size。</li>
+<li>2、“index” 块在文件中的偏移位置 offset 和 块大小 size。</li>
+<li>3、将“Footer”长度填充 到 $2 * BlockHandle::kMaxEncodedLength = 20$ 长度。</li>
+<li>4、以小端序写入一个64比特的魔法数。</li></ul>
+<img src='../assets/leveldb/ldb-footer.png' title='ldb-footer' alt='ldb-footer' width='600'/>
+<h3>5.2 “块”的格式</h3>
+<p class="text-align-justify">将键值写入块的内存缓冲区时，每连续 16 （默认值，可配置）个键会进行 delta 编码压缩：</p>
+<ul><li>1、先计算当前键与前一次写入键的共同前缀长度</li>
+<li>2、依次写入“键共同前缀长度”、“当前键去掉共同前缀后的长度”、“值的长度”、“当前键去掉共同前缀后的内容”、“值内容”</li></ul>
+<p class="text-align-justify">如果连续“delta 编码压缩”的键数/写入次数达到阈值 16，则将当前内存缓冲区的大小记录到“重置位点列表”（<code>restarts_</code>）中。</p>
+<p class="text-align-justify">将块的内存缓存区内容落到文件的流程：</p>
+<ul><li>1、把<u>“重置位点列表”中的元素</u>依次逐个添加到缓冲区尾部。</li>
+<li>2、将<u>“重置位点”数量</u>以固定32比特长度添加到缓冲区尾部。</li>
+<li>3、将缓冲区内容整体做一次通用压缩（可配置 不压缩、snappy 压缩、zstd 压缩）。</li>
+<li>4、将压缩后的字节序列写入文件后，再将 压缩类型(CompressionType，1字节) 和 “压缩后的字节序列 与 压缩类型” 的 crc32 校验码（4字节）写到文件的尾部。</li></ul>
+<pre class="language-cpp"><code>enum CompressionType {  
+  // NOTE: do not change the values of existing entries, as these are  
+  // part of the persistent format on disk.
+  kNoCompression = 0x0,  
+  kSnappyCompression = 0x1,  
+  kZstdCompression = 0x2,  
+};</code></pre>
+<img src='../assets/leveldb/ldb-block-encode.png' title='ldb-block-encode' alt='ldb-block-encode' width='800'/>
+<h3>5.3 “data 块”</h3>
+<p class="text-align-justify">leveldb 文件中“data 块”数据是按照 key 有序存储的。同一个文件中，块与块之间有序，块之间 key 范围不会有重合，块内内容也是按 key 有序存储。</p>
+<p class="text-align-justify">因为有序， 使用默认的 BytewiseComparator，delta 编码压缩效果通常会明显。</p>
+<p class="text-align-justify">对于“data 块”，如果块的内存缓冲区内容大小（通用压缩前的原始内容大小+重置位点数组大小+重置位点数组长度）超过 4KB（可配置，配置项 <code>block_size</code>），就会将块的内存缓冲区作为一个“data 块”落到文件中。</p>
+<pre class="language-cpp"><code>// Approximate size of user data packed per block.  Note that the  
+// block size specified here corresponds to uncompressed data.  The  
+// actual size of the unit read from disk may be smaller if  
+// compression is enabled.  This parameter can be changed dynamically.  
+size_t block_size = 4 * 1024;</code></pre>
+<h3>5.4 “index 块”</h3>
+<p class="text-align-justify">“index 块” 存储 “data 块” 的索引信息。</p>
+<p class="text-align-justify">当一个“data 块”从内存缓存区落到文件后，将该“data 块”最后/最大的 key（经存储优化处理后） 作为 键（<u>大致含义-当前块中所有 key 都小于该键，下一个块中所有 key 都大于等于该键</u>），该“data 块”在文件中的偏移位置 offset 和 块大小 size 打包后作为值，写入“index 块”内存缓冲区。</p>
+<p class="text-align-justify">当 leveldb 文件的所有“data 块”都写入文件后，会将“index 块”内存缓冲区内容也按照“块”格式写入文件。</p>
+<p class="text-align-justify">Get key 检索时，</p>
+<ul><li>1、先从 “Footer” 部分取出“index 块的” offer 和 size，</li>
+<li>2、然后在“index 块”进行二分查找，找到目标“data 块”，</li>
+<li>3、从目标“data 块”中解析出来重置位点数组，继续进行二分查找。</li></ul>
+<h3>5.5 “meta 块” & “metaindex 块”</h3>
+<pre class="language-cpp"><code>// A FilterBlockBuilder is used to construct all of the filters for a  
+// particular Table.  It generates a single string which is stored as  
+// a special block in the Table.  
+//  
+// The sequence of calls to FilterBlockBuilder must match the regexp:  
+//      (StartBlock AddKey*)* Finish  
+class FilterBlockBuilder {  
+ public:  
+  explicit FilterBlockBuilder(const FilterPolicy*);  
+  
+  void StartBlock(uint64_t block_offset);  
+  void AddKey(const Slice&amp; key);  
+  Slice Finish();  
+  
+ private:  
+  void GenerateFilter();  
+  
+  const FilterPolicy* policy_;  
+
+  std::string keys_;             // Flattened key contents  
+  std::vector&lt;size_t&gt; start_;    // Starting index in keys_ of each key  
+
+  std::string result_;           // Filter data computed so far  
+  std::vector&lt;Slice&gt; tmp_keys_;  // policy_-&gt;CreateFilter() argument  
+  std::vector&lt;uint32_t&gt; filter_offsets_;  
+};
+
+void FilterBlockBuilder::StartBlock(uint64_t block_offset) {  
+  uint64_t filter_index = (block_offset / kFilterBase);  
+  assert(filter_index &gt;= filter_offsets_.size());  
+  while (filter_index &gt; filter_offsets_.size()) {  
+    GenerateFilter();  
+  }  
+}
+
+void FilterBlockBuilder::AddKey(const Slice&amp; key) {  
+  Slice k = key;  
+  start_.push_back(keys_.size());  
+  keys_.append(k.data(), k.size());  
+}</code></pre>
+<p class="text-align-justify">目前的实现，如果 leveldb 文件中存在“meta 块”，应该也只会有一个，即<strong>过滤数据块</strong>。</p>
+<p class="text-align-justify">如果 leveldb 数据库开启了检索时过滤策略（FilterPolicy），则对于写入“data 块”的每个 key，都会被记录到 filter 内存缓冲区（<code>FilterBlockBuilder</code>）中。</p>
+<p class="text-align-justify">当一个“data 块”刷到文件后，就对 FilterBlockBuilder 中存入的 key 序列算一下“过滤数据”，拼接到 <code>result_</code> 后面，以及将最新计算的“过滤数据”在 <code>result_</code> 中的偏移位置存到 <code>filter_offets_</code> 向量中。</p>
+<pre class="language-text"><code>准备处理第一个“data 块”时，
+- FilterBlockBuilder 的 filter_offsets_ 为空数组 []， result_ 为空字符串 &quot;&quot;
+- 当第一个“data 块”刷到数据文件后，准备处理第二个“data 块”，因&lt;u&gt;逻辑上&lt;/u&gt;约束每 2KB 数据算一次过滤数据
+	- case-1：如果第一个“data 块”大小 &lt; 4KB（大概率是这样），那么 filter_index = 1，对这个“data 块”的所有 key 算一次过滤数据，result_ 长度为 a， filter_offset_ 将变成 [0],
+	- case-2：如果第一个“data 块”大小 &gt;（=）4KB且&lt; 8KB，那么 filter_index = 2，对这个“data 块”的所有 key 算一次过滤数据，result_ 长度为 a&apos;，filter_offset_ 将变成 [0, a&apos;]
+	- case-3：如果第一个“data 块”大小 &gt;（=）8KB且&lt; 16KB，那么 filter_index = 3，对这个“data 块”的所有 key 算一次过滤数据，result_ 长度为 a&apos;&apos;，filter_offset_ 将变成 [0, a&apos;&apos;, a&apos;&apos;]
+- 如果第二个“data 块”为&lt;u&gt;最后一个&lt;/u&gt;，不管大小多少，刷到数据文件后，对第二个“data 块”的所有 key 算一次过滤数据，result_ 长度为 b
+	- 对于 case-1，filter_offset_ 先填充为 [0, a]，最后会填充为 [0, a, b]
+	- 对于 case-2，filter_offset_ 先填充为 [0, a&apos;, a&apos;]，最后会填充为 [0, a&apos;, a&apos;, b]
+	- 对于 case-3，filter_offset_ 先填充为 [0, a&apos;&apos;, a&apos;&apos;, a&apos;&apos;]，最后会填充为 [0, a&apos;&apos;, a&apos;&apos;, a&apos;&apos;, b]
+- 那么在过滤匹配时，
+	- 对于第一个“data 块”，因其 offset 为 0，所以 filter_offset_ 的 0 &amp; 1 位置的值为区间从 result_ 中去对应的过滤数据
+	- 对于第二个“data 块”，
+		- case-1 时，其 offset &lt; 4KB，以 filter_offset_ 的 1 &amp; 2 位置的值为区间从 result_ 中去对应的过滤数据
+		- case-2 时，其 offset 在 [4KB, 8KB) 区间，以 filter_offset_ 的 2 &amp; 3 位置的值为区间从 result_ 中去对应的过滤数据
+		- case-3 时，其 offset 在 [8KB, 16KB) 区间，以 filter_offset_ 的 3 &amp; 4 位置的值为区间从 result_ 中去对应的过滤数据
+- 所以 FilterBlockBuilder 的处理逻辑会对 filter_offset_ 做一些额外的填充，确保根据“data 块”在文件中的偏移位置 offset，能够正确地找到对应的 过滤数据块。</code></pre>
+<p class="text-align-justify">当 leveldb 文件的所有“data 块”都写入文件后，</p>
+<ul><li>1、将 <code>filter_offets_</code> 中的偏移位置数据逐个以 32 比特定长编码后拼接到 <code>result_</code> 后面，</li>
+<li>2、接着将“还未拼接偏移位置数据时的 <code>result_</code> 长度”以 32 比特定长编码后拼接到 <code>result_</code> 后面，</li>
+<li>3、然后将 kFilterBaseLg（=11）参数拼接到后面（占用1个字节），</li>
+<li>4、最后将 <code>result_</code> 作为“meta 块”的原始数据<strong>不经压缩地</strong>写入文件中。（<u>这里有点特殊，和其他块不太一样，其他块都是键值对编码写入的</u>）</li></ul>
+<img src='../assets/leveldb/ldb-filter-block.png' title='ldb-filter-block' alt='ldb-filter-block' width='800'/>
+<p class="text-align-justify">并将 过滤策略 名称拼接上前缀<code>filter.</code> 作为 键，将meta 块（“过滤数据块”）在文件中的偏移位置 offset 和块大小 size 编码后作为值，写入 metaindex 块中。</p>
+<p class="text-align-justify">打开数据库时，</p>
+<ul><li>1、先从 “Footer” 部分读取“metaindex 块”的偏移位置 offset 和 块大小 size</li>
+<li>2、从“metaindex 块”中解析出使用的“过滤策略”名称，以及过滤数据，初始化过滤策略</li></ul>
+<p class="text-align-justify">Get key 检索时，对 ldb 文件的“data 块”进行检索时，都先根据过滤策略做一下过滤，从而减少文件的磁盘读取次数。</p>
+    </article>
+</div>
+
+    </div>
+</div>
+
+<footer class="site-footer">
+    <div class="wrapper">
+        <div class="footer-col-wrapper">
+            <div class="footer-col footer-col-1">
+                <ul class="social-media-list">
+                    <li>
+                        <a href="https://github.com/kitelife" target="_blank">
+                            <span class="icon icon--github">
+                                <svg viewBox="0 0 16 16">
+                                    <path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                                </svg>
+                            </span>
+                            <span class="username">kitelife</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://maimai.cn/profile/detail?dstu=39580141" target="_blank">
+                            <span class="icon icon--maimai">
+                                <img src="https://maimai.cn/favicon.ico" width="16"/>
+                            </span>
+                            <span class="username">Xiayf</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="footer-col footer-col-2"></div>
+            <div class="footer-col footer-col-3"></div>
+            <div class="footer-col footer-col-4">
+                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">
+                    <img alt="Creative Commons License" src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-sa.svg">
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        },
+        svg: {
+            fontCache: 'global'
+        }
+    };
+</script>
+<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</body>
+</html>

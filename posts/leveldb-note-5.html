@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta property="og:title" content="BitPacking">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://blog.xiayf.cn/">
+    <meta property="og:site_name" content="BitPacking">
+    <meta property="og:description" content="精进，求诸己身">
+
+    <title>BitPacking</title>
+    <meta name="description" content="精进，求诸己身">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <link rel="stylesheet" href="/static/main.css">
+    <link rel="canonical" href="https://blog.xiayf.cn/">
+    
+    <link crossorigin="" rel="shortcut icon" type="image/x-icon" href="/assets/bits_small.ico">
+    
+</head>
+
+<body>
+<header class="site-header">
+    <div class="wrapper">
+        <a class="site-title" href="/">BitPacking</a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg viewBox="0 0 18 15">
+                    <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                <a class="page-link" href="/pages/about.html">关于我</a>
+                
+                <a class="page-link" href="/pages/works.html">作品</a>
+                
+                <a class="page-link" href="/rss.xml">RSS</a>
+                
+            </div>
+        </nav>
+    </div>
+</header>
+
+<div class="page-content">
+    <div class="wrapper">
+        
+<div class="post">
+    <header class="post-header">
+        <h1 class="post-title">读码：LevelDB - 杂项</h1>
+        <p class="post-meta">2024-11-23</p>
+    </header>
+    <article class="post-content">
+        <h2>10、其他</h2>
+<h3>10.1 Env</h3>
+<p class="text-align-justify">leveldb 将 文件系统/时间/线程 等和底层系统相关的操作都抽象封装到 Env 类继承体系中，提升可移植性，默认提供对 Posix 兼容系统（Unix/Linux）的支持。</p>
+<pre class="language-cpp"><code>Env* Env::Default() {  
+  static PosixDefaultEnv env_container;  
+  return env_container.env();  
+}
+
+// An implementation of Env that forwards all calls to another Env.  
+// May be useful to clients who wish to override just part of the  
+// functionality of another Env.  
+class EnvWrapper : public Env {}
+// A wrapper that allows injection of errors.  
+class ErrorEnv : public EnvWrapper {}
+class InMemoryEnv : public EnvWrapper {}
+// Special Env used to delay background operations.  
+class SpecialEnv : public EnvWrapper {
+// Test Env to override default Env behavior for testing.  
+class TestEnv : public EnvWrapper {
+
+class PosixEnv : public Env {}</code></pre>
+<h3>10.2 文件锁</h3>
+<p class="text-align-justify">leveldb 基于文件锁来防止多个进程打开同一个数据库。</p>
+<p class="text-align-justify">文件锁使用的文件名称为 <code>LOCK</code>，对这个文件加锁成功之后，才能执行后续的逻辑。</p>
+<pre class="language-cpp"><code>assert(db_lock_ == nullptr);
+Status s = env_-&gt;LockFile(LockFileName(dbname_), &amp;db_lock_);  
+if (!s.ok()) {  
+  return s;  
+}</code></pre>
+<pre class="language-cpp"><code>// Lock the specified file.  Used to prevent concurrent access to  
+// the same db by multiple processes.  On failure, stores nullptr in  
+// *lock and returns non-OK.  
+//  
+// On success, stores a pointer to the object that represents the  
+// acquired lock in *lock and returns OK.  The caller should call  
+// UnlockFile(*lock) to release the lock.  If the process exits,  
+// the lock will be automatically released.  
+//  
+// If somebody else already holds the lock, finishes immediately  
+// with a failure.  I.e., this call does not wait for existing locks  
+// to go away.  
+//  
+// May create the named file if it does not already exist.  
+virtual Status LockFile(const std::string&amp; fname, FileLock** lock) = 0;</code></pre>
+<p class="text-align-justify">原理参见：</p>
+<ul><li>https://man7.org/linux/man-pages/man2/fcntl.2.html 的 “Advisory record locking” 部分</li>
+<li><a href='https://www.cnblogs.com/nufangrensheng/p/3554168.html'>高级 I/O 之记录锁</a></li></ul>
+<pre class="language-cpp"><code>int LockOrUnlock(int fd, bool lock) {  
+  errno = 0;  
+  struct ::flock file_lock_info;  
+  std::memset(&amp;file_lock_info, 0, sizeof(file_lock_info));  
+  file_lock_info.l_type = (lock ? F_WRLCK : F_UNLCK);  
+  file_lock_info.l_whence = SEEK_SET;  
+  file_lock_info.l_start = 0;  
+  file_lock_info.l_len = 0;  // Lock/unlock entire file.  
+  return ::fcntl(fd, F_SETLK, &amp;file_lock_info);  
+}</code></pre>
+<blockquote><p class="text-align-justify">cat client 基于 flock 函数来实现文件锁（Open file description locks (non-POSIX)）。与 leveldb 采用的文件锁方式，区别见 fcntl 文档说明：</p>
+<p class="text-align-justify">Open file description locks are advisory byte-range locks whose operation is in most respects identical to the traditional record locks described above.  This lock type is Linux-specific, and available since Linux 3.15.</p>
+<p class="text-align-justify">The principal difference between the two lock types is that whereas traditional record locks are associated with a process, open file description locks are associated with the open file description on which they are acquired, much like locks acquired with <a href='https://man7.org/linux/man-pages/man2/flock.2.html'>flock(2)</a>.  Consequently (and unlike traditional advisory record locks), open file description locks are inherited across <a href='https://man7.org/linux/man-pages/man2/fork.2.html'>fork(2)</a> (and <a href='https://man7.org/linux/man-pages/man2/clone.2.html'>clone(2)</a> with <strong>CLONE_FILES</strong>), and are only automatically released on the last close of the open file description, instead of being released on any close of the file.</p>
+<p class="text-align-justify">...</p></blockquote>
+<pre class="language-cpp"><code>// cat-client中文件锁的实现方式
+
+try {
+  lock_file_name_ = FLAGS_cat_multi_process ? std::to_string(getpid()) + FLAGS_cat_id_lock_file
+                                            : FLAGS_cat_id_lock_file;
+
+  file_lock_ = new FileLock(lock_file_name_);
+  if (!file_lock_-&gt;TryLock()) {
+    throw runtime_error(lock_file_name_ + &quot; is locked by another process&quot;);
+  }
+}
+//
+bool FileLock::TryLock() {
+  //mode_t m = umask(0);
+  fd_ = open(file_name_.c_str(), O_RDWR | O_CREAT, 0666);
+  if (fd_ &gt;= 0 &amp;&amp; flock(fd_, LOCK_EX | LOCK_NB) &lt; 0) {
+    close(fd_);
+    fd_ = -1;
+    return false;
+  }
+  return true;
+}
+
+bool FileLock::Unlock() {
+  if (fd_ &lt; 0) {
+    return true;
+  }
+  remove(file_name_.c_str());
+  close(fd_);
+  fd_ = -1;
+  return true;
+}</code></pre>
+<h3>10.3 整数编码</h3>
+<p class="text-align-justify">定长编码比较简单，使用小端方式，将 32 比特整数拆成 4个 char 存储，将 64 比特整数拆成 8个char 存储。</p>
+<img src='../assets/leveldb/fixed-coding.png' title='leveldb-fixed-coding' alt='leveldb-fixed-coding' width='600'/>
+<p class="text-align-justify">不定长编码稍微有点麻烦，每8个比特需要使用1个比特位来标识当前这个字节是否是最后一个字节，也就是 char 序列中，每个char 只有尾部7个比特用来存储部分值，头部1比特是状态位。</p>
+<p class="text-align-justify">这意味着：</p>
+<ul><li>无符号32比特整数，一旦大于 $2^{28}-1$，就需要5个字节来存储</li>
+<li>无符号64比特整数，一旦大于 $2^{56}-1$，就需要9个字节来存储</li>
+<li>从存储空间来看，就不划算了</li></ul>
+<img src='../assets/leveldb/varint-coding.png' title='leveldb-varint-coding' alt='leveldb-varint-coding' width='800'/>
+<h3>10.4 文件 ID</h3>
+<p class="text-align-justify">除了 LOCK / CURRENT / LOG 文件，对于“ldb 数据文件”、“WAL log 文件”、“MANIFEST-版本变更日志文件”都使用整数 id 来命名(固定6个字符宽度)，比如 id 为 123，文件名形式如下：</p>
+<ul><li>ldb 数据文件：<code>000123.ldb</code></li>
+<li>WAL log 文件：<code>000123.log</code></li>
+<li>MANIFEST-版本变更日志文件：<code>MANIFEST-000123</code></li></ul>
+<p class="text-align-justify">id 全局自增，统一分配：</p>
+<pre class="language-cpp"><code>// Allocate and return a new file number  
+uint64_t NewFileNumber() { return next_file_number_++; }</code></pre>
+<p class="text-align-justify">这样的好处在于，除非真的需要读取文件时，其他时候的逻辑对于同一种文件类型的不同文件都使用整数 id 来区分，排序/比较等处理逻辑效率更高。</p>
+<h3>10.5 Slice</h3>
+<blockquote><p class="text-align-justify"><code>Slice</code> is a simple structure that contains a length and a pointer to an external byte array. Returning a <code>Slice</code> is a cheaper alternative to returning a <code>std::string</code> since we do not need to copy potentially large keys and values. In addition, <code>leveldb</code> methods do not return null-terminated C-style strings since <code>leveldb</code> keys and values are allowed to contain '\0' bytes.</p></blockquote>
+<h3>10.6 编程技巧</h3>
+<h4>10.6.1 GUARDED_BY - 线程安全注解</h4>
+<pre class="language-cpp"><code>#ifndef GUARDED_BY  
+#define GUARDED_BY(x) THREAD_ANNOTATION_ATTRIBUTE__(guarded_by(x))  
+#endif</code></pre>
+<blockquote><p class="text-align-justify">https://clang.llvm.org/docs/ThreadSafetyAnalysis.html</p></blockquote>
+<h4>10.6.2 引用计数</h4>
+<p class="text-align-justify">类似 C++11 之后的共享指针，leveldb 对一些类使用引用计数来管理生命周期和资源释放。当一个对象的引用计数归0时，会删除自己（<code>delete this</code>），触发析构函数，完成资源清理操作。</p>
+<pre class="language-cpp"><code>// Increase reference count.  
+void Ref() { ++refs_; }  
+  
+// Drop reference count.  Delete if no more references exist.  
+void Unref() {  
+  --refs_;  
+  assert(refs_ &gt;= 0);  
+  if (refs_ &lt;= 0) {  
+    delete this;  
+  }  
+}</code></pre>
+<h2>参考&推荐</h2>
+<ul><li><a href='https://github.com/google/leveldb/blob/main/doc/index.md'>leveldb 说明文档</a></li>
+<li><a href='https://github.com/google/leveldb/blob/main/doc/impl.md'>leveldb 逻辑实现说明</a></li>
+<li><a href='https://github.com/google/leveldb/blob/main/doc/table_format.md'>leveldb ldb 数据文件编码格式</a></li>
+<li><a href='https://github.com/google/leveldb/blob/main/doc/log_format.md'>leveldb WAL log 编码格式</a></li>
+<li><a href='https://opendatastructures.org/newhtml/ods/latex-saved-html/skiplists.html'>Open Data Structures - Skiplists</a></li>
+<li><a href='https://en.wikipedia.org/wiki/Bloom_filter'>Wikipedia - Bloom filter</a></li>
+<li><a href='https://man7.org/linux/man-pages/man2/fcntl.2.html'>fcntl(2) — Linux manual page</a></li>
+<li>《The Linux Programming Interface》</li></ul>
+    </article>
+</div>
+
+    </div>
+</div>
+
+<footer class="site-footer">
+    <div class="wrapper">
+        <div class="footer-col-wrapper">
+            <div class="footer-col footer-col-1">
+                <ul class="social-media-list">
+                    <li>
+                        <a href="https://github.com/kitelife" target="_blank">
+                            <span class="icon icon--github">
+                                <svg viewBox="0 0 16 16">
+                                    <path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                                </svg>
+                            </span>
+                            <span class="username">kitelife</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://maimai.cn/profile/detail?dstu=39580141" target="_blank">
+                            <span class="icon icon--maimai">
+                                <img src="https://maimai.cn/favicon.ico" width="16"/>
+                            </span>
+                            <span class="username">Xiayf</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="footer-col footer-col-2"></div>
+            <div class="footer-col footer-col-3"></div>
+            <div class="footer-col footer-col-4">
+                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">
+                    <img alt="Creative Commons License" src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-sa.svg">
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        },
+        svg: {
+            fontCache: 'global'
+        }
+    };
+</script>
+<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</body>
+</html>

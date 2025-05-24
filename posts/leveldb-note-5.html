@@ -150,13 +150,13 @@ bool FileLock::Unlock() {
 }</code></pre>
 <h3>10.3 整数编码</h3>
 <p class="text-align-justify">定长编码比较简单，使用小端方式，将 32 比特整数拆成 4个 char 存储，将 64 比特整数拆成 8个char 存储。</p>
-<img src='../assets/leveldb/fixed-coding.png' title='leveldb-fixed-coding' alt='leveldb-fixed-coding' width='600'/>
+<img src='https://s2.loli.net/2025/05/24/jNUdmrhJYcvGany.png' title='leveldb-fixed-coding' alt='leveldb-fixed-coding' width='600'/>
 <p class="text-align-justify">不定长编码稍微有点麻烦，每8个比特需要使用1个比特位来标识当前这个字节是否是最后一个字节，也就是 char 序列中，每个char 只有尾部7个比特用来存储部分值，头部1比特是状态位。</p>
 <p class="text-align-justify">这意味着：</p>
 <ul><li>无符号32比特整数，一旦大于 $2^{28}-1$，就需要5个字节来存储</li>
 <li>无符号64比特整数，一旦大于 $2^{56}-1$，就需要9个字节来存储</li>
 <li>从存储空间来看，就不划算了</li></ul>
-<img src='../assets/leveldb/varint-coding.png' title='leveldb-varint-coding' alt='leveldb-varint-coding' width='800'/>
+<img src='https://s2.loli.net/2025/05/24/cJgo1ABkU6nfhC5.png' title='leveldb-varint-coding' alt='leveldb-varint-coding' width='800'/>
 <h3>10.4 文件 ID</h3>
 <p class="text-align-justify">除了 LOCK / CURRENT / LOG 文件，对于“ldb 数据文件”、“WAL log 文件”、“MANIFEST-版本变更日志文件”都使用整数 id 来命名(固定6个字符宽度)，比如 id 为 123，文件名形式如下：</p>
 <ul><li>ldb 数据文件：<code>000123.ldb</code></li>

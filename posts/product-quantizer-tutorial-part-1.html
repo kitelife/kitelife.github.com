@@ -65,19 +65,19 @@
 <p class="text-align-justify">乘积量化器方法的作者们是信号处理和压缩技术背景的，所以如果你是机器学习方向的，可能对他们的用词和术语比较陌生。不过，如果你熟悉 k-means 聚类（且摒弃所有压缩命名法的词汇），使用一个示例你就能轻松理解乘积量化器的基础知识。之后，我们再回头来看压缩技术相关术语。</p>
 <h2>数据集压缩</h2>
 <p class="text-align-justify">假设你有一个 50,000 张的图片集，使用一个卷积神经网络（CNN）完成一些特征的抽取。这样你现在就得到一个 50,000个特征向量的数据集，每个特征向量有 1024 维。</p>
-<img src='../assets/image_vectors.png' title='image_vectors.png' alt='image_vectors.png' width='300'/>
+<img src='https://s2.loli.net/2025/05/24/GYq3ZzBRHSQMCyL.png' title='image_vectors.png' alt='image_vectors.png' width='300'/>
 <p class="text-align-justify">我们要做的第一件事情就是压缩数据集。向量的数量保持不变，但是可以减少每个向量需要的存储空间。注意：我们要做的事情不同于“降维（dimensionality reduction）”！这是因为压缩后的向量中的值其实是符号而不是数值，所以不能直接比较压缩后的向量。</p>
 <p class="text-align-justify">压缩数据集有两大好处：（1）内存访问耗时通常是处理速度的限制因素，（2）对大数据集而言内存容量是个问题。</p>
 <p class="text-align-justify">压缩的原理如下所述：对于我们的示例数据集，将所有向量一起切成8个子向量，每个子向量的长度为 128（8个子向量 $\times$ 每个子向量128维 = 原始向量的 1024 维）。这样就将数据集分成8个矩阵，每个矩阵大小为 $[50K \times 128]$。</p>
-<img src='../assets/vector_slice.png' title='vector_slice.png' alt='vector_slice.png' width='500'/>
+<img src='https://s2.loli.net/2025/05/19/WJq2XenwRcoSAtM.png' title='vector_slice.png' alt='vector_slice.png' width='500'/>
 <p class="text-align-justify">然后对这8个矩阵的每一个单独进行 k-means 聚类，k = 256。这样，对于向量的8个子段的每1个都存在256个质心 - 一共8组质心，每组包含256个质心。</p>
-<img src='../assets/kmeans_clustering.png' title='kmeans_clustering.png' alt='kmeans_clustering.png' width='500'/>
+<img src='https://s2.loli.net/2025/05/23/wQHcVTzs6ftJFeg.png' title='kmeans_clustering.png' alt='kmeans_clustering.png' width='500'/>
 <p class="text-align-justify">这些质心类似于“原型”。它们代表数据集子向量中最常见的模式。</p>
 <p class="text-align-justify">可以使用这些质心来压缩向量数据集 - 使用最接近/最相似的置信来替代向量中对应的每个子部分，从而得到一个不同于原始向量的一个新向量，不过它们之间应该还是相近的。</p>
 <p class="text-align-justify">这样我们就能更加高效地存储这些向量 - 不用存储原始的浮点数值，只要存储聚类中心 ID 即可 - 对每个子向量，找到最近的质心，存储该质心的 ID。每个向量也就被替换为8个质心 ID 的一个序列。</p>
 <p class="text-align-justify">注意：对于8个子部分矩阵的每一个学习到的质心集合是不同的。使用最近质心 id 替换子向量时，只能与对应子部分的 256 个质心做比较。</p>
 <p class="text-align-justify">每个子部分只有 256 个质心，所以仅需 8 比特就能存储一个质心 ID。每个向量，原本包含 1024 个 32 浮点数（4,096 字节），现在仅是 8 个 8 比特整数的序列（每个向量只要8字节的存储空间！）。</p>
-<img src='../assets/compression.png' title='compression.png' alt='compression.png' width='100%'/>
+<img src='https://s2.loli.net/2025/05/19/eTMGdN4Vfbrhyl5.png' title='compression.png' alt='compression.png' width='100%'/>
 <h2>最近邻搜索</h2>
 <p class="text-align-justify">很棒！向量经过压缩了。不过无法对经过压缩的向量直接计算 L2 距离 - 质心 ID 之间的距离是任意且没有实际意义的！（这就是压缩与降维的不同之处）</p>
 <p class="text-align-justify">接下来说说怎么进行最近邻搜索，虽仍是穷举搜索（与所有向量计算距离并排序），不过可以更高效地计算距离 - 只需进行表查找以及某种加法即可。</p>

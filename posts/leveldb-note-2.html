@@ -69,7 +69,7 @@
 [Footer]        (fixed size; starts at file_size - sizeof(Footer))
 &lt;end_of_file&gt;</code></pre>
 <p class="text-align-justify">leveldb 文件（文件后缀 <code>.ldb</code>）内容由 N 个 “data 块” 部分、 K 个 “meta 块” 部分、1个 “metaindex 块” 部分、1个 “index 块”部分、1个 “Footer” 部分依次构成。</p>
-<img src='../assets/leveldb/ldb-block-flow.png' title='' alt='' width='830'/>
+<img src='https://s2.loli.net/2025/05/24/4jKOHEMRi6SYD9n.png' title='' alt='' width='830'/>
 <p class="text-align-justify">ldb 数据文件的加载解析流程：</p>
 <ul><li>1、取文件末尾的 28 个字节，解析出(1) metaindex block 的 offset & size (2) index block 的 offset & size</li>
 <li>2、根据 metaindex block 的 offset & size 解析出 “过滤策略名称” 和 meta block 的 offset & size
@@ -88,7 +88,7 @@
 <li>2、“index” 块在文件中的偏移位置 offset 和 块大小 size。</li>
 <li>3、将“Footer”长度填充 到 $2 * BlockHandle::kMaxEncodedLength = 20$ 长度。</li>
 <li>4、以小端序写入一个64比特的魔法数。</li></ul>
-<img src='../assets/leveldb/ldb-footer.png' title='ldb-footer' alt='ldb-footer' width='600'/>
+<img src='https://s2.loli.net/2025/05/24/9fXToy6AGZe4C82.png' title='ldb-footer' alt='ldb-footer' width='600'/>
 <h3>5.2 “块”的格式</h3>
 <p class="text-align-justify">将键值写入块的内存缓冲区时，每连续 16 （默认值，可配置）个键会进行 delta 编码压缩：</p>
 <ul><li>1、先计算当前键与前一次写入键的共同前缀长度</li>
@@ -106,7 +106,7 @@
   kSnappyCompression = 0x1,  
   kZstdCompression = 0x2,  
 };</code></pre>
-<img src='../assets/leveldb/ldb-block-encode.png' title='ldb-block-encode' alt='ldb-block-encode' width='800'/>
+<img src='https://s2.loli.net/2025/05/24/UzgZTxtOsaqYn9w.png' title='ldb-block-encode' alt='ldb-block-encode' width='800'/>
 <h3>5.3 “data 块”</h3>
 <p class="text-align-justify">leveldb 文件中“data 块”数据是按照 key 有序存储的。同一个文件中，块与块之间有序，块之间 key 范围不会有重合，块内内容也是按 key 有序存储。</p>
 <p class="text-align-justify">因为有序， 使用默认的 BytewiseComparator，delta 编码压缩效果通常会明显。</p>
@@ -190,7 +190,7 @@ void FilterBlockBuilder::AddKey(const Slice&amp; key) {
 <li>2、接着将“还未拼接偏移位置数据时的 <code>result_</code> 长度”以 32 比特定长编码后拼接到 <code>result_</code> 后面，</li>
 <li>3、然后将 kFilterBaseLg（=11）参数拼接到后面（占用1个字节），</li>
 <li>4、最后将 <code>result_</code> 作为“meta 块”的原始数据<strong>不经压缩地</strong>写入文件中。（<u>这里有点特殊，和其他块不太一样，其他块都是键值对编码写入的</u>）</li></ul>
-<img src='../assets/leveldb/ldb-filter-block.png' title='ldb-filter-block' alt='ldb-filter-block' width='800'/>
+<img src='https://s2.loli.net/2025/05/24/MvG4UNntp7ibmPF.png' title='ldb-filter-block' alt='ldb-filter-block' width='800'/>
 <p class="text-align-justify">并将 过滤策略 名称拼接上前缀<code>filter.</code> 作为 键，将meta 块（“过滤数据块”）在文件中的偏移位置 offset 和块大小 size 编码后作为值，写入 metaindex 块中。</p>
 <p class="text-align-justify">打开数据库时，</p>
 <ul><li>1、先从 “Footer” 部分读取“metaindex 块”的偏移位置 offset 和 块大小 size</li>

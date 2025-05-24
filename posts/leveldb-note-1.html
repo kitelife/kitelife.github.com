@@ -56,13 +56,13 @@
     </header>
     <article class="post-content">
         <h2>0、设计概要&接口定义</h2>
-<img src='../assets/leveldb/lsm.png' title='lsm' alt='lsm' width='800'/>
-<img src='/images/15090582047606246417.svg' title='15090582047606246417' alt='15090582047606246417'/>
+<img src='https://s2.loli.net/2025/05/24/9Gh1agVoq2x6pBU.png' title='lsm' alt='lsm' width='800'/>
+<img src='../plantuml-images/13339516205926192126.svg' title='13339516205926192126' alt='13339516205926192126'/>
 <p class="text-align-justify">基于 DB 类的静态方法 Open 来打开/初始化一个数据库，Open 会实例化一个 DBImpl 对象，调用其私有方法 Recover 来恢复/初始化状态，并将 DBImpl 对象指针赋值给 dbptr 返回给调用方，调用方通过 dbptr 调用 Put/Write/Delete/Get/NewIterator 进行读写操作。</p>
 <h2>1、WriteBatch</h2>
 <p class="text-align-justify">Put 和 Delete 是针对单个 key 进行操作，在底层会将键值操作包装成 WriteBatch 对象，然后调用 Write 接口执行实际的操作流程。</p>
 <p class="text-align-justify">也可以在调用侧实例化 WriteBatch 对象，将一批增删操作都先填充到 WriteBatch 对象，然后直接调用 Write 接口执行一批操作，这样写吞吐应该会更高一点。这批操作是<u>原子的</u>（一起写成功或者失败）。</p>
-<img src='/images/13107110993396303339.svg' title='13107110993396303339' alt='13107110993396303339'/>
+<img src='../plantuml-images/7934814931082875318.svg' title='7934814931082875318' alt='7934814931082875318'/>
 <pre class="language-cpp"><code>//
 typedef uint64_t SequenceNumber; // 虽然序列号使用了的 uint64_t 类型，但是实际只会使用 56 比特，即最大值为 ((0x1ull &lt;&lt; 56) - 1)
 // We leave eight bits empty at the bottom so a type and sequence#  
@@ -81,12 +81,12 @@ typedef SkipList&lt;const char*, KeyComparator&gt; Table;</code></pre>
 // varstring :=  
 //    len: varint32  
 //    data: uint8[len]</code></pre>
-<img src='../assets/leveldb/write_batch.png' title='write-batch' alt='write-batch' width='800'/>
+<img src='https://s2.loli.net/2025/05/24/nACmfLPxBvcRpyM.png' title='write-batch' alt='write-batch' width='800'/>
 <p class="text-align-justify">$SequenceNum$ 是当前 WriteBatch 所有操作的基准序列号，即 WriteBatch 中第一个操作的序列号为 $SequenceNum + 0$ ，第二个操作的序列号为 $SequenceNum + 1$，依次类推。为每次操作分配一个唯一的序列号，是为了方便实现快照能力。后面再解释。</p>
 <h2>2、写入缓冲与攒批</h2>
-<img src='/images/2145630333506801931.svg' title='2145630333506801931' alt='2145630333506801931'/>
+<img src='../plantuml-images/17435093155912734571.svg' title='17435093155912734571' alt='17435093155912734571'/>
 <p class="text-align-justify">leveldb 的 write 写入过程基于 Writer （双端）队列实现缓冲和可能的攒批（合并多个 WriteBatch），提升写入的吞吐性能。攒批的性能空间来自 - 如果写入时发现 level0 文件过多（compaction 未完成，影响读/检索性能），则认为需要对写入进行限速，将写入先在 Write 队列中缓冲，攒 1ms 左右，合并成一个大的 WriteBatch 然后写入 memtable。</p>
-<img src='../assets/leveldb/write_deque.png' title='write-deque' alt='write-deque' width='450'/>
+<img src='https://s2.loli.net/2025/05/24/vfKFoAlU7b6hjna.png' title='write-deque' alt='write-deque' width='450'/>
 <p class="text-align-justify">如果本次写入的 Writer 为队列头部，则说明当前写入压力应该不大，可以直接进行写入操作 -</p>
 <ul><li>1、先确认写入条件是否满足：
 <ul><li>(1) level0 文件数是否超过阈值（8），如果超过，说明写入压力有点大（都来不及 minor compaction 啦），则释放互斥锁，当前线程休眠 1ms（攒批的性能空间在这！）</li>
@@ -102,7 +102,7 @@ typedef SkipList&lt;const char*, KeyComparator&gt; Table;</code></pre>
 
 // Header is checksum (4 bytes), length (2 bytes), type (1 byte).  
 static const int kHeaderSize = 4 + 2 + 1;</code></pre>
-<img src='../assets/leveldb/wal_log_format.png' title='wal-log-format' alt='wal-log-format' width='800'/>
+<img src='https://s2.loli.net/2025/05/24/CGjQK76MiHlgAeZ.png' title='wal-log-format' alt='wal-log-format' width='800'/>
 <p class="text-align-justify">leveldb 会将 WriteBatch 的 <code>rep_</code> 当作字节序列写入 log 文件中。不过 log 文件存储的单元结构为块（block），块大小为 32768 字节。一个 WriteBatch 的 <code>rep_</code> 的大小可能大于/等于/小于一个块大小，也就是写入一个 <code>rep_</code> 可能填不满一个块或者正好填满一个块或者跨多个块。</p>
 <p class="text-align-justify">如果一次写入后，当前 block 剩余的空间不足以填充下一次写入的头部，则直接将剩余空间以 <code>\x00</code> 填满。</p>
 <p class="text-align-justify">这样编码的好处？- 读取解析时，按块大小进行读取，速度更快，顺序解析也方便。</p>
@@ -110,7 +110,7 @@ static const int kHeaderSize = 4 + 2 + 1;</code></pre>
 <p class="text-align-justify">那也意味着，如果一旦不可变 memtable 数据 compaction 到 $level_0$ 文件后，这些数据状态对应的“WAL log” 内容就没没有实际用处了，可以及时清理掉。</p>
 <p class="text-align-justify">leveldb 写入数据时，如果发现 memtable 占用内存已达到阈值，并且不可变 memtable 数据已被 minor compaction 成 $level_0$ 文件，则会将 memtable 切换成不可变 memtable，同时创建一个新的“WAL log”，并申请一个新的 memtable。不过此时新的不可变 memtable 还没被 minor compaction 成 $level_0$ 文件，所以前一个“WAL log”文件也还要保留，不能删除。</p>
 <h2>4、MemTable</h2>
-<img src='/images/5046769896657894949.svg' title='5046769896657894949' alt='5046769896657894949'/>
+<img src='../plantuml-images/7374646708898753946.svg' title='7374646708898753946' alt='7374646708898753946'/>
 <pre class="language-cpp"><code>typedef SkipList&lt;const char*, KeyComparator&gt; Table;</code></pre>
 <p class="text-align-justify">MemTable 是对应一个“WAL log” 文件的内存存储结构。<u>单个 MemTable 内存占用阈值为 4MB(<code>write_buffer_size</code>)</u>，当可变 MemTable 的内存占用达到阈值时，就尝试切换成不可变 MemTable，并创建一个新的 WAL log 文件以及对应的可变 MemTable 来承接写入，而不可变 MemTable 的内容等待被 minor compaction 刷成一个 $level_0$ ldb 数据文件。</p>
 <pre class="language-cpp"><code>// Amount of data to build up in memory (backed by an unsorted log  
@@ -126,7 +126,7 @@ size_t write_buffer_size = 4 * 1024 * 1024;</code></pre>
 <p class="text-align-justify">Arena 的特点是整块内存申请，整块内存一次性释放，从而优化内存的申请释放开销。</p>
 <p class="text-align-justify">leveldb 里 Arena 的生命周期与 MemTable 对象保持一致，MemTable 对象的所有 Add 操作涉及的内存分配都在同一 Arena 对象上进行， MemTable 对象切换成不可变状态并存储为 level0 ldb 文件后，Arena 对象的所有内存块随着 MemTable 对象析构而一次性释放。</p>
 <pre class="language-cpp"><code>static const int kBlockSize = 4096;</code></pre>
-<img src='../assets/leveldb/memtable_arena.png' title='memtable-arena' alt='memtable-arena' width='800'/>
+<img src='https://s2.loli.net/2025/05/24/yZ8lKoRXL3V4cm7.png' title='memtable-arena' alt='memtable-arena' width='800'/>
 <p class="text-align-justify">从 Arena 申请内存空间时，如果最新一个可用块的剩余内存大小（<code>alloc_bytes_remaining_</code>）小于当前申请的内存大小 bytes，则先申请一个新的内存块，然后从新内存块上分配内存空间 - 如果当前申请的内存大小大于整块大小的 1/4，则单独占用一个内存块。</p>
 <p class="text-align-justify">所以 Arena 内存块大小必须大于实际一次申请的最大内存，并且为减少内存碎片，应该要根据代码中实际的内存分配情况来确定 Arena 内存块大小。</p>
 <p class="text-align-justify">MemTable 的 Arena 内存块大小只有一种。有些项目中内存分配情况比较复杂的话，其 Arena 设计通常会使用多种内存块大小 ，以此提高灵活性，减少内存碎片浪费。</p>
@@ -209,7 +209,7 @@ void MemTable::Add(SequenceNumber s, ValueType type, const Slice&amp; key,
   assert(p + val_size == buf + encoded_len);  
   table_.Insert(buf);  
 }</code></pre>
-<img src='../assets/leveldb/skiplist_node_key.png' title='skiplist-node-key' alt='skiplist-node-key' width='800'/>
+<img src='https://s2.loli.net/2025/05/24/HMisDYbkf6eUdCV.png' title='skiplist-node-key' alt='skiplist-node-key' width='800'/>
 <ul><li>整数变长编码：“key 长度” 和 “value 长度”正常是32bit（4字节）整数，但 key 和 value 实际可能是比较短的字节序列（比如：长度小于128时，只要1个字节就能存储长度，而不是4字节）。</li>
 <li>序列号仅使用尾部7个字节：序列号大小不会超过7个字节？确认一下哪里有约束</li>
 <li>操作/值类型：

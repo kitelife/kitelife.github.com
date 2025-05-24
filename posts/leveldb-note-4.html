@@ -64,12 +64,12 @@
 <p class="text-align-justify">写入过程非常简单，所以 leveldb 的写入吞吐可以非常高。不过有3个性能调优点可以注意一下：</p>
 <ul><li>1、写入操作可以指定是同步的（sync）或者异步的，这里说的<u>同步异步是针对 WAL log 文件写入而言的</u>，需要在吞吐性能和数据一致性之间做好平衡：
 <ul><li>如果写入操作指定为同步，那么将操作记录到 WAL log 文件后，还要<u>确保文件内容持久化到磁盘</u>，这个持久化操作对 leveldb 的写入吞吐影响会比较大。</li>
-<li>如果写入操作指定为<u>非同步，那么对 WAL log 的文件写入，实际只是写到内核的文件缓冲区</u>。如果写入操作记录到可变 Memtable 并返回写入成功状态给调用方后，内核缓冲区内容刷出到磁盘之前，系统 crash 或者机器掉电都会导致写入数据丢失，存在先写后读的一致性问题。</li></ul></li>
-<li>2、leveldb 的实现中，可变 Memtable 对象和不可变 Memtable 对象均只有一个，并且 Memtable 对象的内存占用存在上限阈值，一旦可变 Memtable 写满且不可变 Memtable 还存在（还没来得及 minor compaction 成 $level_0$ 数据文件），那么写入就会被阻塞（详情见[[## 2、写入缓冲与攒批]] 部分解说），那么：
+<li>如果写入操作指定为<u>非同步，那么对 WAL log 的文件写入，实际只是写到内核的文件缓冲区</u>。如果写入操作记录到可变 Memtable 并返回写入成功状态给调用方后，内核缓冲区内容刷出到磁盘之前，系统 crash 或者机器掉电都会导致写入数据丢失，存在先写后读的一致性问题。</li></ul></li></ul>
+<ul><li>2、leveldb 的实现中，可变 Memtable 对象和不可变 Memtable 对象均只有一个，并且 Memtable 对象的内存占用存在上限阈值，一旦可变 Memtable 写满且不可变 Memtable 还存在（还没来得及 minor compaction 成 $level_0$ 数据文件），那么写入就会被阻塞，那么：
 <ul><li>可以适当调大 Memtable 内存占用的上限阈值，但也不能调得很大，因为这会导致 compaction 压力会比较大，间接影响读/检索的性能：
 <ul><li>如果 $level_0$ 文件很多，来不及 major compaction，而这些文件的 key 区间又存在重合，就可能需要检索多个 $level_0$ 文件。</li>
-<li>major compaction 涉及较多的文件磁盘 I/O，从而可能影响检索时的文件读取。</li></ul></li>
-<li>�“不可变 Memtable 对象均只有一个” 如果调整 leveldb 实现支持存在多个 不可变 Memtable 对象，可能存在优化空间；compaction 目前是单线程处理的，如果调整成某种多线程实现，可能也存在优化空间，不过实现起来应该要复杂得多，并且磁盘 I/O 也容易成为检索性能退化的因素。</li></ul></li></ul>
+<li>major compaction 涉及较多的文件磁盘 I/O，从而可能影响检索时的文件读取。</li></ul></li></ul></li></ul>
+<ul><li>3、“不可变 Memtable 对象均只有一个” 如果调整 leveldb 实现支持存在多个 不可变 Memtable 对象，可能存在优化空间；compaction 目前是单线程处理的，如果调整成某种多线程实现，可能也存在优化空间，不过实现起来应该要复杂得多，并且磁盘 I/O 也容易成为检索性能退化的因素。</li></ul>
 <img src='../assets/leveldb/IO-buffering.png' title='IO-buffering' alt='IO-buffering' width='800'/>
 <blockquote><p class="text-align-justify">图片摘自《The Linux Programming Interface》一书 244 页。</p>
 <p class="text-align-justify"></p>
@@ -274,7 +274,7 @@ public:
 <ul><li>1、先根据 key 匹配到目标数据文件的元信息</li>
 <li>2、根据元信息中的数据文件 id，去 TableCache 中查找对应的 Table 对象，如果不存在，则先打开数据文件，读取解析 footer / index / meta / meta index 这些索引信息，准备好 Table 对象，缓存到 TableCache 中</li>
 <li>3、基于 Table 对象继续进行数据文件内的检索流程</li></ul>
-<img src='/images/13668317937842427369.svg' title='13668317937842427369' alt='13668317937842427369'/>
+<img src='/images/8466311624164870414.svg' title='8466311624164870414' alt='8466311624164870414'/>
 <p class="text-align-justify">leveldb 默认参数支持缓存 990 个 Table，ShardedLRUCache 默认分片数为 16，按照公式计算，每个分片支持 缓存 62 个 Table。</p>
 <pre class="language-cpp"><code>struct Options {
   // 省略
@@ -328,7 +328,7 @@ Cache* block_cache = nullptr;
 // compression is enabled.  This parameter can be changed dynamically.  
 size_t block_size = 4 * 1024;</code></pre>
 <h4>9.4.3 ShardedLRUCache</h4>
-<img src='/images/13668317937842427369.svg' title='13668317937842427369' alt='13668317937842427369'/>
+<img src='/images/4783583573570112171.svg' title='4783583573570112171' alt='4783583573570112171'/>
 <p class="text-align-justify">HandleTable 是一个“链接法（chaining）” 实现的哈希表，默认初始化 4 个 buckets，每个 bucket 初始值为空指针，指针类型为 <code>LRUHandle*</code>，即哈希表节点类型。</p>
 <p class="text-align-justify">HandleTable 中：</p>
 <ul><li><code>length_</code>：表示哈希表的当前容量。</li>
@@ -375,7 +375,7 @@ HandleTable table_ GUARDED_BY(mutex_);</code></pre>
 <h3>9.5、过滤策略-布隆过滤器</h3>
 <img src='../assets/leveldb/Bloom_filter_speed.png' title='Bloom_filter_speed' alt='Bloom_filter_speed' width='600'/>
 <p class="text-align-justify">过滤器匹配返回 false，就一定不在存储中；如果返回 true，有小概率不对（false positive）<sup id="fnref:1"><a href="#fn:1" class="footnote" rel="footnote" role="doc-noteref">[1]</a></sup>。</p>
-<img src='/images/13668317937842427369.svg' title='13668317937842427369' alt='13668317937842427369'/>
+<img src='/images/3681420631020226762.svg' title='3681420631020226762' alt='3681420631020226762'/>
 <pre class="language-cpp"><code>class FilterPolicy {
 public:  
  virtual ~FilterPolicy();  

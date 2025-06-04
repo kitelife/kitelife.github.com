@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta property="og:title" content="BitPacking">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://blog.xiayf.cn/">
+    <meta property="og:site_name" content="BitPacking">
+    <meta property="og:description" content="精进，求诸己身">
+
+    <title>BitPacking</title>
+    <meta name="description" content="精进，求诸己身">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <link rel="stylesheet" href="/static/main.css">
+    <link rel="canonical" href="https://blog.xiayf.cn/">
+    
+    <link crossorigin="" rel="shortcut icon" type="image/x-icon" href="/assets/bits_small.ico">
+    
+</head>
+
+<body>
+<header class="site-header">
+    <div class="wrapper">
+        <a class="site-title" href="/">BitPacking</a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg viewBox="0 0 18 15">
+                    <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                <a class="page-link" href="/pages/about.html">关于我</a>
+                
+                <a class="page-link" href="/pages/works.html">作品</a>
+                
+                <a class="page-link" href="/pages/linlang.html">琳琅</a>
+                
+                <a class="page-link" href="/rss.xml">RSS</a>
+                
+            </div>
+        </nav>
+    </div>
+</header>
+
+<div class="page-content">
+    <div class="wrapper">
+        
+<div class="post">
+    <header class="post-header">
+        <h1 class="post-title">一行式并行方案（译）</h1>
+        <p class="post-meta">2015-09-11</p>
+    </header>
+    <article class="post-content">
+        <p class="text-align-justify">原文：<a href='http://chriskiehl.com/article/parallelism-in-one-line'>Parallelism in one line</a></p>
+<p class="text-align-justify">在并行处理能力方面，Python的声名并不太好。不考虑关于线程和GIL（多数情况下是合理的）的标准论据，我认为Python中关于并行的真正问题并不是一个技术问题，而是教学问题。围绕Python线程和多进程的常见教程，一般都写得不错，但也令人乏味 - 激烈非凡，对日常真正有用的东西却很少涉及。</p>
+<h3>沿袭的例子</h3>
+<p class="text-align-justify">在DuckDuckGo（DDG）中搜索“Python多线程教程”，简单调查一下排在前面的结果，就会发现它们给出的都是同样基于Class + Queue的示例。</p>
+<p class="text-align-justify"><em>介绍threading/multiprocessing、生产者/消费者的真实示例代码：</em></p>
+<pre class="language-python"><code># coding: utf-8
+# Example.py
+&apos;&apos;&apos;
+标准的多线程生产者/消费者模式
+&apos;&apos;&apos;
+
+import time 
+import threading 
+import Queue 
+
+class Consumer(threading.Thread): 
+  def __init__(self, queue): 
+    threading.Thread.__init__(self)
+    self._queue = queue 
+
+  def run(self):
+    while True: 
+      # queue.get() 会阻塞当前线程，直到获取到一个数据项
+      msg = self._queue.get() 
+      # 检查当前消息是否是个“毒药丸”
+      if isinstance(msg, str) and msg == &apos;quit&apos;:
+        # 如果是，则退出循环
+        break
+      # “处理” (这里是打印)从队列中取出的数据项
+      print &quot;I&apos;m a thread, and I received %s!!&quot; % msg
+    # 我始终是这么的友好
+    print &apos;Bye byes!&apos;
+
+
+def Producer():
+  # Queue用于在线程之间共享数据项
+  queue = Queue.Queue()
+
+  # 创建一个工作实例
+  worker = Consumer(queue)
+  # start方法会调用内部的run()方法来开启线程
+  worker.start() 
+
+  # 变量，用于追踪开始的时间
+  start_time = time.time() 
+  # 在5秒之内
+  while time.time() - start_time &lt; 5: 
+    # “生产”一块工作，放入队列中，由消费者来处理
+    queue.put(&apos;something at %s&apos; % time.time())
+    # 睡眠一会儿，以避免过多的消息
+    time.sleep(1)
+
+  # 这是杀死线程的“毒药丸”方式
+  queue.put(&apos;quit&apos;)
+  # 等待线程关闭
+  worker.join()
+
+
+if __name__ == &apos;__main__&apos;:
+  Producer()</code></pre>
+<p class="text-align-justify">嗯...闻闻，代码中一股子Java的气息。</p>
+<p class="text-align-justify">我不想让大家觉得好像我认为生产者/消费者是处理线程/多进程的错误方式 - 因为确实不是。实际上，对多种问题来说，这种方式非常适合。然而，我认为：对于日常的脚本程序来说，这种方式并非是最有用的。</p>
+<h3>问题（我认为的）</h3>
+<p class="text-align-justify">其一，为了做点有用的事情，你得搞一个公式化的类；其二，你得维护一个队列（Queue），用于传送对象；这些齐备之后，在队列管道的两端还得准备方法来做真正的工作（如果希望有两种方式来通信或者准备存储结果，可能还得引入另一个队列）。</p>
+<p class="text-align-justify"><strong>更多的工作者，更多的问题</strong></p>
+<p class="text-align-justify">基于此，下一件你想要做的事情就是搞一个工作者类的池，来加速你的Python程序。在关于线程的IBM教程中，给出了一个示例代码，以下是其变种。这是一个常见的应用场景 - 在多个线程上分配获取网页的任务。</p>
+<pre class="language-python"><code># coding: utf-8
+# Example2.py
+&apos;&apos;&apos;
+一个更加实际的线程池示例
+&apos;&apos;&apos;
+
+import time 
+import threading 
+import Queue 
+import urllib2 
+
+class Consumer(threading.Thread): 
+  def __init__(self, queue): 
+    threading.Thread.__init__(self)
+    self._queue = queue 
+
+  def run(self):
+    while True: 
+      content = self._queue.get() 
+      if isinstance(content, str) and content == &apos;quit&apos;:
+        break
+      response = urllib2.urlopen(content)
+    print &apos;Bye byes!&apos;
+
+
+def Producer():
+  urls = [
+    &apos;http://www.python.org&apos;, &apos;http://www.yahoo.com&apos;
+    &apos;http://www.scala.org&apos;, &apos;http://www.google.com&apos;
+    # 等等... 
+  ]
+  queue = Queue.Queue()
+  worker_threads = build_worker_pool(queue, 4)
+  start_time = time.time()
+
+  # 加入待处理的URL
+  for url in urls: 
+    queue.put(url)
+  # 加入毒药丸
+  for worker in worker_threads:
+    queue.put(&apos;quit&apos;)
+  for worker in worker_threads:
+    worker.join()
+
+  print &apos;Done! Time taken: {}&apos;.format(time.time() - start_time)
+
+def build_worker_pool(queue, size):
+  workers = []
+  for _ in range(size):
+    worker = Consumer(queue)
+    worker.start() 
+    workers.append(worker)
+  return workers
+
+if __name__ == &apos;__main__&apos;:
+  Producer()</code></pre>
+<p class="text-align-justify">奏效了，但是你看看这些代码！准备（setup）方法、一组要追踪的线程，最糟糕的是，若有任何地方易发生死锁，就会产生一堆的join状态说明。自此，一切只会更复杂！</p>
+<p class="text-align-justify">到目前为止，完成了些什么？啥都没有。上面的代码纯粹只是把所有东西像用纸糊起来一样（Just about everything in the above code is pure plumbing，如何翻译？）。这是另一种公式化的写法，也易发生错误（嘿，在写这个代码时，我甚至忘了在队列对象上调用task_done()（我懒得去解决这个问题然后再搞个截图）），付出很多，得到的却很少。幸运的是，我们有更好的方式。</p>
+<h2>引入：Map</h2>
+<p class="text-align-justify">Map是一个酷酷的小东西，也是在Python代码轻松引入并行的关键。对此不熟悉的人会认为map是从函数式语言（如Lisp）借鉴来的东西。map是一个函数 - 将另一个函数映射到一个序列上。例如：</p>
+<pre class="language-python"><code>urls = [&apos;http://www.yahoo.com&apos;, &apos;http://www.reddit.com&apos;]
+results = map(urllib2.urlopen, urls)</code></pre>
+<p class="text-align-justify">这段代码在传入序列的每个元素上应用方法<em>urlopen</em>，并将所有结果存入一个列表中。大致与下面这段代码的逻辑相当：</p>
+<pre class="language-python"><code>results = []
+for url in urls: 
+    results.append(urllib2.urlopen(url))</code></pre>
+<p class="text-align-justify">Map会为我们处理在序列上的迭代，应用函数，最后将结果存入一个方便使用的列表。</p>
+<p class="text-align-justify">这为什么重要呢？因为利用恰当的库，map让并行处理成为小事一桩！</p>
+<img src='https://i.loli.net/2020/06/14/kqumnip3B7M2dcQ.png' title='map-function' alt='map-function' width='600'/>
+<p class="text-align-justify">Python标准库中<em>multiprocessing</em>模块，以及极少人知但同样出色的子模块<em>multiprocessing.dummy</em>，提供了map函数的并行版本。</p>
+<p class="text-align-justify">题外话：这是啥？你从未听说过这名为dummy的mulprocessing模块的线程克隆版本？我也是最近才知道的。在multiprocessing文档页中仅有一句提到这个子模块，而这句话基本可以归结为“哦，是的，存在这样一个东西”。完全低估了这个模块的价值！</p>
+<p class="text-align-justify">Dummy是multiprocessing模块的精确克隆，唯一的区别是：multiprocessing基于进程工作，而dummy模块使用线程（也就带来了常见的Python限制）。因此，任何东西可套用到一个模块，也就可以套用到另一个模块。在两个模块之间来回切换也就相当容易，当你不太确定一些框架调用是IO密集型还是CPU密集型时，想做探索性质的编程，这一点会让你觉得非常赞！</p>
+<h3>开始</h3>
+<p class="text-align-justify">为了访问map函数的并行版本，首先需要导入包含它的模块：</p>
+<pre class="language-python"><code># 以下两行引入其一即可
+from multiprocessing import Pool
+from multiprocessing.dummy import Pool as ThreadPool</code></pre>
+<p class="text-align-justify">并实例化池对象：</p>
+<pre class="language-python"><code># 译注：这里其实是以dummy模块为例
+pool = ThreadPool()</code></pre>
+<p class="text-align-justify">这一句代码处理了example2.py中7行的<em>build_worker_pool</em>函数完成的所有事情。如名所示，这句代码会创建一组可用的工作者，启动它们来准备工作，并将它们存入变量中，方便访问。</p>
+<p class="text-align-justify">pool对象可以有若干参数，但目前，只需关注第一个：进程/线程数量。这个参数用于设置池中的工作者数目。如果留空，默认为机器的CPU核数。</p>
+<p class="text-align-justify">一般来说，如果为CPU密集型任务使用进程池（multiprocessing pool），更多的核等于更快的速度（但有一些注意事项）。然而，当使用线程池（threading）处理网络密集型任务时，情况就很不一样了，因此最好试验一下池的最佳大小。</p>
+<pre class="language-python"><code>pool = ThreadPool(4) # 将池的大小设置为4</code></pre>
+<p class="text-align-justify">如果运行了过多的线程，就会浪费时间在线程切换上，而不是做有用的事情，所以可以把玩把玩直到找到最适合任务的线程数量。</p>
+<p class="text-align-justify">现在池对象创建好了，简单的并行也是弹指之间的事情了，那来重写example2.py吧。</p>
+<pre class="language-python"><code>import urllib2 
+from multiprocessing.dummy import Pool as ThreadPool 
+
+urls = [
+  &apos;http://www.python.org&apos;, 
+  &apos;http://www.python.org/about/&apos;,
+  &apos;http://www.onlamp.com/pub/a/python/2003/04/17/metaclasses.html&apos;,
+  &apos;http://www.python.org/doc/&apos;,
+  &apos;http://www.python.org/download/&apos;,
+  &apos;http://www.python.org/getit/&apos;,
+  &apos;http://www.python.org/community/&apos;,
+  &apos;https://wiki.python.org/moin/&apos;,
+  &apos;http://planet.python.org/&apos;,
+  &apos;https://wiki.python.org/moin/LocalUserGroups&apos;,
+  &apos;http://www.python.org/psf/&apos;,
+  &apos;http://docs.python.org/devguide/&apos;,
+  &apos;http://www.python.org/community/awards/&apos;
+  # 等等...
+  ]
+
+# 创建一个工作者线程池
+pool = ThreadPool(4) 
+# 在各个线程中打开url，并返回结果
+results = pool.map(urllib2.urlopen, urls)
+#close the pool and wait for the work to finish
+# 关闭线程池，等待工作结束
+pool.close() 
+pool.join()</code></pre>
+<p class="text-align-justify">看看！真正做事情的代码仅有4行，其中3行只是简单的辅助功能。<em>map</em>调用轻松搞定了之前示例40行代码做的事情！觉得好玩，我对两种方式进行了时间测量，并使用了不同的池大小。</p>
+<pre class="language-python"><code># 译注：我觉得与串行处理方式对比意义不大，应该和队列的方式进行性能对比
+results = [] 
+for url in urls:
+  result = urllib2.urlopen(url)
+  results.append(result)
+
+# # ------- 对比 ------- # 
+
+
+# # ------- 池的大小为4 ------- # 
+pool = ThreadPool(4) 
+results = pool.map(urllib2.urlopen, urls)
+
+# # ------- 池的大小为8 ------- # 
+
+pool = ThreadPool(8) 
+results = pool.map(urllib2.urlopen, urls)
+
+# # ------- 池的大小为13 ------- # 
+
+pool = ThreadPool(13) 
+results = pool.map(urllib2.urlopen, urls)</code></pre>
+<p class="text-align-justify">结果：</p>
+<pre class="language-text"><code>单线程: 14.4 秒
+池大小为4时：3.1 秒
+池大小为8时：1.4 秒
+池大小为13时：1.3秒</code></pre>
+<p class="text-align-justify">真是呱呱叫啊！也说明了试验不同的池大小是有必要的。在我的机器上，池的大小大于9后会导致性能退化（译注：咦，结果不是显示13比8的性能要好么？）。</p>
+<h2>现实中的Example 2</h2>
+<p class="text-align-justify">为千张图片创建缩略图。</p>
+<p class="text-align-justify">来做点CPU密集型的事情！对于我，在工作中常见的任务是操作大量的图片目录。其中一种图片转换是创建缩略图。这项工作适于并行处理。</p>
+<p class="text-align-justify"><strong>基本的单进程设置</strong></p>
+<pre class="language-python"><code>from multiprocessing import Pool 
+from PIL import Image
+
+SIZE = (75,75)
+SAVE_DIRECTORY = &apos;thumbs&apos;
+
+def get_image_paths(folder):
+  return (os.path.join(folder, f) 
+      for f in os.listdir(folder) 
+      if &apos;jpeg&apos; in f)
+
+def create_thumbnail(filename): 
+  im = Image.open(filename)
+  im.thumbnail(SIZE, Image.ANTIALIAS)
+  base, fname = os.path.split(filename) 
+  save_path = os.path.join(base, SAVE_DIRECTORY, fname)
+  im.save(save_path)
+
+if __name__ == &apos;__main__&apos;:
+  folder = os.path.abspath(
+    &apos;11_18_2013_R000_IQM_Big_Sur_Mon__e10d1958e7b766c3e840&apos;)
+  os.mkdir(os.path.join(folder, SAVE_DIRECTORY))
+
+  images = get_image_paths(folder)
+
+  for image in images: 
+    create_thumbnail(image)</code></pre>
+<p class="text-align-justify">示例代码中用了一些技巧，但大体上是：向程序传入一个目录，从目录中获取所有图片，然后创建缩略图，并将缩略图存放到各自的目录中。</p>
+<p class="text-align-justify">在我的机器上，这个程序处理大约6000张图片，花费27.9秒。</p>
+<p class="text-align-justify">如果使用一个并行的map调用来替换<em>for</em>循环：</p>
+<pre class="language-python"><code>from multiprocessing import Pool 
+from PIL import Image
+
+SIZE = (75,75)
+SAVE_DIRECTORY = &apos;thumbs&apos;
+
+def get_image_paths(folder):
+  return (os.path.join(folder, f) 
+      for f in os.listdir(folder) 
+      if &apos;jpeg&apos; in f)
+
+def create_thumbnail(filename): 
+  im = Image.open(filename)
+  im.thumbnail(SIZE, Image.ANTIALIAS)
+  base, fname = os.path.split(filename) 
+  save_path = os.path.join(base, SAVE_DIRECTORY, fname)
+  im.save(save_path)
+
+if __name__ == &apos;__main__&apos;:
+  folder = os.path.abspath(
+    &apos;11_18_2013_R000_IQM_Big_Sur_Mon__e10d1958e7b766c3e840&apos;)
+  os.mkdir(os.path.join(folder, SAVE_DIRECTORY))
+
+  images = get_image_paths(folder)
+
+  pool = Pool()
+  pool.map(create_thumbnail, images)
+  pool.close() 
+  pool.join()</code></pre>
+<p class="text-align-justify"><strong>5.6秒！</strong></p>
+<p class="text-align-justify">仅修改几行代码就能得到巨大的速度提升。这个程序的生产环境版本通过切分CPU密集型工作和IO密集型工作并分配到各自的进程和线程（通常是死锁代码的一个因素），获得更快的速度。然而，由于map性质清晰明确，无需手动管理线程，以干净、可靠、易于调试的方式混合匹配两者（译注：这里的“两者”是指什么？CPU密集型工作和IO密集型工作？），也是相当容易的。</p>
+<p class="text-align-justify">就是这样了。（几乎）一行式并行解决方案。</p>
+    </article>
+</div>
+
+    </div>
+</div>
+
+<footer class="site-footer">
+    <div class="wrapper">
+        <div class="footer-col-wrapper">
+            <div class="footer-col footer-col-1">
+                <ul class="social-media-list">
+                    <li>
+                        <a href="https://github.com/kitelife" target="_blank">
+                            <span class="icon icon--github">
+                                <svg viewBox="0 0 16 16">
+                                    <path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                                </svg>
+                            </span>
+                            <span class="username">kitelife</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://maimai.cn/profile/detail?dstu=39580141" target="_blank">
+                            <span class="icon icon--maimai">
+                                <img src="https://maimai.cn/favicon.ico" width="16"/>
+                            </span>
+                            <span class="username">Xiayf</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="footer-col footer-col-2"></div>
+            <div class="footer-col footer-col-3"></div>
+            <div class="footer-col footer-col-4">
+                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">
+                    <img alt="Creative Commons License" src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-sa.svg">
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        },
+        svg: {
+            fontCache: 'global'
+        }
+    };
+</script>
+<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</body>
+</html>

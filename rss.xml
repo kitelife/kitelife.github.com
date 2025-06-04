@@ -4,8 +4,8 @@
         <description>精进，求诸己身</description>
         <link>https://blog.xiayf.cn/</link>
         <atom:link href="https://blog.xiayf.cn/rss.xml" rel="self" type="application/rss+xml"/>
-        <pubDate>2025-05-24T23:07:22.853875+08:00</pubDate>
-        <lastBuildDate>2025-05-24T23:07:22.853875+08:00</lastBuildDate>
+        <pubDate>2025-06-05T00:50:46.911686+08:00</pubDate>
+        <lastBuildDate>2025-06-05T00:50:46.911686+08:00</lastBuildDate>
         <generator>LingDong</generator>
         
         <item>
@@ -214,7 +214,7 @@ eucl\_ dist(v_{3},q)&amp;=5.52
 &lt;p class=&quot;text-align-justify&quot;&gt;多数嵌入（embedding）模型会输出 $float32$ 数值精度的向量。这个精度虽然提供了信息高保真，但在真正重要的信息之外也带来一些资源浪费。对于给定的数据集，嵌入不可能在单个维度需要20亿种取值，特别是对于高维度向量而言（比如：386维及以上）。量化以一种有损的方式对向量进行编码，轻微降低信息保真而明显地降低存储空间占用。&lt;/p&gt;
 &lt;h2&gt;理解标量量化的分桶&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;标量量化使用更小的数据类型对向量每一维的取值进行分桶。本文的余下部分将假设将 $float32$ 量化到 $int8$ 。为了准确地对值进行分桶，不能简单地将值四舍五入到最近的整数。许多模型输出向量的维度取值空间为 $[-1.0, 1.0]$，如果简单粗暴地四舍五入处理，那么 0.123 和 0.321 这两个不同的向量维度取值都会向下取整到 0。最终，一个向量仅会使用 $int8$ 可用 255 个桶中的2个桶，这样就丢失太多信息了。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/Q3oyflHEWhrajNI.jpg&apos; title=&apos;float32-to-int8-buckets.jpeg&apos; alt=&apos;float32-to-int8-buckets.jpeg&apos; width=&apos;500&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/06/05/92bnmVKzjqe3GOJ.jpg&apos; title=&apos;float32-to-int8-buckets.jpeg&apos; alt=&apos;float32-to-int8-buckets.jpeg&apos; width=&apos;500&apos;/&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图1：量化目标图解 - 将 -1.0 到 1.0 之间的连续值分桶到离散的 $int8$ 数值。&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;这种数值转换背后的数学原理并不太复杂。我们可以先计算浮点数取值区间的最小和最大值，然后使用 &lt;a href=&apos;https://en.wikipedia.org/wiki/Feature_scaling#Rescaling_(min-max_normalization&apos;&gt;最小-最大归一化&lt;/a&gt;) 对值进行线性变换（linearly shift）。&lt;/p&gt;
 &lt;p style=&quot;text-align: center&quot;&gt;$$int8\approx \frac{127}{max-min} \  \times \left( float32-min \right)$$&lt;/p&gt;
@@ -936,7 +936,7 @@ public:
 &lt;ul&gt;&lt;li&gt;1、先根据 key 匹配到目标数据文件的元信息&lt;/li&gt;
 &lt;li&gt;2、根据元信息中的数据文件 id，去 TableCache 中查找对应的 Table 对象，如果不存在，则先打开数据文件，读取解析 footer / index / meta / meta index 这些索引信息，准备好 Table 对象，缓存到 TableCache 中&lt;/li&gt;
 &lt;li&gt;3、基于 Table 对象继续进行数据文件内的检索流程&lt;/li&gt;&lt;/ul&gt;
-&lt;img src=&apos;../plantuml-images/16574682605797224568.svg&apos; title=&apos;16574682605797224568&apos; alt=&apos;16574682605797224568&apos;/&gt;
+&lt;img src=&apos;../plantuml-images/308888399600238653.svg&apos; title=&apos;308888399600238653&apos; alt=&apos;308888399600238653&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;leveldb 默认参数支持缓存 990 个 Table，ShardedLRUCache 默认分片数为 16，按照公式计算，每个分片支持 缓存 62 个 Table。&lt;/p&gt;
 &lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;struct Options {
   // 省略
@@ -990,7 +990,7 @@ Cache* block_cache = nullptr;
 // compression is enabled.  This parameter can be changed dynamically.  
 size_t block_size = 4 * 1024;&lt;/code&gt;&lt;/pre&gt;
 &lt;h4&gt;9.4.3 ShardedLRUCache&lt;/h4&gt;
-&lt;img src=&apos;../plantuml-images/1359659425277025706.svg&apos; title=&apos;1359659425277025706&apos; alt=&apos;1359659425277025706&apos;/&gt;
+&lt;img src=&apos;../plantuml-images/12631314437766535650.svg&apos; title=&apos;12631314437766535650&apos; alt=&apos;12631314437766535650&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;HandleTable 是一个“链接法（chaining）” 实现的哈希表，默认初始化 4 个 buckets，每个 bucket 初始值为空指针，指针类型为 &lt;code&gt;LRUHandle*&lt;/code&gt;，即哈希表节点类型。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;HandleTable 中：&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;&lt;code&gt;length_&lt;/code&gt;：表示哈希表的当前容量。&lt;/li&gt;
@@ -1037,7 +1037,7 @@ HandleTable table_ GUARDED_BY(mutex_);&lt;/code&gt;&lt;/pre&gt;
 &lt;h3&gt;9.5、过滤策略-布隆过滤器&lt;/h3&gt;
 &lt;img src=&apos;https://s2.loli.net/2025/05/24/If15V9oNdJHp8kW.png&apos; title=&apos;Bloom_filter_speed&apos; alt=&apos;Bloom_filter_speed&apos; width=&apos;600&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;过滤器匹配返回 false，就一定不在存储中；如果返回 true，有小概率不对（false positive）&lt;sup id=&quot;fnref:1&quot;&gt;&lt;a href=&quot;#fn:1&quot; class=&quot;footnote&quot; rel=&quot;footnote&quot; role=&quot;doc-noteref&quot;&gt;[1]&lt;/a&gt;&lt;/sup&gt;。&lt;/p&gt;
-&lt;img src=&apos;../plantuml-images/8612161629936957404.svg&apos; title=&apos;8612161629936957404&apos; alt=&apos;8612161629936957404&apos;/&gt;
+&lt;img src=&apos;../plantuml-images/11015249355168551956.svg&apos; title=&apos;11015249355168551956&apos; alt=&apos;11015249355168551956&apos;/&gt;
 &lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;class FilterPolicy {
 public:  
  virtual ~FilterPolicy();  
@@ -2054,12 +2054,12 @@ void FilterBlockBuilder::AddKey(const Slice&amp;amp;amp; key) {
             <title>读码：LevelDB - 接口定义与数据写入</title>
             <description>&lt;h2&gt;0、设计概要&amp;接口定义&lt;/h2&gt;
 &lt;img src=&apos;https://s2.loli.net/2025/05/24/9Gh1agVoq2x6pBU.png&apos; title=&apos;lsm&apos; alt=&apos;lsm&apos; width=&apos;800&apos;/&gt;
-&lt;img src=&apos;../plantuml-images/13339516205926192126.svg&apos; title=&apos;13339516205926192126&apos; alt=&apos;13339516205926192126&apos;/&gt;
+&lt;img src=&apos;../plantuml-images/13236969468958455395.svg&apos; title=&apos;13236969468958455395&apos; alt=&apos;13236969468958455395&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;基于 DB 类的静态方法 Open 来打开/初始化一个数据库，Open 会实例化一个 DBImpl 对象，调用其私有方法 Recover 来恢复/初始化状态，并将 DBImpl 对象指针赋值给 dbptr 返回给调用方，调用方通过 dbptr 调用 Put/Write/Delete/Get/NewIterator 进行读写操作。&lt;/p&gt;
 &lt;h2&gt;1、WriteBatch&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;Put 和 Delete 是针对单个 key 进行操作，在底层会将键值操作包装成 WriteBatch 对象，然后调用 Write 接口执行实际的操作流程。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;也可以在调用侧实例化 WriteBatch 对象，将一批增删操作都先填充到 WriteBatch 对象，然后直接调用 Write 接口执行一批操作，这样写吞吐应该会更高一点。这批操作是&lt;u&gt;原子的&lt;/u&gt;（一起写成功或者失败）。&lt;/p&gt;
-&lt;img src=&apos;../plantuml-images/7934814931082875318.svg&apos; title=&apos;7934814931082875318&apos; alt=&apos;7934814931082875318&apos;/&gt;
+&lt;img src=&apos;../plantuml-images/4605494190679769299.svg&apos; title=&apos;4605494190679769299&apos; alt=&apos;4605494190679769299&apos;/&gt;
 &lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;//
 typedef uint64_t SequenceNumber; // 虽然序列号使用了的 uint64_t 类型，但是实际只会使用 56 比特，即最大值为 ((0x1ull &amp;amp;lt;&amp;amp;lt; 56) - 1)
 // We leave eight bits empty at the bottom so a type and sequence#  
@@ -2081,7 +2081,7 @@ typedef SkipList&amp;amp;lt;const char*, KeyComparator&amp;amp;gt; Table;&lt;/co
 &lt;img src=&apos;https://s2.loli.net/2025/05/24/nACmfLPxBvcRpyM.png&apos; title=&apos;write-batch&apos; alt=&apos;write-batch&apos; width=&apos;800&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;$SequenceNum$ 是当前 WriteBatch 所有操作的基准序列号，即 WriteBatch 中第一个操作的序列号为 $SequenceNum + 0$ ，第二个操作的序列号为 $SequenceNum + 1$，依次类推。为每次操作分配一个唯一的序列号，是为了方便实现快照能力。后面再解释。&lt;/p&gt;
 &lt;h2&gt;2、写入缓冲与攒批&lt;/h2&gt;
-&lt;img src=&apos;../plantuml-images/17435093155912734571.svg&apos; title=&apos;17435093155912734571&apos; alt=&apos;17435093155912734571&apos;/&gt;
+&lt;img src=&apos;../plantuml-images/6834044343684626864.svg&apos; title=&apos;6834044343684626864&apos; alt=&apos;6834044343684626864&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;leveldb 的 write 写入过程基于 Writer （双端）队列实现缓冲和可能的攒批（合并多个 WriteBatch），提升写入的吞吐性能。攒批的性能空间来自 - 如果写入时发现 level0 文件过多（compaction 未完成，影响读/检索性能），则认为需要对写入进行限速，将写入先在 Write 队列中缓冲，攒 1ms 左右，合并成一个大的 WriteBatch 然后写入 memtable。&lt;/p&gt;
 &lt;img src=&apos;https://s2.loli.net/2025/05/24/vfKFoAlU7b6hjna.png&apos; title=&apos;write-deque&apos; alt=&apos;write-deque&apos; width=&apos;450&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;如果本次写入的 Writer 为队列头部，则说明当前写入压力应该不大，可以直接进行写入操作 -&lt;/p&gt;
@@ -2099,7 +2099,7 @@ typedef SkipList&amp;amp;lt;const char*, KeyComparator&amp;amp;gt; Table;&lt;/co
 
 // Header is checksum (4 bytes), length (2 bytes), type (1 byte).  
 static const int kHeaderSize = 4 + 2 + 1;&lt;/code&gt;&lt;/pre&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/CGjQK76MiHlgAeZ.png&apos; title=&apos;wal-log-format&apos; alt=&apos;wal-log-format&apos; width=&apos;800&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/06/05/dsKGPjVclyAHYOW.png&apos; title=&apos;wal-log-format&apos; alt=&apos;wal-log-format&apos; width=&apos;800&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;leveldb 会将 WriteBatch 的 &lt;code&gt;rep_&lt;/code&gt; 当作字节序列写入 log 文件中。不过 log 文件存储的单元结构为块（block），块大小为 32768 字节。一个 WriteBatch 的 &lt;code&gt;rep_&lt;/code&gt; 的大小可能大于/等于/小于一个块大小，也就是写入一个 &lt;code&gt;rep_&lt;/code&gt; 可能填不满一个块或者正好填满一个块或者跨多个块。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;如果一次写入后，当前 block 剩余的空间不足以填充下一次写入的头部，则直接将剩余空间以 &lt;code&gt;\x00&lt;/code&gt; 填满。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;这样编码的好处？- 读取解析时，按块大小进行读取，速度更快，顺序解析也方便。&lt;/p&gt;
@@ -2107,7 +2107,7 @@ static const int kHeaderSize = 4 + 2 + 1;&lt;/code&gt;&lt;/pre&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;那也意味着，如果一旦不可变 memtable 数据 compaction 到 $level_0$ 文件后，这些数据状态对应的“WAL log” 内容就没没有实际用处了，可以及时清理掉。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;leveldb 写入数据时，如果发现 memtable 占用内存已达到阈值，并且不可变 memtable 数据已被 minor compaction 成 $level_0$ 文件，则会将 memtable 切换成不可变 memtable，同时创建一个新的“WAL log”，并申请一个新的 memtable。不过此时新的不可变 memtable 还没被 minor compaction 成 $level_0$ 文件，所以前一个“WAL log”文件也还要保留，不能删除。&lt;/p&gt;
 &lt;h2&gt;4、MemTable&lt;/h2&gt;
-&lt;img src=&apos;../plantuml-images/7374646708898753946.svg&apos; title=&apos;7374646708898753946&apos; alt=&apos;7374646708898753946&apos;/&gt;
+&lt;img src=&apos;../plantuml-images/4348912710508773988.svg&apos; title=&apos;4348912710508773988&apos; alt=&apos;4348912710508773988&apos;/&gt;
 &lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;typedef SkipList&amp;amp;lt;const char*, KeyComparator&amp;amp;gt; Table;&lt;/code&gt;&lt;/pre&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;MemTable 是对应一个“WAL log” 文件的内存存储结构。&lt;u&gt;单个 MemTable 内存占用阈值为 4MB(&lt;code&gt;write_buffer_size&lt;/code&gt;)&lt;/u&gt;，当可变 MemTable 的内存占用达到阈值时，就尝试切换成不可变 MemTable，并创建一个新的 WAL log 文件以及对应的可变 MemTable 来承接写入，而不可变 MemTable 的内容等待被 minor compaction 刷成一个 $level_0$ ldb 数据文件。&lt;/p&gt;
 &lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;// Amount of data to build up in memory (backed by an unsorted log  
@@ -4449,6 +4449,385 @@ function base64_URL_decode($data) {
         </item>
         
         <item>
+            <title>又一次系统故障</title>
+            <description>&lt;p class=&quot;text-align-justify&quot;&gt;上周五早上9点多，我还在上班的路上，接到技术 leader 的电话：线上突然出故障了；接着发来一张故障信息页面截图：&lt;/p&gt;
+&lt;img src=&apos;https://i.loli.net/2020/06/14/L4fVgPGAb3Whznr.png&apos; title=&apos;system-fault-err-page&apos; alt=&apos;system-fault-err-page&apos; width=&apos;600&apos;/&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;截图包含的信息是：数据库中没找到数据表&lt;code&gt;Users&lt;/code&gt;。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;但同事检查过数据库，Users 数据表是存在的。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;我快速地回忆了一下最近的代码发布和环境变更 - 前一天有个同事对线上机器做了点改动。因此，让同事赶紧检查一下之前的改动是否有问题，经检查确认改动没有问题，而且稍微思考一下就应该明白不是配置的问题，如果是配置的问题，那么问题应该早就出现了，而不是在早上9点多时候才发生。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;我翻了翻手机中最近收到的几条告警短信，去除重复告警短信，只有两条告警：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;某台Web服务器上出现大量的500错误&lt;/li&gt;
+&lt;li&gt;某台数据库服务器的磁盘使用率为98.99%&lt;/li&gt;&lt;/ul&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;由此可以推测两个故障原因：&lt;/p&gt;
+&lt;ol&gt;&lt;li&gt;那台Web服务器上应用的数据库配置有问题 - 但检查之后确认没有问题&lt;/li&gt;
+&lt;li&gt;由于那台数据库服务器磁盘满导致的问题，虽然一时还想不到其中的关联 - 同事在检查之后，确认那台机器的磁盘确实已满，但通过内网的数据库管理后台，可以正常访问数据库，所以认为应该不是磁盘满导致的问题&lt;/li&gt;&lt;/ol&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;如此，一时我也没想明白故障的原因。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;接着，同事发来消息：只有登录用户才会遇到这个问题！&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;这时，基于之前的线索，基本能断定故障原因是 - 数据库服务器磁盘满。为什么呢？&lt;/p&gt;
+&lt;ol&gt;&lt;li&gt;数据库管理后台默认是&lt;strong&gt;只读&lt;/strong&gt;：读数据表列表、数据表结构、单个表的若干条数据&lt;/li&gt;
+&lt;li&gt;我们应用在实现上有这样的逻辑：登录用户的每次访问需要登录权限的页面都会自动更新用户的最新的访问时间，即Users数据表的updated_time字段，也即会写Users数据表。&lt;/li&gt;&lt;/ol&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;由于磁盘已满，所以写会失败，故障信息提示“数据库中找不到Users数据表”，估计和MySQL的写实现有关。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;之后清理了磁盘，故障立即恢复。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;我一直认为：排除故障/解决问题时，我们就像侦探一样 - 收集信息、思考信息之间的关联、透过现象看本质。故障现象很多时候会导致迷惑，如何能破除迷惑？- 全面地掌握系统的信息并作出思考。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;但是，故障发生时，我们首先要考虑的是恢复故障，尽可能减小对SLA的影响。大多数时候，我们都暂时无法找到故障原因，而且“找到故障原因”并非是“故障恢复”的必要条件，所以故障发生时，不要只顾着查找原因，先看看如何恢复故障。比如：本文所述的这个故障，如果没有想明白原因，可以先把排查过程中发现的所有异常 - 磁盘满 - 都解决了。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;再来说说这个故障的原因 - 磁盘满。个人认为这个故障原因是比较低级的，可见我们监控运维的缺失。为什么磁盘使用率到了98.88%才告警？大量占用磁盘的日志文件是否可以定期自动清理？后来，我们&lt;strong&gt;将磁盘告警的阈值修改为85%，并且定期删除一段时间之前的日志文件&lt;/strong&gt;。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;故障解决之后，我了解到数据库服务器上占用磁盘最多的竟然是&lt;strong&gt;数据库代理服务的日志&lt;/strong&gt;。数据库代理服务会将每个网络请求的信息记录在日志中，在网络请求量大时，日志会快速增长 &lt;em&gt;（这样的日志信息除了在故障发生时帮助排查故障，没有其他用处，完全可以定期清除）&lt;/em&gt; 。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;那么数据库服务、数据库代理服务是如何部署的呢？前一篇文章给出了一张系统架构图，其中数据库代理服务和数据库服务我们运维的同学实际上是这样部署的：&lt;/p&gt;
+&lt;img src=&apos;https://i.loli.net/2020/06/14/H1MhZn6Nj52moiR.png&apos; title=&apos;db-proxy-deployment&apos; alt=&apos;db-proxy-deployment&apos; width=&apos;600&apos;/&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;这样的部署徒增别人的迷惑，增大故障排除的难度，而且主MySQL与数据库代理服务之间会存在资源竞争，特别是在数据量访问量大的时候。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;导致这种低级故障和部署混乱的原因又是什么呢？&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;在我们团队中，运维同事是与另一个业务部门共享的，由于另一个业务部门做的是公司的重点业务，运维同事的KPI是根据它们业务来定，也就是说运维同事在我们这完全是友情支持，又能花多少时间来帮我们做运维呢？&lt;/p&gt;</description>
+            <pubDate>2015-11-16</pubDate>
+            <link>https://blog.xiayf.cn/posts/another-system-fault.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/another-system-fault.html</guid>
+        </item>
+        
+        <item>
+            <title>记一次系统故障</title>
+            <description>&lt;p class=&quot;text-align-justify&quot;&gt;前段时间，工作中遭遇一次故障，虽然不算什么“疑难杂症”，倒也花了不少时间才真正找到故障的原因，故也值得记录一下。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;为方便读者快速理解故障，先给出系统大致的架构图：&lt;/p&gt;
+&lt;img src=&apos;https://i.loli.net/2020/06/14/2ZBQgfPqMUnhVzY.png&apos; title=&apos;gxt-tech-arch&apos; alt=&apos;gxt-tech-arch&apos; width=&apos;800&apos;/&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;其中，&lt;/p&gt;
+&lt;ol&gt;&lt;li&gt;每台Web服务器上开启12个PHP-FPM实例，并配置到Nginx的upstream，每个实例最多可以开启10个子进程&lt;/li&gt;
+&lt;li&gt;“Database Proxy”的代理规则为：写操作及事务中的所有SQL操作都交给主MySQL处理，其余的读操作都交给任意一台从MySQL处理&lt;/li&gt;&lt;/ol&gt;
+&lt;hr&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;故障所表现的现象包括：&lt;/p&gt;
+&lt;ol&gt;&lt;li&gt;大量请求响应为502，但每次故障发生时，错误响应一般集中在一台Web服务器，如下图所示：&lt;/li&gt;&lt;/ol&gt;
+&lt;img src=&apos;https://i.loli.net/2020/06/14/cPmFMn8gKZdzVoB.png&apos; title=&apos;nginx-502-error&apos; alt=&apos;nginx-502-error&apos; width=&apos;400&apos;/&gt;
+&lt;img src=&apos;https://i.loli.net/2020/06/14/CSRj4ILYVlU21Es.jpg&apos; title=&apos;nginx-server-502-count&apos; alt=&apos;nginx-server-502-count&apos; width=&apos;600&apos;/&gt;
+&lt;ol&gt;&lt;li&gt;（一台或多台）MySQL数据库服务器CPU使用率飙升（但并非总是一起表现故障），如下图所示：&lt;/li&gt;&lt;/ol&gt;
+&lt;img src=&apos;https://i.loli.net/2020/06/14/H5gqL8BeQpKXOla.png&apos; title=&apos;mysql-slave-server-idle&apos; alt=&apos;mysql-slave-server-idle&apos; width=&apos;600&apos;/&gt;
+&lt;hr&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;故障刚开始出现时，重启/关闭出现故障现象的MySQL服务，或将出现故障的Web服务器上所有PHP-FPM重启，也能解一时的问题，但治不了本，故障还是频繁出现。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;在故障发生时，从相关服务器上收集到的信息如下所示：&lt;/p&gt;
+&lt;ol&gt;&lt;li&gt;出现故障现象的Web服务器 - CPU使用率、内存使用率等系统指标均正常，但PHP-FPM子进程数达到上限（12 x 10 = 120），并且PHP-FPM进程与数据库代理服务器之间的网络连接数量较多（与PHP-FPM子进程数大致相当）&lt;/li&gt;&lt;/ol&gt;
+&lt;ol&gt;&lt;li&gt;出现故障现象的MySQL服务器 - CPU使用率飙升，主要为MySQL进程占用；MySQL进程与数据库代理服务器之间的网络连接较多&lt;/li&gt;&lt;/ol&gt;
+&lt;ol&gt;&lt;li&gt;继而，对出现故障现象的MySQL服务器上的数据库执行命令&lt;code&gt;SHOW PROCESSLIST&lt;/code&gt;（查看当前MySQL实例运行着哪些线程），结果如下所示（截图只是一部分结果）：&lt;/li&gt;&lt;/ol&gt;
+&lt;img src=&apos;https://i.loli.net/2020/06/14/jLbvVOZEKlCdkgI.png&apos; title=&apos;mysql-show-processlist&apos; alt=&apos;mysql-show-processlist&apos; width=&apos;800&apos;/&gt;
+&lt;hr&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;先来分析一下&lt;code&gt;SHOW PROCESSLIST&lt;/code&gt;的执行结果：&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;strong&gt;Command&lt;/strong&gt;字段，表示当前线程正在执行的任务类型&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;strong&gt;db&lt;/strong&gt;字段，表示当前线程所执行任务涉及的数据库是哪个&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;strong&gt;State&lt;/strong&gt;字段，表示当前线程所处的状态&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;strong&gt;Time&lt;/strong&gt;字段，表示当前线程处于State字段持续的时间，单位为秒&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;strong&gt;Info&lt;/strong&gt;字段，表示如果当前线程是在执行查询操作（Query），那么查询的语句是什么样的，如非查询操作，则该字段为NULL&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;结果中，有两种任务线程：“Binlog Dump”和“Query”，其中“Query”数量占绝大多数（和MySQL进程与数据库代理服务器之间的网络连接数大致相当）：&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;1、Binlog Dump：该任务线程表明当前MySQL实例为主 MySQL，并且其状态表明主从同步已顺利完成。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;2、Query：表明当前线程正在执行一次 SQL 查询操作。该 SQL 为:&lt;/p&gt;
+&lt;pre class=&quot;language-sql&quot;&gt;&lt;code&gt;SELECT h.host, p.result, p.update_time FROM PIXIU p join Host h using(host_id) WHERE ...&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;线程所处状态为“Sorting result”（正在创建排序索引），持续时间为86-99秒左右。很明显，这句SQL语句花费的时间过长，存在问题。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;综合上面所述，可以引出一个猜测：由于这条SQL查询需耗费较长时间，并且被频繁执行，涉及该SQL的请求需要较长时间完成，大量SQL线程排队无响应，阻塞了大量PHP-FPM进程，在某些时候会达到PHP-FPM并发子进程数上限（更何况某个会被频繁访问的页面请求涉及该SQL，导致情况更糟），PHP-FPM无法处理新的请求，对于已有的请求也会因为超时导致Nginx响应502。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;那么针对该猜测，可以做两个优化来解决故障：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;优化这条 SQL&lt;/li&gt;
+&lt;li&gt;使用缓存&lt;/li&gt;&lt;/ul&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;这条SQL的完整语句为：&lt;/p&gt;
+&lt;pre class=&quot;language-sql&quot;&gt;&lt;code&gt;SELECT h.host,p.result,p.update_time FROM Pixiu p 
+    JOIN Host h USING(host_id) 
+    WHERE result!=&amp;amp;apos;[]&amp;amp;apos;
+    ORDER BY update_time DESC&lt;/code&gt;&lt;/pre&gt;
+&lt;ul&gt;&lt;li&gt;字段 p.result 的类型为 &lt;code&gt;mediumtext NOT NULL&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;字段 p.update_time 的类型为：&lt;/li&gt;&lt;/ul&gt;
+&lt;pre class=&quot;language-sql&quot;&gt;&lt;code&gt;timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;由于业务逻辑并不要求该SQL的结果是排序的，所以我们将该SQL中的排序条件&lt;code&gt;order by update_time desc&lt;/code&gt;删除，经测试发现查询时间大幅度降低到9ms左右（原来的平均查询时间为600多-700ms左右），另外，由于业务逻辑对于该条SQL涉及的数据的实时性要求不高，我们使用Memcached缓存了该SQL的查询结果。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;重新部署，压测，并线上运行观察，之后故障再未发生。事后回想，故障也确实是在涉及该SQL的功能模块上线之后才发生的。&lt;/p&gt;
+&lt;h2&gt;参考资料&lt;/h2&gt;
+&lt;ul&gt;&lt;li&gt;&lt;a href=&apos;http://dev.mysql.com/doc/refman/5.6/en/show-processlist.html&apos;&gt;MySQL官方文档 - SHOW PROCESSLIST Syntax&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&apos;http://dev.mysql.com/doc/refman/5.6/en/thread-commands.html&apos;&gt;MySQL官方文档 - Thread Command Values&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&apos;http://dev.mysql.com/doc/refman/5.6/en/master-thread-states.html&apos;&gt;MySQL官方文档 - Replication Master Thread States&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&apos;http://dev.mysql.com/doc/refman/5.6/en/general-thread-states.html&apos;&gt;MySQL官方文档 - General Thread States&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&apos;http://www.nginx.cn/102.html&apos;&gt;nginx+php-fpm出现502 bad gateway错误解决方法&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;</description>
+            <pubDate>2015-10-02</pubDate>
+            <link>https://blog.xiayf.cn/posts/note-of-a-system-fault.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/note-of-a-system-fault.html</guid>
+        </item>
+        
+        <item>
+            <title>一行式并行方案（译）</title>
+            <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文：&lt;a href=&apos;http://chriskiehl.com/article/parallelism-in-one-line&apos;&gt;Parallelism in one line&lt;/a&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;在并行处理能力方面，Python的声名并不太好。不考虑关于线程和GIL（多数情况下是合理的）的标准论据，我认为Python中关于并行的真正问题并不是一个技术问题，而是教学问题。围绕Python线程和多进程的常见教程，一般都写得不错，但也令人乏味 - 激烈非凡，对日常真正有用的东西却很少涉及。&lt;/p&gt;
+&lt;h3&gt;沿袭的例子&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;在DuckDuckGo（DDG）中搜索“Python多线程教程”，简单调查一下排在前面的结果，就会发现它们给出的都是同样基于Class + Queue的示例。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;em&gt;介绍threading/multiprocessing、生产者/消费者的真实示例代码：&lt;/em&gt;&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;# coding: utf-8
+# Example.py
+&amp;amp;apos;&amp;amp;apos;&amp;amp;apos;
+标准的多线程生产者/消费者模式
+&amp;amp;apos;&amp;amp;apos;&amp;amp;apos;
+
+import time 
+import threading 
+import Queue 
+
+class Consumer(threading.Thread): 
+  def __init__(self, queue): 
+    threading.Thread.__init__(self)
+    self._queue = queue 
+
+  def run(self):
+    while True: 
+      # queue.get() 会阻塞当前线程，直到获取到一个数据项
+      msg = self._queue.get() 
+      # 检查当前消息是否是个“毒药丸”
+      if isinstance(msg, str) and msg == &amp;amp;apos;quit&amp;amp;apos;:
+        # 如果是，则退出循环
+        break
+      # “处理” (这里是打印)从队列中取出的数据项
+      print &amp;amp;quot;I&amp;amp;apos;m a thread, and I received %s!!&amp;amp;quot; % msg
+    # 我始终是这么的友好
+    print &amp;amp;apos;Bye byes!&amp;amp;apos;
+
+
+def Producer():
+  # Queue用于在线程之间共享数据项
+  queue = Queue.Queue()
+
+  # 创建一个工作实例
+  worker = Consumer(queue)
+  # start方法会调用内部的run()方法来开启线程
+  worker.start() 
+
+  # 变量，用于追踪开始的时间
+  start_time = time.time() 
+  # 在5秒之内
+  while time.time() - start_time &amp;amp;lt; 5: 
+    # “生产”一块工作，放入队列中，由消费者来处理
+    queue.put(&amp;amp;apos;something at %s&amp;amp;apos; % time.time())
+    # 睡眠一会儿，以避免过多的消息
+    time.sleep(1)
+
+  # 这是杀死线程的“毒药丸”方式
+  queue.put(&amp;amp;apos;quit&amp;amp;apos;)
+  # 等待线程关闭
+  worker.join()
+
+
+if __name__ == &amp;amp;apos;__main__&amp;amp;apos;:
+  Producer()&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;嗯...闻闻，代码中一股子Java的气息。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;我不想让大家觉得好像我认为生产者/消费者是处理线程/多进程的错误方式 - 因为确实不是。实际上，对多种问题来说，这种方式非常适合。然而，我认为：对于日常的脚本程序来说，这种方式并非是最有用的。&lt;/p&gt;
+&lt;h3&gt;问题（我认为的）&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;其一，为了做点有用的事情，你得搞一个公式化的类；其二，你得维护一个队列（Queue），用于传送对象；这些齐备之后，在队列管道的两端还得准备方法来做真正的工作（如果希望有两种方式来通信或者准备存储结果，可能还得引入另一个队列）。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;strong&gt;更多的工作者，更多的问题&lt;/strong&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;基于此，下一件你想要做的事情就是搞一个工作者类的池，来加速你的Python程序。在关于线程的IBM教程中，给出了一个示例代码，以下是其变种。这是一个常见的应用场景 - 在多个线程上分配获取网页的任务。&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;# coding: utf-8
+# Example2.py
+&amp;amp;apos;&amp;amp;apos;&amp;amp;apos;
+一个更加实际的线程池示例
+&amp;amp;apos;&amp;amp;apos;&amp;amp;apos;
+
+import time 
+import threading 
+import Queue 
+import urllib2 
+
+class Consumer(threading.Thread): 
+  def __init__(self, queue): 
+    threading.Thread.__init__(self)
+    self._queue = queue 
+
+  def run(self):
+    while True: 
+      content = self._queue.get() 
+      if isinstance(content, str) and content == &amp;amp;apos;quit&amp;amp;apos;:
+        break
+      response = urllib2.urlopen(content)
+    print &amp;amp;apos;Bye byes!&amp;amp;apos;
+
+
+def Producer():
+  urls = [
+    &amp;amp;apos;http://www.python.org&amp;amp;apos;, &amp;amp;apos;http://www.yahoo.com&amp;amp;apos;
+    &amp;amp;apos;http://www.scala.org&amp;amp;apos;, &amp;amp;apos;http://www.google.com&amp;amp;apos;
+    # 等等... 
+  ]
+  queue = Queue.Queue()
+  worker_threads = build_worker_pool(queue, 4)
+  start_time = time.time()
+
+  # 加入待处理的URL
+  for url in urls: 
+    queue.put(url)
+  # 加入毒药丸
+  for worker in worker_threads:
+    queue.put(&amp;amp;apos;quit&amp;amp;apos;)
+  for worker in worker_threads:
+    worker.join()
+
+  print &amp;amp;apos;Done! Time taken: {}&amp;amp;apos;.format(time.time() - start_time)
+
+def build_worker_pool(queue, size):
+  workers = []
+  for _ in range(size):
+    worker = Consumer(queue)
+    worker.start() 
+    workers.append(worker)
+  return workers
+
+if __name__ == &amp;amp;apos;__main__&amp;amp;apos;:
+  Producer()&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;奏效了，但是你看看这些代码！准备（setup）方法、一组要追踪的线程，最糟糕的是，若有任何地方易发生死锁，就会产生一堆的join状态说明。自此，一切只会更复杂！&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;到目前为止，完成了些什么？啥都没有。上面的代码纯粹只是把所有东西像用纸糊起来一样（Just about everything in the above code is pure plumbing，如何翻译？）。这是另一种公式化的写法，也易发生错误（嘿，在写这个代码时，我甚至忘了在队列对象上调用task_done()（我懒得去解决这个问题然后再搞个截图）），付出很多，得到的却很少。幸运的是，我们有更好的方式。&lt;/p&gt;
+&lt;h2&gt;引入：Map&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;Map是一个酷酷的小东西，也是在Python代码轻松引入并行的关键。对此不熟悉的人会认为map是从函数式语言（如Lisp）借鉴来的东西。map是一个函数 - 将另一个函数映射到一个序列上。例如：&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;urls = [&amp;amp;apos;http://www.yahoo.com&amp;amp;apos;, &amp;amp;apos;http://www.reddit.com&amp;amp;apos;]
+results = map(urllib2.urlopen, urls)&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;这段代码在传入序列的每个元素上应用方法&lt;em&gt;urlopen&lt;/em&gt;，并将所有结果存入一个列表中。大致与下面这段代码的逻辑相当：&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;results = []
+for url in urls: 
+    results.append(urllib2.urlopen(url))&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;Map会为我们处理在序列上的迭代，应用函数，最后将结果存入一个方便使用的列表。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;这为什么重要呢？因为利用恰当的库，map让并行处理成为小事一桩！&lt;/p&gt;
+&lt;img src=&apos;https://i.loli.net/2020/06/14/kqumnip3B7M2dcQ.png&apos; title=&apos;map-function&apos; alt=&apos;map-function&apos; width=&apos;600&apos;/&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;Python标准库中&lt;em&gt;multiprocessing&lt;/em&gt;模块，以及极少人知但同样出色的子模块&lt;em&gt;multiprocessing.dummy&lt;/em&gt;，提供了map函数的并行版本。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;题外话：这是啥？你从未听说过这名为dummy的mulprocessing模块的线程克隆版本？我也是最近才知道的。在multiprocessing文档页中仅有一句提到这个子模块，而这句话基本可以归结为“哦，是的，存在这样一个东西”。完全低估了这个模块的价值！&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;Dummy是multiprocessing模块的精确克隆，唯一的区别是：multiprocessing基于进程工作，而dummy模块使用线程（也就带来了常见的Python限制）。因此，任何东西可套用到一个模块，也就可以套用到另一个模块。在两个模块之间来回切换也就相当容易，当你不太确定一些框架调用是IO密集型还是CPU密集型时，想做探索性质的编程，这一点会让你觉得非常赞！&lt;/p&gt;
+&lt;h3&gt;开始&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;为了访问map函数的并行版本，首先需要导入包含它的模块：&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;# 以下两行引入其一即可
+from multiprocessing import Pool
+from multiprocessing.dummy import Pool as ThreadPool&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;并实例化池对象：&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;# 译注：这里其实是以dummy模块为例
+pool = ThreadPool()&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;这一句代码处理了example2.py中7行的&lt;em&gt;build_worker_pool&lt;/em&gt;函数完成的所有事情。如名所示，这句代码会创建一组可用的工作者，启动它们来准备工作，并将它们存入变量中，方便访问。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;pool对象可以有若干参数，但目前，只需关注第一个：进程/线程数量。这个参数用于设置池中的工作者数目。如果留空，默认为机器的CPU核数。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;一般来说，如果为CPU密集型任务使用进程池（multiprocessing pool），更多的核等于更快的速度（但有一些注意事项）。然而，当使用线程池（threading）处理网络密集型任务时，情况就很不一样了，因此最好试验一下池的最佳大小。&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;pool = ThreadPool(4) # 将池的大小设置为4&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;如果运行了过多的线程，就会浪费时间在线程切换上，而不是做有用的事情，所以可以把玩把玩直到找到最适合任务的线程数量。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;现在池对象创建好了，简单的并行也是弹指之间的事情了，那来重写example2.py吧。&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;import urllib2 
+from multiprocessing.dummy import Pool as ThreadPool 
+
+urls = [
+  &amp;amp;apos;http://www.python.org&amp;amp;apos;, 
+  &amp;amp;apos;http://www.python.org/about/&amp;amp;apos;,
+  &amp;amp;apos;http://www.onlamp.com/pub/a/python/2003/04/17/metaclasses.html&amp;amp;apos;,
+  &amp;amp;apos;http://www.python.org/doc/&amp;amp;apos;,
+  &amp;amp;apos;http://www.python.org/download/&amp;amp;apos;,
+  &amp;amp;apos;http://www.python.org/getit/&amp;amp;apos;,
+  &amp;amp;apos;http://www.python.org/community/&amp;amp;apos;,
+  &amp;amp;apos;https://wiki.python.org/moin/&amp;amp;apos;,
+  &amp;amp;apos;http://planet.python.org/&amp;amp;apos;,
+  &amp;amp;apos;https://wiki.python.org/moin/LocalUserGroups&amp;amp;apos;,
+  &amp;amp;apos;http://www.python.org/psf/&amp;amp;apos;,
+  &amp;amp;apos;http://docs.python.org/devguide/&amp;amp;apos;,
+  &amp;amp;apos;http://www.python.org/community/awards/&amp;amp;apos;
+  # 等等...
+  ]
+
+# 创建一个工作者线程池
+pool = ThreadPool(4) 
+# 在各个线程中打开url，并返回结果
+results = pool.map(urllib2.urlopen, urls)
+#close the pool and wait for the work to finish
+# 关闭线程池，等待工作结束
+pool.close() 
+pool.join()&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;看看！真正做事情的代码仅有4行，其中3行只是简单的辅助功能。&lt;em&gt;map&lt;/em&gt;调用轻松搞定了之前示例40行代码做的事情！觉得好玩，我对两种方式进行了时间测量，并使用了不同的池大小。&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;# 译注：我觉得与串行处理方式对比意义不大，应该和队列的方式进行性能对比
+results = [] 
+for url in urls:
+  result = urllib2.urlopen(url)
+  results.append(result)
+
+# # ------- 对比 ------- # 
+
+
+# # ------- 池的大小为4 ------- # 
+pool = ThreadPool(4) 
+results = pool.map(urllib2.urlopen, urls)
+
+# # ------- 池的大小为8 ------- # 
+
+pool = ThreadPool(8) 
+results = pool.map(urllib2.urlopen, urls)
+
+# # ------- 池的大小为13 ------- # 
+
+pool = ThreadPool(13) 
+results = pool.map(urllib2.urlopen, urls)&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;结果：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;单线程: 14.4 秒
+池大小为4时：3.1 秒
+池大小为8时：1.4 秒
+池大小为13时：1.3秒&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;真是呱呱叫啊！也说明了试验不同的池大小是有必要的。在我的机器上，池的大小大于9后会导致性能退化（译注：咦，结果不是显示13比8的性能要好么？）。&lt;/p&gt;
+&lt;h2&gt;现实中的Example 2&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;为千张图片创建缩略图。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;来做点CPU密集型的事情！对于我，在工作中常见的任务是操作大量的图片目录。其中一种图片转换是创建缩略图。这项工作适于并行处理。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;strong&gt;基本的单进程设置&lt;/strong&gt;&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;from multiprocessing import Pool 
+from PIL import Image
+
+SIZE = (75,75)
+SAVE_DIRECTORY = &amp;amp;apos;thumbs&amp;amp;apos;
+
+def get_image_paths(folder):
+  return (os.path.join(folder, f) 
+      for f in os.listdir(folder) 
+      if &amp;amp;apos;jpeg&amp;amp;apos; in f)
+
+def create_thumbnail(filename): 
+  im = Image.open(filename)
+  im.thumbnail(SIZE, Image.ANTIALIAS)
+  base, fname = os.path.split(filename) 
+  save_path = os.path.join(base, SAVE_DIRECTORY, fname)
+  im.save(save_path)
+
+if __name__ == &amp;amp;apos;__main__&amp;amp;apos;:
+  folder = os.path.abspath(
+    &amp;amp;apos;11_18_2013_R000_IQM_Big_Sur_Mon__e10d1958e7b766c3e840&amp;amp;apos;)
+  os.mkdir(os.path.join(folder, SAVE_DIRECTORY))
+
+  images = get_image_paths(folder)
+
+  for image in images: 
+    create_thumbnail(image)&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;示例代码中用了一些技巧，但大体上是：向程序传入一个目录，从目录中获取所有图片，然后创建缩略图，并将缩略图存放到各自的目录中。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;在我的机器上，这个程序处理大约6000张图片，花费27.9秒。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;如果使用一个并行的map调用来替换&lt;em&gt;for&lt;/em&gt;循环：&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;from multiprocessing import Pool 
+from PIL import Image
+
+SIZE = (75,75)
+SAVE_DIRECTORY = &amp;amp;apos;thumbs&amp;amp;apos;
+
+def get_image_paths(folder):
+  return (os.path.join(folder, f) 
+      for f in os.listdir(folder) 
+      if &amp;amp;apos;jpeg&amp;amp;apos; in f)
+
+def create_thumbnail(filename): 
+  im = Image.open(filename)
+  im.thumbnail(SIZE, Image.ANTIALIAS)
+  base, fname = os.path.split(filename) 
+  save_path = os.path.join(base, SAVE_DIRECTORY, fname)
+  im.save(save_path)
+
+if __name__ == &amp;amp;apos;__main__&amp;amp;apos;:
+  folder = os.path.abspath(
+    &amp;amp;apos;11_18_2013_R000_IQM_Big_Sur_Mon__e10d1958e7b766c3e840&amp;amp;apos;)
+  os.mkdir(os.path.join(folder, SAVE_DIRECTORY))
+
+  images = get_image_paths(folder)
+
+  pool = Pool()
+  pool.map(create_thumbnail, images)
+  pool.close() 
+  pool.join()&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;strong&gt;5.6秒！&lt;/strong&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;仅修改几行代码就能得到巨大的速度提升。这个程序的生产环境版本通过切分CPU密集型工作和IO密集型工作并分配到各自的进程和线程（通常是死锁代码的一个因素），获得更快的速度。然而，由于map性质清晰明确，无需手动管理线程，以干净、可靠、易于调试的方式混合匹配两者（译注：这里的“两者”是指什么？CPU密集型工作和IO密集型工作？），也是相当容易的。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;就是这样了。（几乎）一行式并行解决方案。&lt;/p&gt;</description>
+            <pubDate>2015-09-11</pubDate>
+            <link>https://blog.xiayf.cn/posts/parallelism-in-one-line.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/parallelism-in-one-line.html</guid>
+        </item>
+        
+        <item>
             <title>编程名言集锦（译）</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文：&lt;a href=&apos;http://quotes.cat-v.org/programming/&apos;&gt;Programming Quotes&lt;/a&gt;&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;译者：&lt;a href=&apos;https://github.com/youngsterxyf&apos;&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
@@ -5504,7 +5883,7 @@ d9976cfe0430557885d162927dd70186d0f521e8&lt;/code&gt;&lt;/pre&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;经过网络查找，发现第一种方案与第二种方案都有现成的工具。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;第一种方案：&lt;a href=&apos;https://github.com/ariya/phantomjs&apos;&gt;phantomjs&lt;/a&gt;可以完成，phantomjs包含了webkit，所以解释JS什么的就不再是个问题了，它有个&lt;a href=&apos;https://github.com/ariya/phantomjs/wiki/Screen-Capture&apos;&gt;Screen Capture&lt;/a&gt;的功能模块支持将网页完整地转换成图片格式，但由于要做很多额外的工作，所以效率比较低。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;第二种方案是从Highcharts的&lt;a href=&apos;http://www.highcharts.com/demo/&apos;&gt;Demo&lt;/a&gt;中挖掘出来的，如图所示：&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/mhpHcbxnZ6BKGR5.png&apos; title=&apos;highchartjs_demo&apos; alt=&apos;highchartjs_demo&apos; width=&apos;100%&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/06/05/hg9KSu156BXmJzG.png&apos; title=&apos;highchartjs_demo&apos; alt=&apos;highchartjs_demo&apos; width=&apos;100%&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;Demo中可以输出多种图片格式，通过chrome浏览器的开发者工具可以发现其实现是向服务器export.highcharts.com发送一个请求，请求中包含网页中生成的SVG矢量图数据、目标图片格式等信息，服务器对该请求进行处理后返回目标格式图片。那么服务器端是如何将SVG转换成图片格式的呢？在Highcharts的&lt;a href=&apos;http://docs.highcharts.com/&apos;&gt;文档&lt;/a&gt;中有个名为&lt;code&gt;Export module&lt;/code&gt;的部分，其中说明了实现原理以及如何搭建这样的一个格式转换服务器。从文档可以看出这个实现方法的核心是借助了&lt;a href=&apos;http://xmlgraphics.apache.org/batik/tools/rasterizer.html&apos;&gt;batik-rasterizer.jar&lt;/a&gt;这个Java工具包，它能将SVG转换成图片或PDF格式。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;从上述该问题解决方案的寻找过程可以看出，&lt;strong&gt;很多时候并不是问题有多复杂或有多难，而是我们根本没有明确业务需求，没有搞清楚真正需要解决的问题，而对模糊的问题描述自以为是地作出一些假设，然后蒙头去解决错误的问题，从而浪费了很多时间&lt;/strong&gt;。&lt;/p&gt;</description>
             <pubDate>2013-04-09</pubDate>

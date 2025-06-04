@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta property="og:title" content="BitPacking">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://blog.xiayf.cn/">
+    <meta property="og:site_name" content="BitPacking">
+    <meta property="og:description" content="精进，求诸己身">
+
+    <title>BitPacking</title>
+    <meta name="description" content="精进，求诸己身">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <link rel="stylesheet" href="/static/main.css">
+    <link rel="canonical" href="https://blog.xiayf.cn/">
+    
+    <link crossorigin="" rel="shortcut icon" type="image/x-icon" href="/assets/bits_small.ico">
+    
+</head>
+
+<body>
+<header class="site-header">
+    <div class="wrapper">
+        <a class="site-title" href="/">BitPacking</a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg viewBox="0 0 18 15">
+                    <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                <a class="page-link" href="/pages/about.html">关于我</a>
+                
+                <a class="page-link" href="/pages/works.html">作品</a>
+                
+                <a class="page-link" href="/pages/linlang.html">琳琅</a>
+                
+                <a class="page-link" href="/rss.xml">RSS</a>
+                
+            </div>
+        </nav>
+    </div>
+</header>
+
+<div class="page-content">
+    <div class="wrapper">
+        
+<div class="post">
+    <header class="post-header">
+        <h1 class="post-title">记一次系统故障</h1>
+        <p class="post-meta">2015-10-02</p>
+    </header>
+    <article class="post-content">
+        <p class="text-align-justify">前段时间，工作中遭遇一次故障，虽然不算什么“疑难杂症”，倒也花了不少时间才真正找到故障的原因，故也值得记录一下。</p>
+<p class="text-align-justify">为方便读者快速理解故障，先给出系统大致的架构图：</p>
+<img src='https://i.loli.net/2020/06/14/2ZBQgfPqMUnhVzY.png' title='gxt-tech-arch' alt='gxt-tech-arch' width='800'/>
+<p class="text-align-justify">其中，</p>
+<ol><li>每台Web服务器上开启12个PHP-FPM实例，并配置到Nginx的upstream，每个实例最多可以开启10个子进程</li>
+<li>“Database Proxy”的代理规则为：写操作及事务中的所有SQL操作都交给主MySQL处理，其余的读操作都交给任意一台从MySQL处理</li></ol>
+<hr>
+<p class="text-align-justify">故障所表现的现象包括：</p>
+<ol><li>大量请求响应为502，但每次故障发生时，错误响应一般集中在一台Web服务器，如下图所示：</li></ol>
+<img src='https://i.loli.net/2020/06/14/cPmFMn8gKZdzVoB.png' title='nginx-502-error' alt='nginx-502-error' width='400'/>
+<img src='https://i.loli.net/2020/06/14/CSRj4ILYVlU21Es.jpg' title='nginx-server-502-count' alt='nginx-server-502-count' width='600'/>
+<ol><li>（一台或多台）MySQL数据库服务器CPU使用率飙升（但并非总是一起表现故障），如下图所示：</li></ol>
+<img src='https://i.loli.net/2020/06/14/H5gqL8BeQpKXOla.png' title='mysql-slave-server-idle' alt='mysql-slave-server-idle' width='600'/>
+<hr>
+<p class="text-align-justify">故障刚开始出现时，重启/关闭出现故障现象的MySQL服务，或将出现故障的Web服务器上所有PHP-FPM重启，也能解一时的问题，但治不了本，故障还是频繁出现。</p>
+<p class="text-align-justify">在故障发生时，从相关服务器上收集到的信息如下所示：</p>
+<ol><li>出现故障现象的Web服务器 - CPU使用率、内存使用率等系统指标均正常，但PHP-FPM子进程数达到上限（12 x 10 = 120），并且PHP-FPM进程与数据库代理服务器之间的网络连接数量较多（与PHP-FPM子进程数大致相当）</li></ol>
+<ol><li>出现故障现象的MySQL服务器 - CPU使用率飙升，主要为MySQL进程占用；MySQL进程与数据库代理服务器之间的网络连接较多</li></ol>
+<ol><li>继而，对出现故障现象的MySQL服务器上的数据库执行命令<code>SHOW PROCESSLIST</code>（查看当前MySQL实例运行着哪些线程），结果如下所示（截图只是一部分结果）：</li></ol>
+<img src='https://i.loli.net/2020/06/14/jLbvVOZEKlCdkgI.png' title='mysql-show-processlist' alt='mysql-show-processlist' width='800'/>
+<hr>
+<p class="text-align-justify">先来分析一下<code>SHOW PROCESSLIST</code>的执行结果：</p>
+<p class="text-align-justify"><strong>Command</strong>字段，表示当前线程正在执行的任务类型</p>
+<p class="text-align-justify"><strong>db</strong>字段，表示当前线程所执行任务涉及的数据库是哪个</p>
+<p class="text-align-justify"><strong>State</strong>字段，表示当前线程所处的状态</p>
+<p class="text-align-justify"><strong>Time</strong>字段，表示当前线程处于State字段持续的时间，单位为秒</p>
+<p class="text-align-justify"><strong>Info</strong>字段，表示如果当前线程是在执行查询操作（Query），那么查询的语句是什么样的，如非查询操作，则该字段为NULL</p>
+<p class="text-align-justify">结果中，有两种任务线程：“Binlog Dump”和“Query”，其中“Query”数量占绝大多数（和MySQL进程与数据库代理服务器之间的网络连接数大致相当）：</p>
+<p class="text-align-justify">1、Binlog Dump：该任务线程表明当前MySQL实例为主 MySQL，并且其状态表明主从同步已顺利完成。</p>
+<p class="text-align-justify">2、Query：表明当前线程正在执行一次 SQL 查询操作。该 SQL 为:</p>
+<pre class="language-sql"><code>SELECT h.host, p.result, p.update_time FROM PIXIU p join Host h using(host_id) WHERE ...</code></pre>
+<p class="text-align-justify">线程所处状态为“Sorting result”（正在创建排序索引），持续时间为86-99秒左右。很明显，这句SQL语句花费的时间过长，存在问题。</p>
+<p class="text-align-justify">综合上面所述，可以引出一个猜测：由于这条SQL查询需耗费较长时间，并且被频繁执行，涉及该SQL的请求需要较长时间完成，大量SQL线程排队无响应，阻塞了大量PHP-FPM进程，在某些时候会达到PHP-FPM并发子进程数上限（更何况某个会被频繁访问的页面请求涉及该SQL，导致情况更糟），PHP-FPM无法处理新的请求，对于已有的请求也会因为超时导致Nginx响应502。</p>
+<p class="text-align-justify">那么针对该猜测，可以做两个优化来解决故障：</p>
+<ul><li>优化这条 SQL</li>
+<li>使用缓存</li></ul>
+<p class="text-align-justify">这条SQL的完整语句为：</p>
+<pre class="language-sql"><code>SELECT h.host,p.result,p.update_time FROM Pixiu p 
+    JOIN Host h USING(host_id) 
+    WHERE result!=&apos;[]&apos;
+    ORDER BY update_time DESC</code></pre>
+<ul><li>字段 p.result 的类型为 <code>mediumtext NOT NULL</code></li>
+<li>字段 p.update_time 的类型为：</li></ul>
+<pre class="language-sql"><code>timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</code></pre>
+<p class="text-align-justify">由于业务逻辑并不要求该SQL的结果是排序的，所以我们将该SQL中的排序条件<code>order by update_time desc</code>删除，经测试发现查询时间大幅度降低到9ms左右（原来的平均查询时间为600多-700ms左右），另外，由于业务逻辑对于该条SQL涉及的数据的实时性要求不高，我们使用Memcached缓存了该SQL的查询结果。</p>
+<p class="text-align-justify">重新部署，压测，并线上运行观察，之后故障再未发生。事后回想，故障也确实是在涉及该SQL的功能模块上线之后才发生的。</p>
+<h2>参考资料</h2>
+<ul><li><a href='http://dev.mysql.com/doc/refman/5.6/en/show-processlist.html'>MySQL官方文档 - SHOW PROCESSLIST Syntax</a></li>
+<li><a href='http://dev.mysql.com/doc/refman/5.6/en/thread-commands.html'>MySQL官方文档 - Thread Command Values</a></li>
+<li><a href='http://dev.mysql.com/doc/refman/5.6/en/master-thread-states.html'>MySQL官方文档 - Replication Master Thread States</a></li>
+<li><a href='http://dev.mysql.com/doc/refman/5.6/en/general-thread-states.html'>MySQL官方文档 - General Thread States</a></li>
+<li><a href='http://www.nginx.cn/102.html'>nginx+php-fpm出现502 bad gateway错误解决方法</a></li></ul>
+    </article>
+</div>
+
+    </div>
+</div>
+
+<footer class="site-footer">
+    <div class="wrapper">
+        <div class="footer-col-wrapper">
+            <div class="footer-col footer-col-1">
+                <ul class="social-media-list">
+                    <li>
+                        <a href="https://github.com/kitelife" target="_blank">
+                            <span class="icon icon--github">
+                                <svg viewBox="0 0 16 16">
+                                    <path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                                </svg>
+                            </span>
+                            <span class="username">kitelife</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://maimai.cn/profile/detail?dstu=39580141" target="_blank">
+                            <span class="icon icon--maimai">
+                                <img src="https://maimai.cn/favicon.ico" width="16"/>
+                            </span>
+                            <span class="username">Xiayf</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="footer-col footer-col-2"></div>
+            <div class="footer-col footer-col-3"></div>
+            <div class="footer-col footer-col-4">
+                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">
+                    <img alt="Creative Commons License" src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-sa.svg">
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        },
+        svg: {
+            fontCache: 'global'
+        }
+    };
+</script>
+<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</body>
+</html>

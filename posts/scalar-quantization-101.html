@@ -39,6 +39,8 @@
                 
                 <a class="page-link" href="/pages/works.html">作品</a>
                 
+                <a class="page-link" href="/pages/linlang.html">琳琅</a>
+                
                 <a class="page-link" href="/rss.xml">RSS</a>
                 
             </div>
@@ -60,7 +62,7 @@
 <p class="text-align-justify">多数嵌入（embedding）模型会输出 $float32$ 数值精度的向量。这个精度虽然提供了信息高保真，但在真正重要的信息之外也带来一些资源浪费。对于给定的数据集，嵌入不可能在单个维度需要20亿种取值，特别是对于高维度向量而言（比如：386维及以上）。量化以一种有损的方式对向量进行编码，轻微降低信息保真而明显地降低存储空间占用。</p>
 <h2>理解标量量化的分桶</h2>
 <p class="text-align-justify">标量量化使用更小的数据类型对向量每一维的取值进行分桶。本文的余下部分将假设将 $float32$ 量化到 $int8$ 。为了准确地对值进行分桶，不能简单地将值四舍五入到最近的整数。许多模型输出向量的维度取值空间为 $[-1.0, 1.0]$，如果简单粗暴地四舍五入处理，那么 0.123 和 0.321 这两个不同的向量维度取值都会向下取整到 0。最终，一个向量仅会使用 $int8$ 可用 255 个桶中的2个桶，这样就丢失太多信息了。</p>
-<img src='https://s2.loli.net/2025/05/24/Q3oyflHEWhrajNI.jpg' title='float32-to-int8-buckets.jpeg' alt='float32-to-int8-buckets.jpeg' width='500'/>
+<img src='https://s2.loli.net/2025/06/05/92bnmVKzjqe3GOJ.jpg' title='float32-to-int8-buckets.jpeg' alt='float32-to-int8-buckets.jpeg' width='500'/>
 <blockquote><p class="text-align-justify">图1：量化目标图解 - 将 -1.0 到 1.0 之间的连续值分桶到离散的 $int8$ 数值。</p></blockquote>
 <p class="text-align-justify">这种数值转换背后的数学原理并不太复杂。我们可以先计算浮点数取值区间的最小和最大值，然后使用 <a href='https://en.wikipedia.org/wiki/Feature_scaling#Rescaling_(min-max_normalization'>最小-最大归一化</a>) 对值进行线性变换（linearly shift）。</p>
 <p style="text-align: center">$$int8\approx \frac{127}{max-min} \  \times \left( float32-min \right)$$</p>

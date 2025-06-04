@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta property="og:title" content="BitPacking">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://blog.xiayf.cn/">
+    <meta property="og:site_name" content="BitPacking">
+    <meta property="og:description" content="精进，求诸己身">
+
+    <title>BitPacking</title>
+    <meta name="description" content="精进，求诸己身">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <link rel="stylesheet" href="/static/main.css">
+    <link rel="canonical" href="https://blog.xiayf.cn/">
+    
+    <link crossorigin="" rel="shortcut icon" type="image/x-icon" href="/assets/bits_small.ico">
+    
+</head>
+
+<body>
+<header class="site-header">
+    <div class="wrapper">
+        <a class="site-title" href="/">BitPacking</a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg viewBox="0 0 18 15">
+                    <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                <a class="page-link" href="/pages/about.html">关于我</a>
+                
+                <a class="page-link" href="/pages/works.html">作品</a>
+                
+                <a class="page-link" href="/pages/linlang.html">琳琅</a>
+                
+                <a class="page-link" href="/rss.xml">RSS</a>
+                
+            </div>
+        </nav>
+    </div>
+</header>
+
+<div class="page-content">
+    <div class="wrapper">
+        
+<div class="post">
+    <header class="post-header">
+        <h1 class="post-title">又一次系统故障</h1>
+        <p class="post-meta">2015-11-16</p>
+    </header>
+    <article class="post-content">
+        <p class="text-align-justify">上周五早上9点多，我还在上班的路上，接到技术 leader 的电话：线上突然出故障了；接着发来一张故障信息页面截图：</p>
+<img src='https://i.loli.net/2020/06/14/L4fVgPGAb3Whznr.png' title='system-fault-err-page' alt='system-fault-err-page' width='600'/>
+<p class="text-align-justify">截图包含的信息是：数据库中没找到数据表<code>Users</code>。</p>
+<p class="text-align-justify">但同事检查过数据库，Users 数据表是存在的。</p>
+<p class="text-align-justify">我快速地回忆了一下最近的代码发布和环境变更 - 前一天有个同事对线上机器做了点改动。因此，让同事赶紧检查一下之前的改动是否有问题，经检查确认改动没有问题，而且稍微思考一下就应该明白不是配置的问题，如果是配置的问题，那么问题应该早就出现了，而不是在早上9点多时候才发生。</p>
+<p class="text-align-justify">我翻了翻手机中最近收到的几条告警短信，去除重复告警短信，只有两条告警：</p>
+<ul><li>某台Web服务器上出现大量的500错误</li>
+<li>某台数据库服务器的磁盘使用率为98.99%</li></ul>
+<p class="text-align-justify">由此可以推测两个故障原因：</p>
+<ol><li>那台Web服务器上应用的数据库配置有问题 - 但检查之后确认没有问题</li>
+<li>由于那台数据库服务器磁盘满导致的问题，虽然一时还想不到其中的关联 - 同事在检查之后，确认那台机器的磁盘确实已满，但通过内网的数据库管理后台，可以正常访问数据库，所以认为应该不是磁盘满导致的问题</li></ol>
+<p class="text-align-justify">如此，一时我也没想明白故障的原因。</p>
+<hr>
+<p class="text-align-justify">接着，同事发来消息：只有登录用户才会遇到这个问题！</p>
+<p class="text-align-justify">这时，基于之前的线索，基本能断定故障原因是 - 数据库服务器磁盘满。为什么呢？</p>
+<ol><li>数据库管理后台默认是<strong>只读</strong>：读数据表列表、数据表结构、单个表的若干条数据</li>
+<li>我们应用在实现上有这样的逻辑：登录用户的每次访问需要登录权限的页面都会自动更新用户的最新的访问时间，即Users数据表的updated_time字段，也即会写Users数据表。</li></ol>
+<p class="text-align-justify">由于磁盘已满，所以写会失败，故障信息提示“数据库中找不到Users数据表”，估计和MySQL的写实现有关。</p>
+<p class="text-align-justify">之后清理了磁盘，故障立即恢复。</p>
+<hr>
+<p class="text-align-justify">我一直认为：排除故障/解决问题时，我们就像侦探一样 - 收集信息、思考信息之间的关联、透过现象看本质。故障现象很多时候会导致迷惑，如何能破除迷惑？- 全面地掌握系统的信息并作出思考。</p>
+<p class="text-align-justify">但是，故障发生时，我们首先要考虑的是恢复故障，尽可能减小对SLA的影响。大多数时候，我们都暂时无法找到故障原因，而且“找到故障原因”并非是“故障恢复”的必要条件，所以故障发生时，不要只顾着查找原因，先看看如何恢复故障。比如：本文所述的这个故障，如果没有想明白原因，可以先把排查过程中发现的所有异常 - 磁盘满 - 都解决了。</p>
+<hr>
+<p class="text-align-justify">再来说说这个故障的原因 - 磁盘满。个人认为这个故障原因是比较低级的，可见我们监控运维的缺失。为什么磁盘使用率到了98.88%才告警？大量占用磁盘的日志文件是否可以定期自动清理？后来，我们<strong>将磁盘告警的阈值修改为85%，并且定期删除一段时间之前的日志文件</strong>。</p>
+<p class="text-align-justify">故障解决之后，我了解到数据库服务器上占用磁盘最多的竟然是<strong>数据库代理服务的日志</strong>。数据库代理服务会将每个网络请求的信息记录在日志中，在网络请求量大时，日志会快速增长 <em>（这样的日志信息除了在故障发生时帮助排查故障，没有其他用处，完全可以定期清除）</em> 。</p>
+<p class="text-align-justify">那么数据库服务、数据库代理服务是如何部署的呢？前一篇文章给出了一张系统架构图，其中数据库代理服务和数据库服务我们运维的同学实际上是这样部署的：</p>
+<img src='https://i.loli.net/2020/06/14/H1MhZn6Nj52moiR.png' title='db-proxy-deployment' alt='db-proxy-deployment' width='600'/>
+<p class="text-align-justify">这样的部署徒增别人的迷惑，增大故障排除的难度，而且主MySQL与数据库代理服务之间会存在资源竞争，特别是在数据量访问量大的时候。</p>
+<hr>
+<p class="text-align-justify">导致这种低级故障和部署混乱的原因又是什么呢？</p>
+<p class="text-align-justify">在我们团队中，运维同事是与另一个业务部门共享的，由于另一个业务部门做的是公司的重点业务，运维同事的KPI是根据它们业务来定，也就是说运维同事在我们这完全是友情支持，又能花多少时间来帮我们做运维呢？</p>
+    </article>
+</div>
+
+    </div>
+</div>
+
+<footer class="site-footer">
+    <div class="wrapper">
+        <div class="footer-col-wrapper">
+            <div class="footer-col footer-col-1">
+                <ul class="social-media-list">
+                    <li>
+                        <a href="https://github.com/kitelife" target="_blank">
+                            <span class="icon icon--github">
+                                <svg viewBox="0 0 16 16">
+                                    <path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                                </svg>
+                            </span>
+                            <span class="username">kitelife</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://maimai.cn/profile/detail?dstu=39580141" target="_blank">
+                            <span class="icon icon--maimai">
+                                <img src="https://maimai.cn/favicon.ico" width="16"/>
+                            </span>
+                            <span class="username">Xiayf</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="footer-col footer-col-2"></div>
+            <div class="footer-col footer-col-3"></div>
+            <div class="footer-col footer-col-4">
+                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">
+                    <img alt="Creative Commons License" src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-sa.svg">
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        },
+        svg: {
+            fontCache: 'global'
+        }
+    };
+</script>
+<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</body>
+</html>

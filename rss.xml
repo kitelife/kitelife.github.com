@@ -4,8 +4,8 @@
         <description>精进，求诸己身</description>
         <link>https://blog.xiayf.cn/</link>
         <atom:link href="https://blog.xiayf.cn/rss.xml" rel="self" type="application/rss+xml"/>
-        <pubDate>2025-06-06T19:06:04.516748+08:00</pubDate>
-        <lastBuildDate>2025-06-06T19:06:04.516748+08:00</lastBuildDate>
+        <pubDate>2025-06-06T23:16:39.105448+08:00</pubDate>
+        <lastBuildDate>2025-06-06T23:16:39.105448+08:00</lastBuildDate>
         <generator>LingDong</generator>
         
         <item>
@@ -936,7 +936,7 @@ public:
 &lt;ul&gt;&lt;li&gt;1、先根据 key 匹配到目标数据文件的元信息&lt;/li&gt;
 &lt;li&gt;2、根据元信息中的数据文件 id，去 TableCache 中查找对应的 Table 对象，如果不存在，则先打开数据文件，读取解析 footer / index / meta / meta index 这些索引信息，准备好 Table 对象，缓存到 TableCache 中&lt;/li&gt;
 &lt;li&gt;3、基于 Table 对象继续进行数据文件内的检索流程&lt;/li&gt;&lt;/ul&gt;
-&lt;img src=&apos;../plantuml-images/3677371886952185404.svg&apos; title=&apos;3677371886952185404&apos; alt=&apos;3677371886952185404&apos;/&gt;
+&lt;img src=&apos;../plantuml-images/10218620051036125969.svg&apos; title=&apos;10218620051036125969&apos; alt=&apos;10218620051036125969&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;leveldb 默认参数支持缓存 990 个 Table，ShardedLRUCache 默认分片数为 16，按照公式计算，每个分片支持 缓存 62 个 Table。&lt;/p&gt;
 &lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;struct Options {
   // 省略
@@ -990,7 +990,7 @@ Cache* block_cache = nullptr;
 // compression is enabled.  This parameter can be changed dynamically.  
 size_t block_size = 4 * 1024;&lt;/code&gt;&lt;/pre&gt;
 &lt;h4&gt;9.4.3 ShardedLRUCache&lt;/h4&gt;
-&lt;img src=&apos;../plantuml-images/14244215025304889058.svg&apos; title=&apos;14244215025304889058&apos; alt=&apos;14244215025304889058&apos;/&gt;
+&lt;img src=&apos;../plantuml-images/10847774103377816582.svg&apos; title=&apos;10847774103377816582&apos; alt=&apos;10847774103377816582&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;HandleTable 是一个“链接法（chaining）” 实现的哈希表，默认初始化 4 个 buckets，每个 bucket 初始值为空指针，指针类型为 &lt;code&gt;LRUHandle*&lt;/code&gt;，即哈希表节点类型。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;HandleTable 中：&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;&lt;code&gt;length_&lt;/code&gt;：表示哈希表的当前容量。&lt;/li&gt;
@@ -1037,7 +1037,7 @@ HandleTable table_ GUARDED_BY(mutex_);&lt;/code&gt;&lt;/pre&gt;
 &lt;h3&gt;9.5、过滤策略-布隆过滤器&lt;/h3&gt;
 &lt;img src=&apos;https://s2.loli.net/2025/05/24/If15V9oNdJHp8kW.png&apos; title=&apos;Bloom_filter_speed&apos; alt=&apos;Bloom_filter_speed&apos; width=&apos;600&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;过滤器匹配返回 false，就一定不在存储中；如果返回 true，有小概率不对（false positive）&lt;sup id=&quot;fnref:1&quot;&gt;&lt;a href=&quot;#fn:1&quot; class=&quot;footnote&quot; rel=&quot;footnote&quot; role=&quot;doc-noteref&quot;&gt;[1]&lt;/a&gt;&lt;/sup&gt;。&lt;/p&gt;
-&lt;img src=&apos;../plantuml-images/12278967407746068451.svg&apos; title=&apos;12278967407746068451&apos; alt=&apos;12278967407746068451&apos;/&gt;
+&lt;img src=&apos;../plantuml-images/856713548873394252.svg&apos; title=&apos;856713548873394252&apos; alt=&apos;856713548873394252&apos;/&gt;
 &lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;class FilterPolicy {
 public:  
  virtual ~FilterPolicy();  
@@ -2054,12 +2054,12 @@ void FilterBlockBuilder::AddKey(const Slice&amp;amp;amp; key) {
             <title>读码：LevelDB - 接口定义与数据写入</title>
             <description>&lt;h2&gt;0、设计概要&amp;接口定义&lt;/h2&gt;
 &lt;img src=&apos;https://s2.loli.net/2025/05/24/9Gh1agVoq2x6pBU.png&apos; title=&apos;lsm&apos; alt=&apos;lsm&apos; width=&apos;800&apos;/&gt;
-&lt;img src=&apos;../plantuml-images/6359595352013989138.svg&apos; title=&apos;6359595352013989138&apos; alt=&apos;6359595352013989138&apos;/&gt;
+&lt;img src=&apos;../plantuml-images/5466215330223589350.svg&apos; title=&apos;5466215330223589350&apos; alt=&apos;5466215330223589350&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;基于 DB 类的静态方法 Open 来打开/初始化一个数据库，Open 会实例化一个 DBImpl 对象，调用其私有方法 Recover 来恢复/初始化状态，并将 DBImpl 对象指针赋值给 dbptr 返回给调用方，调用方通过 dbptr 调用 Put/Write/Delete/Get/NewIterator 进行读写操作。&lt;/p&gt;
 &lt;h2&gt;1、WriteBatch&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;Put 和 Delete 是针对单个 key 进行操作，在底层会将键值操作包装成 WriteBatch 对象，然后调用 Write 接口执行实际的操作流程。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;也可以在调用侧实例化 WriteBatch 对象，将一批增删操作都先填充到 WriteBatch 对象，然后直接调用 Write 接口执行一批操作，这样写吞吐应该会更高一点。这批操作是&lt;u&gt;原子的&lt;/u&gt;（一起写成功或者失败）。&lt;/p&gt;
-&lt;img src=&apos;../plantuml-images/15438443962830358341.svg&apos; title=&apos;15438443962830358341&apos; alt=&apos;15438443962830358341&apos;/&gt;
+&lt;img src=&apos;../plantuml-images/2954303224409429649.svg&apos; title=&apos;2954303224409429649&apos; alt=&apos;2954303224409429649&apos;/&gt;
 &lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;//
 typedef uint64_t SequenceNumber; // 虽然序列号使用了的 uint64_t 类型，但是实际只会使用 56 比特，即最大值为 ((0x1ull &amp;amp;lt;&amp;amp;lt; 56) - 1)
 // We leave eight bits empty at the bottom so a type and sequence#  
@@ -2081,7 +2081,7 @@ typedef SkipList&amp;amp;lt;const char*, KeyComparator&amp;amp;gt; Table;&lt;/co
 &lt;img src=&apos;https://s2.loli.net/2025/05/24/nACmfLPxBvcRpyM.png&apos; title=&apos;write-batch&apos; alt=&apos;write-batch&apos; width=&apos;800&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;$SequenceNum$ 是当前 WriteBatch 所有操作的基准序列号，即 WriteBatch 中第一个操作的序列号为 $SequenceNum + 0$ ，第二个操作的序列号为 $SequenceNum + 1$，依次类推。为每次操作分配一个唯一的序列号，是为了方便实现快照能力。后面再解释。&lt;/p&gt;
 &lt;h2&gt;2、写入缓冲与攒批&lt;/h2&gt;
-&lt;img src=&apos;../plantuml-images/16350957578966051389.svg&apos; title=&apos;16350957578966051389&apos; alt=&apos;16350957578966051389&apos;/&gt;
+&lt;img src=&apos;../plantuml-images/6546807012046921820.svg&apos; title=&apos;6546807012046921820&apos; alt=&apos;6546807012046921820&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;leveldb 的 write 写入过程基于 Writer （双端）队列实现缓冲和可能的攒批（合并多个 WriteBatch），提升写入的吞吐性能。攒批的性能空间来自 - 如果写入时发现 level0 文件过多（compaction 未完成，影响读/检索性能），则认为需要对写入进行限速，将写入先在 Write 队列中缓冲，攒 1ms 左右，合并成一个大的 WriteBatch 然后写入 memtable。&lt;/p&gt;
 &lt;img src=&apos;https://s2.loli.net/2025/05/24/vfKFoAlU7b6hjna.png&apos; title=&apos;write-deque&apos; alt=&apos;write-deque&apos; width=&apos;450&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;如果本次写入的 Writer 为队列头部，则说明当前写入压力应该不大，可以直接进行写入操作 -&lt;/p&gt;
@@ -2107,7 +2107,7 @@ static const int kHeaderSize = 4 + 2 + 1;&lt;/code&gt;&lt;/pre&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;那也意味着，如果一旦不可变 memtable 数据 compaction 到 $level_0$ 文件后，这些数据状态对应的“WAL log” 内容就没没有实际用处了，可以及时清理掉。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;leveldb 写入数据时，如果发现 memtable 占用内存已达到阈值，并且不可变 memtable 数据已被 minor compaction 成 $level_0$ 文件，则会将 memtable 切换成不可变 memtable，同时创建一个新的“WAL log”，并申请一个新的 memtable。不过此时新的不可变 memtable 还没被 minor compaction 成 $level_0$ 文件，所以前一个“WAL log”文件也还要保留，不能删除。&lt;/p&gt;
 &lt;h2&gt;4、MemTable&lt;/h2&gt;
-&lt;img src=&apos;../plantuml-images/13521469798245810568.svg&apos; title=&apos;13521469798245810568&apos; alt=&apos;13521469798245810568&apos;/&gt;
+&lt;img src=&apos;../plantuml-images/13885392873113826242.svg&apos; title=&apos;13885392873113826242&apos; alt=&apos;13885392873113826242&apos;/&gt;
 &lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;typedef SkipList&amp;amp;lt;const char*, KeyComparator&amp;amp;gt; Table;&lt;/code&gt;&lt;/pre&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;MemTable 是对应一个“WAL log” 文件的内存存储结构。&lt;u&gt;单个 MemTable 内存占用阈值为 4MB(&lt;code&gt;write_buffer_size&lt;/code&gt;)&lt;/u&gt;，当可变 MemTable 的内存占用达到阈值时，就尝试切换成不可变 MemTable，并创建一个新的 WAL log 文件以及对应的可变 MemTable 来承接写入，而不可变 MemTable 的内容等待被 minor compaction 刷成一个 $level_0$ ldb 数据文件。&lt;/p&gt;
 &lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;// Amount of data to build up in memory (backed by an unsorted log  
@@ -5978,7 +5978,7 @@ d9976cfe0430557885d162927dd70186d0f521e8&lt;/code&gt;&lt;/pre&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;在特定情况下，对于需要处理的数据进行完美重现是不必要的：一个近似的结果就足够了。通常，这些情况出现在多媒体应用中：超出人类听觉范围的声音不需要记录，人眼无法识别的颜色与梯度的细微之处也无需重现。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;一个经典的示例是 MPEG 音频标准---通过去除高频声音相关的额外数据来降低音频文件的大小。这个标准的 Layer-3 规格允许多种去除数据的设定，这样渐进地从音频样本中去除更多的信息。&lt;/p&gt;
 &lt;img src=&apos;https://s2.loli.net/2025/06/06/EzHuK4mqoPWyn9D.gif&apos; title=&apos;compression-mp3.gif&apos; alt=&apos;compression-mp3.gif&apos; width=&apos;100%&apos;/&gt;
-&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图2：经MPEG音频Layer-3编码的Yardım Et ((Mor ve Ötesi)[http://www.morveotesi.com/], &quot;Dünya Yalan Söylüyor&quot;)&lt;/p&gt;&lt;/blockquote&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图2：经 MPEG 音频 Layer-3 编码的 Yardım Et (&lt;a href=&apos;http://www.morveotesi.com/&apos;&gt;Mor ve Ötesi&lt;/a&gt;, &quot;Dünya Yalan Söylüyor&quot;)&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;上图2中，两个波形叠加在一起：红色的为原来的歌曲波形，覆盖在其上的蓝色是经充分压缩的变体。展示的样本长度为1.5秒；作为原来波形文件的一部分，这段样本存储为 160kB 的数据。经压缩的变体，长度相同，但仅占用48kB的空间。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;这是通过 MPEG 音频压缩算法得到的，调整歌曲的频率属性，去除超出人类听力范围（高至大约20kHz）的部分。这样，如上可见，并未显著地影响产生的波形，因此经压缩的声音不会明显地不同于原有的声音。&lt;/p&gt;
 &lt;h2&gt;扔掉数据：视觉有损编码&lt;/h2&gt;

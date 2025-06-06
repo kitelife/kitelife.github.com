@@ -59,12 +59,12 @@
     <article class="post-content">
         <h2>0、设计概要&接口定义</h2>
 <img src='https://s2.loli.net/2025/05/24/9Gh1agVoq2x6pBU.png' title='lsm' alt='lsm' width='800'/>
-<img src='../plantuml-images/2020231719221711318.svg' title='2020231719221711318' alt='2020231719221711318'/>
+<img src='../plantuml-images/6359595352013989138.svg' title='6359595352013989138' alt='6359595352013989138'/>
 <p class="text-align-justify">基于 DB 类的静态方法 Open 来打开/初始化一个数据库，Open 会实例化一个 DBImpl 对象，调用其私有方法 Recover 来恢复/初始化状态，并将 DBImpl 对象指针赋值给 dbptr 返回给调用方，调用方通过 dbptr 调用 Put/Write/Delete/Get/NewIterator 进行读写操作。</p>
 <h2>1、WriteBatch</h2>
 <p class="text-align-justify">Put 和 Delete 是针对单个 key 进行操作，在底层会将键值操作包装成 WriteBatch 对象，然后调用 Write 接口执行实际的操作流程。</p>
 <p class="text-align-justify">也可以在调用侧实例化 WriteBatch 对象，将一批增删操作都先填充到 WriteBatch 对象，然后直接调用 Write 接口执行一批操作，这样写吞吐应该会更高一点。这批操作是<u>原子的</u>（一起写成功或者失败）。</p>
-<img src='../plantuml-images/4310966129065534356.svg' title='4310966129065534356' alt='4310966129065534356'/>
+<img src='../plantuml-images/15438443962830358341.svg' title='15438443962830358341' alt='15438443962830358341'/>
 <pre class="language-cpp"><code>//
 typedef uint64_t SequenceNumber; // 虽然序列号使用了的 uint64_t 类型，但是实际只会使用 56 比特，即最大值为 ((0x1ull &lt;&lt; 56) - 1)
 // We leave eight bits empty at the bottom so a type and sequence#  
@@ -86,7 +86,7 @@ typedef SkipList&lt;const char*, KeyComparator&gt; Table;</code></pre>
 <img src='https://s2.loli.net/2025/05/24/nACmfLPxBvcRpyM.png' title='write-batch' alt='write-batch' width='800'/>
 <p class="text-align-justify">$SequenceNum$ 是当前 WriteBatch 所有操作的基准序列号，即 WriteBatch 中第一个操作的序列号为 $SequenceNum + 0$ ，第二个操作的序列号为 $SequenceNum + 1$，依次类推。为每次操作分配一个唯一的序列号，是为了方便实现快照能力。后面再解释。</p>
 <h2>2、写入缓冲与攒批</h2>
-<img src='../plantuml-images/10455326765692218700.svg' title='10455326765692218700' alt='10455326765692218700'/>
+<img src='../plantuml-images/16350957578966051389.svg' title='16350957578966051389' alt='16350957578966051389'/>
 <p class="text-align-justify">leveldb 的 write 写入过程基于 Writer （双端）队列实现缓冲和可能的攒批（合并多个 WriteBatch），提升写入的吞吐性能。攒批的性能空间来自 - 如果写入时发现 level0 文件过多（compaction 未完成，影响读/检索性能），则认为需要对写入进行限速，将写入先在 Write 队列中缓冲，攒 1ms 左右，合并成一个大的 WriteBatch 然后写入 memtable。</p>
 <img src='https://s2.loli.net/2025/05/24/vfKFoAlU7b6hjna.png' title='write-deque' alt='write-deque' width='450'/>
 <p class="text-align-justify">如果本次写入的 Writer 为队列头部，则说明当前写入压力应该不大，可以直接进行写入操作 -</p>
@@ -112,7 +112,7 @@ static const int kHeaderSize = 4 + 2 + 1;</code></pre>
 <p class="text-align-justify">那也意味着，如果一旦不可变 memtable 数据 compaction 到 $level_0$ 文件后，这些数据状态对应的“WAL log” 内容就没没有实际用处了，可以及时清理掉。</p>
 <p class="text-align-justify">leveldb 写入数据时，如果发现 memtable 占用内存已达到阈值，并且不可变 memtable 数据已被 minor compaction 成 $level_0$ 文件，则会将 memtable 切换成不可变 memtable，同时创建一个新的“WAL log”，并申请一个新的 memtable。不过此时新的不可变 memtable 还没被 minor compaction 成 $level_0$ 文件，所以前一个“WAL log”文件也还要保留，不能删除。</p>
 <h2>4、MemTable</h2>
-<img src='../plantuml-images/18364841602614845104.svg' title='18364841602614845104' alt='18364841602614845104'/>
+<img src='../plantuml-images/13521469798245810568.svg' title='13521469798245810568' alt='13521469798245810568'/>
 <pre class="language-cpp"><code>typedef SkipList&lt;const char*, KeyComparator&gt; Table;</code></pre>
 <p class="text-align-justify">MemTable 是对应一个“WAL log” 文件的内存存储结构。<u>单个 MemTable 内存占用阈值为 4MB(<code>write_buffer_size</code>)</u>，当可变 MemTable 的内存占用达到阈值时，就尝试切换成不可变 MemTable，并创建一个新的 WAL log 文件以及对应的可变 MemTable 来承接写入，而不可变 MemTable 的内容等待被 minor compaction 刷成一个 $level_0$ ldb 数据文件。</p>
 <pre class="language-cpp"><code>// Amount of data to build up in memory (backed by an unsorted log  

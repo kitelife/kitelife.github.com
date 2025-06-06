@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta property="og:title" content="BitPacking">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://blog.xiayf.cn/">
+    <meta property="og:site_name" content="BitPacking">
+    <meta property="og:description" content="精进，求诸己身">
+
+    <title>BitPacking</title>
+    <meta name="description" content="精进，求诸己身">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <link rel="stylesheet" href="/static/main.css">
+    <link rel="canonical" href="https://blog.xiayf.cn/">
+    
+    <link crossorigin="" rel="shortcut icon" type="image/x-icon" href="/assets/bits_small.ico">
+    
+</head>
+
+<body>
+<header class="site-header">
+    <div class="wrapper">
+        <a class="site-title" href="/">BitPacking</a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg viewBox="0 0 18 15">
+                    <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                <a class="page-link" href="/pages/about.html">关于我</a>
+                
+                <a class="page-link" href="/pages/works.html">作品</a>
+                
+                <a class="page-link" href="/pages/linlang.html">琳琅</a>
+                
+                <a class="page-link" href="/rss.xml">RSS</a>
+                
+            </div>
+        </nav>
+    </div>
+</header>
+
+<div class="page-content">
+    <div class="wrapper">
+        
+<div class="post">
+    <header class="post-header">
+        <h1 class="post-title">Python 格式字符串（译）</h1>
+        <p class="post-meta">2013-01-26</p>
+    </header>
+    <article class="post-content">
+        <p class="text-align-justify">原文：<a href='http://mkaz.com/solog/python-string-format'>Python String Format</a></p>
+<p class="text-align-justify">每次使用Python的格式字符串（string formatter），2.7及以上版本的，我都会犯错，并且有生之年，我想我都理解不了它们的文档。我非常习惯于更老的 <code>%</code> 方法。所以着手编写自己的格式字符串手册。若你有一些其他好的示例请告知我。</p>
+<h2>格式字符串手册</h2>
+<p class="text-align-justify"><strong>数字格式化</strong></p>
+<p class="text-align-justify">下面的表格展示了使用 Python 的后起新秀 <code>str.format()</code> 格式化数字的多种方法，包含浮点数格式化与整数格式化示例。可使用 <code>print(&quot;FORMAT&quot;.format(NUMBER));</code> 来运行示例，因此你可以运行： <code>print(&quot;{:.2f}&quot;.format(3.1415926));</code> 来得到第一个示例的输出。</p>
+<table class="table table-bordered">
+<thead>
+<tr><th style="text-align: left">数字</th>
+<th style="text-align: left">格式</th>
+<th style="text-align: left">输出</th>
+<th style="text-align: left">描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td style="text-align: left"><p class="text-align-left">3.1415926</p></td>
+<td style="text-align: left"><p class="text-align-left"><code>{:.2f}</code></p></td>
+<td style="text-align: left"><p class="text-align-left"><code>3.14</code></p></td>
+<td style="text-align: left"><p class="text-align-left">保留小数点后两位</p></td>
+</tr>
+<tr>
+<td style="text-align: left"><p class="text-align-left">3.1415926</p></td>
+<td style="text-align: left"><p class="text-align-left"><code>{:+.2f}</code></p></td>
+<td style="text-align: left"><p class="text-align-left"><code>+3.14</code></p></td>
+<td style="text-align: left"><p class="text-align-left">带符号保留小数点后两位</p></td>
+</tr>
+<tr>
+<td style="text-align: left"><p class="text-align-left">-1</p></td>
+<td style="text-align: left"><p class="text-align-left"><code>{:+.2f}</code></p></td>
+<td style="text-align: left"><p class="text-align-left"><code>-1.00</code></p></td>
+<td style="text-align: left"><p class="text-align-left">带符号保留小数点后两位</p></td>
+</tr>
+<tr>
+<td style="text-align: left"><p class="text-align-left">2.71828</p></td>
+<td style="text-align: left"><p class="text-align-left"><code>{:.0f}</code></p></td>
+<td style="text-align: left"><p class="text-align-left"><code>3</code></p></td>
+<td style="text-align: left"><p class="text-align-left">不带小数</p></td>
+</tr>
+<tr>
+<td style="text-align: left"><p class="text-align-left">5</p></td>
+<td style="text-align: left"><p class="text-align-left"><code>{:0&gt;2d}</code></p></td>
+<td style="text-align: left"><p class="text-align-left"><code>05</code></p></td>
+<td style="text-align: left"><p class="text-align-left">数字补零 (填充左边, 宽度为2)</p></td>
+</tr>
+<tr>
+<td style="text-align: left"><p class="text-align-left">5</p></td>
+<td style="text-align: left"><p class="text-align-left"><code>{:x&lt;4d}</code></p></td>
+<td style="text-align: left"><p class="text-align-left"><code>5xxx</code></p></td>
+<td style="text-align: left"><p class="text-align-left">数字补x (填充右边, 宽度为4)</p></td>
+</tr>
+<tr>
+<td style="text-align: left"><p class="text-align-left">10</p></td>
+<td style="text-align: left"><p class="text-align-left"><code>{:x&lt;4d}</code></p></td>
+<td style="text-align: left"><p class="text-align-left"><code>10xx</code></p></td>
+<td style="text-align: left"><p class="text-align-left">数字补x (填充右边, 宽度为4)</p></td>
+</tr>
+<tr>
+<td style="text-align: left"><p class="text-align-left">1000000</p></td>
+<td style="text-align: left"><p class="text-align-left"><code>{:,}</code></p></td>
+<td style="text-align: left"><p class="text-align-left"><code>1,000,000</code></p></td>
+<td style="text-align: left"><p class="text-align-left">以逗号分隔的数字格式</p></td>
+</tr>
+<tr>
+<td style="text-align: left"><p class="text-align-left">0.25</p></td>
+<td style="text-align: left"><p class="text-align-left"><code>{:.2%}</code></p></td>
+<td style="text-align: left"><p class="text-align-left"><code>25.00%</code></p></td>
+<td style="text-align: left"><p class="text-align-left">百分比格式</p></td>
+</tr>
+<tr>
+<td style="text-align: left"><p class="text-align-left">1000000000</p></td>
+<td style="text-align: left"><p class="text-align-left"><code>{:.2e}</code></p></td>
+<td style="text-align: left"><p class="text-align-left"><code>1.00e+09</code></p></td>
+<td style="text-align: left"><p class="text-align-left">指数记法</p></td>
+</tr>
+<tr>
+<td style="text-align: left"><p class="text-align-left">13</p></td>
+<td style="text-align: left"><p class="text-align-left"><code>{:10d}</code></p></td>
+<td style="text-align: left"><p class="text-align-left">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;13</p></td>
+<td style="text-align: left"><p class="text-align-left">右对齐 (默认, 宽度为10)</p></td>
+</tr>
+<tr>
+<td style="text-align: left"><p class="text-align-left">13</p></td>
+<td style="text-align: left"><p class="text-align-left"><code>{:&lt;10d}</code></p></td>
+<td style="text-align: left"><p class="text-align-left">13&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p></td>
+<td style="text-align: left"><p class="text-align-left">左对齐 (宽度为10)</p></td>
+</tr>
+<tr>
+<td style="text-align: left"><p class="text-align-left">13</p></td>
+<td style="text-align: left"><p class="text-align-left"><code>{:^10d}</code></p></td>
+<td style="text-align: left"><p class="text-align-left">&nbsp;&nbsp;&nbsp;&nbsp;13&nbsp;&nbsp;&nbsp;&nbsp;</p></td>
+<td style="text-align: left"><p class="text-align-left">中间对齐 (宽度为10)</p></td>
+</tr>
+</tbody>
+</table>
+<h2><code>string.format()</code> 基础</h2>
+<p class="text-align-justify">如下是两个基本字符串替换的示例，符号 <code>{}</code></p>
+<p class="text-align-justify">是替换变量的占位符。若没有指定格式，则直接将变量值作为字符串插入。</p>
+<pre class="language-python"><code>s1 = &quot;so much depends upon {}&quot;.format(&quot;a red wheel barrow&quot;)
+s2 = &quot;glazed with {} water beside the {} chickens&quot;.format(&quot;rain&quot;, &quot;white&quot;)</code></pre>
+<p class="text-align-justify">你也可以使用变量的位置数值，在字符串中改变它们，进行格式化时，会更加灵活。如果搞错了顺序，你可以轻易地修正而不需要打乱所有的变量。</p>
+<pre class="language-python"><code>s1 = &quot; {0} is better than {1} &quot;.format(&quot;emacs&quot;, &quot;vim&quot;)
+s2 = &quot; {1} is better than {0} &quot;.format(&quot;emacs&quot;, &quot;vim&quot;)</code></pre>
+<h2>更老的格式字符串符号"%"</h2>
+<p class="text-align-justify">Python 2.6 之前，格式字符串的使用方法相对更简单些，虽然其能够接收的参数数量有限制。这些方法在 Python 3.3 中仍然有效，但已有含蓄的警告称将完全淘汰这些方法，目前还没有明确的时间进度表。<a href='http://www.python.org/dev/peps/pep-3101/'>PEP-3101</a></p>
+<p class="text-align-justify"><strong>格式化浮点数：</strong></p>
+<pre class="language-python"><code>pi = 3.14159
+print(&quot; pi = %1.2f &quot;, % pi)</code></pre>
+<p class="text-align-justify"><strong>多个替换值</strong></p>
+<pre class="language-python"><code>s1 = &quot;cats&quot;
+s2 = &quot;dogs&quot;
+s3 = &quot; %s and %s living together&quot; % (s1, s2)</code></pre>
+<p class="text-align-justify"><strong>没有足够的参数</strong></p>
+<p class="text-align-justify">使用老的格式化方法，我经常犯错“TypeError: not enough arguments for formating string”，因为我数错了替换变量的数量，编写如下这样的代码很容易漏掉变量。</p>
+<pre class="language-python"><code>set =  (%s, %s, %s, %s, %s, %s, %s, %s) &quot; % (a,b,c,d,e,f,g,h,i)</code></pre>
+<p class="text-align-justify">对于新的Python格式字符串，可以使用编号的参数，这样你就不需要统计有多少个参数。</p>
+<pre class="language-python"><code>set = set = &quot; ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}) &quot;.format(a,b,c,d,e,f,g)</code></pre>
+<h2>更多<code>.format()</code>的格式字符串方法</h2>
+<p class="text-align-justify"><code>format()</code> 函数提供了相当多的附加特性和功能，如下是一些有用的使用 <code>.format()</code> 的技巧。</p>
+<p class="text-align-justify"><strong>命名参数</strong></p>
+<p class="text-align-justify">你可以将新的格式字符串用作模板引擎，使用命名参数，这样就不要求有严格的顺序。</p>
+<pre class="language-text"><code>madlib = &quot; I {verb} the {object} off the {place} &quot;.format(verb=&quot;took&quot;, object=&quot;cheese&quot;, place=&quot;table&quot;)
+&gt;&gt;&gt; I took the cheese off the table</code></pre>
+<p class="text-align-justify"><strong>多次复用同一个变量</strong></p>
+<p class="text-align-justify">使用<code>%</code> 格式字符串，要求变量有严格的次序，而<code>.format()</code>方法允许如上所示那样任意排列参数，也允许复用。</p>
+<pre class="language-text"><code>str = &quot;Oh {0}, {0}! wherefore art thou {0}?&quot;.format(&quot;Romeo&quot;)
+&gt;&gt;&gt; Oh Romeo, Romeo! wherefore art thou Romeo?</code></pre>
+<p class="text-align-justify"><strong>将数值转换为不同的进制</strong></p>
+<p class="text-align-justify">可以使用如下字母来将数字转换成字母代表的进制，<strong>d</strong>ecimal，he<strong>x</strong>，<strong>o</strong>ctal, <strong>b</strong>inary。</p>
+<pre class="language-text"><code>print(&quot;{0:d} - {0:x} - {0:o} - {0:b} &quot;.format(21))
+&gt;&gt;&gt; 21 - 15 - 25 -10101</code></pre>
+<p class="text-align-justify"><strong>将格式作为函数来使用</strong></p>
+<p class="text-align-justify">可以将<code>.format()</code>用作函数，这就允许在代码中将普通文本和格式区分开来。例如，你可以在程序的开头包含所有需要使用的格式，然后在后面使用。这也是一种处理国际化的好方法，国际化不仅要求不同的文本，且常常要求不同的数字格式。</p>
+<pre class="language-python"><code>## 定义格式
+email_f = &quot;Your email address was {email}&quot;.format
+### 在另一个地方使用
+print(email_f(email=&quot;bob@example.com&quot;))</code></pre>
+<p class="text-align-justify">感谢 <a href='http://www.reddit.com/r/Python/comments/174e1i/python_string_format_cookbook/c82ot0h'>earthboundkid</a> 在 reddit 上提供这一技巧。</p>
+<h2>其他技巧</h2>
+<p class="text-align-justify"><strong>转义大括号</strong></p>
+<p class="text-align-justify">使用<code>str.format()</code>时，若你需要使用大括号，只要写两次就可以了：</p>
+<pre class="language-text"><code>print(&quot; The {} set is often represented as { {0} } &quot;.format(&quot;empty&quot;))
+&gt;&gt;&gt; The empty set is often represented as {0}</code></pre>
+<h2>参考资料</h2>
+<ul><li><a href='http://docs.python.org/3/library/string.html'>Python String Library</a> - 标准库文档</li></ul>
+    </article>
+</div>
+
+    </div>
+</div>
+
+<footer class="site-footer">
+    <div class="wrapper">
+        <div class="footer-col-wrapper">
+            <div class="footer-col footer-col-1">
+                <ul class="social-media-list">
+                    <li>
+                        <a href="https://github.com/kitelife" target="_blank">
+                            <span class="icon icon--github">
+                                <svg viewBox="0 0 16 16">
+                                    <path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                                </svg>
+                            </span>
+                            <span class="username">kitelife</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://maimai.cn/profile/detail?dstu=39580141" target="_blank">
+                            <span class="icon icon--maimai">
+                                <img src="https://maimai.cn/favicon.ico" width="16"/>
+                            </span>
+                            <span class="username">Xiayf</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="footer-col footer-col-2"></div>
+            <div class="footer-col footer-col-3"></div>
+            <div class="footer-col footer-col-4">
+                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">
+                    <img alt="Creative Commons License" src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-sa.svg">
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        },
+        svg: {
+            fontCache: 'global'
+        }
+    };
+</script>
+<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</body>
+</html>

@@ -4,8 +4,8 @@
         <description>精进，求诸己身</description>
         <link>https://blog.xiayf.cn/</link>
         <atom:link href="https://blog.xiayf.cn/rss.xml" rel="self" type="application/rss+xml"/>
-        <pubDate>2025-06-06T00:29:04.32434+08:00</pubDate>
-        <lastBuildDate>2025-06-06T00:29:04.32434+08:00</lastBuildDate>
+        <pubDate>2025-06-06T19:06:04.516748+08:00</pubDate>
+        <lastBuildDate>2025-06-06T19:06:04.516748+08:00</lastBuildDate>
         <generator>LingDong</generator>
         
         <item>
@@ -936,7 +936,7 @@ public:
 &lt;ul&gt;&lt;li&gt;1、先根据 key 匹配到目标数据文件的元信息&lt;/li&gt;
 &lt;li&gt;2、根据元信息中的数据文件 id，去 TableCache 中查找对应的 Table 对象，如果不存在，则先打开数据文件，读取解析 footer / index / meta / meta index 这些索引信息，准备好 Table 对象，缓存到 TableCache 中&lt;/li&gt;
 &lt;li&gt;3、基于 Table 对象继续进行数据文件内的检索流程&lt;/li&gt;&lt;/ul&gt;
-&lt;img src=&apos;../plantuml-images/15837073280295236712.svg&apos; title=&apos;15837073280295236712&apos; alt=&apos;15837073280295236712&apos;/&gt;
+&lt;img src=&apos;../plantuml-images/3677371886952185404.svg&apos; title=&apos;3677371886952185404&apos; alt=&apos;3677371886952185404&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;leveldb 默认参数支持缓存 990 个 Table，ShardedLRUCache 默认分片数为 16，按照公式计算，每个分片支持 缓存 62 个 Table。&lt;/p&gt;
 &lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;struct Options {
   // 省略
@@ -990,7 +990,7 @@ Cache* block_cache = nullptr;
 // compression is enabled.  This parameter can be changed dynamically.  
 size_t block_size = 4 * 1024;&lt;/code&gt;&lt;/pre&gt;
 &lt;h4&gt;9.4.3 ShardedLRUCache&lt;/h4&gt;
-&lt;img src=&apos;../plantuml-images/6266200502175455323.svg&apos; title=&apos;6266200502175455323&apos; alt=&apos;6266200502175455323&apos;/&gt;
+&lt;img src=&apos;../plantuml-images/14244215025304889058.svg&apos; title=&apos;14244215025304889058&apos; alt=&apos;14244215025304889058&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;HandleTable 是一个“链接法（chaining）” 实现的哈希表，默认初始化 4 个 buckets，每个 bucket 初始值为空指针，指针类型为 &lt;code&gt;LRUHandle*&lt;/code&gt;，即哈希表节点类型。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;HandleTable 中：&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;&lt;code&gt;length_&lt;/code&gt;：表示哈希表的当前容量。&lt;/li&gt;
@@ -1037,7 +1037,7 @@ HandleTable table_ GUARDED_BY(mutex_);&lt;/code&gt;&lt;/pre&gt;
 &lt;h3&gt;9.5、过滤策略-布隆过滤器&lt;/h3&gt;
 &lt;img src=&apos;https://s2.loli.net/2025/05/24/If15V9oNdJHp8kW.png&apos; title=&apos;Bloom_filter_speed&apos; alt=&apos;Bloom_filter_speed&apos; width=&apos;600&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;过滤器匹配返回 false，就一定不在存储中；如果返回 true，有小概率不对（false positive）&lt;sup id=&quot;fnref:1&quot;&gt;&lt;a href=&quot;#fn:1&quot; class=&quot;footnote&quot; rel=&quot;footnote&quot; role=&quot;doc-noteref&quot;&gt;[1]&lt;/a&gt;&lt;/sup&gt;。&lt;/p&gt;
-&lt;img src=&apos;../plantuml-images/16081863763612408949.svg&apos; title=&apos;16081863763612408949&apos; alt=&apos;16081863763612408949&apos;/&gt;
+&lt;img src=&apos;../plantuml-images/12278967407746068451.svg&apos; title=&apos;12278967407746068451&apos; alt=&apos;12278967407746068451&apos;/&gt;
 &lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;class FilterPolicy {
 public:  
  virtual ~FilterPolicy();  
@@ -2054,12 +2054,12 @@ void FilterBlockBuilder::AddKey(const Slice&amp;amp;amp; key) {
             <title>读码：LevelDB - 接口定义与数据写入</title>
             <description>&lt;h2&gt;0、设计概要&amp;接口定义&lt;/h2&gt;
 &lt;img src=&apos;https://s2.loli.net/2025/05/24/9Gh1agVoq2x6pBU.png&apos; title=&apos;lsm&apos; alt=&apos;lsm&apos; width=&apos;800&apos;/&gt;
-&lt;img src=&apos;../plantuml-images/2020231719221711318.svg&apos; title=&apos;2020231719221711318&apos; alt=&apos;2020231719221711318&apos;/&gt;
+&lt;img src=&apos;../plantuml-images/6359595352013989138.svg&apos; title=&apos;6359595352013989138&apos; alt=&apos;6359595352013989138&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;基于 DB 类的静态方法 Open 来打开/初始化一个数据库，Open 会实例化一个 DBImpl 对象，调用其私有方法 Recover 来恢复/初始化状态，并将 DBImpl 对象指针赋值给 dbptr 返回给调用方，调用方通过 dbptr 调用 Put/Write/Delete/Get/NewIterator 进行读写操作。&lt;/p&gt;
 &lt;h2&gt;1、WriteBatch&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;Put 和 Delete 是针对单个 key 进行操作，在底层会将键值操作包装成 WriteBatch 对象，然后调用 Write 接口执行实际的操作流程。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;也可以在调用侧实例化 WriteBatch 对象，将一批增删操作都先填充到 WriteBatch 对象，然后直接调用 Write 接口执行一批操作，这样写吞吐应该会更高一点。这批操作是&lt;u&gt;原子的&lt;/u&gt;（一起写成功或者失败）。&lt;/p&gt;
-&lt;img src=&apos;../plantuml-images/4310966129065534356.svg&apos; title=&apos;4310966129065534356&apos; alt=&apos;4310966129065534356&apos;/&gt;
+&lt;img src=&apos;../plantuml-images/15438443962830358341.svg&apos; title=&apos;15438443962830358341&apos; alt=&apos;15438443962830358341&apos;/&gt;
 &lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;//
 typedef uint64_t SequenceNumber; // 虽然序列号使用了的 uint64_t 类型，但是实际只会使用 56 比特，即最大值为 ((0x1ull &amp;amp;lt;&amp;amp;lt; 56) - 1)
 // We leave eight bits empty at the bottom so a type and sequence#  
@@ -2081,7 +2081,7 @@ typedef SkipList&amp;amp;lt;const char*, KeyComparator&amp;amp;gt; Table;&lt;/co
 &lt;img src=&apos;https://s2.loli.net/2025/05/24/nACmfLPxBvcRpyM.png&apos; title=&apos;write-batch&apos; alt=&apos;write-batch&apos; width=&apos;800&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;$SequenceNum$ 是当前 WriteBatch 所有操作的基准序列号，即 WriteBatch 中第一个操作的序列号为 $SequenceNum + 0$ ，第二个操作的序列号为 $SequenceNum + 1$，依次类推。为每次操作分配一个唯一的序列号，是为了方便实现快照能力。后面再解释。&lt;/p&gt;
 &lt;h2&gt;2、写入缓冲与攒批&lt;/h2&gt;
-&lt;img src=&apos;../plantuml-images/10455326765692218700.svg&apos; title=&apos;10455326765692218700&apos; alt=&apos;10455326765692218700&apos;/&gt;
+&lt;img src=&apos;../plantuml-images/16350957578966051389.svg&apos; title=&apos;16350957578966051389&apos; alt=&apos;16350957578966051389&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;leveldb 的 write 写入过程基于 Writer （双端）队列实现缓冲和可能的攒批（合并多个 WriteBatch），提升写入的吞吐性能。攒批的性能空间来自 - 如果写入时发现 level0 文件过多（compaction 未完成，影响读/检索性能），则认为需要对写入进行限速，将写入先在 Write 队列中缓冲，攒 1ms 左右，合并成一个大的 WriteBatch 然后写入 memtable。&lt;/p&gt;
 &lt;img src=&apos;https://s2.loli.net/2025/05/24/vfKFoAlU7b6hjna.png&apos; title=&apos;write-deque&apos; alt=&apos;write-deque&apos; width=&apos;450&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;如果本次写入的 Writer 为队列头部，则说明当前写入压力应该不大，可以直接进行写入操作 -&lt;/p&gt;
@@ -2107,7 +2107,7 @@ static const int kHeaderSize = 4 + 2 + 1;&lt;/code&gt;&lt;/pre&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;那也意味着，如果一旦不可变 memtable 数据 compaction 到 $level_0$ 文件后，这些数据状态对应的“WAL log” 内容就没没有实际用处了，可以及时清理掉。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;leveldb 写入数据时，如果发现 memtable 占用内存已达到阈值，并且不可变 memtable 数据已被 minor compaction 成 $level_0$ 文件，则会将 memtable 切换成不可变 memtable，同时创建一个新的“WAL log”，并申请一个新的 memtable。不过此时新的不可变 memtable 还没被 minor compaction 成 $level_0$ 文件，所以前一个“WAL log”文件也还要保留，不能删除。&lt;/p&gt;
 &lt;h2&gt;4、MemTable&lt;/h2&gt;
-&lt;img src=&apos;../plantuml-images/18364841602614845104.svg&apos; title=&apos;18364841602614845104&apos; alt=&apos;18364841602614845104&apos;/&gt;
+&lt;img src=&apos;../plantuml-images/13521469798245810568.svg&apos; title=&apos;13521469798245810568&apos; alt=&apos;13521469798245810568&apos;/&gt;
 &lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;typedef SkipList&amp;amp;lt;const char*, KeyComparator&amp;amp;gt; Table;&lt;/code&gt;&lt;/pre&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;MemTable 是对应一个“WAL log” 文件的内存存储结构。&lt;u&gt;单个 MemTable 内存占用阈值为 4MB(&lt;code&gt;write_buffer_size&lt;/code&gt;)&lt;/u&gt;，当可变 MemTable 的内存占用达到阈值时，就尝试切换成不可变 MemTable，并创建一个新的 WAL log 文件以及对应的可变 MemTable 来承接写入，而不可变 MemTable 的内容等待被 minor compaction 刷成一个 $level_0$ ldb 数据文件。&lt;/p&gt;
 &lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;// Amount of data to build up in memory (backed by an unsorted log  
@@ -4350,7 +4350,7 @@ public class testTester {
         </item>
         
         <item>
-            <title>Base64编码原理与应用</title>
+            <title>Base64 编码原理与应用</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;2015年，我们在青云平台上实现了“百度云观测”应用。青云应用本质上是一个iframe，在向iframe服务方发送的请求中会携带一些数据，青云平台会使用&lt;code&gt;Base64 URL&lt;/code&gt;对这些数据进行编码，其提供的编码解码算法示例如下：&lt;/p&gt;
 &lt;pre class=&quot;language-php&quot;&gt;&lt;code&gt;// php版本
 function base64_URL_encode($data) {
@@ -4970,7 +4970,7 @@ if __name__ == &amp;amp;apos;__main__&amp;amp;apos;:
         </item>
         
         <item>
-            <title>Go并发编程基础（译）</title>
+            <title>Go 并发编程基础（译）</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文：&lt;a href=&apos;http://www.nada.kth.se/~snilsson/concurrency/&apos;&gt;Fundamentals of concurrent programming&lt;/a&gt;&lt;/p&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;译注：原文章链接已失效，作者重新写了一篇内容相近的文章 &lt;a href=&apos;https://yourbasic.org/golang/concurrent-programming/&apos;&gt;Concurrent programming&lt;/a&gt;&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;本文是一篇并发编程方面的入门文章，以&lt;a href=&apos;http://golang.org/&apos;&gt;Go语言&lt;/a&gt;编写示例代码，内容涵盖：&lt;/p&gt;
@@ -5655,7 +5655,7 @@ func mul(u, v Vector, k int) (res float64) {
         </item>
         
         <item>
-            <title>搭建高可用负载均衡组件及缓存DNS</title>
+            <title>搭建高可用负载均衡组件及缓存 DNS</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;该项工作，如题所示，主要分为两部分：高可用负载均衡组件、缓存 DNS。&lt;/p&gt;
 &lt;h2&gt;高可用负载均衡组件&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;需求：优化业务系统架构中某些关键环节，针对 TCP 层数据流量进行负载均衡，并保证服务的高可用。&lt;/p&gt;
@@ -5685,17 +5685,17 @@ func mul(u, v Vector, k int) (res float64) {
         </item>
         
         <item>
-            <title>通过示例学习Git内部构造（译）</title>
+            <title>通过示例学习 Git 内部构造（译）</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文：&lt;a href=&apos;http://teohm.github.io/blog/2011/05/30/learning-git-internals-by-example/&apos;&gt;Learning Git Internals by Example&lt;/a&gt;&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;状态：草稿&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;计划修订本文，未来可能会简化一些...&lt;/p&gt;
 &lt;h2&gt;动机&lt;/h2&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;从Subversion和Mercurial切换到Git之后的几个月，我始终觉得Git在本质上是不同于Subversion和Mercurial的，但没法确切地说出区别。&lt;/p&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;我经常在Github上看到tree、parent等术语，也搞不清楚它们确切的含义。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;从 Subversion 和 Mercuria l切换到 Git 之后的几个月，我始终觉得 Git 在本质上是不同于 Subversion 和 Mercurial 的，但没法确切地说出区别。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;我经常在 Github上 看到 tree、parent 等术语，也搞不清楚它们确切的含义。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;因此我决定花些时间学学Git。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;我会尝试概述，并阐述一路走来学到的关于Git的关键信息...但这仅是有助于我回答Git与其他源码控制工具区别的Git内部构造基本知识。&lt;/p&gt;
 &lt;h2&gt;实体、引用、索引（Objects，References，The Index）&lt;/h2&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;要理解Git内部构造的核心，我们应理解三个东西： &lt;strong&gt;实体&lt;/strong&gt;、&lt;strong&gt;引用&lt;/strong&gt;、 &lt;strong&gt;索引&lt;/strong&gt;。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;要理解 Git内部构造的核心，我们应理解三个东西： &lt;strong&gt;实体&lt;/strong&gt;、&lt;strong&gt;引用&lt;/strong&gt;、 &lt;strong&gt;索引&lt;/strong&gt;。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;我发现这个模型非常优雅。用一个小小的图表就能完全展现，也易于理解记忆。&lt;/p&gt;
 &lt;img src=&apos;https://s2.loli.net/2025/05/24/DZipXYwEqnguCF9.png&apos; title=&apos;Big Picture&apos; alt=&apos;Big Picture&apos; width=&apos;500&apos;/&gt;
 &lt;h3&gt;实体&lt;/h3&gt;
@@ -5889,6 +5889,277 @@ d9976cfe0430557885d162927dd70186d0f521e8&lt;/code&gt;&lt;/pre&gt;
             <pubDate>2013-04-09</pubDate>
             <link>https://blog.xiayf.cn/posts/understand-before-solve.html</link>
             <guid isPermaLink="true">https://blog.xiayf.cn/posts/understand-before-solve.html</guid>
+        </item>
+        
+        <item>
+            <title>数据压缩理论简介（译）</title>
+            <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文：&lt;a href=&apos;http://imrannazar.com/An-Introduction-to-Compression&apos;&gt;A introduction to compression&lt;/a&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;最近我在思考 GIF 和 JPEG 图片格式之间的不同：为什么某些图片存储为 GIF 格式所占的磁盘空间更大，而另一些图片以 JPEG 格式存储要占用更大的磁盘空间？事实证明，这是因为不同的图片格式使用了不同的压缩方法。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;压缩是一组程序的简便说法，这些程序能够将数据装进更小的存储空间中，也能将数据从压缩编码中重新取回。这是一个双向的过程：输入文件能够产生经过压缩的输出，并且算法根据压缩后的输出能够重新给你一个输入的拷贝。&lt;/p&gt;
+&lt;h2&gt;冗余：行程长度编码（Run-Length Encoding）&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;使压缩成为可能的是冗余：事实表明大多数的数据都以某种方式重复自己。例如，在一个文档中可能多次使用同一个单词，或者一张图片的多处包含相同的颜色。一个非常简单的冗余数据片段的示例如下所示：&lt;/p&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;Redundancy: Before compression&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;AAAAABBWWWWWWWWWPPPPQZMMMMVVV&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;在这种情况下，冗余是明显的；整个样本中重复出现了一系列字母。压缩这种数据的一种简单方式是通过重复次数来代表重复出现的字母，从而削减了样本的总长度。&lt;/p&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;Redundancy: After compression&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;A5B2W9P4Q1Z1M4V3&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;算法读取样本编码后的版本将能够完美地重现原来的数据：&quot;A&quot; 5次，&quot;B&quot; 2次，等等。这个简单算法的使用非常广泛，被称为行程长度编码（RLE）：写下字符的每次行程有多长。以古老的 PCX 图像格式为例来说明一种广泛使用的标准 RLE。&lt;/p&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/06/06/WR8QJBAapuZPION.png&apos; title=&apos;compression-stripes.png&apos; alt=&apos;compression-stripes.png&apos; width=&apos;100%&apos;/&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图1：条纹 &lt;a href=&apos;http://www.thisisnotparis.com/&apos;&gt;Gottschal&lt;/a&gt;/&lt;a href=&apos;http://www.gluecksbazillus.de/&quot;&apos;&gt;Schuster&lt;/a&gt;&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;图1中有很多单色的实心方块。这张图片宽500个像素，高190个像素；作为一张原始位图，使用一个字节来表示一个像素，那么这张图片就产生 95kB 的数据。PCX 算法计算图片中每行像素的行程长度，为相同颜色的连续像素保存行程长度：以这种方式，图片的大小减到了 52kB。&lt;/p&gt;
+&lt;h2&gt;频率：哈夫曼（Huffman）编码&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;RLE 的一个主要问题是它处理的是数据中的连续值：图1中，RLE 算法对图片的每个水平行进行独立的处理，然而其实所有的行都是相同的。这个问题可以通过整体地看待数据来缓解，构建一个表来记录在整个数据集中每个值出现的次数。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;哈夫曼编码是一种借助这种“频率表”的方法，这种表记录着每个值出现的频率，并且为每一项分配一个编码。频率越高的项编码越短，较少出现的项也就得到长的编码。在计算中，这些编码一般是二进制编码，然后就可以组合成字节进行文件存储。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;使用上面的例子，一个哈夫曼编码的过程如下所示：&lt;/p&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;Huffman encoding: Before compression&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;AAAAABBWWWWWWWWWPPPPQZMMMMVVV&lt;/p&gt;&lt;/blockquote&gt;
+&lt;table class=&quot;table table-bordered&quot;&gt;
+&lt;thead&gt;
+&lt;tr&gt;&lt;th style=&quot;text-align: center&quot;&gt;值&lt;/th&gt;
+&lt;th style=&quot;text-align: center&quot;&gt;频率&lt;/th&gt;
+&lt;th style=&quot;text-align: left&quot;&gt;编码&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;&lt;tr&gt;
+&lt;td style=&quot;text-align: center&quot;&gt;&lt;p class=&quot;text-align-center&quot;&gt;Q&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: center&quot;&gt;&lt;p class=&quot;text-align-center&quot;&gt;1&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;000000&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: center&quot;&gt;&lt;p class=&quot;text-align-center&quot;&gt;Z&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: center&quot;&gt;&lt;p class=&quot;text-align-center&quot;&gt;1&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;000001&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: center&quot;&gt;&lt;p class=&quot;text-align-center&quot;&gt;B&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: center&quot;&gt;&lt;p class=&quot;text-align-center&quot;&gt;2&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;00001&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: center&quot;&gt;&lt;p class=&quot;text-align-center&quot;&gt;V&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: center&quot;&gt;&lt;p class=&quot;text-align-center&quot;&gt;3&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;0001&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: center&quot;&gt;&lt;p class=&quot;text-align-center&quot;&gt;P&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: center&quot;&gt;&lt;p class=&quot;text-align-center&quot;&gt;4&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;001&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: center&quot;&gt;&lt;p class=&quot;text-align-center&quot;&gt;M&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: center&quot;&gt;&lt;p class=&quot;text-align-center&quot;&gt;4&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;011&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: center&quot;&gt;&lt;p class=&quot;text-align-center&quot;&gt;A&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: center&quot;&gt;&lt;p class=&quot;text-align-center&quot;&gt;5&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;01&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: center&quot;&gt;&lt;p class=&quot;text-align-center&quot;&gt;W&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: center&quot;&gt;&lt;p class=&quot;text-align-center&quot;&gt;9&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;1&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;表1：频率和哈夫曼表&lt;/p&gt;&lt;/blockquote&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;Huffman encoding: After compression&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;01 01 01 01 01 00001 00001 1 1 1 1 1 1 1 1 1 001 001 001 001 000000 000001 011 011 011 011 0001 0001 0001&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;此处省略了一行乱码，避免渲染异常...&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;使用哈夫曼编码，数据从29个字符减少到10个字节。当然这没包含频率与编码表，这个表必须和压缩后的数据一起存储才有意义；本例中，频率表比压缩后的数据还要大，但在多数情况下，频率表的大小是微不足道的。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;当然，将 RLE 和哈夫曼编码结合使用是可能的，首先执行 RLE，然后将压缩后的结果交给哈夫曼算法处理。对于简单的图片，这会产生特别好的结果：上面的图1通过使用GIF文件格式可以从一个95kB的位图压缩成一个 4kB 的文件，GIF 文件格式就是结合使用了 RLE，哈夫曼编码以及其他算法。&lt;/p&gt;
+&lt;h2&gt;感知：有损编码&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;上述方法可以用于以一种能够完美重现的方式对数据进行压缩。这种压缩的用例包括文档和软件程序，对于这种用例来说，任意值的丢失或损坏都可能使得文件不再有价值。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;在特定情况下，对于需要处理的数据进行完美重现是不必要的：一个近似的结果就足够了。通常，这些情况出现在多媒体应用中：超出人类听觉范围的声音不需要记录，人眼无法识别的颜色与梯度的细微之处也无需重现。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;一个经典的示例是 MPEG 音频标准---通过去除高频声音相关的额外数据来降低音频文件的大小。这个标准的 Layer-3 规格允许多种去除数据的设定，这样渐进地从音频样本中去除更多的信息。&lt;/p&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/06/06/EzHuK4mqoPWyn9D.gif&apos; title=&apos;compression-mp3.gif&apos; alt=&apos;compression-mp3.gif&apos; width=&apos;100%&apos;/&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图2：经MPEG音频Layer-3编码的Yardım Et ((Mor ve Ötesi)[http://www.morveotesi.com/], &quot;Dünya Yalan Söylüyor&quot;)&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;上图2中，两个波形叠加在一起：红色的为原来的歌曲波形，覆盖在其上的蓝色是经充分压缩的变体。展示的样本长度为1.5秒；作为原来波形文件的一部分，这段样本存储为 160kB 的数据。经压缩的变体，长度相同，但仅占用48kB的空间。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;这是通过 MPEG 音频压缩算法得到的，调整歌曲的频率属性，去除超出人类听力范围（高至大约20kHz）的部分。这样，如上可见，并未显著地影响产生的波形，因此经压缩的声音不会明显地不同于原有的声音。&lt;/p&gt;
+&lt;h2&gt;扔掉数据：视觉有损编码&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;正如声音文件的高频部分人耳无法辨别，图片也有高频部分：颜色的变化之处不足以人眼区分，或者由黑到白的渐变过程是如此的迅速导致无法看到渐变的部分。与声音处理一样，也可以从图片中去除这些高频部分；这就是JPEG图片格式的前提。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;JPEG 应用了 MPEG 音频所使用算法的一种变种，从包含于图片的频率部分抽取一个二维映射；该算法继而裁剪到这个频率部分，并重新合成图片。如下所示是这个过程的一个例子。&lt;/p&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/06/06/5UGpbkWaNcLJvAM.gif&apos; title=&apos;compression-jpeg-sharp.gif&apos; alt=&apos;compression-jpeg-sharp.gif&apos; width=&apos;100%&apos;/&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图3：JPEG压缩应用于一张块状图&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;图3中，一张由4个16x16像素方块构成的图片，与该图片经JPEG编码后的图片进行比较。颜色或亮度上的尖锐变化被定义为高视觉频率的结果。这正是 JPEG 要去除的地方。结果，编码后图片的边缘比较模糊。4个方块的接触点特别模糊。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;但JPEG的强大之处并不是编码具有尖锐变化边沿和角落的图片，而是低视觉频率的图片；照片就是其中的一个典型例子。&lt;/p&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/06/06/iqAsQdTYOHeGMZ6.gif&apos; title=&apos;compression-jpeg-photo.gif&apos; alt=&apos;compression-jpeg-photo.gif&apos; width=&apos;100%&apos;/&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图4：JPEG压缩应用于一张照片&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;图4中，一张安塔利亚港的300x300图片，经过JPEG编码。原来的位图为270kB，经去除尖锐边缘和颜色变化，JPEG 能够产生一张22kB的图片。对于人眼而言，图片的变化很小；即使像素有所改变，图片所展示的景色也完好无损。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;这就是有损编码背后的主要概念：确切的数据并不重要，重要的是数据所呈现的信息。将 JPEG 算法用于编码软件程序是不明智的，但当数据表达了不必要的过多信息之时，有损编码就派上用场了。&lt;/p&gt;
+&lt;h2&gt;感知冗余：视频编码&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;说到视频剪辑，通过结合无损和有损编码背后的原则，进一步压缩数据是有可能的。构建一个视频剪辑片段的最简单最幼稚的方法是合并连续的图片，作为视频帧来看待： MJPEG 视频文件格式就是将一系列的 JPEG 图片看到独立的视频帧。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;这种方法忽视了视频片段中固有的数据冗余：一个给定帧中包含的大多数信息同样会包含于其前一帧中。任何特定帧中仅有一小部分是新的信息；通过计算这部分信息所处的位置，然后仅存储这部分信息数据，那么就有可能大大地缩减视频帧的数据大小。&lt;/p&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/06/06/JkBWCrtegsp3x2n.gif&apos; title=&apos;compression-mpeg-diff.gif&apos; alt=&apos;compression-mpeg-diff.gif&apos; width=&apos;100%&apos;/&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图5：连续视频帧，以及它们的不同之处（&lt;a href=&apos;http://jpl.nasa.gov/&quot;&apos;&gt;NASA JPL&lt;/a&gt;）&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;图5中，较之第一帧，视频的第二帧显示的变化非常小：仅仅航天飞机的排气羽流有显著的运动。事实上，发射塔后面的航天飞机固体助推器（SRB）(译注：见Wikipedia词条&lt;a href=&apos;http://zh.wikipedia.org/wiki/%E8%88%AA%E5%A4%A9%E9%A3%9E%E6%9C%BA%E5%9B%BA%E4%BD%93%E5%8A%A9%E6%8E%A8%E5%99%A8&apos;&gt;航天飞机固体助推器&lt;/a&gt;)和天空在两帧之间完全没有变化。那么就不用存储图片的这些部分，可能存储一个值：“没有变化”就可以了。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;MPEG视频标准利用了这种内在的冗余作为算法的一部分。理论上，仅仅拍摄（a shot）的初始帧需要完整存储：拍摄的任何运动部分都可以作为与前一帧的相异之处来存储。初始帧，也称为一个内帧，存储为一张标准的 JPEG 图片，而后续的差异帧被称为间帧，或预测帧。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;实际上，MPEG视频标准是以“流”来设计的，这样就能够从拍摄（a shot）的中间开始观看视频片段。但若仅提供视频的一个内帧（I-帧），那么预测帧（P-帧）是不可能插入它们的差异的。所以，通常会把I-帧每隔一定时间插入到视频片段中，而不管拍摄的场景（a shot）是否变化。&lt;/p&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/06/06/mOXWBCpcMS87vxk.gif&apos; title=&apos;compression-mpeg-graph.gif&apos; alt=&apos;compression-mpeg-graph.gif&apos; width=&apos;100%&apos;/&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图6：一个4秒的MPEG视频片段的帧大小（&lt;a href=&apos;http://news.bbc.co.uk/&quot;&apos;&gt;BBC News&lt;/a&gt;）&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;上图6中，视频片段每间隔25帧或一秒插入I-帧。后续的每个P-帧都比I-帧小得多，由于政治家在接受采访时一般都不会频繁移动，因此不同视频帧之间的不同之处更少。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;图6使用的例子是一个4秒的400x224视频片段。以原始位图形式粗糙农户，生成文件的大小有26.7MB；通过结合使用有损编码和冗余的技术，MPEG 视频标准能够将视频大小缩减到300kB，减小了99%。&lt;/p&gt;
+&lt;h2&gt;总结：什么情况下可以有损编码&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;本文所列举的有损编码的例子都是应用于特殊情况的：音频，视频，图片。仅对于这些或者其他相关的东西，感知才是压缩过程中的一个重大因素。对于其他压缩目标，比如文档或软件程序，数据是什么样的就保存为什么样，非常重要。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;人们一直在开发更加高级的特殊压缩方法，但数据压缩的多数常见实现都是基于本文讲述的技术：去除冗余和重复信息。当存在大量冗余数据时，数据压缩会表现得非常好，所以不要试图去压缩一个已经压缩过的文件。&lt;/p&gt;</description>
+            <pubDate>2013-02-27</pubDate>
+            <link>https://blog.xiayf.cn/posts/a-introduction-to-compression.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/a-introduction-to-compression.html</guid>
+        </item>
+        
+        <item>
+            <title>Python 格式字符串（译）</title>
+            <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文：&lt;a href=&apos;http://mkaz.com/solog/python-string-format&apos;&gt;Python String Format&lt;/a&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;每次使用Python的格式字符串（string formatter），2.7及以上版本的，我都会犯错，并且有生之年，我想我都理解不了它们的文档。我非常习惯于更老的 &lt;code&gt;%&lt;/code&gt; 方法。所以着手编写自己的格式字符串手册。若你有一些其他好的示例请告知我。&lt;/p&gt;
+&lt;h2&gt;格式字符串手册&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;strong&gt;数字格式化&lt;/strong&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;下面的表格展示了使用 Python 的后起新秀 &lt;code&gt;str.format()&lt;/code&gt; 格式化数字的多种方法，包含浮点数格式化与整数格式化示例。可使用 &lt;code&gt;print(&amp;quot;FORMAT&amp;quot;.format(NUMBER));&lt;/code&gt; 来运行示例，因此你可以运行： &lt;code&gt;print(&amp;quot;{:.2f}&amp;quot;.format(3.1415926));&lt;/code&gt; 来得到第一个示例的输出。&lt;/p&gt;
+&lt;table class=&quot;table table-bordered&quot;&gt;
+&lt;thead&gt;
+&lt;tr&gt;&lt;th style=&quot;text-align: left&quot;&gt;数字&lt;/th&gt;
+&lt;th style=&quot;text-align: left&quot;&gt;格式&lt;/th&gt;
+&lt;th style=&quot;text-align: left&quot;&gt;输出&lt;/th&gt;
+&lt;th style=&quot;text-align: left&quot;&gt;描述&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;&lt;tr&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;3.1415926&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&lt;code&gt;{:.2f}&lt;/code&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&lt;code&gt;3.14&lt;/code&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;保留小数点后两位&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;3.1415926&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&lt;code&gt;{:+.2f}&lt;/code&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&lt;code&gt;+3.14&lt;/code&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;带符号保留小数点后两位&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;-1&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&lt;code&gt;{:+.2f}&lt;/code&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&lt;code&gt;-1.00&lt;/code&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;带符号保留小数点后两位&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;2.71828&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&lt;code&gt;{:.0f}&lt;/code&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&lt;code&gt;3&lt;/code&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;不带小数&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;5&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&lt;code&gt;{:0&amp;gt;2d}&lt;/code&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&lt;code&gt;05&lt;/code&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;数字补零 (填充左边, 宽度为2)&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;5&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&lt;code&gt;{:x&amp;lt;4d}&lt;/code&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&lt;code&gt;5xxx&lt;/code&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;数字补x (填充右边, 宽度为4)&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;10&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&lt;code&gt;{:x&amp;lt;4d}&lt;/code&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&lt;code&gt;10xx&lt;/code&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;数字补x (填充右边, 宽度为4)&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;1000000&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&lt;code&gt;{:,}&lt;/code&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&lt;code&gt;1,000,000&lt;/code&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;以逗号分隔的数字格式&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;0.25&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&lt;code&gt;{:.2%}&lt;/code&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&lt;code&gt;25.00%&lt;/code&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;百分比格式&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;1000000000&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&lt;code&gt;{:.2e}&lt;/code&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&lt;code&gt;1.00e+09&lt;/code&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;指数记法&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;13&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&lt;code&gt;{:10d}&lt;/code&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;13&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;右对齐 (默认, 宽度为10)&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;13&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&lt;code&gt;{:&amp;lt;10d}&lt;/code&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;13&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;左对齐 (宽度为10)&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;13&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&lt;code&gt;{:^10d}&lt;/code&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;13&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;中间对齐 (宽度为10)&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2&gt;&lt;code&gt;string.format()&lt;/code&gt; 基础&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;如下是两个基本字符串替换的示例，符号 &lt;code&gt;{}&lt;/code&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;是替换变量的占位符。若没有指定格式，则直接将变量值作为字符串插入。&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;s1 = &amp;amp;quot;so much depends upon {}&amp;amp;quot;.format(&amp;amp;quot;a red wheel barrow&amp;amp;quot;)
+s2 = &amp;amp;quot;glazed with {} water beside the {} chickens&amp;amp;quot;.format(&amp;amp;quot;rain&amp;amp;quot;, &amp;amp;quot;white&amp;amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;你也可以使用变量的位置数值，在字符串中改变它们，进行格式化时，会更加灵活。如果搞错了顺序，你可以轻易地修正而不需要打乱所有的变量。&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;s1 = &amp;amp;quot; {0} is better than {1} &amp;amp;quot;.format(&amp;amp;quot;emacs&amp;amp;quot;, &amp;amp;quot;vim&amp;amp;quot;)
+s2 = &amp;amp;quot; {1} is better than {0} &amp;amp;quot;.format(&amp;amp;quot;emacs&amp;amp;quot;, &amp;amp;quot;vim&amp;amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;更老的格式字符串符号&quot;%&quot;&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;Python 2.6 之前，格式字符串的使用方法相对更简单些，虽然其能够接收的参数数量有限制。这些方法在 Python 3.3 中仍然有效，但已有含蓄的警告称将完全淘汰这些方法，目前还没有明确的时间进度表。&lt;a href=&apos;http://www.python.org/dev/peps/pep-3101/&apos;&gt;PEP-3101&lt;/a&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;strong&gt;格式化浮点数：&lt;/strong&gt;&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;pi = 3.14159
+print(&amp;amp;quot; pi = %1.2f &amp;amp;quot;, % pi)&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;strong&gt;多个替换值&lt;/strong&gt;&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;s1 = &amp;amp;quot;cats&amp;amp;quot;
+s2 = &amp;amp;quot;dogs&amp;amp;quot;
+s3 = &amp;amp;quot; %s and %s living together&amp;amp;quot; % (s1, s2)&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;strong&gt;没有足够的参数&lt;/strong&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;使用老的格式化方法，我经常犯错“TypeError: not enough arguments for formating string”，因为我数错了替换变量的数量，编写如下这样的代码很容易漏掉变量。&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;set =  (%s, %s, %s, %s, %s, %s, %s, %s) &amp;amp;quot; % (a,b,c,d,e,f,g,h,i)&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;对于新的Python格式字符串，可以使用编号的参数，这样你就不需要统计有多少个参数。&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;set = set = &amp;amp;quot; ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}) &amp;amp;quot;.format(a,b,c,d,e,f,g)&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;更多&lt;code&gt;.format()&lt;/code&gt;的格式字符串方法&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;code&gt;format()&lt;/code&gt; 函数提供了相当多的附加特性和功能，如下是一些有用的使用 &lt;code&gt;.format()&lt;/code&gt; 的技巧。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;strong&gt;命名参数&lt;/strong&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;你可以将新的格式字符串用作模板引擎，使用命名参数，这样就不要求有严格的顺序。&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;madlib = &amp;amp;quot; I {verb} the {object} off the {place} &amp;amp;quot;.format(verb=&amp;amp;quot;took&amp;amp;quot;, object=&amp;amp;quot;cheese&amp;amp;quot;, place=&amp;amp;quot;table&amp;amp;quot;)
+&amp;amp;gt;&amp;amp;gt;&amp;amp;gt; I took the cheese off the table&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;strong&gt;多次复用同一个变量&lt;/strong&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;使用&lt;code&gt;%&lt;/code&gt; 格式字符串，要求变量有严格的次序，而&lt;code&gt;.format()&lt;/code&gt;方法允许如上所示那样任意排列参数，也允许复用。&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;str = &amp;amp;quot;Oh {0}, {0}! wherefore art thou {0}?&amp;amp;quot;.format(&amp;amp;quot;Romeo&amp;amp;quot;)
+&amp;amp;gt;&amp;amp;gt;&amp;amp;gt; Oh Romeo, Romeo! wherefore art thou Romeo?&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;strong&gt;将数值转换为不同的进制&lt;/strong&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;可以使用如下字母来将数字转换成字母代表的进制，&lt;strong&gt;d&lt;/strong&gt;ecimal，he&lt;strong&gt;x&lt;/strong&gt;，&lt;strong&gt;o&lt;/strong&gt;ctal, &lt;strong&gt;b&lt;/strong&gt;inary。&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;print(&amp;amp;quot;{0:d} - {0:x} - {0:o} - {0:b} &amp;amp;quot;.format(21))
+&amp;amp;gt;&amp;amp;gt;&amp;amp;gt; 21 - 15 - 25 -10101&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;strong&gt;将格式作为函数来使用&lt;/strong&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;可以将&lt;code&gt;.format()&lt;/code&gt;用作函数，这就允许在代码中将普通文本和格式区分开来。例如，你可以在程序的开头包含所有需要使用的格式，然后在后面使用。这也是一种处理国际化的好方法，国际化不仅要求不同的文本，且常常要求不同的数字格式。&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot;&gt;&lt;code&gt;## 定义格式
+email_f = &amp;amp;quot;Your email address was {email}&amp;amp;quot;.format
+### 在另一个地方使用
+print(email_f(email=&amp;amp;quot;bob@example.com&amp;amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;感谢 &lt;a href=&apos;http://www.reddit.com/r/Python/comments/174e1i/python_string_format_cookbook/c82ot0h&apos;&gt;earthboundkid&lt;/a&gt; 在 reddit 上提供这一技巧。&lt;/p&gt;
+&lt;h2&gt;其他技巧&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;strong&gt;转义大括号&lt;/strong&gt;&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;使用&lt;code&gt;str.format()&lt;/code&gt;时，若你需要使用大括号，只要写两次就可以了：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;print(&amp;amp;quot; The {} set is often represented as { {0} } &amp;amp;quot;.format(&amp;amp;quot;empty&amp;amp;quot;))
+&amp;amp;gt;&amp;amp;gt;&amp;amp;gt; The empty set is often represented as {0}&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;参考资料&lt;/h2&gt;
+&lt;ul&gt;&lt;li&gt;&lt;a href=&apos;http://docs.python.org/3/library/string.html&apos;&gt;Python String Library&lt;/a&gt; - 标准库文档&lt;/li&gt;&lt;/ul&gt;</description>
+            <pubDate>2013-01-26</pubDate>
+            <link>https://blog.xiayf.cn/posts/python-string-format.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/python-string-format.html</guid>
         </item>
         
         <item>
@@ -6239,7 +6510,7 @@ some_function()
         </item>
         
         <item>
-            <title>Python装饰器入门（译）</title>
+            <title>Python 装饰器入门（译）</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文: &lt;a href=&apos;http://www.thumbtack.com/engineering/a-primer-on-python-decorators/&apos;&gt;A primer on Python decorators&lt;/a&gt;&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;Python允许你，作为程序员，使用函数完成一些很酷的事情。在Python中，函数是&lt;a href=&apos;http://en.wikipedia.org/wiki/First-class_function&apos;&gt;一等对象(first-class object)&lt;/a&gt;，这就意味着你可以像使用字符串，整数，或者任何其他对象一样使用函数。例如，你可以将函数赋值给变量:&lt;/p&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;&amp;amp;gt;&amp;amp;gt;&amp;amp;gt; def square(n):
@@ -6393,7 +6664,7 @@ def memoize(fn):
         </item>
         
         <item>
-            <title>Python学习路线(针对具备一定编程经验者)</title>
+            <title>Python 学习路线(针对具备一定编程经验者)</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;相比C,C++,JAVA等编程语言，Python是易学的。但要想深入地理解Python，并熟练地编写Python风格的Python代码。我想还是有一长段路程要走的。下面即是我的一点经验总结，主要是为了整理自己学习的思路。&lt;/p&gt;
 &lt;ol&gt;&lt;li&gt;花1-2天的时间阅读一本好的Python入门书籍，并在亲手实践书中的代码。推荐入门书籍：《A byte of Python》(中文翻译《简明Python教程》)或《Practical Programming:An Introduction to Computer Science Using Python》(中文翻译《Python实践教程》)或者其他的比较薄的入门书籍。&lt;/li&gt;
 &lt;li&gt;抛开书籍，用Python去写一切你想写的程序。这时最好的参考文档即为：(1).Python命令解释器中的help(),dir()辅助方法；(2).Python官网文档：&lt;a href=&apos;http://docs.python.org/&apos;&gt;http://docs.python.org/&lt;/a&gt; 。遇到不清楚的地方就用这两个方法查，再不行就去google一下。&lt;/li&gt;
@@ -6460,8 +6731,8 @@ def memoize(fn):
         </item>
         
         <item>
-            <title>Linux添加定时任务</title>
-            <description>&lt;p class=&quot;text-align-justify&quot;&gt;在Linux下如果希望某个任务定时地执行，一般是使用cron服务器，将任务添加到cron任务列表中。&lt;/p&gt;
+            <title>Linux 添加定时任务</title>
+            <description>&lt;p class=&quot;text-align-justify&quot;&gt;在 Linux 下如果希望某个任务定时地执行，一般是使用cron服务器，将任务添加到cron任务列表中。&lt;/p&gt;
 &lt;h4&gt;启动，关闭，重启cron(需超级用户权限)&lt;/h4&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;/etc/init.d/cron start
 /etc/init.d/cron stop

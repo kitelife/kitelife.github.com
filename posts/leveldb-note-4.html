@@ -276,7 +276,7 @@ public:
 <ul><li>1、先根据 key 匹配到目标数据文件的元信息</li>
 <li>2、根据元信息中的数据文件 id，去 TableCache 中查找对应的 Table 对象，如果不存在，则先打开数据文件，读取解析 footer / index / meta / meta index 这些索引信息，准备好 Table 对象，缓存到 TableCache 中</li>
 <li>3、基于 Table 对象继续进行数据文件内的检索流程</li></ul>
-<img src='../plantuml-images/15837073280295236712.svg' title='15837073280295236712' alt='15837073280295236712'/>
+<img src='../plantuml-images/3677371886952185404.svg' title='3677371886952185404' alt='3677371886952185404'/>
 <p class="text-align-justify">leveldb 默认参数支持缓存 990 个 Table，ShardedLRUCache 默认分片数为 16，按照公式计算，每个分片支持 缓存 62 个 Table。</p>
 <pre class="language-cpp"><code>struct Options {
   // 省略
@@ -330,7 +330,7 @@ Cache* block_cache = nullptr;
 // compression is enabled.  This parameter can be changed dynamically.  
 size_t block_size = 4 * 1024;</code></pre>
 <h4>9.4.3 ShardedLRUCache</h4>
-<img src='../plantuml-images/6266200502175455323.svg' title='6266200502175455323' alt='6266200502175455323'/>
+<img src='../plantuml-images/14244215025304889058.svg' title='14244215025304889058' alt='14244215025304889058'/>
 <p class="text-align-justify">HandleTable 是一个“链接法（chaining）” 实现的哈希表，默认初始化 4 个 buckets，每个 bucket 初始值为空指针，指针类型为 <code>LRUHandle*</code>，即哈希表节点类型。</p>
 <p class="text-align-justify">HandleTable 中：</p>
 <ul><li><code>length_</code>：表示哈希表的当前容量。</li>
@@ -377,7 +377,7 @@ HandleTable table_ GUARDED_BY(mutex_);</code></pre>
 <h3>9.5、过滤策略-布隆过滤器</h3>
 <img src='https://s2.loli.net/2025/05/24/If15V9oNdJHp8kW.png' title='Bloom_filter_speed' alt='Bloom_filter_speed' width='600'/>
 <p class="text-align-justify">过滤器匹配返回 false，就一定不在存储中；如果返回 true，有小概率不对（false positive）<sup id="fnref:1"><a href="#fn:1" class="footnote" rel="footnote" role="doc-noteref">[1]</a></sup>。</p>
-<img src='../plantuml-images/16081863763612408949.svg' title='16081863763612408949' alt='16081863763612408949'/>
+<img src='../plantuml-images/12278967407746068451.svg' title='12278967407746068451' alt='12278967407746068451'/>
 <pre class="language-cpp"><code>class FilterPolicy {
 public:  
  virtual ~FilterPolicy();  

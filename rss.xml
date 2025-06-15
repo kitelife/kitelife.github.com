@@ -4,9 +4,70 @@
         <description>精进，求诸己身</description>
         <link>https://blog.xiayf.cn/</link>
         <atom:link href="https://blog.xiayf.cn/rss.xml" rel="self" type="application/rss+xml"/>
-        <pubDate>2025-06-09T12:28:38.190303+08:00</pubDate>
-        <lastBuildDate>2025-06-09T12:28:38.190303+08:00</lastBuildDate>
+        <pubDate>2025-06-15T17:37:05.551151+08:00</pubDate>
+        <lastBuildDate>2025-06-15T17:37:05.551151+08:00</lastBuildDate>
         <generator>LingDong</generator>
+        
+        <item>
+            <title>absl::Hash 的一个误用</title>
+            <description>&lt;p class=&quot;text-align-justify&quot;&gt;近期在写 &lt;a href=&apos;https://github.com/kitelife/lingdong&apos;&gt;LingDong&lt;/a&gt; 的 &lt;a href=&apos;https://github.com/kitelife/lingdong/blob/7077f1def3790d1ab3f1c9a7f5809c71c98c2ddc/src/plugin/plantuml.hpp#L191&apos;&gt;PlantUML&lt;/a&gt; 插件时，一开始使用了 &lt;code&gt;absl::Hash&lt;/code&gt; 来计算 PlantUML 输出的 svg 图内容的哈希值，作为输出文件名。&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;auto hash_value = absl::Hash&amp;amp;lt;std::string&amp;amp;gt;{}(absl::StrJoin(codeblock-&amp;amp;gt;lines, &amp;amp;quot;\n&amp;amp;quot;));&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;发现：即使文章中 plantuml 原始绘图代码没有变更，每次构建，都会产出新的 svg 文件（文件名是文件内容的哈希值，从文件名看都是新文件）。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;一开始猜测 PlantUML 生成的 svg 图内容中暗含了什么生成时间点之类的字符串。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;经单测分析：对于相同的原始字符串，一次单测运行中两次生成的哈希值是相同的，不同次单测运行中生成的哈希值不同。那么基本可以确定问题原因是 &lt;code&gt;absl::Hash&lt;/code&gt; 哈希依赖于某个不确定的种子。分析源码会发现：&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;absl::Hash&amp;amp;lt;std::string&amp;amp;gt;{}(...)&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;会间接调用 &lt;code&gt;MixingHashState::hash&lt;/code&gt;，其实现为：&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;template &amp;amp;lt;typename T, absl::enable_if_t&amp;amp;lt;!IntegralFastPath&amp;amp;lt;T&amp;amp;gt;::value, int&amp;amp;gt; = 0&amp;amp;gt;
+static size_t hash(const T&amp;amp;amp; value) {
+  return static_cast&amp;amp;lt;size_t&amp;amp;gt;(combine(MixingHashState{}, value).state_);
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;其中 &lt;code&gt;MixingHashState{}&lt;/code&gt; 调用私有的无参构造函数进行实例化：&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;MixingHashState() : state_(Seed()) {}&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;code&gt;state_&lt;/code&gt; 成员变量 和 &lt;code&gt;Seed()&lt;/code&gt; 成员函数的定义如下所示：&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;  // Seed()
+  //
+  // A non-deterministic seed.
+  //
+  // The current purpose of this seed is to generate non-deterministic results
+  // and prevent having users depend on the particular hash values.
+  // It is not meant as a security feature right now, but it leaves the door
+  // open to upgrade it to a true per-process random seed. A true random seed
+  // costs more and we don&amp;amp;apos;t need to pay for that right now.
+  //
+  // On platforms with ASLR, we take advantage of it to make a per-process
+  // random value.
+  // See https://en.wikipedia.org/wiki/Address_space_layout_randomization
+  //
+  // On other platforms this is still going to be non-deterministic but most
+  // probably per-build and not per-process.
+  ABSL_ATTRIBUTE_ALWAYS_INLINE static uint64_t Seed() {
+#if (!defined(__clang__) || __clang_major__ &amp;amp;gt; 11) &amp;amp;amp;&amp;amp;amp; \
+    (!defined(__apple_build_version__) ||            \
+     __apple_build_version__ &amp;amp;gt;= 19558921)  // Xcode 12
+    return static_cast&amp;amp;lt;uint64_t&amp;amp;gt;(reinterpret_cast&amp;amp;lt;uintptr_t&amp;amp;gt;(&amp;amp;amp;kSeed));
+#else
+    // Workaround the absence of
+    // https://github.com/llvm/llvm-project/commit/bc15bf66dcca76cc06fe71fca35b74dc4d521021.
+    return static_cast&amp;amp;lt;uint64_t&amp;amp;gt;(reinterpret_cast&amp;amp;lt;uintptr_t&amp;amp;gt;(kSeed));
+#endif
+  }
+  static const void* const kSeed;
+
+  uint64_t state_;&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;而 &lt;code&gt;kSeed&lt;/code&gt; 静态成员变量的初始化逻辑为 - 存储自身的地址：&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;ABSL_CONST_INIT const void* const MixingHashState::kSeed = &amp;amp;amp;kSeed;&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;C++ 程序中，&lt;strong&gt;静态变量的地址在编译期可知（链接时确定），静态变量在程序启动时初始化（早于 main 执行）&lt;/strong&gt;。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;基于安全考虑，现代操作系统都会使用“&lt;a href=&apos;https://en.wikipedia.org/wiki/Address_space_layout_randomization&apos;&gt;地址空间配置随机加载（ASLR）&lt;/a&gt;” 这一机制，导致：同一程序中的同一静态变量，不同次运行或者在不同进程中，内存地址不同。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;code&gt;absl::Hash&lt;/code&gt; 基于这一机制来生成哈希的不确定种子值。&lt;a href=&apos;https://abseil.io/docs/cpp/guides/hash#abslhash&apos;&gt;Abseil 官方指南&lt;/a&gt;中其实也有一处不太显眼的说明：&lt;/p&gt;
+&lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;NOTE: the hash codes computed by absl::Hash are not guaranteed to be stable across different runs of your program, or across different dynamically loaded libraries in your program.&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;这也就意味着：基于 &lt;code&gt;absl::Hash&lt;/code&gt; 生成的哈希值以及 Abseil 中依赖哈希逻辑的容器不能持久化进行后续使用。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;Abseil 库中似乎也未提供方法以绕过这一机制。只好改成使用 C++ 标准库中的 &lt;code&gt;std::hash&lt;/code&gt;：&lt;/p&gt;
+&lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;auto hash_value = std::hash&amp;amp;lt;std::string&amp;amp;gt;{}(absl::StrJoin(codeblock-&amp;amp;gt;lines, &amp;amp;quot;\n&amp;amp;quot;));&lt;/code&gt;&lt;/pre&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;code&gt;std::hash&lt;/code&gt; 生成的哈希值是确定性，其实现基于 &lt;a href=&apos;https://en.wikipedia.org/wiki/MurmurHash#MurmurHash2&apos;&gt;MurmurHash2&lt;/a&gt; 和 &lt;a href=&apos;https://github.com/google/cityhash&apos;&gt;CityHash&lt;/a&gt; 哈希算法。&lt;/p&gt;</description>
+            <pubDate>2025-06-15</pubDate>
+            <link>https://blog.xiayf.cn/posts/absl-hash-misuse.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/absl-hash-misuse.html</guid>
+        </item>
         
         <item>
             <title>小心 fast-math（简译）</title>
@@ -46,7 +107,7 @@
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;解释一下这段代码：这个函数将返回寄存器 &lt;code&gt;eax&lt;/code&gt; 与自己做 xor 异或操作，从而将返回寄存器设置为 0，这意味着函数将始终返回 &lt;code&gt;false&lt;/code&gt;。&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;没错，你的编译器这时移除了所有那些检查操作。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;这个做法看起来可能是显然的（“你告诉编译器不会存在 NaN 值，那为什么它还要做检测？”），也可能是荒谬的（“如果都不做检测，那又怎么能安全地把 NaN 值优化掉呢？”），对错与否，取决于你问谁，即使是编译器开发者也&lt;a href=&apos;https://twitter.com/johnregehr/status/1440021297103134720&apos;&gt;无法达成一致意见&lt;/a&gt;。&lt;/p&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;这也许是 fast-math 相关 &lt;a href=&apos;https://stackoverflow.com/q/7263404/392585&apos;&gt;StackOverflow 问题&lt;/a&gt;和 &lt;a href=&apos;https://github.com/numba/numba/issues/2919&apos;&gt;GitHub&lt;/a&gt; &lt;a href=&apos;https://github.com/google/jax/issues/276&apos;&gt;bug&lt;/a&gt; &lt;a href=&apos;https://github.com/pytorch/glow/issues/2073&apos;&gt;报告&lt;/a&gt;中最常见的原因。因此，如果你的代码经过 fast-math 编译优化后给出了错误结果，纳闷第一反应应该是关掉这个编译选项（&lt;code&gt;-fno-finite-math-only&lt;/code&gt;）。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;这也许是 fast-math 相关 &lt;a href=&apos;https://stackoverflow.com/q/7263404/392585&apos;&gt;StackOverflow 问题&lt;/a&gt;和 &lt;a href=&apos;https://github.com/numba/numba/issues/2919&apos;&gt;GitHub&lt;/a&gt; &lt;a href=&apos;https://github.com/google/jax/issues/276&apos;&gt;bug&lt;/a&gt; &lt;a href=&apos;https://github.com/pytorch/glow/issues/2073&apos;&gt;报告&lt;/a&gt;中最常见的原因。因此，如果你的代码经过 fast-math 编译优化后给出了错误结果，那么第一反应应该是关掉这个编译选项（&lt;code&gt;-fno-finite-math-only&lt;/code&gt;）。&lt;/p&gt;
 &lt;h2&gt;三、&lt;code&gt;-fassociative-math&lt;/code&gt;&lt;/h2&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;允许在浮点运算序列中重新结合操作数。&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;这个编译选项允许编译器改变浮点运算序列中的求值顺序。例如，如果有一个表达式 &lt;code&gt;(a+b)+c&lt;/code&gt;，编译器可以将其调整为求值 &lt;code&gt;a+(b+c)&lt;/code&gt;。这两个表达式对于实数在数学上是等价的，但在浮点运算中它们的求值结果并不相等：它们产生的误差可能不同，在某些情况下差异可能非常显著：&lt;/p&gt;

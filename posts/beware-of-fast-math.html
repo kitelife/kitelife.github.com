@@ -93,7 +93,7 @@
 <blockquote><p class="text-align-justify">解释一下这段代码：这个函数将返回寄存器 <code>eax</code> 与自己做 xor 异或操作，从而将返回寄存器设置为 0，这意味着函数将始终返回 <code>false</code>。</p></blockquote>
 <p class="text-align-justify">没错，你的编译器这时移除了所有那些检查操作。</p>
 <p class="text-align-justify">这个做法看起来可能是显然的（“你告诉编译器不会存在 NaN 值，那为什么它还要做检测？”），也可能是荒谬的（“如果都不做检测，那又怎么能安全地把 NaN 值优化掉呢？”），对错与否，取决于你问谁，即使是编译器开发者也<a href='https://twitter.com/johnregehr/status/1440021297103134720'>无法达成一致意见</a>。</p>
-<p class="text-align-justify">这也许是 fast-math 相关 <a href='https://stackoverflow.com/q/7263404/392585'>StackOverflow 问题</a>和 <a href='https://github.com/numba/numba/issues/2919'>GitHub</a> <a href='https://github.com/google/jax/issues/276'>bug</a> <a href='https://github.com/pytorch/glow/issues/2073'>报告</a>中最常见的原因。因此，如果你的代码经过 fast-math 编译优化后给出了错误结果，纳闷第一反应应该是关掉这个编译选项（<code>-fno-finite-math-only</code>）。</p>
+<p class="text-align-justify">这也许是 fast-math 相关 <a href='https://stackoverflow.com/q/7263404/392585'>StackOverflow 问题</a>和 <a href='https://github.com/numba/numba/issues/2919'>GitHub</a> <a href='https://github.com/google/jax/issues/276'>bug</a> <a href='https://github.com/pytorch/glow/issues/2073'>报告</a>中最常见的原因。因此，如果你的代码经过 fast-math 编译优化后给出了错误结果，那么第一反应应该是关掉这个编译选项（<code>-fno-finite-math-only</code>）。</p>
 <h2>三、<code>-fassociative-math</code></h2>
 <blockquote><p class="text-align-justify">允许在浮点运算序列中重新结合操作数。</p></blockquote>
 <p class="text-align-justify">这个编译选项允许编译器改变浮点运算序列中的求值顺序。例如，如果有一个表达式 <code>(a+b)+c</code>，编译器可以将其调整为求值 <code>a+(b+c)</code>。这两个表达式对于实数在数学上是等价的，但在浮点运算中它们的求值结果并不相等：它们产生的误差可能不同，在某些情况下差异可能非常显著：</p>

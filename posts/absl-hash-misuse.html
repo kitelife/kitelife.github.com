@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta property="og:title" content="BitPacking">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://blog.xiayf.cn/">
+    <meta property="og:site_name" content="BitPacking">
+    <meta property="og:description" content="精进，求诸己身">
+
+    <title>BitPacking</title>
+    <meta name="description" content="精进，求诸己身">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <link rel="stylesheet" href="/static/main.css">
+    <link rel="canonical" href="https://blog.xiayf.cn/">
+    
+    <link crossorigin="" rel="shortcut icon" type="image/x-icon" href="/assets/bits_small.ico">
+    
+</head>
+
+<body>
+<header class="site-header">
+    <div class="wrapper">
+        <a class="site-title" href="/">BitPacking</a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg viewBox="0 0 18 15">
+                    <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                <a class="page-link" href="/pages/about.html">关于我</a>
+                
+                <a class="page-link" href="/pages/works.html">作品</a>
+                
+                <a class="page-link" href="/pages/linlang.html">琳琅</a>
+                
+                <a class="page-link" href="/rss.xml">RSS</a>
+                
+            </div>
+        </nav>
+    </div>
+</header>
+
+<div class="page-content">
+    <div class="wrapper">
+        
+<div class="post">
+    <header class="post-header">
+        <h1 class="post-title">absl::Hash 的一个误用</h1>
+        <p class="post-meta">2025-06-15</p>
+    </header>
+    <article class="post-content">
+        <p class="text-align-justify">近期在写 <a href='https://github.com/kitelife/lingdong'>LingDong</a> 的 <a href='https://github.com/kitelife/lingdong/blob/7077f1def3790d1ab3f1c9a7f5809c71c98c2ddc/src/plugin/plantuml.hpp#L191'>PlantUML</a> 插件时，一开始使用了 <code>absl::Hash</code> 来计算 PlantUML 输出的 svg 图内容的哈希值，作为输出文件名。</p>
+<pre class="language-cpp"><code>auto hash_value = absl::Hash&lt;std::string&gt;{}(absl::StrJoin(codeblock-&gt;lines, &quot;\n&quot;));</code></pre>
+<p class="text-align-justify">发现：即使文章中 plantuml 原始绘图代码没有变更，每次构建，都会产出新的 svg 文件（文件名是文件内容的哈希值，从文件名看都是新文件）。</p>
+<p class="text-align-justify">一开始猜测 PlantUML 生成的 svg 图内容中暗含了什么生成时间点之类的字符串。</p>
+<p class="text-align-justify">经单测分析：对于相同的原始字符串，一次单测运行中两次生成的哈希值是相同的，不同次单测运行中生成的哈希值不同。那么基本可以确定问题原因是 <code>absl::Hash</code> 哈希依赖于某个不确定的种子。分析源码会发现：</p>
+<pre class="language-cpp"><code>absl::Hash&lt;std::string&gt;{}(...)</code></pre>
+<p class="text-align-justify">会间接调用 <code>MixingHashState::hash</code>，其实现为：</p>
+<pre class="language-cpp"><code>template &lt;typename T, absl::enable_if_t&lt;!IntegralFastPath&lt;T&gt;::value, int&gt; = 0&gt;
+static size_t hash(const T&amp; value) {
+  return static_cast&lt;size_t&gt;(combine(MixingHashState{}, value).state_);
+}</code></pre>
+<p class="text-align-justify">其中 <code>MixingHashState{}</code> 调用私有的无参构造函数进行实例化：</p>
+<pre class="language-cpp"><code>MixingHashState() : state_(Seed()) {}</code></pre>
+<p class="text-align-justify"><code>state_</code> 成员变量 和 <code>Seed()</code> 成员函数的定义如下所示：</p>
+<pre class="language-cpp"><code>  // Seed()
+  //
+  // A non-deterministic seed.
+  //
+  // The current purpose of this seed is to generate non-deterministic results
+  // and prevent having users depend on the particular hash values.
+  // It is not meant as a security feature right now, but it leaves the door
+  // open to upgrade it to a true per-process random seed. A true random seed
+  // costs more and we don&apos;t need to pay for that right now.
+  //
+  // On platforms with ASLR, we take advantage of it to make a per-process
+  // random value.
+  // See https://en.wikipedia.org/wiki/Address_space_layout_randomization
+  //
+  // On other platforms this is still going to be non-deterministic but most
+  // probably per-build and not per-process.
+  ABSL_ATTRIBUTE_ALWAYS_INLINE static uint64_t Seed() {
+#if (!defined(__clang__) || __clang_major__ &gt; 11) &amp;&amp; \
+    (!defined(__apple_build_version__) ||            \
+     __apple_build_version__ &gt;= 19558921)  // Xcode 12
+    return static_cast&lt;uint64_t&gt;(reinterpret_cast&lt;uintptr_t&gt;(&amp;kSeed));
+#else
+    // Workaround the absence of
+    // https://github.com/llvm/llvm-project/commit/bc15bf66dcca76cc06fe71fca35b74dc4d521021.
+    return static_cast&lt;uint64_t&gt;(reinterpret_cast&lt;uintptr_t&gt;(kSeed));
+#endif
+  }
+  static const void* const kSeed;
+
+  uint64_t state_;</code></pre>
+<p class="text-align-justify">而 <code>kSeed</code> 静态成员变量的初始化逻辑为 - 存储自身的地址：</p>
+<pre class="language-cpp"><code>ABSL_CONST_INIT const void* const MixingHashState::kSeed = &amp;kSeed;</code></pre>
+<p class="text-align-justify">C++ 程序中，<strong>静态变量的地址在编译期可知（链接时确定），静态变量在程序启动时初始化（早于 main 执行）</strong>。</p>
+<p class="text-align-justify">基于安全考虑，现代操作系统都会使用“<a href='https://en.wikipedia.org/wiki/Address_space_layout_randomization'>地址空间配置随机加载（ASLR）</a>” 这一机制，导致：同一程序中的同一静态变量，不同次运行或者在不同进程中，内存地址不同。</p>
+<p class="text-align-justify"><code>absl::Hash</code> 基于这一机制来生成哈希的不确定种子值。<a href='https://abseil.io/docs/cpp/guides/hash#abslhash'>Abseil 官方指南</a>中其实也有一处不太显眼的说明：</p>
+<pre class="language-text"><code>NOTE: the hash codes computed by absl::Hash are not guaranteed to be stable across different runs of your program, or across different dynamically loaded libraries in your program.</code></pre>
+<p class="text-align-justify">这也就意味着：基于 <code>absl::Hash</code> 生成的哈希值以及 Abseil 中依赖哈希逻辑的容器不能持久化进行后续使用。</p>
+<p class="text-align-justify">Abseil 库中似乎也未提供方法以绕过这一机制。只好改成使用 C++ 标准库中的 <code>std::hash</code>：</p>
+<pre class="language-cpp"><code>auto hash_value = std::hash&lt;std::string&gt;{}(absl::StrJoin(codeblock-&gt;lines, &quot;\n&quot;));</code></pre>
+<p class="text-align-justify"><code>std::hash</code> 生成的哈希值是确定性，其实现基于 <a href='https://en.wikipedia.org/wiki/MurmurHash#MurmurHash2'>MurmurHash2</a> 和 <a href='https://github.com/google/cityhash'>CityHash</a> 哈希算法。</p>
+    </article>
+</div>
+
+    </div>
+</div>
+
+<footer class="site-footer">
+    <div class="wrapper">
+        <div class="footer-col-wrapper">
+            <div class="footer-col footer-col-1">
+                <ul class="social-media-list">
+                    <li>
+                        <a href="https://github.com/kitelife" target="_blank">
+                            <span class="icon icon--github">
+                                <svg viewBox="0 0 16 16">
+                                    <path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                                </svg>
+                            </span>
+                            <span class="username">kitelife</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://maimai.cn/profile/detail?dstu=39580141" target="_blank">
+                            <span class="icon icon--maimai">
+                                <img src="https://maimai.cn/favicon.ico" width="16"/>
+                            </span>
+                            <span class="username">Xiayf</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="footer-col footer-col-2"></div>
+            <div class="footer-col footer-col-3"></div>
+            <div class="footer-col footer-col-4">
+                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">
+                    <img alt="Creative Commons License" src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-sa.svg">
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        },
+        svg: {
+            fontCache: 'global'
+        }
+    };
+</script>
+<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta property="og:title" content="BitPacking">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://blog.xiayf.cn/">
+    <meta property="og:site_name" content="BitPacking">
+    <meta property="og:description" content="精进，求诸己身">
+
+    <title>BitPacking</title>
+    <meta name="description" content="精进，求诸己身">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <link rel="stylesheet" href="/static/main.css">
+    <link rel="canonical" href="https://blog.xiayf.cn/">
+    
+    <link crossorigin="" rel="shortcut icon" type="image/x-icon" href="/assets/bits_small.ico">
+    
+</head>
+
+<body>
+<header class="site-header">
+    <div class="wrapper">
+        <a class="site-title" href="/">BitPacking</a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg viewBox="0 0 18 15">
+                    <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                <a class="page-link" href="/pages/about.html">关于我</a>
+                
+                <a class="page-link" href="/pages/works.html">作品</a>
+                
+                <a class="page-link" href="/pages/linlang.html">琳琅</a>
+                
+                <a class="page-link" href="/rss.xml">RSS</a>
+                
+            </div>
+        </nav>
+    </div>
+</header>
+
+<div class="page-content">
+    <div class="wrapper">
+        
+<div class="post">
+    <header class="post-header">
+        <h1 class="post-title">译文：数据系统中一致性究竟是什么意思？</h1>
+        <p class="post-meta">2025-06-22</p>
+    </header>
+    <article class="post-content">
+        <p class="text-align-justify">原文： <a href='https://risingwave.com/blog/what-consistency-really-means-in-data-systems/'>What Consistency Really Means in Data Systems?</a></p>
+<blockquote><p class="text-align-justify">致谢：本译文基于 <a href='https://chromewebstore.google.com/detail/immersive-translate-trans/bpoadfkcbjbfhfodiogcnhhhpibjhbnh'>沉浸式翻译 chrome 插件</a> 的翻译结果，人工调整润色而成。</p></blockquote>
+<p class="text-align-justify">从事流处理系统开发工作的过去几年里，别人经常对我提出这样一个问题 - “你的系统可以实现强一致性（consistency）吗？”。我常常想自信地推介我们的产品，但现实是，这个问题回答起来其实挺复杂的。要想把这个问题讲清楚，挑战不在于问题本身，而在于“一致性”对不同的人来说意味着不同的东西，取决于他们的技术背景。</p>
+<p class="text-align-justify">事实上，问这个问题的很多人，技术背景都不同，比如：</p>
+<ul><li>数据库</li>
+<li>分布式系统</li>
+<li>流式系统（streaming system）</li></ul>
+<p class="text-align-justify">这些技术背景的人对一致性都有各自不同的理解。没有理解他们问这个问题的上下文背景，就贸然回答，容易导致误解。本文中，我将解释清楚在这些不同数据系统中一致性究竟是什么意思。</p>
+<h2>数据库中的一致性</h2>
+<p class="text-align-justify">在传统数据库中，ACID 性质（原子性/Atomicity、一致性/Consistency、隔离型/Isolation、持久性/Durability） 的核心之一就是一致性。这一性质保证了每个事务都将数据库从一个有效状态转换到弄一个有效状态。例如：在一次银行交易中，一个账户扣款另一个账户收款，一致性确保总余额保持不变。千万不要将一致性和原子性混淆了，原子性是指交易/事务要么全有要么全无（all-or-nothing）的性质。例如：原子性确保一个事务中的所有操作要么全部成功完成，要么全部不执行，数据库中不会留下部分事务的效果。</p>
+<p class="text-align-justify">总之，数据库中的一致性强调的是事务过程中保持数据正确性和有效性（validity）的规则。</p>
+<img src='https://s2.loli.net/2025/06/23/snze3I1iDwybl5h.png' title='consistency-bank-transaction.png' alt='consistency-bank-transaction.png' width='600'/>
+<h2>分布式系统中的一致性</h2>
+<p class="text-align-justify">关于分布式系统的讨论经常涉及一个基础概念 - 著名 <a href='https://zh.wikipedia.org/wiki/CAP%E5%AE%9A%E7%90%86'>CAP 定理</a> 中的一致性。该定理最初由加州大学伯克利分校的研究人员提出，已成为分布式系统相关大学课程和专业对话中的基本话题。</p>
+<p class="text-align-justify">在 CAP 定理中，“一致性”特指跨不同节点分布的多个副本之间数据的统一性（uniformity）。在分布式系统中确保这种一致性特别有挑战。该定理强调了三个关键属性的重要权衡：一致性、可用性（availability）和分区容错性（partition tolerance）。根据 CAP 定理，一个分布式系统同时只能实现这三个属性中的两个。</p>
+<p class="text-align-justify">在这个上下文语境下，一致性确保在任何给定时间点不同节点上的数据副本体现的信息相同。这对于维护数据完整性至关重要，尤其在涉及网络故障或延迟的场景中。该定理揭示了在多个节点间保持数据同步的固有困难，突出了在设计和维护可靠的分布式系统时平衡这三种相互竞争需求所面临的持续挑战。</p>
+<img src='https://s2.loli.net/2025/06/23/q3kitoETbShzwI9.png' title='consistency-data-sync-multi-node.png' alt='consistency-data-sync-multi-node.png' width='600'/>
+<h2>流式系统中的一致性</h2>
+<p class="text-align-justify">在讨论流式系统时，关于一致性的讨论通常与数据库或分布式系统的一致性不同，这反映了流式系统中独特的需求和挑战。<a href='https://www.confluent.io/blog/rethinking-distributed-stream-processing-in-kafka/'>一致性和完整性：重新思考 Apache Kafka 中的分布式流处理</a>一文中，作者认为“精确一次”语义概念是流式系统中一致性的关键特征。</p>
+<p class="text-align-justify">在流式系统中，保持一致性，并非和数据复制相关，而是强调确保每条事件数据仅被处理一次，不多不少，即使在发生系统故障时也是如此。例如，考虑实时处理一次金融交易的情况。如果系统在处理过程中崩溃，那么在系统恢复后，必须确保该交易不会被重复处理。这种精确处理一次的要求对于保持流式数据的完整性和一致性至关重要 - 确保每笔交易都仅被精确处理一次，无论系统是否发生中断。</p>
+<img src='https://s2.loli.net/2025/06/23/L4aKt7XFdk6DSxm.png' title='consistency-mathias-verraes.png' alt='consistency-mathias-verraes.png' width='600'/>
+<h2>人们真正想要的是什么？</h2>
+<p class="text-align-justify">如下表格突出对比了不同系统对一致性要求的差异：</p>
+<table class="table table-bordered">
+<thead>
+<tr><th style="text-align: left">系统类型</th>
+<th style="text-align: left">一致性需求</th>
+<th style="text-align: left">示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td style="text-align: left"><p class="text-align-left">数据库</p></td>
+<td style="text-align: left"><p class="text-align-left">事务完整性</p></td>
+<td style="text-align: left"><p class="text-align-left">银行交易应始终保持账户平衡</p></td>
+</tr>
+<tr>
+<td style="text-align: left"><p class="text-align-left">分布式系统</p></td>
+<td style="text-align: left"><p class="text-align-left">节点间数据一致性</p></td>
+<td style="text-align: left"><p class="text-align-left">社交媒体上的个人资料更新必须处处一致</p></td>
+</tr>
+<tr>
+<td style="text-align: left"><p class="text-align-left">流式系统</p></td>
+<td style="text-align: left"><p class="text-align-left">次序和处理语义保障</p></td>
+<td style="text-align: left"><p class="text-align-left">每笔金融交易仅被实时处理一次</p></td>
+</tr>
+</tbody>
+</table>
+<p class="text-align-justify">在实际应用中，用户和企业真正追求的是可靠性和数据完整性，这超越了标准教科书对一致性的定义。他们期望系统不仅稳健可靠，而且能够有效管控现实世界的复杂性。于用户而言，衡量系统是否成功的终极标准是其能够始终正确地提供结果，不会出错。必须认识到：要达到这种程序的一致性，系统不能仅仅“感觉上”是正确的，必须具备理论上的严谨性和功能上的可靠性（being theoretically sound and functionally reliable）。</p>
+<h2>分布式流数据库中的一致性</h2>
+<p class="text-align-justify">好的，我们来深入探讨一个更有趣的话题：分布式流数据库中的数据一致性。如果你不了解流数据库是什么，<a href='https://ksqldb.io/'>KsqlDB</a> 和 <a href='https://github.com/pipelinedb/pipelinedb'>PipelineDB</a> 就是此类系统。本质上，流数据库是为流处理量身定制的。感兴趣的读者可以参考我<a href='https://risingwave9.wpcomstaging.com/blog/streaming-databases-everything-you-wanted-to-know/'>之前写的文章</a>了解更多细节。在 RisingWave，我们开发了一个分布式流数据库，旨在降低流处理的成本和复杂性。</p>
+<p class="text-align-justify">分布式流数据库是数据库、分布式系统和流系统的结合。那么，它的一致性是什么样的呢？理想情况下，流数据库可以在所有场景下实现一致性，不过这当然也取决于具体系统的实现。在这里我也无法概述所有分布式流数据库的一致性模型，不过可以仅聚焦于 RisingWave： RisingWave 中的一致性看起来是什么样的？我们从三个维度来探讨这个问题。</p>
+<h3>数据库上下文中的“一致性”</h3>
+<p class="text-align-justify">RisingWave 提供这种一致性。RisingWave 有效地确保其内部状态能够无缝地从一种有效状态转换到另一种有效状态。然而，需要注意，RisingWave 支持只读事务，不过并不支持跨不同表的读写事务。因此，如果有人需要一个 OLTP 数据库来管理复杂的事务型工作负载，可能选择 <a href='https://www.mysql.com/'>MySQL</a>、<a href='https://www.postgresql.org/'>Postgres</a>、<a href='https://www.cockroachlabs.com/'>CockroachDB</a> 或 <a href='https://www.pingcap.com/'>TiDB</a> 这些方案更为合适。RisingWave 的这一设计决策主要是考虑到两个因素：</p>
+<ul><li><strong>专注于流数据</strong>：RisingWave 专为优化流数据处理而设计。引入完整的事务能力会显著增大系统的复杂性。</li>
+<li><strong>与传统 OLTP 数据库集成</strong>：通常情况下，传统 OLTP 数据库负责处理上游的事务序列化。RisingWave，作为一个下游系统，专注于实时分析。深度集成事务处理会导致显著的性能下降，尤其是在现实操作的苛刻条件下。</li></ul>
+<img src='https://s2.loli.net/2025/06/23/NUuJqaDg3dnmIy7.png' title='consistency-in-database-context.png' alt='consistency-in-database-context.png' width='600'/>
+<p class="text-align-justify">此外，RisingWave 被设计用于理解和处理来自上游 OLTP 数据库的事务语义，这对金融等行业（sectors）的客户来说是一个关键特性。</p>
+<h3>分布式系统上下文中的“一致性”</h3>
+<p class="text-align-justify">RisingWave 提供这种一致性。RisingWave 可以实现跨多个区域的高可用性。RisingWave 没有通过 Paxos 或 Raft 等复杂的共识协议来确保副本间的一致性，而是借助 S3 进行数据存储。S3 不仅存储数据库表，还存储流处理的内部状态，有效地在多个副本间复制数据以保持一致性。</p>
+<h3>流式系统上下文中的“一致性”</h3>
+<p class="text-align-justify">RisingWave 提供这种一致性。RisingWave 能够确保精确一次语义，也能轻巧地管理乱序数据处理。这种能力保证了每个数据事件被精确处理一次，无论数据流是否存在中断或干扰，从而在流数据中保持高度一致性。</p>
+<h3>总结</h3>
+<p class="text-align-justify">所谓数据系统的一致性，在数据库、分布式系统和流式系统之间涵义差别很大：</p>
+<ul><li>数据库关注事务完整性。</li>
+<li>分布式系统强调复制节点之间如何访存数据（how data is accessed across replicated nodes）。</li>
+<li>流式系统优先考虑消息处理语义保证，比如精确一次语义。</li></ul>
+<p class="text-align-justify">RisingWave 作为一个健壮、可适应的分布式流数据库，有效地满足这些多样化的需求。我们的设计实现方式不仅遵循理论的一致性标准，在实际应用中也表现出色。对于数据一致性需求变化多样的领域（in the evolving landscape of data consistency），RisingWave 是一个可靠的解决方案。</p>
+    </article>
+</div>
+
+    </div>
+</div>
+
+<footer class="site-footer">
+    <div class="wrapper">
+        <div class="footer-col-wrapper">
+            <div class="footer-col footer-col-1">
+                <ul class="social-media-list">
+                    <li>
+                        <a href="https://github.com/kitelife" target="_blank">
+                            <span class="icon icon--github">
+                                <svg viewBox="0 0 16 16">
+                                    <path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                                </svg>
+                            </span>
+                            <span class="username">kitelife</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://maimai.cn/profile/detail?dstu=39580141" target="_blank">
+                            <span class="icon icon--maimai">
+                                <img src="https://maimai.cn/favicon.ico" width="16"/>
+                            </span>
+                            <span class="username">Xiayf</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="footer-col footer-col-2"></div>
+            <div class="footer-col footer-col-3"></div>
+            <div class="footer-col footer-col-4">
+                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">
+                    <img alt="Creative Commons License" src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-sa.svg">
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+        },
+        svg: {
+            fontCache: 'global'
+        }
+    };
+</script>
+<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</body>
+</html>

@@ -104,7 +104,7 @@ typedef SkipList&lt;const char*, KeyComparator&gt; Table;</code></pre>
 
 // Header is checksum (4 bytes), length (2 bytes), type (1 byte).  
 static const int kHeaderSize = 4 + 2 + 1;</code></pre>
-<img src='https://s2.loli.net/2025/06/05/dsKGPjVclyAHYOW.png' title='wal-log-format' alt='wal-log-format' width='800'/>
+<img src='https://s2.loli.net/2025/06/05/gwpxDFuWGIb56r2.png' title='wal-log-format' alt='wal-log-format' width='800'/>
 <p class="text-align-justify">leveldb 会将 WriteBatch 的 <code>rep_</code> 当作字节序列写入 log 文件中。不过 log 文件存储的单元结构为块（block），块大小为 32768 字节。一个 WriteBatch 的 <code>rep_</code> 的大小可能大于/等于/小于一个块大小，也就是写入一个 <code>rep_</code> 可能填不满一个块或者正好填满一个块或者跨多个块。</p>
 <p class="text-align-justify">如果一次写入后，当前 block 剩余的空间不足以填充下一次写入的头部，则直接将剩余空间以 <code>\x00</code> 填满。</p>
 <p class="text-align-justify">这样编码的好处？- 读取解析时，按块大小进行读取，速度更快，顺序解析也方便。</p>

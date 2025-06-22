@@ -4,9 +4,83 @@
         <description>精进，求诸己身</description>
         <link>https://blog.xiayf.cn/</link>
         <atom:link href="https://blog.xiayf.cn/rss.xml" rel="self" type="application/rss+xml"/>
-        <pubDate>2025-06-15T17:37:05.551151+08:00</pubDate>
-        <lastBuildDate>2025-06-15T17:37:05.551151+08:00</lastBuildDate>
+        <pubDate>2025-06-23T00:03:33.698694+08:00</pubDate>
+        <lastBuildDate>2025-06-23T00:03:33.698694+08:00</lastBuildDate>
         <generator>LingDong</generator>
+        
+        <item>
+            <title>译文：数据系统中一致性究竟是什么意思？</title>
+            <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文： &lt;a href=&apos;https://risingwave.com/blog/what-consistency-really-means-in-data-systems/&apos;&gt;What Consistency Really Means in Data Systems?&lt;/a&gt;&lt;/p&gt;
+&lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;致谢：本译文基于 &lt;a href=&apos;https://chromewebstore.google.com/detail/immersive-translate-trans/bpoadfkcbjbfhfodiogcnhhhpibjhbnh&apos;&gt;沉浸式翻译 chrome 插件&lt;/a&gt; 的翻译结果，人工调整润色而成。&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;从事流处理系统开发工作的过去几年里，别人经常对我提出这样一个问题 - “你的系统可以实现强一致性（consistency）吗？”。我常常想自信地推介我们的产品，但现实是，这个问题回答起来其实挺复杂的。要想把这个问题讲清楚，挑战不在于问题本身，而在于“一致性”对不同的人来说意味着不同的东西，取决于他们的技术背景。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;事实上，问这个问题的很多人，技术背景都不同，比如：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;数据库&lt;/li&gt;
+&lt;li&gt;分布式系统&lt;/li&gt;
+&lt;li&gt;流式系统（streaming system）&lt;/li&gt;&lt;/ul&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;这些技术背景的人对一致性都有各自不同的理解。没有理解他们问这个问题的上下文背景，就贸然回答，容易导致误解。本文中，我将解释清楚在这些不同数据系统中一致性究竟是什么意思。&lt;/p&gt;
+&lt;h2&gt;数据库中的一致性&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;在传统数据库中，ACID 性质（原子性/Atomicity、一致性/Consistency、隔离型/Isolation、持久性/Durability） 的核心之一就是一致性。这一性质保证了每个事务都将数据库从一个有效状态转换到弄一个有效状态。例如：在一次银行交易中，一个账户扣款另一个账户收款，一致性确保总余额保持不变。千万不要将一致性和原子性混淆了，原子性是指交易/事务要么全有要么全无（all-or-nothing）的性质。例如：原子性确保一个事务中的所有操作要么全部成功完成，要么全部不执行，数据库中不会留下部分事务的效果。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;总之，数据库中的一致性强调的是事务过程中保持数据正确性和有效性（validity）的规则。&lt;/p&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/06/23/snze3I1iDwybl5h.png&apos; title=&apos;consistency-bank-transaction.png&apos; alt=&apos;consistency-bank-transaction.png&apos; width=&apos;600&apos;/&gt;
+&lt;h2&gt;分布式系统中的一致性&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;关于分布式系统的讨论经常涉及一个基础概念 - 著名 &lt;a href=&apos;https://zh.wikipedia.org/wiki/CAP%E5%AE%9A%E7%90%86&apos;&gt;CAP 定理&lt;/a&gt; 中的一致性。该定理最初由加州大学伯克利分校的研究人员提出，已成为分布式系统相关大学课程和专业对话中的基本话题。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;在 CAP 定理中，“一致性”特指跨不同节点分布的多个副本之间数据的统一性（uniformity）。在分布式系统中确保这种一致性特别有挑战。该定理强调了三个关键属性的重要权衡：一致性、可用性（availability）和分区容错性（partition tolerance）。根据 CAP 定理，一个分布式系统同时只能实现这三个属性中的两个。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;在这个上下文语境下，一致性确保在任何给定时间点不同节点上的数据副本体现的信息相同。这对于维护数据完整性至关重要，尤其在涉及网络故障或延迟的场景中。该定理揭示了在多个节点间保持数据同步的固有困难，突出了在设计和维护可靠的分布式系统时平衡这三种相互竞争需求所面临的持续挑战。&lt;/p&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/06/23/q3kitoETbShzwI9.png&apos; title=&apos;consistency-data-sync-multi-node.png&apos; alt=&apos;consistency-data-sync-multi-node.png&apos; width=&apos;600&apos;/&gt;
+&lt;h2&gt;流式系统中的一致性&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;在讨论流式系统时，关于一致性的讨论通常与数据库或分布式系统的一致性不同，这反映了流式系统中独特的需求和挑战。&lt;a href=&apos;https://www.confluent.io/blog/rethinking-distributed-stream-processing-in-kafka/&apos;&gt;一致性和完整性：重新思考 Apache Kafka 中的分布式流处理&lt;/a&gt;一文中，作者认为“精确一次”语义概念是流式系统中一致性的关键特征。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;在流式系统中，保持一致性，并非和数据复制相关，而是强调确保每条事件数据仅被处理一次，不多不少，即使在发生系统故障时也是如此。例如，考虑实时处理一次金融交易的情况。如果系统在处理过程中崩溃，那么在系统恢复后，必须确保该交易不会被重复处理。这种精确处理一次的要求对于保持流式数据的完整性和一致性至关重要 - 确保每笔交易都仅被精确处理一次，无论系统是否发生中断。&lt;/p&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/06/23/L4aKt7XFdk6DSxm.png&apos; title=&apos;consistency-mathias-verraes.png&apos; alt=&apos;consistency-mathias-verraes.png&apos; width=&apos;600&apos;/&gt;
+&lt;h2&gt;人们真正想要的是什么？&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;如下表格突出对比了不同系统对一致性要求的差异：&lt;/p&gt;
+&lt;table class=&quot;table table-bordered&quot;&gt;
+&lt;thead&gt;
+&lt;tr&gt;&lt;th style=&quot;text-align: left&quot;&gt;系统类型&lt;/th&gt;
+&lt;th style=&quot;text-align: left&quot;&gt;一致性需求&lt;/th&gt;
+&lt;th style=&quot;text-align: left&quot;&gt;示例&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;&lt;tr&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;数据库&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;事务完整性&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;银行交易应始终保持账户平衡&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;分布式系统&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;节点间数据一致性&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;社交媒体上的个人资料更新必须处处一致&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;流式系统&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;次序和处理语义保障&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;text-align: left&quot;&gt;&lt;p class=&quot;text-align-left&quot;&gt;每笔金融交易仅被实时处理一次&lt;/p&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;在实际应用中，用户和企业真正追求的是可靠性和数据完整性，这超越了标准教科书对一致性的定义。他们期望系统不仅稳健可靠，而且能够有效管控现实世界的复杂性。于用户而言，衡量系统是否成功的终极标准是其能够始终正确地提供结果，不会出错。必须认识到：要达到这种程序的一致性，系统不能仅仅“感觉上”是正确的，必须具备理论上的严谨性和功能上的可靠性（being theoretically sound and functionally reliable）。&lt;/p&gt;
+&lt;h2&gt;分布式流数据库中的一致性&lt;/h2&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;好的，我们来深入探讨一个更有趣的话题：分布式流数据库中的数据一致性。如果你不了解流数据库是什么，&lt;a href=&apos;https://ksqldb.io/&apos;&gt;KsqlDB&lt;/a&gt; 和 &lt;a href=&apos;https://github.com/pipelinedb/pipelinedb&apos;&gt;PipelineDB&lt;/a&gt; 就是此类系统。本质上，流数据库是为流处理量身定制的。感兴趣的读者可以参考我&lt;a href=&apos;https://risingwave9.wpcomstaging.com/blog/streaming-databases-everything-you-wanted-to-know/&apos;&gt;之前写的文章&lt;/a&gt;了解更多细节。在 RisingWave，我们开发了一个分布式流数据库，旨在降低流处理的成本和复杂性。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;分布式流数据库是数据库、分布式系统和流系统的结合。那么，它的一致性是什么样的呢？理想情况下，流数据库可以在所有场景下实现一致性，不过这当然也取决于具体系统的实现。在这里我也无法概述所有分布式流数据库的一致性模型，不过可以仅聚焦于 RisingWave： RisingWave 中的一致性看起来是什么样的？我们从三个维度来探讨这个问题。&lt;/p&gt;
+&lt;h3&gt;数据库上下文中的“一致性”&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;RisingWave 提供这种一致性。RisingWave 有效地确保其内部状态能够无缝地从一种有效状态转换到另一种有效状态。然而，需要注意，RisingWave 支持只读事务，不过并不支持跨不同表的读写事务。因此，如果有人需要一个 OLTP 数据库来管理复杂的事务型工作负载，可能选择 &lt;a href=&apos;https://www.mysql.com/&apos;&gt;MySQL&lt;/a&gt;、&lt;a href=&apos;https://www.postgresql.org/&apos;&gt;Postgres&lt;/a&gt;、&lt;a href=&apos;https://www.cockroachlabs.com/&apos;&gt;CockroachDB&lt;/a&gt; 或 &lt;a href=&apos;https://www.pingcap.com/&apos;&gt;TiDB&lt;/a&gt; 这些方案更为合适。RisingWave 的这一设计决策主要是考虑到两个因素：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;&lt;strong&gt;专注于流数据&lt;/strong&gt;：RisingWave 专为优化流数据处理而设计。引入完整的事务能力会显著增大系统的复杂性。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;与传统 OLTP 数据库集成&lt;/strong&gt;：通常情况下，传统 OLTP 数据库负责处理上游的事务序列化。RisingWave，作为一个下游系统，专注于实时分析。深度集成事务处理会导致显著的性能下降，尤其是在现实操作的苛刻条件下。&lt;/li&gt;&lt;/ul&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/06/23/NUuJqaDg3dnmIy7.png&apos; title=&apos;consistency-in-database-context.png&apos; alt=&apos;consistency-in-database-context.png&apos; width=&apos;600&apos;/&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;此外，RisingWave 被设计用于理解和处理来自上游 OLTP 数据库的事务语义，这对金融等行业（sectors）的客户来说是一个关键特性。&lt;/p&gt;
+&lt;h3&gt;分布式系统上下文中的“一致性”&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;RisingWave 提供这种一致性。RisingWave 可以实现跨多个区域的高可用性。RisingWave 没有通过 Paxos 或 Raft 等复杂的共识协议来确保副本间的一致性，而是借助 S3 进行数据存储。S3 不仅存储数据库表，还存储流处理的内部状态，有效地在多个副本间复制数据以保持一致性。&lt;/p&gt;
+&lt;h3&gt;流式系统上下文中的“一致性”&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;RisingWave 提供这种一致性。RisingWave 能够确保精确一次语义，也能轻巧地管理乱序数据处理。这种能力保证了每个数据事件被精确处理一次，无论数据流是否存在中断或干扰，从而在流数据中保持高度一致性。&lt;/p&gt;
+&lt;h3&gt;总结&lt;/h3&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;所谓数据系统的一致性，在数据库、分布式系统和流式系统之间涵义差别很大：&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;数据库关注事务完整性。&lt;/li&gt;
+&lt;li&gt;分布式系统强调复制节点之间如何访存数据（how data is accessed across replicated nodes）。&lt;/li&gt;
+&lt;li&gt;流式系统优先考虑消息处理语义保证，比如精确一次语义。&lt;/li&gt;&lt;/ul&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;RisingWave 作为一个健壮、可适应的分布式流数据库，有效地满足这些多样化的需求。我们的设计实现方式不仅遵循理论的一致性标准，在实际应用中也表现出色。对于数据一致性需求变化多样的领域（in the evolving landscape of data consistency），RisingWave 是一个可靠的解决方案。&lt;/p&gt;</description>
+            <pubDate>2025-06-22</pubDate>
+            <link>https://blog.xiayf.cn/posts/consistency-in-data-systems.html</link>
+            <guid isPermaLink="true">https://blog.xiayf.cn/posts/consistency-in-data-systems.html</guid>
+        </item>
         
         <item>
             <title>absl::Hash 的一个误用</title>
@@ -57,20 +131,20 @@ static size_t hash(const T&amp;amp;amp; value) {
 &lt;p class=&quot;text-align-justify&quot;&gt;而 &lt;code&gt;kSeed&lt;/code&gt; 静态成员变量的初始化逻辑为 - 存储自身的地址：&lt;/p&gt;
 &lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;ABSL_CONST_INIT const void* const MixingHashState::kSeed = &amp;amp;amp;kSeed;&lt;/code&gt;&lt;/pre&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;C++ 程序中，&lt;strong&gt;静态变量的地址在编译期可知（链接时确定），静态变量在程序启动时初始化（早于 main 执行）&lt;/strong&gt;。&lt;/p&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;基于安全考虑，现代操作系统都会使用“&lt;a href=&apos;https://en.wikipedia.org/wiki/Address_space_layout_randomization&apos;&gt;地址空间配置随机加载（ASLR）&lt;/a&gt;” 这一机制，导致：同一程序中的同一静态变量，不同次运行或者在不同进程中，内存地址不同。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;基于安全考虑，现代操作系统都会使用“&lt;a href=&apos;https://en.wikipedia.org/wiki/Address_space_layout_randomization&apos;&gt;地址空间配置随机加载（ASLR）&lt;/a&gt;” 这一机制，导致：&lt;strong&gt;同一程序中的同一静态变量，不同次运行或者在不同进程中，内存地址不同&lt;/strong&gt;。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;&lt;code&gt;absl::Hash&lt;/code&gt; 基于这一机制来生成哈希的不确定种子值。&lt;a href=&apos;https://abseil.io/docs/cpp/guides/hash#abslhash&apos;&gt;Abseil 官方指南&lt;/a&gt;中其实也有一处不太显眼的说明：&lt;/p&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;NOTE: the hash codes computed by absl::Hash are not guaranteed to be stable across different runs of your program, or across different dynamically loaded libraries in your program.&lt;/code&gt;&lt;/pre&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;这也就意味着：基于 &lt;code&gt;absl::Hash&lt;/code&gt; 生成的哈希值以及 Abseil 中依赖哈希逻辑的容器不能持久化进行后续使用。&lt;/p&gt;
+&lt;p class=&quot;text-align-justify&quot;&gt;这也就意味着：基于 &lt;code&gt;absl::Hash&lt;/code&gt; 生成的哈希值以及 Abseil 中依赖哈希逻辑的容器不能持久化以后续使用。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;Abseil 库中似乎也未提供方法以绕过这一机制。只好改成使用 C++ 标准库中的 &lt;code&gt;std::hash&lt;/code&gt;：&lt;/p&gt;
 &lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;auto hash_value = std::hash&amp;amp;lt;std::string&amp;amp;gt;{}(absl::StrJoin(codeblock-&amp;amp;gt;lines, &amp;amp;quot;\n&amp;amp;quot;));&lt;/code&gt;&lt;/pre&gt;
-&lt;p class=&quot;text-align-justify&quot;&gt;&lt;code&gt;std::hash&lt;/code&gt; 生成的哈希值是确定性，其实现基于 &lt;a href=&apos;https://en.wikipedia.org/wiki/MurmurHash#MurmurHash2&apos;&gt;MurmurHash2&lt;/a&gt; 和 &lt;a href=&apos;https://github.com/google/cityhash&apos;&gt;CityHash&lt;/a&gt; 哈希算法。&lt;/p&gt;</description>
+&lt;p class=&quot;text-align-justify&quot;&gt;&lt;code&gt;std::hash&lt;/code&gt; 生成的哈希值是确定性的，其实现基于 &lt;a href=&apos;https://en.wikipedia.org/wiki/MurmurHash#MurmurHash2&apos;&gt;MurmurHash2&lt;/a&gt; 和 &lt;a href=&apos;https://github.com/google/cityhash&apos;&gt;CityHash&lt;/a&gt; 哈希算法。&lt;/p&gt;</description>
             <pubDate>2025-06-15</pubDate>
             <link>https://blog.xiayf.cn/posts/absl-hash-misuse.html</link>
             <guid isPermaLink="true">https://blog.xiayf.cn/posts/absl-hash-misuse.html</guid>
         </item>
         
         <item>
-            <title>小心 fast-math（简译）</title>
+            <title>译文：小心 fast-math</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文：&lt;a href=&apos;https://simonbyrne.github.io/notes/fastmath&apos;&gt;Beware of fast-math&lt;/a&gt;&lt;/p&gt;
 &lt;h2&gt;一、fast-math 是什么？&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;fast-math 是一个编译器标志（flag），或者许多编程语言和编译器中存在的一个配置项，包括如下这些：&lt;/p&gt;
@@ -207,7 +281,7 @@ s = sa + sb;&lt;/code&gt;&lt;/pre&gt;
         </item>
         
         <item>
-            <title>RaBitQ 二值量化入门（译）</title>
+            <title>译文：RaBitQ 二值量化入门</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文:  &lt;a href=&apos;https://www.elastic.co/search-labs/blog/rabitq-explainer-101&apos;&gt;RaBitQ binary quantization 101&lt;/a&gt;&lt;/p&gt;
 &lt;h2&gt;一、引言&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;正如我们之前在 &lt;a href=&apos;https://blog.xiayf.cn/posts/scalar-quantization-101.html&apos;&gt;标量量化入门&lt;/a&gt; 中讨论的那样，大多数嵌入模型输出$float32$类型向量值，这个精度对于表征向量空间来说通常过于冗余。标量量化技术大大减少了表征这些向量所需的存储空间。之前我们也讨论过 &lt;a href=&apos;https://www.elastic.co/search-labs/blog/bit-vectors-in-elasticsearch&apos;&gt;Elasticsearch 中的比特向量&lt;/a&gt;，以及二值量化导致的损失通常是不可接受的。&lt;/p&gt;
@@ -406,13 +480,13 @@ eucl\_ dist(v_{3},q)&amp;=5.52
         </item>
         
         <item>
-            <title>标量量化入门（译）</title>
+            <title>译文：标量量化入门</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文：&lt;a href=&apos;https://www.elastic.co/search-labs/blog/scalar-quantization-101&apos;&gt;Scalar quantization 101&lt;/a&gt;&lt;/p&gt;
 &lt;h2&gt;简介&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;多数嵌入（embedding）模型会输出 $float32$ 数值精度的向量。这个精度虽然提供了信息高保真，但在真正重要的信息之外也带来一些资源浪费。对于给定的数据集，嵌入不可能在单个维度需要20亿种取值，特别是对于高维度向量而言（比如：386维及以上）。量化以一种有损的方式对向量进行编码，轻微降低信息保真而明显地降低存储空间占用。&lt;/p&gt;
 &lt;h2&gt;理解标量量化的分桶&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;标量量化使用更小的数据类型对向量每一维的取值进行分桶。本文的余下部分将假设将 $float32$ 量化到 $int8$ 。为了准确地对值进行分桶，不能简单地将值四舍五入到最近的整数。许多模型输出向量的维度取值空间为 $[-1.0, 1.0]$，如果简单粗暴地四舍五入处理，那么 0.123 和 0.321 这两个不同的向量维度取值都会向下取整到 0。最终，一个向量仅会使用 $int8$ 可用 255 个桶中的2个桶，这样就丢失太多信息了。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/06/05/92bnmVKzjqe3GOJ.jpg&apos; title=&apos;float32-to-int8-buckets.jpeg&apos; alt=&apos;float32-to-int8-buckets.jpeg&apos; width=&apos;500&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/06/05/J6uMBLimnWhcVyj.jpg&apos; title=&apos;float32-to-int8-buckets.jpeg&apos; alt=&apos;float32-to-int8-buckets.jpeg&apos; width=&apos;500&apos;/&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图1：量化目标图解 - 将 -1.0 到 1.0 之间的连续值分桶到离散的 $int8$ 数值。&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;这种数值转换背后的数学原理并不太复杂。我们可以先计算浮点数取值区间的最小和最大值，然后使用 &lt;a href=&apos;https://en.wikipedia.org/wiki/Feature_scaling#Rescaling_(min-max_normalization&apos;&gt;最小-最大归一化&lt;/a&gt;) 对值进行线性变换（linearly shift）。&lt;/p&gt;
 &lt;p style=&quot;text-align: center&quot;&gt;$$int8\approx \frac{127}{max-min} \  \times \left( float32-min \right)$$&lt;/p&gt;
@@ -446,7 +520,7 @@ eucl\_ dist(v_{3},q)&amp;=5.52
         </item>
         
         <item>
-            <title>k-NN 乘积量化器教程-第2部分（译）</title>
+            <title>译文：k-NN 乘积量化器教程-第2部分</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;&lt;a href=&apos;http://mccormickml.com/2017/10/13/product-quantizer-tutorial-part-1/&apos;&gt;本教程的第1部分&lt;/a&gt; 讲解了乘积量化器的最基础形式。本文将讲解 &lt;a href=&apos;https://github.com/facebookresearch/faiss/wiki/Getting-started-tutorial&apos;&gt;FAISS 库的 IndexIVFPQ 索引&lt;/a&gt;，该索引类型使用一个乘积量化器以及 &lt;a href=&apos;https://lear.inrialpes.fr/pubs/2011/JDS11/jegou_searching_with_quantization.pdf&apos;&gt;2011 年发表的这篇论文&lt;/a&gt;介绍的一些额外的技术。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;下面先简要介绍一下该索引引入的两个特性，之后会再详细解释。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;&lt;em&gt;倒排文件索引（IVF）&lt;/em&gt;  - IVF 就是一种数据集预过滤的技术，避免对所有向量进行穷举搜索。它的原理相当直观 - 使用 k-means 聚类算法提前将数据集聚类成一定数量的数据集分区，然后在检索时，先将查询向量与每个分区的质心做比较，找到最近的若干个聚类，然后只在这些聚类分区内做向量搜索。&lt;/p&gt;
@@ -491,7 +565,7 @@ eucl\_ dist(v_{3},q)&amp;=5.52
         </item>
         
         <item>
-            <title>k-NN 乘积量化器教程-第1部分（译）</title>
+            <title>译文：k-NN 乘积量化器教程-第1部分</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;乘积量化器是一种“向量量化器”（后面我会解释这是啥意思），可以用于加速近似最近邻检索。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;2017年3月发布的 &lt;a href=&apos;https://code.facebook.com/posts/1373769912645926/faiss-a-library-for-efficient-similarity-search/&apos;&gt;Facebook AI 相似性检索（FAISS）库&lt;/a&gt;，风靡一时，乘积量化器是其核心组件，吸引了很多人关注。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;本教程的第一部分将解释乘积量化器的最基础形式，ANN 检索中通常是这样实现。第二部分将解释 FAISS 中的 “IndexIVFPQ” 索引，这种索引在基础形式的乘积量化器上添加了不少特性。&lt;/p&gt;
@@ -542,7 +616,7 @@ eucl\_ dist(v_{3},q)&amp;=5.52
         </item>
         
         <item>
-            <title>Arrow 列存格式-序列化与进程间通信（译）</title>
+            <title>译文：Arrow 列存格式-序列化与进程间通信</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文：&lt;a href=&apos;https://arrow.apache.org/docs/format/Columnar.html#serialization-and-interprocess-communication-ipc&apos;&gt;Arrow Columnar Format-Serialization and Interprocess Communication (IPC)&lt;/a&gt;&lt;/p&gt;
 &lt;h2&gt;序列化与进程间通信(IPC)&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;本列存格式定义中，序列化数据的基本单元是“成批记录（record batch）”。语义上，一个成批记录是若干数组的一个有序集合，一个数组对应一个字段列（field），这些数组的长度相同，但数据类型可能不同。一个成批记录中字段列的名称和类型信息共同形成该批的 &lt;em&gt;schema&lt;/em&gt;。&lt;/p&gt;
@@ -2297,7 +2371,7 @@ typedef SkipList&amp;amp;lt;const char*, KeyComparator&amp;amp;gt; Table;&lt;/co
 
 // Header is checksum (4 bytes), length (2 bytes), type (1 byte).  
 static const int kHeaderSize = 4 + 2 + 1;&lt;/code&gt;&lt;/pre&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/06/05/dsKGPjVclyAHYOW.png&apos; title=&apos;wal-log-format&apos; alt=&apos;wal-log-format&apos; width=&apos;800&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/06/05/gwpxDFuWGIb56r2.png&apos; title=&apos;wal-log-format&apos; alt=&apos;wal-log-format&apos; width=&apos;800&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;leveldb 会将 WriteBatch 的 &lt;code&gt;rep_&lt;/code&gt; 当作字节序列写入 log 文件中。不过 log 文件存储的单元结构为块（block），块大小为 32768 字节。一个 WriteBatch 的 &lt;code&gt;rep_&lt;/code&gt; 的大小可能大于/等于/小于一个块大小，也就是写入一个 &lt;code&gt;rep_&lt;/code&gt; 可能填不满一个块或者正好填满一个块或者跨多个块。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;如果一次写入后，当前 block 剩余的空间不足以填充下一次写入的头部，则直接将剩余空间以 &lt;code&gt;\x00&lt;/code&gt; 填满。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;这样编码的好处？- 读取解析时，按块大小进行读取，速度更快，顺序解析也方便。&lt;/p&gt;
@@ -2976,7 +3050,7 @@ public class Test {
         </item>
         
         <item>
-            <title>如何剖析 JVM 应用（译）</title>
+            <title>译文：如何剖析 JVM 应用</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文：&lt;a href=&apos;https://www.lightbend.com/blog/profiling-jvm-applications&apos;&gt;How to profile JVM applications&lt;/a&gt;&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;Hi 大家好。工具团队（tooling team）近期的一个关注点是改进 sbt 贡献流程（ improvement of the contribution process to sbt）。我们一直在思考的另一个事情是 sbt 的性能。为一举解决这两件事情，我调研了 Jason Zaugg、Johannes Rudolph 这些人如何剖析 JVM 应用，这篇文章即是调研结果。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;这里论述的技术应该可以应用于Java 和 Scala，也基本与你使用的工具无关。&lt;/p&gt;
@@ -3263,7 +3337,7 @@ Flame graph SVG written to DTRACE_FLAME_OUTPUT=&amp;amp;apos;/Users/xxx/work/qui
         </item>
         
         <item>
-            <title>Lucene 查询解析器语法（译）</title>
+            <title>译文：Lucene 查询解析器语法</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文：&lt;a href=&apos;http://lucene.apache.org/core/8_2_0/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#package.description&apos;&gt;Query Parser Syntax&lt;/a&gt;&lt;/p&gt;
 &lt;h2&gt;概览&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;Lucene 除了提供 API 方便开发者创建查询请求，还通过一个查询解析器（一个词法分析器，使用 JavaCC 将一个字符串翻译成一个 Lucene 查询）提供一种功能丰富的查询语言。&lt;/p&gt;
@@ -4744,7 +4818,7 @@ function base64_URL_decode($data) {
         </item>
         
         <item>
-            <title>一行式并行方案（译）</title>
+            <title>译文：一行式并行方案</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文：&lt;a href=&apos;http://chriskiehl.com/article/parallelism-in-one-line&apos;&gt;Parallelism in one line&lt;/a&gt;&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;在并行处理能力方面，Python的声名并不太好。不考虑关于线程和GIL（多数情况下是合理的）的标准论据，我认为Python中关于并行的真正问题并不是一个技术问题，而是教学问题。围绕Python线程和多进程的常见教程，一般都写得不错，但也令人乏味 - 激烈非凡，对日常真正有用的东西却很少涉及。&lt;/p&gt;
 &lt;h3&gt;沿袭的例子&lt;/h3&gt;
@@ -5168,7 +5242,7 @@ if __name__ == &amp;amp;apos;__main__&amp;amp;apos;:
         </item>
         
         <item>
-            <title>Go 并发编程基础（译）</title>
+            <title>译文：Go 并发编程基础</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文：&lt;a href=&apos;http://www.nada.kth.se/~snilsson/concurrency/&apos;&gt;Fundamentals of concurrent programming&lt;/a&gt;&lt;/p&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;译注：原文章链接已失效，作者重新写了一篇内容相近的文章 &lt;a href=&apos;https://yourbasic.org/golang/concurrent-programming/&apos;&gt;Concurrent programming&lt;/a&gt;&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;本文是一篇并发编程方面的入门文章，以&lt;a href=&apos;http://golang.org/&apos;&gt;Go语言&lt;/a&gt;编写示例代码，内容涵盖：&lt;/p&gt;
@@ -5883,7 +5957,7 @@ func mul(u, v Vector, k int) (res float64) {
         </item>
         
         <item>
-            <title>通过示例学习 Git 内部构造（译）</title>
+            <title>译文：通过示例学习 Git 内部构造</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文：&lt;a href=&apos;http://teohm.github.io/blog/2011/05/30/learning-git-internals-by-example/&apos;&gt;Learning Git Internals by Example&lt;/a&gt;&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;状态：草稿&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;计划修订本文，未来可能会简化一些...&lt;/p&gt;
@@ -6081,7 +6155,7 @@ d9976cfe0430557885d162927dd70186d0f521e8&lt;/code&gt;&lt;/pre&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;经过网络查找，发现第一种方案与第二种方案都有现成的工具。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;第一种方案：&lt;a href=&apos;https://github.com/ariya/phantomjs&apos;&gt;phantomjs&lt;/a&gt;可以完成，phantomjs包含了webkit，所以解释JS什么的就不再是个问题了，它有个&lt;a href=&apos;https://github.com/ariya/phantomjs/wiki/Screen-Capture&apos;&gt;Screen Capture&lt;/a&gt;的功能模块支持将网页完整地转换成图片格式，但由于要做很多额外的工作，所以效率比较低。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;第二种方案是从Highcharts的&lt;a href=&apos;http://www.highcharts.com/demo/&apos;&gt;Demo&lt;/a&gt;中挖掘出来的，如图所示：&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/06/05/hg9KSu156BXmJzG.png&apos; title=&apos;highchartjs_demo&apos; alt=&apos;highchartjs_demo&apos; width=&apos;100%&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/06/05/xEYJUhXFuIBHMzb.png&apos; title=&apos;highchartjs_demo&apos; alt=&apos;highchartjs_demo&apos; width=&apos;100%&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;Demo中可以输出多种图片格式，通过chrome浏览器的开发者工具可以发现其实现是向服务器export.highcharts.com发送一个请求，请求中包含网页中生成的SVG矢量图数据、目标图片格式等信息，服务器对该请求进行处理后返回目标格式图片。那么服务器端是如何将SVG转换成图片格式的呢？在Highcharts的&lt;a href=&apos;http://docs.highcharts.com/&apos;&gt;文档&lt;/a&gt;中有个名为&lt;code&gt;Export module&lt;/code&gt;的部分，其中说明了实现原理以及如何搭建这样的一个格式转换服务器。从文档可以看出这个实现方法的核心是借助了&lt;a href=&apos;http://xmlgraphics.apache.org/batik/tools/rasterizer.html&apos;&gt;batik-rasterizer.jar&lt;/a&gt;这个Java工具包，它能将SVG转换成图片或PDF格式。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;从上述该问题解决方案的寻找过程可以看出，&lt;strong&gt;很多时候并不是问题有多复杂或有多难，而是我们根本没有明确业务需求，没有搞清楚真正需要解决的问题，而对模糊的问题描述自以为是地作出一些假设，然后蒙头去解决错误的问题，从而浪费了很多时间&lt;/strong&gt;。&lt;/p&gt;</description>
             <pubDate>2013-04-09</pubDate>
@@ -6090,7 +6164,7 @@ d9976cfe0430557885d162927dd70186d0f521e8&lt;/code&gt;&lt;/pre&gt;
         </item>
         
         <item>
-            <title>数据压缩理论简介（译）</title>
+            <title>译文：数据压缩理论简介</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文：&lt;a href=&apos;http://imrannazar.com/An-Introduction-to-Compression&apos;&gt;A introduction to compression&lt;/a&gt;&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;最近我在思考 GIF 和 JPEG 图片格式之间的不同：为什么某些图片存储为 GIF 格式所占的磁盘空间更大，而另一些图片以 JPEG 格式存储要占用更大的磁盘空间？事实证明，这是因为不同的图片格式使用了不同的压缩方法。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;压缩是一组程序的简便说法，这些程序能够将数据装进更小的存储空间中，也能将数据从压缩编码中重新取回。这是一个双向的过程：输入文件能够产生经过压缩的输出，并且算法根据压缩后的输出能够重新给你一个输入的拷贝。&lt;/p&gt;
@@ -6104,7 +6178,7 @@ d9976cfe0430557885d162927dd70186d0f521e8&lt;/code&gt;&lt;/pre&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;A5B2W9P4Q1Z1M4V3&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;算法读取样本编码后的版本将能够完美地重现原来的数据：&quot;A&quot; 5次，&quot;B&quot; 2次，等等。这个简单算法的使用非常广泛，被称为行程长度编码（RLE）：写下字符的每次行程有多长。以古老的 PCX 图像格式为例来说明一种广泛使用的标准 RLE。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/06/06/WR8QJBAapuZPION.png&apos; title=&apos;compression-stripes.png&apos; alt=&apos;compression-stripes.png&apos; width=&apos;100%&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/06/23/akRiNIUmeCKHjyc.png&apos; title=&apos;compression-stripes.png&apos; alt=&apos;compression-stripes.png&apos; width=&apos;100%&apos;/&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图1：条纹 &lt;a href=&apos;http://www.thisisnotparis.com/&apos;&gt;Gottschal&lt;/a&gt;/&lt;a href=&apos;http://www.gluecksbazillus.de/&quot;&apos;&gt;Schuster&lt;/a&gt;&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;图1中有很多单色的实心方块。这张图片宽500个像素，高190个像素；作为一张原始位图，使用一个字节来表示一个像素，那么这张图片就产生 95kB 的数据。PCX 算法计算图片中每行像素的行程长度，为相同颜色的连续像素保存行程长度：以这种方式，图片的大小减到了 52kB。&lt;/p&gt;
 &lt;h2&gt;频率：哈夫曼（Huffman）编码&lt;/h2&gt;
@@ -6175,30 +6249,30 @@ d9976cfe0430557885d162927dd70186d0f521e8&lt;/code&gt;&lt;/pre&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;上述方法可以用于以一种能够完美重现的方式对数据进行压缩。这种压缩的用例包括文档和软件程序，对于这种用例来说，任意值的丢失或损坏都可能使得文件不再有价值。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;在特定情况下，对于需要处理的数据进行完美重现是不必要的：一个近似的结果就足够了。通常，这些情况出现在多媒体应用中：超出人类听觉范围的声音不需要记录，人眼无法识别的颜色与梯度的细微之处也无需重现。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;一个经典的示例是 MPEG 音频标准---通过去除高频声音相关的额外数据来降低音频文件的大小。这个标准的 Layer-3 规格允许多种去除数据的设定，这样渐进地从音频样本中去除更多的信息。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/06/06/EzHuK4mqoPWyn9D.gif&apos; title=&apos;compression-mp3.gif&apos; alt=&apos;compression-mp3.gif&apos; width=&apos;100%&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/06/23/fOKA1Qqg4LZmy8r.gif&apos; title=&apos;compression-mp3.gif&apos; alt=&apos;compression-mp3.gif&apos; width=&apos;100%&apos;/&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图2：经 MPEG 音频 Layer-3 编码的 Yardım Et (&lt;a href=&apos;http://www.morveotesi.com/&apos;&gt;Mor ve Ötesi&lt;/a&gt;, &quot;Dünya Yalan Söylüyor&quot;)&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;上图2中，两个波形叠加在一起：红色的为原来的歌曲波形，覆盖在其上的蓝色是经充分压缩的变体。展示的样本长度为1.5秒；作为原来波形文件的一部分，这段样本存储为 160kB 的数据。经压缩的变体，长度相同，但仅占用48kB的空间。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;这是通过 MPEG 音频压缩算法得到的，调整歌曲的频率属性，去除超出人类听力范围（高至大约20kHz）的部分。这样，如上可见，并未显著地影响产生的波形，因此经压缩的声音不会明显地不同于原有的声音。&lt;/p&gt;
 &lt;h2&gt;扔掉数据：视觉有损编码&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;正如声音文件的高频部分人耳无法辨别，图片也有高频部分：颜色的变化之处不足以人眼区分，或者由黑到白的渐变过程是如此的迅速导致无法看到渐变的部分。与声音处理一样，也可以从图片中去除这些高频部分；这就是JPEG图片格式的前提。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;JPEG 应用了 MPEG 音频所使用算法的一种变种，从包含于图片的频率部分抽取一个二维映射；该算法继而裁剪到这个频率部分，并重新合成图片。如下所示是这个过程的一个例子。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/06/06/5UGpbkWaNcLJvAM.gif&apos; title=&apos;compression-jpeg-sharp.gif&apos; alt=&apos;compression-jpeg-sharp.gif&apos; width=&apos;100%&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/06/23/I764aQWydBZgfew.gif&apos; title=&apos;compression-jpeg-sharp.gif&apos; alt=&apos;compression-jpeg-sharp.gif&apos; width=&apos;100%&apos;/&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图3：JPEG压缩应用于一张块状图&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;图3中，一张由4个16x16像素方块构成的图片，与该图片经JPEG编码后的图片进行比较。颜色或亮度上的尖锐变化被定义为高视觉频率的结果。这正是 JPEG 要去除的地方。结果，编码后图片的边缘比较模糊。4个方块的接触点特别模糊。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;但JPEG的强大之处并不是编码具有尖锐变化边沿和角落的图片，而是低视觉频率的图片；照片就是其中的一个典型例子。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/06/06/iqAsQdTYOHeGMZ6.gif&apos; title=&apos;compression-jpeg-photo.gif&apos; alt=&apos;compression-jpeg-photo.gif&apos; width=&apos;100%&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/06/23/lfpyiLuRmbG2PSh.gif&apos; title=&apos;compression-jpeg-photo.gif&apos; alt=&apos;compression-jpeg-photo.gif&apos; width=&apos;100%&apos;/&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图4：JPEG压缩应用于一张照片&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;图4中，一张安塔利亚港的300x300图片，经过JPEG编码。原来的位图为270kB，经去除尖锐边缘和颜色变化，JPEG 能够产生一张22kB的图片。对于人眼而言，图片的变化很小；即使像素有所改变，图片所展示的景色也完好无损。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;这就是有损编码背后的主要概念：确切的数据并不重要，重要的是数据所呈现的信息。将 JPEG 算法用于编码软件程序是不明智的，但当数据表达了不必要的过多信息之时，有损编码就派上用场了。&lt;/p&gt;
 &lt;h2&gt;感知冗余：视频编码&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;说到视频剪辑，通过结合无损和有损编码背后的原则，进一步压缩数据是有可能的。构建一个视频剪辑片段的最简单最幼稚的方法是合并连续的图片，作为视频帧来看待： MJPEG 视频文件格式就是将一系列的 JPEG 图片看到独立的视频帧。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;这种方法忽视了视频片段中固有的数据冗余：一个给定帧中包含的大多数信息同样会包含于其前一帧中。任何特定帧中仅有一小部分是新的信息；通过计算这部分信息所处的位置，然后仅存储这部分信息数据，那么就有可能大大地缩减视频帧的数据大小。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/06/06/JkBWCrtegsp3x2n.gif&apos; title=&apos;compression-mpeg-diff.gif&apos; alt=&apos;compression-mpeg-diff.gif&apos; width=&apos;100%&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/06/23/z3KPQkNi2XY9WlG.gif&apos; title=&apos;compression-mpeg-diff.gif&apos; alt=&apos;compression-mpeg-diff.gif&apos; width=&apos;100%&apos;/&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图5：连续视频帧，以及它们的不同之处（&lt;a href=&apos;http://jpl.nasa.gov/&quot;&apos;&gt;NASA JPL&lt;/a&gt;）&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;图5中，较之第一帧，视频的第二帧显示的变化非常小：仅仅航天飞机的排气羽流有显著的运动。事实上，发射塔后面的航天飞机固体助推器（SRB）(译注：见Wikipedia词条&lt;a href=&apos;http://zh.wikipedia.org/wiki/%E8%88%AA%E5%A4%A9%E9%A3%9E%E6%9C%BA%E5%9B%BA%E4%BD%93%E5%8A%A9%E6%8E%A8%E5%99%A8&apos;&gt;航天飞机固体助推器&lt;/a&gt;)和天空在两帧之间完全没有变化。那么就不用存储图片的这些部分，可能存储一个值：“没有变化”就可以了。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;MPEG视频标准利用了这种内在的冗余作为算法的一部分。理论上，仅仅拍摄（a shot）的初始帧需要完整存储：拍摄的任何运动部分都可以作为与前一帧的相异之处来存储。初始帧，也称为一个内帧，存储为一张标准的 JPEG 图片，而后续的差异帧被称为间帧，或预测帧。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;实际上，MPEG视频标准是以“流”来设计的，这样就能够从拍摄（a shot）的中间开始观看视频片段。但若仅提供视频的一个内帧（I-帧），那么预测帧（P-帧）是不可能插入它们的差异的。所以，通常会把I-帧每隔一定时间插入到视频片段中，而不管拍摄的场景（a shot）是否变化。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/06/06/mOXWBCpcMS87vxk.gif&apos; title=&apos;compression-mpeg-graph.gif&apos; alt=&apos;compression-mpeg-graph.gif&apos; width=&apos;100%&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/06/23/ogWmUIQFOqe8TBc.gif&apos; title=&apos;compression-mpeg-graph.gif&apos; alt=&apos;compression-mpeg-graph.gif&apos; width=&apos;100%&apos;/&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图6：一个4秒的MPEG视频片段的帧大小（&lt;a href=&apos;http://news.bbc.co.uk/&quot;&apos;&gt;BBC News&lt;/a&gt;）&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;上图6中，视频片段每间隔25帧或一秒插入I-帧。后续的每个P-帧都比I-帧小得多，由于政治家在接受采访时一般都不会频繁移动，因此不同视频帧之间的不同之处更少。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;图6使用的例子是一个4秒的400x224视频片段。以原始位图形式粗糙农户，生成文件的大小有26.7MB；通过结合使用有损编码和冗余的技术，MPEG 视频标准能够将视频大小缩减到300kB，减小了99%。&lt;/p&gt;
@@ -6211,7 +6285,7 @@ d9976cfe0430557885d162927dd70186d0f521e8&lt;/code&gt;&lt;/pre&gt;
         </item>
         
         <item>
-            <title>Python 格式字符串（译）</title>
+            <title>译文：Python 格式字符串</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文：&lt;a href=&apos;http://mkaz.com/solog/python-string-format&apos;&gt;Python String Format&lt;/a&gt;&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;每次使用Python的格式字符串（string formatter），2.7及以上版本的，我都会犯错，并且有生之年，我想我都理解不了它们的文档。我非常习惯于更老的 &lt;code&gt;%&lt;/code&gt; 方法。所以着手编写自己的格式字符串手册。若你有一些其他好的示例请告知我。&lt;/p&gt;
 &lt;h2&gt;格式字符串手册&lt;/h2&gt;
@@ -6397,7 +6471,7 @@ print(email_f(email=&amp;amp;quot;bob@example.com&amp;amp;quot;))&lt;/code&gt;&l
         </item>
         
         <item>
-            <title>装饰器与函数式 Python（译）</title>
+            <title>译文：装饰器与函数式 Python</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文：&lt;a href=&apos;http://www.brianholdefehr.com/decorators-and-functional-python&apos;&gt;Decorators and Functional Python&lt;/a&gt;&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;装饰器是Python的一大特色。除了在语言中的原本用处，还帮助我们以一种有趣的方式（函数式）进行思考。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;我打算自底向上解释装饰器如何工作。首先解释几个话题以帮助理解装饰器。然后，深入一点探索几个简单的装饰器以及它们如何工作。最后，讨论一些更高级的使用装饰器的方式，比如：传递可选参数给装饰器或者串接几个装饰器。&lt;/p&gt;
@@ -6708,7 +6782,7 @@ some_function()
         </item>
         
         <item>
-            <title>Python 装饰器入门（译）</title>
+            <title>译文：Python 装饰器入门</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文: &lt;a href=&apos;http://www.thumbtack.com/engineering/a-primer-on-python-decorators/&apos;&gt;A primer on Python decorators&lt;/a&gt;&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;Python允许你，作为程序员，使用函数完成一些很酷的事情。在Python中，函数是&lt;a href=&apos;http://en.wikipedia.org/wiki/First-class_function&apos;&gt;一等对象(first-class object)&lt;/a&gt;，这就意味着你可以像使用字符串，整数，或者任何其他对象一样使用函数。例如，你可以将函数赋值给变量:&lt;/p&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;&amp;amp;gt;&amp;amp;gt;&amp;amp;gt; def square(n):

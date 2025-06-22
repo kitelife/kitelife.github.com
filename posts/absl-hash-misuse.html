@@ -104,13 +104,13 @@ static size_t hash(const T&amp; value) {
 <p class="text-align-justify">而 <code>kSeed</code> 静态成员变量的初始化逻辑为 - 存储自身的地址：</p>
 <pre class="language-cpp"><code>ABSL_CONST_INIT const void* const MixingHashState::kSeed = &amp;kSeed;</code></pre>
 <p class="text-align-justify">C++ 程序中，<strong>静态变量的地址在编译期可知（链接时确定），静态变量在程序启动时初始化（早于 main 执行）</strong>。</p>
-<p class="text-align-justify">基于安全考虑，现代操作系统都会使用“<a href='https://en.wikipedia.org/wiki/Address_space_layout_randomization'>地址空间配置随机加载（ASLR）</a>” 这一机制，导致：同一程序中的同一静态变量，不同次运行或者在不同进程中，内存地址不同。</p>
+<p class="text-align-justify">基于安全考虑，现代操作系统都会使用“<a href='https://en.wikipedia.org/wiki/Address_space_layout_randomization'>地址空间配置随机加载（ASLR）</a>” 这一机制，导致：<strong>同一程序中的同一静态变量，不同次运行或者在不同进程中，内存地址不同</strong>。</p>
 <p class="text-align-justify"><code>absl::Hash</code> 基于这一机制来生成哈希的不确定种子值。<a href='https://abseil.io/docs/cpp/guides/hash#abslhash'>Abseil 官方指南</a>中其实也有一处不太显眼的说明：</p>
 <pre class="language-text"><code>NOTE: the hash codes computed by absl::Hash are not guaranteed to be stable across different runs of your program, or across different dynamically loaded libraries in your program.</code></pre>
-<p class="text-align-justify">这也就意味着：基于 <code>absl::Hash</code> 生成的哈希值以及 Abseil 中依赖哈希逻辑的容器不能持久化进行后续使用。</p>
+<p class="text-align-justify">这也就意味着：基于 <code>absl::Hash</code> 生成的哈希值以及 Abseil 中依赖哈希逻辑的容器不能持久化以后续使用。</p>
 <p class="text-align-justify">Abseil 库中似乎也未提供方法以绕过这一机制。只好改成使用 C++ 标准库中的 <code>std::hash</code>：</p>
 <pre class="language-cpp"><code>auto hash_value = std::hash&lt;std::string&gt;{}(absl::StrJoin(codeblock-&gt;lines, &quot;\n&quot;));</code></pre>
-<p class="text-align-justify"><code>std::hash</code> 生成的哈希值是确定性，其实现基于 <a href='https://en.wikipedia.org/wiki/MurmurHash#MurmurHash2'>MurmurHash2</a> 和 <a href='https://github.com/google/cityhash'>CityHash</a> 哈希算法。</p>
+<p class="text-align-justify"><code>std::hash</code> 生成的哈希值是确定性的，其实现基于 <a href='https://en.wikipedia.org/wiki/MurmurHash#MurmurHash2'>MurmurHash2</a> 和 <a href='https://github.com/google/cityhash'>CityHash</a> 哈希算法。</p>
     </article>
 </div>
 

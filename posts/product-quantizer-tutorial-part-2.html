@@ -12,12 +12,15 @@
 
     <title>BitPacking</title>
     <meta name="description" content="精进，求诸己身">
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
     <link rel="stylesheet" href="/static/main.css">
     <link rel="canonical" href="https://blog.xiayf.cn/">
     
     <link crossorigin="" rel="shortcut icon" type="image/x-icon" href="/assets/bits_small.ico">
+    
+    
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    
     
 </head>
 
@@ -47,7 +50,6 @@
         </nav>
     </div>
 </header>
-
 <div class="page-content">
     <div class="wrapper">
         
@@ -74,7 +76,7 @@
 <p class="text-align-justify">这个特性也是相对比较直观的，不过如果你没有理解的话可能会觉得有点奇怪。其想法是将 IVF 阶段的一些信息加入到乘积量化器中，借此提升准确性（因此这个概念是建立在数据集分区技术之上的）。</p>
 <p class="text-align-justify">先定义一下什么是“残差”向量。暂时抛开乘积量化器不谈（因为它会增大理解的困难，后面我们再把它加回来）。假设我们要做标准的暴力 k-NN 搜索，不过是用数据集分区技术来削减待搜索向量的数量。</p>
 <p class="text-align-justify">假设我们是用 k-means 将数据集聚类成 100 个聚类（或者叫“数据集分区”）。给定数据集中的一个向量，其残差即是它相对于所属分区的质心的偏移（offset）。也就是，将数据集中的这个向量与其所属聚类的质心的向量相减。质心即是聚类的均值，那么对一组点均减去它们的均值会发生什么？现在这些点就围绕着 0 点了。如下是一个简单的二维示例：</p>
-<img src='https://s2.loli.net/2025/05/24/VJ7siPxgmBhNvFA.png' title='residuals_one_partition.png' alt='residuals_one_partition.png' width='800'/>
+<img src='https://s2.loli.net/2025/08/06/Q1YX6c2DpNW3agl.png' title='residuals_one_partition.png' alt='residuals_one_partition.png' width='800'/>
 <p class="text-align-justify">开始有趣起来了。假设将一个数据集分区中的所有向量都替换为各自的残差向量，怎么从这个数据集分区中找到查询向量的最近邻？先计算查询向量的残差（相对于分区质心的偏移），然后对这个数据集分区的所有残差向量做最近邻搜索，得到的结果与使用原始向量做搜索是一样的！</p>
 <p class="text-align-justify">基于上面的图示，凭直觉可能就能理解，不过还是再看看下面的等式加深理解。'x' 和 'y' 这两个向量的长度为 'n'，它们的 L2 距离计算公式为：</p>
 <p style="text-align: center">$$dist_{L2}\left( x,y \right) =\sqrt{\sum_{i}^{n} \left( x_{i}-y_{i} \right)^{2}}$$</p>
@@ -85,7 +87,7 @@
 <p class="text-align-justify">可能你之前就使用过这种等价关系，均值归一化（对向量减去均值）是一种常见的预处理技术。</p>
 <p class="text-align-justify">不过目前为止说的都是单个分区内的计算。将不同分区内的向量做比较又会是什么情况呢？仍然管用，只要针对每个分区分别计算查询向量的残差即可。</p>
 <p class="text-align-justify">下面这个图解中包含两个数据集分区。计算残差之后，两个分区的所有点都围绕在 0 点周围了。不过现在是有两个查询向量的残差 - 一个是与蓝色点集（分区 1）比较得到的，另一个是与绿色点集（分区 2）比较得到的。</p>
-<img src='https://s2.loli.net/2025/05/24/iLmu5s84ZvGQUo9.png' title='residuals_two_partitions.png' alt='residuals_two_partitions.png' width='800'/>
+<img src='https://s2.loli.net/2025/08/06/xFhHNrOUvsSLoWe.png' title='residuals_two_partitions.png' alt='residuals_two_partitions.png' width='800'/>
 <p class="text-align-justify">前面解释过查询向量和数据库向量之间的距离，使用原始向量计算和使用残差向量计算，结果是一样的，还记得吧？</p>
 <p class="text-align-justify">很有意思，不过目前为止还是无用功 - 尚未改变结果的准确性也没有减少计算成本。现在将 PQ 重新放进来一起考虑，就会发现好处在哪了。</p>
 <p class="text-align-justify">在训练乘积量化器之前，先计算数据集所有分区所有向量的残差向量。残差向量集合保持原有分区（不会合并在一起），不过现在所有残差向量都围绕着 0 点，相对紧凑地聚集在一起。我们抛弃掉原始的数据集向量，只存储残差向量集。</p>
@@ -98,27 +100,30 @@
     </article>
 </div>
 
-        <div class="comment">
-            <script src="https://giscus.app/client.js"
-                                          data-repo="kitelife/kitelife.github.com"
-                                          data-repo-id="MDEwOlJlcG9zaXRvcnk4NTg1Njcx"
-                                          data-category="giscus"
-                                          data-category-id="DIC_kwDOAIMBx84Ctgkx"
-                                          data-mapping="pathname"
-                                          data-strict="0"
-                                          data-reactions-enabled="1"
-                                          data-emit-metadata="0"
-                                          data-input-position="top"
-                                          data-theme="light"
-                                          data-lang="zh-CN"
-                                          data-loading="lazy"
-                                          crossorigin="anonymous"
-                                          async>
-        </script>
-        </div>
+
+<div class="comment">
+     <script src="https://giscus.app/client.js"
+        data-repo="kitelife/kitelife.github.com"
+        data-repo-id="MDEwOlJlcG9zaXRvcnk4NTg1Njcx"
+        data-category="giscus"
+        data-category-id="DIC_kwDOAIMBx84Ctgkx"
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="light"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+      </script>
+    </div>
+
+
+
     </div>
 </div>
-
 <footer class="site-footer">
     <div class="wrapper">
         <div class="footer-col-wrapper">
@@ -154,6 +159,11 @@
         </div>
     </div>
 </footer>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+
 <script>
     MathJax = {
         tex: {
@@ -165,7 +175,7 @@
     };
 </script>
 <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<script>hljs.highlightAll();</script>
+
+
 </body>
 </html>

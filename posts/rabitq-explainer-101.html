@@ -12,12 +12,15 @@
 
     <title>BitPacking</title>
     <meta name="description" content="精进，求诸己身">
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
     <link rel="stylesheet" href="/static/main.css">
     <link rel="canonical" href="https://blog.xiayf.cn/">
     
     <link crossorigin="" rel="shortcut icon" type="image/x-icon" href="/assets/bits_small.ico">
+    
+    
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    
     
 </head>
 
@@ -47,7 +50,6 @@
         </nav>
     </div>
 </header>
-
 <div class="page-content">
     <div class="wrapper">
         
@@ -85,7 +87,7 @@
 <p style="text-align: center">$$c=[(0.56+1.23+-3.28)/3,(0.82+0.71+2.13)/3]$$</p>
 <p style="text-align: center">$$c=[-0.49, 1.22]$$</p>
 <p class="text-align-justify">将所有这些点一起绘制出来：</p>
-<img src='https://s2.loli.net/2025/05/24/t9BEZycxnGLmuKd.webp' title='rabitq-101-pic-1' alt='rabitq-101-pic-1' width='600'/>
+<img src='https://s2.loli.net/2025/08/06/vxryoTqt6XjDldY.webp' title='rabitq-101-pic-1' alt='rabitq-101-pic-1' width='600'/>
 <blockquote><p class="text-align-justify">图 1：基于示例向量及其派生质心绘制的二维平面图。</p></blockquote>
 <p class="text-align-justify">将残差向量做归一化后，分别命名为 $v_{c1}$、$v_{c2}$和$v_{c3}$。</p>
 <p style="text-align: center">$$
@@ -115,7 +117,7 @@ v_{c1}&=(v_{1}-c)/\| v_{1}-c\|\\
 \begin{aligned}v_{c2}&=\left[ 0.96,-0.28 \right]\\ v_{c3}&=\left[ -0.95,0.31 \right]\end{aligned}
 $$</p>
 <p class="text-align-justify">下面这个动态图，可以方便我们形象地理解这个转换和归一化过程。</p>
-<img src='https://s2.loli.net/2025/05/24/Ls2nz3BpexGFfyD.gif' title='rabitq-101-pic-2' alt='rabitq-101-pic-2' width='600'/>
+<img src='https://s2.loli.net/2025/08/06/DEhIA3lkTMJyzcN.gif' title='rabitq-101-pic-2' alt='rabitq-101-pic-2' width='600'/>
 <blockquote><p class="text-align-justify">图 2：示例向量及其派生质心在单位圆内的变换动画。</p></blockquote>
 <h2>四、仅使用 1 比特</h2>
 <p class="text-align-justify">将数据向量集中和归一化之后，可以应用标准的<a href='https://www.elastic.co/search-labs/blog/bit-vectors-in-elasticsearch'>二值量化</a>编码 - 对于经过转换的向量的每个分量，如果其为负数，则编码为0，正数则编码为1。在我们的二维示例中，即将单位圆分成四个象限，$v_{c1}$、$v_{c2}$和$v_{c3}$对应的二值向量分别变为$r_1=[1,0],r_2=[1,0],r_3=[0,1]$。</p>
@@ -133,7 +135,7 @@ $$</p>
 \overline{v}_3&=\left[ -\frac{1}{\sqrt{2}} ,\frac{1}{\sqrt{2}} \right]
 \end{aligned}$$</p>
 <p class="text-align-justify">如 <a href='https://arxiv.org/pdf/2405.12497'>RaBitQ 论文</a> 所述，选取的这些代表性点具备一些不错的数学性质，与<a href='http://hal.archives-ouvertes.fr/docs/00/51/44/62/PDF/paper_hal.pdf'>乘积量化（PQ）</a> 的码本类似（not unlike）。</p>
-<img src='https://s2.loli.net/2025/05/24/FwhH1C3vxcgKBzJ.gif' title='rabitq-101-pic-3' alt='rabitq-101-pic-3' width='600'/>
+<img src='https://s2.loli.net/2025/08/06/qr3FEpguCbWdB1e.gif' title='rabitq-101-pic-3' alt='rabitq-101-pic-3' width='600'/>
 <blockquote><p class="text-align-justify">图 3：二值量化后的向量吸附到对应区域中代表性点的过程。</p></blockquote>
 <p class="text-align-justify">至此，对于向量的每个分量都有一个1比特的近似值，尽管直接用于计算比较距离有些不太准确（somewhat fuzzy）。显然，在当前这个量化状态下，$\overline{v}_1$和$\overline{v}_2$是相同的，这样不太理想，问题类似于之前讨论将浮点数向量编码为 <a href='https://www.elastic.co/search-labs/blog/bit-vectors-in-elasticsearch'>ElasticSearch 中的比特向量</a> 是说的。</p>
 <p class="text-align-justify">这种方法的优雅之处在于，查询时可以使用类似于点积的东西计算近似距离来快速比较每个数据向量和每个查询向量。后文中讨论处理查询时会详细介绍。</p>
@@ -186,7 +188,7 @@ width&=\left( upper-lower \right) /\left( 2^{4}-1 \right)\\
 &=\lfloor ([0.37,-0.92]-[-0.92,-0.92])/0.08\rfloor\\
 &=[15,0]
 \end{aligned}$$</p>
-<img src='https://s2.loli.net/2025/05/24/z9jOGPw7oiAqv2f.gif' title='rabitq-101-pic-4' alt='rabitq-101-pic-4' width='600'/>
+<img src='https://s2.loli.net/2025/08/06/ecZBfjzM5Dv8iXF.gif' title='rabitq-101-pic-4' alt='rabitq-101-pic-4' width='600'/>
 <blockquote><p class="text-align-justify">图 4：对查询向量应用质心转换的过程。</p></blockquote>
 <p class="text-align-justify">如您所见，因为我们只有两个维度，我们的量化查询向量由处于$int4$取值范围内两个值组成。对于更长的向量，你会看到各种 $int4$ 值，其中有一个是取值范围的最大值，还有一个是最小值。</p>
 <p class="text-align-justify">现在可以执行距离计算，对每个索引数据向量与这个查询向量做比较 - 将量化数据向量每一维分别与量化查询向量的对应维相乘，再将所有维的乘积相加。基本上，就是一个普通的点积，但使用的是比特值和字节值（bits and bytes）。</p>
@@ -252,27 +254,30 @@ eucl\_ dist(v_{3},q)&=5.52
     </article>
 </div>
 
-        <div class="comment">
-            <script src="https://giscus.app/client.js"
-                                          data-repo="kitelife/kitelife.github.com"
-                                          data-repo-id="MDEwOlJlcG9zaXRvcnk4NTg1Njcx"
-                                          data-category="giscus"
-                                          data-category-id="DIC_kwDOAIMBx84Ctgkx"
-                                          data-mapping="pathname"
-                                          data-strict="0"
-                                          data-reactions-enabled="1"
-                                          data-emit-metadata="0"
-                                          data-input-position="top"
-                                          data-theme="light"
-                                          data-lang="zh-CN"
-                                          data-loading="lazy"
-                                          crossorigin="anonymous"
-                                          async>
-        </script>
-        </div>
+
+<div class="comment">
+     <script src="https://giscus.app/client.js"
+        data-repo="kitelife/kitelife.github.com"
+        data-repo-id="MDEwOlJlcG9zaXRvcnk4NTg1Njcx"
+        data-category="giscus"
+        data-category-id="DIC_kwDOAIMBx84Ctgkx"
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="light"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+      </script>
+    </div>
+
+
+
     </div>
 </div>
-
 <footer class="site-footer">
     <div class="wrapper">
         <div class="footer-col-wrapper">
@@ -308,6 +313,11 @@ eucl\_ dist(v_{3},q)&=5.52
         </div>
     </div>
 </footer>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+
 <script>
     MathJax = {
         tex: {
@@ -319,7 +329,7 @@ eucl\_ dist(v_{3},q)&=5.52
     };
 </script>
 <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<script>hljs.highlightAll();</script>
+
+
 </body>
 </html>

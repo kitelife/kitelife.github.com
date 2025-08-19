@@ -12,12 +12,15 @@
 
     <title>BitPacking</title>
     <meta name="description" content="精进，求诸己身">
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
     <link rel="stylesheet" href="/static/main.css">
     <link rel="canonical" href="https://blog.xiayf.cn/">
     
     <link crossorigin="" rel="shortcut icon" type="image/x-icon" href="/assets/bits_small.ico">
+    
+    
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    
     
 </head>
 
@@ -47,7 +50,6 @@
         </nav>
     </div>
 </header>
-
 <div class="page-content">
     <div class="wrapper">
         
@@ -68,16 +70,16 @@
 <h2>数据库中的一致性</h2>
 <p class="text-align-justify">在传统数据库中，ACID 性质（原子性/Atomicity、一致性/Consistency、隔离型/Isolation、持久性/Durability） 的核心之一就是一致性。这一性质保证了每个事务都将数据库从一个有效状态转换到弄一个有效状态。例如：在一次银行交易中，一个账户扣款另一个账户收款，一致性确保总余额保持不变。千万不要将一致性和原子性混淆了，原子性是指交易/事务要么全有要么全无（all-or-nothing）的性质。例如：原子性确保一个事务中的所有操作要么全部成功完成，要么全部不执行，数据库中不会留下部分事务的效果。</p>
 <p class="text-align-justify">总之，数据库中的一致性强调的是事务过程中保持数据正确性和有效性（validity）的规则。</p>
-<img src='https://s2.loli.net/2025/06/23/snze3I1iDwybl5h.png' title='consistency-bank-transaction.png' alt='consistency-bank-transaction.png' width='600'/>
+<img src='https://s2.loli.net/2025/08/06/sb1n75wD3m8P6VL.png' title='consistency-bank-transaction.png' alt='consistency-bank-transaction.png' width='600'/>
 <h2>分布式系统中的一致性</h2>
 <p class="text-align-justify">关于分布式系统的讨论经常涉及一个基础概念 - 著名 <a href='https://zh.wikipedia.org/wiki/CAP%E5%AE%9A%E7%90%86'>CAP 定理</a> 中的一致性。该定理最初由加州大学伯克利分校的研究人员提出，已成为分布式系统相关大学课程和专业对话中的基本话题。</p>
 <p class="text-align-justify">在 CAP 定理中，“一致性”特指跨不同节点分布的多个副本之间数据的统一性（uniformity）。在分布式系统中确保这种一致性特别有挑战。该定理强调了三个关键属性的重要权衡：一致性、可用性（availability）和分区容错性（partition tolerance）。根据 CAP 定理，一个分布式系统同时只能实现这三个属性中的两个。</p>
 <p class="text-align-justify">在这个上下文语境下，一致性确保在任何给定时间点不同节点上的数据副本体现的信息相同。这对于维护数据完整性至关重要，尤其在涉及网络故障或延迟的场景中。该定理揭示了在多个节点间保持数据同步的固有困难，突出了在设计和维护可靠的分布式系统时平衡这三种相互竞争需求所面临的持续挑战。</p>
-<img src='https://s2.loli.net/2025/06/23/q3kitoETbShzwI9.png' title='consistency-data-sync-multi-node.png' alt='consistency-data-sync-multi-node.png' width='600'/>
+<img src='https://s2.loli.net/2025/08/06/or7xFAylsJV13KG.png' title='consistency-data-sync-multi-node.png' alt='consistency-data-sync-multi-node.png' width='600'/>
 <h2>流式系统中的一致性</h2>
 <p class="text-align-justify">在讨论流式系统时，关于一致性的讨论通常与数据库或分布式系统的一致性不同，这反映了流式系统中独特的需求和挑战。<a href='https://www.confluent.io/blog/rethinking-distributed-stream-processing-in-kafka/'>一致性和完整性：重新思考 Apache Kafka 中的分布式流处理</a>一文中，作者认为“精确一次”语义概念是流式系统中一致性的关键特征。</p>
 <p class="text-align-justify">在流式系统中，保持一致性，并非和数据复制相关，而是强调确保每条事件数据仅被处理一次，不多不少，即使在发生系统故障时也是如此。例如，考虑实时处理一次金融交易的情况。如果系统在处理过程中崩溃，那么在系统恢复后，必须确保该交易不会被重复处理。这种精确处理一次的要求对于保持流式数据的完整性和一致性至关重要 - 确保每笔交易都仅被精确处理一次，无论系统是否发生中断。</p>
-<img src='https://s2.loli.net/2025/06/23/L4aKt7XFdk6DSxm.png' title='consistency-mathias-verraes.png' alt='consistency-mathias-verraes.png' width='600'/>
+<img src='https://s2.loli.net/2025/08/06/vku1bgn9ecxC7Mw.png' title='consistency-mathias-verraes.png' alt='consistency-mathias-verraes.png' width='600'/>
 <h2>人们真正想要的是什么？</h2>
 <p class="text-align-justify">如下表格突出对比了不同系统对一致性要求的差异：</p>
 <table class="table table-bordered">
@@ -112,7 +114,7 @@
 <p class="text-align-justify">RisingWave 提供这种一致性。RisingWave 有效地确保其内部状态能够无缝地从一种有效状态转换到另一种有效状态。然而，需要注意，RisingWave 支持只读事务，不过并不支持跨不同表的读写事务。因此，如果有人需要一个 OLTP 数据库来管理复杂的事务型工作负载，可能选择 <a href='https://www.mysql.com/'>MySQL</a>、<a href='https://www.postgresql.org/'>Postgres</a>、<a href='https://www.cockroachlabs.com/'>CockroachDB</a> 或 <a href='https://www.pingcap.com/'>TiDB</a> 这些方案更为合适。RisingWave 的这一设计决策主要是考虑到两个因素：</p>
 <ul><li><strong>专注于流数据</strong>：RisingWave 专为优化流数据处理而设计。引入完整的事务能力会显著增大系统的复杂性。</li>
 <li><strong>与传统 OLTP 数据库集成</strong>：通常情况下，传统 OLTP 数据库负责处理上游的事务序列化。RisingWave，作为一个下游系统，专注于实时分析。深度集成事务处理会导致显著的性能下降，尤其是在现实操作的苛刻条件下。</li></ul>
-<img src='https://s2.loli.net/2025/06/23/NUuJqaDg3dnmIy7.png' title='consistency-in-database-context.png' alt='consistency-in-database-context.png' width='600'/>
+<img src='https://s2.loli.net/2025/08/06/5XNnhrVvBIDdk7x.png' title='consistency-in-database-context.png' alt='consistency-in-database-context.png' width='600'/>
 <p class="text-align-justify">此外，RisingWave 被设计用于理解和处理来自上游 OLTP 数据库的事务语义，这对金融等行业（sectors）的客户来说是一个关键特性。</p>
 <h3>分布式系统上下文中的“一致性”</h3>
 <p class="text-align-justify">RisingWave 提供这种一致性。RisingWave 可以实现跨多个区域的高可用性。RisingWave 没有通过 Paxos 或 Raft 等复杂的共识协议来确保副本间的一致性，而是借助 S3 进行数据存储。S3 不仅存储数据库表，还存储流处理的内部状态，有效地在多个副本间复制数据以保持一致性。</p>
@@ -127,27 +129,30 @@
     </article>
 </div>
 
-        <div class="comment">
-            <script src="https://giscus.app/client.js"
-                                          data-repo="kitelife/kitelife.github.com"
-                                          data-repo-id="MDEwOlJlcG9zaXRvcnk4NTg1Njcx"
-                                          data-category="giscus"
-                                          data-category-id="DIC_kwDOAIMBx84Ctgkx"
-                                          data-mapping="pathname"
-                                          data-strict="0"
-                                          data-reactions-enabled="1"
-                                          data-emit-metadata="0"
-                                          data-input-position="top"
-                                          data-theme="light"
-                                          data-lang="zh-CN"
-                                          data-loading="lazy"
-                                          crossorigin="anonymous"
-                                          async>
-        </script>
-        </div>
+
+<div class="comment">
+     <script src="https://giscus.app/client.js"
+        data-repo="kitelife/kitelife.github.com"
+        data-repo-id="MDEwOlJlcG9zaXRvcnk4NTg1Njcx"
+        data-category="giscus"
+        data-category-id="DIC_kwDOAIMBx84Ctgkx"
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="light"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+      </script>
+    </div>
+
+
+
     </div>
 </div>
-
 <footer class="site-footer">
     <div class="wrapper">
         <div class="footer-col-wrapper">
@@ -183,6 +188,11 @@
         </div>
     </div>
 </footer>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+
 <script>
     MathJax = {
         tex: {
@@ -194,7 +204,7 @@
     };
 </script>
 <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<script>hljs.highlightAll();</script>
+
+
 </body>
 </html>

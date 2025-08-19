@@ -12,12 +12,15 @@
 
     <title>BitPacking</title>
     <meta name="description" content="精进，求诸己身">
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
     <link rel="stylesheet" href="/static/main.css">
     <link rel="canonical" href="https://blog.xiayf.cn/">
     
     <link crossorigin="" rel="shortcut icon" type="image/x-icon" href="/assets/bits_small.ico">
+    
+    
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    
     
 </head>
 
@@ -47,7 +50,6 @@
         </nav>
     </div>
 </header>
-
 <div class="page-content">
     <div class="wrapper">
         
@@ -70,7 +72,7 @@
 <p class="text-align-justify"></p>
 <p class="text-align-justify">A5B2W9P4Q1Z1M4V3</p></blockquote>
 <p class="text-align-justify">算法读取样本编码后的版本将能够完美地重现原来的数据："A" 5次，"B" 2次，等等。这个简单算法的使用非常广泛，被称为行程长度编码（RLE）：写下字符的每次行程有多长。以古老的 PCX 图像格式为例来说明一种广泛使用的标准 RLE。</p>
-<img src='https://s2.loli.net/2025/06/23/akRiNIUmeCKHjyc.png' title='compression-stripes.png' alt='compression-stripes.png' width='100%'/>
+<img src='https://s2.loli.net/2025/08/06/kYE1Oz8sjITHRNU.png' title='compression-stripes.png' alt='compression-stripes.png' width='100%'/>
 <blockquote><p class="text-align-justify">图1：条纹 <a href='http://www.thisisnotparis.com/'>Gottschal</a>/<a href='http://www.gluecksbazillus.de/"'>Schuster</a></p></blockquote>
 <p class="text-align-justify">图1中有很多单色的实心方块。这张图片宽500个像素，高190个像素；作为一张原始位图，使用一个字节来表示一个像素，那么这张图片就产生 95kB 的数据。PCX 算法计算图片中每行像素的行程长度，为相同颜色的连续像素保存行程长度：以这种方式，图片的大小减到了 52kB。</p>
 <h2>频率：哈夫曼（Huffman）编码</h2>
@@ -141,30 +143,30 @@
 <p class="text-align-justify">上述方法可以用于以一种能够完美重现的方式对数据进行压缩。这种压缩的用例包括文档和软件程序，对于这种用例来说，任意值的丢失或损坏都可能使得文件不再有价值。</p>
 <p class="text-align-justify">在特定情况下，对于需要处理的数据进行完美重现是不必要的：一个近似的结果就足够了。通常，这些情况出现在多媒体应用中：超出人类听觉范围的声音不需要记录，人眼无法识别的颜色与梯度的细微之处也无需重现。</p>
 <p class="text-align-justify">一个经典的示例是 MPEG 音频标准---通过去除高频声音相关的额外数据来降低音频文件的大小。这个标准的 Layer-3 规格允许多种去除数据的设定，这样渐进地从音频样本中去除更多的信息。</p>
-<img src='https://s2.loli.net/2025/06/23/fOKA1Qqg4LZmy8r.gif' title='compression-mp3.gif' alt='compression-mp3.gif' width='100%'/>
+<img src='https://s2.loli.net/2025/08/06/QbL2awg13ZMXjmS.gif' title='compression-mp3.gif' alt='compression-mp3.gif' width='100%'/>
 <blockquote><p class="text-align-justify">图2：经 MPEG 音频 Layer-3 编码的 Yardım Et (<a href='http://www.morveotesi.com/'>Mor ve Ötesi</a>, "Dünya Yalan Söylüyor")</p></blockquote>
 <p class="text-align-justify">上图2中，两个波形叠加在一起：红色的为原来的歌曲波形，覆盖在其上的蓝色是经充分压缩的变体。展示的样本长度为1.5秒；作为原来波形文件的一部分，这段样本存储为 160kB 的数据。经压缩的变体，长度相同，但仅占用48kB的空间。</p>
 <p class="text-align-justify">这是通过 MPEG 音频压缩算法得到的，调整歌曲的频率属性，去除超出人类听力范围（高至大约20kHz）的部分。这样，如上可见，并未显著地影响产生的波形，因此经压缩的声音不会明显地不同于原有的声音。</p>
 <h2>扔掉数据：视觉有损编码</h2>
 <p class="text-align-justify">正如声音文件的高频部分人耳无法辨别，图片也有高频部分：颜色的变化之处不足以人眼区分，或者由黑到白的渐变过程是如此的迅速导致无法看到渐变的部分。与声音处理一样，也可以从图片中去除这些高频部分；这就是JPEG图片格式的前提。</p>
 <p class="text-align-justify">JPEG 应用了 MPEG 音频所使用算法的一种变种，从包含于图片的频率部分抽取一个二维映射；该算法继而裁剪到这个频率部分，并重新合成图片。如下所示是这个过程的一个例子。</p>
-<img src='https://s2.loli.net/2025/06/23/I764aQWydBZgfew.gif' title='compression-jpeg-sharp.gif' alt='compression-jpeg-sharp.gif' width='100%'/>
+<img src='https://s2.loli.net/2025/08/06/SJdkezoiR48sbhG.gif' title='compression-jpeg-sharp.gif' alt='compression-jpeg-sharp.gif' width='100%'/>
 <blockquote><p class="text-align-justify">图3：JPEG压缩应用于一张块状图</p></blockquote>
 <p class="text-align-justify">图3中，一张由4个16x16像素方块构成的图片，与该图片经JPEG编码后的图片进行比较。颜色或亮度上的尖锐变化被定义为高视觉频率的结果。这正是 JPEG 要去除的地方。结果，编码后图片的边缘比较模糊。4个方块的接触点特别模糊。</p>
 <p class="text-align-justify">但JPEG的强大之处并不是编码具有尖锐变化边沿和角落的图片，而是低视觉频率的图片；照片就是其中的一个典型例子。</p>
-<img src='https://s2.loli.net/2025/06/23/lfpyiLuRmbG2PSh.gif' title='compression-jpeg-photo.gif' alt='compression-jpeg-photo.gif' width='100%'/>
+<img src='https://s2.loli.net/2025/08/06/wU1QiTCxSerMPGN.gif' title='compression-jpeg-photo.gif' alt='compression-jpeg-photo.gif' width='100%'/>
 <blockquote><p class="text-align-justify">图4：JPEG压缩应用于一张照片</p></blockquote>
 <p class="text-align-justify">图4中，一张安塔利亚港的300x300图片，经过JPEG编码。原来的位图为270kB，经去除尖锐边缘和颜色变化，JPEG 能够产生一张22kB的图片。对于人眼而言，图片的变化很小；即使像素有所改变，图片所展示的景色也完好无损。</p>
 <p class="text-align-justify">这就是有损编码背后的主要概念：确切的数据并不重要，重要的是数据所呈现的信息。将 JPEG 算法用于编码软件程序是不明智的，但当数据表达了不必要的过多信息之时，有损编码就派上用场了。</p>
 <h2>感知冗余：视频编码</h2>
 <p class="text-align-justify">说到视频剪辑，通过结合无损和有损编码背后的原则，进一步压缩数据是有可能的。构建一个视频剪辑片段的最简单最幼稚的方法是合并连续的图片，作为视频帧来看待： MJPEG 视频文件格式就是将一系列的 JPEG 图片看到独立的视频帧。</p>
 <p class="text-align-justify">这种方法忽视了视频片段中固有的数据冗余：一个给定帧中包含的大多数信息同样会包含于其前一帧中。任何特定帧中仅有一小部分是新的信息；通过计算这部分信息所处的位置，然后仅存储这部分信息数据，那么就有可能大大地缩减视频帧的数据大小。</p>
-<img src='https://s2.loli.net/2025/06/23/z3KPQkNi2XY9WlG.gif' title='compression-mpeg-diff.gif' alt='compression-mpeg-diff.gif' width='100%'/>
+<img src='https://s2.loli.net/2025/08/06/1MrOwVFe4xptsgS.gif' title='compression-mpeg-diff.gif' alt='compression-mpeg-diff.gif' width='100%'/>
 <blockquote><p class="text-align-justify">图5：连续视频帧，以及它们的不同之处（<a href='http://jpl.nasa.gov/"'>NASA JPL</a>）</p></blockquote>
 <p class="text-align-justify">图5中，较之第一帧，视频的第二帧显示的变化非常小：仅仅航天飞机的排气羽流有显著的运动。事实上，发射塔后面的航天飞机固体助推器（SRB）(译注：见Wikipedia词条<a href='http://zh.wikipedia.org/wiki/%E8%88%AA%E5%A4%A9%E9%A3%9E%E6%9C%BA%E5%9B%BA%E4%BD%93%E5%8A%A9%E6%8E%A8%E5%99%A8'>航天飞机固体助推器</a>)和天空在两帧之间完全没有变化。那么就不用存储图片的这些部分，可能存储一个值：“没有变化”就可以了。</p>
 <p class="text-align-justify">MPEG视频标准利用了这种内在的冗余作为算法的一部分。理论上，仅仅拍摄（a shot）的初始帧需要完整存储：拍摄的任何运动部分都可以作为与前一帧的相异之处来存储。初始帧，也称为一个内帧，存储为一张标准的 JPEG 图片，而后续的差异帧被称为间帧，或预测帧。</p>
 <p class="text-align-justify">实际上，MPEG视频标准是以“流”来设计的，这样就能够从拍摄（a shot）的中间开始观看视频片段。但若仅提供视频的一个内帧（I-帧），那么预测帧（P-帧）是不可能插入它们的差异的。所以，通常会把I-帧每隔一定时间插入到视频片段中，而不管拍摄的场景（a shot）是否变化。</p>
-<img src='https://s2.loli.net/2025/06/23/ogWmUIQFOqe8TBc.gif' title='compression-mpeg-graph.gif' alt='compression-mpeg-graph.gif' width='100%'/>
+<img src='https://s2.loli.net/2025/08/06/LKdY8lkVAU1cn6S.gif' title='compression-mpeg-graph.gif' alt='compression-mpeg-graph.gif' width='100%'/>
 <blockquote><p class="text-align-justify">图6：一个4秒的MPEG视频片段的帧大小（<a href='http://news.bbc.co.uk/"'>BBC News</a>）</p></blockquote>
 <p class="text-align-justify">上图6中，视频片段每间隔25帧或一秒插入I-帧。后续的每个P-帧都比I-帧小得多，由于政治家在接受采访时一般都不会频繁移动，因此不同视频帧之间的不同之处更少。</p>
 <p class="text-align-justify">图6使用的例子是一个4秒的400x224视频片段。以原始位图形式粗糙农户，生成文件的大小有26.7MB；通过结合使用有损编码和冗余的技术，MPEG 视频标准能够将视频大小缩减到300kB，减小了99%。</p>
@@ -174,27 +176,30 @@
     </article>
 </div>
 
-        <div class="comment">
-            <script src="https://giscus.app/client.js"
-                                          data-repo="kitelife/kitelife.github.com"
-                                          data-repo-id="MDEwOlJlcG9zaXRvcnk4NTg1Njcx"
-                                          data-category="giscus"
-                                          data-category-id="DIC_kwDOAIMBx84Ctgkx"
-                                          data-mapping="pathname"
-                                          data-strict="0"
-                                          data-reactions-enabled="1"
-                                          data-emit-metadata="0"
-                                          data-input-position="top"
-                                          data-theme="light"
-                                          data-lang="zh-CN"
-                                          data-loading="lazy"
-                                          crossorigin="anonymous"
-                                          async>
-        </script>
-        </div>
+
+<div class="comment">
+     <script src="https://giscus.app/client.js"
+        data-repo="kitelife/kitelife.github.com"
+        data-repo-id="MDEwOlJlcG9zaXRvcnk4NTg1Njcx"
+        data-category="giscus"
+        data-category-id="DIC_kwDOAIMBx84Ctgkx"
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="light"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+      </script>
+    </div>
+
+
+
     </div>
 </div>
-
 <footer class="site-footer">
     <div class="wrapper">
         <div class="footer-col-wrapper">
@@ -230,6 +235,11 @@
         </div>
     </div>
 </footer>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+
 <script>
     MathJax = {
         tex: {
@@ -241,7 +251,7 @@
     };
 </script>
 <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<script>hljs.highlightAll();</script>
+
+
 </body>
 </html>

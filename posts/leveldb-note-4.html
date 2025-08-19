@@ -12,12 +12,15 @@
 
     <title>BitPacking</title>
     <meta name="description" content="精进，求诸己身">
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
     <link rel="stylesheet" href="/static/main.css">
     <link rel="canonical" href="https://blog.xiayf.cn/">
     
     <link crossorigin="" rel="shortcut icon" type="image/x-icon" href="/assets/bits_small.ico">
+    
+    
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    
     
 </head>
 
@@ -47,7 +50,6 @@
         </nav>
     </div>
 </header>
-
 <div class="page-content">
     <div class="wrapper">
         
@@ -58,7 +60,7 @@
     </header>
     <article class="post-content">
         <h2>9、增删改查</h2>
-<img src='https://s2.loli.net/2025/05/24/9Gh1agVoq2x6pBU.png' title='lsm' alt='lsm' width='800'/>
+<img src='https://s2.loli.net/2025/08/06/EPeWyYTC6VUwgrM.png' title='lsm' alt='lsm' width='800'/>
 <h3>9.1 增删改</h3>
 <p class="text-align-justify">对于 leveldb（lsm-tree 存储结构）来说，增改操作统一为 put 操作（改也是插入一条新记录），put 操作和删除操作又统一为 write 操作（删除是值为空的写入操作）。write 操作过程为</p>
 <ul><li>1、先将操作记录（包括原始键值）写到 WAL log 文件</li>
@@ -72,7 +74,7 @@
 <ul><li>如果 $level_0$ 文件很多，来不及 major compaction，而这些文件的 key 区间又存在重合，就可能需要检索多个 $level_0$ 文件。</li>
 <li>major compaction 涉及较多的文件磁盘 I/O，从而可能影响检索时的文件读取。</li></ul></li></ul></li></ul>
 <ul><li>3、“不可变 Memtable 对象均只有一个” 如果调整 leveldb 实现支持存在多个 不可变 Memtable 对象，可能存在优化空间；compaction 目前是单线程处理的，如果调整成某种多线程实现，可能也存在优化空间，不过实现起来应该要复杂得多，并且磁盘 I/O 也容易成为检索性能退化的因素。</li></ul>
-<img src='https://s2.loli.net/2025/05/24/n1X4jVK9iztOBSJ.png' title='IO-buffering' alt='IO-buffering' width='800'/>
+<img src='https://s2.loli.net/2025/08/06/5BtxUyEcZwPNlas.png' title='IO-buffering' alt='IO-buffering' width='800'/>
 <blockquote><p class="text-align-justify">图片摘自《The Linux Programming Interface》一书 244 页。</p>
 <p class="text-align-justify"></p>
 <p class="text-align-justify">对于 WAL log 非同步写入，leveldb 会将内容先写到一块用户态内存缓冲区中，如果缓冲区满，则先调用 <code>write</code> 系统调用将用户态缓冲区内容写到内核缓冲区（Kernel buffer cache），将内容的剩余部分继续写到用户态内存缓冲区后，就返回；</p>
@@ -122,7 +124,7 @@ class SnapshotImpl : public Snapshot {
 <li>找到目标数据文件后，先对索引块二分查找找到目标数据块，如果目标数据表是经过压缩的，则需要先经过解压，然后根据数据块中的重置位点列表信息，依次进行 delta 解码遍历</li></ul></li></ul>
 <p class="text-align-justify">点查操作，可以指定一个之前获取的快照信息，如果没有指定，则默认使用最新分配的序列号作为快照，实际查找过程会<u>将快照中的序列号和存储记录中的序列号进行比较，序列号大于快照序列号的记录都会被忽略</u>。</p>
 <p class="text-align-justify">查找键（LookupKey）的编码方式：</p>
-<img src='https://s2.loli.net/2025/05/24/RqzHL35VbtpE9DT.png' title='lookup-key-encode' alt='lookup-key-encode' width='600'/>
+<img src='https://s2.loli.net/2025/08/06/xa4Aclw5PUp2fTD.png' title='lookup-key-encode' alt='lookup-key-encode' width='600'/>
 <p class="text-align-justify">与 Memtable 中跳表节点中的 Key 的编码的区别仅在于不包含 value 的长度和 value 值。</p>
 <pre class="language-cpp"><code>// A helper class useful for DBImpl::Get()  
 class LookupKey {
@@ -263,7 +265,7 @@ public:
 <li>4、对于 2/3 中取到的最小记录，因为存在快照约束以及同一个 key 可能存在多次写入（Put 或 Delete），所以需要：
 <ul><li>跳过序列号大于快照序列号的记录</li>
 <li>同一个 key：如果最后一次写入是 Delete 操作，则跳过该 key 的所有记录；如果最后一次写入是 Put 操作，则跳过最后一次之前的所有记录；从而确保同一个 key 只会遍历返回最新有效的记录。</li></ul></li></ul>
-<img src='https://s2.loli.net/2025/05/24/5yrW6aOe7q1Iz2F.png' title='leveldb-db-iterator' alt='leveldb-db-iterator' width='830'/>
+<img src='https://s2.loli.net/2025/08/06/nQN5qhsEuvtO7dI.png' title='leveldb-db-iterator' alt='leveldb-db-iterator' width='830'/>
 <h3>9.4 表缓存 & 块缓存</h3>
 <p class="text-align-justify">多线程并发对 leveldb 数据库检索（点查/有序遍历）时，有一些数据文件会被频繁访问（多线程之间以及时序上），将这些文件的句柄以及数据索引等元信息缓存起来进行复用，可以提高检索性能，降低资源消耗。</p>
 <p class="text-align-justify">另外，按照 ldb 文件“块”格式，数据块内容写入文件之前可以先进行压缩，可能存在一些热点数据块，如果每次检索都根据索引<u>从文件中读取数据块并解压</u>再做进一步查找，对性能和资源开销影响会比较大，所以也可以在数据块级别做缓存。</p>
@@ -375,7 +377,7 @@ HandleTable table_ GUARDED_BY(mutex_);</code></pre>
 <ul><li>1、将缓存项的引用计数减1。</li>
 <li>2、将缓存项从 <code>in_use_</code> 链表中摘除，挂接到 <code>lru_</code> 链表队尾。</li></ul>
 <h3>9.5、过滤策略-布隆过滤器</h3>
-<img src='https://s2.loli.net/2025/05/24/If15V9oNdJHp8kW.png' title='Bloom_filter_speed' alt='Bloom_filter_speed' width='600'/>
+<img src='https://s2.loli.net/2025/08/06/mTSFUORGI5fAvdy.png' title='Bloom_filter_speed' alt='Bloom_filter_speed' width='600'/>
 <p class="text-align-justify">过滤器匹配返回 false，就一定不在存储中；如果返回 true，有小概率不对（false positive）<sup id="fnref:1"><a href="#fn:1" class="footnote" rel="footnote" role="doc-noteref">[1]</a></sup>。</p>
 <img src='../plantuml-images/9237803061677223425.svg' title='9237803061677223425' alt='9237803061677223425'/>
 <pre class="language-cpp"><code>class FilterPolicy {
@@ -598,27 +600,30 @@ private:
     </article>
 </div>
 
-        <div class="comment">
-            <script src="https://giscus.app/client.js"
-                                          data-repo="kitelife/kitelife.github.com"
-                                          data-repo-id="MDEwOlJlcG9zaXRvcnk4NTg1Njcx"
-                                          data-category="giscus"
-                                          data-category-id="DIC_kwDOAIMBx84Ctgkx"
-                                          data-mapping="pathname"
-                                          data-strict="0"
-                                          data-reactions-enabled="1"
-                                          data-emit-metadata="0"
-                                          data-input-position="top"
-                                          data-theme="light"
-                                          data-lang="zh-CN"
-                                          data-loading="lazy"
-                                          crossorigin="anonymous"
-                                          async>
-        </script>
-        </div>
+
+<div class="comment">
+     <script src="https://giscus.app/client.js"
+        data-repo="kitelife/kitelife.github.com"
+        data-repo-id="MDEwOlJlcG9zaXRvcnk4NTg1Njcx"
+        data-category="giscus"
+        data-category-id="DIC_kwDOAIMBx84Ctgkx"
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="light"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+      </script>
+    </div>
+
+
+
     </div>
 </div>
-
 <footer class="site-footer">
     <div class="wrapper">
         <div class="footer-col-wrapper">
@@ -654,6 +659,11 @@ private:
         </div>
     </div>
 </footer>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+
 <script>
     MathJax = {
         tex: {
@@ -665,7 +675,7 @@ private:
     };
 </script>
 <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<script>hljs.highlightAll();</script>
+
+
 </body>
 </html>

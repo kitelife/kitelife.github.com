@@ -4,8 +4,8 @@
         <description>精进，求诸己身</description>
         <link>https://blog.xiayf.cn/</link>
         <atom:link href="https://blog.xiayf.cn/rss.xml" rel="self" type="application/rss+xml"/>
-        <pubDate>2025-07-29T02:21:17.92976+08:00</pubDate>
-        <lastBuildDate>2025-07-29T02:21:17.92976+08:00</lastBuildDate>
+        <pubDate>2025-08-20T00:12:36.167631+08:00</pubDate>
+        <lastBuildDate>2025-08-20T00:12:36.167631+08:00</lastBuildDate>
         <generator>LingDong</generator>
         
         <item>
@@ -21,16 +21,16 @@
 &lt;h2&gt;数据库中的一致性&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;在传统数据库中，ACID 性质（原子性/Atomicity、一致性/Consistency、隔离型/Isolation、持久性/Durability） 的核心之一就是一致性。这一性质保证了每个事务都将数据库从一个有效状态转换到弄一个有效状态。例如：在一次银行交易中，一个账户扣款另一个账户收款，一致性确保总余额保持不变。千万不要将一致性和原子性混淆了，原子性是指交易/事务要么全有要么全无（all-or-nothing）的性质。例如：原子性确保一个事务中的所有操作要么全部成功完成，要么全部不执行，数据库中不会留下部分事务的效果。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;总之，数据库中的一致性强调的是事务过程中保持数据正确性和有效性（validity）的规则。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/06/23/snze3I1iDwybl5h.png&apos; title=&apos;consistency-bank-transaction.png&apos; alt=&apos;consistency-bank-transaction.png&apos; width=&apos;600&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/sb1n75wD3m8P6VL.png&apos; title=&apos;consistency-bank-transaction.png&apos; alt=&apos;consistency-bank-transaction.png&apos; width=&apos;600&apos;/&gt;
 &lt;h2&gt;分布式系统中的一致性&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;关于分布式系统的讨论经常涉及一个基础概念 - 著名 &lt;a href=&apos;https://zh.wikipedia.org/wiki/CAP%E5%AE%9A%E7%90%86&apos;&gt;CAP 定理&lt;/a&gt; 中的一致性。该定理最初由加州大学伯克利分校的研究人员提出，已成为分布式系统相关大学课程和专业对话中的基本话题。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;在 CAP 定理中，“一致性”特指跨不同节点分布的多个副本之间数据的统一性（uniformity）。在分布式系统中确保这种一致性特别有挑战。该定理强调了三个关键属性的重要权衡：一致性、可用性（availability）和分区容错性（partition tolerance）。根据 CAP 定理，一个分布式系统同时只能实现这三个属性中的两个。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;在这个上下文语境下，一致性确保在任何给定时间点不同节点上的数据副本体现的信息相同。这对于维护数据完整性至关重要，尤其在涉及网络故障或延迟的场景中。该定理揭示了在多个节点间保持数据同步的固有困难，突出了在设计和维护可靠的分布式系统时平衡这三种相互竞争需求所面临的持续挑战。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/06/23/q3kitoETbShzwI9.png&apos; title=&apos;consistency-data-sync-multi-node.png&apos; alt=&apos;consistency-data-sync-multi-node.png&apos; width=&apos;600&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/or7xFAylsJV13KG.png&apos; title=&apos;consistency-data-sync-multi-node.png&apos; alt=&apos;consistency-data-sync-multi-node.png&apos; width=&apos;600&apos;/&gt;
 &lt;h2&gt;流式系统中的一致性&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;在讨论流式系统时，关于一致性的讨论通常与数据库或分布式系统的一致性不同，这反映了流式系统中独特的需求和挑战。&lt;a href=&apos;https://www.confluent.io/blog/rethinking-distributed-stream-processing-in-kafka/&apos;&gt;一致性和完整性：重新思考 Apache Kafka 中的分布式流处理&lt;/a&gt;一文中，作者认为“精确一次”语义概念是流式系统中一致性的关键特征。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;在流式系统中，保持一致性，并非和数据复制相关，而是强调确保每条事件数据仅被处理一次，不多不少，即使在发生系统故障时也是如此。例如，考虑实时处理一次金融交易的情况。如果系统在处理过程中崩溃，那么在系统恢复后，必须确保该交易不会被重复处理。这种精确处理一次的要求对于保持流式数据的完整性和一致性至关重要 - 确保每笔交易都仅被精确处理一次，无论系统是否发生中断。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/06/23/L4aKt7XFdk6DSxm.png&apos; title=&apos;consistency-mathias-verraes.png&apos; alt=&apos;consistency-mathias-verraes.png&apos; width=&apos;600&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/vku1bgn9ecxC7Mw.png&apos; title=&apos;consistency-mathias-verraes.png&apos; alt=&apos;consistency-mathias-verraes.png&apos; width=&apos;600&apos;/&gt;
 &lt;h2&gt;人们真正想要的是什么？&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;如下表格突出对比了不同系统对一致性要求的差异：&lt;/p&gt;
 &lt;table class=&quot;table table-bordered&quot;&gt;
@@ -65,7 +65,7 @@
 &lt;p class=&quot;text-align-justify&quot;&gt;RisingWave 提供这种一致性。RisingWave 有效地确保其内部状态能够无缝地从一种有效状态转换到另一种有效状态。然而，需要注意，RisingWave 支持只读事务，不过并不支持跨不同表的读写事务。因此，如果有人需要一个 OLTP 数据库来管理复杂的事务型工作负载，可能选择 &lt;a href=&apos;https://www.mysql.com/&apos;&gt;MySQL&lt;/a&gt;、&lt;a href=&apos;https://www.postgresql.org/&apos;&gt;Postgres&lt;/a&gt;、&lt;a href=&apos;https://www.cockroachlabs.com/&apos;&gt;CockroachDB&lt;/a&gt; 或 &lt;a href=&apos;https://www.pingcap.com/&apos;&gt;TiDB&lt;/a&gt; 这些方案更为合适。RisingWave 的这一设计决策主要是考虑到两个因素：&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;&lt;strong&gt;专注于流数据&lt;/strong&gt;：RisingWave 专为优化流数据处理而设计。引入完整的事务能力会显著增大系统的复杂性。&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;与传统 OLTP 数据库集成&lt;/strong&gt;：通常情况下，传统 OLTP 数据库负责处理上游的事务序列化。RisingWave，作为一个下游系统，专注于实时分析。深度集成事务处理会导致显著的性能下降，尤其是在现实操作的苛刻条件下。&lt;/li&gt;&lt;/ul&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/06/23/NUuJqaDg3dnmIy7.png&apos; title=&apos;consistency-in-database-context.png&apos; alt=&apos;consistency-in-database-context.png&apos; width=&apos;600&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/5XNnhrVvBIDdk7x.png&apos; title=&apos;consistency-in-database-context.png&apos; alt=&apos;consistency-in-database-context.png&apos; width=&apos;600&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;此外，RisingWave 被设计用于理解和处理来自上游 OLTP 数据库的事务语义，这对金融等行业（sectors）的客户来说是一个关键特性。&lt;/p&gt;
 &lt;h3&gt;分布式系统上下文中的“一致性”&lt;/h3&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;RisingWave 提供这种一致性。RisingWave 可以实现跨多个区域的高可用性。RisingWave 没有通过 Paxos 或 Raft 等复杂的共识协议来确保副本间的一致性，而是借助 S3 进行数据存储。S3 不仅存储数据库表，还存储流处理的内部状态，有效地在多个副本间复制数据以保持一致性。&lt;/p&gt;
@@ -310,7 +310,7 @@ s = sa + sb;&lt;/code&gt;&lt;/pre&gt;
 &lt;p style=&quot;text-align: center&quot;&gt;$$c=[(0.56+1.23+-3.28)/3,(0.82+0.71+2.13)/3]$$&lt;/p&gt;
 &lt;p style=&quot;text-align: center&quot;&gt;$$c=[-0.49, 1.22]$$&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;将所有这些点一起绘制出来：&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/t9BEZycxnGLmuKd.webp&apos; title=&apos;rabitq-101-pic-1&apos; alt=&apos;rabitq-101-pic-1&apos; width=&apos;600&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/vxryoTqt6XjDldY.webp&apos; title=&apos;rabitq-101-pic-1&apos; alt=&apos;rabitq-101-pic-1&apos; width=&apos;600&apos;/&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图 1：基于示例向量及其派生质心绘制的二维平面图。&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;将残差向量做归一化后，分别命名为 $v_{c1}$、$v_{c2}$和$v_{c3}$。&lt;/p&gt;
 &lt;p style=&quot;text-align: center&quot;&gt;$$
@@ -340,7 +340,7 @@ v_{c1}&amp;=(v_{1}-c)/\| v_{1}-c\|\\
 \begin{aligned}v_{c2}&amp;=\left[ 0.96,-0.28 \right]\\ v_{c3}&amp;=\left[ -0.95,0.31 \right]\end{aligned}
 $$&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;下面这个动态图，可以方便我们形象地理解这个转换和归一化过程。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/Ls2nz3BpexGFfyD.gif&apos; title=&apos;rabitq-101-pic-2&apos; alt=&apos;rabitq-101-pic-2&apos; width=&apos;600&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/DEhIA3lkTMJyzcN.gif&apos; title=&apos;rabitq-101-pic-2&apos; alt=&apos;rabitq-101-pic-2&apos; width=&apos;600&apos;/&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图 2：示例向量及其派生质心在单位圆内的变换动画。&lt;/p&gt;&lt;/blockquote&gt;
 &lt;h2&gt;四、仅使用 1 比特&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;将数据向量集中和归一化之后，可以应用标准的&lt;a href=&apos;https://www.elastic.co/search-labs/blog/bit-vectors-in-elasticsearch&apos;&gt;二值量化&lt;/a&gt;编码 - 对于经过转换的向量的每个分量，如果其为负数，则编码为0，正数则编码为1。在我们的二维示例中，即将单位圆分成四个象限，$v_{c1}$、$v_{c2}$和$v_{c3}$对应的二值向量分别变为$r_1=[1,0],r_2=[1,0],r_3=[0,1]$。&lt;/p&gt;
@@ -358,7 +358,7 @@ $$&lt;/p&gt;
 \overline{v}_3&amp;=\left[ -\frac{1}{\sqrt{2}} ,\frac{1}{\sqrt{2}} \right]
 \end{aligned}$$&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;如 &lt;a href=&apos;https://arxiv.org/pdf/2405.12497&apos;&gt;RaBitQ 论文&lt;/a&gt; 所述，选取的这些代表性点具备一些不错的数学性质，与&lt;a href=&apos;http://hal.archives-ouvertes.fr/docs/00/51/44/62/PDF/paper_hal.pdf&apos;&gt;乘积量化（PQ）&lt;/a&gt; 的码本类似（not unlike）。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/FwhH1C3vxcgKBzJ.gif&apos; title=&apos;rabitq-101-pic-3&apos; alt=&apos;rabitq-101-pic-3&apos; width=&apos;600&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/qr3FEpguCbWdB1e.gif&apos; title=&apos;rabitq-101-pic-3&apos; alt=&apos;rabitq-101-pic-3&apos; width=&apos;600&apos;/&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图 3：二值量化后的向量吸附到对应区域中代表性点的过程。&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;至此，对于向量的每个分量都有一个1比特的近似值，尽管直接用于计算比较距离有些不太准确（somewhat fuzzy）。显然，在当前这个量化状态下，$\overline{v}_1$和$\overline{v}_2$是相同的，这样不太理想，问题类似于之前讨论将浮点数向量编码为 &lt;a href=&apos;https://www.elastic.co/search-labs/blog/bit-vectors-in-elasticsearch&apos;&gt;ElasticSearch 中的比特向量&lt;/a&gt; 是说的。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;这种方法的优雅之处在于，查询时可以使用类似于点积的东西计算近似距离来快速比较每个数据向量和每个查询向量。后文中讨论处理查询时会详细介绍。&lt;/p&gt;
@@ -411,7 +411,7 @@ width&amp;=\left( upper-lower \right) /\left( 2^{4}-1 \right)\\
 &amp;=\lfloor ([0.37,-0.92]-[-0.92,-0.92])/0.08\rfloor\\
 &amp;=[15,0]
 \end{aligned}$$&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/z9jOGPw7oiAqv2f.gif&apos; title=&apos;rabitq-101-pic-4&apos; alt=&apos;rabitq-101-pic-4&apos; width=&apos;600&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/ecZBfjzM5Dv8iXF.gif&apos; title=&apos;rabitq-101-pic-4&apos; alt=&apos;rabitq-101-pic-4&apos; width=&apos;600&apos;/&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图 4：对查询向量应用质心转换的过程。&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;如您所见，因为我们只有两个维度，我们的量化查询向量由处于$int4$取值范围内两个值组成。对于更长的向量，你会看到各种 $int4$ 值，其中有一个是取值范围的最大值，还有一个是最小值。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;现在可以执行距离计算，对每个索引数据向量与这个查询向量做比较 - 将量化数据向量每一维分别与量化查询向量的对应维相乘，再将所有维的乘积相加。基本上，就是一个普通的点积，但使用的是比特值和字节值（bits and bytes）。&lt;/p&gt;
@@ -486,7 +486,7 @@ eucl\_ dist(v_{3},q)&amp;=5.52
 &lt;p class=&quot;text-align-justify&quot;&gt;多数嵌入（embedding）模型会输出 $float32$ 数值精度的向量。这个精度虽然提供了信息高保真，但在真正重要的信息之外也带来一些资源浪费。对于给定的数据集，嵌入不可能在单个维度需要20亿种取值，特别是对于高维度向量而言（比如：386维及以上）。量化以一种有损的方式对向量进行编码，轻微降低信息保真而明显地降低存储空间占用。&lt;/p&gt;
 &lt;h2&gt;理解标量量化的分桶&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;标量量化使用更小的数据类型对向量每一维的取值进行分桶。本文的余下部分将假设将 $float32$ 量化到 $int8$ 。为了准确地对值进行分桶，不能简单地将值四舍五入到最近的整数。许多模型输出向量的维度取值空间为 $[-1.0, 1.0]$，如果简单粗暴地四舍五入处理，那么 0.123 和 0.321 这两个不同的向量维度取值都会向下取整到 0。最终，一个向量仅会使用 $int8$ 可用 255 个桶中的2个桶，这样就丢失太多信息了。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/06/05/J6uMBLimnWhcVyj.jpg&apos; title=&apos;float32-to-int8-buckets.jpeg&apos; alt=&apos;float32-to-int8-buckets.jpeg&apos; width=&apos;500&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/cfo8iR1NHlmMASD.jpg&apos; title=&apos;float32-to-int8-buckets.jpeg&apos; alt=&apos;float32-to-int8-buckets.jpeg&apos; width=&apos;500&apos;/&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图1：量化目标图解 - 将 -1.0 到 1.0 之间的连续值分桶到离散的 $int8$ 数值。&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;这种数值转换背后的数学原理并不太复杂。我们可以先计算浮点数取值区间的最小和最大值，然后使用 &lt;a href=&apos;https://en.wikipedia.org/wiki/Feature_scaling#Rescaling_(min-max_normalization&apos;&gt;最小-最大归一化&lt;/a&gt;) 对值进行线性变换（linearly shift）。&lt;/p&gt;
 &lt;p style=&quot;text-align: center&quot;&gt;$$int8\approx \frac{127}{max-min} \  \times \left( float32-min \right)$$&lt;/p&gt;
@@ -494,7 +494,7 @@ eucl\_ dist(v_{3},q)&amp;=5.52
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图2：$int8$ 和 $float32$ 之间的变换公式。注意：这两个变换是有损的，并不是精确变换。下面的例子中，仅使用 $int8$ 取值空间的正数部分。Lucene 的实现也是这样的。&lt;/p&gt;&lt;/blockquote&gt;
 &lt;h2&gt;标量量化的统计视角&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;&lt;a href=&apos;https://en.wikipedia.org/wiki/Quantile&apos;&gt;分位点（quantile）&lt;/a&gt; 是指数值分布的一个切片，这个切片包含一定数量比例的值。例如：一种浮点数取值分布下 99% 的值落在 $[-0.75, 0.86]$ 这个分位点区间内，小于 $-0.75$ 和大于 $0.86$ 的值都被视为离群值/异常值（outliers），因此将 $-0.75$ 和 $0.86$ 分别视为实际的最小值和最大值。如果量化时将离群值包含在内，就意味着那些最常见的值可用的桶偏少了，可用桶少了也就意味着精度更差，信息损失更多。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/19/PhYvL58SluIskbe.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/ncMq95X4RJCazSN.jpg&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;500&apos;/&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图3:图解 99%  &lt;a href=&apos;https://en.wikipedia.org/wiki/Confidence_interval&apos;&gt;置信区间(confidence interval)&lt;/a&gt;及对应的分位点数值，即 99% 的值落在 $[-0.75, 0.86]$ 这个范围内。&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;不错，我们现在知道如何对浮点值进行量化了，那么又应该如何计算两个量化后向量的距离呢？就像常规的&lt;a href=&apos;https://en.wikipedia.org/wiki/Dot_product&apos;&gt;点积&lt;/a&gt;计算一样简单吗？&lt;/p&gt;
 &lt;h2&gt;标量量化的代数视角&lt;/h2&gt;
@@ -538,7 +538,7 @@ eucl\_ dist(v_{3},q)&amp;=5.52
 &lt;p class=&quot;text-align-justify&quot;&gt;这个特性也是相对比较直观的，不过如果你没有理解的话可能会觉得有点奇怪。其想法是将 IVF 阶段的一些信息加入到乘积量化器中，借此提升准确性（因此这个概念是建立在数据集分区技术之上的）。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;先定义一下什么是“残差”向量。暂时抛开乘积量化器不谈（因为它会增大理解的困难，后面我们再把它加回来）。假设我们要做标准的暴力 k-NN 搜索，不过是用数据集分区技术来削减待搜索向量的数量。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;假设我们是用 k-means 将数据集聚类成 100 个聚类（或者叫“数据集分区”）。给定数据集中的一个向量，其残差即是它相对于所属分区的质心的偏移（offset）。也就是，将数据集中的这个向量与其所属聚类的质心的向量相减。质心即是聚类的均值，那么对一组点均减去它们的均值会发生什么？现在这些点就围绕着 0 点了。如下是一个简单的二维示例：&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/VJ7siPxgmBhNvFA.png&apos; title=&apos;residuals_one_partition.png&apos; alt=&apos;residuals_one_partition.png&apos; width=&apos;800&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/Q1YX6c2DpNW3agl.png&apos; title=&apos;residuals_one_partition.png&apos; alt=&apos;residuals_one_partition.png&apos; width=&apos;800&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;开始有趣起来了。假设将一个数据集分区中的所有向量都替换为各自的残差向量，怎么从这个数据集分区中找到查询向量的最近邻？先计算查询向量的残差（相对于分区质心的偏移），然后对这个数据集分区的所有残差向量做最近邻搜索，得到的结果与使用原始向量做搜索是一样的！&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;基于上面的图示，凭直觉可能就能理解，不过还是再看看下面的等式加深理解。&apos;x&apos; 和 &apos;y&apos; 这两个向量的长度为 &apos;n&apos;，它们的 L2 距离计算公式为：&lt;/p&gt;
 &lt;p style=&quot;text-align: center&quot;&gt;$$dist_{L2}\left( x,y \right) =\sqrt{\sum_{i}^{n} \left( x_{i}-y_{i} \right)^{2}}$$&lt;/p&gt;
@@ -549,7 +549,7 @@ eucl\_ dist(v_{3},q)&amp;=5.52
 &lt;p class=&quot;text-align-justify&quot;&gt;可能你之前就使用过这种等价关系，均值归一化（对向量减去均值）是一种常见的预处理技术。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;不过目前为止说的都是单个分区内的计算。将不同分区内的向量做比较又会是什么情况呢？仍然管用，只要针对每个分区分别计算查询向量的残差即可。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;下面这个图解中包含两个数据集分区。计算残差之后，两个分区的所有点都围绕在 0 点周围了。不过现在是有两个查询向量的残差 - 一个是与蓝色点集（分区 1）比较得到的，另一个是与绿色点集（分区 2）比较得到的。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/iLmu5s84ZvGQUo9.png&apos; title=&apos;residuals_two_partitions.png&apos; alt=&apos;residuals_two_partitions.png&apos; width=&apos;800&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/xFhHNrOUvsSLoWe.png&apos; title=&apos;residuals_two_partitions.png&apos; alt=&apos;residuals_two_partitions.png&apos; width=&apos;800&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;前面解释过查询向量和数据库向量之间的距离，使用原始向量计算和使用残差向量计算，结果是一样的，还记得吧？&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;很有意思，不过目前为止还是无用功 - 尚未改变结果的准确性也没有减少计算成本。现在将 PQ 重新放进来一起考虑，就会发现好处在哪了。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;在训练乘积量化器之前，先计算数据集所有分区所有向量的残差向量。残差向量集合保持原有分区（不会合并在一起），不过现在所有残差向量都围绕着 0 点，相对紧凑地聚集在一起。我们抛弃掉原始的数据集向量，只存储残差向量集。&lt;/p&gt;
@@ -576,19 +576,19 @@ eucl\_ dist(v_{3},q)&amp;=5.52
 &lt;p class=&quot;text-align-justify&quot;&gt;乘积量化器方法的作者们是信号处理和压缩技术背景的，所以如果你是机器学习方向的，可能对他们的用词和术语比较陌生。不过，如果你熟悉 k-means 聚类（且摒弃所有压缩命名法的词汇），使用一个示例你就能轻松理解乘积量化器的基础知识。之后，我们再回头来看压缩技术相关术语。&lt;/p&gt;
 &lt;h2&gt;数据集压缩&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;假设你有一个 50,000 张的图片集，使用一个卷积神经网络（CNN）完成一些特征的抽取。这样你现在就得到一个 50,000个特征向量的数据集，每个特征向量有 1024 维。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/GYq3ZzBRHSQMCyL.png&apos; title=&apos;image_vectors.png&apos; alt=&apos;image_vectors.png&apos; width=&apos;300&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/gX3GpBkNn8lwqUm.png&apos; title=&apos;image_vectors.png&apos; alt=&apos;image_vectors.png&apos; width=&apos;300&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;我们要做的第一件事情就是压缩数据集。向量的数量保持不变，但是可以减少每个向量需要的存储空间。注意：我们要做的事情不同于“降维（dimensionality reduction）”！这是因为压缩后的向量中的值其实是符号而不是数值，所以不能直接比较压缩后的向量。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;压缩数据集有两大好处：（1）内存访问耗时通常是处理速度的限制因素，（2）对大数据集而言内存容量是个问题。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;压缩的原理如下所述：对于我们的示例数据集，将所有向量一起切成8个子向量，每个子向量的长度为 128（8个子向量 $\times$ 每个子向量128维 = 原始向量的 1024 维）。这样就将数据集分成8个矩阵，每个矩阵大小为 $[50K \times 128]$。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/19/WJq2XenwRcoSAtM.png&apos; title=&apos;vector_slice.png&apos; alt=&apos;vector_slice.png&apos; width=&apos;500&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/WOZV6tNL4nq7C8D.png&apos; title=&apos;vector_slice.png&apos; alt=&apos;vector_slice.png&apos; width=&apos;500&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;然后对这8个矩阵的每一个单独进行 k-means 聚类，k = 256。这样，对于向量的8个子段的每1个都存在256个质心 - 一共8组质心，每组包含256个质心。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/23/wQHcVTzs6ftJFeg.png&apos; title=&apos;kmeans_clustering.png&apos; alt=&apos;kmeans_clustering.png&apos; width=&apos;500&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/s6cGuEagDSW2yiY.png&apos; title=&apos;kmeans_clustering.png&apos; alt=&apos;kmeans_clustering.png&apos; width=&apos;500&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;这些质心类似于“原型”。它们代表数据集子向量中最常见的模式。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;可以使用这些质心来压缩向量数据集 - 使用最接近/最相似的置信来替代向量中对应的每个子部分，从而得到一个不同于原始向量的一个新向量，不过它们之间应该还是相近的。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;这样我们就能更加高效地存储这些向量 - 不用存储原始的浮点数值，只要存储聚类中心 ID 即可 - 对每个子向量，找到最近的质心，存储该质心的 ID。每个向量也就被替换为8个质心 ID 的一个序列。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;注意：对于8个子部分矩阵的每一个学习到的质心集合是不同的。使用最近质心 id 替换子向量时，只能与对应子部分的 256 个质心做比较。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;每个子部分只有 256 个质心，所以仅需 8 比特就能存储一个质心 ID。每个向量，原本包含 1024 个 32 浮点数（4,096 字节），现在仅是 8 个 8 比特整数的序列（每个向量只要8字节的存储空间！）。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/19/eTMGdN4Vfbrhyl5.png&apos; title=&apos;compression.png&apos; alt=&apos;compression.png&apos; width=&apos;100%&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/Okd5gFTUiL1KnIw.png&apos; title=&apos;compression.png&apos; alt=&apos;compression.png&apos; width=&apos;100%&apos;/&gt;
 &lt;h2&gt;最近邻搜索&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;很棒！向量经过压缩了。不过无法对经过压缩的向量直接计算 L2 距离 - 质心 ID 之间的距离是任意且没有实际意义的！（这就是压缩与降维的不同之处）&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;接下来说说怎么进行最近邻搜索，虽仍是穷举搜索（与所有向量计算距离并排序），不过可以更高效地计算距离 - 只需进行表查找以及某种加法即可。&lt;/p&gt;
@@ -936,13 +936,13 @@ bool FileLock::Unlock() {
 }&lt;/code&gt;&lt;/pre&gt;
 &lt;h3&gt;10.3 整数编码&lt;/h3&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;定长编码比较简单，使用小端方式，将 32 比特整数拆成 4个 char 存储，将 64 比特整数拆成 8个char 存储。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/jNUdmrhJYcvGany.png&apos; title=&apos;leveldb-fixed-coding&apos; alt=&apos;leveldb-fixed-coding&apos; width=&apos;600&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/byH2FAktPSVTC1p.png&apos; title=&apos;leveldb-fixed-coding&apos; alt=&apos;leveldb-fixed-coding&apos; width=&apos;600&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;不定长编码稍微有点麻烦，每8个比特需要使用1个比特位来标识当前这个字节是否是最后一个字节，也就是 char 序列中，每个char 只有尾部7个比特用来存储部分值，头部1比特是状态位。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;这意味着：&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;无符号32比特整数，一旦大于 $2^{28}-1$，就需要5个字节来存储&lt;/li&gt;
 &lt;li&gt;无符号64比特整数，一旦大于 $2^{56}-1$，就需要9个字节来存储&lt;/li&gt;
 &lt;li&gt;从存储空间来看，就不划算了&lt;/li&gt;&lt;/ul&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/cJgo1ABkU6nfhC5.png&apos; title=&apos;leveldb-varint-coding&apos; alt=&apos;leveldb-varint-coding&apos; width=&apos;800&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/Zjv9q4nYIipSwTz.png&apos; title=&apos;leveldb-varint-coding&apos; alt=&apos;leveldb-varint-coding&apos; width=&apos;800&apos;/&gt;
 &lt;h3&gt;10.4 文件 ID&lt;/h3&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;除了 LOCK / CURRENT / LOG 文件，对于“ldb 数据文件”、“WAL log 文件”、“MANIFEST-版本变更日志文件”都使用整数 id 来命名(固定6个字符宽度)，比如 id 为 123，文件名形式如下：&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;ldb 数据文件：&lt;code&gt;000123.ldb&lt;/code&gt;&lt;/li&gt;
@@ -990,7 +990,7 @@ void Unref() {
         <item>
             <title>读码：LevelDB - 增删改查</title>
             <description>&lt;h2&gt;9、增删改查&lt;/h2&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/9Gh1agVoq2x6pBU.png&apos; title=&apos;lsm&apos; alt=&apos;lsm&apos; width=&apos;800&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/EPeWyYTC6VUwgrM.png&apos; title=&apos;lsm&apos; alt=&apos;lsm&apos; width=&apos;800&apos;/&gt;
 &lt;h3&gt;9.1 增删改&lt;/h3&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;对于 leveldb（lsm-tree 存储结构）来说，增改操作统一为 put 操作（改也是插入一条新记录），put 操作和删除操作又统一为 write 操作（删除是值为空的写入操作）。write 操作过程为&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;1、先将操作记录（包括原始键值）写到 WAL log 文件&lt;/li&gt;
@@ -1004,7 +1004,7 @@ void Unref() {
 &lt;ul&gt;&lt;li&gt;如果 $level_0$ 文件很多，来不及 major compaction，而这些文件的 key 区间又存在重合，就可能需要检索多个 $level_0$ 文件。&lt;/li&gt;
 &lt;li&gt;major compaction 涉及较多的文件磁盘 I/O，从而可能影响检索时的文件读取。&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;
 &lt;ul&gt;&lt;li&gt;3、“不可变 Memtable 对象均只有一个” 如果调整 leveldb 实现支持存在多个 不可变 Memtable 对象，可能存在优化空间；compaction 目前是单线程处理的，如果调整成某种多线程实现，可能也存在优化空间，不过实现起来应该要复杂得多，并且磁盘 I/O 也容易成为检索性能退化的因素。&lt;/li&gt;&lt;/ul&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/n1X4jVK9iztOBSJ.png&apos; title=&apos;IO-buffering&apos; alt=&apos;IO-buffering&apos; width=&apos;800&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/5BtxUyEcZwPNlas.png&apos; title=&apos;IO-buffering&apos; alt=&apos;IO-buffering&apos; width=&apos;800&apos;/&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图片摘自《The Linux Programming Interface》一书 244 页。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;对于 WAL log 非同步写入，leveldb 会将内容先写到一块用户态内存缓冲区中，如果缓冲区满，则先调用 &lt;code&gt;write&lt;/code&gt; 系统调用将用户态缓冲区内容写到内核缓冲区（Kernel buffer cache），将内容的剩余部分继续写到用户态内存缓冲区后，就返回；&lt;/p&gt;
@@ -1054,7 +1054,7 @@ class SnapshotImpl : public Snapshot {
 &lt;li&gt;找到目标数据文件后，先对索引块二分查找找到目标数据块，如果目标数据表是经过压缩的，则需要先经过解压，然后根据数据块中的重置位点列表信息，依次进行 delta 解码遍历&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;点查操作，可以指定一个之前获取的快照信息，如果没有指定，则默认使用最新分配的序列号作为快照，实际查找过程会&lt;u&gt;将快照中的序列号和存储记录中的序列号进行比较，序列号大于快照序列号的记录都会被忽略&lt;/u&gt;。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;查找键（LookupKey）的编码方式：&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/RqzHL35VbtpE9DT.png&apos; title=&apos;lookup-key-encode&apos; alt=&apos;lookup-key-encode&apos; width=&apos;600&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/xa4Aclw5PUp2fTD.png&apos; title=&apos;lookup-key-encode&apos; alt=&apos;lookup-key-encode&apos; width=&apos;600&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;与 Memtable 中跳表节点中的 Key 的编码的区别仅在于不包含 value 的长度和 value 值。&lt;/p&gt;
 &lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;// A helper class useful for DBImpl::Get()  
 class LookupKey {
@@ -1195,7 +1195,7 @@ public:
 &lt;li&gt;4、对于 2/3 中取到的最小记录，因为存在快照约束以及同一个 key 可能存在多次写入（Put 或 Delete），所以需要：
 &lt;ul&gt;&lt;li&gt;跳过序列号大于快照序列号的记录&lt;/li&gt;
 &lt;li&gt;同一个 key：如果最后一次写入是 Delete 操作，则跳过该 key 的所有记录；如果最后一次写入是 Put 操作，则跳过最后一次之前的所有记录；从而确保同一个 key 只会遍历返回最新有效的记录。&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/5yrW6aOe7q1Iz2F.png&apos; title=&apos;leveldb-db-iterator&apos; alt=&apos;leveldb-db-iterator&apos; width=&apos;830&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/nQN5qhsEuvtO7dI.png&apos; title=&apos;leveldb-db-iterator&apos; alt=&apos;leveldb-db-iterator&apos; width=&apos;830&apos;/&gt;
 &lt;h3&gt;9.4 表缓存 &amp; 块缓存&lt;/h3&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;多线程并发对 leveldb 数据库检索（点查/有序遍历）时，有一些数据文件会被频繁访问（多线程之间以及时序上），将这些文件的句柄以及数据索引等元信息缓存起来进行复用，可以提高检索性能，降低资源消耗。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;另外，按照 ldb 文件“块”格式，数据块内容写入文件之前可以先进行压缩，可能存在一些热点数据块，如果每次检索都根据索引&lt;u&gt;从文件中读取数据块并解压&lt;/u&gt;再做进一步查找，对性能和资源开销影响会比较大，所以也可以在数据块级别做缓存。&lt;/p&gt;
@@ -1307,7 +1307,7 @@ HandleTable table_ GUARDED_BY(mutex_);&lt;/code&gt;&lt;/pre&gt;
 &lt;ul&gt;&lt;li&gt;1、将缓存项的引用计数减1。&lt;/li&gt;
 &lt;li&gt;2、将缓存项从 &lt;code&gt;in_use_&lt;/code&gt; 链表中摘除，挂接到 &lt;code&gt;lru_&lt;/code&gt; 链表队尾。&lt;/li&gt;&lt;/ul&gt;
 &lt;h3&gt;9.5、过滤策略-布隆过滤器&lt;/h3&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/If15V9oNdJHp8kW.png&apos; title=&apos;Bloom_filter_speed&apos; alt=&apos;Bloom_filter_speed&apos; width=&apos;600&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/mTSFUORGI5fAvdy.png&apos; title=&apos;Bloom_filter_speed&apos; alt=&apos;Bloom_filter_speed&apos; width=&apos;600&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;过滤器匹配返回 false，就一定不在存储中；如果返回 true，有小概率不对（false positive）&lt;sup id=&quot;fnref:1&quot;&gt;&lt;a href=&quot;#fn:1&quot; class=&quot;footnote&quot; rel=&quot;footnote&quot; role=&quot;doc-noteref&quot;&gt;[1]&lt;/a&gt;&lt;/sup&gt;。&lt;/p&gt;
 &lt;img src=&apos;../plantuml-images/9237803061677223425.svg&apos; title=&apos;9237803061677223425&apos; alt=&apos;9237803061677223425&apos;/&gt;
 &lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;class FilterPolicy {
@@ -2190,7 +2190,7 @@ Version::~Version() {
 [Footer]        (fixed size; starts at file_size - sizeof(Footer))
 &amp;amp;lt;end_of_file&amp;amp;gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;leveldb 文件（文件后缀 &lt;code&gt;.ldb&lt;/code&gt;）内容由 N 个 “data 块” 部分、 K 个 “meta 块” 部分、1个 “metaindex 块” 部分、1个 “index 块”部分、1个 “Footer” 部分依次构成。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/4jKOHEMRi6SYD9n.png&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;830&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/vGZCySwcU8EgH94.png&apos; title=&apos;&apos; alt=&apos;&apos; width=&apos;830&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;ldb 数据文件的加载解析流程：&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;1、取文件末尾的 28 个字节，解析出(1) metaindex block 的 offset &amp; size (2) index block 的 offset &amp; size&lt;/li&gt;
 &lt;li&gt;2、根据 metaindex block 的 offset &amp; size 解析出 “过滤策略名称” 和 meta block 的 offset &amp; size
@@ -2209,7 +2209,7 @@ Version::~Version() {
 &lt;li&gt;2、“index” 块在文件中的偏移位置 offset 和 块大小 size。&lt;/li&gt;
 &lt;li&gt;3、将“Footer”长度填充 到 $2 * BlockHandle::kMaxEncodedLength = 20$ 长度。&lt;/li&gt;
 &lt;li&gt;4、以小端序写入一个64比特的魔法数。&lt;/li&gt;&lt;/ul&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/9fXToy6AGZe4C82.png&apos; title=&apos;ldb-footer&apos; alt=&apos;ldb-footer&apos; width=&apos;600&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/uDUmJwMT3oy2S5A.png&apos; title=&apos;ldb-footer&apos; alt=&apos;ldb-footer&apos; width=&apos;600&apos;/&gt;
 &lt;h3&gt;5.2 “块”的格式&lt;/h3&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;将键值写入块的内存缓冲区时，每连续 16 （默认值，可配置）个键会进行 delta 编码压缩：&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;1、先计算当前键与前一次写入键的共同前缀长度&lt;/li&gt;
@@ -2227,7 +2227,7 @@ Version::~Version() {
   kSnappyCompression = 0x1,  
   kZstdCompression = 0x2,  
 };&lt;/code&gt;&lt;/pre&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/UzgZTxtOsaqYn9w.png&apos; title=&apos;ldb-block-encode&apos; alt=&apos;ldb-block-encode&apos; width=&apos;800&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/YaFdPy6cN3bOAkU.png&apos; title=&apos;ldb-block-encode&apos; alt=&apos;ldb-block-encode&apos; width=&apos;800&apos;/&gt;
 &lt;h3&gt;5.3 “data 块”&lt;/h3&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;leveldb 文件中“data 块”数据是按照 key 有序存储的。同一个文件中，块与块之间有序，块之间 key 范围不会有重合，块内内容也是按 key 有序存储。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;因为有序， 使用默认的 BytewiseComparator，delta 编码压缩效果通常会明显。&lt;/p&gt;
@@ -2311,7 +2311,7 @@ void FilterBlockBuilder::AddKey(const Slice&amp;amp;amp; key) {
 &lt;li&gt;2、接着将“还未拼接偏移位置数据时的 &lt;code&gt;result_&lt;/code&gt; 长度”以 32 比特定长编码后拼接到 &lt;code&gt;result_&lt;/code&gt; 后面，&lt;/li&gt;
 &lt;li&gt;3、然后将 kFilterBaseLg（=11）参数拼接到后面（占用1个字节），&lt;/li&gt;
 &lt;li&gt;4、最后将 &lt;code&gt;result_&lt;/code&gt; 作为“meta 块”的原始数据&lt;strong&gt;不经压缩地&lt;/strong&gt;写入文件中。（&lt;u&gt;这里有点特殊，和其他块不太一样，其他块都是键值对编码写入的&lt;/u&gt;）&lt;/li&gt;&lt;/ul&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/MvG4UNntp7ibmPF.png&apos; title=&apos;ldb-filter-block&apos; alt=&apos;ldb-filter-block&apos; width=&apos;800&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/3pdZIHsFlSvmCQA.png&apos; title=&apos;ldb-filter-block&apos; alt=&apos;ldb-filter-block&apos; width=&apos;800&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;并将 过滤策略 名称拼接上前缀&lt;code&gt;filter.&lt;/code&gt; 作为 键，将meta 块（“过滤数据块”）在文件中的偏移位置 offset 和块大小 size 编码后作为值，写入 metaindex 块中。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;打开数据库时，&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;1、先从 “Footer” 部分读取“metaindex 块”的偏移位置 offset 和 块大小 size&lt;/li&gt;
@@ -2325,7 +2325,7 @@ void FilterBlockBuilder::AddKey(const Slice&amp;amp;amp; key) {
         <item>
             <title>读码：LevelDB - 接口定义与数据写入</title>
             <description>&lt;h2&gt;0、设计概要&amp;接口定义&lt;/h2&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/9Gh1agVoq2x6pBU.png&apos; title=&apos;lsm&apos; alt=&apos;lsm&apos; width=&apos;800&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/EPeWyYTC6VUwgrM.png&apos; title=&apos;lsm&apos; alt=&apos;lsm&apos; width=&apos;800&apos;/&gt;
 &lt;img src=&apos;../plantuml-images/10988454778988851872.svg&apos; title=&apos;10988454778988851872&apos; alt=&apos;10988454778988851872&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;基于 DB 类的静态方法 Open 来打开/初始化一个数据库，Open 会实例化一个 DBImpl 对象，调用其私有方法 Recover 来恢复/初始化状态，并将 DBImpl 对象指针赋值给 dbptr 返回给调用方，调用方通过 dbptr 调用 Put/Write/Delete/Get/NewIterator 进行读写操作。&lt;/p&gt;
 &lt;h2&gt;1、WriteBatch&lt;/h2&gt;
@@ -2350,12 +2350,12 @@ typedef SkipList&amp;amp;lt;const char*, KeyComparator&amp;amp;gt; Table;&lt;/co
 // varstring :=  
 //    len: varint32  
 //    data: uint8[len]&lt;/code&gt;&lt;/pre&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/nACmfLPxBvcRpyM.png&apos; title=&apos;write-batch&apos; alt=&apos;write-batch&apos; width=&apos;800&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/CUoWvHwjdMSs6a2.png&apos; title=&apos;write-batch&apos; alt=&apos;write-batch&apos; width=&apos;800&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;$SequenceNum$ 是当前 WriteBatch 所有操作的基准序列号，即 WriteBatch 中第一个操作的序列号为 $SequenceNum + 0$ ，第二个操作的序列号为 $SequenceNum + 1$，依次类推。为每次操作分配一个唯一的序列号，是为了方便实现快照能力。后面再解释。&lt;/p&gt;
 &lt;h2&gt;2、写入缓冲与攒批&lt;/h2&gt;
 &lt;img src=&apos;../plantuml-images/12524554170754623315.svg&apos; title=&apos;12524554170754623315&apos; alt=&apos;12524554170754623315&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;leveldb 的 write 写入过程基于 Writer （双端）队列实现缓冲和可能的攒批（合并多个 WriteBatch），提升写入的吞吐性能。攒批的性能空间来自 - 如果写入时发现 level0 文件过多（compaction 未完成，影响读/检索性能），则认为需要对写入进行限速，将写入先在 Write 队列中缓冲，攒 1ms 左右，合并成一个大的 WriteBatch 然后写入 memtable。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/vfKFoAlU7b6hjna.png&apos; title=&apos;write-deque&apos; alt=&apos;write-deque&apos; width=&apos;450&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/u1IYKbz4exfp823.png&apos; title=&apos;write-deque&apos; alt=&apos;write-deque&apos; width=&apos;450&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;如果本次写入的 Writer 为队列头部，则说明当前写入压力应该不大，可以直接进行写入操作 -&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;1、先确认写入条件是否满足：
 &lt;ul&gt;&lt;li&gt;(1) level0 文件数是否超过阈值（8），如果超过，说明写入压力有点大（都来不及 minor compaction 啦），则释放互斥锁，当前线程休眠 1ms（攒批的性能空间在这！）&lt;/li&gt;
@@ -2371,7 +2371,7 @@ typedef SkipList&amp;amp;lt;const char*, KeyComparator&amp;amp;gt; Table;&lt;/co
 
 // Header is checksum (4 bytes), length (2 bytes), type (1 byte).  
 static const int kHeaderSize = 4 + 2 + 1;&lt;/code&gt;&lt;/pre&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/06/05/gwpxDFuWGIb56r2.png&apos; title=&apos;wal-log-format&apos; alt=&apos;wal-log-format&apos; width=&apos;800&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/SD7BfQIMl2GZaTj.png&apos; title=&apos;wal-log-format&apos; alt=&apos;wal-log-format&apos; width=&apos;800&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;leveldb 会将 WriteBatch 的 &lt;code&gt;rep_&lt;/code&gt; 当作字节序列写入 log 文件中。不过 log 文件存储的单元结构为块（block），块大小为 32768 字节。一个 WriteBatch 的 &lt;code&gt;rep_&lt;/code&gt; 的大小可能大于/等于/小于一个块大小，也就是写入一个 &lt;code&gt;rep_&lt;/code&gt; 可能填不满一个块或者正好填满一个块或者跨多个块。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;如果一次写入后，当前 block 剩余的空间不足以填充下一次写入的头部，则直接将剩余空间以 &lt;code&gt;\x00&lt;/code&gt; 填满。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;这样编码的好处？- 读取解析时，按块大小进行读取，速度更快，顺序解析也方便。&lt;/p&gt;
@@ -2395,7 +2395,7 @@ size_t write_buffer_size = 4 * 1024 * 1024;&lt;/code&gt;&lt;/pre&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;Arena 的特点是整块内存申请，整块内存一次性释放，从而优化内存的申请释放开销。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;leveldb 里 Arena 的生命周期与 MemTable 对象保持一致，MemTable 对象的所有 Add 操作涉及的内存分配都在同一 Arena 对象上进行， MemTable 对象切换成不可变状态并存储为 level0 ldb 文件后，Arena 对象的所有内存块随着 MemTable 对象析构而一次性释放。&lt;/p&gt;
 &lt;pre class=&quot;language-cpp&quot;&gt;&lt;code&gt;static const int kBlockSize = 4096;&lt;/code&gt;&lt;/pre&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/yZ8lKoRXL3V4cm7.png&apos; title=&apos;memtable-arena&apos; alt=&apos;memtable-arena&apos; width=&apos;800&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/iVjaX9OwJbPMStU.png&apos; title=&apos;memtable-arena&apos; alt=&apos;memtable-arena&apos; width=&apos;800&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;从 Arena 申请内存空间时，如果最新一个可用块的剩余内存大小（&lt;code&gt;alloc_bytes_remaining_&lt;/code&gt;）小于当前申请的内存大小 bytes，则先申请一个新的内存块，然后从新内存块上分配内存空间 - 如果当前申请的内存大小大于整块大小的 1/4，则单独占用一个内存块。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;所以 Arena 内存块大小必须大于实际一次申请的最大内存，并且为减少内存碎片，应该要根据代码中实际的内存分配情况来确定 Arena 内存块大小。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;MemTable 的 Arena 内存块大小只有一种。有些项目中内存分配情况比较复杂的话，其 Arena 设计通常会使用多种内存块大小 ，以此提高灵活性，减少内存碎片浪费。&lt;/p&gt;
@@ -2478,7 +2478,7 @@ void MemTable::Add(SequenceNumber s, ValueType type, const Slice&amp;amp;amp; ke
   assert(p + val_size == buf + encoded_len);  
   table_.Insert(buf);  
 }&lt;/code&gt;&lt;/pre&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/HMisDYbkf6eUdCV.png&apos; title=&apos;skiplist-node-key&apos; alt=&apos;skiplist-node-key&apos; width=&apos;800&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/H6YxZwdyVXujsJo.png&apos; title=&apos;skiplist-node-key&apos; alt=&apos;skiplist-node-key&apos; width=&apos;800&apos;/&gt;
 &lt;ul&gt;&lt;li&gt;整数变长编码：“key 长度” 和 “value 长度”正常是32bit（4字节）整数，但 key 和 value 实际可能是比较短的字节序列（比如：长度小于128时，只要1个字节就能存储长度，而不是4字节）。&lt;/li&gt;
 &lt;li&gt;序列号仅使用尾部7个字节：序列号大小不会超过7个字节？确认一下哪里有约束&lt;/li&gt;
 &lt;li&gt;操作/值类型：
@@ -5100,7 +5100,7 @@ if __name__ == &amp;amp;apos;__main__&amp;amp;apos;:
         </item>
         
         <item>
-            <title>编程名言集锦（译）</title>
+            <title>译文：编程名言集锦</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文：&lt;a href=&apos;http://quotes.cat-v.org/programming/&apos;&gt;Programming Quotes&lt;/a&gt;&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;译者：&lt;a href=&apos;https://github.com/youngsterxyf&apos;&gt;youngsterxyf&lt;/a&gt;&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;&lt;strong&gt;C.A.R. Hoare, The 1980 ACM Turing Award Lecture&lt;/strong&gt;&lt;/li&gt;&lt;/ul&gt;
@@ -5747,7 +5747,7 @@ func mul(u, v Vector, k int) (res float64) {
         </item>
         
         <item>
-            <title>面向分布式系统工程师的分布式系统理论（译）</title>
+            <title>译文：面向分布式系统工程师的分布式系统理论</title>
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;原文：&lt;a href=&apos;http://the-paper-trail.org/blog/distributed-systems-theory-for-the-distributed-systems-engineer/&apos;&gt;Distributed systems theory for the distributed systems engineer&lt;/a&gt;&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;Gwen Shapira，大腕级的解决方案架构师（SA），如今 Cloudera 的全职工程师，在&lt;a href=&apos;https://twitter.com/gwenshap/status/497203248332165121&apos;&gt; Twitter 上提的一个问题&lt;/a&gt;引起了我的思考。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;如果是以前，我可能会回答“嗯，这里有篇 FLP 论文，这里有篇 Paxos 论文，这里还有篇拜占庭将军问题的论文...”，我会罗列一箩筐重要的材料，如果你一头扎进去，至少花费 6 个月的时间才能过一遍这些材料。然而我已逐渐明白推荐大量的理论性的论文通常恰恰是着手学习分布式系统理论的错误方式（除非你在做一个 PhD 项目）。论文通常比较深入难懂，需要认真地研习，通常还需要&lt;em&gt;大量的时间投入（significant experience）&lt;/em&gt;来理清这些论文的重要贡献，以及在整个理论体系中的位置。要求工程师具备这样的专业水平又有多大的意义呢？&lt;/p&gt;
@@ -5803,7 +5803,7 @@ func mul(u, v Vector, k int) (res float64) {
             <description>&lt;p class=&quot;text-align-justify&quot;&gt;近期在参与一个仓库作业机器监控项目。该项目的需求背景是：公司的电商业务在全国各地有多处或大或小的仓库，仓库的作业人员（没有IT技术背景）经常反馈/投诉作业机器断网、断电、连不了服务等问题。实际情况经常与反馈的不一致，但运维侧并没有数据可以证明，所以才有了这个项目的需求。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;该项目第一期的目标仅是&lt;em&gt;收集、展示作业机器某些监控指标数据，以便在快速定位解决问题，或至少有数据可查&lt;/em&gt;。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;为了避免大量监控数据上报影响到生产系统的网络服务，系统采用如下结构：&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/EfLNUvneo3D1trl.png&apos; title=&apos;inner_warehouse_monitor&apos; alt=&apos;inner_warehouse_monitor&apos; width=&apos;600&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/Pr5SQqenwO9IYXl.png&apos; title=&apos;inner_warehouse_monitor&apos; alt=&apos;inner_warehouse_monitor&apos; width=&apos;600&apos;/&gt;
 &lt;ol&gt;&lt;li&gt;实现一个 agent 用于在仓库作业 PC 或作业 PDA 上获取机器的监控数据；&lt;/li&gt;
 &lt;li&gt;在仓库本地服务器上实现一个数据收集处理服务，提供 API 给 agent 上传监控数据；数据收集处理服务会将接收到的数据持久化到数据库，提供给仓库本地服务器上的 webApp 进行数据展示等；&lt;/li&gt;
 &lt;li&gt;中心服务器可以调用各个仓库本地服务器上的 webApp 提供的数据查询接口（数据用于定位、发现问题）；定期按需对各个仓库本地服务器上的数据进行归档。&lt;/li&gt;&lt;/ol&gt;
@@ -5815,7 +5815,7 @@ func mul(u, v Vector, k int) (res float64) {
 &lt;p class=&quot;text-align-justify&quot;&gt;选用 SQLite 的理由是：不必像 MySQL 那样安装 server 程序，无需额外部署维护。当然 SQLite 的文件锁会大大影响数据库读写性能，我们通过尽可能拆分数据库，将不同的指标数据存储在不同的 SQLite DB 文件中，甚至将每台作业机器每个指标的每天的数据分别存储在不同的 DB 文件中，来尽可能减小文件锁的性能影响，目前看来效果还不错。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;选择 NSQ 的理由是：Golang 实现、分布式、伸缩性好、性能高、支持 HTTP/TCP 协议、自带web管理界面等。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;详细的系统结构图如下所示：&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/OwhHWZbmcofzRue.png&apos; title=&apos;inner_warehouse_monitor-arch&apos; alt=&apos;inner_warehouse_monitor-arch&apos; width=&apos;600&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/vjk7FQMViB2Tl4m.png&apos; title=&apos;inner_warehouse_monitor-arch&apos; alt=&apos;inner_warehouse_monitor-arch&apos; width=&apos;600&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;NSQ 支持多 topic（不同 topic 的数据不同），topic 又可以有多个 channel（同一个 topic 的所有channel中的数据相同，以多播的方式实现，每个 channel 在 client 中有一个对应的处理流程来处理 channel 中的数据）。我们将作业机器不同的监控指标数据作为不同 topic 传入 NSQ，多数指标数据只需持久化到数据库以备后用，所以这些 topic 仅需一个 channel。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;webApp 基于 Beego 框架实现，避免重复造轮子、工作量小。webApp中的数据展示采用 HighCharts、Raphael 实现，兼容性好。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;对于机器指标数据，其实不应该使用关系型数据库来存储，因为这种数据的特点是：写入之后只读不改、时间序列的、几乎没有关系型的读取操作、连续批量数据读取，所以开源监控系统如 Cacti、Ganglia 等均使用 RRDtool 来读写指标数据。所以如上所述，我们将指标数据的存储尽可能地拆分成多个文件以提高读写性能而不会造成其他问题。&lt;/p&gt;
@@ -5934,10 +5934,10 @@ func mul(u, v Vector, k int) (res float64) {
 &lt;p class=&quot;text-align-justify&quot;&gt;技术选型：HAProxy + Keepalived，这对组合比较常见成熟。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;另外，由于 HAProxy 的负载均衡任务可能比较多，靠人工修改配置来增删改任务不方便可靠，所以实现了一个简单的 HAProxy 管理系统，&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;以后经实际使用验证和完善会开放源码。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/lY67ipAcb12TnBS.png&apos; title=&apos;high availability load balancer&apos; alt=&apos;high availability load balancer&apos; width=&apos;100%&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/wJkI6YOUVGhL7gj.png&apos; title=&apos;high availability load balancer&apos; alt=&apos;high availability load balancer&apos; width=&apos;100%&apos;/&gt;
 &lt;h2&gt;缓存 DNS&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;先以 www.qq.com 为例，解释一下域名解析过程：&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/1cyVpdBQSoAq9b6.jpg&apos; title=&apos;resolve qq.com&apos; alt=&apos;resolve qq.com&apos; width=&apos;600&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/wmHxzI6UMeBQDrh.jpg&apos; title=&apos;resolve qq.com&apos; alt=&apos;resolve qq.com&apos; width=&apos;600&apos;/&gt;
 &lt;ol&gt;&lt;li&gt;用户向 Local DNS 发起 &lt;code&gt;www.qq.com.&lt;/code&gt; 查询请求；&lt;/li&gt;
 &lt;li&gt;Local DNS 向根服务器发起 &lt;code&gt;com.&lt;/code&gt; 查询请求；&lt;/li&gt;
 &lt;li&gt;根服务器向 Local DNS 返回 &lt;code&gt;com.&lt;/code&gt; 解析记录；&lt;/li&gt;
@@ -5969,7 +5969,7 @@ func mul(u, v Vector, k int) (res float64) {
 &lt;h2&gt;实体、引用、索引（Objects，References，The Index）&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;要理解 Git内部构造的核心，我们应理解三个东西： &lt;strong&gt;实体&lt;/strong&gt;、&lt;strong&gt;引用&lt;/strong&gt;、 &lt;strong&gt;索引&lt;/strong&gt;。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;我发现这个模型非常优雅。用一个小小的图表就能完全展现，也易于理解记忆。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/DZipXYwEqnguCF9.png&apos; title=&apos;Big Picture&apos; alt=&apos;Big Picture&apos; width=&apos;500&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/hwLp2i63F7EXB4v.png&apos; title=&apos;Big Picture&apos; alt=&apos;Big Picture&apos; width=&apos;500&apos;/&gt;
 &lt;h3&gt;实体&lt;/h3&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;你提交到一个Git代码仓库中的所有文件，包括每个提交的说明信息（the commit info）都在目录 &lt;code&gt;.git/objects/&lt;/code&gt;中存储为&lt;strong&gt;实体&lt;/strong&gt;。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;一个实体以一个40字符长度的字符串（该实体内容的SHA1哈希值）来标识。&lt;/p&gt;
@@ -5992,7 +5992,7 @@ func mul(u, v Vector, k int) (res float64) {
 &lt;p class=&quot;text-align-justify&quot;&gt;我们来演练一个简单的示例，创建一个Git代码仓库，提交一些文件，看看幕后&lt;code&gt;.git&lt;/code&gt;目录中都发生了些什么。&lt;/p&gt;
 &lt;h3&gt;初始化新的代码仓库&lt;/h3&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ git init canai&lt;/code&gt;&lt;/pre&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/8cQagykr73UeENP.png&apos; title=&apos;初始化代码仓库后&apos; alt=&apos;初始化代码仓库后&apos; width=&apos;500&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/wPbjJ4rlD7QszMh.png&apos; title=&apos;初始化代码仓库后&apos; alt=&apos;初始化代码仓库后&apos; width=&apos;500&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;发生了什么呢？&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;创建了空目录&lt;code&gt;.git/objects/&lt;/code&gt;和&lt;code&gt;.git/refs/&lt;/code&gt;。&lt;/li&gt;
 &lt;li&gt;还没有索引（Index）文件。&lt;/li&gt;
@@ -6002,7 +6002,7 @@ ref: refs/heads/master&lt;/code&gt;&lt;/pre&gt;
 &lt;h3&gt;添加新文件&lt;/h3&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ echo &amp;amp;quot;A roti canai project.&amp;amp;quot; &amp;amp;gt;&amp;amp;gt; README
 $ git add README&lt;/code&gt;&lt;/pre&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/8nJVFwti7TpLRXG.png&apos; title=&apos;添加新文件后&apos; alt=&apos;添加新文件后&apos; width=&apos;500&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/v4mR1GbowJ3prXg.png&apos; title=&apos;添加新文件后&apos; alt=&apos;添加新文件后&apos; width=&apos;500&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;发生了什么呢？&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;创建了索引（Index）文件。它有一个SHA1哈希值指向一个blob实体。&lt;/li&gt;&lt;/ul&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ git ls-files --stage
@@ -6016,7 +6016,7 @@ A roti canai project.&lt;/code&gt;&lt;/pre&gt;
 [master (root-commit) d9976cf] first commit
 1 files changed, 1 insertions(+), 0 deletions(-)
 create mode 100644 README&lt;/code&gt;&lt;/pre&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/b3uUpRsyiJBwQrX.png&apos; title=&apos;首次提交后&apos; alt=&apos;首次提交后&apos; width=&apos;500&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/wZdOamGn3QrK8cY.png&apos; title=&apos;首次提交后&apos; alt=&apos;首次提交后&apos; width=&apos;500&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;发生了什么呢？&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;创建了分支‘master’引用，指向‘master’分支中最新的commit实体。&lt;/li&gt;&lt;/ul&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ cat .git/refs/heads/master 
@@ -6036,7 +6036,7 @@ $ git ls-tree 0ff699
 &lt;h3&gt;添加一个修改过的文件&lt;/h3&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ echo &amp;amp;quot;Welcome everyone.&amp;amp;quot; &amp;amp;gt;&amp;amp;gt; README
 $ git add README&lt;/code&gt;&lt;/pre&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/HV2OvpxglEh94fR.png&apos; title=&apos;添加一个修改过的文件后&apos; alt=&apos;添加一个修改过的文件后&apos; width=&apos;500&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/ty4k8VIgvr3wUJq.png&apos; title=&apos;添加一个修改过的文件后&apos; alt=&apos;添加一个修改过的文件后&apos; width=&apos;500&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;发生了什么呢？&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;更新了索引（Index）文件。注意到了吗？它记录了一个新blob。&lt;/li&gt;&lt;/ul&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ git ls-files --stage
@@ -6050,7 +6050,7 @@ Welcome everyone.&lt;/code&gt;&lt;/pre&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ mkdir doc
 $ echo &amp;amp;quot;[[TBD]] manual toc&amp;amp;quot; &amp;amp;gt;&amp;amp;gt; doc/manual.txt
 $ git add doc&lt;/code&gt;&lt;/pre&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/GkF3I2gZpNJtuqx.png&apos; title=&apos;向子目录添加文件后&apos; alt=&apos;向子目录添加文件后&apos; width=&apos;500&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/NzbvZ39xdq4JKhC.png&apos; title=&apos;向子目录添加文件后&apos; alt=&apos;向子目录添加文件后&apos; width=&apos;500&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;发生了什么呢？&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;更新了索引（Index）文件。&lt;/li&gt;&lt;/ul&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ git ls-files --stage
@@ -6065,7 +6065,7 @@ $ git cat-file blob ea283
 [master 556eaf3] second commit
  2 files changed, 2 insertions(+), 0 deletions(-)
  create mode 100644 doc/manual.txt&lt;/code&gt;&lt;/pre&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/p8sMkec5PlWzVEi.png&apos; title=&apos;第二次提交后&apos; alt=&apos;第二次提交后&apos; width=&apos;500&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/HEnGmZCNuha7vAi.png&apos; title=&apos;第二次提交后&apos; alt=&apos;第二次提交后&apos; width=&apos;500&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;发生了什么呢？&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;更新了分支“master”引用，指向该分支中最新的commit实体。&lt;/li&gt;&lt;/ul&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ cat .git/refs/heads/master 
@@ -6087,7 +6087,7 @@ second commit&lt;/code&gt;&lt;/pre&gt;
 100644 blob ea283e4fb22719fad512405d41dffa050cd16f9a  manual.txt&lt;/code&gt;&lt;/pre&gt;
 &lt;h3&gt;添加一个注释标签（annotated tag）&lt;/h3&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ git tag -a -m&amp;amp;apos;this is annotated tag&amp;amp;apos; v0.1 d9976&lt;/code&gt;&lt;/pre&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/M3ElNd58kHbDS9v.png&apos; title=&apos;添加一个注释标签后&apos; alt=&apos;添加一个注释标签后&apos; width=&apos;500&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/OgAU2V5mfkiJM9a.png&apos; title=&apos;添加一个注释标签后&apos; alt=&apos;添加一个注释标签后&apos; width=&apos;500&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;发生了什么呢？&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;创建了一个标签引用，指向一个tag实体。&lt;/li&gt;&lt;/ul&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ cat .git/refs/tags/v0.1 
@@ -6102,7 +6102,7 @@ tagger Huiming Teo &amp;amp;lt;huiming@favoritemedium.com&amp;amp;gt; 1306744918
 this is annotated tag&lt;/code&gt;&lt;/pre&gt;
 &lt;h3&gt;添加一个新的（轻量的）标签&lt;/h3&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ git tag root-commit d9976&lt;/code&gt;&lt;/pre&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/05/24/ZdV1ijg8DwaxSpG.png&apos; title=&apos;添加一个新的轻量标签后&apos; alt=&apos;添加一个新的轻量标签后&apos; width=&apos;500&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/EdUPaTFtzJ5CfHn.png&apos; title=&apos;添加一个新的轻量标签后&apos; alt=&apos;添加一个新的轻量标签后&apos; width=&apos;500&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;发生了什么呢？&lt;/p&gt;
 &lt;ul&gt;&lt;li&gt;创建了一个标签引用，指向一个commit实体。&lt;/li&gt;&lt;/ul&gt;
 &lt;pre class=&quot;language-text&quot;&gt;&lt;code&gt;$ cat .git/refs/tags/root-commit 
@@ -6155,7 +6155,7 @@ d9976cfe0430557885d162927dd70186d0f521e8&lt;/code&gt;&lt;/pre&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;经过网络查找，发现第一种方案与第二种方案都有现成的工具。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;第一种方案：&lt;a href=&apos;https://github.com/ariya/phantomjs&apos;&gt;phantomjs&lt;/a&gt;可以完成，phantomjs包含了webkit，所以解释JS什么的就不再是个问题了，它有个&lt;a href=&apos;https://github.com/ariya/phantomjs/wiki/Screen-Capture&apos;&gt;Screen Capture&lt;/a&gt;的功能模块支持将网页完整地转换成图片格式，但由于要做很多额外的工作，所以效率比较低。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;第二种方案是从Highcharts的&lt;a href=&apos;http://www.highcharts.com/demo/&apos;&gt;Demo&lt;/a&gt;中挖掘出来的，如图所示：&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/06/05/xEYJUhXFuIBHMzb.png&apos; title=&apos;highchartjs_demo&apos; alt=&apos;highchartjs_demo&apos; width=&apos;100%&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/EbhJ7P5XDOvzmpt.png&apos; title=&apos;highchartjs_demo&apos; alt=&apos;highchartjs_demo&apos; width=&apos;100%&apos;/&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;Demo中可以输出多种图片格式，通过chrome浏览器的开发者工具可以发现其实现是向服务器export.highcharts.com发送一个请求，请求中包含网页中生成的SVG矢量图数据、目标图片格式等信息，服务器对该请求进行处理后返回目标格式图片。那么服务器端是如何将SVG转换成图片格式的呢？在Highcharts的&lt;a href=&apos;http://docs.highcharts.com/&apos;&gt;文档&lt;/a&gt;中有个名为&lt;code&gt;Export module&lt;/code&gt;的部分，其中说明了实现原理以及如何搭建这样的一个格式转换服务器。从文档可以看出这个实现方法的核心是借助了&lt;a href=&apos;http://xmlgraphics.apache.org/batik/tools/rasterizer.html&apos;&gt;batik-rasterizer.jar&lt;/a&gt;这个Java工具包，它能将SVG转换成图片或PDF格式。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;从上述该问题解决方案的寻找过程可以看出，&lt;strong&gt;很多时候并不是问题有多复杂或有多难，而是我们根本没有明确业务需求，没有搞清楚真正需要解决的问题，而对模糊的问题描述自以为是地作出一些假设，然后蒙头去解决错误的问题，从而浪费了很多时间&lt;/strong&gt;。&lt;/p&gt;</description>
             <pubDate>2013-04-09</pubDate>
@@ -6178,7 +6178,7 @@ d9976cfe0430557885d162927dd70186d0f521e8&lt;/code&gt;&lt;/pre&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;A5B2W9P4Q1Z1M4V3&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;算法读取样本编码后的版本将能够完美地重现原来的数据：&quot;A&quot; 5次，&quot;B&quot; 2次，等等。这个简单算法的使用非常广泛，被称为行程长度编码（RLE）：写下字符的每次行程有多长。以古老的 PCX 图像格式为例来说明一种广泛使用的标准 RLE。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/06/23/akRiNIUmeCKHjyc.png&apos; title=&apos;compression-stripes.png&apos; alt=&apos;compression-stripes.png&apos; width=&apos;100%&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/kYE1Oz8sjITHRNU.png&apos; title=&apos;compression-stripes.png&apos; alt=&apos;compression-stripes.png&apos; width=&apos;100%&apos;/&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图1：条纹 &lt;a href=&apos;http://www.thisisnotparis.com/&apos;&gt;Gottschal&lt;/a&gt;/&lt;a href=&apos;http://www.gluecksbazillus.de/&quot;&apos;&gt;Schuster&lt;/a&gt;&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;图1中有很多单色的实心方块。这张图片宽500个像素，高190个像素；作为一张原始位图，使用一个字节来表示一个像素，那么这张图片就产生 95kB 的数据。PCX 算法计算图片中每行像素的行程长度，为相同颜色的连续像素保存行程长度：以这种方式，图片的大小减到了 52kB。&lt;/p&gt;
 &lt;h2&gt;频率：哈夫曼（Huffman）编码&lt;/h2&gt;
@@ -6249,30 +6249,30 @@ d9976cfe0430557885d162927dd70186d0f521e8&lt;/code&gt;&lt;/pre&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;上述方法可以用于以一种能够完美重现的方式对数据进行压缩。这种压缩的用例包括文档和软件程序，对于这种用例来说，任意值的丢失或损坏都可能使得文件不再有价值。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;在特定情况下，对于需要处理的数据进行完美重现是不必要的：一个近似的结果就足够了。通常，这些情况出现在多媒体应用中：超出人类听觉范围的声音不需要记录，人眼无法识别的颜色与梯度的细微之处也无需重现。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;一个经典的示例是 MPEG 音频标准---通过去除高频声音相关的额外数据来降低音频文件的大小。这个标准的 Layer-3 规格允许多种去除数据的设定，这样渐进地从音频样本中去除更多的信息。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/06/23/fOKA1Qqg4LZmy8r.gif&apos; title=&apos;compression-mp3.gif&apos; alt=&apos;compression-mp3.gif&apos; width=&apos;100%&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/QbL2awg13ZMXjmS.gif&apos; title=&apos;compression-mp3.gif&apos; alt=&apos;compression-mp3.gif&apos; width=&apos;100%&apos;/&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图2：经 MPEG 音频 Layer-3 编码的 Yardım Et (&lt;a href=&apos;http://www.morveotesi.com/&apos;&gt;Mor ve Ötesi&lt;/a&gt;, &quot;Dünya Yalan Söylüyor&quot;)&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;上图2中，两个波形叠加在一起：红色的为原来的歌曲波形，覆盖在其上的蓝色是经充分压缩的变体。展示的样本长度为1.5秒；作为原来波形文件的一部分，这段样本存储为 160kB 的数据。经压缩的变体，长度相同，但仅占用48kB的空间。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;这是通过 MPEG 音频压缩算法得到的，调整歌曲的频率属性，去除超出人类听力范围（高至大约20kHz）的部分。这样，如上可见，并未显著地影响产生的波形，因此经压缩的声音不会明显地不同于原有的声音。&lt;/p&gt;
 &lt;h2&gt;扔掉数据：视觉有损编码&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;正如声音文件的高频部分人耳无法辨别，图片也有高频部分：颜色的变化之处不足以人眼区分，或者由黑到白的渐变过程是如此的迅速导致无法看到渐变的部分。与声音处理一样，也可以从图片中去除这些高频部分；这就是JPEG图片格式的前提。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;JPEG 应用了 MPEG 音频所使用算法的一种变种，从包含于图片的频率部分抽取一个二维映射；该算法继而裁剪到这个频率部分，并重新合成图片。如下所示是这个过程的一个例子。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/06/23/I764aQWydBZgfew.gif&apos; title=&apos;compression-jpeg-sharp.gif&apos; alt=&apos;compression-jpeg-sharp.gif&apos; width=&apos;100%&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/SJdkezoiR48sbhG.gif&apos; title=&apos;compression-jpeg-sharp.gif&apos; alt=&apos;compression-jpeg-sharp.gif&apos; width=&apos;100%&apos;/&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图3：JPEG压缩应用于一张块状图&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;图3中，一张由4个16x16像素方块构成的图片，与该图片经JPEG编码后的图片进行比较。颜色或亮度上的尖锐变化被定义为高视觉频率的结果。这正是 JPEG 要去除的地方。结果，编码后图片的边缘比较模糊。4个方块的接触点特别模糊。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;但JPEG的强大之处并不是编码具有尖锐变化边沿和角落的图片，而是低视觉频率的图片；照片就是其中的一个典型例子。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/06/23/lfpyiLuRmbG2PSh.gif&apos; title=&apos;compression-jpeg-photo.gif&apos; alt=&apos;compression-jpeg-photo.gif&apos; width=&apos;100%&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/wU1QiTCxSerMPGN.gif&apos; title=&apos;compression-jpeg-photo.gif&apos; alt=&apos;compression-jpeg-photo.gif&apos; width=&apos;100%&apos;/&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图4：JPEG压缩应用于一张照片&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;图4中，一张安塔利亚港的300x300图片，经过JPEG编码。原来的位图为270kB，经去除尖锐边缘和颜色变化，JPEG 能够产生一张22kB的图片。对于人眼而言，图片的变化很小；即使像素有所改变，图片所展示的景色也完好无损。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;这就是有损编码背后的主要概念：确切的数据并不重要，重要的是数据所呈现的信息。将 JPEG 算法用于编码软件程序是不明智的，但当数据表达了不必要的过多信息之时，有损编码就派上用场了。&lt;/p&gt;
 &lt;h2&gt;感知冗余：视频编码&lt;/h2&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;说到视频剪辑，通过结合无损和有损编码背后的原则，进一步压缩数据是有可能的。构建一个视频剪辑片段的最简单最幼稚的方法是合并连续的图片，作为视频帧来看待： MJPEG 视频文件格式就是将一系列的 JPEG 图片看到独立的视频帧。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;这种方法忽视了视频片段中固有的数据冗余：一个给定帧中包含的大多数信息同样会包含于其前一帧中。任何特定帧中仅有一小部分是新的信息；通过计算这部分信息所处的位置，然后仅存储这部分信息数据，那么就有可能大大地缩减视频帧的数据大小。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/06/23/z3KPQkNi2XY9WlG.gif&apos; title=&apos;compression-mpeg-diff.gif&apos; alt=&apos;compression-mpeg-diff.gif&apos; width=&apos;100%&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/1MrOwVFe4xptsgS.gif&apos; title=&apos;compression-mpeg-diff.gif&apos; alt=&apos;compression-mpeg-diff.gif&apos; width=&apos;100%&apos;/&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图5：连续视频帧，以及它们的不同之处（&lt;a href=&apos;http://jpl.nasa.gov/&quot;&apos;&gt;NASA JPL&lt;/a&gt;）&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;图5中，较之第一帧，视频的第二帧显示的变化非常小：仅仅航天飞机的排气羽流有显著的运动。事实上，发射塔后面的航天飞机固体助推器（SRB）(译注：见Wikipedia词条&lt;a href=&apos;http://zh.wikipedia.org/wiki/%E8%88%AA%E5%A4%A9%E9%A3%9E%E6%9C%BA%E5%9B%BA%E4%BD%93%E5%8A%A9%E6%8E%A8%E5%99%A8&apos;&gt;航天飞机固体助推器&lt;/a&gt;)和天空在两帧之间完全没有变化。那么就不用存储图片的这些部分，可能存储一个值：“没有变化”就可以了。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;MPEG视频标准利用了这种内在的冗余作为算法的一部分。理论上，仅仅拍摄（a shot）的初始帧需要完整存储：拍摄的任何运动部分都可以作为与前一帧的相异之处来存储。初始帧，也称为一个内帧，存储为一张标准的 JPEG 图片，而后续的差异帧被称为间帧，或预测帧。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;实际上，MPEG视频标准是以“流”来设计的，这样就能够从拍摄（a shot）的中间开始观看视频片段。但若仅提供视频的一个内帧（I-帧），那么预测帧（P-帧）是不可能插入它们的差异的。所以，通常会把I-帧每隔一定时间插入到视频片段中，而不管拍摄的场景（a shot）是否变化。&lt;/p&gt;
-&lt;img src=&apos;https://s2.loli.net/2025/06/23/ogWmUIQFOqe8TBc.gif&apos; title=&apos;compression-mpeg-graph.gif&apos; alt=&apos;compression-mpeg-graph.gif&apos; width=&apos;100%&apos;/&gt;
+&lt;img src=&apos;https://s2.loli.net/2025/08/06/LKdY8lkVAU1cn6S.gif&apos; title=&apos;compression-mpeg-graph.gif&apos; alt=&apos;compression-mpeg-graph.gif&apos; width=&apos;100%&apos;/&gt;
 &lt;blockquote&gt;&lt;p class=&quot;text-align-justify&quot;&gt;图6：一个4秒的MPEG视频片段的帧大小（&lt;a href=&apos;http://news.bbc.co.uk/&quot;&apos;&gt;BBC News&lt;/a&gt;）&lt;/p&gt;&lt;/blockquote&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;上图6中，视频片段每间隔25帧或一秒插入I-帧。后续的每个P-帧都比I-帧小得多，由于政治家在接受采访时一般都不会频繁移动，因此不同视频帧之间的不同之处更少。&lt;/p&gt;
 &lt;p class=&quot;text-align-justify&quot;&gt;图6使用的例子是一个4秒的400x224视频片段。以原始位图形式粗糙农户，生成文件的大小有26.7MB；通过结合使用有损编码和冗余的技术，MPEG 视频标准能够将视频大小缩减到300kB，减小了99%。&lt;/p&gt;

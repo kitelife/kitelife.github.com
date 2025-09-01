@@ -6,14 +6,14 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta property="og:title" content="BitPacking">
     <meta property="og:type" content="article">
-    <meta property="og:url" content="https://blog.xiayf.cn/">
+    <meta property="og:url" content="https://bit.xiayf.cn/">
     <meta property="og:site_name" content="BitPacking">
     <meta property="og:description" content="精进，求诸己身">
 
     <title>BitPacking</title>
     <meta name="description" content="精进，求诸己身">
     <link rel="stylesheet" href="/static/main.css">
-    <link rel="canonical" href="https://blog.xiayf.cn/">
+    <link rel="canonical" href="https://bit.xiayf.cn/">
     
     <link crossorigin="" rel="shortcut icon" type="image/x-icon" href="/assets/bits_small.ico">
     
@@ -84,7 +84,7 @@ class PosixEnv : public Env {}</code></pre>
 <p class="text-align-justify">leveldb 基于文件锁来防止多个进程打开同一个数据库。</p>
 <p class="text-align-justify">文件锁使用的文件名称为 <code>LOCK</code>，对这个文件加锁成功之后，才能执行后续的逻辑。</p>
 <pre class="language-cpp"><code>assert(db_lock_ == nullptr);
-Status s = env_-&gt;LockFile(LockFileName(dbname_), &amp;db_lock_);  
+Status s = env_->LockFile(LockFileName(dbname_), &db_lock_);  
 if (!s.ok()) {  
   return s;  
 }</code></pre>
@@ -102,19 +102,19 @@ if (!s.ok()) {
 // to go away.  
 //  
 // May create the named file if it does not already exist.  
-virtual Status LockFile(const std::string&amp; fname, FileLock** lock) = 0;</code></pre>
+virtual Status LockFile(const std::string& fname, FileLock** lock) = 0;</code></pre>
 <p class="text-align-justify">原理参见：</p>
 <ul><li>https://man7.org/linux/man-pages/man2/fcntl.2.html 的 “Advisory record locking” 部分</li>
 <li><a href='https://www.cnblogs.com/nufangrensheng/p/3554168.html'>高级 I/O 之记录锁</a></li></ul>
 <pre class="language-cpp"><code>int LockOrUnlock(int fd, bool lock) {  
   errno = 0;  
   struct ::flock file_lock_info;  
-  std::memset(&amp;file_lock_info, 0, sizeof(file_lock_info));  
+  std::memset(&file_lock_info, 0, sizeof(file_lock_info));  
   file_lock_info.l_type = (lock ? F_WRLCK : F_UNLCK);  
   file_lock_info.l_whence = SEEK_SET;  
   file_lock_info.l_start = 0;  
   file_lock_info.l_len = 0;  // Lock/unlock entire file.  
-  return ::fcntl(fd, F_SETLK, &amp;file_lock_info);  
+  return ::fcntl(fd, F_SETLK, &file_lock_info);  
 }</code></pre>
 <blockquote><p class="text-align-justify">cat client 基于 flock 函数来实现文件锁（Open file description locks (non-POSIX)）。与 leveldb 采用的文件锁方式，区别见 fcntl 文档说明：</p>
 <p class="text-align-justify">Open file description locks are advisory byte-range locks whose operation is in most respects identical to the traditional record locks described above.  This lock type is Linux-specific, and available since Linux 3.15.</p>
@@ -127,15 +127,15 @@ try {
                                             : FLAGS_cat_id_lock_file;
 
   file_lock_ = new FileLock(lock_file_name_);
-  if (!file_lock_-&gt;TryLock()) {
-    throw runtime_error(lock_file_name_ + &quot; is locked by another process&quot;);
+  if (!file_lock_->TryLock()) {
+    throw runtime_error(lock_file_name_ + " is locked by another process");
   }
 }
 //
 bool FileLock::TryLock() {
   //mode_t m = umask(0);
   fd_ = open(file_name_.c_str(), O_RDWR | O_CREAT, 0666);
-  if (fd_ &gt;= 0 &amp;&amp; flock(fd_, LOCK_EX | LOCK_NB) &lt; 0) {
+  if (fd_ >= 0 && flock(fd_, LOCK_EX | LOCK_NB) < 0) {
     close(fd_);
     fd_ = -1;
     return false;
@@ -144,7 +144,7 @@ bool FileLock::TryLock() {
 }
 
 bool FileLock::Unlock() {
-  if (fd_ &lt; 0) {
+  if (fd_ < 0) {
     return true;
   }
   remove(file_name_.c_str());
@@ -157,8 +157,8 @@ bool FileLock::Unlock() {
 <img src='https://s2.loli.net/2025/08/06/byH2FAktPSVTC1p.png' title='leveldb-fixed-coding' alt='leveldb-fixed-coding' width='600'/>
 <p class="text-align-justify">不定长编码稍微有点麻烦，每8个比特需要使用1个比特位来标识当前这个字节是否是最后一个字节，也就是 char 序列中，每个char 只有尾部7个比特用来存储部分值，头部1比特是状态位。</p>
 <p class="text-align-justify">这意味着：</p>
-<ul><li>无符号32比特整数，一旦大于 $2^{28}-1$，就需要5个字节来存储</li>
-<li>无符号64比特整数，一旦大于 $2^{56}-1$，就需要9个字节来存储</li>
+<ul><li>无符号32比特整数，一旦大于 <svg style="vertical-align: -0.188ex;" xmlns="http://www.w3.org/2000/svg" width="6.816ex" height="2.188ex" role="img" focusable="false" viewBox="0 -883.9 3012.6 966.9" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-85-NCM-N-32" d="M237 666C186 666 143 648 106 612C69 576 50 534 50 483C50 449 75 424 106 424C136 424 161 450 161 480C161 513 137 536 105 536C102 536 100 536 98 535C117 584 161 627 224 627C306 627 352 556 352 470C352 403 318 331 250 255L62 43C49 28 50 29 50 0L421 0L450 180L417 180C409 129 402 100 396 91C391 86 361 84 306 84L139 84L236 179C304 243 390 312 419 365C439 400 449 435 449 470C449 588 357 666 237 666Z"></path><path id="MJX-85-NCM-N-38" d="M250 666C201 666 158 650 122 618C86 586 68 546 68 497C68 456 83 419 113 386C120 378 142 361 179 335C88 288 42 227 42 153C42 100 64 57 107 24C147-7 194-22 249-22C305-22 354-4 395 32C436 68 457 115 457 170C457 216 441 257 408 294C396 307 365 330 316 361C393 402 431 454 431 515C431 606 344 666 250 666M379 515C379 463 348 418 286 381L167 459C136 479 120 505 120 536C120 596 185 633 249 633C318 633 379 584 379 515M250 14C168 14 99 73 99 153C99 220 136 274 210 315L328 240C376 209 400 174 400 134C400 62 325 14 250 14Z"></path><path id="MJX-85-NCM-N-2212" d="M698 270L80 270C64 270 56 263 56 250C56 237 64 230 80 230L698 230C714 230 722 237 722 250C722 262 710 270 698 270Z"></path><path id="MJX-85-NCM-N-31" d="M269 666C228 624 168 603 89 603L89 564C141 564 184 572 217 588L217 82C217 64 213 52 204 47C195 42 170 39 130 39L95 39L95 0C120 2 174 3 257 3C340 3 394 2 419 0L419 39L384 39C343 39 318 42 310 47C302 52 297 64 297 82L297 636C297 660 295 666 269 666Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="2^{28}-1"><g data-mml-node="msup" data-latex="2^{8}"><g data-mml-node="mn" data-latex="2"><use data-c="32" xlink:href="#MJX-85-NCM-N-32"></use></g><g data-mml-node="TeXAtom" transform="translate(533,413) scale(0.707)" data-latex="{8}" data-mjx-texclass="ORD"><g data-mml-node="mn" data-latex="8"><use data-c="32" xlink:href="#MJX-85-NCM-N-32"></use><use data-c="38" xlink:href="#MJX-85-NCM-N-38" transform="translate(500,0)"></use></g></g></g><g data-mml-node="mo" data-latex="-" transform="translate(1512.3,0)"><use data-c="2212" xlink:href="#MJX-85-NCM-N-2212"></use></g><g data-mml-node="mn" data-latex="1" transform="translate(2512.6,0)"><use data-c="31" xlink:href="#MJX-85-NCM-N-31"></use></g></g></g></svg>，就需要5个字节来存储</li>
+<li>无符号64比特整数，一旦大于 <svg style="vertical-align: -0.188ex;" xmlns="http://www.w3.org/2000/svg" width="6.816ex" height="2.188ex" role="img" focusable="false" viewBox="0 -883.9 3012.6 966.9" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-86-NCM-N-32" d="M237 666C186 666 143 648 106 612C69 576 50 534 50 483C50 449 75 424 106 424C136 424 161 450 161 480C161 513 137 536 105 536C102 536 100 536 98 535C117 584 161 627 224 627C306 627 352 556 352 470C352 403 318 331 250 255L62 43C49 28 50 29 50 0L421 0L450 180L417 180C409 129 402 100 396 91C391 86 361 84 306 84L139 84L236 179C304 243 390 312 419 365C439 400 449 435 449 470C449 588 357 666 237 666Z"></path><path id="MJX-86-NCM-N-35" d="M118 315C123 315 129 319 134 326C164 371 205 393 257 393C292 393 319 373 337 332C348 305 354 264 354 209C354 146 346 102 331 76C306 35 272 14 229 14C162 14 109 62 91 114C94 113 96 114 100 114C130 114 155 137 155 167C155 198 130 219 100 219C65 219 50 200 50 163C50 63 131-22 231-22C292-22 344 0 386 44C428 88 449 141 449 202C449 260 432 310 398 353C361 400 315 423 259 423C212 423 171 408 138 378L138 556C165 548 191 544 218 544C264 544 304 555 338 578C369 597 390 616 402 634C408 642 411 648 411 651C411 661 406 666 396 666C341 645 294 634 256 634C211 634 168 643 127 662C122 664 118 665 114 665C105 665 100 656 100 637L100 345C100 324 100 315 118 315Z"></path><path id="MJX-86-NCM-N-36" d="M383 504C416 504 432 521 432 555C432 627 378 666 304 666C221 666 155 627 106 548C63 480 42 403 42 316C42 189 65 100 112 47C152 1 198-22 251-22C312-22 362 1 401 47C438 91 457 144 457 205C457 266 439 318 403 361C365 407 316 431 257 431C205 431 165 402 138 346L138 352C138 465 166 561 226 605C252 624 279 633 306 633C342 633 368 623 385 602C351 602 334 583 334 553C334 525 355 504 383 504M344 340C355 317 361 272 361 206C361 141 356 98 345 76C325 35 294 14 251 14C222 14 200 24 184 44C171 60 162 74 158 85C146 116 140 163 140 227C140 255 144 282 151 308C164 355 201 399 256 399C295 399 325 379 344 340Z"></path><path id="MJX-86-NCM-N-2212" d="M698 270L80 270C64 270 56 263 56 250C56 237 64 230 80 230L698 230C714 230 722 237 722 250C722 262 710 270 698 270Z"></path><path id="MJX-86-NCM-N-31" d="M269 666C228 624 168 603 89 603L89 564C141 564 184 572 217 588L217 82C217 64 213 52 204 47C195 42 170 39 130 39L95 39L95 0C120 2 174 3 257 3C340 3 394 2 419 0L419 39L384 39C343 39 318 42 310 47C302 52 297 64 297 82L297 636C297 660 295 666 269 666Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="2^{56}-1"><g data-mml-node="msup" data-latex="2^{6}"><g data-mml-node="mn" data-latex="2"><use data-c="32" xlink:href="#MJX-86-NCM-N-32"></use></g><g data-mml-node="TeXAtom" transform="translate(533,413) scale(0.707)" data-latex="{6}" data-mjx-texclass="ORD"><g data-mml-node="mn" data-latex="6"><use data-c="35" xlink:href="#MJX-86-NCM-N-35"></use><use data-c="36" xlink:href="#MJX-86-NCM-N-36" transform="translate(500,0)"></use></g></g></g><g data-mml-node="mo" data-latex="-" transform="translate(1512.3,0)"><use data-c="2212" xlink:href="#MJX-86-NCM-N-2212"></use></g><g data-mml-node="mn" data-latex="1" transform="translate(2512.6,0)"><use data-c="31" xlink:href="#MJX-86-NCM-N-31"></use></g></g></g></svg>，就需要9个字节来存储</li>
 <li>从存储空间来看，就不划算了</li></ul>
 <img src='https://s2.loli.net/2025/08/06/Zjv9q4nYIipSwTz.png' title='leveldb-varint-coding' alt='leveldb-varint-coding' width='800'/>
 <h3>10.4 文件 ID</h3>
@@ -186,8 +186,8 @@ void Ref() { ++refs_; }
 // Drop reference count.  Delete if no more references exist.  
 void Unref() {  
   --refs_;  
-  assert(refs_ &gt;= 0);  
-  if (refs_ &lt;= 0) {  
+  assert(refs_ >= 0);  
+  if (refs_ <= 0) {  
     delete this;  
   }  
 }</code></pre>
@@ -266,18 +266,6 @@ void Unref() {
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script>hljs.highlightAll();</script>
-
-<script>
-    MathJax = {
-        tex: {
-            inlineMath: [['$', '$'], ['\\(', '\\)']]
-        },
-        svg: {
-            fontCache: 'global'
-        }
-    };
-</script>
-<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 
 
 </body>

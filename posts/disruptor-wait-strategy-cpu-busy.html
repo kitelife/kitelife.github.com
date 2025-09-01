@@ -6,14 +6,14 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta property="og:title" content="BitPacking">
     <meta property="og:type" content="article">
-    <meta property="og:url" content="https://blog.xiayf.cn/">
+    <meta property="og:url" content="https://bit.xiayf.cn/">
     <meta property="og:site_name" content="BitPacking">
     <meta property="og:description" content="精进，求诸己身">
 
     <title>BitPacking</title>
     <meta name="description" content="精进，求诸己身">
     <link rel="stylesheet" href="/static/main.css">
-    <link rel="canonical" href="https://blog.xiayf.cn/">
+    <link rel="canonical" href="https://bit.xiayf.cn/">
     
     <link crossorigin="" rel="shortcut icon" type="image/x-icon" href="/assets/bits_small.ico">
     
@@ -64,8 +64,8 @@
 <img src='https://i.loli.net/2020/07/14/ONwUsrlhLmIq8BW.jpg' title='' alt='' width='100%'/>
 <p class="text-align-justify">其中的 队列 实际使用的是 <a href='https://github.com/LMAX-Exchange/disruptor'>Disruptor</a>，多生产者单消费者模式：</p>
 <pre class="language-java"><code>ThreadFactory factory = new ThreadFactoryBuilder().setNameFormat(name).setDaemon(true).build();
-Disruptor&lt;Event&lt;T&gt;&gt;  disruptor = new Disruptor&lt;&gt;(Event&lt;T&gt;::new, bufferSize, factory, ProducerType.MULTI, new SleepingWaitStrategy());
-disruptor.handleEventsWith((Event&lt;T&gt; event, long sequence, boolean endOfBatch) -&gt; {
+Disruptor<Event<T>>  disruptor = new Disruptor<>(Event<T>::new, bufferSize, factory, ProducerType.MULTI, new SleepingWaitStrategy());
+disruptor.handleEventsWith((Event<T> event, long sequence, boolean endOfBatch) -> {
     consumer.accept(event.value, endOfBatch);
     event.value = null;
 });</code></pre>
@@ -87,7 +87,7 @@ disruptor.handleEventsWith((Event&lt;T&gt; event, long sequence, boolean endOfBa
     // 默认 200
     int counter = retries;
 
-    while ((availableSequence = dependentSequence.get()) &lt; sequence) {
+    while ((availableSequence = dependentSequence.get()) < sequence) {
       counter = applyWaitMethod(barrier, counter);
     }
 
@@ -97,11 +97,11 @@ disruptor.handleEventsWith((Event&lt;T&gt; event, long sequence, boolean endOfBa
 <pre class="language-java"><code>private int applyWaitMethod(final SequenceBarrier barrier, int counter) throws AlertException {
     barrier.checkAlert();
 
-    if (counter &gt; 100)
+    if (counter > 100)
     {
         --counter;
     }
-    else if (counter &gt; 0)
+    else if (counter > 0)
     {
         --counter;
         Thread.yield();
@@ -117,7 +117,7 @@ disruptor.handleEventsWith((Event&lt;T&gt; event, long sequence, boolean endOfBa
 }</code></pre>
 <p class="text-align-justify"><a href='https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/locks/LockSupport.html#parkNanos-long-'>LockSupport.parkNanos</a> 方法的作用简单而言即让当前线程睡眠 sleepTimeNs 纳秒。</p>
 <p class="text-align-justify">Disruptor 作为一个任务队列，自带一个线程池，线程池的线程工厂即构造方法传入的 factory，线程数量等于 <a href='https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/dsl/Disruptor.java#L165'>disruptor.handleEventsWith</a> 调用时传入的回调方法数量，handleEventsWith 的参数数量不定:</p>
-<pre class="language-java"><code>public final EventHandlerGroup&lt;T&gt; handleEventsWith(final EventHandler&lt;? super T&gt;... handlers)</code></pre>
+<pre class="language-java"><code>public final EventHandlerGroup<T> handleEventsWith(final EventHandler<? super T>... handlers)</code></pre>
 <p class="text-align-justify">18个 Disruptor 实例，每个实例有一个消费者线程，消费者线程不断检查队列中是否有新的 <code>Event&lt;T&gt;</code> 任务需要处理，如果有，则调用 EventHandler 回调方法进行处理，否则睡眠 sleepTimeNs 纳秒。</p>
 <p class="text-align-justify">到此，结合监控指标，可以大致猜测：由于 sleepTimeNs 较小，导致多个线程的状态不断在 <code>运行</code>、<code>睡眠</code>、<code>等待调度</code> 之间切换，线程上下文切换非常频繁。</p>
 <p class="text-align-justify">围绕 LockSupport.parkNanos 编写一个测试程序，来复现这个问题：</p>
@@ -130,8 +130,8 @@ public class Test {
 
   public static void main(String[] args) throws InterruptedException {
     ExecutorService tp = Executors.newFixedThreadPool(18);
-    for (int idx = 0; idx &lt; 18; idx++) {
-      tp.submit(() -&gt; {
+    for (int idx = 0; idx < 18; idx++) {
+      tp.submit(() -> {
         while (true) {
           LockSupport.parkNanos(100);
         }
@@ -220,18 +220,6 @@ public class Test {
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script>hljs.highlightAll();</script>
-
-<script>
-    MathJax = {
-        tex: {
-            inlineMath: [['$', '$'], ['\\(', '\\)']]
-        },
-        svg: {
-            fontCache: 'global'
-        }
-    };
-</script>
-<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 
 
 </body>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HackerNews 搜索</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+        }
+
+        h1 {
+            color: #1a73e8;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .search-container {
+            display: flex;
+            max-width: 600px;
+            margin: 0 auto 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 24px;
+            overflow: hidden;
+        }
+
+        #search-input {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            font-size: 16px;
+            outline: none;
+        }
+
+        #search-button {
+            padding: 14px 24px;
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+
+        #search-button:hover {
+            background-color: #1557b0;
+        }
+
+        .results-info {
+            margin-bottom: 20px;
+            color: #5f6368;
+            font-size: 14px;
+        }
+
+        .results-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        .result-item {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .result-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-title {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #1a73e8;
+        }
+
+        .result-title a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .result-title a:hover {
+            text-decoration: underline;
+        }
+
+        .result-url {
+            color: #0d652d;
+            font-size: 14px;
+            margin-bottom: 12px;
+            word-break: break-all;
+        }
+
+        .result-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 14px;
+            color: #5f6368;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #5f6368;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #5f6368;
+        }
+
+        .error {
+            text-align: center;
+            padding: 20px;
+            color: #d93025;
+            background-color: #fce8e6;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #5f6368;
+            border-top: 1px solid #e8eaed;
+        }
+
+        .acknowledgement {
+            font-style: italic;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            .search-container {
+                flex-direction: column;
+                border-radius: 8px;
+            }
+
+            #search-input {
+                border-radius: 8px 8px 0 0;
+            }
+
+            #search-button {
+                border-radius: 0 0 8px 8px;
+            }
+
+            .result-meta {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>HackerNews 搜索</h1>
+</header>
+
+<div class="search-container">
+    <input type="text" id="search-input" placeholder="输入搜索关键词..." autocomplete="off">
+    <button id="search-button">搜索</button>
+</div>
+
+<div id="results-area"></div>
+<footer>
+    <p>© 2025 HackerNews 检索 - 所有权利保留</p>
+    <p class="acknowledgement">感谢 DeepSeek-V3.1 帮忙生成页面！</p>
+</footer>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('search-input');
+        const searchButton = document.getElementById('search-button');
+        const resultsArea = document.getElementById('results-area');
+
+        // 从URL参数中获取搜索词（如果有）
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryParam = urlParams.get('query');
+        if (queryParam) {
+            searchInput.value = queryParam;
+            performSearch(queryParam);
+        }
+
+        // 点击搜索按钮事件
+        searchButton.addEventListener('click', function() {
+            const query = searchInput.value.trim();
+            if (query) {
+                // 更新URL参数但不刷新页面
+                const newUrl = new URL(window.location);
+                newUrl.searchParams.set('query', query);
+                window.history.pushState({}, '', newUrl);
+
+                performSearch(query);
+            }
+        });
+
+        // 按回车键搜索
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchButton.click();
+            }
+        });
+
+        function performSearch(query) {
+            // 显示加载状态
+            resultsArea.innerHTML = '<div class="loading">搜索中...</div>';
+
+            // 发送搜索请求
+            fetch('/tool/hn/search/?query=' + encodeURIComponent(query))
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('网络请求失败');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    displayResults(data.result, query);
+                })
+                .catch(error => {
+                    resultsArea.innerHTML = `
+                        <div class="error">
+                            <p>搜索失败: ${error.message}</p>
+                            <p>请检查网络连接后重试</p>
+                        </div>
+                    `;
+                });
+        }
+
+        function displayResults(results, query) {
+            // 清空结果区域
+            resultsArea.innerHTML = '';
+
+            if (!results || results.length === 0) {
+                resultsArea.innerHTML = `
+                    <div class="no-results">
+                        <p>没有找到关于"${query}"的结果</p>
+                        <p>请尝试其他关键词</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 按ann_score和score排序
+            results.sort((a, b) => {
+                if (b.ann_score !== a.ann_score) {
+                    return b.ann_score - a.ann_score;
+                }
+                return b.score - a.score;
+            });
+
+            // 显示结果数量信息
+            const resultsInfo = document.createElement('div');
+            resultsInfo.className = 'results-info';
+            resultsInfo.textContent = `找到 ${results.length} 条关于"${query}"的结果`;
+            resultsArea.appendChild(resultsInfo);
+
+            // 创建结果容器
+            const resultsContainer = document.createElement('div');
+            resultsContainer.className = 'results-container';
+
+            // 添加每个结果项
+            results.forEach(result => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'result-item';
+
+                resultItem.innerHTML = `
+                    <h2 class="result-title">
+                        <a href="${result.url}" target="_blank">${result.title}</a>
+                    </h2>
+                    <div class="result-url">${result.url}</div>
+                    <div class="result-meta">
+                        <span>评分: ${result.score}</span>
+                        <span>相关度: ${result.ann_score.toFixed(4)}</span>
+                    </div>
+                `;
+
+                resultsContainer.appendChild(resultItem);
+            });
+
+            resultsArea.appendChild(resultsContainer);
+        }
+    });
+</script>
+</body>
+</html>

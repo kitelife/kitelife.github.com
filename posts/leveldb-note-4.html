@@ -6,14 +6,14 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta property="og:title" content="BitPacking">
     <meta property="og:type" content="article">
-    <meta property="og:url" content="https://blog.xiayf.cn/">
+    <meta property="og:url" content="https://bit.xiayf.cn/">
     <meta property="og:site_name" content="BitPacking">
     <meta property="og:description" content="精进，求诸己身">
 
     <title>BitPacking</title>
     <meta name="description" content="精进，求诸己身">
     <link rel="stylesheet" href="/static/main.css">
-    <link rel="canonical" href="https://blog.xiayf.cn/">
+    <link rel="canonical" href="https://bit.xiayf.cn/">
     
     <link crossorigin="" rel="shortcut icon" type="image/x-icon" href="/assets/bits_small.ico">
     
@@ -69,9 +69,9 @@
 <ul><li>1、写入操作可以指定是同步的（sync）或者异步的，这里说的<u>同步异步是针对 WAL log 文件写入而言的</u>，需要在吞吐性能和数据一致性之间做好平衡：
 <ul><li>如果写入操作指定为同步，那么将操作记录到 WAL log 文件后，还要<u>确保文件内容持久化到磁盘</u>，这个持久化操作对 leveldb 的写入吞吐影响会比较大。</li>
 <li>如果写入操作指定为<u>非同步，那么对 WAL log 的文件写入，实际只是写到内核的文件缓冲区</u>。如果写入操作记录到可变 Memtable 并返回写入成功状态给调用方后，内核缓冲区内容刷出到磁盘之前，系统 crash 或者机器掉电都会导致写入数据丢失，存在先写后读的一致性问题。</li></ul></li></ul>
-<ul><li>2、leveldb 的实现中，可变 Memtable 对象和不可变 Memtable 对象均只有一个，并且 Memtable 对象的内存占用存在上限阈值，一旦可变 Memtable 写满且不可变 Memtable 还存在（还没来得及 minor compaction 成 $level_0$ 数据文件），那么写入就会被阻塞，那么：
+<ul><li>2、leveldb 的实现中，可变 Memtable 对象和不可变 Memtable 对象均只有一个，并且 Memtable 对象的内存占用存在上限阈值，一旦可变 Memtable 写满且不可变 Memtable 还存在（还没来得及 minor compaction 成 <svg style="vertical-align: -0.375ex;" xmlns="http://www.w3.org/2000/svg" width="5.542ex" height="1.945ex" role="img" focusable="false" viewBox="0 -694 2449.6 859.6" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-72-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-72-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-72-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-72-NCM-N-30" d="M249-22C390-22 460 92 460 320C460 473 428 575 365 625C330 652 291 666 250 666C109 666 39 551 39 320C39 136 88-22 249-22M361 524C368 489 371 425 371 332C371 240 367 172 360 128C347 48 310 8 249 8C226 8 203 17 182 34C155 57 139 104 132 176C129 201 128 253 128 332C128 419 131 480 136 513C145 568 163 603 191 618C213 630 232 636 249 636C314 636 350 583 361 524Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_0"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-72-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-72-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-72-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-72-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_0" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-72-NCM-I-1D459"></use></g><g data-mml-node="mn" transform="translate(331,-150) scale(0.707)" data-latex="0"><use data-c="30" xlink:href="#MJX-72-NCM-N-30"></use></g></g></g></g></svg> 数据文件），那么写入就会被阻塞，那么：
 <ul><li>可以适当调大 Memtable 内存占用的上限阈值，但也不能调得很大，因为这会导致 compaction 压力会比较大，间接影响读/检索的性能：
-<ul><li>如果 $level_0$ 文件很多，来不及 major compaction，而这些文件的 key 区间又存在重合，就可能需要检索多个 $level_0$ 文件。</li>
+<ul><li>如果 <svg style="vertical-align: -0.375ex;" xmlns="http://www.w3.org/2000/svg" width="5.542ex" height="1.945ex" role="img" focusable="false" viewBox="0 -694 2449.6 859.6" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-73-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-73-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-73-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-73-NCM-N-30" d="M249-22C390-22 460 92 460 320C460 473 428 575 365 625C330 652 291 666 250 666C109 666 39 551 39 320C39 136 88-22 249-22M361 524C368 489 371 425 371 332C371 240 367 172 360 128C347 48 310 8 249 8C226 8 203 17 182 34C155 57 139 104 132 176C129 201 128 253 128 332C128 419 131 480 136 513C145 568 163 603 191 618C213 630 232 636 249 636C314 636 350 583 361 524Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_0"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-73-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-73-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-73-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-73-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_0" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-73-NCM-I-1D459"></use></g><g data-mml-node="mn" transform="translate(331,-150) scale(0.707)" data-latex="0"><use data-c="30" xlink:href="#MJX-73-NCM-N-30"></use></g></g></g></g></svg> 文件很多，来不及 major compaction，而这些文件的 key 区间又存在重合，就可能需要检索多个 <svg style="vertical-align: -0.375ex;" xmlns="http://www.w3.org/2000/svg" width="5.542ex" height="1.945ex" role="img" focusable="false" viewBox="0 -694 2449.6 859.6" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-74-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-74-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-74-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-74-NCM-N-30" d="M249-22C390-22 460 92 460 320C460 473 428 575 365 625C330 652 291 666 250 666C109 666 39 551 39 320C39 136 88-22 249-22M361 524C368 489 371 425 371 332C371 240 367 172 360 128C347 48 310 8 249 8C226 8 203 17 182 34C155 57 139 104 132 176C129 201 128 253 128 332C128 419 131 480 136 513C145 568 163 603 191 618C213 630 232 636 249 636C314 636 350 583 361 524Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_0"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-74-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-74-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-74-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-74-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_0" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-74-NCM-I-1D459"></use></g><g data-mml-node="mn" transform="translate(331,-150) scale(0.707)" data-latex="0"><use data-c="30" xlink:href="#MJX-74-NCM-N-30"></use></g></g></g></g></svg> 文件。</li>
 <li>major compaction 涉及较多的文件磁盘 I/O，从而可能影响检索时的文件读取。</li></ul></li></ul></li></ul>
 <ul><li>3、“不可变 Memtable 对象均只有一个” 如果调整 leveldb 实现支持存在多个 不可变 Memtable 对象，可能存在优化空间；compaction 目前是单线程处理的，如果调整成某种多线程实现，可能也存在优化空间，不过实现起来应该要复杂得多，并且磁盘 I/O 也容易成为检索性能退化的因素。</li></ul>
 <img src='https://s2.loli.net/2025/08/06/5BtxUyEcZwPNlas.png' title='IO-buffering' alt='IO-buffering' width='800'/>
@@ -84,8 +84,8 @@
 <p class="text-align-justify">leveldb 中每个 Put/Delete 操作都被分配了一个序列号（SequenceNum），这个序列号是一种“Lamport 时钟” 或者说 “逻辑时间戳”。</p>
 <p class="text-align-justify">leveldb 支持对数据库做一个快照，这个快照操作非常轻量 - 就是最新分配分配序列号（LastSequence）。这个快照的含义：序列号小于等于LastSequence的操作都属于这个快照的，大于 LastSequence 的操作则不属于这个快照，是在这个快照发生之后发生的。</p>
 <pre class="language-cpp"><code>const Snapshot* DBImpl::GetSnapshot() {  
-  MutexLock l(&amp;mutex_);  
-  return snapshots_.New(versions_-&gt;LastSequence());  
+  MutexLock l(&mutex_);  
+  return snapshots_.New(versions_->LastSequence());  
 }
 
 // Abstract handle to particular state of a DB.  
@@ -118,9 +118,9 @@ class SnapshotImpl : public Snapshot {
 <p class="text-align-justify">指定 key 进行点查的逻辑顺序为：</p>
 <ul><li>1、从可变 Memtable 的跳表中查找，如果找到就返回给调用方（如果找到的是非删除记录，则返回序列号最大的那个记录的值，且返回状态为默认值“找到”，如果找到的是删除记录，则保留返回值为空，返回状态为“未找到”）</li>
 <li>2、1 中没找到，则继续从不可变 Memtable 的跳表中查找，如果找到就返回给调用方</li>
-<li>2、2 中没找到，则从 $level_0$ 开始依次逐层在数据文件中查找，
-<ul><li>因为 $level_0$ 数据文件的 key 区间可以存在重合，所以在 $level_0$ 层检索可能会涉及多个数据文件</li>
-<li>$level_1$~$level_n$ 数据文件的 key 区间不会重合，所以根据最新版本维护的对应层数据文件元信息列表找到目标数据文件即可，如果没找到，则到下一层继续检索</li>
+<li>2、2 中没找到，则从 <svg style="vertical-align: -0.375ex;" xmlns="http://www.w3.org/2000/svg" width="5.542ex" height="1.945ex" role="img" focusable="false" viewBox="0 -694 2449.6 859.6" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-75-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-75-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-75-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-75-NCM-N-30" d="M249-22C390-22 460 92 460 320C460 473 428 575 365 625C330 652 291 666 250 666C109 666 39 551 39 320C39 136 88-22 249-22M361 524C368 489 371 425 371 332C371 240 367 172 360 128C347 48 310 8 249 8C226 8 203 17 182 34C155 57 139 104 132 176C129 201 128 253 128 332C128 419 131 480 136 513C145 568 163 603 191 618C213 630 232 636 249 636C314 636 350 583 361 524Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_0"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-75-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-75-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-75-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-75-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_0" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-75-NCM-I-1D459"></use></g><g data-mml-node="mn" transform="translate(331,-150) scale(0.707)" data-latex="0"><use data-c="30" xlink:href="#MJX-75-NCM-N-30"></use></g></g></g></g></svg> 开始依次逐层在数据文件中查找，
+<ul><li>因为 <svg style="vertical-align: -0.375ex;" xmlns="http://www.w3.org/2000/svg" width="5.542ex" height="1.945ex" role="img" focusable="false" viewBox="0 -694 2449.6 859.6" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-76-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-76-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-76-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-76-NCM-N-30" d="M249-22C390-22 460 92 460 320C460 473 428 575 365 625C330 652 291 666 250 666C109 666 39 551 39 320C39 136 88-22 249-22M361 524C368 489 371 425 371 332C371 240 367 172 360 128C347 48 310 8 249 8C226 8 203 17 182 34C155 57 139 104 132 176C129 201 128 253 128 332C128 419 131 480 136 513C145 568 163 603 191 618C213 630 232 636 249 636C314 636 350 583 361 524Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_0"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-76-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-76-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-76-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-76-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_0" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-76-NCM-I-1D459"></use></g><g data-mml-node="mn" transform="translate(331,-150) scale(0.707)" data-latex="0"><use data-c="30" xlink:href="#MJX-76-NCM-N-30"></use></g></g></g></g></svg> 数据文件的 key 区间可以存在重合，所以在 <svg style="vertical-align: -0.375ex;" xmlns="http://www.w3.org/2000/svg" width="5.542ex" height="1.945ex" role="img" focusable="false" viewBox="0 -694 2449.6 859.6" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-77-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-77-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-77-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-77-NCM-N-30" d="M249-22C390-22 460 92 460 320C460 473 428 575 365 625C330 652 291 666 250 666C109 666 39 551 39 320C39 136 88-22 249-22M361 524C368 489 371 425 371 332C371 240 367 172 360 128C347 48 310 8 249 8C226 8 203 17 182 34C155 57 139 104 132 176C129 201 128 253 128 332C128 419 131 480 136 513C145 568 163 603 191 618C213 630 232 636 249 636C314 636 350 583 361 524Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_0"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-77-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-77-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-77-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-77-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_0" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-77-NCM-I-1D459"></use></g><g data-mml-node="mn" transform="translate(331,-150) scale(0.707)" data-latex="0"><use data-c="30" xlink:href="#MJX-77-NCM-N-30"></use></g></g></g></g></svg> 层检索可能会涉及多个数据文件</li>
+<li><svg style="vertical-align: -0.339ex;" xmlns="http://www.w3.org/2000/svg" width="5.542ex" height="1.91ex" role="img" focusable="false" viewBox="0 -694 2449.6 844" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-78-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-78-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-78-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-78-NCM-N-31" d="M269 666C228 624 168 603 89 603L89 564C141 564 184 572 217 588L217 82C217 64 213 52 204 47C195 42 170 39 130 39L95 39L95 0C120 2 174 3 257 3C340 3 394 2 419 0L419 39L384 39C343 39 318 42 310 47C302 52 297 64 297 82L297 636C297 660 295 666 269 666Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_1"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-78-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-78-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-78-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-78-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_1" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-78-NCM-I-1D459"></use></g><g data-mml-node="mn" transform="translate(331,-150) scale(0.707)" data-latex="1"><use data-c="31" xlink:href="#MJX-78-NCM-N-31"></use></g></g></g></g></svg>~<svg style="vertical-align: -0.357ex;" xmlns="http://www.w3.org/2000/svg" width="5.702ex" height="1.927ex" role="img" focusable="false" viewBox="0 -694 2520.3 851.8" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-79-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-79-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-79-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-79-NCM-I-1D45B" d="M537 137C514 58 481 18 440 18C427 18 420 28 420 47C420 61 426 84 438 115C478 224 498 296 498 333C498 403 451 442 381 442C322 442 271 416 230 363C222 407 187 442 136 442C80 442 58 390 44 345C34 313 29 294 29 287C29 278 34 273 45 273C50 273 53 274 56 276C61 285 64 292 65 299C83 375 106 413 133 413C151 413 160 399 160 371C160 358 155 331 144 290L87 63C84 50 78 24 78 19C78-1 89-11 111-11C130-11 144-1 151 19C153 24 159 49 170 92L191 181L221 295C232 318 249 341 270 365C299 397 335 413 378 413C411 413 427 391 427 348C427 310 406 234 363 120C356 102 353 87 353 74C353 25 390-11 438-11C482-11 517 14 542 64C561 104 571 131 571 144C571 153 566 158 555 158C552 158 537 149 537 137Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_n"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-79-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-79-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-79-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-79-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_n" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-79-NCM-I-1D459"></use></g><g data-mml-node="mi" transform="translate(331,-150) scale(0.707)" data-latex="n"><use data-c="1D45B" xlink:href="#MJX-79-NCM-I-1D45B"></use></g></g></g></g></svg> 数据文件的 key 区间不会重合，所以根据最新版本维护的对应层数据文件元信息列表找到目标数据文件即可，如果没找到，则到下一层继续检索</li>
 <li>找到目标数据文件后，先对索引块二分查找找到目标数据块，如果目标数据表是经过压缩的，则需要先经过解压，然后根据数据块中的重置位点列表信息，依次进行 delta 解码遍历</li></ul></li></ul>
 <p class="text-align-justify">点查操作，可以指定一个之前获取的快照信息，如果没有指定，则默认使用最新分配的序列号作为快照，实际查找过程会<u>将快照中的序列号和存储记录中的序列号进行比较，序列号大于快照序列号的记录都会被忽略</u>。</p>
 <p class="text-align-justify">查找键（LookupKey）的编码方式：</p>
@@ -131,7 +131,7 @@ class LookupKey {
 public:
   // Initialize *this for looking up user_key at a snapshot with  
   // the specified sequence number.  
-  LookupKey(const Slice&amp; user_key, SequenceNumber sequence);
+  LookupKey(const Slice& user_key, SequenceNumber sequence);
 
   // Return a key suitable for lookup in a MemTable.  
   Slice memtable_key() const { return Slice(start_, end_ - start_); }
@@ -144,23 +144,23 @@ public:
 
 private:
   // We construct a char array of the form:  
-  //    klength  varint32               &lt;-- start_  
-  //    userkey  char[klength]          &lt;-- kstart_  
+  //    klength  varint32               <-- start_  
+  //    userkey  char[klength]          <-- kstart_  
   //    tag      uint64  
-  //                                    &lt;-- end_  
+  //                                    <-- end_  
   // The array is a suitable MemTable key.  
-  // The suffix starting with &quot;userkey&quot; can be used as an InternalKey.  
+  // The suffix starting with "userkey" can be used as an InternalKey.  
   const char* start_;  
   const char* kstart_;  
   const char* end_;  
   char space_[200];  // Avoid allocation for short keys
 }
 
-LookupKey::LookupKey(const Slice&amp; user_key, SequenceNumber s) {  
+LookupKey::LookupKey(const Slice& user_key, SequenceNumber s) {  
   size_t usize = user_key.size();  
   size_t needed = usize + 13;  // A conservative estimate  
   char* dst;  
-  if (needed &lt;= sizeof(space_)) {  
+  if (needed <= sizeof(space_)) {  
     dst = space_;  
   } else {  
     dst = new char[needed];  
@@ -176,9 +176,9 @@ LookupKey::LookupKey(const Slice&amp; user_key, SequenceNumber s) {
 }
 
 static uint64_t PackSequenceAndType(uint64_t seq, ValueType t) {  
-  assert(seq &lt;= kMaxSequenceNumber);  
-  assert(t &lt;= kValueTypeForSeek);  
-  return (seq &lt;&lt; 8) | t;  
+  assert(seq <= kMaxSequenceNumber);  
+  assert(t <= kValueTypeForSeek);  
+  return (seq << 8) | t;  
 }</code></pre>
 <h4>9.2.3 全库/范围有序扫描（遍历）</h4>
 <pre class="language-cpp"><code>class DB {
@@ -189,18 +189,18 @@ public:
  //  
  // Caller should delete the iterator when it is no longer needed.  
  // The returned iterator should be deleted before this db is deleted.  
- virtual Iterator* NewIterator(const ReadOptions&amp; options) = 0; // 接口
+ virtual Iterator* NewIterator(const ReadOptions& options) = 0; // 接口
 }
 
 // 实现
-Iterator* DBImpl::NewIterator(const ReadOptions&amp; options) {  
+Iterator* DBImpl::NewIterator(const ReadOptions& options) {  
   SequenceNumber latest_snapshot;  
   uint32_t seed;  
-  Iterator* iter = NewInternalIterator(options, &amp;latest_snapshot, &amp;seed);  
+  Iterator* iter = NewInternalIterator(options, &latest_snapshot, &seed);  
   return NewDBIterator(this, user_comparator(), iter,  
                        (options.snapshot != nullptr  
-                            ? static_cast&lt;const SnapshotImpl*&gt;(options.snapshot)  
-                                  -&gt;sequence_number()  
+                            ? static_cast<const SnapshotImpl*>(options.snapshot)  
+                                  ->sequence_number()  
                             : latest_snapshot),  
                        seed);  
 }
@@ -223,7 +223,7 @@ public:
   // Position at the first key in the source that is at or past target.  
   // The iterator is Valid() after this call iff the source contains  
   // an entry that comes at or past target.  
-  virtual void Seek(const Slice&amp; target) = 0;
+  virtual void Seek(const Slice& target) = 0;
 
   // Moves to the next entry in the source.  After this call, Valid() is  
   // true iff the iterator was not positioned at the last entry in the source.  
@@ -254,12 +254,12 @@ public:
 <li>SeekToLast：不指定起始 key，从尾部逆序遍历（不断调用 Prev）</li>
 <li>Seek：指定起始 key，从起始 key 开始顺序遍历（不断调用 Next）</li></ul></li>
 <li>3、调用方根据迭代器的 <code>Valid()</code> 方法返回判断是否遍历结束，或者根据最新遍历到的 key 值做判断是否要结束遍历。</li></ul>
-<p class="text-align-justify">有序（顺序）遍历的实现逻辑类似于 compaction 过程的 N 路归并算法，只不过 compaction 涉及的 level 层 和 level+1 层输入数据文件的 N 路归并排序，而有序遍历则涵盖“可变 memtable”/“不可变 memtable”/“$level_0$~$level_n$ 所有层数据文件”数据库完整状态：</p>
+<p class="text-align-justify">有序（顺序）遍历的实现逻辑类似于 compaction 过程的 N 路归并算法，只不过 compaction 涉及的 level 层 和 level+1 层输入数据文件的 N 路归并排序，而有序遍历则涵盖“可变 memtable”/“不可变 memtable”/“<svg style="vertical-align: -0.375ex;" xmlns="http://www.w3.org/2000/svg" width="5.542ex" height="1.945ex" role="img" focusable="false" viewBox="0 -694 2449.6 859.6" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-80-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-80-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-80-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-80-NCM-N-30" d="M249-22C390-22 460 92 460 320C460 473 428 575 365 625C330 652 291 666 250 666C109 666 39 551 39 320C39 136 88-22 249-22M361 524C368 489 371 425 371 332C371 240 367 172 360 128C347 48 310 8 249 8C226 8 203 17 182 34C155 57 139 104 132 176C129 201 128 253 128 332C128 419 131 480 136 513C145 568 163 603 191 618C213 630 232 636 249 636C314 636 350 583 361 524Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_0"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-80-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-80-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-80-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-80-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_0" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-80-NCM-I-1D459"></use></g><g data-mml-node="mn" transform="translate(331,-150) scale(0.707)" data-latex="0"><use data-c="30" xlink:href="#MJX-80-NCM-N-30"></use></g></g></g></g></svg>~<svg style="vertical-align: -0.357ex;" xmlns="http://www.w3.org/2000/svg" width="5.702ex" height="1.927ex" role="img" focusable="false" viewBox="0 -694 2520.3 851.8" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-81-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-81-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-81-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-81-NCM-I-1D45B" d="M537 137C514 58 481 18 440 18C427 18 420 28 420 47C420 61 426 84 438 115C478 224 498 296 498 333C498 403 451 442 381 442C322 442 271 416 230 363C222 407 187 442 136 442C80 442 58 390 44 345C34 313 29 294 29 287C29 278 34 273 45 273C50 273 53 274 56 276C61 285 64 292 65 299C83 375 106 413 133 413C151 413 160 399 160 371C160 358 155 331 144 290L87 63C84 50 78 24 78 19C78-1 89-11 111-11C130-11 144-1 151 19C153 24 159 49 170 92L191 181L221 295C232 318 249 341 270 365C299 397 335 413 378 413C411 413 427 391 427 348C427 310 406 234 363 120C356 102 353 87 353 74C353 25 390-11 438-11C482-11 517 14 542 64C561 104 571 131 571 144C571 153 566 158 555 158C552 158 537 149 537 137Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_n"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-81-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-81-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-81-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-81-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_n" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-81-NCM-I-1D459"></use></g><g data-mml-node="mi" transform="translate(331,-150) scale(0.707)" data-latex="n"><use data-c="1D45B" xlink:href="#MJX-81-NCM-I-1D45B"></use></g></g></g></g></svg> 所有层数据文件”数据库完整状态：</p>
 <ul><li>1、先针对各部分数据创建各自的迭代器：
 <ul><li>“可变 memtable” 一个迭代器</li>
 <li>“不可变 memtable” 一个迭代器</li>
-<li>$level_0$ 层，因为不同文件的 key 区间可能会重合，所以一个文件一个迭代器</li>
-<li>$level_1$~$level_n$ 层，因为不同文件的 key 区间不会重合，所以一层一个迭代器，同一层的数据文件按照 key 区间从小到大排序后依次遍历即可</li></ul></li>
+<li><svg style="vertical-align: -0.375ex;" xmlns="http://www.w3.org/2000/svg" width="5.542ex" height="1.945ex" role="img" focusable="false" viewBox="0 -694 2449.6 859.6" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-82-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-82-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-82-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-82-NCM-N-30" d="M249-22C390-22 460 92 460 320C460 473 428 575 365 625C330 652 291 666 250 666C109 666 39 551 39 320C39 136 88-22 249-22M361 524C368 489 371 425 371 332C371 240 367 172 360 128C347 48 310 8 249 8C226 8 203 17 182 34C155 57 139 104 132 176C129 201 128 253 128 332C128 419 131 480 136 513C145 568 163 603 191 618C213 630 232 636 249 636C314 636 350 583 361 524Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_0"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-82-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-82-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-82-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-82-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_0" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-82-NCM-I-1D459"></use></g><g data-mml-node="mn" transform="translate(331,-150) scale(0.707)" data-latex="0"><use data-c="30" xlink:href="#MJX-82-NCM-N-30"></use></g></g></g></g></svg> 层，因为不同文件的 key 区间可能会重合，所以一个文件一个迭代器</li>
+<li><svg style="vertical-align: -0.339ex;" xmlns="http://www.w3.org/2000/svg" width="5.542ex" height="1.91ex" role="img" focusable="false" viewBox="0 -694 2449.6 844" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-83-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-83-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-83-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-83-NCM-N-31" d="M269 666C228 624 168 603 89 603L89 564C141 564 184 572 217 588L217 82C217 64 213 52 204 47C195 42 170 39 130 39L95 39L95 0C120 2 174 3 257 3C340 3 394 2 419 0L419 39L384 39C343 39 318 42 310 47C302 52 297 64 297 82L297 636C297 660 295 666 269 666Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_1"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-83-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-83-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-83-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-83-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_1" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-83-NCM-I-1D459"></use></g><g data-mml-node="mn" transform="translate(331,-150) scale(0.707)" data-latex="1"><use data-c="31" xlink:href="#MJX-83-NCM-N-31"></use></g></g></g></g></svg>~<svg style="vertical-align: -0.357ex;" xmlns="http://www.w3.org/2000/svg" width="5.702ex" height="1.927ex" role="img" focusable="false" viewBox="0 -694 2520.3 851.8" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-84-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-84-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-84-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-84-NCM-I-1D45B" d="M537 137C514 58 481 18 440 18C427 18 420 28 420 47C420 61 426 84 438 115C478 224 498 296 498 333C498 403 451 442 381 442C322 442 271 416 230 363C222 407 187 442 136 442C80 442 58 390 44 345C34 313 29 294 29 287C29 278 34 273 45 273C50 273 53 274 56 276C61 285 64 292 65 299C83 375 106 413 133 413C151 413 160 399 160 371C160 358 155 331 144 290L87 63C84 50 78 24 78 19C78-1 89-11 111-11C130-11 144-1 151 19C153 24 159 49 170 92L191 181L221 295C232 318 249 341 270 365C299 397 335 413 378 413C411 413 427 391 427 348C427 310 406 234 363 120C356 102 353 87 353 74C353 25 390-11 438-11C482-11 517 14 542 64C561 104 571 131 571 144C571 153 566 158 555 158C552 158 537 149 537 137Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_n"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-84-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-84-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-84-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-84-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_n" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-84-NCM-I-1D459"></use></g><g data-mml-node="mi" transform="translate(331,-150) scale(0.707)" data-latex="n"><use data-c="1D45B" xlink:href="#MJX-84-NCM-I-1D45B"></use></g></g></g></g></svg> 层，因为不同文件的 key 区间不会重合，所以一层一个迭代器，同一层的数据文件按照 key 区间从小到大排序后依次遍历即可</li></ul></li>
 <li>2、SeekToFirst / Seek 的逻辑，即是让各个迭代器先各自进行 SeekToFirst / Seek，然后对这些迭代器的读到的首个元素进行比较，获得最小的那个记录</li>
 <li>3、Next 的逻辑，让上次取得最小元素的那个迭代器先 Next 一次，然后对这些迭代器的读到的首个元素进行比较，获得最小的那个记录</li>
 <li>4、对于 2/3 中取到的最小记录，因为存在快照约束以及同一个 key 可能存在多次写入（Put 或 Delete），所以需要：
@@ -291,13 +291,13 @@ public:
 
 const int kNumNonTableCacheFiles = 10;
 
-static int TableCacheSize(const Options&amp; sanitized_options) {  
+static int TableCacheSize(const Options& sanitized_options) {  
   // Reserve ten files or so for other uses and give the rest to TableCache.  
   return sanitized_options.max_open_files - kNumNonTableCacheFiles;  
 }</code></pre>
 <pre class="language-cpp"><code>explicit ShardedLRUCache(size_t capacity) : last_id_(0) {  
   const size_t per_shard = (capacity + (kNumShards - 1)) / kNumShards;  
-  for (int s = 0; s &lt; kNumShards; s++) {  
+  for (int s = 0; s < kNumShards; s++) {  
     shard_[s].SetCapacity(per_shard);  
   }  
 }</code></pre>
@@ -309,13 +309,13 @@ static int TableCacheSize(const Options&amp; sanitized_options) {
 bool fill_cache = true;</code></pre>
 <p class="text-align-justify">块缓存使用的键为 “缓存 id” 拼接上 数据块在文件中的偏移位置：</p>
 <pre class="language-cpp"><code>char cache_key_buffer[16];  
-EncodeFixed64(cache_key_buffer, table-&gt;rep_-&gt;cache_id);  
+EncodeFixed64(cache_key_buffer, table->rep_->cache_id);  
 EncodeFixed64(cache_key_buffer + 8, handle.offset());  
 Slice key(cache_key_buffer, sizeof(cache_key_buffer));  
-cache_handle = block_cache-&gt;Lookup(key);</code></pre>
+cache_handle = block_cache->Lookup(key);</code></pre>
 <p class="text-align-justify">“缓存 id” 和 Table 对象关联，不同 Table 对象的“缓存 id” 不同，所以“缓存 id” 用于在同一个缓存中区分不同数据文件的数据块。ShardedLRUCache 缓存实现以递增整数的方式分配“缓存 id”：</p>
 <pre class="language-cpp"><code>uint64_t NewId() override {  
-  MutexLock l(&amp;id_mutex_);  
+  MutexLock l(&id_mutex_);  
   return ++(last_id_);  
 }</code></pre>
 <p class="text-align-justify">compaction 过程会对输入数据文件进行遍历，并且使用的也是同一个 TableCache 实例和各个 Table 实例，如果这个过程也启用块缓存，则会导致大量非热点的数据块缓存起来，对正常检索造成干扰。所以 <u>compaction 过程会将 fill_cache 设置为 false，关闭 compaction 输入遍历的块缓存</u>。</p>
@@ -357,7 +357,7 @@ size_t block_size = 4 * 1024;</code></pre>
 LRUHandle lru_ GUARDED_BY(mutex_);  
   
 // Dummy head of in-use list.  
-// Entries are in use by clients, and have refs &gt;= 2 and in_cache==true.  
+// Entries are in use by clients, and have refs >= 2 and in_cache==true.  
 LRUHandle in_use_ GUARDED_BY(mutex_);  
   
 HandleTable table_ GUARDED_BY(mutex_);</code></pre>
@@ -399,12 +399,12 @@ public:
  virtual void CreateFilter(const Slice* keys, int n,  
                            std::string* dst) const = 0;  
   
- // &quot;filter&quot; contains the data appended by a preceding call to  
+ // "filter" contains the data appended by a preceding call to  
  // CreateFilter() on this class.  This method must return true if
  // the key was in the list of keys passed to CreateFilter().
  // This method may return true or false if the key was not on the
  // list, but it should aim to return false with a high probability.
- virtual bool KeyMayMatch(const Slice&amp; key, const Slice&amp; filter) const = 0;
+ virtual bool KeyMayMatch(const Slice& key, const Slice& filter) const = 0;
 }
 
 // Return a new filter policy that uses a bloom filter with approximately  
@@ -422,7 +422,7 @@ public:
 // FilterPolicy (like NewBloomFilterPolicy) that does not ignore  
 // trailing spaces in keys.
 const FilterPolicy* NewBloomFilterPolicy(int bits_per_key);</code></pre>
-<pre class="language-cpp"><code>static uint32_t BloomHash(const Slice&amp; key) {  
+<pre class="language-cpp"><code>static uint32_t BloomHash(const Slice& key) {  
   return Hash(key.data(), key.size(), 0xbc9f1d34);  
 }  
   
@@ -438,12 +438,12 @@ class BloomFilterPolicy : public FilterPolicy {
 	2、提高匹配效率：虽然较小的 k 值可能导致过滤器不准确，但在实际应用中，这个影响往往是可以接受的。因为匹配效率会大幅提高，特别是在过滤器大小相对较小时。
 	3、平衡精度和大小：乘以 0.69 的方法可以帮助找到一个合适的 k 值，使得过滤器的大小和精度达到一个平衡。这对于实际应用来说非常重要，因为它可以确保过滤器既能准确又能高效。
     */
-    k_ = static_cast&lt;size_t&gt;(bits_per_key * 0.69);  // 0.69 =~ ln(2)  
-    if (k_ &lt; 1) k_ = 1;  
-    if (k_ &gt; 30) k_ = 30;  
+    k_ = static_cast<size_t>(bits_per_key * 0.69);  // 0.69 =~ ln(2)  
+    if (k_ < 1) k_ = 1;  
+    if (k_ > 30) k_ = 30;  
   }  
   
-  const char* Name() const override { return &quot;leveldb.BuiltinBloomFilter2&quot;; }  
+  const char* Name() const override { return "leveldb.BuiltinBloomFilter2"; }  
   
   void CreateFilter(const Slice* keys, int n, std::string* dst) const override {  
     // Compute bloom filter size (in both bits and bytes)  
@@ -451,33 +451,33 @@ class BloomFilterPolicy : public FilterPolicy {
   
     // For small n, we can see a very high false positive rate.  Fix it  
     // by enforcing a minimum bloom filter length.
-    if (bits &lt; 64) bits = 64;  
+    if (bits < 64) bits = 64;  
   
     size_t bytes = (bits + 7) / 8;  
     bits = bytes * 8;  
   
-    const size_t init_size = dst-&gt;size();  
-    dst-&gt;resize(init_size + bytes, 0);  
-    dst-&gt;push_back(static_cast&lt;char&gt;(k_));  // Remember # of probes in filter  
-    char* array = &amp;(*dst)[init_size];  
-    for (int i = 0; i &lt; n; i++) {  
+    const size_t init_size = dst->size();  
+    dst->resize(init_size + bytes, 0);  
+    dst->push_back(static_cast<char>(k_));  // Remember # of probes in filter  
+    char* array = &(*dst)[init_size];  
+    for (int i = 0; i < n; i++) {  
       // Use double-hashing to generate a sequence of hash values.  
       // See analysis in [Kirsch,Mitzenmacher 2006].
       uint32_t h = BloomHash(keys[i]);  
-      const uint32_t delta = (h &gt;&gt; 17) | (h &lt;&lt; 15);  // Rotate right 17 bits  
-      for (size_t j = 0; j &lt; k_; j++) {  // 算 k_ 次哈希以及设置 k_ 个比特位
+      const uint32_t delta = (h >> 17) | (h << 15);  // Rotate right 17 bits  
+      for (size_t j = 0; j < k_; j++) {  // 算 k_ 次哈希以及设置 k_ 个比特位
         const uint32_t bitpos = h % bits;  
         // 第几个字节？bitpos / 8
         // 目标字节中的第几个比特？ bitpos % 8
-        array[bitpos / 8] |= (1 &lt;&lt; (bitpos % 8));  
+        array[bitpos / 8] |= (1 << (bitpos % 8));  
         h += delta;  // 每次哈希值有变化
       }  
     }  
   }  
   
-  bool KeyMayMatch(const Slice&amp; key, const Slice&amp; bloom_filter) const override {  
+  bool KeyMayMatch(const Slice& key, const Slice& bloom_filter) const override {  
     const size_t len = bloom_filter.size();  
-    if (len &lt; 2) return false;  
+    if (len < 2) return false;  
   
     const char* array = bloom_filter.data();  
     const size_t bits = (len - 1) * 8;  
@@ -485,17 +485,17 @@ class BloomFilterPolicy : public FilterPolicy {
     // Use the encoded k so that we can read filters generated by  
     // bloom filters created using different parameters.
     const size_t k = array[len - 1];  
-    if (k &gt; 30) {  
+    if (k > 30) {  
       // Reserved for potentially new encodings for short bloom filters.  
       // Consider it a match.
       return true;  
     }  
   
     uint32_t h = BloomHash(key);  
-    const uint32_t delta = (h &gt;&gt; 17) | (h &lt;&lt; 15);  // Rotate right 17 bits  
-    for (size_t j = 0; j &lt; k; j++) {  
+    const uint32_t delta = (h >> 17) | (h << 15);  // Rotate right 17 bits  
+    for (size_t j = 0; j < k; j++) {  
       const uint32_t bitpos = h % bits;  
-      if ((array[bitpos / 8] &amp; (1 &lt;&lt; (bitpos % 8))) == 0) return false;  // 任一比特位不匹配，就算不匹配。
+      if ((array[bitpos / 8] & (1 << (bitpos % 8))) == 0) return false;  // 任一比特位不匹配，就算不匹配。
       h += delta;  
     }  
     return true;  
@@ -515,7 +515,7 @@ const uint8_t KEY_VALIDATOR_LOCK_MASK = KEY_VALIDATOR_LOCK_COUNT - 1;
 
 class KeyValidator {
 public:
-    static KeyValidator&amp; Instance() {
+    static KeyValidator& Instance() {
         static KeyValidator instance;
         return instance;
     }
@@ -537,20 +537,20 @@ public:
         }
         std::memset(bitmap_data_, 0, KEY_VALIDATOR_BYTE_SIZE);
         // need to catch bad_alloc ?
-        LOG(WARNING) &lt;&lt; &quot;KeyValidator initialized succ.&quot;;
+        LOG(WARNING) << "KeyValidator initialized succ.";
         return true;
     }
 
     bool Update(uint64_t key_id) {
         if (!bitmap_data_) {
-            LOG(ERROR) &lt;&lt; &quot;bitmap_data not initialized!&quot;;
+            LOG(ERROR) << "bitmap_data not initialized!";
             return false;
         }
         uint64_t byte_index = 0;
         uint8_t bit_mask = 0;
         GetByteIndex(key_id, byte_index, bit_mask);
         // lock to ensure multi-thread write
-        auto&amp; lock = spin_locks[byte_index &amp; KEY_VALIDATOR_LOCK_MASK];
+        auto& lock = spin_locks[byte_index & KEY_VALIDATOR_LOCK_MASK];
         lock.Lock();
         bitmap_data_[byte_index] |= bit_mask;
         lock.UnLock();
@@ -559,21 +559,21 @@ public:
 
     bool IsValid(uint64_t key_id) {
         if (!bitmap_data_) {
-            LOG(ERROR) &lt;&lt; &quot;bitmap_data not initialized!&quot;;
+            LOG(ERROR) << "bitmap_data not initialized!";
             return false;
         }
         uint64_t byte_index = 0;
         uint8_t bit_mask = 0;
         GetByteIndex(key_id, byte_index, bit_mask);
-        return (bitmap_data_[byte_index] &amp; bit_mask);
+        return (bitmap_data_[byte_index] & bit_mask);
     }
 
 
-    bool GetValidKeys(const std::vector&lt;int64_t&gt;&amp; key_list,
-                std::vector&lt;int64_t&gt;&amp; result) {
+    bool GetValidKeys(const std::vector<int64_t>& key_list,
+                std::vector<int64_t>& result) {
         result.clear();
         result.reserve(key_list.size());
-        for (auto&amp; key_id : key_list) {
+        for (auto& key_id : key_list) {
             if (IsValid(key_id)) {
                 result.push_back(key_id);
             }
@@ -583,16 +583,16 @@ public:
 
 private:
     uint8_t* bitmap_data_ = nullptr;
-    std::vector&lt;psarlib::synchronization::SpinLock&gt; spin_locks;
+    std::vector<psarlib::synchronization::SpinLock> spin_locks;
 
     KeyValidator()
     : spin_locks(KEY_VALIDATOR_LOCK_COUNT) {}
 
-    void GetByteIndex(uint64_t key_id, uint64_t&amp; byte_index, uint8_t&amp; bit_mask) {
-        auto value = key_id &amp; KEY_VALIDATOR_VALUE_MASK;
-        byte_index = value &gt;&gt; 3;                          // divide by 8
-        auto bit_index = value &amp; KEY_VALIDATOR_BIT_MASK;  // mod by 8
-        bit_mask = (KEY_VALIDATOR_ONE &lt;&lt; bit_index);
+    void GetByteIndex(uint64_t key_id, uint64_t& byte_index, uint8_t& bit_mask) {
+        auto value = key_id & KEY_VALIDATOR_VALUE_MASK;
+        byte_index = value >> 3;                          // divide by 8
+        auto bit_index = value & KEY_VALIDATOR_BIT_MASK;  // mod by 8
+        bit_mask = (KEY_VALIDATOR_ONE << bit_index);
     }
 };</code></pre>
 <hr>
@@ -663,18 +663,6 @@ private:
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script>hljs.highlightAll();</script>
-
-<script>
-    MathJax = {
-        tex: {
-            inlineMath: [['$', '$'], ['\\(', '\\)']]
-        },
-        svg: {
-            fontCache: 'global'
-        }
-    };
-</script>
-<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 
 
 </body>

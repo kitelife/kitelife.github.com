@@ -6,14 +6,14 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta property="og:title" content="BitPacking">
     <meta property="og:type" content="article">
-    <meta property="og:url" content="https://blog.xiayf.cn/">
+    <meta property="og:url" content="https://bit.xiayf.cn/">
     <meta property="og:site_name" content="BitPacking">
     <meta property="og:description" content="精进，求诸己身">
 
     <title>BitPacking</title>
     <meta name="description" content="精进，求诸己身">
     <link rel="stylesheet" href="/static/main.css">
-    <link rel="canonical" href="https://blog.xiayf.cn/">
+    <link rel="canonical" href="https://bit.xiayf.cn/">
     
     <link crossorigin="" rel="shortcut icon" type="image/x-icon" href="/assets/bits_small.ico">
     
@@ -73,16 +73,16 @@
 <p class="text-align-justify">Goroutine非常轻量，除了为之分配的栈空间，其所占用的内存空间微乎其微。并且其栈空间在开始时非常小，之后随着堆存储空间的按需分配或释放而变化。内部实现上，goroutine会在多个操作系统线程上多路复用。如果一个goroutine阻塞了一个操作系统线程，例如：等待输入，这个线程上的其他goroutine就会迁移到其他线程，这样能继续运行。开发者并不需要关心/担心这些细节。</p>
 <p class="text-align-justify">下面所示程序会输出“Hello from main goroutine”。也可能会输出“Hello from another goroutine”，具体依赖于两个goroutine哪个先结束。</p>
 <pre class="language-golang"><code>func main() {
-    go fmt.Println(&quot;Hello from another goroutine&quot;)
-    fmt.Println(&quot;Hello from main goroutine&quot;)
+    go fmt.Println("Hello from another goroutine")
+    fmt.Println("Hello from main goroutine")
 
     // 至此，程序运行结束，
     // 所有活跃的goroutine被杀死
 }</code></pre>
 <p class="text-align-justify">接下来的这个程序，多数情况下，会输出“Hello from main goroutine”和“Hello from another goroutine”，输出的顺序不确定。但还有另一个可能性是：第二个goroutine运行得极其慢，在程序结束之前都没来得及输出相应的消息。</p>
 <pre class="language-golang"><code>func main() {
-    go fmt.Println(&quot;Hello from another goroutine&quot;)
-    fmt.Println(&quot;Hello from main goroutine&quot;)
+    go fmt.Println("Hello from another goroutine")
+    fmt.Println("Hello from main goroutine")
 
     time.Sleep(time.Second)        // 等待1秒，等另一个goroutine结束
 }</code></pre>
@@ -92,18 +92,18 @@
 func Publish(text string, delay time.Duration) {
     go func() {
         time.Sleep(delay)
-        fmt.Println(&quot;BREAKING NEWS:&quot;, text)
+        fmt.Println("BREAKING NEWS:", text)
     }()    // 注意这里的括号。必须调用匿名函数
 }</code></pre>
 <p class="text-align-justify">你可能会这样使用<code>Publish</code>函数：</p>
 <pre class="language-golang"><code>func main() {
-    Publish(&quot;A goroutine starts a new thread of execution.&quot;, 5*time.Second)
-    fmt.Println(&quot;Let’s hope the news will published before I leave.&quot;)
+    Publish("A goroutine starts a new thread of execution.", 5*time.Second)
+    fmt.Println("Let’s hope the news will published before I leave.")
 
     // 等待发布新闻
     time.Sleep(10 * time.Second)
 
-    fmt.Println(&quot;Ten seconds later: I’m leaving now.&quot;)
+    fmt.Println("Ten seconds later: I’m leaving now.")
 }</code></pre>
 <p class="text-align-justify">这个程序，绝大多数情况下，会输出以下三行，顺序固定，每行输出之间相隔5秒。</p>
 <pre class="language-text"><code>$ go run publish1.go
@@ -115,40 +115,40 @@ Ten seconds later: I’m leaving now.</code></pre>
 <img src='https://yourbasic.org/golang/sushi-conveyor-belt.jpg' title='Sushi conveyor belt' alt='Sushi conveyor belt' width='100%'/>
 <p class="text-align-justify"><a href='http://golang.org/ref/spec#Channel_types'>管道</a>是Go语言的一个构件，提供一种机制用于两个goroutine之间通过传递一个指定类型的值来同步运行和通讯。操作符<code>&lt;-</code>用于指定管道的方向，发送或接收。如果未指定方向，则为双向管道。</p>
 <pre class="language-golang"><code>chan Sushi        // 可用来发送和接收Sushi类型的值
-chan&lt;- float64    // 仅可用来发送float64类型的值
-&lt;-chan int        // 仅可用来接收int类型的值</code></pre>
+chan<- float64    // 仅可用来发送float64类型的值
+<-chan int        // 仅可用来接收int类型的值</code></pre>
 <p class="text-align-justify">管道是引用类型，基于make函数来分配。</p>
 <pre class="language-golang"><code>ic := make(chan int)    // 不带缓冲的int类型管道
 wc := make(chan *Work, 10)    // 带缓冲的Work类型指针管道</code></pre>
 <p class="text-align-justify">如果通过管道发送一个值，则将<code>&lt;-</code>作为二元操作符使用。通过管道接收一个值，则将其作为一元操作符使用：</p>
-<pre class="language-golang"><code>ic &lt;- 3        // 往管道发送3
-work := &lt;-wc    // 从管道接收一个指向Work类型值的指针</code></pre>
+<pre class="language-golang"><code>ic <- 3        // 往管道发送3
+work := <-wc    // 从管道接收一个指向Work类型值的指针</code></pre>
 <p class="text-align-justify">如果管道不带缓冲，发送方会阻塞直到接收方从管道中接收了值。如果管道带缓冲，发送方则会阻塞直到发送的值被拷贝到缓冲区内；如果缓冲区已满，则意味着需要等待直到某个接收方获取到一个值。接收方在有值可以接收之前会一直阻塞。</p>
 <p class="text-align-justify"><strong>关闭管道（Close）</strong></p>
 <p class="text-align-justify"><a href='http://golang.org/ref/spec#Close'>close</a> 函数标志着不会再往某个管道发送值。在调用<code>close</code>之后，并且在之前发送的值都被接收后，接收操作会返回一个零值，不会阻塞。一个多返回值的接收操作会额外返回一个布尔值用来指示返回的值是否发送操作传递的。</p>
 <pre class="language-golang"><code>ch := make(chan string)
 go func() {
-    ch &lt;- &quot;Hello!&quot;
+    ch <- "Hello!"
     close(ch)
 }()
-fmt.Println(&lt;-ch)    // 输出字符串&quot;Hello!&quot;
-fmt.Println(&lt;-ch)    // 输出零值 - 空字符串&quot;&quot;，不会阻塞
-fmt.Println(&lt;-ch)    // 再次打印输出空字符串&quot;&quot;
-v, ok := &lt;-ch        // 变量v的值为空字符串&quot;&quot;，变量ok的值为false</code></pre>
+fmt.Println(<-ch)    // 输出字符串"Hello!"
+fmt.Println(<-ch)    // 输出零值 - 空字符串""，不会阻塞
+fmt.Println(<-ch)    // 再次打印输出空字符串""
+v, ok := <-ch        // 变量v的值为空字符串""，变量ok的值为false</code></pre>
 <p class="text-align-justify">一个带有<code>range</code>子句的<code>for</code>语句会依次读取发往管道的值，直到该管道关闭：</p>
 <pre class="language-golang"><code>func main() {
     // 译注：要想运行该示例，需要先定义类型Sushi，如type Sushi string
-    var ch &lt;-chan Sushi = Producer()
+    var ch <-chan Sushi = Producer()
     for s := range ch {
-        fmt.Println(&quot;Consumed&quot;, s)
+        fmt.Println("Consumed", s)
     }
 }
 
-func Producer() &lt;-chan Sushi {
+func Producer() <-chan Sushi {
     ch := make(chan Sushi)
     go func(){
-        ch &lt;- Sushi(&quot;海老握り&quot;)    // Ebi nigiri
-        ch &lt;- Sushi(&quot;鮪とろ握り&quot;) // Toro nigiri
+        ch <- Sushi("海老握り")    // Ebi nigiri
+        ch <- Sushi("鮪とろ握り") // Toro nigiri
         close(ch)
     }()
     return ch
@@ -157,11 +157,11 @@ func Producer() &lt;-chan Sushi {
 <p class="text-align-justify">下一个示例中，我们让<code>Publish</code>函数返回一个管道 - 用于在发布text变量值时广播一条消息：</p>
 <pre class="language-golang"><code>// 在给定时间过期时，Publish函数会打印text变量值到标准输出
 // 在text变量值发布后，该函数会关闭管道wait
-func Publish(text string, delay time.Duration) (wait &lt;-chan struct{}) {
+func Publish(text string, delay time.Duration) (wait <-chan struct{}) {
     ch := make(chan struct{})
     go func() {
         time.Sleep(delay)
-        fmt.Println(&quot;BREAKING NEWS:&quot;, text)
+        fmt.Println("BREAKING NEWS:", text)
         close(ch)    // 广播 - 一个关闭的管道都会发送一个零值
     }()
     return ch
@@ -169,10 +169,10 @@ func Publish(text string, delay time.Duration) (wait &lt;-chan struct{}) {
 <p class="text-align-justify">注意：我们使用了一个空结构体的管道：<code>struct{}</code>。这明确地指明该管道仅用于发信号，而不是传递数据。</p>
 <p class="text-align-justify">我们可能会这样使用这个函数：</p>
 <pre class="language-golang"><code>func main() {
-    wait := Publish(&quot;Channels let goroutines communicate.&quot;, 5*time.Second)
-    fmt.Println(&quot;Waiting for the news...&quot;)
-    &lt;-wait
-    fmt.Println(&quot;The news is out, time to leave.&quot;)
+    wait := Publish("Channels let goroutines communicate.", 5*time.Second)
+    fmt.Println("Waiting for the news...")
+    <-wait
+    fmt.Println("The news is out, time to leave.")
 }</code></pre>
 <p class="text-align-justify">这个程序会按指定的顺序输出以下三行内容。最后一行在新闻（news）一出就会立即输出。</p>
 <pre class="language-text"><code>$ go run publish2.go
@@ -182,11 +182,11 @@ The news is out, time to leave.</code></pre>
 <h3>4. 死锁</h3>
 <img src='https://yourbasic.org/golang/traffic-jam.jpg' title='traffic jam' alt='traffic jam' width='100%'/>
 <p class="text-align-justify">现在我们在<code>Publish</code>函数中引入一个bug：</p>
-<pre class="language-golang"><code>func Publish(text string, delay time.Duration) (wait &lt;-chan struct{}) {
+<pre class="language-golang"><code>func Publish(text string, delay time.Duration) (wait <-chan struct{}) {
     ch := make(chan struct{})
     go func() {
         time.Sleep(delay)
-        fmt.Println(&quot;BREAKING NEWS:&quot;, text)
+        fmt.Println("BREAKING NEWS:", text)
         // 译注：注意这里将close函数调用注释掉了
         //close(ch)
     }()
@@ -194,11 +194,11 @@ The news is out, time to leave.</code></pre>
 }</code></pre>
 <p class="text-align-justify">主程序还是像之前一样开始运行：输出第一行，然后等待5秒，这时<code>Publish</code>函数开启的goroutine会输出突发新闻（breaking news），然后退出，留下主goroutine独自等待。</p>
 <pre class="language-golang"><code>func main() {
-    wait := Publish(&quot;Channels let goroutines communicate.&quot;, 5*time.Second)
-    fmt.Println(&quot;Waiting for the news...&quot;)
+    wait := Publish("Channels let goroutines communicate.", 5*time.Second)
+    fmt.Println("Waiting for the news...")
     // 译注：注意下面这一句
-    &lt;-wait
-    fmt.Println(&quot;The news is out, time to leave.&quot;)
+    <-wait
+    fmt.Println("The news is out, time to leave.")
 }</code></pre>
 <p class="text-align-justify">此刻之后，程序无法再继续往下执行。众所周知，这种情形即为死锁。</p>
 <blockquote><p class="text-align-justify">死锁是线程之间相互等待，其中任何一个都无法向前运行的情形。</p></blockquote>
@@ -233,7 +233,7 @@ created by addtimer
     }()
     // 译注：注意下面这一行
     n++ // 另一次冲突的访问
-    &lt;-wait
+    <-wait
     fmt.Println(n) // 输出：未指定
 }</code></pre>
 <p class="text-align-justify">代码中的两个goroutine（假设命名为<code>g1</code>和<code>g2</code>）参与了一次竞争，我们无法获知操作会以何种顺序发生。以下是诸多可能中的一种：</p>
@@ -253,9 +253,9 @@ created by addtimer
     go func() {
         n := 0 // 仅为一个goroutine可见的局部变量.
         n++
-        ch &lt;- n // 数据从一个goroutine离开...
+        ch <- n // 数据从一个goroutine离开...
     }()
-    n := &lt;-ch   // ...然后安全到达另一个goroutine.
+    n := <-ch   // ...然后安全到达另一个goroutine.
     n++
     fmt.Println(n) // 输出: 2
 }</code></pre>
@@ -296,7 +296,7 @@ func lockItUp() {
         close(wait)
     }()
     n.Add(1) // 另一个并发访问
-    &lt;-wait
+    <-wait
     fmt.Println(n.Value()) // 输出: 2
 }</code></pre>
 <h3>7. 检测数据竞争</h3>
@@ -305,7 +305,7 @@ func lockItUp() {
     var wg sync.WaitGroup
     wg.Add(5)
     // 译注：注意下面这行代码中的i++
-    for i := 0; i &lt; 5; i++ {
+    for i := 0; i < 5; i++ {
         go func() {
             // 注意下一行代码会输出什么？为什么？
             fmt.Print(i) // 6个goroutine共享变量i
@@ -320,7 +320,7 @@ func lockItUp() {
 <pre class="language-golang"><code>func correct() {
     var wg sync.WaitGroup
     wg.Add(5)
-    for i := 0; i &lt; 5; i++ {
+    for i := 0; i < 5; i++ {
         go func(n int) { // 使用局部变量
             fmt.Print(n)
             wg.Done()
@@ -334,7 +334,7 @@ func lockItUp() {
 <pre class="language-golang"><code>func alsoCorrect() {
     var wg sync.WaitGroup
     wg.Add(5)
-    for i := 0; i &lt; 5; i++ {
+    for i := 0; i < 5; i++ {
         n := i // 为每个闭包创建一个独有的变量
         go func() {
             fmt.Print(n)
@@ -385,13 +385,13 @@ exit status 66</code></pre>
 <p class="text-align-justify"><a href='http://golang.org/ref/spec#Select_statements'>select语句</a>是Go语言并发工具集中的终极工具。select用于从一组可能的通讯中选择一个进一步处理。如果任意一个通讯都可以进一步处理，则从中随机选择一个，执行对应的语句。否则，如果又没有默认分支（default case），select语句则会阻塞，直到其中一个通讯完成。</p>
 <p class="text-align-justify">以下是一个玩具示例，演示<code>select</code>语句如何用于实现一个随机数生成器：</p>
 <pre class="language-golang"><code>// RandomBits函数 返回一个管道，用于产生一个比特随机序列
-func RandomBits() &lt;-chan int {
+func RandomBits() <-chan int {
     ch := make(chan int)
     go func() {
         for {
             select {
-            case ch &lt;- 0: // 注意：分支没有对应的处理语句
-            case ch &lt;- 1:
+            case ch <- 0: // 注意：分支没有对应的处理语句
+            case ch <- 1:
             }
         }
     }()
@@ -399,17 +399,17 @@ func RandomBits() &lt;-chan int {
 }</code></pre>
 <p class="text-align-justify">下面是相对更加实际一点的例子：如何使用select语句为一个操作设置一个时间限制。代码会输出变量news的值或者超时消息，具体依赖于两个接收语句哪个先执行：</p>
 <pre class="language-golang"><code>select {
-case news := &lt;-NewsAgency:
+case news := <-NewsAgency:
     fmt.Println(news)
-case &lt;-time.After(time.Minute):
-    fmt.Println(&quot;Time out: no news in one minute.&quot;)
+case <-time.After(time.Minute):
+    fmt.Println("Time out: no news in one minute.")
 }</code></pre>
 <p class="text-align-justify">函数 <a href='http://golang.org/pkg/time/#After'>time.After</a> 是Go语言标准库的一部分；它会在等待指定时间后将当前的时间发送到返回的管道中。</p>
 <h3>9. 综合所有示例</h3>
 <p class="text-align-justify">花点时间认真研究一下这个示例。如果你完全理解，也就对Go语言中并发的应用方式有了全面的掌握。</p>
 <p class="text-align-justify">这个程序演示了如何将管道用于被任意数量的goroutine发送和接收数据，也演示了如何将select语句用于从多个通讯中选择一个。</p>
 <pre class="language-golang"><code>func main() {
-    people := []string{&quot;Anna&quot;, &quot;Bob&quot;, &quot;Cody&quot;, &quot;Dave&quot;, &quot;Eva&quot;}
+    people := []string{"Anna", "Bob", "Cody", "Dave", "Eva"}
     match := make(chan string, 1) // 为一个未匹配的发送操作提供空间
     wg := new(sync.WaitGroup)
     wg.Add(len(people))
@@ -418,8 +418,8 @@ case &lt;-time.After(time.Minute):
     }
     wg.Wait()
     select {
-    case name := &lt;-match:
-        fmt.Printf(&quot;No one received %s’s message.\n&quot;, name)
+    case name := <-match:
+        fmt.Printf("No one received %s’s message.\n", name)
     default:
         // 没有待处理的发送操作
     }
@@ -428,9 +428,9 @@ case &lt;-time.After(time.Minute):
 // 函数Seek 发送一个name到match管道或从match管道接收一个peer，结束时通知wait group
 func Seek(name string, match chan string, wg *sync.WaitGroup) {
     select {
-    case peer := &lt;-match:
-        fmt.Printf(&quot;%s sent a message to %s.\n&quot;, peer, name)
-    case match &lt;- name:
+    case peer := <-match:
+        fmt.Printf("%s sent a message to %s.\n", peer, name)
+    case match <- name:
         // 等待某个goroutine接收我的消息
     }
     wg.Done()
@@ -450,12 +450,12 @@ No one received Dave’s message.</code></pre>
 <pre class="language-golang"><code>type Vector []float64
 
 // 函数Convolve 计算 w = u * v，其中 w[k] = Σ u[i]*v[j], i + j = k
-// 先决条件：len(u) &gt; 0, len(v) &gt; 0
+// 先决条件：len(u) > 0, len(v) > 0
 func Convolve(u, v Vector) (w Vector) {
     n := len(u) + len(v) - 1
     w = make(Vector, n)
 
-    for k := 0; k &lt; n; k++ {
+    for k := 0; k < n; k++ {
         w[k] = mul(u, v, k)
     }
     return
@@ -465,7 +465,7 @@ func Convolve(u, v Vector) (w Vector) {
 func mul(u, v Vector, k int) (res float64) {
     n := min(k+1, len(u))
     j := min(k, len(v)-1)
-    for i := k - j; i &lt; n; i, j = i+1, j-1 {
+    for i := k - j; i < n; i, j = i+1, j-1 {
         res += u[i] * v[j]
     }
     return
@@ -476,19 +476,19 @@ func mul(u, v Vector, k int) (res float64) {
     w = make(Vector, n)
 
     // 将 w 切分成花费 ~100μs-1ms 用于计算的工作单元
-    size := max(1, 1&lt;&lt;20/n)
+    size := max(1, 1<<20/n)
 
     wg := new(sync.WaitGroup)
     wg.Add(1 + (n-1)/size)
-    for i := 0; i &lt; n &amp;&amp; i &gt;= 0; i += size { // 整型溢出后 i &lt; 0
+    for i := 0; i < n && i >= 0; i += size { // 整型溢出后 i < 0
         j := i + size
-        if j &gt; n || j &lt; 0 { // 整型溢出后 j &lt; 0
+        if j > n || j < 0 { // 整型溢出后 j < 0
             j = n
         }
 
         // 这些goroutine共享内存，但是只读
         go func(i, j int) {
-            for k := i; k &lt; j; k++ {
+            for k := i; k < j; k++ {
                 w[k] = mul(u, v, k)
             }
             wg.Done()
@@ -568,18 +568,6 @@ func mul(u, v Vector, k int) (res float64) {
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script>hljs.highlightAll();</script>
-
-<script>
-    MathJax = {
-        tex: {
-            inlineMath: [['$', '$'], ['\\(', '\\)']]
-        },
-        svg: {
-            fontCache: 'global'
-        }
-    };
-</script>
-<script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 
 
 </body>

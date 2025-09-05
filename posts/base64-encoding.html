@@ -59,7 +59,7 @@
         <p class="post-meta">2016-01-24</p>
     </header>
     <article class="post-content">
-        <p class="text-align-justify">2015年，我们在青云平台上实现了“百度云观测”应用。青云应用本质上是一个iframe，在向iframe服务方发送的请求中会携带一些数据，青云平台会使用<code>Base64 URL</code>对这些数据进行编码，其提供的编码解码算法示例如下：</p>
+        <p class="text-align-justify">2015年，我们在青云平台上实现了“百度云观测”应用。青云应用本质上是一个 iframe，在向 iframe 服务方发送的请求中会携带一些数据，青云平台会使用<code>Base64 URL</code>对这些数据进行编码，其提供的编码解码算法示例如下：</p>
 <pre class="language-php"><code>// php版本
 function base64_URL_encode($data) {
   return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
@@ -68,50 +68,50 @@ function base64_URL_decode($data) {
   return base64_decode(str_pad(strtr($data, '-_', '+/'), 
                             strlen($data) % 4, '=', STR_PAD_RIGHT));
 }</code></pre>
-<p class="text-align-justify">可以看出，<code>Base64 URL</code> 是标准Base64编码的一个变种，分别用 <code>-</code>、<code>_</code> 替换标准Base64编码结果中的 <code>+</code> 、 <code>/</code> ，并删除结果最后的 <code>=</code> 。</p>
+<p class="text-align-justify">可以看出，<code>Base64 URL</code> 是标准 Base64 编码的一个变种，分别用 <code>-</code>、<code>_</code> 替换标准 Base64 编码结果中的 <code>+</code> 、 <code>/</code> ，并删除结果最后的 <code>=</code> 。</p>
 <p class="text-align-justify">在实现 “百度云观测” 青云应用时，我在想：</p>
-<ul><li>为什么要使用Base64编码？</li>
-<li>Base64编码算法是什么样的？</li></ul>
+<ul><li>为什么要使用 Base64 编码？</li>
+<li>Base64 编码算法是什么样的？</li></ul>
 <p class="text-align-justify">本文是围绕这两个问题思考和实践的结果。</p>
-<p class="text-align-justify">我认为，理解Base64或其他类似编码的关键有两点：</p>
-<ol><li>计算机最终存储和执行的是01二进制序列，这个二进制序列的含义则由解码程序/解释程序决定</li>
-<li>很多场景下的数据传输要求数据只能由简单通用的字符组成，比如HTTP协议要求请求的首行和请求头都必须是ASCII编码</li></ol>
-<p class="text-align-justify">以青云应用为例，简单解释这两点。青云平台通过POST一个表单来获取iframe，表单有 <code>payload</code> 和 <code>signature</code> 两项， <code>payload</code> 原本是一个JSON对象，其中的键值可能包含一些特殊字符，比如 <code>&amp;</code>、<code>/</code> 等，由于青云设计的一种通用的请求交互方案，需要考虑iframe服务方服务器端的各种可能实现，有些服务器端实现没有考虑表单值有这些特殊字符，或者POST请求被中间服务器转换成GET请求再次发出，对于URL来说，<code>&amp;</code>、<code>/</code>都是具有特殊含义的字符，所以需要对请求数据进行特殊编码避免这些字符出现 - 数据发送方对数据按规则进行编码，接收方对应地按规则解码数据。</p>
-<h2>Base64编码原理</h2>
-<p class="text-align-justify">Base64编码之所以称为Base64，是因为其使用64个字符来对任意数据进行编码，同理有Base32、Base16编码。标准Base64编码使用的64个字符为：</p>
+<p class="text-align-justify">我认为，理解 Base64 或其他类似编码的关键有两点：</p>
+<ol><li>计算机最终存储和执行的是 01二进制序列，这个二进制序列的含义则由解码程序/解释程序决定</li>
+<li>很多场景下的数据传输要求数据只能由简单通用的字符组成，比如 HTTP 协议要求请求的首行和请求头都必须是ASCII编码</li></ol>
+<p class="text-align-justify">以青云应用为例，简单解释这两点。青云平台通过 POST 一个表单来获取 iframe，表单有 <code>payload</code> 和 <code>signature</code> 两项， <code>payload</code> 原本是一个 JSON 对象，其中的键值可能包含一些特殊字符，比如 <code>&amp;</code>、<code>/</code> 等，由于青云设计的一种通用的请求交互方案，需要考虑 iframe 服务方服务器端的各种可能实现，有些服务器端实现没有考虑表单值有这些特殊字符，或者 POST 请求被中间服务器转换成 GET 请求再次发出，对于 URL 来说，<code>&amp;</code>、<code>/</code>都是具有特殊含义的字符，所以需要对请求数据进行特殊编码避免这些字符出现 - 数据发送方对数据按规则进行编码，接收方对应地按规则解码数据。</p>
+<h2>Base64 编码原理</h2>
+<p class="text-align-justify">Base64 编码之所以称为 Base64，是因为其使用64个字符来对任意数据进行编码，同理有 Base32、Base16 编码。标准 Base64 编码使用的64个字符为：</p>
 <img src='https://i.loli.net/2020/06/14/XHFMRvxfez4OVtr.jpg' title='' alt='' width='500'/>
-<p class="text-align-justify">这64个字符是各种字符编码（比如ASCII编码）所使用字符的子集，基本，并且可打印。唯一有点特殊的是最后两个字符，因对最后两个字符的选择不同，Base64编码又有很多变种，比如Base64 URL编码。</p>
-<p class="text-align-justify">Base64编码本质上是一种将二进制数据转成文本数据的方案。对于非二进制数据，是先将其转换成二进制形式，然后每连续6比特（2的6次方=64）计算其十进制值，根据该值在上面的索引表中找到对应的字符，最终得到一个文本字符串。</p>
+<p class="text-align-justify">这64个字符是各种字符编码（比如 ASCII 编码）所使用字符的子集，基本，并且可打印。唯一有点特殊的是最后两个字符，因对最后两个字符的选择不同，Base64 编码又有很多变种，比如 Base64 URL 编码。</p>
+<p class="text-align-justify">Base64 编码本质上是一种将二进制数据转成文本数据的方案。对于非二进制数据，是先将其转换成二进制形式，然后每连续6比特（2的6次方=64）计算其十进制值，根据该值在上面的索引表中找到对应的字符，最终得到一个文本字符串。</p>
 <p class="text-align-justify">假设我们要对 <code>Hello!</code> 进行Base64编码，按照ASCII表，其转换过程如下图所示：</p>
 <img src='https://i.loli.net/2020/06/14/tJnClQsjc4WMGhB.jpg' title='' alt='' width='100%'/>
-<p class="text-align-justify">可知 <code>Hello!</code> 的Base64编码结果为 <code>SGVsbG8h</code> ，原始字符串长度为6个字符，编码后长度为8个字符，每3个原始字符经Base64编码成4个字符，编码前后长度比4/3，这个长度比很重要 - 比原始字符串长度短，则需要使用更大的编码字符集，这并不我们想要的；长度比越大，则需要传输越多的字符，传输时间越长。Base64应用广泛的原因是在字符集大小与长度比之间取得一个较好的平衡，适用于各种场景。</p>
-<p class="text-align-justify">是不是觉得Base64编码原理很简单？</p>
-<p class="text-align-justify">但这里需要注意一个点：Base64编码是每3个原始字符编码成4个字符，如果原始字符串长度不能被3整除，那怎么办？使用0值来补充原始字符串。</p>
+<p class="text-align-justify">可知 <code>Hello!</code> 的Base64编码结果为 <code>SGVsbG8h</code> ，原始字符串长度为6个字符，编码后长度为8个字符，每3个原始字符经 Base64 编码成4个字符，编码前后长度比4/3，这个长度比很重要 - 比原始字符串长度短，则需要使用更大的编码字符集，这并不我们想要的；长度比越大，则需要传输越多的字符，传输时间越长。Base64 应用广泛的原因是在字符集大小与长度比之间取得一个较好的平衡，适用于各种场景。</p>
+<p class="text-align-justify">是不是觉得 Base64 编码原理很简单？</p>
+<p class="text-align-justify">但这里需要注意一个点：Base64 编码是每3个原始字符编码成4个字符，如果原始字符串长度不能被3整除，那怎么办？使用0值来补充原始字符串。</p>
 <p class="text-align-justify">以 <code>Hello!!</code> 为例，其转换过程为：</p>
 <img src='https://i.loli.net/2020/06/14/5URB8nVis9ljwYe.jpg' title='' alt='' width='100%'/>
 <p class="text-align-justify"><em>注：图表中蓝色背景的二进制0值是额外补充的。</em></p>
-<p class="text-align-justify"><code>Hello!!</code> Base64编码的结果为 <code>SGVsbG8hIQAA</code> 。最后2个零值只是为了Base64编码而补充的，在原始字符中并没有对应的字符，那么Base64编码结果中的最后两个字符 <code>AA</code> 实际不带有效信息，所以需要特殊处理，以免解码错误。</p>
-<p class="text-align-justify">标准Base64编码通常用 <code>=</code> 字符来替换最后的 <code>A</code>，即编码结果为 <code>SGVsbG8hIQ==</code>。因为 <code>=</code> 字符并不在Base64编码索引表中，其意义在于结束符号，在Base64解码时遇到 <code>=</code> 时即可知道一个Base64编码字符串结束。</p>
-<p class="text-align-justify">如果Base64编码字符串不会相互拼接再传输，那么最后的 <code>=</code> 也可以省略，解码时如果发现Base64编码字符串长度不能被4整除，则先补充 <code>=</code> 字符，再解码即可。</p>
-<p class="text-align-justify">为了理解Base64编码解码过程，个人实现了一个非常简陋的Base64编码解码程序，见：<a href='https://github.com/youngsterxyf/xiaBase64'>youngsterxyf/xiaBase64</a>。</p>
-<p class="text-align-justify">由于Base64应用广泛，所以很多编程语言的标准库都内置Base64编码解码包，如：</p>
+<p class="text-align-justify"><code>Hello!!</code> Base64 编码的结果为 <code>SGVsbG8hIQAA</code> 。最后2个零值只是为了 Base64 编码而补充的，在原始字符中并没有对应的字符，那么 Base64 编码结果中的最后两个字符 <code>AA</code> 实际不带有效信息，所以需要特殊处理，以免解码错误。</p>
+<p class="text-align-justify">标准 Base64 编码通常用 <code>=</code> 字符来替换最后的 <code>A</code>，即编码结果为 <code>SGVsbG8hIQ==</code>。因为 <code>=</code> 字符并不在 Base64 编码索引表中，其意义在于结束符号，在 Base64 解码时遇到 <code>=</code> 时即可知道一个 Base64 编码字符串结束。</p>
+<p class="text-align-justify">如果 Base64 编码字符串不会相互拼接再传输，那么最后的 <code>=</code> 也可以省略，解码时如果发现 Base64 编码字符串长度不能被4整除，则先补充 <code>=</code> 字符，再解码即可。</p>
+<p class="text-align-justify">为了理解 Base64 编码解码过程，个人实现了一个非常简陋的 Base64 编码解码程序，见：<a href='https://github.com/youngsterxyf/xiaBase64'>youngsterxyf/xiaBase64</a>。</p>
+<p class="text-align-justify">由于Base64应用广泛，所以很多编程语言的标准库都内置 Base64 编码解码包，如：</p>
 <ul><li>PHP：<a href='http://php.net/manual/en/function.base64-encode.php'>base64_encode</a>、<a href='http://php.net/manual/en/function.base64-decode.php'>base64_decode</a></li>
 <li>Python：<a href='https://docs.python.org/2/library/base64.html'>base64包</a></li>
 <li>Go：<a href='https://golang.org/pkg/encoding/base64/'>encoding/base64</a></li>
 <li>...</li></ul>
-<h2>Base64编码应用</h2>
-<p class="text-align-justify">本文开始提到的青云应用例子只是Base64编码的应用场景之一。由于Base64编码在字符集大小与编码后数据长度之间做了较好的平衡，以及Base64编码变种形式的多样，使得Base64编码的应用场景非常广泛。下面举2个常用常见的例子。</p>
-<h3>HTML内嵌Base64编码图片</h3>
-<p class="text-align-justify">前端在实现页面时，对于一些简单图片，通常会选择将图片内容直接内嵌在页面中，避免不必要的外部资源加载，增大页面加载时间，但是图片数据是二进制数据，该怎么嵌入呢？<a href='http://caniuse.com/#search=Data%20URI'>绝大多数现代浏览器</a>都支持一种名为 <code>Data URLs</code> 的特性，允许使用Base64对图片或其他文件的二进制数据进行编码，将其作为文本字符串嵌入网页中。以百度搜索首页为例，其中语音搜索的图标是个背景图片，其内容以 <code>Data URLs</code> 形式直接写在css中，这个css内容又直接嵌在HTML页面中，如下图所示：</p>
+<h2>Base64 编码应用</h2>
+<p class="text-align-justify">本文开始提到的青云应用例子只是 Base64 编码的应用场景之一。由于Base64编码在字符集大小与编码后数据长度之间做了较好的平衡，以及 Base64 编码变种形式的多样，使得Base64编码的应用场景非常广泛。下面举2个常用常见的例子。</p>
+<h3>HTML 内嵌 Base64 编码图片</h3>
+<p class="text-align-justify">前端在实现页面时，对于一些简单图片，通常会选择将图片内容直接内嵌在页面中，避免不必要的外部资源加载，增大页面加载时间，但是图片数据是二进制数据，该怎么嵌入呢？<a href='http://caniuse.com/#search=Data%20URI'>绝大多数现代浏览器</a>都支持一种名为 <code>Data URLs</code> 的特性，允许使用 Base64 对图片或其他文件的二进制数据进行编码，将其作为文本字符串嵌入网页中。以百度搜索首页为例，其中语音搜索的图标是个背景图片，其内容以 <code>Data URLs</code> 形式直接写在 css 中，这个css内容又直接嵌在 HTML 页面中，如下图所示：</p>
 <img src='https://i.loli.net/2020/06/14/oa6rsPSwgMzv87l.jpg' title='' alt='' width='100%'/>
 <p class="text-align-justify"><code>Data URLs</code> 格式为：<code>url(data:文件类型;编码方式,编码后的文件内容)</code>。</p>
 <p class="text-align-justify">当然，也可以直接基于image标签嵌入图片，如下所示：</p>
-<pre class="language-html"><code><img alt="Embedded Image" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIA..." /></code></pre>
-<p class="text-align-justify">但请注意：如果图片较大，图片的色彩层次比较丰富，则不适合使用这种方式，因为其Base64编码后的字符串非常大，会明显增大HTML页面，影响加载速度。</p>
+<pre class="language-html"><code>&lt;img alt=&quot;Embedded Image&quot; src=&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIA...&quot; /&gt;</code></pre>
+<p class="text-align-justify">但请注意：如果图片较大，图片的色彩层次比较丰富，则不适合使用这种方式，因为其 Base64 编码后的字符串非常大，会明显增大 HTML 页面，影响加载速度。</p>
 <h3>MIME（多用途互联网邮件扩展）</h3>
-<p class="text-align-justify">我们的电子邮件系统，一般是使用SMTP（简单邮件传输协议）将邮件从客户端发往服务器端，邮件客户端使用POP3（邮局协议，第3版本）或IMAP（交互邮件访问协议）从服务器端获取邮件。</p>
-<p class="text-align-justify">SMTP协议一开始是基于纯ASCII文本的，对于二进制文件（比如邮件附件中的图像、声音等）的处理并不好，所以后来新增MIME标准来编码二进制文件，使其能够通过SMTP协议传输。</p>
-<p class="text-align-justify">举例来说，我给自己发封邮件，正文为空，带一个名为hello.txt的附件，内容为 <code>您好！世界！</code>。导出邮件源码，其关键部分如下图所示：</p>
+<p class="text-align-justify">我们的电子邮件系统，一般是使用SMTP（简单邮件传输协议）将邮件从客户端发往服务器端，邮件客户端使用 POP3（邮局协议，第3版本）或 IMAP（交互邮件访问协议）从服务器端获取邮件。</p>
+<p class="text-align-justify">SMTP 协议一开始是基于纯 ASCII 文本的，对于二进制文件（比如邮件附件中的图像、声音等）的处理并不好，所以后来新增 MIME 标准来编码二进制文件，使其能够通过 SMTP 协议传输。</p>
+<p class="text-align-justify">举例来说，我给自己发封邮件，正文为空，带一个名为 hello.txt 的附件，内容为 <code>您好！世界！</code>。导出邮件源码，其关键部分如下图所示：</p>
 <img src='https://i.loli.net/2020/06/14/c8wIeoij9HWt4Ph.jpg' title='' alt='' width='600'/>
 <p class="text-align-justify"><code>MIME-Version: 1.0</code>：表示当前使用MIME标准1.0版本。</p>
 <p class="text-align-justify"><code>Content-Type: text/plain; name=&quot;hello.txt&quot;</code>：表示附件文件名为 <code>hello.txt</code> ，格式为纯文本。</p>

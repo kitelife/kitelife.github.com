@@ -73,11 +73,11 @@ body {
 <pre class="language-cpp"><code>class Version {
 private:
   // List of files per level  
-  std::vector<FileMetaData*> files_[config::kNumLevels];
+  std::vector&lt;FileMetaData*&gt; files_[config::kNumLevels];
 }
 
 struct FileMetaData {  
-  FileMetaData() : refs(0), allowed_seeks(1 << 30), file_size(0) {}  
+  FileMetaData() : refs(0), allowed_seeks(1 &lt;&lt; 30), file_size(0) {}  
   
   int refs;  
   int allowed_seeks;  // Seeks allowed until compaction  
@@ -106,14 +106,14 @@ struct FileMetaData {
 <h3>7.1 major compaction 触发条件</h3>
 <pre class="language-cpp"><code>// We prefer compactions triggered by too much data in a level over  
 // the compactions triggered by seeks.  
-const bool size_compaction = (current_->compaction_score_ >= 1);  
-const bool seek_compaction = (current_->file_to_compact_ != nullptr);</code></pre>
+const bool size_compaction = (current_-&gt;compaction_score_ &gt;= 1);  
+const bool seek_compaction = (current_-&gt;file_to_compact_ != nullptr);</code></pre>
 <pre class="language-cpp"><code>void VersionSet::Finalize(Version* v) {  
   // Precomputed best level for next compaction  
   int best_level = -1;  
   double best_score = -1;  
   
-  for (int level = 0; level < config::kNumLevels - 1; level++) {  
+  for (int level = 0; level &lt; config::kNumLevels - 1; level++) {  
     double score;  
     if (level == 0) {  
       // We treat level-0 specially by bounding the number of files  
@@ -127,23 +127,23 @@ const bool seek_compaction = (current_->file_to_compact_ != nullptr);</code></pr
       // file size is small (perhaps because of a small write-buffer
       // setting, or very high compression ratios, or lots of
       // overwrites/deletions).
-      score = v->files_[level].size() /  
-              static_cast<double>(config::kL0_CompactionTrigger);  
+      score = v-&gt;files_[level].size() /  
+              static_cast&lt;double&gt;(config::kL0_CompactionTrigger);  
     } else {  
       // Compute the ratio of current size to size limit.  
-      const uint64_t level_bytes = TotalFileSize(v->files_[level]);  
+      const uint64_t level_bytes = TotalFileSize(v-&gt;files_[level]);  
       score =  
-          static_cast<double>(level_bytes) / MaxBytesForLevel(options_, level);  
+          static_cast&lt;double&gt;(level_bytes) / MaxBytesForLevel(options_, level);  
     }  
   
-    if (score > best_score) {  
+    if (score &gt; best_score) {  
       best_level = level;  
       best_score = score;  
     }  
   }  
   
-  v->compaction_level_ = best_level;  
-  v->compaction_score_ = best_score;  
+  v-&gt;compaction_level_ = best_level;  
+  v-&gt;compaction_score_ = best_score;  
 }
 
 static double MaxBytesForLevel(const Options* options, int level) {  
@@ -151,7 +151,7 @@ static double MaxBytesForLevel(const Options* options, int level) {
   // the level-0 compaction threshold based on number of files.  
   // Result for both level-0 and level-1
   double result = 10. * 1048576.0;  
-  while (level > 1) {  
+  while (level &gt; 1) {  
     result *= 10;  
     level--;  
   }  
@@ -160,11 +160,11 @@ static double MaxBytesForLevel(const Options* options, int level) {
 <p class="text-align-justify">leveldb 打开/初始化期间或者每次 compaction 结束时都会计算下次 compaction 最应该处理的哪个 level 的数据文件以及紧迫程度（<code>compaction_score_</code>），不过对于 <svg style="vertical-align: -0.375ex;" xmlns="http://www.w3.org/2000/svg" width="5.542ex" height="1.945ex" role="img" focusable="false" viewBox="0 -694 2449.6 859.6" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-41-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-41-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-41-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-41-NCM-N-30" d="M249-22C390-22 460 92 460 320C460 473 428 575 365 625C330 652 291 666 250 666C109 666 39 551 39 320C39 136 88-22 249-22M361 524C368 489 371 425 371 332C371 240 367 172 360 128C347 48 310 8 249 8C226 8 203 17 182 34C155 57 139 104 132 176C129 201 128 253 128 332C128 419 131 480 136 513C145 568 163 603 191 618C213 630 232 636 249 636C314 636 350 583 361 524Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_0"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-41-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-41-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-41-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-41-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_0" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-41-NCM-I-1D459"></use></g><g data-mml-node="mn" transform="translate(331,-150) scale(0.707)" data-latex="0"><use data-c="30" xlink:href="#MJX-41-NCM-N-30"></use></g></g></g></g></svg> 和 其他 level 的计算逻辑有区别：</p>
 <ul><li>1、<svg style="vertical-align: -0.375ex;" xmlns="http://www.w3.org/2000/svg" width="5.542ex" height="1.945ex" role="img" focusable="false" viewBox="0 -694 2449.6 859.6" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-42-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-42-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-42-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-42-NCM-N-30" d="M249-22C390-22 460 92 460 320C460 473 428 575 365 625C330 652 291 666 250 666C109 666 39 551 39 320C39 136 88-22 249-22M361 524C368 489 371 425 371 332C371 240 367 172 360 128C347 48 310 8 249 8C226 8 203 17 182 34C155 57 139 104 132 176C129 201 128 253 128 332C128 419 131 480 136 513C145 568 163 603 191 618C213 630 232 636 249 636C314 636 350 583 361 524Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_0"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-42-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-42-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-42-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-42-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_0" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-42-NCM-I-1D459"></use></g><g data-mml-node="mn" transform="translate(331,-150) scale(0.707)" data-latex="0"><use data-c="30" xlink:href="#MJX-42-NCM-N-30"></use></g></g></g></g></svg> compaction 紧迫程度，取决于文件数和 compaction 阈值（kL0_CompactionTrigger = 4）的倍数</li>
 <li>2、其他 level 则取决于文件占用的存储空间和阈值的倍数，level 越大，阈值越大 - <svg style="vertical-align: -0.339ex;" xmlns="http://www.w3.org/2000/svg" width="5.542ex" height="1.91ex" role="img" focusable="false" viewBox="0 -694 2449.6 844" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-43-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-43-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-43-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-43-NCM-N-31" d="M269 666C228 624 168 603 89 603L89 564C141 564 184 572 217 588L217 82C217 64 213 52 204 47C195 42 170 39 130 39L95 39L95 0C120 2 174 3 257 3C340 3 394 2 419 0L419 39L384 39C343 39 318 42 310 47C302 52 297 64 297 82L297 636C297 660 295 666 269 666Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_1"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-43-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-43-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-43-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-43-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_1" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-43-NCM-I-1D459"></use></g><g data-mml-node="mn" transform="translate(331,-150) scale(0.707)" data-latex="1"><use data-c="31" xlink:href="#MJX-43-NCM-N-31"></use></g></g></g></g></svg> 阈值为 <code>10. * 1048576.0</code> 字节（10MB），相邻层之间的阈值为 10 倍关系。</li></ul>
-<pre class="language-cpp"><code>bool Version::UpdateStats(const GetStats& stats) {  
+<pre class="language-cpp"><code>bool Version::UpdateStats(const GetStats&amp; stats) {  
   FileMetaData* f = stats.seek_file;  
   if (f != nullptr) {  
-    f->allowed_seeks--;  // allowed_seeks 初始值 1 << 30
-    if (f->allowed_seeks <= 0 && file_to_compact_ == nullptr) {  
+    f-&gt;allowed_seeks--;  // allowed_seeks 初始值 1 &lt;&lt; 30
+    if (f-&gt;allowed_seeks &lt;= 0 &amp;&amp; file_to_compact_ == nullptr) {  
       file_to_compact_ = f;  
       file_to_compact_level_ = stats.seek_file_level;  
       return true;  
@@ -189,13 +189,13 @@ private:
   Version* input_version_;  // 当前对哪个 Version 做 compaction？
   VersionEdit edit_; // 每次 compaction 会产生一个新的 Version
 
-  // Each compaction reads inputs from "level_" and "level_+1"
+  // Each compaction reads inputs from &quot;level_&quot; and &quot;level_+1&quot;
   // compaction 只会在目标层和相邻下一层之间进行
-  std::vector<FileMetaData*> inputs_[2];  // The two sets of inputs
+  std::vector&lt;FileMetaData*&gt; inputs_[2];  // The two sets of inputs
 
   // State used to check for number of overlapping grandparent files  
   // (parent == level_ + 1, grandparent == level_ + 2)  
-  std::vector<FileMetaData*> grandparents_;  // 用于判断是否可以将 level 层的文件直接移动到 level+1 层，见 bool Compaction::IsTrivialMove() const
+  std::vector&lt;FileMetaData*&gt; grandparents_;  // 用于判断是否可以将 level 层的文件直接移动到 level+1 层，见 bool Compaction::IsTrivialMove() const
   size_t grandparent_index_;  // Index in grandparent_starts_  
   bool seen_key_;             // Some output key has been seen  
   int64_t overlapped_bytes_;  // Bytes of overlap between current output  
@@ -203,10 +203,10 @@ private:
 
   // State for implementing IsBaseLevelForKey  
   
-  // level_ptrs_ holds indices into input_version_->levels_: our state  
+  // level_ptrs_ holds indices into input_version_-&gt;levels_: our state  
   // is that we are positioned at one of the file ranges for each  
   // higher level than the ones involved in this compaction (i.e. for  
-  // all L >= level_ + 2).  
+  // all L &gt;= level_ + 2).  
   size_t level_ptrs_[config::kNumLevels];
 }</code></pre>
 <pre class="language-cpp"><code>Compaction* VersionSet::PickCompaction() {  
@@ -215,47 +215,47 @@ private:
   
   // We prefer compactions triggered by too much data in a level over  
   // the compactions triggered by seeks.
-  const bool size_compaction = (current_->compaction_score_ >= 1);
-  const bool seek_compaction = (current_->file_to_compact_ != nullptr);  
+  const bool size_compaction = (current_-&gt;compaction_score_ &gt;= 1);
+  const bool seek_compaction = (current_-&gt;file_to_compact_ != nullptr);  
   if (size_compaction) {  
-    level = current_->compaction_level_;  
-    assert(level >= 0);  
-    assert(level + 1 < config::kNumLevels);  
+    level = current_-&gt;compaction_level_;  
+    assert(level &gt;= 0);  
+    assert(level + 1 &lt; config::kNumLevels);  
     c = new Compaction(options_, level);  
   
     // Pick the first file that comes after compact_pointer_[level]  
-    for (size_t i = 0; i < current_->files_[level].size(); i++) {  
-      FileMetaData* f = current_->files_[level][i];  
+    for (size_t i = 0; i &lt; current_-&gt;files_[level].size(); i++) {  
+      FileMetaData* f = current_-&gt;files_[level][i];  
       if (compact_pointer_[level].empty() ||  
-          icmp_.Compare(f->largest.Encode(), compact_pointer_[level]) > 0) {  
-        c->inputs_[0].push_back(f);  // 选择该 level 上次 compaction 的文件的下一个文件
+          icmp_.Compare(f-&gt;largest.Encode(), compact_pointer_[level]) &gt; 0) {  
+        c-&gt;inputs_[0].push_back(f);  // 选择该 level 上次 compaction 的文件的下一个文件
         break;  
       }  
     }  
-    if (c->inputs_[0].empty()) {  
+    if (c-&gt;inputs_[0].empty()) {  
       // Wrap-around to the beginning of the key space  
-      c->inputs_[0].push_back(current_->files_[level][0]);  // 如果该 level 整个 key 空间都 compaction 过，则从头开始选择第一个文件
+      c-&gt;inputs_[0].push_back(current_-&gt;files_[level][0]);  // 如果该 level 整个 key 空间都 compaction 过，则从头开始选择第一个文件
     }  
   } else if (seek_compaction) {  
-    level = current_->file_to_compact_level_;  
+    level = current_-&gt;file_to_compact_level_;  
     c = new Compaction(options_, level);  
-    c->inputs_[0].push_back(current_->file_to_compact_);  
+    c-&gt;inputs_[0].push_back(current_-&gt;file_to_compact_);  
   } else {  
     return nullptr;  
   }  
   
-  c->input_version_ = current_;  
-  c->input_version_->Ref();  
+  c-&gt;input_version_ = current_;  
+  c-&gt;input_version_-&gt;Ref();  
   
   // Files in level 0 may overlap each other, so pick up all overlapping ones  
   if (level == 0) {  
     InternalKey smallest, largest;  
-    GetRange(c->inputs_[0], &smallest, &largest);  
+    GetRange(c-&gt;inputs_[0], &amp;smallest, &amp;largest);  
     // Note that the next call will discard the file we placed in  
-    // c->inputs_[0] earlier and replace it with an overlapping set
+    // c-&gt;inputs_[0] earlier and replace it with an overlapping set
     // which will include the picked file.
-    current_->GetOverlappingInputs(0, &smallest, &largest, &c->inputs_[0]);  
-    assert(!c->inputs_[0].empty());  
+    current_-&gt;GetOverlappingInputs(0, &amp;smallest, &amp;largest, &amp;c-&gt;inputs_[0]);  
+    assert(!c-&gt;inputs_[0].empty());  
   }  
   
   SetupOtherInputs(c);  
@@ -270,32 +270,32 @@ private:
 <li>2)、<svg style="vertical-align: -0.339ex;" xmlns="http://www.w3.org/2000/svg" width="5.542ex" height="1.91ex" role="img" focusable="false" viewBox="0 -694 2449.6 844" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-50-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-50-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-50-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-50-NCM-N-31" d="M269 666C228 624 168 603 89 603L89 564C141 564 184 572 217 588L217 82C217 64 213 52 204 47C195 42 170 39 130 39L95 39L95 0C120 2 174 3 257 3C340 3 394 2 419 0L419 39L384 39C343 39 318 42 310 47C302 52 297 64 297 82L297 636C297 660 295 666 269 666Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_1"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-50-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-50-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-50-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-50-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_1" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-50-NCM-I-1D459"></use></g><g data-mml-node="mn" transform="translate(331,-150) scale(0.707)" data-latex="1"><use data-c="31" xlink:href="#MJX-50-NCM-N-31"></use></g></g></g></g></svg> ~ <svg style="vertical-align: -0.357ex;" xmlns="http://www.w3.org/2000/svg" width="5.702ex" height="1.927ex" role="img" focusable="false" viewBox="0 -694 2520.3 851.8" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-51-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-51-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-51-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-51-NCM-I-1D45B" d="M537 137C514 58 481 18 440 18C427 18 420 28 420 47C420 61 426 84 438 115C478 224 498 296 498 333C498 403 451 442 381 442C322 442 271 416 230 363C222 407 187 442 136 442C80 442 58 390 44 345C34 313 29 294 29 287C29 278 34 273 45 273C50 273 53 274 56 276C61 285 64 292 65 299C83 375 106 413 133 413C151 413 160 399 160 371C160 358 155 331 144 290L87 63C84 50 78 24 78 19C78-1 89-11 111-11C130-11 144-1 151 19C153 24 159 49 170 92L191 181L221 295C232 318 249 341 270 365C299 397 335 413 378 413C411 413 427 391 427 348C427 310 406 234 363 120C356 102 353 87 353 74C353 25 390-11 438-11C482-11 517 14 542 64C561 104 571 131 571 144C571 153 566 158 555 158C552 158 537 149 537 137Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_n"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-51-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-51-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-51-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-51-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_n" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-51-NCM-I-1D459"></use></g><g data-mml-node="mi" transform="translate(331,-150) scale(0.707)" data-latex="n"><use data-c="1D45B" xlink:href="#MJX-51-NCM-I-1D45B"></use></g></g></g></g></svg> 层的数据库文件 key 区间不会有重合，所以比较简单，按照 key 区间先做一下排序，然后逐个文件遍历读取就可以。</li></ul></li></ul></li></ul>
 <pre class="language-cpp"><code>Iterator* VersionSet::MakeInputIterator(Compaction* c) {  
   ReadOptions options;  
-  options.verify_checksums = options_->paranoid_checks;  
+  options.verify_checksums = options_-&gt;paranoid_checks;  
   options.fill_cache = false;  
   
   // Level-0 files have to be merged together.  For other levels,  
   // we will make a concatenating iterator per level.  // TODO(opt): use concatenating iterator for level-0 if there is no overlap  
-  const int space = (c->level() == 0 ? c->inputs_[0].size() + 1 : 2);  
+  const int space = (c-&gt;level() == 0 ? c-&gt;inputs_[0].size() + 1 : 2);  
   Iterator** list = new Iterator*[space];  
   int num = 0;  
-  for (int which = 0; which < 2; which++) {  
-    if (!c->inputs_[which].empty()) {  
-      if (c->level() + which == 0) {  
-        const std::vector<FileMetaData*>& files = c->inputs_[which];  
-        for (size_t i = 0; i < files.size(); i++) {  
-          list[num++] = table_cache_->NewIterator(options, files[i]->number,  
-                                                  files[i]->file_size);  
+  for (int which = 0; which &lt; 2; which++) {  
+    if (!c-&gt;inputs_[which].empty()) {  
+      if (c-&gt;level() + which == 0) {  
+        const std::vector&lt;FileMetaData*&gt;&amp; files = c-&gt;inputs_[which];  
+        for (size_t i = 0; i &lt; files.size(); i++) {  
+          list[num++] = table_cache_-&gt;NewIterator(options, files[i]-&gt;number,  
+                                                  files[i]-&gt;file_size);  
         }  
       } else {  
         // Create concatenating iterator for the files from this level  
         list[num++] = NewTwoLevelIterator(  
-            new Version::LevelFileNumIterator(icmp_, &c->inputs_[which]),  
-            &GetFileIterator, table_cache_, options);  
+            new Version::LevelFileNumIterator(icmp_, &amp;c-&gt;inputs_[which]),  
+            &amp;GetFileIterator, table_cache_, options);  
       }  
     }  
   }  
-  assert(num <= space);  
-  Iterator* result = NewMergingIterator(&icmp_, list, num);  
+  assert(num &lt;= space);  
+  Iterator* result = NewMergingIterator(&amp;icmp_, list, num);  
   delete[] list;  
   return result;  
 }</code></pre>
@@ -312,14 +312,14 @@ private:
 <p class="text-align-justify">> - 如果发现当前处理的 IK 的 UK 与前一次处理的 IK 的 UK 不相同，则重置状态位。</p></blockquote>
 <pre class="language-cpp"><code>// Handle key/value, add to state, etc.  
 bool drop = false;  
-if (!ParseInternalKey(key, &ikey)) {  
+if (!ParseInternalKey(key, &amp;ikey)) {  
   // Do not hide error keys  
   current_user_key.clear();  
   has_current_user_key = false;  
   last_sequence_for_key = kMaxSequenceNumber;  
 } else {  
   if (!has_current_user_key ||  
-      user_comparator()->Compare(ikey.user_key, Slice(current_user_key)) !=  
+      user_comparator()-&gt;Compare(ikey.user_key, Slice(current_user_key)) !=  
           0) {  
     // First occurrence of this user key  
     current_user_key.assign(ikey.user_key.data(), ikey.user_key.size());  
@@ -327,12 +327,12 @@ if (!ParseInternalKey(key, &ikey)) {
     last_sequence_for_key = kMaxSequenceNumber;  
   }  
   
-  if (last_sequence_for_key <= compact->smallest_snapshot) {  
+  if (last_sequence_for_key &lt;= compact-&gt;smallest_snapshot) {  
     // Hidden by an newer entry for same user key  
     drop = true;  // (A)  
-  } else if (ikey.type == kTypeDeletion &&  
-             ikey.sequence <= compact->smallest_snapshot &&  
-             compact->compaction->IsBaseLevelForKey(ikey.user_key)) {  
+  } else if (ikey.type == kTypeDeletion &amp;&amp;  
+             ikey.sequence &lt;= compact-&gt;smallest_snapshot &amp;&amp;  
+             compact-&gt;compaction-&gt;IsBaseLevelForKey(ikey.user_key)) {  
     // For this user key:  
     // (1) there is no data in higher levels
     // (2) data in lower levels will have larger sequence numbers
@@ -345,18 +345,18 @@ if (!ParseInternalKey(key, &ikey)) {
   
   last_sequence_for_key = ikey.sequence;  
 }</code></pre>
-<pre class="language-cpp"><code>int InternalKeyComparator::Compare(const Slice& akey, const Slice& bkey) const {  
+<pre class="language-cpp"><code>int InternalKeyComparator::Compare(const Slice&amp; akey, const Slice&amp; bkey) const {  
   // Order by:  
   //    increasing user key (according to user-supplied comparator)
   //    decreasing sequence number
   //    decreasing type (though sequence# should be enough to disambiguate)
-  int r = user_comparator_->Compare(ExtractUserKey(akey), ExtractUserKey(bkey));  // 先比较用户 key 部分
+  int r = user_comparator_-&gt;Compare(ExtractUserKey(akey), ExtractUserKey(bkey));  // 先比较用户 key 部分
   if (r == 0) {  // 如果用户key 相同，则比较序列号，序列号大的排在前面
     const uint64_t anum = DecodeFixed64(akey.data() + akey.size() - 8);  
     const uint64_t bnum = DecodeFixed64(bkey.data() + bkey.size() - 8);  
-    if (anum > bnum) {  
+    if (anum &gt; bnum) {  
       r = -1;  
-    } else if (anum < bnum) {  
+    } else if (anum &lt; bnum) {  
       r = +1;  
     }  
   }  
@@ -381,58 +381,58 @@ size_t max_file_size = 2 * 1024 * 1024;</code></pre>
 <li>“WAL log” 文件保留最新的两个即可（memtable 和不可变 memtable 对应的“WAL log”文件）</li></ul></li></ul></li></ul>
 <pre class="language-cpp"><code>Status DBImpl::InstallCompactionResults(CompactionState* compact) {  
   mutex_.AssertHeld();  
-  Log(options_.info_log, "Compacted %d@%d + %d@%d files => %lld bytes",  
-      compact->compaction->num_input_files(0), compact->compaction->level(),  
-      compact->compaction->num_input_files(1), compact->compaction->level() + 1,  
-      static_cast<long long>(compact->total_bytes));  
+  Log(options_.info_log, &quot;Compacted %d@%d + %d@%d files =&gt; %lld bytes&quot;,  
+      compact-&gt;compaction-&gt;num_input_files(0), compact-&gt;compaction-&gt;level(),  
+      compact-&gt;compaction-&gt;num_input_files(1), compact-&gt;compaction-&gt;level() + 1,  
+      static_cast&lt;long long&gt;(compact-&gt;total_bytes));  
   
   // Add compaction outputs  
-  compact->compaction->AddInputDeletions(compact->compaction->edit());  
-  const int level = compact->compaction->level();  
-  for (size_t i = 0; i < compact->outputs.size(); i++) {  
-    const CompactionState::Output& out = compact->outputs[i];  
-    compact->compaction->edit()->AddFile(level + 1, out.number, out.file_size,  
+  compact-&gt;compaction-&gt;AddInputDeletions(compact-&gt;compaction-&gt;edit());  
+  const int level = compact-&gt;compaction-&gt;level();  
+  for (size_t i = 0; i &lt; compact-&gt;outputs.size(); i++) {  
+    const CompactionState::Output&amp; out = compact-&gt;outputs[i];  
+    compact-&gt;compaction-&gt;edit()-&gt;AddFile(level + 1, out.number, out.file_size,  
                                          out.smallest, out.largest);  
   }  
-  return versions_->LogAndApply(compact->compaction->edit(), &mutex_);  
+  return versions_-&gt;LogAndApply(compact-&gt;compaction-&gt;edit(), &amp;mutex_);  
 }</code></pre>
 <pre class="language-cpp"><code>void DBImpl::RemoveObsoleteFiles() {  
   mutex_.AssertHeld();  
   
   if (!bg_error_.ok()) {  
-    // After a background error, we don't know whether a new version may  
+    // After a background error, we don&apos;t know whether a new version may  
     // or may not have been committed, so we cannot safely garbage collect.
     return;  
   }  
   
   // Make a set of all of the live files  
-  std::set<uint64_t> live = pending_outputs_;  
-  versions_->AddLiveFiles(&live);  
+  std::set&lt;uint64_t&gt; live = pending_outputs_;  
+  versions_-&gt;AddLiveFiles(&amp;live);  
   
-  std::vector<std::string> filenames;  
-  env_->GetChildren(dbname_, &filenames);  // Ignoring errors on purpose  
+  std::vector&lt;std::string&gt; filenames;  
+  env_-&gt;GetChildren(dbname_, &amp;filenames);  // Ignoring errors on purpose  
   uint64_t number;  
   FileType type;  
-  std::vector<std::string> files_to_delete;  
-  for (std::string& filename : filenames) {  
-    if (ParseFileName(filename, &number, &type)) {  
+  std::vector&lt;std::string&gt; files_to_delete;  
+  for (std::string&amp; filename : filenames) {  
+    if (ParseFileName(filename, &amp;number, &amp;type)) {  
       bool keep = true;  
       switch (type) {  
         case kLogFile:  
-          keep = ((number >= versions_->LogNumber()) ||  
-                  (number == versions_->PrevLogNumber()));  
+          keep = ((number &gt;= versions_-&gt;LogNumber()) ||  
+                  (number == versions_-&gt;PrevLogNumber()));  
           break;  
         case kDescriptorFile:  
-          // Keep my manifest file, and any newer incarnations'  
+          // Keep my manifest file, and any newer incarnations&apos;  
           // (in case there is a race that allows other incarnations)
-		  keep = (number >= versions_->ManifestFileNumber());  
+		  keep = (number &gt;= versions_-&gt;ManifestFileNumber());  
           break;  
         case kTableFile:  
           keep = (live.find(number) != live.end());  
           break;  
         case kTempFile:  
           // Any temp files that are currently being written to must  
-          // be recorded in pending_outputs_, which is inserted into "live"
+          // be recorded in pending_outputs_, which is inserted into &quot;live&quot;
           keep = (live.find(number) != live.end());  
           break;  
         case kCurrentFile:  
@@ -445,10 +445,10 @@ size_t max_file_size = 2 * 1024 * 1024;</code></pre>
       if (!keep) {  
         files_to_delete.push_back(std::move(filename));  
         if (type == kTableFile) {  
-          table_cache_->Evict(number);  
+          table_cache_-&gt;Evict(number);  
         }  
-        Log(options_.info_log, "Delete type=%d #%lld\n", static_cast<int>(type),  
-            static_cast<unsigned long long>(number));  
+        Log(options_.info_log, &quot;Delete type=%d #%lld\n&quot;, static_cast&lt;int&gt;(type),  
+            static_cast&lt;unsigned long long&gt;(number));  
       }  
     }  
   }  
@@ -457,8 +457,8 @@ size_t max_file_size = 2 * 1024 * 1024;</code></pre>
   // have unique names which will not collide with newly created files and
   // are therefore safe to delete while allowing other threads to proceed.
   mutex_.Unlock();  
-  for (const std::string& filename : files_to_delete) {  
-    env_->RemoveFile(dbname_ + "/" + filename);  
+  for (const std::string&amp; filename : files_to_delete) {  
+    env_-&gt;RemoveFile(dbname_ + &quot;/&quot; + filename);  
   }  
   mutex_.Lock();  
 }</code></pre>
@@ -510,20 +510,20 @@ void VersionEdit::EncodeTo(std::string* dst) const {
     PutVarint64(dst, last_sequence_);  
   }  
   
-  for (size_t i = 0; i < compact_pointers_.size(); i++) {  
+  for (size_t i = 0; i &lt; compact_pointers_.size(); i++) {  
     PutVarint32(dst, kCompactPointer);  
     PutVarint32(dst, compact_pointers_[i].first);  // level  
     PutLengthPrefixedSlice(dst, compact_pointers_[i].second.Encode());  
   }  
   
-  for (const auto& deleted_file_kvp : deleted_files_) {  
+  for (const auto&amp; deleted_file_kvp : deleted_files_) {  
     PutVarint32(dst, kDeletedFile);  
     PutVarint32(dst, deleted_file_kvp.first);   // level  
     PutVarint64(dst, deleted_file_kvp.second);  // file number  
   }  
   
-  for (size_t i = 0; i < new_files_.size(); i++) {  
-    const FileMetaData& f = new_files_[i].second;  
+  for (size_t i = 0; i &lt; new_files_.size(); i++) {  
+    const FileMetaData&amp; f = new_files_[i].second;  
     PutVarint32(dst, kNewFile);  
     PutVarint32(dst, new_files_[i].first);  // level  
     PutVarint64(dst, f.number);  
@@ -546,9 +546,9 @@ void VersionEdit::EncodeTo(std::string* dst) const {
 public:
   // Add the specified file at the specified number.  
   // REQUIRES: This version has not been saved (see VersionSet::SaveTo)  
-  // REQUIRES: "smallest" and "largest" are smallest and largest keys in file  
+  // REQUIRES: &quot;smallest&quot; and &quot;largest&quot; are smallest and largest keys in file  
   void AddFile(int level, uint64_t file, uint64_t file_size,  
-               const InternalKey& smallest, const InternalKey& largest) {  
+               const InternalKey&amp; smallest, const InternalKey&amp; largest) {  
     FileMetaData f;  
     f.number = file;  
     f.file_size = file_size;  
@@ -557,13 +557,13 @@ public:
     new_files_.push_back(std::make_pair(level, f));  
   }  
   
-  // Delete the specified "file" from the specified "level".  
+  // Delete the specified &quot;file&quot; from the specified &quot;level&quot;.  
   void RemoveFile(int level, uint64_t file) {  
     deleted_files_.insert(std::make_pair(level, file));  
   }
 
 private:
-  typedef std::set<std::pair<int, uint64_t>> DeletedFileSet;  
+  typedef std::set&lt;std::pair&lt;int, uint64_t&gt;&gt; DeletedFileSet;  
   
   std::string comparator_;  
   uint64_t log_number_;  
@@ -576,16 +576,16 @@ private:
   bool has_next_file_number_;  
   bool has_last_sequence_;  
   
-  std::vector<std::pair<int, InternalKey>> compact_pointers_;  
+  std::vector&lt;std::pair&lt;int, InternalKey&gt;&gt; compact_pointers_;  
   DeletedFileSet deleted_files_;  
-  std::vector<std::pair<int, FileMetaData>> new_files_;
+  std::vector&lt;std::pair&lt;int, FileMetaData&gt;&gt; new_files_;
 }</code></pre>
 <p class="text-align-justify">VersionEdit 是 Version 版本信息处于编辑/变更的状态，是 Version 版本信息操作的一种日志结构，比如：</p>
 <ul><li>compaction 过程涉及对最新版本的两个 level 可删除文件和新增文件的记录，以及 compaction 暂存状态的记录。</li>
 <li>持久化记录到 MANIFEST 文件中，用于恢复数据库的状态。</li></ul>
 <pre class="language-cpp"><code>class VersionSet {
 public:
-  VersionSet(const std::string& dbname, const Options* options,  
+  VersionSet(const std::string&amp; dbname, const Options* options,  
            TableCache* table_cache, const InternalKeyComparator*);
 
   // Apply *edit to the current version to form a new descriptor that  
@@ -614,7 +614,7 @@ public:
   // describes the compaction.  Caller should delete the result.  
   Compaction* PickCompaction();
 
-  // Create an iterator that reads over the compaction inputs for "*c".  
+  // Create an iterator that reads over the compaction inputs for &quot;*c&quot;.  
   // The caller should delete the iterator when no longer needed.  
   Iterator* MakeInputIterator(Compaction* c);
 
@@ -646,11 +646,11 @@ public:
   // Lookup the value for key.  If found, store it in *val and  
   // return OK.  Else return a non-OK status.  Fills *stats.  
   // REQUIRES: lock is not held  
-  Status Get(const ReadOptions&, const LookupKey& key, std::string* val,  
+  Status Get(const ReadOptions&amp;, const LookupKey&amp; key, std::string* val,  
              GetStats* stats);
 
 private:
-  Iterator* NewConcatenatingIterator(const ReadOptions&, int level) const;
+  Iterator* NewConcatenatingIterator(const ReadOptions&amp;, int level) const;
 
   VersionSet* vset_;  // VersionSet to which this Version belongs  
   Version* next_;     // Next version in linked list  
@@ -658,14 +658,14 @@ private:
   int refs_;          // Number of live refs to this version  
   
   // List of files per level  
-  std::vector<FileMetaData*> files_[config::kNumLevels];  
+  std::vector&lt;FileMetaData*&gt; files_[config::kNumLevels];  
   
   // Next file to compact based on seek stats.  
   FileMetaData* file_to_compact_;  
   int file_to_compact_level_;  
   
   // Level that should be compacted next and its compaction score.  
-  // Score < 1 means compaction is not strictly needed.  These fields  
+  // Score &lt; 1 means compaction is not strictly needed.  These fields  
   // are initialized by Finalize().  
   double compaction_score_;  
   int compaction_level_;
@@ -675,8 +675,8 @@ private:
 <pre class="language-cpp"><code>void Version::Ref() { ++refs_; }  
   
 void Version::Unref() {  
-  assert(this != &vset_->dummy_versions_);  
-  assert(refs_ >= 1);  
+  assert(this != &amp;vset_-&gt;dummy_versions_);  
+  assert(refs_ &gt;= 1);  
   --refs_;  
   if (refs_ == 0) {
     delete this;  
@@ -687,16 +687,16 @@ Version::~Version() {
   assert(refs_ == 0);  
   
   // Remove from linked list  
-  prev_->next_ = next_;  
-  next_->prev_ = prev_;  
+  prev_-&gt;next_ = next_;  
+  next_-&gt;prev_ = prev_;  
   
   // Drop references to files  
-  for (int level = 0; level < config::kNumLevels; level++) {  
-    for (size_t i = 0; i < files_[level].size(); i++) {  
+  for (int level = 0; level &lt; config::kNumLevels; level++) {  
+    for (size_t i = 0; i &lt; files_[level].size(); i++) {  
       FileMetaData* f = files_[level][i];  
-      assert(f->refs > 0);  
-      f->refs--;  
-      if (f->refs <= 0) {  
+      assert(f-&gt;refs &gt; 0);  
+      f-&gt;refs--;  
+      if (f-&gt;refs &lt;= 0) {  
         delete f;  
       }  
     }  

@@ -74,9 +74,9 @@ body {
 <p class="text-align-justify"><em>介绍threading/multiprocessing、生产者/消费者的真实示例代码：</em></p>
 <pre class="language-python"><code># coding: utf-8
 # Example.py
-'''
+&apos;&apos;&apos;
 标准的多线程生产者/消费者模式
-'''
+&apos;&apos;&apos;
 
 import time 
 import threading 
@@ -92,13 +92,13 @@ class Consumer(threading.Thread):
       # queue.get() 会阻塞当前线程，直到获取到一个数据项
       msg = self._queue.get() 
       # 检查当前消息是否是个“毒药丸”
-      if isinstance(msg, str) and msg == 'quit':
+      if isinstance(msg, str) and msg == &apos;quit&apos;:
         # 如果是，则退出循环
         break
       # “处理” (这里是打印)从队列中取出的数据项
-      print "I'm a thread, and I received %s!!" % msg
+      print &quot;I&apos;m a thread, and I received %s!!&quot; % msg
     # 我始终是这么的友好
-    print 'Bye byes!'
+    print &apos;Bye byes!&apos;
 
 
 def Producer():
@@ -113,19 +113,19 @@ def Producer():
   # 变量，用于追踪开始的时间
   start_time = time.time() 
   # 在5秒之内
-  while time.time() - start_time < 5: 
+  while time.time() - start_time &lt; 5: 
     # “生产”一块工作，放入队列中，由消费者来处理
-    queue.put('something at %s' % time.time())
+    queue.put(&apos;something at %s&apos; % time.time())
     # 睡眠一会儿，以避免过多的消息
     time.sleep(1)
 
   # 这是杀死线程的“毒药丸”方式
-  queue.put('quit')
+  queue.put(&apos;quit&apos;)
   # 等待线程关闭
   worker.join()
 
 
-if __name__ == '__main__':
+if __name__ == &apos;__main__&apos;:
   Producer()</code></pre>
 <p class="text-align-justify">嗯...闻闻，代码中一股子Java的气息。</p>
 <p class="text-align-justify">我不想让大家觉得好像我认为生产者/消费者是处理线程/多进程的错误方式 - 因为确实不是。实际上，对多种问题来说，这种方式非常适合。然而，我认为：对于日常的脚本程序来说，这种方式并非是最有用的。</p>
@@ -135,9 +135,9 @@ if __name__ == '__main__':
 <p class="text-align-justify">基于此，下一件你想要做的事情就是搞一个工作者类的池，来加速你的Python程序。在关于线程的IBM教程中，给出了一个示例代码，以下是其变种。这是一个常见的应用场景 - 在多个线程上分配获取网页的任务。</p>
 <pre class="language-python"><code># coding: utf-8
 # Example2.py
-'''
+&apos;&apos;&apos;
 一个更加实际的线程池示例
-'''
+&apos;&apos;&apos;
 
 import time 
 import threading 
@@ -152,16 +152,16 @@ class Consumer(threading.Thread):
   def run(self):
     while True: 
       content = self._queue.get() 
-      if isinstance(content, str) and content == 'quit':
+      if isinstance(content, str) and content == &apos;quit&apos;:
         break
       response = urllib2.urlopen(content)
-    print 'Bye byes!'
+    print &apos;Bye byes!&apos;
 
 
 def Producer():
   urls = [
-    'http://www.python.org', 'http://www.yahoo.com'
-    'http://www.scala.org', 'http://www.google.com'
+    &apos;http://www.python.org&apos;, &apos;http://www.yahoo.com&apos;
+    &apos;http://www.scala.org&apos;, &apos;http://www.google.com&apos;
     # 等等... 
   ]
   queue = Queue.Queue()
@@ -173,11 +173,11 @@ def Producer():
     queue.put(url)
   # 加入毒药丸
   for worker in worker_threads:
-    queue.put('quit')
+    queue.put(&apos;quit&apos;)
   for worker in worker_threads:
     worker.join()
 
-  print 'Done! Time taken: {}'.format(time.time() - start_time)
+  print &apos;Done! Time taken: {}&apos;.format(time.time() - start_time)
 
 def build_worker_pool(queue, size):
   workers = []
@@ -187,13 +187,13 @@ def build_worker_pool(queue, size):
     workers.append(worker)
   return workers
 
-if __name__ == '__main__':
+if __name__ == &apos;__main__&apos;:
   Producer()</code></pre>
 <p class="text-align-justify">奏效了，但是你看看这些代码！准备（setup）方法、一组要追踪的线程，最糟糕的是，若有任何地方易发生死锁，就会产生一堆的join状态说明。自此，一切只会更复杂！</p>
 <p class="text-align-justify">到目前为止，完成了些什么？啥都没有。上面的代码纯粹只是把所有东西像用纸糊起来一样（Just about everything in the above code is pure plumbing，如何翻译？）。这是另一种公式化的写法，也易发生错误（嘿，在写这个代码时，我甚至忘了在队列对象上调用task_done()（我懒得去解决这个问题然后再搞个截图）），付出很多，得到的却很少。幸运的是，我们有更好的方式。</p>
 <h2>引入：Map</h2>
 <p class="text-align-justify">Map是一个酷酷的小东西，也是在Python代码轻松引入并行的关键。对此不熟悉的人会认为map是从函数式语言（如Lisp）借鉴来的东西。map是一个函数 - 将另一个函数映射到一个序列上。例如：</p>
-<pre class="language-python"><code>urls = ['http://www.yahoo.com', 'http://www.reddit.com']
+<pre class="language-python"><code>urls = [&apos;http://www.yahoo.com&apos;, &apos;http://www.reddit.com&apos;]
 results = map(urllib2.urlopen, urls)</code></pre>
 <p class="text-align-justify">这段代码在传入序列的每个元素上应用方法<em>urlopen</em>，并将所有结果存入一个列表中。大致与下面这段代码的逻辑相当：</p>
 <pre class="language-python"><code>results = []
@@ -223,19 +223,19 @@ pool = ThreadPool()</code></pre>
 from multiprocessing.dummy import Pool as ThreadPool 
 
 urls = [
-  'http://www.python.org', 
-  'http://www.python.org/about/',
-  'http://www.onlamp.com/pub/a/python/2003/04/17/metaclasses.html',
-  'http://www.python.org/doc/',
-  'http://www.python.org/download/',
-  'http://www.python.org/getit/',
-  'http://www.python.org/community/',
-  'https://wiki.python.org/moin/',
-  'http://planet.python.org/',
-  'https://wiki.python.org/moin/LocalUserGroups',
-  'http://www.python.org/psf/',
-  'http://docs.python.org/devguide/',
-  'http://www.python.org/community/awards/'
+  &apos;http://www.python.org&apos;, 
+  &apos;http://www.python.org/about/&apos;,
+  &apos;http://www.onlamp.com/pub/a/python/2003/04/17/metaclasses.html&apos;,
+  &apos;http://www.python.org/doc/&apos;,
+  &apos;http://www.python.org/download/&apos;,
+  &apos;http://www.python.org/getit/&apos;,
+  &apos;http://www.python.org/community/&apos;,
+  &apos;https://wiki.python.org/moin/&apos;,
+  &apos;http://planet.python.org/&apos;,
+  &apos;https://wiki.python.org/moin/LocalUserGroups&apos;,
+  &apos;http://www.python.org/psf/&apos;,
+  &apos;http://docs.python.org/devguide/&apos;,
+  &apos;http://www.python.org/community/awards/&apos;
   # 等等...
   ]
 
@@ -284,12 +284,12 @@ results = pool.map(urllib2.urlopen, urls)</code></pre>
 from PIL import Image
 
 SIZE = (75,75)
-SAVE_DIRECTORY = 'thumbs'
+SAVE_DIRECTORY = &apos;thumbs&apos;
 
 def get_image_paths(folder):
   return (os.path.join(folder, f) 
       for f in os.listdir(folder) 
-      if 'jpeg' in f)
+      if &apos;jpeg&apos; in f)
 
 def create_thumbnail(filename): 
   im = Image.open(filename)
@@ -298,9 +298,9 @@ def create_thumbnail(filename):
   save_path = os.path.join(base, SAVE_DIRECTORY, fname)
   im.save(save_path)
 
-if __name__ == '__main__':
+if __name__ == &apos;__main__&apos;:
   folder = os.path.abspath(
-    '11_18_2013_R000_IQM_Big_Sur_Mon__e10d1958e7b766c3e840')
+    &apos;11_18_2013_R000_IQM_Big_Sur_Mon__e10d1958e7b766c3e840&apos;)
   os.mkdir(os.path.join(folder, SAVE_DIRECTORY))
 
   images = get_image_paths(folder)
@@ -314,12 +314,12 @@ if __name__ == '__main__':
 from PIL import Image
 
 SIZE = (75,75)
-SAVE_DIRECTORY = 'thumbs'
+SAVE_DIRECTORY = &apos;thumbs&apos;
 
 def get_image_paths(folder):
   return (os.path.join(folder, f) 
       for f in os.listdir(folder) 
-      if 'jpeg' in f)
+      if &apos;jpeg&apos; in f)
 
 def create_thumbnail(filename): 
   im = Image.open(filename)
@@ -328,9 +328,9 @@ def create_thumbnail(filename):
   save_path = os.path.join(base, SAVE_DIRECTORY, fname)
   im.save(save_path)
 
-if __name__ == '__main__':
+if __name__ == &apos;__main__&apos;:
   folder = os.path.abspath(
-    '11_18_2013_R000_IQM_Big_Sur_Mon__e10d1958e7b766c3e840')
+    &apos;11_18_2013_R000_IQM_Big_Sur_Mon__e10d1958e7b766c3e840&apos;)
   os.mkdir(os.path.join(folder, SAVE_DIRECTORY))
 
   images = get_image_paths(folder)

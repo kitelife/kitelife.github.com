@@ -96,7 +96,7 @@ body {
             # try to get the cached result
             return stored_results[args]
         except KeyError:
-            # nothing was cached for those args. let's fix that.
+            # nothing was cached for those args. let&apos;s fix that.
             result = stored_results[args] = fn(*args)
             return result
     return memoized</code></pre>
@@ -114,7 +114,7 @@ def fib(n):
 <pre class="language-python"><code>def make_verbose(fn):
     def verbose(*args):
         # will print (e.g.) fib(5)
-        print '%s(%s)' % (fb.__name__, ', '.join(repr(arg) for arg in args))
+        print &apos;%s(%s)&apos; % (fb.__name__, &apos;, &apos;.join(repr(arg) for arg in args))
         return fn(*args)   # actually call the decorated function
 
     return verbose</code></pre>
@@ -128,11 +128,11 @@ def fib(n):
     return n if n in [0, 1] else fib(n - 2) + fib(n - 1)
 fib = memoize(make_verbose(fib))</code></pre>
 <p class="text-align-justify">有趣的是，Python并没有限制你在@符号后只能写一个函数名：你也可以调用一个函数，从而能够高效地传递参数给装饰器。假设我们并不满足于简单的memoization，还想将函数的结果存储到<a href='http://memcached.org/'>memcached</a>中。如果你已经写了一个 <code>memcached</code> 装饰器函数，那么可以(例如)传递一个服务器地址给它:</p>
-<pre class="language-python"><code>@memcached('127.0.0.1:11211')
+<pre class="language-python"><code>@memcached(&apos;127.0.0.1:11211&apos;)
 def fib(n):
     return n if n in [0, 1] else fib(n - 2) + fib(n - 1)</code></pre>
 <p class="text-align-justify">非装饰器语法的写法会如下展开:</p>
-<pre class="language-python"><code>fib = memcached('127.0.0.1:11211')(fib)</code></pre>
+<pre class="language-python"><code>fib = memcached(&apos;127.0.0.1:11211&apos;)(fib)</code></pre>
 <p class="text-align-justify">Python配备有一些作为装饰器使用的非常有用的函数。例如，Python有一个 <code>classmethod</code> 函数，可以创建大致类似于java的静态方法:</p>
 <pre class="language-python"><code>class Foo(object):
     SOME_CLASS_CONSTANT = 42
@@ -143,11 +143,11 @@ def fib(n):
         # subclass of Foo, `cls` would be that subclass instead.
         return cls.SOME_CLASS_CONSTANT + value
 
-Foo.add_to_my_constant(10)  # => 52
+Foo.add_to_my_constant(10)  # =&gt; 52
 
 # unlike in Java, you can also call a classmethod on an instance
 f = Foo()
-f.add_to_my_constant(10)    # => 52</code></pre>
+f.add_to_my_constant(10)    # =&gt; 52</code></pre>
 <h2>旁注：文档字符串</h2>
 <p class="text-align-justify">Python函数可以包含更多的信息，而不仅仅是代码：它们也包含有用的帮助信息，比如函数名称，文档字符串:</p>
 <pre class="language-text"><code>&gt;&gt;&gt; def fib(n):

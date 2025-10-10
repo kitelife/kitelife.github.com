@@ -92,8 +92,8 @@ body {
 <p class="text-align-justify">leveldb 中每个 Put/Delete 操作都被分配了一个序列号（SequenceNum），这个序列号是一种“Lamport 时钟” 或者说 “逻辑时间戳”。</p>
 <p class="text-align-justify">leveldb 支持对数据库做一个快照，这个快照操作非常轻量 - 就是最新分配分配序列号（LastSequence）。这个快照的含义：序列号小于等于LastSequence的操作都属于这个快照的，大于 LastSequence 的操作则不属于这个快照，是在这个快照发生之后发生的。</p>
 <pre class="language-cpp"><code>const Snapshot* DBImpl::GetSnapshot() {  
-  MutexLock l(&mutex_);  
-  return snapshots_.New(versions_->LastSequence());  
+  MutexLock l(&amp;mutex_);  
+  return snapshots_.New(versions_-&gt;LastSequence());  
 }
 
 // Abstract handle to particular state of a DB.  
@@ -139,7 +139,7 @@ class LookupKey {
 public:
   // Initialize *this for looking up user_key at a snapshot with  
   // the specified sequence number.  
-  LookupKey(const Slice& user_key, SequenceNumber sequence);
+  LookupKey(const Slice&amp; user_key, SequenceNumber sequence);
 
   // Return a key suitable for lookup in a MemTable.  
   Slice memtable_key() const { return Slice(start_, end_ - start_); }
@@ -152,23 +152,23 @@ public:
 
 private:
   // We construct a char array of the form:  
-  //    klength  varint32               <-- start_  
-  //    userkey  char[klength]          <-- kstart_  
+  //    klength  varint32               &lt;-- start_  
+  //    userkey  char[klength]          &lt;-- kstart_  
   //    tag      uint64  
-  //                                    <-- end_  
+  //                                    &lt;-- end_  
   // The array is a suitable MemTable key.  
-  // The suffix starting with "userkey" can be used as an InternalKey.  
+  // The suffix starting with &quot;userkey&quot; can be used as an InternalKey.  
   const char* start_;  
   const char* kstart_;  
   const char* end_;  
   char space_[200];  // Avoid allocation for short keys
 }
 
-LookupKey::LookupKey(const Slice& user_key, SequenceNumber s) {  
+LookupKey::LookupKey(const Slice&amp; user_key, SequenceNumber s) {  
   size_t usize = user_key.size();  
   size_t needed = usize + 13;  // A conservative estimate  
   char* dst;  
-  if (needed <= sizeof(space_)) {  
+  if (needed &lt;= sizeof(space_)) {  
     dst = space_;  
   } else {  
     dst = new char[needed];  
@@ -184,9 +184,9 @@ LookupKey::LookupKey(const Slice& user_key, SequenceNumber s) {
 }
 
 static uint64_t PackSequenceAndType(uint64_t seq, ValueType t) {  
-  assert(seq <= kMaxSequenceNumber);  
-  assert(t <= kValueTypeForSeek);  
-  return (seq << 8) | t;  
+  assert(seq &lt;= kMaxSequenceNumber);  
+  assert(t &lt;= kValueTypeForSeek);  
+  return (seq &lt;&lt; 8) | t;  
 }</code></pre>
 <h4>9.2.3 全库/范围有序扫描（遍历）</h4>
 <pre class="language-cpp"><code>class DB {
@@ -197,18 +197,18 @@ public:
  //  
  // Caller should delete the iterator when it is no longer needed.  
  // The returned iterator should be deleted before this db is deleted.  
- virtual Iterator* NewIterator(const ReadOptions& options) = 0; // 接口
+ virtual Iterator* NewIterator(const ReadOptions&amp; options) = 0; // 接口
 }
 
 // 实现
-Iterator* DBImpl::NewIterator(const ReadOptions& options) {  
+Iterator* DBImpl::NewIterator(const ReadOptions&amp; options) {  
   SequenceNumber latest_snapshot;  
   uint32_t seed;  
-  Iterator* iter = NewInternalIterator(options, &latest_snapshot, &seed);  
+  Iterator* iter = NewInternalIterator(options, &amp;latest_snapshot, &amp;seed);  
   return NewDBIterator(this, user_comparator(), iter,  
                        (options.snapshot != nullptr  
-                            ? static_cast<const SnapshotImpl*>(options.snapshot)  
-                                  ->sequence_number()  
+                            ? static_cast&lt;const SnapshotImpl*&gt;(options.snapshot)  
+                                  -&gt;sequence_number()  
                             : latest_snapshot),  
                        seed);  
 }
@@ -231,7 +231,7 @@ public:
   // Position at the first key in the source that is at or past target.  
   // The iterator is Valid() after this call iff the source contains  
   // an entry that comes at or past target.  
-  virtual void Seek(const Slice& target) = 0;
+  virtual void Seek(const Slice&amp; target) = 0;
 
   // Moves to the next entry in the source.  After this call, Valid() is  
   // true iff the iterator was not positioned at the last entry in the source.  
@@ -299,13 +299,13 @@ public:
 
 const int kNumNonTableCacheFiles = 10;
 
-static int TableCacheSize(const Options& sanitized_options) {  
+static int TableCacheSize(const Options&amp; sanitized_options) {  
   // Reserve ten files or so for other uses and give the rest to TableCache.  
   return sanitized_options.max_open_files - kNumNonTableCacheFiles;  
 }</code></pre>
 <pre class="language-cpp"><code>explicit ShardedLRUCache(size_t capacity) : last_id_(0) {  
   const size_t per_shard = (capacity + (kNumShards - 1)) / kNumShards;  
-  for (int s = 0; s < kNumShards; s++) {  
+  for (int s = 0; s &lt; kNumShards; s++) {  
     shard_[s].SetCapacity(per_shard);  
   }  
 }</code></pre>
@@ -317,13 +317,13 @@ static int TableCacheSize(const Options& sanitized_options) {
 bool fill_cache = true;</code></pre>
 <p class="text-align-justify">块缓存使用的键为 “缓存 id” 拼接上 数据块在文件中的偏移位置：</p>
 <pre class="language-cpp"><code>char cache_key_buffer[16];  
-EncodeFixed64(cache_key_buffer, table->rep_->cache_id);  
+EncodeFixed64(cache_key_buffer, table-&gt;rep_-&gt;cache_id);  
 EncodeFixed64(cache_key_buffer + 8, handle.offset());  
 Slice key(cache_key_buffer, sizeof(cache_key_buffer));  
-cache_handle = block_cache->Lookup(key);</code></pre>
+cache_handle = block_cache-&gt;Lookup(key);</code></pre>
 <p class="text-align-justify">“缓存 id” 和 Table 对象关联，不同 Table 对象的“缓存 id” 不同，所以“缓存 id” 用于在同一个缓存中区分不同数据文件的数据块。ShardedLRUCache 缓存实现以递增整数的方式分配“缓存 id”：</p>
 <pre class="language-cpp"><code>uint64_t NewId() override {  
-  MutexLock l(&id_mutex_);  
+  MutexLock l(&amp;id_mutex_);  
   return ++(last_id_);  
 }</code></pre>
 <p class="text-align-justify">compaction 过程会对输入数据文件进行遍历，并且使用的也是同一个 TableCache 实例和各个 Table 实例，如果这个过程也启用块缓存，则会导致大量非热点的数据块缓存起来，对正常检索造成干扰。所以 <u>compaction 过程会将 fill_cache 设置为 false，关闭 compaction 输入遍历的块缓存</u>。</p>
@@ -365,7 +365,7 @@ size_t block_size = 4 * 1024;</code></pre>
 LRUHandle lru_ GUARDED_BY(mutex_);  
   
 // Dummy head of in-use list.  
-// Entries are in use by clients, and have refs >= 2 and in_cache==true.  
+// Entries are in use by clients, and have refs &gt;= 2 and in_cache==true.  
 LRUHandle in_use_ GUARDED_BY(mutex_);  
   
 HandleTable table_ GUARDED_BY(mutex_);</code></pre>
@@ -407,12 +407,12 @@ public:
  virtual void CreateFilter(const Slice* keys, int n,  
                            std::string* dst) const = 0;  
   
- // "filter" contains the data appended by a preceding call to  
+ // &quot;filter&quot; contains the data appended by a preceding call to  
  // CreateFilter() on this class.  This method must return true if
  // the key was in the list of keys passed to CreateFilter().
  // This method may return true or false if the key was not on the
  // list, but it should aim to return false with a high probability.
- virtual bool KeyMayMatch(const Slice& key, const Slice& filter) const = 0;
+ virtual bool KeyMayMatch(const Slice&amp; key, const Slice&amp; filter) const = 0;
 }
 
 // Return a new filter policy that uses a bloom filter with approximately  
@@ -430,7 +430,7 @@ public:
 // FilterPolicy (like NewBloomFilterPolicy) that does not ignore  
 // trailing spaces in keys.
 const FilterPolicy* NewBloomFilterPolicy(int bits_per_key);</code></pre>
-<pre class="language-cpp"><code>static uint32_t BloomHash(const Slice& key) {  
+<pre class="language-cpp"><code>static uint32_t BloomHash(const Slice&amp; key) {  
   return Hash(key.data(), key.size(), 0xbc9f1d34);  
 }  
   
@@ -446,12 +446,12 @@ class BloomFilterPolicy : public FilterPolicy {
 	2、提高匹配效率：虽然较小的 k 值可能导致过滤器不准确，但在实际应用中，这个影响往往是可以接受的。因为匹配效率会大幅提高，特别是在过滤器大小相对较小时。
 	3、平衡精度和大小：乘以 0.69 的方法可以帮助找到一个合适的 k 值，使得过滤器的大小和精度达到一个平衡。这对于实际应用来说非常重要，因为它可以确保过滤器既能准确又能高效。
     */
-    k_ = static_cast<size_t>(bits_per_key * 0.69);  // 0.69 =~ ln(2)  
-    if (k_ < 1) k_ = 1;  
-    if (k_ > 30) k_ = 30;  
+    k_ = static_cast&lt;size_t&gt;(bits_per_key * 0.69);  // 0.69 =~ ln(2)  
+    if (k_ &lt; 1) k_ = 1;  
+    if (k_ &gt; 30) k_ = 30;  
   }  
   
-  const char* Name() const override { return "leveldb.BuiltinBloomFilter2"; }  
+  const char* Name() const override { return &quot;leveldb.BuiltinBloomFilter2&quot;; }  
   
   void CreateFilter(const Slice* keys, int n, std::string* dst) const override {  
     // Compute bloom filter size (in both bits and bytes)  
@@ -459,33 +459,33 @@ class BloomFilterPolicy : public FilterPolicy {
   
     // For small n, we can see a very high false positive rate.  Fix it  
     // by enforcing a minimum bloom filter length.
-    if (bits < 64) bits = 64;  
+    if (bits &lt; 64) bits = 64;  
   
     size_t bytes = (bits + 7) / 8;  
     bits = bytes * 8;  
   
-    const size_t init_size = dst->size();  
-    dst->resize(init_size + bytes, 0);  
-    dst->push_back(static_cast<char>(k_));  // Remember # of probes in filter  
-    char* array = &(*dst)[init_size];  
-    for (int i = 0; i < n; i++) {  
+    const size_t init_size = dst-&gt;size();  
+    dst-&gt;resize(init_size + bytes, 0);  
+    dst-&gt;push_back(static_cast&lt;char&gt;(k_));  // Remember # of probes in filter  
+    char* array = &amp;(*dst)[init_size];  
+    for (int i = 0; i &lt; n; i++) {  
       // Use double-hashing to generate a sequence of hash values.  
       // See analysis in [Kirsch,Mitzenmacher 2006].
       uint32_t h = BloomHash(keys[i]);  
-      const uint32_t delta = (h >> 17) | (h << 15);  // Rotate right 17 bits  
-      for (size_t j = 0; j < k_; j++) {  // 算 k_ 次哈希以及设置 k_ 个比特位
+      const uint32_t delta = (h &gt;&gt; 17) | (h &lt;&lt; 15);  // Rotate right 17 bits  
+      for (size_t j = 0; j &lt; k_; j++) {  // 算 k_ 次哈希以及设置 k_ 个比特位
         const uint32_t bitpos = h % bits;  
         // 第几个字节？bitpos / 8
         // 目标字节中的第几个比特？ bitpos % 8
-        array[bitpos / 8] |= (1 << (bitpos % 8));  
+        array[bitpos / 8] |= (1 &lt;&lt; (bitpos % 8));  
         h += delta;  // 每次哈希值有变化
       }  
     }  
   }  
   
-  bool KeyMayMatch(const Slice& key, const Slice& bloom_filter) const override {  
+  bool KeyMayMatch(const Slice&amp; key, const Slice&amp; bloom_filter) const override {  
     const size_t len = bloom_filter.size();  
-    if (len < 2) return false;  
+    if (len &lt; 2) return false;  
   
     const char* array = bloom_filter.data();  
     const size_t bits = (len - 1) * 8;  
@@ -493,17 +493,17 @@ class BloomFilterPolicy : public FilterPolicy {
     // Use the encoded k so that we can read filters generated by  
     // bloom filters created using different parameters.
     const size_t k = array[len - 1];  
-    if (k > 30) {  
+    if (k &gt; 30) {  
       // Reserved for potentially new encodings for short bloom filters.  
       // Consider it a match.
       return true;  
     }  
   
     uint32_t h = BloomHash(key);  
-    const uint32_t delta = (h >> 17) | (h << 15);  // Rotate right 17 bits  
-    for (size_t j = 0; j < k; j++) {  
+    const uint32_t delta = (h &gt;&gt; 17) | (h &lt;&lt; 15);  // Rotate right 17 bits  
+    for (size_t j = 0; j &lt; k; j++) {  
       const uint32_t bitpos = h % bits;  
-      if ((array[bitpos / 8] & (1 << (bitpos % 8))) == 0) return false;  // 任一比特位不匹配，就算不匹配。
+      if ((array[bitpos / 8] &amp; (1 &lt;&lt; (bitpos % 8))) == 0) return false;  // 任一比特位不匹配，就算不匹配。
       h += delta;  
     }  
     return true;  
@@ -523,7 +523,7 @@ const uint8_t KEY_VALIDATOR_LOCK_MASK = KEY_VALIDATOR_LOCK_COUNT - 1;
 
 class KeyValidator {
 public:
-    static KeyValidator& Instance() {
+    static KeyValidator&amp; Instance() {
         static KeyValidator instance;
         return instance;
     }
@@ -545,20 +545,20 @@ public:
         }
         std::memset(bitmap_data_, 0, KEY_VALIDATOR_BYTE_SIZE);
         // need to catch bad_alloc ?
-        LOG(WARNING) << "KeyValidator initialized succ.";
+        LOG(WARNING) &lt;&lt; &quot;KeyValidator initialized succ.&quot;;
         return true;
     }
 
     bool Update(uint64_t key_id) {
         if (!bitmap_data_) {
-            LOG(ERROR) << "bitmap_data not initialized!";
+            LOG(ERROR) &lt;&lt; &quot;bitmap_data not initialized!&quot;;
             return false;
         }
         uint64_t byte_index = 0;
         uint8_t bit_mask = 0;
         GetByteIndex(key_id, byte_index, bit_mask);
         // lock to ensure multi-thread write
-        auto& lock = spin_locks[byte_index & KEY_VALIDATOR_LOCK_MASK];
+        auto&amp; lock = spin_locks[byte_index &amp; KEY_VALIDATOR_LOCK_MASK];
         lock.Lock();
         bitmap_data_[byte_index] |= bit_mask;
         lock.UnLock();
@@ -567,21 +567,21 @@ public:
 
     bool IsValid(uint64_t key_id) {
         if (!bitmap_data_) {
-            LOG(ERROR) << "bitmap_data not initialized!";
+            LOG(ERROR) &lt;&lt; &quot;bitmap_data not initialized!&quot;;
             return false;
         }
         uint64_t byte_index = 0;
         uint8_t bit_mask = 0;
         GetByteIndex(key_id, byte_index, bit_mask);
-        return (bitmap_data_[byte_index] & bit_mask);
+        return (bitmap_data_[byte_index] &amp; bit_mask);
     }
 
 
-    bool GetValidKeys(const std::vector<int64_t>& key_list,
-                std::vector<int64_t>& result) {
+    bool GetValidKeys(const std::vector&lt;int64_t&gt;&amp; key_list,
+                std::vector&lt;int64_t&gt;&amp; result) {
         result.clear();
         result.reserve(key_list.size());
-        for (auto& key_id : key_list) {
+        for (auto&amp; key_id : key_list) {
             if (IsValid(key_id)) {
                 result.push_back(key_id);
             }
@@ -591,16 +591,16 @@ public:
 
 private:
     uint8_t* bitmap_data_ = nullptr;
-    std::vector<psarlib::synchronization::SpinLock> spin_locks;
+    std::vector&lt;psarlib::synchronization::SpinLock&gt; spin_locks;
 
     KeyValidator()
     : spin_locks(KEY_VALIDATOR_LOCK_COUNT) {}
 
-    void GetByteIndex(uint64_t key_id, uint64_t& byte_index, uint8_t& bit_mask) {
-        auto value = key_id & KEY_VALIDATOR_VALUE_MASK;
-        byte_index = value >> 3;                          // divide by 8
-        auto bit_index = value & KEY_VALIDATOR_BIT_MASK;  // mod by 8
-        bit_mask = (KEY_VALIDATOR_ONE << bit_index);
+    void GetByteIndex(uint64_t key_id, uint64_t&amp; byte_index, uint8_t&amp; bit_mask) {
+        auto value = key_id &amp; KEY_VALIDATOR_VALUE_MASK;
+        byte_index = value &gt;&gt; 3;                          // divide by 8
+        auto bit_index = value &amp; KEY_VALIDATOR_BIT_MASK;  // mod by 8
+        bit_mask = (KEY_VALIDATOR_ONE &lt;&lt; bit_index);
     }
 };</code></pre>
 <hr>

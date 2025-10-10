@@ -89,13 +89,13 @@ p.start()</code></pre>
 import BackgroundScheduler
 
 scheduler = BackgroundScheduler()
-scheduler.add_join(func, 'interval', seconds=1)
+scheduler.add_join(func, &apos;interval&apos;, seconds=1)
 scheduler.start()</code></pre>
 <p class="text-align-justify">因为对于 Python 应用，通常会使用 gunicorn 这种 WSGI HTTP 服务器以多进程启动多个应用实例，提升请求吞吐能力。但是对于定时任务我们希望只有一个实例，对此，如果使用 gunicorn，可以基于它的 preload 机制来实现：</p>
 <pre class="language-python"><code># wsgi.py
 import app
 
-if __name__ == "__main__":
+if __name__ == &quot;__main__&quot;:
     app.run()</code></pre>
 <pre class="language-text"><code># 注意其中的 --preload 参数
 gunicorn --workers=4 --preload --log-level=info --access-logfile=access.log -b 0.0.0.0:8080 wsgi:app</code></pre>
@@ -106,14 +106,14 @@ gunicorn --workers=4 --preload --log-level=info --access-logfile=access.log -b 0
         def wrapper(*args, **kwargs):
             count = 0
             exception = None
-            while count < times:
+            while count &lt; times:
                 try:
                     return f(*args, **kwargs)
                 except Exception as e:
                     exception = e
                     count += 1
-                    logging.exception("Try {} times".format(count))
-                    if (sleep_then_try_seconds is not None) and count < times:
+                    logging.exception(&quot;Try {} times&quot;.format(count))
+                    if (sleep_then_try_seconds is not None) and count &lt; times:
                         time.sleep(sleep_then_try_seconds)
             raise exception
         return wrapper
@@ -157,7 +157,7 @@ with_db(conf.db.connect())(delete_task_from_job_queue)(task_id)</code></pre>
         if self.begin is None:
             self.begin = timeit.default_timer()
         self.cond_true = self.condition()
-        self.timeout_false = self.timeout <= 0 or (timeit.default_timer() - self.begin) < self.timeout
+        self.timeout_false = self.timeout &lt;= 0 or (timeit.default_timer() - self.begin) &lt; self.timeout
         return self.cond_true and self.timeout_false
 
     def is_timeout(self):
@@ -174,10 +174,10 @@ if cond.is_timeout():
 <p class="text-align-justify">当前应用处于什么环境，可以通过环境变量来配置，应用初始化时最先检测当前处于什么环境，之后的初始化流程就可以依据环境配置来加载配置，定制应用行为。</p>
 <pre class="language-python"><code># conf/__init__.py
 class AppConfig(object):
-    app_env = os.getenv('APP_ENV', 'development')
-    is_prod = app_env == 'production'
-    is_dev = app_env == 'development'
-    is_testing = app_env == 'testing'
+    app_env = os.getenv(&apos;APP_ENV&apos;, &apos;development&apos;)
+    is_prod = app_env == &apos;production&apos;
+    is_dev = app_env == &apos;development&apos;
+    is_testing = app_env == &apos;testing&apos;
     
     # 其余应用配置项
     ...
@@ -186,7 +186,7 @@ conf = AppConfig()
 
 
 def _load_config_by_env(env: str):
-    '''
+    &apos;&apos;&apos;
     不同环境加载不同的配置文件
     配置目录结构：
     conf/
@@ -194,13 +194,13 @@ def _load_config_by_env(env: str):
         development.py
         production.py
         testing.py
-    '''
-    module = importlib.import_module('conf.{}'.format(env))
-    if not hasattr(module, 'Config'):
-        logging.warning('Not find {} config'.format(env))
+    &apos;&apos;&apos;
+    module = importlib.import_module(&apos;conf.{}&apos;.format(env))
+    if not hasattr(module, &apos;Config&apos;):
+        logging.warning(&apos;Not find {} config&apos;.format(env))
         return
-    for name, value in getattr(module, 'Config').__dict__.items():
-        if name.startswith('__'):
+    for name, value in getattr(module, &apos;Config&apos;).__dict__.items():
+        if name.startswith(&apos;__&apos;):
             continue
         conf.__dict__[name] = value</code></pre>
 <pre class="language-python"><code># 根据环境配置日志级别
@@ -210,23 +210,23 @@ logging.basicConfig(format=consts.LOG_FORMAT, level=log_level)</code></pre>
 <p class="text-align-justify">日志是问题排查的主要信息来源，所以日志记录得好不好，很关键。</p>
 <pre class="language-python"><code># https://github.com/python/cpython/blob/3.7/Lib/logging/__init__.py#L457
 # 日志时间 - 日志级别 - 代码文件路径 - 行号 - 进程 ID - 线程名称 - 日志内容
-LOG_FORMAT = '%(asctime)-15s - %(levelname)s - %(pathname)s - %(lineno)d - %(process)d - %(threadName)s - %(message)s'</code></pre>
+LOG_FORMAT = &apos;%(asctime)-15s - %(levelname)s - %(pathname)s - %(lineno)d - %(process)d - %(threadName)s - %(message)s&apos;</code></pre>
 <h4>6、API 规范与异常提示</h4>
 <p class="text-align-justify">为了统一前端 API 响应处理，有必要对 API 响应体的结构指定标准。以我个人的习惯，所有从应用代码中返回的响应，HTTP 状态码都应该是 200，具体当前 API 请求成功还是失败，如果失败，失败的原因是什么都应该包含在响应体中，响应体大致的结构为：</p>
 <pre class="language-json"><code>{
-    "code": ...,
-    "msg": "...",
-    "data": ...
+    &quot;code&quot;: ...,
+    &quot;msg&quot;: &quot;...&quot;,
+    &quot;data&quot;: ...
 }</code></pre>
 <p class="text-align-justify">code 表示请求处理失败时，data 字段可选，code 表示请求处理成功时，msg 字段可选。</p>
 <p class="text-align-justify">前端配合对响应体进行统一检测和提示：</p>
-<pre class="language-javascript"><code>import { notification } from 'antd';
+<pre class="language-javascript"><code>import { notification } from &apos;antd&apos;;
 
 function defaultHTTPCodeHandler(response) {
-  if (response.status >= 400) {
+  if (response.status &gt;= 400) {
     // 注意 clone
-    response.clone().text().then(respBody => {
-      notification.error({message: 'API 异常响应', description: `${response.status}, ${respBody}`, duration: null});
+    response.clone().text().then(respBody =&gt; {
+      notification.error({message: &apos;API 异常响应&apos;, description: `${response.status}, ${respBody}`, duration: null});
       console.log(`${response.status}, ${respBody}`);
     });
   }
@@ -235,10 +235,10 @@ function defaultHTTPCodeHandler(response) {
 function defaultMsgCodeHandler(response) {
   if (response.status === 200) {
     // 注意 clone
-    response.clone().json().then(jsonBody => {
+    response.clone().json().then(jsonBody =&gt; {
       // 0、200、10000 都属于成功响应
-      if (jsonBody !== undefined && jsonBody.code !== undefined && jsonBody.code !== 0 && jsonBody.code !== 200 && jsonBody.code != 10000) {
-        notification.error({message: '请求失败', description: `${jsonBody.code}, ${jsonBody.msg}`, duration: null});
+      if (jsonBody !== undefined &amp;&amp; jsonBody.code !== undefined &amp;&amp; jsonBody.code !== 0 &amp;&amp; jsonBody.code !== 200 &amp;&amp; jsonBody.code != 10000) {
+        notification.error({message: &apos;请求失败&apos;, description: `${jsonBody.code}, ${jsonBody.msg}`, duration: null});
         console.log(`${jsonBody.code}, ${jsonBody.msg}`);
       }
     });
@@ -249,33 +249,33 @@ function defaultMsgCodeHandler(response) {
   const host = myHost();
   let urlPrefix = host;
   // 自带 host，则不额外补充 host 前缀
-  if (url.startsWith("http://") || url.startsWith("https://")) {
-    urlPrefix = '';
+  if (url.startsWith(&quot;http://&quot;) || url.startsWith(&quot;https://&quot;)) {
+    urlPrefix = &apos;&apos;;
   }
   const httpCodeHandler = httpCodeCallback === undefined ? defaultHTTPCodeHandler : httpCodeCallback;
   const msgCodeHandler = msgCodeCallback === undefined ? defaultMsgCodeHandler : msgCodeCallback;
   // 对于线上环境或者测试环境，不跨域
   if (host === PROD_ENV_HOST || host === TEST_ENV_HOST) {
     const promise = fetch(urlPrefix + url, init);
-    promise.then((response) => httpCodeHandler(response));
-    promise.then((response) => msgCodeHandler(response));
+    promise.then((response) =&gt; httpCodeHandler(response));
+    promise.then((response) =&gt; msgCodeHandler(response));
     return promise;
   }
   // 对于本地测试环境，跨域访问预发环境 API 数据，方便测试
   let corsInit = {
-    credentials: 'include',
-    mode: 'cors',
-    redirect: 'follow',
+    credentials: &apos;include&apos;,
+    mode: &apos;cors&apos;,
+    redirect: &apos;follow&apos;,
   };
   if (init !== undefined) {
     corsInit = { ...corsInit, ...init };
   }
-  if (urlPrefix !== '') {
+  if (urlPrefix !== &apos;&apos;) {
     urlPrefix = TEST_ENV_HOST;
   }
   const promise = fetch(urlPrefix + url, corsInit);
-  promise.then((response) => httpCodeHandler(response));
-  promise.then((response) => msgCodeHandler(response));
+  promise.then((response) =&gt; httpCodeHandler(response));
+  promise.then((response) =&gt; msgCodeHandler(response));
   return promise;
 }</code></pre>
 <p class="text-align-justify">其中为了方便本地开发测试，允许本地开发环境跨域访问测试环境（最好不要直接跨越访问生产环境），并且自动区分，corsFetch 调用方无感知。</p>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta property="og:title" content="BitPacking">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://bit.xiayf.cn/">
+    <meta property="og:site_name" content="BitPacking">
+    <meta property="og:description" content="精进，求诸己身">
+
+    <title>BitPacking</title>
+    <meta name="description" content="精进，求诸己身">
+    <link rel="stylesheet" href="/static/main.css">
+    <link rel="canonical" href="https://bit.xiayf.cn/">
+    
+    <link crossorigin="" rel="shortcut icon" type="image/x-icon" href="/assets/bits_small.ico">
+    
+    
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    
+    <style>
+@import url("https://fontsapi.zeoseven.com/7/main/result.css");
+body {
+    font-family: equity_text_a, "Zhuque Fangsong (technical preview)";
+    font-weight: normal;
+}
+</style>
+    
+    
+</head>
+
+<body>
+<header class="site-header">
+    <div class="wrapper">
+        <a class="site-title" href="/">BitPacking</a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg viewBox="0 0 18 15">
+                    <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                <a class="page-link" href="/pages/about.html">关于我</a>
+                
+                <a class="page-link" href="/pages/works.html">作品</a>
+                
+                <a class="page-link" href="/pages/linlang.html">琳琅</a>
+                
+                <a class="page-link" href="/rss.xml">RSS</a>
+                
+            </div>
+        </nav>
+    </div>
+</header>
+<div class="page-content">
+    <div class="wrapper">
+        
+<div class="post">
+    <header class="post-header">
+        <h1 class="post-title">译文：应该如何在映射中查找值</h1>
+        <p class="post-meta">2025-10-10</p>
+    </header>
+    <article class="post-content">
+        <p class="text-align-justify">原文： <a href='https://www.sandordargo.com/blog/2025/08/27/lookup-value-in-map'>How to look up values in a map</a></p>
+<p class="text-align-justify">在编程面试或者编写生产代码时，你可能都遇到过这样一个问题：在 <code>std::map</code> 或 <code>std::unordered_map</code> 中查找值的正确方法是什么？简便起见，本文将这两种容器都称为映射。</p>
+<p class="text-align-justify">我们来探讨一下不同的查找方式，以及它们的优缺点。</p>
+<h2><code>operator[]</code></h2>
+<p class="text-align-justify">使用 <code>operator[]</code> 是访问映射元素的过时方法 - 接受一个键，返回对应值的一个引用。对于 <code>std::map</code>，该方法的算法时间复杂度为 <svg style="vertical-align: -0.561ex;" xmlns="http://www.w3.org/2000/svg" width="5.968ex" height="2.253ex" role="img" focusable="false" viewBox="0 -748 2638 996" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-226-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-226-NCM-I-1D45C" d="M308 442C239 442 176 412 122 353C68 294 41 229 41 159C41 63 106-11 202-11C272-11 334 19 388 78C442 137 469 201 469 272C469 369 405 442 308 442M389 310C389 287 384 255 374 213C353 130 319 73 272 42C248 26 225 18 203 18C149 18 121 65 121 122C121 180 155 288 178 324C216 383 259 413 307 413C361 413 389 367 389 310Z"></path><path id="MJX-226-NCM-I-1D454" d="M15-141C15-184 60-205 150-205C197-205 241-193 280-170C324-144 351-109 362-66L471 373C473 383 474 389 474 392C474 412 463 422 442 422C420 422 406 410 399 387C377 424 347 442 310 442C246 442 189 410 140 346C95 286 72 223 72 158C72 71 123-3 207-3C246-3 282 14 315 47L285-71C256-140 211-175 148-175C122-175 100-173 82-169C103-158 113-141 113-118C113-93 99-80 72-80C40-80 15-109 15-141M356 392C376 371 386 351 386 331C386 330 385 325 383 318L336 129C330 106 313 82 286 60C259 38 233 27 210 27C170 27 150 56 150 114C150 169 184 291 204 327C235 384 270 412 311 412C329 412 344 405 356 392Z"></path><path id="MJX-226-NCM-N-28" d="M318-248C327-248 332-243 332-234C332-231 330-227 327-223C275-183 233-117 202-26C175 53 161 131 161 208L161 292C161 369 175 447 202 526C233 617 275 683 327 723C330 726 332 730 332 734C332 743 327 748 318 748C317 748 314 747 311 745C251 699 201 631 160 540C121 453 101 371 101 292L101 208C101 129 121 47 160-40C201-131 251-199 311-245C314-247 317-248 318-248Z"></path><path id="MJX-226-NCM-I-1D45B" d="M537 137C514 58 481 18 440 18C427 18 420 28 420 47C420 61 426 84 438 115C478 224 498 296 498 333C498 403 451 442 381 442C322 442 271 416 230 363C222 407 187 442 136 442C80 442 58 390 44 345C34 313 29 294 29 287C29 278 34 273 45 273C50 273 53 274 56 276C61 285 64 292 65 299C83 375 106 413 133 413C151 413 160 399 160 371C160 358 155 331 144 290L87 63C84 50 78 24 78 19C78-1 89-11 111-11C130-11 144-1 151 19C153 24 159 49 170 92L191 181L221 295C232 318 249 341 270 365C299 397 335 413 378 413C411 413 427 391 427 348C427 310 406 234 363 120C356 102 353 87 353 74C353 25 390-11 438-11C482-11 517 14 542 64C561 104 571 131 571 144C571 153 566 158 555 158C552 158 537 149 537 137Z"></path><path id="MJX-226-NCM-N-29" d="M78-245C138-199 188-131 229-40C268 47 288 129 288 208L288 292C288 371 268 453 229 540C188 631 138 699 78 745C75 747 72 748 71 748C62 748 57 743 57 734C57 730 59 726 62 723C114 683 156 617 187 526C214 447 228 369 228 292L228 208C228 131 214 53 187-26C156-117 114-183 62-223C59-227 57-231 57-234C57-243 62-248 71-248C72-248 75-247 78-245Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="log(n)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-226-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="o" transform="translate(298,0)"><use data-c="1D45C" xlink:href="#MJX-226-NCM-I-1D45C"></use></g><g data-mml-node="mi" data-latex="g" transform="translate(783,0)"><use data-c="1D454" xlink:href="#MJX-226-NCM-I-1D454"></use></g><g data-mml-node="mo" data-latex="(" transform="translate(1260,0)"><use data-c="28" xlink:href="#MJX-226-NCM-N-28"></use></g><g data-mml-node="mi" data-latex="n" transform="translate(1649,0)"><use data-c="1D45B" xlink:href="#MJX-226-NCM-I-1D45B"></use></g><g data-mml-node="mo" data-latex=")" transform="translate(2249,0)"><use data-c="29" xlink:href="#MJX-226-NCM-N-29"></use></g></g></g></svg>；对于 <code>std::unordered_map</code>，平均时间复杂度为常数时间（最坏情况是线性时间/with worst-case linear）。</p>
+<p class="text-align-justify">然而，这个方法存在一个比较大的限制。</p>
+<p class="text-align-justify">如果键不在映射中，会发生什么？</p>
+<p class="text-align-justify">与 <code>vector</code> - 对 <code>operator[]</code> 使用无效下标会导致未定义行为 - 不同，<code>map</code> 会插入一个给定键和默认构造值的新条目。这个副作用也即意味着 <code>operator[]</code> 在不期望插入的查找中是不安全的。</p>
+<p class="text-align-justify">这也是不能在 <code>const</code> 映射上使用 <code>operator[]</code> 的原因：</p>
+<pre class="language-cpp"><code>#include &lt;map&gt;
+
+int main() {
+    const std::map&lt;int, int&gt; squares{ {1, 1}, {2, 4}, {3, 3} };
+    return squares[2]; // ERROR: passing &apos;const std::map&lt;int, int&gt;&apos; as &apos;this&apos; argument discards qualifiers
+}</code></pre>
+<p class="text-align-justify">可惜了。我们需要一个替代方案！</p>
+<h2><code>at()</code></h2>
+<p class="text-align-justify"><code>at()</code> 方法来救场了。与 <code>operator[]</code> 一样高效访问，但是它绝不会插入新元素。如果键不存在，它会抛出一个 <code>std::out_of_range</code> 异常。因此，它适合与 <code>const</code> 映射配合使用：</p>
+<pre class="language-cpp"><code>#include &lt;map&gt;
+
+int main() {
+    const std::map&lt;int, int&gt; squares{ {1, 1}, {2, 4}, {3, 3} };
+    return squares.at(2);
+}</code></pre>
+<p class="text-align-justify">若想安全地使用 <code>at()</code>，要么确保键存在，要么将查找操作包裹在 try-catch 块中。</p>
+<p class="text-align-justify">看看如下这两个包装器：</p>
+<pre class="language-cpp"><code>#include &lt;map&gt;
+#include &lt;optional&gt;
+#include &lt;stdexcept&gt;
+
+std::optional&lt;int&gt; lookupAtContains(const std::map&lt;int, int&gt; &amp;map, int key) {
+    if (map.contains(key)) {
+        return map.at(key);
+    }
+    return std::nullopt;
+} 
+
+std::optional&lt;int&gt; lookupAtTryCatch(const std::map&lt;int, int&gt; &amp;map, int key) {
+    try {
+        return map.at(key);
+    } catch (const std::out_of_range&amp; err) {
+        return std::nullopt;
+    }
+}</code></pre>
+<p class="text-align-justify">两者使用起来都安全，但都有缺点。</p>
+<p class="text-align-justify">第一个 - <code>lookupAtContains</code> - 不是线程安全的。如果在 <code>contains</code> 和 <code>at</code> 调用之间，键被移除了，怎么办？当然也许我们不需要考虑这样的场景。另一个问题是效率 - 键查找了两次。顺便说一句：这样的查找包装器也可以与 <code>operator[]</code> 一起使用。虽然使用 <code>at()</code> 要考虑这样的问题，不过未捕获的异常要好于未定义行为。</p>
+<p class="text-align-justify">第二个，缺点是使用了异常。也许你不会允许在你的代码库中使用异常。也许你担心性能损失。也可能你会说异常如果没有被调用就是一种零成本抽象 - 这并不完全正确，<a href='https://www.sandordargo.com/blog/2023/03/29/binary-size-and-exceptions'>运行时异常没有被调用的话确实没有开销</a>，不过编译时，必须为生成处理异常所需的信息付出代价。此外，在映射中找不到键显然不是一种异常情况。</p>
+<h2><code>std::find</code></h2>
+<p class="text-align-justify">还有一个选择是使用 <code>find()</code> 方法。</p>
+<pre class="language-cpp"><code>int main() {
+    const std::map&lt;int, int&gt; squares{ {1, 1}, {2, 4}, {3, 3} };
+    auto maybe_entry = squares.find(2);
+    return maybe_entry != squares.end() ? maybe_entry-&gt;second : -1;
+}</code></pre>
+<p class="text-align-justify">在 <code>const</code> 容器上也能正常使用，不过代码丑了点。如果键存在，它会返回一个指向该键对应条目的迭代器；如果键不存在，则返回一个指向容器末尾之后位置的迭代器。我们对返回的迭代器做处理即可。</p>
+<p class="text-align-justify">也可以配套使用一个包装器：</p>
+<pre class="language-cpp"><code>std::optional&lt;int&gt; lookupFind(const std::map&lt;int, int&gt; &amp;map, int key) {
+    auto maybe_entry = map.find(key);
+    if (maybe_entry == map.end()) {
+        return std::nullopt;
+    }
+    return maybe_entry-&gt;second;
+}</code></pre>
+<p class="text-align-justify">这个方法仍然存在线程安全问题，不过对于单线程的适用场景，不存在这个问题。</p>
+<p class="text-align-justify">优点是我们现在只需一次查找！如果想提高代码可读性，可以使用包装器。</p>
+<h2>双重查找真的是一个问题吗？</h2>
+<p class="text-align-justify">具体情况具体分析。</p>
+<p class="text-align-justify">使用 <code>contains</code> 后跟 <code>at()</code> 的方式，确实会有性能损失。基准测试显示，当键存在时，<code>lookupAtContains</code> 的查找速度比 <code>lookupFind</code> 慢约 60%。</p>
+<img src='https://s2.loli.net/2025/10/10/dDtPpCbvrIFKOWw.png' title='lookup_key_found' alt='lookup_key_found' width='100%'/>
+<p class="text-align-justify">更糟糕的是，当键不存在时，<code>lookupAtTryCatch</code> 由于异常开销，<a href='https://quick-bench.com/q/2CtXkOZPw1u6pMb8sLJRPyhNOhE'>速度慢了几个数量级</a>。</p>
+<img src='https://s2.loli.net/2025/10/10/2RjS5BbJaXQ9gGW.png' title='lookup_key_not_found' alt='lookup_key_not_found' width='100%'/>
+<p class="text-align-justify">话虽如此，双重查找的性能损耗自由在代码运行在热点路径上时才重要。大多数应用中，与其他瓶颈（如异常处理、I/O 等）相比，这点性能差异微乎其微。代码清晰度胜过过早优化 - 除非在性能关键领域。</p>
+<h2>结论</h2>
+<p class="text-align-justify">在 <code>map</code> 中查找值并不像看起来那么简单。如下对可选方案做个总结：</p>
+<ul><li>如果期望在键不存在时做插入，并且不是在操作不可变映射，可以使用 <code>operator[]</code>。</li>
+<li>如果期望安全地不做插入地访问，特别时在操作不可变映射时，可以使用 <code>at()</code>，不过要注意异常。</li>
+<li>使用 <code>find()</code>，可控性和性能都更好，代价是代码可能更冗长。如果你正在构建一个可重用组件，建议将 <code>find()</code> 包装在像 <code>lookupFind()</code> 这样的辅助函数中，可以在安全性、性能和代码清晰度之间取得最佳平衡。</li></ul>
+<p class="text-align-justify">最终，选择适合你当前情况的方法 - 可读性、性能和代码库规范都很重要。</p>
+<p class="text-align-justify">你最常用哪种方法？为什么？</p>
+    </article>
+</div>
+
+
+<div class="comment">
+     <script src="https://giscus.app/client.js"
+        data-repo="kitelife/kitelife.github.com"
+        data-repo-id="MDEwOlJlcG9zaXRvcnk4NTg1Njcx"
+        data-category="giscus"
+        data-category-id="DIC_kwDOAIMBx84Ctgkx"
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="light"
+        data-lang="zh-CN"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+      </script>
+    </div>
+
+
+
+    </div>
+</div>
+<footer class="site-footer">
+    <div class="wrapper">
+        <div class="footer-col-wrapper">
+            <div class="footer-col footer-col-1">
+                <ul class="social-media-list">
+                    <li>
+                        <a href="https://github.com/kitelife" target="_blank">
+                            <span class="icon icon--github">
+                                <svg viewBox="0 0 16 16">
+                                    <path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                                </svg>
+                            </span>
+                            <span class="username">kitelife</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://maimai.cn/profile/detail?dstu=39580141" target="_blank">
+                            <span class="icon icon--maimai">
+                                <img src="https://maimai.cn/favicon.ico" width="16"/>
+                            </span>
+                            <span class="username">Xiayf</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="footer-col footer-col-2"></div>
+            <div class="footer-col footer-col-3"></div>
+            <div class="footer-col footer-col-4">
+                <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">
+                    <img alt="Creative Commons License" src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-sa.svg">
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+
+</body>
+</html>

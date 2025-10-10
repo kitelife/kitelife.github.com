@@ -92,7 +92,7 @@ class PosixEnv : public Env {}</code></pre>
 <p class="text-align-justify">leveldb 基于文件锁来防止多个进程打开同一个数据库。</p>
 <p class="text-align-justify">文件锁使用的文件名称为 <code>LOCK</code>，对这个文件加锁成功之后，才能执行后续的逻辑。</p>
 <pre class="language-cpp"><code>assert(db_lock_ == nullptr);
-Status s = env_->LockFile(LockFileName(dbname_), &db_lock_);  
+Status s = env_-&gt;LockFile(LockFileName(dbname_), &amp;db_lock_);  
 if (!s.ok()) {  
   return s;  
 }</code></pre>
@@ -110,19 +110,19 @@ if (!s.ok()) {
 // to go away.  
 //  
 // May create the named file if it does not already exist.  
-virtual Status LockFile(const std::string& fname, FileLock** lock) = 0;</code></pre>
+virtual Status LockFile(const std::string&amp; fname, FileLock** lock) = 0;</code></pre>
 <p class="text-align-justify">原理参见：</p>
 <ul><li>https://man7.org/linux/man-pages/man2/fcntl.2.html 的 “Advisory record locking” 部分</li>
 <li><a href='https://www.cnblogs.com/nufangrensheng/p/3554168.html'>高级 I/O 之记录锁</a></li></ul>
 <pre class="language-cpp"><code>int LockOrUnlock(int fd, bool lock) {  
   errno = 0;  
   struct ::flock file_lock_info;  
-  std::memset(&file_lock_info, 0, sizeof(file_lock_info));  
+  std::memset(&amp;file_lock_info, 0, sizeof(file_lock_info));  
   file_lock_info.l_type = (lock ? F_WRLCK : F_UNLCK);  
   file_lock_info.l_whence = SEEK_SET;  
   file_lock_info.l_start = 0;  
   file_lock_info.l_len = 0;  // Lock/unlock entire file.  
-  return ::fcntl(fd, F_SETLK, &file_lock_info);  
+  return ::fcntl(fd, F_SETLK, &amp;file_lock_info);  
 }</code></pre>
 <blockquote><p class="text-align-justify">cat client 基于 flock 函数来实现文件锁（Open file description locks (non-POSIX)）。与 leveldb 采用的文件锁方式，区别见 fcntl 文档说明：</p>
 <p class="text-align-justify">Open file description locks are advisory byte-range locks whose operation is in most respects identical to the traditional record locks described above.  This lock type is Linux-specific, and available since Linux 3.15.</p>
@@ -135,15 +135,15 @@ try {
                                             : FLAGS_cat_id_lock_file;
 
   file_lock_ = new FileLock(lock_file_name_);
-  if (!file_lock_->TryLock()) {
-    throw runtime_error(lock_file_name_ + " is locked by another process");
+  if (!file_lock_-&gt;TryLock()) {
+    throw runtime_error(lock_file_name_ + &quot; is locked by another process&quot;);
   }
 }
 //
 bool FileLock::TryLock() {
   //mode_t m = umask(0);
   fd_ = open(file_name_.c_str(), O_RDWR | O_CREAT, 0666);
-  if (fd_ >= 0 && flock(fd_, LOCK_EX | LOCK_NB) < 0) {
+  if (fd_ &gt;= 0 &amp;&amp; flock(fd_, LOCK_EX | LOCK_NB) &lt; 0) {
     close(fd_);
     fd_ = -1;
     return false;
@@ -152,7 +152,7 @@ bool FileLock::TryLock() {
 }
 
 bool FileLock::Unlock() {
-  if (fd_ < 0) {
+  if (fd_ &lt; 0) {
     return true;
   }
   remove(file_name_.c_str());
@@ -194,8 +194,8 @@ void Ref() { ++refs_; }
 // Drop reference count.  Delete if no more references exist.  
 void Unref() {  
   --refs_;  
-  assert(refs_ >= 0);  
-  if (refs_ <= 0) {  
+  assert(refs_ &gt;= 0);  
+  if (refs_ &lt;= 0) {  
     delete this;  
   }  
 }</code></pre>

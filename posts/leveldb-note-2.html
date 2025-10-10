@@ -148,7 +148,7 @@ class FilterBlockBuilder {
   explicit FilterBlockBuilder(const FilterPolicy*);  
   
   void StartBlock(uint64_t block_offset);  
-  void AddKey(const Slice& key);  
+  void AddKey(const Slice&amp; key);  
   Slice Finish();  
   
  private:  
@@ -157,22 +157,22 @@ class FilterBlockBuilder {
   const FilterPolicy* policy_;  
 
   std::string keys_;             // Flattened key contents  
-  std::vector<size_t> start_;    // Starting index in keys_ of each key  
+  std::vector&lt;size_t&gt; start_;    // Starting index in keys_ of each key  
 
   std::string result_;           // Filter data computed so far  
-  std::vector<Slice> tmp_keys_;  // policy_->CreateFilter() argument  
-  std::vector<uint32_t> filter_offsets_;  
+  std::vector&lt;Slice&gt; tmp_keys_;  // policy_-&gt;CreateFilter() argument  
+  std::vector&lt;uint32_t&gt; filter_offsets_;  
 };
 
 void FilterBlockBuilder::StartBlock(uint64_t block_offset) {  
   uint64_t filter_index = (block_offset / kFilterBase);  
-  assert(filter_index >= filter_offsets_.size());  
-  while (filter_index > filter_offsets_.size()) {  
+  assert(filter_index &gt;= filter_offsets_.size());  
+  while (filter_index &gt; filter_offsets_.size()) {  
     GenerateFilter();  
   }  
 }
 
-void FilterBlockBuilder::AddKey(const Slice& key) {  
+void FilterBlockBuilder::AddKey(const Slice&amp; key) {  
   Slice k = key;  
   start_.push_back(keys_.size());  
   keys_.append(k.data(), k.size());  

@@ -70,11 +70,11 @@ body {
         <p class="text-align-justify">2015年，我们在青云平台上实现了“百度云观测”应用。青云应用本质上是一个 iframe，在向 iframe 服务方发送的请求中会携带一些数据，青云平台会使用<code>Base64 URL</code>对这些数据进行编码，其提供的编码解码算法示例如下：</p>
 <pre class="language-php"><code>// php版本
 function base64_URL_encode($data) {
-  return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+  return rtrim(strtr(base64_encode($data), &apos;+/&apos;, &apos;-_&apos;), &apos;=&apos;);
 }
 function base64_URL_decode($data) {
-  return base64_decode(str_pad(strtr($data, '-_', '+/'), 
-                            strlen($data) % 4, '=', STR_PAD_RIGHT));
+  return base64_decode(str_pad(strtr($data, &apos;-_&apos;, &apos;+/&apos;), 
+                            strlen($data) % 4, &apos;=&apos;, STR_PAD_RIGHT));
 }</code></pre>
 <p class="text-align-justify">可以看出，<code>Base64 URL</code> 是标准 Base64 编码的一个变种，分别用 <code>-</code>、<code>_</code> 替换标准 Base64 编码结果中的 <code>+</code> 、 <code>/</code> ，并删除结果最后的 <code>=</code> 。</p>
 <p class="text-align-justify">在实现 “百度云观测” 青云应用时，我在想：</p>

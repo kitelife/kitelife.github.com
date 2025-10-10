@@ -4,9 +4,95 @@
         <title>BitPacking</title>
         <description>精进，求诸己身</description>
         <link>https://bit.xiayf.cn/</link>
-        <pubDate>2025-10-07T00:08:34.953422+08:00</pubDate>
-        <lastBuildDate>2025-10-07T00:08:34.953422+08:00</lastBuildDate>
+        <pubDate>2025-10-10T22:09:23.254507+08:00</pubDate>
+        <lastBuildDate>2025-10-10T22:09:23.254507+08:00</lastBuildDate>
         <generator>LingDong</generator>
+        
+        <item>
+            <title>译文：应该如何在映射中查找值</title>
+            <description><![CDATA[<p class="text-align-justify">原文： <a href='https://www.sandordargo.com/blog/2025/08/27/lookup-value-in-map'>How to look up values in a map</a></p>
+<p class="text-align-justify">在编程面试或者编写生产代码时，你可能都遇到过这样一个问题：在 <code>std::map</code> 或 <code>std::unordered_map</code> 中查找值的正确方法是什么？简便起见，本文将这两种容器都称为映射。</p>
+<p class="text-align-justify">我们来探讨一下不同的查找方式，以及它们的优缺点。</p>
+<h2><code>operator[]</code></h2>
+<p class="text-align-justify">使用 <code>operator[]</code> 是访问映射元素的过时方法 - 接受一个键，返回对应值的一个引用。对于 <code>std::map</code>，该方法的算法时间复杂度为 <svg style="vertical-align: -0.561ex;" xmlns="http://www.w3.org/2000/svg" width="5.968ex" height="2.253ex" role="img" focusable="false" viewBox="0 -748 2638 996" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-226-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-226-NCM-I-1D45C" d="M308 442C239 442 176 412 122 353C68 294 41 229 41 159C41 63 106-11 202-11C272-11 334 19 388 78C442 137 469 201 469 272C469 369 405 442 308 442M389 310C389 287 384 255 374 213C353 130 319 73 272 42C248 26 225 18 203 18C149 18 121 65 121 122C121 180 155 288 178 324C216 383 259 413 307 413C361 413 389 367 389 310Z"></path><path id="MJX-226-NCM-I-1D454" d="M15-141C15-184 60-205 150-205C197-205 241-193 280-170C324-144 351-109 362-66L471 373C473 383 474 389 474 392C474 412 463 422 442 422C420 422 406 410 399 387C377 424 347 442 310 442C246 442 189 410 140 346C95 286 72 223 72 158C72 71 123-3 207-3C246-3 282 14 315 47L285-71C256-140 211-175 148-175C122-175 100-173 82-169C103-158 113-141 113-118C113-93 99-80 72-80C40-80 15-109 15-141M356 392C376 371 386 351 386 331C386 330 385 325 383 318L336 129C330 106 313 82 286 60C259 38 233 27 210 27C170 27 150 56 150 114C150 169 184 291 204 327C235 384 270 412 311 412C329 412 344 405 356 392Z"></path><path id="MJX-226-NCM-N-28" d="M318-248C327-248 332-243 332-234C332-231 330-227 327-223C275-183 233-117 202-26C175 53 161 131 161 208L161 292C161 369 175 447 202 526C233 617 275 683 327 723C330 726 332 730 332 734C332 743 327 748 318 748C317 748 314 747 311 745C251 699 201 631 160 540C121 453 101 371 101 292L101 208C101 129 121 47 160-40C201-131 251-199 311-245C314-247 317-248 318-248Z"></path><path id="MJX-226-NCM-I-1D45B" d="M537 137C514 58 481 18 440 18C427 18 420 28 420 47C420 61 426 84 438 115C478 224 498 296 498 333C498 403 451 442 381 442C322 442 271 416 230 363C222 407 187 442 136 442C80 442 58 390 44 345C34 313 29 294 29 287C29 278 34 273 45 273C50 273 53 274 56 276C61 285 64 292 65 299C83 375 106 413 133 413C151 413 160 399 160 371C160 358 155 331 144 290L87 63C84 50 78 24 78 19C78-1 89-11 111-11C130-11 144-1 151 19C153 24 159 49 170 92L191 181L221 295C232 318 249 341 270 365C299 397 335 413 378 413C411 413 427 391 427 348C427 310 406 234 363 120C356 102 353 87 353 74C353 25 390-11 438-11C482-11 517 14 542 64C561 104 571 131 571 144C571 153 566 158 555 158C552 158 537 149 537 137Z"></path><path id="MJX-226-NCM-N-29" d="M78-245C138-199 188-131 229-40C268 47 288 129 288 208L288 292C288 371 268 453 229 540C188 631 138 699 78 745C75 747 72 748 71 748C62 748 57 743 57 734C57 730 59 726 62 723C114 683 156 617 187 526C214 447 228 369 228 292L228 208C228 131 214 53 187-26C156-117 114-183 62-223C59-227 57-231 57-234C57-243 62-248 71-248C72-248 75-247 78-245Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="log(n)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-226-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="o" transform="translate(298,0)"><use data-c="1D45C" xlink:href="#MJX-226-NCM-I-1D45C"></use></g><g data-mml-node="mi" data-latex="g" transform="translate(783,0)"><use data-c="1D454" xlink:href="#MJX-226-NCM-I-1D454"></use></g><g data-mml-node="mo" data-latex="(" transform="translate(1260,0)"><use data-c="28" xlink:href="#MJX-226-NCM-N-28"></use></g><g data-mml-node="mi" data-latex="n" transform="translate(1649,0)"><use data-c="1D45B" xlink:href="#MJX-226-NCM-I-1D45B"></use></g><g data-mml-node="mo" data-latex=")" transform="translate(2249,0)"><use data-c="29" xlink:href="#MJX-226-NCM-N-29"></use></g></g></g></svg>；对于 <code>std::unordered_map</code>，平均时间复杂度为常数时间（最坏情况是线性时间/with worst-case linear）。</p>
+<p class="text-align-justify">然而，这个方法存在一个比较大的限制。</p>
+<p class="text-align-justify">如果键不在映射中，会发生什么？</p>
+<p class="text-align-justify">与 <code>vector</code> - 对 <code>operator[]</code> 使用无效下标会导致未定义行为 - 不同，<code>map</code> 会插入一个给定键和默认构造值的新条目。这个副作用也即意味着 <code>operator[]</code> 在不期望插入的查找中是不安全的。</p>
+<p class="text-align-justify">这也是不能在 <code>const</code> 映射上使用 <code>operator[]</code> 的原因：</p>
+<pre class="language-cpp"><code>#include &lt;map&gt;
+
+int main() {
+    const std::map&lt;int, int&gt; squares{ {1, 1}, {2, 4}, {3, 3} };
+    return squares[2]; // ERROR: passing &apos;const std::map&lt;int, int&gt;&apos; as &apos;this&apos; argument discards qualifiers
+}</code></pre>
+<p class="text-align-justify">可惜了。我们需要一个替代方案！</p>
+<h2><code>at()</code></h2>
+<p class="text-align-justify"><code>at()</code> 方法来救场了。与 <code>operator[]</code> 一样高效访问，但是它绝不会插入新元素。如果键不存在，它会抛出一个 <code>std::out_of_range</code> 异常。因此，它适合与 <code>const</code> 映射配合使用：</p>
+<pre class="language-cpp"><code>#include &lt;map&gt;
+
+int main() {
+    const std::map&lt;int, int&gt; squares{ {1, 1}, {2, 4}, {3, 3} };
+    return squares.at(2);
+}</code></pre>
+<p class="text-align-justify">若想安全地使用 <code>at()</code>，要么确保键存在，要么将查找操作包裹在 try-catch 块中。</p>
+<p class="text-align-justify">看看如下这两个包装器：</p>
+<pre class="language-cpp"><code>#include &lt;map&gt;
+#include &lt;optional&gt;
+#include &lt;stdexcept&gt;
+
+std::optional&lt;int&gt; lookupAtContains(const std::map&lt;int, int&gt; &amp;map, int key) {
+    if (map.contains(key)) {
+        return map.at(key);
+    }
+    return std::nullopt;
+} 
+
+std::optional&lt;int&gt; lookupAtTryCatch(const std::map&lt;int, int&gt; &amp;map, int key) {
+    try {
+        return map.at(key);
+    } catch (const std::out_of_range&amp; err) {
+        return std::nullopt;
+    }
+}</code></pre>
+<p class="text-align-justify">两者使用起来都安全，但都有缺点。</p>
+<p class="text-align-justify">第一个 - <code>lookupAtContains</code> - 不是线程安全的。如果在 <code>contains</code> 和 <code>at</code> 调用之间，键被移除了，怎么办？当然也许我们不需要考虑这样的场景。另一个问题是效率 - 键查找了两次。顺便说一句：这样的查找包装器也可以与 <code>operator[]</code> 一起使用。虽然使用 <code>at()</code> 要考虑这样的问题，不过未捕获的异常要好于未定义行为。</p>
+<p class="text-align-justify">第二个，缺点是使用了异常。也许你不会允许在你的代码库中使用异常。也许你担心性能损失。也可能你会说异常如果没有被调用就是一种零成本抽象 - 这并不完全正确，<a href='https://www.sandordargo.com/blog/2023/03/29/binary-size-and-exceptions'>运行时异常没有被调用的话确实没有开销</a>，不过编译时，必须为生成处理异常所需的信息付出代价。此外，在映射中找不到键显然不是一种异常情况。</p>
+<h2><code>std::find</code></h2>
+<p class="text-align-justify">还有一个选择是使用 <code>find()</code> 方法。</p>
+<pre class="language-cpp"><code>int main() {
+    const std::map&lt;int, int&gt; squares{ {1, 1}, {2, 4}, {3, 3} };
+    auto maybe_entry = squares.find(2);
+    return maybe_entry != squares.end() ? maybe_entry-&gt;second : -1;
+}</code></pre>
+<p class="text-align-justify">在 <code>const</code> 容器上也能正常使用，不过代码丑了点。如果键存在，它会返回一个指向该键对应条目的迭代器；如果键不存在，则返回一个指向容器末尾之后位置的迭代器。我们对返回的迭代器做处理即可。</p>
+<p class="text-align-justify">也可以配套使用一个包装器：</p>
+<pre class="language-cpp"><code>std::optional&lt;int&gt; lookupFind(const std::map&lt;int, int&gt; &amp;map, int key) {
+    auto maybe_entry = map.find(key);
+    if (maybe_entry == map.end()) {
+        return std::nullopt;
+    }
+    return maybe_entry-&gt;second;
+}</code></pre>
+<p class="text-align-justify">这个方法仍然存在线程安全问题，不过对于单线程的适用场景，不存在这个问题。</p>
+<p class="text-align-justify">优点是我们现在只需一次查找！如果想提高代码可读性，可以使用包装器。</p>
+<h2>双重查找真的是一个问题吗？</h2>
+<p class="text-align-justify">具体情况具体分析。</p>
+<p class="text-align-justify">使用 <code>contains</code> 后跟 <code>at()</code> 的方式，确实会有性能损失。基准测试显示，当键存在时，<code>lookupAtContains</code> 的查找速度比 <code>lookupFind</code> 慢约 60%。</p>
+<img src='https://s2.loli.net/2025/10/10/dDtPpCbvrIFKOWw.png' title='lookup_key_found' alt='lookup_key_found' width='100%'/>
+<p class="text-align-justify">更糟糕的是，当键不存在时，<code>lookupAtTryCatch</code> 由于异常开销，<a href='https://quick-bench.com/q/2CtXkOZPw1u6pMb8sLJRPyhNOhE'>速度慢了几个数量级</a>。</p>
+<img src='https://s2.loli.net/2025/10/10/2RjS5BbJaXQ9gGW.png' title='lookup_key_not_found' alt='lookup_key_not_found' width='100%'/>
+<p class="text-align-justify">话虽如此，双重查找的性能损耗自由在代码运行在热点路径上时才重要。大多数应用中，与其他瓶颈（如异常处理、I/O 等）相比，这点性能差异微乎其微。代码清晰度胜过过早优化 - 除非在性能关键领域。</p>
+<h2>结论</h2>
+<p class="text-align-justify">在 <code>map</code> 中查找值并不像看起来那么简单。如下对可选方案做个总结：</p>
+<ul><li>如果期望在键不存在时做插入，并且不是在操作不可变映射，可以使用 <code>operator[]</code>。</li>
+<li>如果期望安全地不做插入地访问，特别时在操作不可变映射时，可以使用 <code>at()</code>，不过要注意异常。</li>
+<li>使用 <code>find()</code>，可控性和性能都更好，代价是代码可能更冗长。如果你正在构建一个可重用组件，建议将 <code>find()</code> 包装在像 <code>lookupFind()</code> 这样的辅助函数中，可以在安全性、性能和代码清晰度之间取得最佳平衡。</li></ul>
+<p class="text-align-justify">最终，选择适合你当前情况的方法 - 可读性、性能和代码库规范都很重要。</p>
+<p class="text-align-justify">你最常用哪种方法？为什么？</p>]]></description>
+            <pubDate>2025-10-10</pubDate>
+            <link>https://bit.xiayf.cn/posts/how-to-look-up-values-in-a-map.html</link>
+            <guid isPermaLink="true">https://bit.xiayf.cn/posts/how-to-look-up-values-in-a-map.html</guid>
+        </item>
         
         <item>
             <title>译文：数据系统中一致性究竟是什么意思？</title>
@@ -85,15 +171,15 @@
         <item>
             <title>absl::Hash 的一个误用</title>
             <description><![CDATA[<p class="text-align-justify">近期在写 <a href='https://github.com/kitelife/lingdong'>LingDong</a> 的 <a href='https://github.com/kitelife/lingdong/blob/7077f1def3790d1ab3f1c9a7f5809c71c98c2ddc/src/plugin/plantuml.hpp#L191'>PlantUML</a> 插件时，一开始使用了 <code>absl::Hash</code> 来计算 PlantUML 输出的 svg 图内容的哈希值，作为输出文件名。</p>
-<pre class="language-cpp"><code>auto hash_value = absl::Hash<std::string>{}(absl::StrJoin(codeblock->lines, "\n"));</code></pre>
+<pre class="language-cpp"><code>auto hash_value = absl::Hash&lt;std::string&gt;{}(absl::StrJoin(codeblock-&gt;lines, &quot;\n&quot;));</code></pre>
 <p class="text-align-justify">发现：即使文章中 plantuml 原始绘图代码没有变更，每次构建，都会产出新的 svg 文件（文件名是文件内容的哈希值，从文件名看都是新文件）。</p>
 <p class="text-align-justify">一开始猜测 PlantUML 生成的 svg 图内容中暗含了什么生成时间点之类的字符串。</p>
 <p class="text-align-justify">经单测分析：对于相同的原始字符串，一次单测运行中两次生成的哈希值是相同的，不同次单测运行中生成的哈希值不同。那么基本可以确定问题原因是 <code>absl::Hash</code> 哈希依赖于某个不确定的种子。分析源码会发现：</p>
-<pre class="language-cpp"><code>absl::Hash<std::string>{}(...)</code></pre>
+<pre class="language-cpp"><code>absl::Hash&lt;std::string&gt;{}(...)</code></pre>
 <p class="text-align-justify">会间接调用 <code>MixingHashState::hash</code>，其实现为：</p>
-<pre class="language-cpp"><code>template <typename T, absl::enable_if_t<!IntegralFastPath<T>::value, int> = 0>
-static size_t hash(const T& value) {
-  return static_cast<size_t>(combine(MixingHashState{}, value).state_);
+<pre class="language-cpp"><code>template &lt;typename T, absl::enable_if_t&lt;!IntegralFastPath&lt;T&gt;::value, int&gt; = 0&gt;
+static size_t hash(const T&amp; value) {
+  return static_cast&lt;size_t&gt;(combine(MixingHashState{}, value).state_);
 }</code></pre>
 <p class="text-align-justify">其中 <code>MixingHashState{}</code> 调用私有的无参构造函数进行实例化：</p>
 <pre class="language-cpp"><code>MixingHashState() : state_(Seed()) {}</code></pre>
@@ -106,7 +192,7 @@ static size_t hash(const T& value) {
   // and prevent having users depend on the particular hash values.
   // It is not meant as a security feature right now, but it leaves the door
   // open to upgrade it to a true per-process random seed. A true random seed
-  // costs more and we don't need to pay for that right now.
+  // costs more and we don&apos;t need to pay for that right now.
   //
   // On platforms with ASLR, we take advantage of it to make a per-process
   // random value.
@@ -115,28 +201,28 @@ static size_t hash(const T& value) {
   // On other platforms this is still going to be non-deterministic but most
   // probably per-build and not per-process.
   ABSL_ATTRIBUTE_ALWAYS_INLINE static uint64_t Seed() {
-#if (!defined(__clang__) || __clang_major__ > 11) && \
+#if (!defined(__clang__) || __clang_major__ &gt; 11) &amp;&amp; \
     (!defined(__apple_build_version__) ||            \
-     __apple_build_version__ >= 19558921)  // Xcode 12
-    return static_cast<uint64_t>(reinterpret_cast<uintptr_t>(&kSeed));
+     __apple_build_version__ &gt;= 19558921)  // Xcode 12
+    return static_cast&lt;uint64_t&gt;(reinterpret_cast&lt;uintptr_t&gt;(&amp;kSeed));
 #else
     // Workaround the absence of
     // https://github.com/llvm/llvm-project/commit/bc15bf66dcca76cc06fe71fca35b74dc4d521021.
-    return static_cast<uint64_t>(reinterpret_cast<uintptr_t>(kSeed));
+    return static_cast&lt;uint64_t&gt;(reinterpret_cast&lt;uintptr_t&gt;(kSeed));
 #endif
   }
   static const void* const kSeed;
 
   uint64_t state_;</code></pre>
 <p class="text-align-justify">而 <code>kSeed</code> 静态成员变量的初始化逻辑为 - 存储自身的地址：</p>
-<pre class="language-cpp"><code>ABSL_CONST_INIT const void* const MixingHashState::kSeed = &kSeed;</code></pre>
+<pre class="language-cpp"><code>ABSL_CONST_INIT const void* const MixingHashState::kSeed = &amp;kSeed;</code></pre>
 <p class="text-align-justify">C++ 程序中，<strong>静态变量的地址在编译期可知（链接时确定），静态变量在程序启动时初始化（早于 main 执行）</strong>。</p>
 <p class="text-align-justify">基于安全考虑，现代操作系统都会使用“<a href='https://en.wikipedia.org/wiki/Address_space_layout_randomization'>地址空间配置随机加载（ASLR）</a>” 这一机制，导致：<strong>同一程序中的同一静态变量，不同次运行或者在不同进程中，内存地址不同</strong>。</p>
 <p class="text-align-justify"><code>absl::Hash</code> 基于这一机制来生成哈希的不确定种子值。<a href='https://abseil.io/docs/cpp/guides/hash#abslhash'>Abseil 官方指南</a>中其实也有一处不太显眼的说明：</p>
 <pre class="language-text"><code>NOTE: the hash codes computed by absl::Hash are not guaranteed to be stable across different runs of your program, or across different dynamically loaded libraries in your program.</code></pre>
 <p class="text-align-justify">这也就意味着：基于 <code>absl::Hash</code> 生成的哈希值以及 Abseil 中依赖哈希逻辑的容器不能持久化以后续使用。</p>
 <p class="text-align-justify">Abseil 库中似乎也未提供方法以绕过这一机制。只好改成使用 C++ 标准库中的 <code>std::hash</code>：</p>
-<pre class="language-cpp"><code>auto hash_value = std::hash<std::string>{}(absl::StrJoin(codeblock->lines, "\n"));</code></pre>
+<pre class="language-cpp"><code>auto hash_value = std::hash&lt;std::string&gt;{}(absl::StrJoin(codeblock-&gt;lines, &quot;\n&quot;));</code></pre>
 <p class="text-align-justify"><code>std::hash</code> 生成的哈希值是确定性的，其实现基于 <a href='https://en.wikipedia.org/wiki/MurmurHash#MurmurHash2'>MurmurHash2</a> 和 <a href='https://github.com/google/cityhash'>CityHash</a> 哈希算法。</p>]]></description>
             <pubDate>2025-06-15</pubDate>
             <link>https://bit.xiayf.cn/posts/absl-hash-misuse.html</link>
@@ -185,12 +271,12 @@ static size_t hash(const T& value) {
 <h2>三、<code>-fassociative-math</code></h2>
 <blockquote><p class="text-align-justify">允许在浮点运算序列中重新结合操作数。</p></blockquote>
 <p class="text-align-justify">这个编译选项允许编译器改变浮点运算序列中的求值顺序。例如，如果有一个表达式 <code>(a+b)+c</code>，编译器可以将其调整为求值 <code>a+(b+c)</code>。这两个表达式对于实数在数学上是等价的，但在浮点运算中它们的求值结果并不相等：它们产生的误差可能不同，在某些情况下差异可能非常显著：</p>
-<pre class="language-julia"><code>julia> a = 1e9+1; b = -1e9; c = 0.1;
+<pre class="language-julia"><code>julia&gt; a = 1e9+1; b = -1e9; c = 0.1;
 
-julia> (a+b)+c
+julia&gt; (a+b)+c
 1.1
 
-julia> a+(b+c)
+julia&gt; a+(b+c)
 1.100000023841858</code></pre>
 <h3>3.1 向量化</h3>
 <p class="text-align-justify">那么我们为什么要启用这个编译选项呢？一个主要原因是它能启用向量/SIMD 指令相关的优化。</p>
@@ -1031,7 +1117,7 @@ class PosixEnv : public Env {}</code></pre>
 <p class="text-align-justify">leveldb 基于文件锁来防止多个进程打开同一个数据库。</p>
 <p class="text-align-justify">文件锁使用的文件名称为 <code>LOCK</code>，对这个文件加锁成功之后，才能执行后续的逻辑。</p>
 <pre class="language-cpp"><code>assert(db_lock_ == nullptr);
-Status s = env_->LockFile(LockFileName(dbname_), &db_lock_);  
+Status s = env_-&gt;LockFile(LockFileName(dbname_), &amp;db_lock_);  
 if (!s.ok()) {  
   return s;  
 }</code></pre>
@@ -1049,19 +1135,19 @@ if (!s.ok()) {
 // to go away.  
 //  
 // May create the named file if it does not already exist.  
-virtual Status LockFile(const std::string& fname, FileLock** lock) = 0;</code></pre>
+virtual Status LockFile(const std::string&amp; fname, FileLock** lock) = 0;</code></pre>
 <p class="text-align-justify">原理参见：</p>
 <ul><li>https://man7.org/linux/man-pages/man2/fcntl.2.html 的 “Advisory record locking” 部分</li>
 <li><a href='https://www.cnblogs.com/nufangrensheng/p/3554168.html'>高级 I/O 之记录锁</a></li></ul>
 <pre class="language-cpp"><code>int LockOrUnlock(int fd, bool lock) {  
   errno = 0;  
   struct ::flock file_lock_info;  
-  std::memset(&file_lock_info, 0, sizeof(file_lock_info));  
+  std::memset(&amp;file_lock_info, 0, sizeof(file_lock_info));  
   file_lock_info.l_type = (lock ? F_WRLCK : F_UNLCK);  
   file_lock_info.l_whence = SEEK_SET;  
   file_lock_info.l_start = 0;  
   file_lock_info.l_len = 0;  // Lock/unlock entire file.  
-  return ::fcntl(fd, F_SETLK, &file_lock_info);  
+  return ::fcntl(fd, F_SETLK, &amp;file_lock_info);  
 }</code></pre>
 <blockquote><p class="text-align-justify">cat client 基于 flock 函数来实现文件锁（Open file description locks (non-POSIX)）。与 leveldb 采用的文件锁方式，区别见 fcntl 文档说明：</p>
 <p class="text-align-justify">Open file description locks are advisory byte-range locks whose operation is in most respects identical to the traditional record locks described above.  This lock type is Linux-specific, and available since Linux 3.15.</p>
@@ -1074,15 +1160,15 @@ try {
                                             : FLAGS_cat_id_lock_file;
 
   file_lock_ = new FileLock(lock_file_name_);
-  if (!file_lock_->TryLock()) {
-    throw runtime_error(lock_file_name_ + " is locked by another process");
+  if (!file_lock_-&gt;TryLock()) {
+    throw runtime_error(lock_file_name_ + &quot; is locked by another process&quot;);
   }
 }
 //
 bool FileLock::TryLock() {
   //mode_t m = umask(0);
   fd_ = open(file_name_.c_str(), O_RDWR | O_CREAT, 0666);
-  if (fd_ >= 0 && flock(fd_, LOCK_EX | LOCK_NB) < 0) {
+  if (fd_ &gt;= 0 &amp;&amp; flock(fd_, LOCK_EX | LOCK_NB) &lt; 0) {
     close(fd_);
     fd_ = -1;
     return false;
@@ -1091,7 +1177,7 @@ bool FileLock::TryLock() {
 }
 
 bool FileLock::Unlock() {
-  if (fd_ < 0) {
+  if (fd_ &lt; 0) {
     return true;
   }
   remove(file_name_.c_str());
@@ -1133,8 +1219,8 @@ void Ref() { ++refs_; }
 // Drop reference count.  Delete if no more references exist.  
 void Unref() {  
   --refs_;  
-  assert(refs_ >= 0);  
-  if (refs_ <= 0) {  
+  assert(refs_ &gt;= 0);  
+  if (refs_ &lt;= 0) {  
     delete this;  
   }  
 }</code></pre>
@@ -1179,8 +1265,8 @@ void Unref() {
 <p class="text-align-justify">leveldb 中每个 Put/Delete 操作都被分配了一个序列号（SequenceNum），这个序列号是一种“Lamport 时钟” 或者说 “逻辑时间戳”。</p>
 <p class="text-align-justify">leveldb 支持对数据库做一个快照，这个快照操作非常轻量 - 就是最新分配分配序列号（LastSequence）。这个快照的含义：序列号小于等于LastSequence的操作都属于这个快照的，大于 LastSequence 的操作则不属于这个快照，是在这个快照发生之后发生的。</p>
 <pre class="language-cpp"><code>const Snapshot* DBImpl::GetSnapshot() {  
-  MutexLock l(&mutex_);  
-  return snapshots_.New(versions_->LastSequence());  
+  MutexLock l(&amp;mutex_);  
+  return snapshots_.New(versions_-&gt;LastSequence());  
 }
 
 // Abstract handle to particular state of a DB.  
@@ -1226,7 +1312,7 @@ class LookupKey {
 public:
   // Initialize *this for looking up user_key at a snapshot with  
   // the specified sequence number.  
-  LookupKey(const Slice& user_key, SequenceNumber sequence);
+  LookupKey(const Slice&amp; user_key, SequenceNumber sequence);
 
   // Return a key suitable for lookup in a MemTable.  
   Slice memtable_key() const { return Slice(start_, end_ - start_); }
@@ -1239,23 +1325,23 @@ public:
 
 private:
   // We construct a char array of the form:  
-  //    klength  varint32               <-- start_  
-  //    userkey  char[klength]          <-- kstart_  
+  //    klength  varint32               &lt;-- start_  
+  //    userkey  char[klength]          &lt;-- kstart_  
   //    tag      uint64  
-  //                                    <-- end_  
+  //                                    &lt;-- end_  
   // The array is a suitable MemTable key.  
-  // The suffix starting with "userkey" can be used as an InternalKey.  
+  // The suffix starting with &quot;userkey&quot; can be used as an InternalKey.  
   const char* start_;  
   const char* kstart_;  
   const char* end_;  
   char space_[200];  // Avoid allocation for short keys
 }
 
-LookupKey::LookupKey(const Slice& user_key, SequenceNumber s) {  
+LookupKey::LookupKey(const Slice&amp; user_key, SequenceNumber s) {  
   size_t usize = user_key.size();  
   size_t needed = usize + 13;  // A conservative estimate  
   char* dst;  
-  if (needed <= sizeof(space_)) {  
+  if (needed &lt;= sizeof(space_)) {  
     dst = space_;  
   } else {  
     dst = new char[needed];  
@@ -1271,9 +1357,9 @@ LookupKey::LookupKey(const Slice& user_key, SequenceNumber s) {
 }
 
 static uint64_t PackSequenceAndType(uint64_t seq, ValueType t) {  
-  assert(seq <= kMaxSequenceNumber);  
-  assert(t <= kValueTypeForSeek);  
-  return (seq << 8) | t;  
+  assert(seq &lt;= kMaxSequenceNumber);  
+  assert(t &lt;= kValueTypeForSeek);  
+  return (seq &lt;&lt; 8) | t;  
 }</code></pre>
 <h4>9.2.3 全库/范围有序扫描（遍历）</h4>
 <pre class="language-cpp"><code>class DB {
@@ -1284,18 +1370,18 @@ public:
  //  
  // Caller should delete the iterator when it is no longer needed.  
  // The returned iterator should be deleted before this db is deleted.  
- virtual Iterator* NewIterator(const ReadOptions& options) = 0; // 接口
+ virtual Iterator* NewIterator(const ReadOptions&amp; options) = 0; // 接口
 }
 
 // 实现
-Iterator* DBImpl::NewIterator(const ReadOptions& options) {  
+Iterator* DBImpl::NewIterator(const ReadOptions&amp; options) {  
   SequenceNumber latest_snapshot;  
   uint32_t seed;  
-  Iterator* iter = NewInternalIterator(options, &latest_snapshot, &seed);  
+  Iterator* iter = NewInternalIterator(options, &amp;latest_snapshot, &amp;seed);  
   return NewDBIterator(this, user_comparator(), iter,  
                        (options.snapshot != nullptr  
-                            ? static_cast<const SnapshotImpl*>(options.snapshot)  
-                                  ->sequence_number()  
+                            ? static_cast&lt;const SnapshotImpl*&gt;(options.snapshot)  
+                                  -&gt;sequence_number()  
                             : latest_snapshot),  
                        seed);  
 }
@@ -1318,7 +1404,7 @@ public:
   // Position at the first key in the source that is at or past target.  
   // The iterator is Valid() after this call iff the source contains  
   // an entry that comes at or past target.  
-  virtual void Seek(const Slice& target) = 0;
+  virtual void Seek(const Slice&amp; target) = 0;
 
   // Moves to the next entry in the source.  After this call, Valid() is  
   // true iff the iterator was not positioned at the last entry in the source.  
@@ -1386,13 +1472,13 @@ public:
 
 const int kNumNonTableCacheFiles = 10;
 
-static int TableCacheSize(const Options& sanitized_options) {  
+static int TableCacheSize(const Options&amp; sanitized_options) {  
   // Reserve ten files or so for other uses and give the rest to TableCache.  
   return sanitized_options.max_open_files - kNumNonTableCacheFiles;  
 }</code></pre>
 <pre class="language-cpp"><code>explicit ShardedLRUCache(size_t capacity) : last_id_(0) {  
   const size_t per_shard = (capacity + (kNumShards - 1)) / kNumShards;  
-  for (int s = 0; s < kNumShards; s++) {  
+  for (int s = 0; s &lt; kNumShards; s++) {  
     shard_[s].SetCapacity(per_shard);  
   }  
 }</code></pre>
@@ -1404,13 +1490,13 @@ static int TableCacheSize(const Options& sanitized_options) {
 bool fill_cache = true;</code></pre>
 <p class="text-align-justify">块缓存使用的键为 “缓存 id” 拼接上 数据块在文件中的偏移位置：</p>
 <pre class="language-cpp"><code>char cache_key_buffer[16];  
-EncodeFixed64(cache_key_buffer, table->rep_->cache_id);  
+EncodeFixed64(cache_key_buffer, table-&gt;rep_-&gt;cache_id);  
 EncodeFixed64(cache_key_buffer + 8, handle.offset());  
 Slice key(cache_key_buffer, sizeof(cache_key_buffer));  
-cache_handle = block_cache->Lookup(key);</code></pre>
+cache_handle = block_cache-&gt;Lookup(key);</code></pre>
 <p class="text-align-justify">“缓存 id” 和 Table 对象关联，不同 Table 对象的“缓存 id” 不同，所以“缓存 id” 用于在同一个缓存中区分不同数据文件的数据块。ShardedLRUCache 缓存实现以递增整数的方式分配“缓存 id”：</p>
 <pre class="language-cpp"><code>uint64_t NewId() override {  
-  MutexLock l(&id_mutex_);  
+  MutexLock l(&amp;id_mutex_);  
   return ++(last_id_);  
 }</code></pre>
 <p class="text-align-justify">compaction 过程会对输入数据文件进行遍历，并且使用的也是同一个 TableCache 实例和各个 Table 实例，如果这个过程也启用块缓存，则会导致大量非热点的数据块缓存起来，对正常检索造成干扰。所以 <u>compaction 过程会将 fill_cache 设置为 false，关闭 compaction 输入遍历的块缓存</u>。</p>
@@ -1452,7 +1538,7 @@ size_t block_size = 4 * 1024;</code></pre>
 LRUHandle lru_ GUARDED_BY(mutex_);  
   
 // Dummy head of in-use list.  
-// Entries are in use by clients, and have refs >= 2 and in_cache==true.  
+// Entries are in use by clients, and have refs &gt;= 2 and in_cache==true.  
 LRUHandle in_use_ GUARDED_BY(mutex_);  
   
 HandleTable table_ GUARDED_BY(mutex_);</code></pre>
@@ -1494,12 +1580,12 @@ public:
  virtual void CreateFilter(const Slice* keys, int n,  
                            std::string* dst) const = 0;  
   
- // "filter" contains the data appended by a preceding call to  
+ // &quot;filter&quot; contains the data appended by a preceding call to  
  // CreateFilter() on this class.  This method must return true if
  // the key was in the list of keys passed to CreateFilter().
  // This method may return true or false if the key was not on the
  // list, but it should aim to return false with a high probability.
- virtual bool KeyMayMatch(const Slice& key, const Slice& filter) const = 0;
+ virtual bool KeyMayMatch(const Slice&amp; key, const Slice&amp; filter) const = 0;
 }
 
 // Return a new filter policy that uses a bloom filter with approximately  
@@ -1517,7 +1603,7 @@ public:
 // FilterPolicy (like NewBloomFilterPolicy) that does not ignore  
 // trailing spaces in keys.
 const FilterPolicy* NewBloomFilterPolicy(int bits_per_key);</code></pre>
-<pre class="language-cpp"><code>static uint32_t BloomHash(const Slice& key) {  
+<pre class="language-cpp"><code>static uint32_t BloomHash(const Slice&amp; key) {  
   return Hash(key.data(), key.size(), 0xbc9f1d34);  
 }  
   
@@ -1533,12 +1619,12 @@ class BloomFilterPolicy : public FilterPolicy {
 	2、提高匹配效率：虽然较小的 k 值可能导致过滤器不准确，但在实际应用中，这个影响往往是可以接受的。因为匹配效率会大幅提高，特别是在过滤器大小相对较小时。
 	3、平衡精度和大小：乘以 0.69 的方法可以帮助找到一个合适的 k 值，使得过滤器的大小和精度达到一个平衡。这对于实际应用来说非常重要，因为它可以确保过滤器既能准确又能高效。
     */
-    k_ = static_cast<size_t>(bits_per_key * 0.69);  // 0.69 =~ ln(2)  
-    if (k_ < 1) k_ = 1;  
-    if (k_ > 30) k_ = 30;  
+    k_ = static_cast&lt;size_t&gt;(bits_per_key * 0.69);  // 0.69 =~ ln(2)  
+    if (k_ &lt; 1) k_ = 1;  
+    if (k_ &gt; 30) k_ = 30;  
   }  
   
-  const char* Name() const override { return "leveldb.BuiltinBloomFilter2"; }  
+  const char* Name() const override { return &quot;leveldb.BuiltinBloomFilter2&quot;; }  
   
   void CreateFilter(const Slice* keys, int n, std::string* dst) const override {  
     // Compute bloom filter size (in both bits and bytes)  
@@ -1546,33 +1632,33 @@ class BloomFilterPolicy : public FilterPolicy {
   
     // For small n, we can see a very high false positive rate.  Fix it  
     // by enforcing a minimum bloom filter length.
-    if (bits < 64) bits = 64;  
+    if (bits &lt; 64) bits = 64;  
   
     size_t bytes = (bits + 7) / 8;  
     bits = bytes * 8;  
   
-    const size_t init_size = dst->size();  
-    dst->resize(init_size + bytes, 0);  
-    dst->push_back(static_cast<char>(k_));  // Remember # of probes in filter  
-    char* array = &(*dst)[init_size];  
-    for (int i = 0; i < n; i++) {  
+    const size_t init_size = dst-&gt;size();  
+    dst-&gt;resize(init_size + bytes, 0);  
+    dst-&gt;push_back(static_cast&lt;char&gt;(k_));  // Remember # of probes in filter  
+    char* array = &amp;(*dst)[init_size];  
+    for (int i = 0; i &lt; n; i++) {  
       // Use double-hashing to generate a sequence of hash values.  
       // See analysis in [Kirsch,Mitzenmacher 2006].
       uint32_t h = BloomHash(keys[i]);  
-      const uint32_t delta = (h >> 17) | (h << 15);  // Rotate right 17 bits  
-      for (size_t j = 0; j < k_; j++) {  // 算 k_ 次哈希以及设置 k_ 个比特位
+      const uint32_t delta = (h &gt;&gt; 17) | (h &lt;&lt; 15);  // Rotate right 17 bits  
+      for (size_t j = 0; j &lt; k_; j++) {  // 算 k_ 次哈希以及设置 k_ 个比特位
         const uint32_t bitpos = h % bits;  
         // 第几个字节？bitpos / 8
         // 目标字节中的第几个比特？ bitpos % 8
-        array[bitpos / 8] |= (1 << (bitpos % 8));  
+        array[bitpos / 8] |= (1 &lt;&lt; (bitpos % 8));  
         h += delta;  // 每次哈希值有变化
       }  
     }  
   }  
   
-  bool KeyMayMatch(const Slice& key, const Slice& bloom_filter) const override {  
+  bool KeyMayMatch(const Slice&amp; key, const Slice&amp; bloom_filter) const override {  
     const size_t len = bloom_filter.size();  
-    if (len < 2) return false;  
+    if (len &lt; 2) return false;  
   
     const char* array = bloom_filter.data();  
     const size_t bits = (len - 1) * 8;  
@@ -1580,17 +1666,17 @@ class BloomFilterPolicy : public FilterPolicy {
     // Use the encoded k so that we can read filters generated by  
     // bloom filters created using different parameters.
     const size_t k = array[len - 1];  
-    if (k > 30) {  
+    if (k &gt; 30) {  
       // Reserved for potentially new encodings for short bloom filters.  
       // Consider it a match.
       return true;  
     }  
   
     uint32_t h = BloomHash(key);  
-    const uint32_t delta = (h >> 17) | (h << 15);  // Rotate right 17 bits  
-    for (size_t j = 0; j < k; j++) {  
+    const uint32_t delta = (h &gt;&gt; 17) | (h &lt;&lt; 15);  // Rotate right 17 bits  
+    for (size_t j = 0; j &lt; k; j++) {  
       const uint32_t bitpos = h % bits;  
-      if ((array[bitpos / 8] & (1 << (bitpos % 8))) == 0) return false;  // 任一比特位不匹配，就算不匹配。
+      if ((array[bitpos / 8] &amp; (1 &lt;&lt; (bitpos % 8))) == 0) return false;  // 任一比特位不匹配，就算不匹配。
       h += delta;  
     }  
     return true;  
@@ -1610,7 +1696,7 @@ const uint8_t KEY_VALIDATOR_LOCK_MASK = KEY_VALIDATOR_LOCK_COUNT - 1;
 
 class KeyValidator {
 public:
-    static KeyValidator& Instance() {
+    static KeyValidator&amp; Instance() {
         static KeyValidator instance;
         return instance;
     }
@@ -1632,20 +1718,20 @@ public:
         }
         std::memset(bitmap_data_, 0, KEY_VALIDATOR_BYTE_SIZE);
         // need to catch bad_alloc ?
-        LOG(WARNING) << "KeyValidator initialized succ.";
+        LOG(WARNING) &lt;&lt; &quot;KeyValidator initialized succ.&quot;;
         return true;
     }
 
     bool Update(uint64_t key_id) {
         if (!bitmap_data_) {
-            LOG(ERROR) << "bitmap_data not initialized!";
+            LOG(ERROR) &lt;&lt; &quot;bitmap_data not initialized!&quot;;
             return false;
         }
         uint64_t byte_index = 0;
         uint8_t bit_mask = 0;
         GetByteIndex(key_id, byte_index, bit_mask);
         // lock to ensure multi-thread write
-        auto& lock = spin_locks[byte_index & KEY_VALIDATOR_LOCK_MASK];
+        auto&amp; lock = spin_locks[byte_index &amp; KEY_VALIDATOR_LOCK_MASK];
         lock.Lock();
         bitmap_data_[byte_index] |= bit_mask;
         lock.UnLock();
@@ -1654,21 +1740,21 @@ public:
 
     bool IsValid(uint64_t key_id) {
         if (!bitmap_data_) {
-            LOG(ERROR) << "bitmap_data not initialized!";
+            LOG(ERROR) &lt;&lt; &quot;bitmap_data not initialized!&quot;;
             return false;
         }
         uint64_t byte_index = 0;
         uint8_t bit_mask = 0;
         GetByteIndex(key_id, byte_index, bit_mask);
-        return (bitmap_data_[byte_index] & bit_mask);
+        return (bitmap_data_[byte_index] &amp; bit_mask);
     }
 
 
-    bool GetValidKeys(const std::vector<int64_t>& key_list,
-                std::vector<int64_t>& result) {
+    bool GetValidKeys(const std::vector&lt;int64_t&gt;&amp; key_list,
+                std::vector&lt;int64_t&gt;&amp; result) {
         result.clear();
         result.reserve(key_list.size());
-        for (auto& key_id : key_list) {
+        for (auto&amp; key_id : key_list) {
             if (IsValid(key_id)) {
                 result.push_back(key_id);
             }
@@ -1678,16 +1764,16 @@ public:
 
 private:
     uint8_t* bitmap_data_ = nullptr;
-    std::vector<psarlib::synchronization::SpinLock> spin_locks;
+    std::vector&lt;psarlib::synchronization::SpinLock&gt; spin_locks;
 
     KeyValidator()
     : spin_locks(KEY_VALIDATOR_LOCK_COUNT) {}
 
-    void GetByteIndex(uint64_t key_id, uint64_t& byte_index, uint8_t& bit_mask) {
-        auto value = key_id & KEY_VALIDATOR_VALUE_MASK;
-        byte_index = value >> 3;                          // divide by 8
-        auto bit_index = value & KEY_VALIDATOR_BIT_MASK;  // mod by 8
-        bit_mask = (KEY_VALIDATOR_ONE << bit_index);
+    void GetByteIndex(uint64_t key_id, uint64_t&amp; byte_index, uint8_t&amp; bit_mask) {
+        auto value = key_id &amp; KEY_VALIDATOR_VALUE_MASK;
+        byte_index = value &gt;&gt; 3;                          // divide by 8
+        auto bit_index = value &amp; KEY_VALIDATOR_BIT_MASK;  // mod by 8
+        bit_mask = (KEY_VALIDATOR_ONE &lt;&lt; bit_index);
     }
 };</code></pre>
 <hr>
@@ -1705,11 +1791,11 @@ private:
 <pre class="language-cpp"><code>class Version {
 private:
   // List of files per level  
-  std::vector<FileMetaData*> files_[config::kNumLevels];
+  std::vector&lt;FileMetaData*&gt; files_[config::kNumLevels];
 }
 
 struct FileMetaData {  
-  FileMetaData() : refs(0), allowed_seeks(1 << 30), file_size(0) {}  
+  FileMetaData() : refs(0), allowed_seeks(1 &lt;&lt; 30), file_size(0) {}  
   
   int refs;  
   int allowed_seeks;  // Seeks allowed until compaction  
@@ -1738,14 +1824,14 @@ struct FileMetaData {
 <h3>7.1 major compaction 触发条件</h3>
 <pre class="language-cpp"><code>// We prefer compactions triggered by too much data in a level over  
 // the compactions triggered by seeks.  
-const bool size_compaction = (current_->compaction_score_ >= 1);  
-const bool seek_compaction = (current_->file_to_compact_ != nullptr);</code></pre>
+const bool size_compaction = (current_-&gt;compaction_score_ &gt;= 1);  
+const bool seek_compaction = (current_-&gt;file_to_compact_ != nullptr);</code></pre>
 <pre class="language-cpp"><code>void VersionSet::Finalize(Version* v) {  
   // Precomputed best level for next compaction  
   int best_level = -1;  
   double best_score = -1;  
   
-  for (int level = 0; level < config::kNumLevels - 1; level++) {  
+  for (int level = 0; level &lt; config::kNumLevels - 1; level++) {  
     double score;  
     if (level == 0) {  
       // We treat level-0 specially by bounding the number of files  
@@ -1759,23 +1845,23 @@ const bool seek_compaction = (current_->file_to_compact_ != nullptr);</code></pr
       // file size is small (perhaps because of a small write-buffer
       // setting, or very high compression ratios, or lots of
       // overwrites/deletions).
-      score = v->files_[level].size() /  
-              static_cast<double>(config::kL0_CompactionTrigger);  
+      score = v-&gt;files_[level].size() /  
+              static_cast&lt;double&gt;(config::kL0_CompactionTrigger);  
     } else {  
       // Compute the ratio of current size to size limit.  
-      const uint64_t level_bytes = TotalFileSize(v->files_[level]);  
+      const uint64_t level_bytes = TotalFileSize(v-&gt;files_[level]);  
       score =  
-          static_cast<double>(level_bytes) / MaxBytesForLevel(options_, level);  
+          static_cast&lt;double&gt;(level_bytes) / MaxBytesForLevel(options_, level);  
     }  
   
-    if (score > best_score) {  
+    if (score &gt; best_score) {  
       best_level = level;  
       best_score = score;  
     }  
   }  
   
-  v->compaction_level_ = best_level;  
-  v->compaction_score_ = best_score;  
+  v-&gt;compaction_level_ = best_level;  
+  v-&gt;compaction_score_ = best_score;  
 }
 
 static double MaxBytesForLevel(const Options* options, int level) {  
@@ -1783,7 +1869,7 @@ static double MaxBytesForLevel(const Options* options, int level) {
   // the level-0 compaction threshold based on number of files.  
   // Result for both level-0 and level-1
   double result = 10. * 1048576.0;  
-  while (level > 1) {  
+  while (level &gt; 1) {  
     result *= 10;  
     level--;  
   }  
@@ -1792,11 +1878,11 @@ static double MaxBytesForLevel(const Options* options, int level) {
 <p class="text-align-justify">leveldb 打开/初始化期间或者每次 compaction 结束时都会计算下次 compaction 最应该处理的哪个 level 的数据文件以及紧迫程度（<code>compaction_score_</code>），不过对于 <svg style="vertical-align: -0.375ex;" xmlns="http://www.w3.org/2000/svg" width="5.542ex" height="1.945ex" role="img" focusable="false" viewBox="0 -694 2449.6 859.6" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-41-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-41-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-41-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-41-NCM-N-30" d="M249-22C390-22 460 92 460 320C460 473 428 575 365 625C330 652 291 666 250 666C109 666 39 551 39 320C39 136 88-22 249-22M361 524C368 489 371 425 371 332C371 240 367 172 360 128C347 48 310 8 249 8C226 8 203 17 182 34C155 57 139 104 132 176C129 201 128 253 128 332C128 419 131 480 136 513C145 568 163 603 191 618C213 630 232 636 249 636C314 636 350 583 361 524Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_0"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-41-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-41-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-41-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-41-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_0" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-41-NCM-I-1D459"></use></g><g data-mml-node="mn" transform="translate(331,-150) scale(0.707)" data-latex="0"><use data-c="30" xlink:href="#MJX-41-NCM-N-30"></use></g></g></g></g></svg> 和 其他 level 的计算逻辑有区别：</p>
 <ul><li>1、<svg style="vertical-align: -0.375ex;" xmlns="http://www.w3.org/2000/svg" width="5.542ex" height="1.945ex" role="img" focusable="false" viewBox="0 -694 2449.6 859.6" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-42-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-42-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-42-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-42-NCM-N-30" d="M249-22C390-22 460 92 460 320C460 473 428 575 365 625C330 652 291 666 250 666C109 666 39 551 39 320C39 136 88-22 249-22M361 524C368 489 371 425 371 332C371 240 367 172 360 128C347 48 310 8 249 8C226 8 203 17 182 34C155 57 139 104 132 176C129 201 128 253 128 332C128 419 131 480 136 513C145 568 163 603 191 618C213 630 232 636 249 636C314 636 350 583 361 524Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_0"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-42-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-42-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-42-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-42-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_0" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-42-NCM-I-1D459"></use></g><g data-mml-node="mn" transform="translate(331,-150) scale(0.707)" data-latex="0"><use data-c="30" xlink:href="#MJX-42-NCM-N-30"></use></g></g></g></g></svg> compaction 紧迫程度，取决于文件数和 compaction 阈值（kL0_CompactionTrigger = 4）的倍数</li>
 <li>2、其他 level 则取决于文件占用的存储空间和阈值的倍数，level 越大，阈值越大 - <svg style="vertical-align: -0.339ex;" xmlns="http://www.w3.org/2000/svg" width="5.542ex" height="1.91ex" role="img" focusable="false" viewBox="0 -694 2449.6 844" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-43-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-43-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-43-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-43-NCM-N-31" d="M269 666C228 624 168 603 89 603L89 564C141 564 184 572 217 588L217 82C217 64 213 52 204 47C195 42 170 39 130 39L95 39L95 0C120 2 174 3 257 3C340 3 394 2 419 0L419 39L384 39C343 39 318 42 310 47C302 52 297 64 297 82L297 636C297 660 295 666 269 666Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_1"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-43-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-43-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-43-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-43-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_1" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-43-NCM-I-1D459"></use></g><g data-mml-node="mn" transform="translate(331,-150) scale(0.707)" data-latex="1"><use data-c="31" xlink:href="#MJX-43-NCM-N-31"></use></g></g></g></g></svg> 阈值为 <code>10. * 1048576.0</code> 字节（10MB），相邻层之间的阈值为 10 倍关系。</li></ul>
-<pre class="language-cpp"><code>bool Version::UpdateStats(const GetStats& stats) {  
+<pre class="language-cpp"><code>bool Version::UpdateStats(const GetStats&amp; stats) {  
   FileMetaData* f = stats.seek_file;  
   if (f != nullptr) {  
-    f->allowed_seeks--;  // allowed_seeks 初始值 1 << 30
-    if (f->allowed_seeks <= 0 && file_to_compact_ == nullptr) {  
+    f-&gt;allowed_seeks--;  // allowed_seeks 初始值 1 &lt;&lt; 30
+    if (f-&gt;allowed_seeks &lt;= 0 &amp;&amp; file_to_compact_ == nullptr) {  
       file_to_compact_ = f;  
       file_to_compact_level_ = stats.seek_file_level;  
       return true;  
@@ -1821,13 +1907,13 @@ private:
   Version* input_version_;  // 当前对哪个 Version 做 compaction？
   VersionEdit edit_; // 每次 compaction 会产生一个新的 Version
 
-  // Each compaction reads inputs from "level_" and "level_+1"
+  // Each compaction reads inputs from &quot;level_&quot; and &quot;level_+1&quot;
   // compaction 只会在目标层和相邻下一层之间进行
-  std::vector<FileMetaData*> inputs_[2];  // The two sets of inputs
+  std::vector&lt;FileMetaData*&gt; inputs_[2];  // The two sets of inputs
 
   // State used to check for number of overlapping grandparent files  
   // (parent == level_ + 1, grandparent == level_ + 2)  
-  std::vector<FileMetaData*> grandparents_;  // 用于判断是否可以将 level 层的文件直接移动到 level+1 层，见 bool Compaction::IsTrivialMove() const
+  std::vector&lt;FileMetaData*&gt; grandparents_;  // 用于判断是否可以将 level 层的文件直接移动到 level+1 层，见 bool Compaction::IsTrivialMove() const
   size_t grandparent_index_;  // Index in grandparent_starts_  
   bool seen_key_;             // Some output key has been seen  
   int64_t overlapped_bytes_;  // Bytes of overlap between current output  
@@ -1835,10 +1921,10 @@ private:
 
   // State for implementing IsBaseLevelForKey  
   
-  // level_ptrs_ holds indices into input_version_->levels_: our state  
+  // level_ptrs_ holds indices into input_version_-&gt;levels_: our state  
   // is that we are positioned at one of the file ranges for each  
   // higher level than the ones involved in this compaction (i.e. for  
-  // all L >= level_ + 2).  
+  // all L &gt;= level_ + 2).  
   size_t level_ptrs_[config::kNumLevels];
 }</code></pre>
 <pre class="language-cpp"><code>Compaction* VersionSet::PickCompaction() {  
@@ -1847,47 +1933,47 @@ private:
   
   // We prefer compactions triggered by too much data in a level over  
   // the compactions triggered by seeks.
-  const bool size_compaction = (current_->compaction_score_ >= 1);
-  const bool seek_compaction = (current_->file_to_compact_ != nullptr);  
+  const bool size_compaction = (current_-&gt;compaction_score_ &gt;= 1);
+  const bool seek_compaction = (current_-&gt;file_to_compact_ != nullptr);  
   if (size_compaction) {  
-    level = current_->compaction_level_;  
-    assert(level >= 0);  
-    assert(level + 1 < config::kNumLevels);  
+    level = current_-&gt;compaction_level_;  
+    assert(level &gt;= 0);  
+    assert(level + 1 &lt; config::kNumLevels);  
     c = new Compaction(options_, level);  
   
     // Pick the first file that comes after compact_pointer_[level]  
-    for (size_t i = 0; i < current_->files_[level].size(); i++) {  
-      FileMetaData* f = current_->files_[level][i];  
+    for (size_t i = 0; i &lt; current_-&gt;files_[level].size(); i++) {  
+      FileMetaData* f = current_-&gt;files_[level][i];  
       if (compact_pointer_[level].empty() ||  
-          icmp_.Compare(f->largest.Encode(), compact_pointer_[level]) > 0) {  
-        c->inputs_[0].push_back(f);  // 选择该 level 上次 compaction 的文件的下一个文件
+          icmp_.Compare(f-&gt;largest.Encode(), compact_pointer_[level]) &gt; 0) {  
+        c-&gt;inputs_[0].push_back(f);  // 选择该 level 上次 compaction 的文件的下一个文件
         break;  
       }  
     }  
-    if (c->inputs_[0].empty()) {  
+    if (c-&gt;inputs_[0].empty()) {  
       // Wrap-around to the beginning of the key space  
-      c->inputs_[0].push_back(current_->files_[level][0]);  // 如果该 level 整个 key 空间都 compaction 过，则从头开始选择第一个文件
+      c-&gt;inputs_[0].push_back(current_-&gt;files_[level][0]);  // 如果该 level 整个 key 空间都 compaction 过，则从头开始选择第一个文件
     }  
   } else if (seek_compaction) {  
-    level = current_->file_to_compact_level_;  
+    level = current_-&gt;file_to_compact_level_;  
     c = new Compaction(options_, level);  
-    c->inputs_[0].push_back(current_->file_to_compact_);  
+    c-&gt;inputs_[0].push_back(current_-&gt;file_to_compact_);  
   } else {  
     return nullptr;  
   }  
   
-  c->input_version_ = current_;  
-  c->input_version_->Ref();  
+  c-&gt;input_version_ = current_;  
+  c-&gt;input_version_-&gt;Ref();  
   
   // Files in level 0 may overlap each other, so pick up all overlapping ones  
   if (level == 0) {  
     InternalKey smallest, largest;  
-    GetRange(c->inputs_[0], &smallest, &largest);  
+    GetRange(c-&gt;inputs_[0], &amp;smallest, &amp;largest);  
     // Note that the next call will discard the file we placed in  
-    // c->inputs_[0] earlier and replace it with an overlapping set
+    // c-&gt;inputs_[0] earlier and replace it with an overlapping set
     // which will include the picked file.
-    current_->GetOverlappingInputs(0, &smallest, &largest, &c->inputs_[0]);  
-    assert(!c->inputs_[0].empty());  
+    current_-&gt;GetOverlappingInputs(0, &amp;smallest, &amp;largest, &amp;c-&gt;inputs_[0]);  
+    assert(!c-&gt;inputs_[0].empty());  
   }  
   
   SetupOtherInputs(c);  
@@ -1902,32 +1988,32 @@ private:
 <li>2)、<svg style="vertical-align: -0.339ex;" xmlns="http://www.w3.org/2000/svg" width="5.542ex" height="1.91ex" role="img" focusable="false" viewBox="0 -694 2449.6 844" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-50-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-50-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-50-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-50-NCM-N-31" d="M269 666C228 624 168 603 89 603L89 564C141 564 184 572 217 588L217 82C217 64 213 52 204 47C195 42 170 39 130 39L95 39L95 0C120 2 174 3 257 3C340 3 394 2 419 0L419 39L384 39C343 39 318 42 310 47C302 52 297 64 297 82L297 636C297 660 295 666 269 666Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_1"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-50-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-50-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-50-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-50-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_1" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-50-NCM-I-1D459"></use></g><g data-mml-node="mn" transform="translate(331,-150) scale(0.707)" data-latex="1"><use data-c="31" xlink:href="#MJX-50-NCM-N-31"></use></g></g></g></g></svg> ~ <svg style="vertical-align: -0.357ex;" xmlns="http://www.w3.org/2000/svg" width="5.702ex" height="1.927ex" role="img" focusable="false" viewBox="0 -694 2520.3 851.8" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-51-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-51-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-51-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-51-NCM-I-1D45B" d="M537 137C514 58 481 18 440 18C427 18 420 28 420 47C420 61 426 84 438 115C478 224 498 296 498 333C498 403 451 442 381 442C322 442 271 416 230 363C222 407 187 442 136 442C80 442 58 390 44 345C34 313 29 294 29 287C29 278 34 273 45 273C50 273 53 274 56 276C61 285 64 292 65 299C83 375 106 413 133 413C151 413 160 399 160 371C160 358 155 331 144 290L87 63C84 50 78 24 78 19C78-1 89-11 111-11C130-11 144-1 151 19C153 24 159 49 170 92L191 181L221 295C232 318 249 341 270 365C299 397 335 413 378 413C411 413 427 391 427 348C427 310 406 234 363 120C356 102 353 87 353 74C353 25 390-11 438-11C482-11 517 14 542 64C561 104 571 131 571 144C571 153 566 158 555 158C552 158 537 149 537 137Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_n"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-51-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-51-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-51-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-51-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_n" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-51-NCM-I-1D459"></use></g><g data-mml-node="mi" transform="translate(331,-150) scale(0.707)" data-latex="n"><use data-c="1D45B" xlink:href="#MJX-51-NCM-I-1D45B"></use></g></g></g></g></svg> 层的数据库文件 key 区间不会有重合，所以比较简单，按照 key 区间先做一下排序，然后逐个文件遍历读取就可以。</li></ul></li></ul></li></ul>
 <pre class="language-cpp"><code>Iterator* VersionSet::MakeInputIterator(Compaction* c) {  
   ReadOptions options;  
-  options.verify_checksums = options_->paranoid_checks;  
+  options.verify_checksums = options_-&gt;paranoid_checks;  
   options.fill_cache = false;  
   
   // Level-0 files have to be merged together.  For other levels,  
   // we will make a concatenating iterator per level.  // TODO(opt): use concatenating iterator for level-0 if there is no overlap  
-  const int space = (c->level() == 0 ? c->inputs_[0].size() + 1 : 2);  
+  const int space = (c-&gt;level() == 0 ? c-&gt;inputs_[0].size() + 1 : 2);  
   Iterator** list = new Iterator*[space];  
   int num = 0;  
-  for (int which = 0; which < 2; which++) {  
-    if (!c->inputs_[which].empty()) {  
-      if (c->level() + which == 0) {  
-        const std::vector<FileMetaData*>& files = c->inputs_[which];  
-        for (size_t i = 0; i < files.size(); i++) {  
-          list[num++] = table_cache_->NewIterator(options, files[i]->number,  
-                                                  files[i]->file_size);  
+  for (int which = 0; which &lt; 2; which++) {  
+    if (!c-&gt;inputs_[which].empty()) {  
+      if (c-&gt;level() + which == 0) {  
+        const std::vector&lt;FileMetaData*&gt;&amp; files = c-&gt;inputs_[which];  
+        for (size_t i = 0; i &lt; files.size(); i++) {  
+          list[num++] = table_cache_-&gt;NewIterator(options, files[i]-&gt;number,  
+                                                  files[i]-&gt;file_size);  
         }  
       } else {  
         // Create concatenating iterator for the files from this level  
         list[num++] = NewTwoLevelIterator(  
-            new Version::LevelFileNumIterator(icmp_, &c->inputs_[which]),  
-            &GetFileIterator, table_cache_, options);  
+            new Version::LevelFileNumIterator(icmp_, &amp;c-&gt;inputs_[which]),  
+            &amp;GetFileIterator, table_cache_, options);  
       }  
     }  
   }  
-  assert(num <= space);  
-  Iterator* result = NewMergingIterator(&icmp_, list, num);  
+  assert(num &lt;= space);  
+  Iterator* result = NewMergingIterator(&amp;icmp_, list, num);  
   delete[] list;  
   return result;  
 }</code></pre>
@@ -1944,14 +2030,14 @@ private:
 <p class="text-align-justify">> - 如果发现当前处理的 IK 的 UK 与前一次处理的 IK 的 UK 不相同，则重置状态位。</p></blockquote>
 <pre class="language-cpp"><code>// Handle key/value, add to state, etc.  
 bool drop = false;  
-if (!ParseInternalKey(key, &ikey)) {  
+if (!ParseInternalKey(key, &amp;ikey)) {  
   // Do not hide error keys  
   current_user_key.clear();  
   has_current_user_key = false;  
   last_sequence_for_key = kMaxSequenceNumber;  
 } else {  
   if (!has_current_user_key ||  
-      user_comparator()->Compare(ikey.user_key, Slice(current_user_key)) !=  
+      user_comparator()-&gt;Compare(ikey.user_key, Slice(current_user_key)) !=  
           0) {  
     // First occurrence of this user key  
     current_user_key.assign(ikey.user_key.data(), ikey.user_key.size());  
@@ -1959,12 +2045,12 @@ if (!ParseInternalKey(key, &ikey)) {
     last_sequence_for_key = kMaxSequenceNumber;  
   }  
   
-  if (last_sequence_for_key <= compact->smallest_snapshot) {  
+  if (last_sequence_for_key &lt;= compact-&gt;smallest_snapshot) {  
     // Hidden by an newer entry for same user key  
     drop = true;  // (A)  
-  } else if (ikey.type == kTypeDeletion &&  
-             ikey.sequence <= compact->smallest_snapshot &&  
-             compact->compaction->IsBaseLevelForKey(ikey.user_key)) {  
+  } else if (ikey.type == kTypeDeletion &amp;&amp;  
+             ikey.sequence &lt;= compact-&gt;smallest_snapshot &amp;&amp;  
+             compact-&gt;compaction-&gt;IsBaseLevelForKey(ikey.user_key)) {  
     // For this user key:  
     // (1) there is no data in higher levels
     // (2) data in lower levels will have larger sequence numbers
@@ -1977,18 +2063,18 @@ if (!ParseInternalKey(key, &ikey)) {
   
   last_sequence_for_key = ikey.sequence;  
 }</code></pre>
-<pre class="language-cpp"><code>int InternalKeyComparator::Compare(const Slice& akey, const Slice& bkey) const {  
+<pre class="language-cpp"><code>int InternalKeyComparator::Compare(const Slice&amp; akey, const Slice&amp; bkey) const {  
   // Order by:  
   //    increasing user key (according to user-supplied comparator)
   //    decreasing sequence number
   //    decreasing type (though sequence# should be enough to disambiguate)
-  int r = user_comparator_->Compare(ExtractUserKey(akey), ExtractUserKey(bkey));  // 先比较用户 key 部分
+  int r = user_comparator_-&gt;Compare(ExtractUserKey(akey), ExtractUserKey(bkey));  // 先比较用户 key 部分
   if (r == 0) {  // 如果用户key 相同，则比较序列号，序列号大的排在前面
     const uint64_t anum = DecodeFixed64(akey.data() + akey.size() - 8);  
     const uint64_t bnum = DecodeFixed64(bkey.data() + bkey.size() - 8);  
-    if (anum > bnum) {  
+    if (anum &gt; bnum) {  
       r = -1;  
-    } else if (anum < bnum) {  
+    } else if (anum &lt; bnum) {  
       r = +1;  
     }  
   }  
@@ -2013,58 +2099,58 @@ size_t max_file_size = 2 * 1024 * 1024;</code></pre>
 <li>“WAL log” 文件保留最新的两个即可（memtable 和不可变 memtable 对应的“WAL log”文件）</li></ul></li></ul></li></ul>
 <pre class="language-cpp"><code>Status DBImpl::InstallCompactionResults(CompactionState* compact) {  
   mutex_.AssertHeld();  
-  Log(options_.info_log, "Compacted %d@%d + %d@%d files => %lld bytes",  
-      compact->compaction->num_input_files(0), compact->compaction->level(),  
-      compact->compaction->num_input_files(1), compact->compaction->level() + 1,  
-      static_cast<long long>(compact->total_bytes));  
+  Log(options_.info_log, &quot;Compacted %d@%d + %d@%d files =&gt; %lld bytes&quot;,  
+      compact-&gt;compaction-&gt;num_input_files(0), compact-&gt;compaction-&gt;level(),  
+      compact-&gt;compaction-&gt;num_input_files(1), compact-&gt;compaction-&gt;level() + 1,  
+      static_cast&lt;long long&gt;(compact-&gt;total_bytes));  
   
   // Add compaction outputs  
-  compact->compaction->AddInputDeletions(compact->compaction->edit());  
-  const int level = compact->compaction->level();  
-  for (size_t i = 0; i < compact->outputs.size(); i++) {  
-    const CompactionState::Output& out = compact->outputs[i];  
-    compact->compaction->edit()->AddFile(level + 1, out.number, out.file_size,  
+  compact-&gt;compaction-&gt;AddInputDeletions(compact-&gt;compaction-&gt;edit());  
+  const int level = compact-&gt;compaction-&gt;level();  
+  for (size_t i = 0; i &lt; compact-&gt;outputs.size(); i++) {  
+    const CompactionState::Output&amp; out = compact-&gt;outputs[i];  
+    compact-&gt;compaction-&gt;edit()-&gt;AddFile(level + 1, out.number, out.file_size,  
                                          out.smallest, out.largest);  
   }  
-  return versions_->LogAndApply(compact->compaction->edit(), &mutex_);  
+  return versions_-&gt;LogAndApply(compact-&gt;compaction-&gt;edit(), &amp;mutex_);  
 }</code></pre>
 <pre class="language-cpp"><code>void DBImpl::RemoveObsoleteFiles() {  
   mutex_.AssertHeld();  
   
   if (!bg_error_.ok()) {  
-    // After a background error, we don't know whether a new version may  
+    // After a background error, we don&apos;t know whether a new version may  
     // or may not have been committed, so we cannot safely garbage collect.
     return;  
   }  
   
   // Make a set of all of the live files  
-  std::set<uint64_t> live = pending_outputs_;  
-  versions_->AddLiveFiles(&live);  
+  std::set&lt;uint64_t&gt; live = pending_outputs_;  
+  versions_-&gt;AddLiveFiles(&amp;live);  
   
-  std::vector<std::string> filenames;  
-  env_->GetChildren(dbname_, &filenames);  // Ignoring errors on purpose  
+  std::vector&lt;std::string&gt; filenames;  
+  env_-&gt;GetChildren(dbname_, &amp;filenames);  // Ignoring errors on purpose  
   uint64_t number;  
   FileType type;  
-  std::vector<std::string> files_to_delete;  
-  for (std::string& filename : filenames) {  
-    if (ParseFileName(filename, &number, &type)) {  
+  std::vector&lt;std::string&gt; files_to_delete;  
+  for (std::string&amp; filename : filenames) {  
+    if (ParseFileName(filename, &amp;number, &amp;type)) {  
       bool keep = true;  
       switch (type) {  
         case kLogFile:  
-          keep = ((number >= versions_->LogNumber()) ||  
-                  (number == versions_->PrevLogNumber()));  
+          keep = ((number &gt;= versions_-&gt;LogNumber()) ||  
+                  (number == versions_-&gt;PrevLogNumber()));  
           break;  
         case kDescriptorFile:  
-          // Keep my manifest file, and any newer incarnations'  
+          // Keep my manifest file, and any newer incarnations&apos;  
           // (in case there is a race that allows other incarnations)
-		  keep = (number >= versions_->ManifestFileNumber());  
+		  keep = (number &gt;= versions_-&gt;ManifestFileNumber());  
           break;  
         case kTableFile:  
           keep = (live.find(number) != live.end());  
           break;  
         case kTempFile:  
           // Any temp files that are currently being written to must  
-          // be recorded in pending_outputs_, which is inserted into "live"
+          // be recorded in pending_outputs_, which is inserted into &quot;live&quot;
           keep = (live.find(number) != live.end());  
           break;  
         case kCurrentFile:  
@@ -2077,10 +2163,10 @@ size_t max_file_size = 2 * 1024 * 1024;</code></pre>
       if (!keep) {  
         files_to_delete.push_back(std::move(filename));  
         if (type == kTableFile) {  
-          table_cache_->Evict(number);  
+          table_cache_-&gt;Evict(number);  
         }  
-        Log(options_.info_log, "Delete type=%d #%lld\n", static_cast<int>(type),  
-            static_cast<unsigned long long>(number));  
+        Log(options_.info_log, &quot;Delete type=%d #%lld\n&quot;, static_cast&lt;int&gt;(type),  
+            static_cast&lt;unsigned long long&gt;(number));  
       }  
     }  
   }  
@@ -2089,8 +2175,8 @@ size_t max_file_size = 2 * 1024 * 1024;</code></pre>
   // have unique names which will not collide with newly created files and
   // are therefore safe to delete while allowing other threads to proceed.
   mutex_.Unlock();  
-  for (const std::string& filename : files_to_delete) {  
-    env_->RemoveFile(dbname_ + "/" + filename);  
+  for (const std::string&amp; filename : files_to_delete) {  
+    env_-&gt;RemoveFile(dbname_ + &quot;/&quot; + filename);  
   }  
   mutex_.Lock();  
 }</code></pre>
@@ -2142,20 +2228,20 @@ void VersionEdit::EncodeTo(std::string* dst) const {
     PutVarint64(dst, last_sequence_);  
   }  
   
-  for (size_t i = 0; i < compact_pointers_.size(); i++) {  
+  for (size_t i = 0; i &lt; compact_pointers_.size(); i++) {  
     PutVarint32(dst, kCompactPointer);  
     PutVarint32(dst, compact_pointers_[i].first);  // level  
     PutLengthPrefixedSlice(dst, compact_pointers_[i].second.Encode());  
   }  
   
-  for (const auto& deleted_file_kvp : deleted_files_) {  
+  for (const auto&amp; deleted_file_kvp : deleted_files_) {  
     PutVarint32(dst, kDeletedFile);  
     PutVarint32(dst, deleted_file_kvp.first);   // level  
     PutVarint64(dst, deleted_file_kvp.second);  // file number  
   }  
   
-  for (size_t i = 0; i < new_files_.size(); i++) {  
-    const FileMetaData& f = new_files_[i].second;  
+  for (size_t i = 0; i &lt; new_files_.size(); i++) {  
+    const FileMetaData&amp; f = new_files_[i].second;  
     PutVarint32(dst, kNewFile);  
     PutVarint32(dst, new_files_[i].first);  // level  
     PutVarint64(dst, f.number);  
@@ -2178,9 +2264,9 @@ void VersionEdit::EncodeTo(std::string* dst) const {
 public:
   // Add the specified file at the specified number.  
   // REQUIRES: This version has not been saved (see VersionSet::SaveTo)  
-  // REQUIRES: "smallest" and "largest" are smallest and largest keys in file  
+  // REQUIRES: &quot;smallest&quot; and &quot;largest&quot; are smallest and largest keys in file  
   void AddFile(int level, uint64_t file, uint64_t file_size,  
-               const InternalKey& smallest, const InternalKey& largest) {  
+               const InternalKey&amp; smallest, const InternalKey&amp; largest) {  
     FileMetaData f;  
     f.number = file;  
     f.file_size = file_size;  
@@ -2189,13 +2275,13 @@ public:
     new_files_.push_back(std::make_pair(level, f));  
   }  
   
-  // Delete the specified "file" from the specified "level".  
+  // Delete the specified &quot;file&quot; from the specified &quot;level&quot;.  
   void RemoveFile(int level, uint64_t file) {  
     deleted_files_.insert(std::make_pair(level, file));  
   }
 
 private:
-  typedef std::set<std::pair<int, uint64_t>> DeletedFileSet;  
+  typedef std::set&lt;std::pair&lt;int, uint64_t&gt;&gt; DeletedFileSet;  
   
   std::string comparator_;  
   uint64_t log_number_;  
@@ -2208,16 +2294,16 @@ private:
   bool has_next_file_number_;  
   bool has_last_sequence_;  
   
-  std::vector<std::pair<int, InternalKey>> compact_pointers_;  
+  std::vector&lt;std::pair&lt;int, InternalKey&gt;&gt; compact_pointers_;  
   DeletedFileSet deleted_files_;  
-  std::vector<std::pair<int, FileMetaData>> new_files_;
+  std::vector&lt;std::pair&lt;int, FileMetaData&gt;&gt; new_files_;
 }</code></pre>
 <p class="text-align-justify">VersionEdit 是 Version 版本信息处于编辑/变更的状态，是 Version 版本信息操作的一种日志结构，比如：</p>
 <ul><li>compaction 过程涉及对最新版本的两个 level 可删除文件和新增文件的记录，以及 compaction 暂存状态的记录。</li>
 <li>持久化记录到 MANIFEST 文件中，用于恢复数据库的状态。</li></ul>
 <pre class="language-cpp"><code>class VersionSet {
 public:
-  VersionSet(const std::string& dbname, const Options* options,  
+  VersionSet(const std::string&amp; dbname, const Options* options,  
            TableCache* table_cache, const InternalKeyComparator*);
 
   // Apply *edit to the current version to form a new descriptor that  
@@ -2246,7 +2332,7 @@ public:
   // describes the compaction.  Caller should delete the result.  
   Compaction* PickCompaction();
 
-  // Create an iterator that reads over the compaction inputs for "*c".  
+  // Create an iterator that reads over the compaction inputs for &quot;*c&quot;.  
   // The caller should delete the iterator when no longer needed.  
   Iterator* MakeInputIterator(Compaction* c);
 
@@ -2278,11 +2364,11 @@ public:
   // Lookup the value for key.  If found, store it in *val and  
   // return OK.  Else return a non-OK status.  Fills *stats.  
   // REQUIRES: lock is not held  
-  Status Get(const ReadOptions&, const LookupKey& key, std::string* val,  
+  Status Get(const ReadOptions&amp;, const LookupKey&amp; key, std::string* val,  
              GetStats* stats);
 
 private:
-  Iterator* NewConcatenatingIterator(const ReadOptions&, int level) const;
+  Iterator* NewConcatenatingIterator(const ReadOptions&amp;, int level) const;
 
   VersionSet* vset_;  // VersionSet to which this Version belongs  
   Version* next_;     // Next version in linked list  
@@ -2290,14 +2376,14 @@ private:
   int refs_;          // Number of live refs to this version  
   
   // List of files per level  
-  std::vector<FileMetaData*> files_[config::kNumLevels];  
+  std::vector&lt;FileMetaData*&gt; files_[config::kNumLevels];  
   
   // Next file to compact based on seek stats.  
   FileMetaData* file_to_compact_;  
   int file_to_compact_level_;  
   
   // Level that should be compacted next and its compaction score.  
-  // Score < 1 means compaction is not strictly needed.  These fields  
+  // Score &lt; 1 means compaction is not strictly needed.  These fields  
   // are initialized by Finalize().  
   double compaction_score_;  
   int compaction_level_;
@@ -2307,8 +2393,8 @@ private:
 <pre class="language-cpp"><code>void Version::Ref() { ++refs_; }  
   
 void Version::Unref() {  
-  assert(this != &vset_->dummy_versions_);  
-  assert(refs_ >= 1);  
+  assert(this != &amp;vset_-&gt;dummy_versions_);  
+  assert(refs_ &gt;= 1);  
   --refs_;  
   if (refs_ == 0) {
     delete this;  
@@ -2319,16 +2405,16 @@ Version::~Version() {
   assert(refs_ == 0);  
   
   // Remove from linked list  
-  prev_->next_ = next_;  
-  next_->prev_ = prev_;  
+  prev_-&gt;next_ = next_;  
+  next_-&gt;prev_ = prev_;  
   
   // Drop references to files  
-  for (int level = 0; level < config::kNumLevels; level++) {  
-    for (size_t i = 0; i < files_[level].size(); i++) {  
+  for (int level = 0; level &lt; config::kNumLevels; level++) {  
+    for (size_t i = 0; i &lt; files_[level].size(); i++) {  
       FileMetaData* f = files_[level][i];  
-      assert(f->refs > 0);  
-      f->refs--;  
-      if (f->refs <= 0) {  
+      assert(f-&gt;refs &gt; 0);  
+      f-&gt;refs--;  
+      if (f-&gt;refs &lt;= 0) {  
         delete f;  
       }  
     }  
@@ -2422,7 +2508,7 @@ class FilterBlockBuilder {
   explicit FilterBlockBuilder(const FilterPolicy*);  
   
   void StartBlock(uint64_t block_offset);  
-  void AddKey(const Slice& key);  
+  void AddKey(const Slice&amp; key);  
   Slice Finish();  
   
  private:  
@@ -2431,22 +2517,22 @@ class FilterBlockBuilder {
   const FilterPolicy* policy_;  
 
   std::string keys_;             // Flattened key contents  
-  std::vector<size_t> start_;    // Starting index in keys_ of each key  
+  std::vector&lt;size_t&gt; start_;    // Starting index in keys_ of each key  
 
   std::string result_;           // Filter data computed so far  
-  std::vector<Slice> tmp_keys_;  // policy_->CreateFilter() argument  
-  std::vector<uint32_t> filter_offsets_;  
+  std::vector&lt;Slice&gt; tmp_keys_;  // policy_-&gt;CreateFilter() argument  
+  std::vector&lt;uint32_t&gt; filter_offsets_;  
 };
 
 void FilterBlockBuilder::StartBlock(uint64_t block_offset) {  
   uint64_t filter_index = (block_offset / kFilterBase);  
-  assert(filter_index >= filter_offsets_.size());  
-  while (filter_index > filter_offsets_.size()) {  
+  assert(filter_index &gt;= filter_offsets_.size());  
+  while (filter_index &gt; filter_offsets_.size()) {  
     GenerateFilter();  
   }  
 }
 
-void FilterBlockBuilder::AddKey(const Slice& key) {  
+void FilterBlockBuilder::AddKey(const Slice&amp; key) {  
   Slice k = key;  
   start_.push_back(keys_.size());  
   keys_.append(k.data(), k.size());  
@@ -2498,12 +2584,12 @@ void FilterBlockBuilder::AddKey(const Slice& key) {
 <p class="text-align-justify">也可以在调用侧实例化 WriteBatch 对象，将一批增删操作都先填充到 WriteBatch 对象，然后直接调用 Write 接口执行一批操作，这样写吞吐应该会更高一点。这批操作是<u>原子的</u>（一起写成功或者失败）。</p>
 <img src='../plantuml-images/11051565628098698760.svg' title='11051565628098698760' alt='11051565628098698760'/>
 <pre class="language-cpp"><code>//
-typedef uint64_t SequenceNumber; // 虽然序列号使用了的 uint64_t 类型，但是实际只会使用 56 比特，即最大值为 ((0x1ull << 56) - 1)
+typedef uint64_t SequenceNumber; // 虽然序列号使用了的 uint64_t 类型，但是实际只会使用 56 比特，即最大值为 ((0x1ull &lt;&lt; 56) - 1)
 // We leave eight bits empty at the bottom so a type and sequence#  
 // can be packed together into 64-bits.  
-static const SequenceNumber kMaxSequenceNumber = ((0x1ull << 56) - 1);
+static const SequenceNumber kMaxSequenceNumber = ((0x1ull &lt;&lt; 56) - 1);
 //
-typedef SkipList<const char*, KeyComparator> Table;</code></pre>
+typedef SkipList&lt;const char*, KeyComparator&gt; Table;</code></pre>
 <p class="text-align-justify"><strong>rep_ 存储结构</strong></p>
 <pre class="language-text"><code>// WriteBatch::rep_ :=  
 //    sequence: fixed64  
@@ -2545,7 +2631,7 @@ static const int kHeaderSize = 4 + 2 + 1;</code></pre>
 <p class="text-align-justify">leveldb 写入数据时，如果发现 memtable 占用内存已达到阈值，并且不可变 memtable 数据已被 minor compaction 成 <svg style="vertical-align: -0.375ex;" xmlns="http://www.w3.org/2000/svg" width="5.542ex" height="1.945ex" role="img" focusable="false" viewBox="0 -694 2449.6 859.6" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-7-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-7-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-7-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-7-NCM-N-30" d="M249-22C390-22 460 92 460 320C460 473 428 575 365 625C330 652 291 666 250 666C109 666 39 551 39 320C39 136 88-22 249-22M361 524C368 489 371 425 371 332C371 240 367 172 360 128C347 48 310 8 249 8C226 8 203 17 182 34C155 57 139 104 132 176C129 201 128 253 128 332C128 419 131 480 136 513C145 568 163 603 191 618C213 630 232 636 249 636C314 636 350 583 361 524Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_0"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-7-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-7-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-7-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-7-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_0" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-7-NCM-I-1D459"></use></g><g data-mml-node="mn" transform="translate(331,-150) scale(0.707)" data-latex="0"><use data-c="30" xlink:href="#MJX-7-NCM-N-30"></use></g></g></g></g></svg> 文件，则会将 memtable 切换成不可变 memtable，同时创建一个新的“WAL log”，并申请一个新的 memtable。不过此时新的不可变 memtable 还没被 minor compaction 成 <svg style="vertical-align: -0.375ex;" xmlns="http://www.w3.org/2000/svg" width="5.542ex" height="1.945ex" role="img" focusable="false" viewBox="0 -694 2449.6 859.6" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-8-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-8-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-8-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-8-NCM-N-30" d="M249-22C390-22 460 92 460 320C460 473 428 575 365 625C330 652 291 666 250 666C109 666 39 551 39 320C39 136 88-22 249-22M361 524C368 489 371 425 371 332C371 240 367 172 360 128C347 48 310 8 249 8C226 8 203 17 182 34C155 57 139 104 132 176C129 201 128 253 128 332C128 419 131 480 136 513C145 568 163 603 191 618C213 630 232 636 249 636C314 636 350 583 361 524Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_0"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-8-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-8-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-8-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-8-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_0" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-8-NCM-I-1D459"></use></g><g data-mml-node="mn" transform="translate(331,-150) scale(0.707)" data-latex="0"><use data-c="30" xlink:href="#MJX-8-NCM-N-30"></use></g></g></g></g></svg> 文件，所以前一个“WAL log”文件也还要保留，不能删除。</p>
 <h2>4、MemTable</h2>
 <img src='../plantuml-images/12787296856683968814.svg' title='12787296856683968814' alt='12787296856683968814'/>
-<pre class="language-cpp"><code>typedef SkipList<const char*, KeyComparator> Table;</code></pre>
+<pre class="language-cpp"><code>typedef SkipList&lt;const char*, KeyComparator&gt; Table;</code></pre>
 <p class="text-align-justify">MemTable 是对应一个“WAL log” 文件的内存存储结构。<u>单个 MemTable 内存占用阈值为 4MB(<code>write_buffer_size</code>)</u>，当可变 MemTable 的内存占用达到阈值时，就尝试切换成不可变 MemTable，并创建一个新的 WAL log 文件以及对应的可变 MemTable 来承接写入，而不可变 MemTable 的内容等待被 minor compaction 刷成一个 <svg style="vertical-align: -0.375ex;" xmlns="http://www.w3.org/2000/svg" width="5.542ex" height="1.945ex" role="img" focusable="false" viewBox="0 -694 2449.6 859.6" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><path id="MJX-9-NCM-I-1D459" d="M173 632L49 119C46 105 44 93 44 84C44 31 83-11 136-11C185-11 220 41 241 145C241 154 236 159 225 159C217 159 211 152 208 138C188 59 165 19 138 19C121 19 113 33 113 60C113 75 115 91 119 107L258 679L258 683C255 690 249 694 242 694C210 694 136 685 124 684C109 682 102 674 102 659C102 650 111 645 130 645C147 645 173 645 173 632Z"></path><path id="MJX-9-NCM-I-1D452" d="M124 129C124 153 129 186 139 227L188 227C253 227 303 235 339 250C372 264 394 284 405 309C412 326 415 342 415 355C415 410 363 442 307 442C268 442 229 432 190 412C113 372 46 281 46 171C46 69 105-11 204-11C257-11 304 2 345 27C379 48 404 69 420 90C427 99 430 106 430 109C430 120 425 126 414 126C409 126 404 122 398 114C365 70 324 42 277 30C246 22 223 18 206 18C149 18 124 72 124 129M375 355C375 289 311 256 182 256L147 256C166 322 194 366 232 387C262 404 287 413 307 413C343 413 375 391 375 355Z"></path><path id="MJX-9-NCM-I-1D463" d="M369 391C369 383 378 370 394 350C410 330 418 307 418 281C418 252 404 203 375 134C354 86 306 18 247 18C201 18 178 45 178 100C178 139 197 208 235 307C243 328 247 345 247 357C247 407 213 442 163 442C119 442 84 417 59 367C39 326 29 300 29 287C29 278 34 273 45 273C58 273 60 279 64 293C87 373 119 413 160 413C173 413 180 404 180 385C180 369 175 347 164 318C127 219 108 152 108 115C108 64 125 29 159 10C186-4 214-11 243-11C332-11 394 85 420 162C452 256 468 325 468 369C468 418 452 442 421 442C396 442 369 416 369 391Z"></path><path id="MJX-9-NCM-N-30" d="M249-22C390-22 460 92 460 320C460 473 428 575 365 625C330 652 291 666 250 666C109 666 39 551 39 320C39 136 88-22 249-22M361 524C368 489 371 425 371 332C371 240 367 172 360 128C347 48 310 8 249 8C226 8 203 17 182 34C155 57 139 104 132 176C129 201 128 253 128 332C128 419 131 480 136 513C145 568 163 603 191 618C213 630 232 636 249 636C314 636 350 583 361 524Z"></path></defs><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math" data-latex="level_0"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-9-NCM-I-1D459"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(298,0)"><use data-c="1D452" xlink:href="#MJX-9-NCM-I-1D452"></use></g><g data-mml-node="mi" data-latex="v" transform="translate(764,0)"><use data-c="1D463" xlink:href="#MJX-9-NCM-I-1D463"></use></g><g data-mml-node="mi" data-latex="e" transform="translate(1249,0)"><use data-c="1D452" xlink:href="#MJX-9-NCM-I-1D452"></use></g><g data-mml-node="msub" data-latex="l_0" transform="translate(1715,0)"><g data-mml-node="mi" data-latex="l"><use data-c="1D459" xlink:href="#MJX-9-NCM-I-1D459"></use></g><g data-mml-node="mn" transform="translate(331,-150) scale(0.707)" data-latex="0"><use data-c="30" xlink:href="#MJX-9-NCM-N-30"></use></g></g></g></g></svg> ldb 数据文件。</p>
 <pre class="language-cpp"><code>// Amount of data to build up in memory (backed by an unsorted log  
 // on disk) before converting to a sorted on-disk file.  
@@ -2572,58 +2658,58 @@ size_t write_buffer_size = 4 * 1024 * 1024;</code></pre>
 <p class="text-align-justify"><strong>插入过程示意图</strong></p>
 <img src='../assets/leveldb/skiplist-add.svg' title='skiplist-add' alt='skiplist-add' width='800'/>
 <p class="text-align-justify"><strong>跳表定义</strong></p>
-<pre class="language-cpp"><code>template <typename Key, class Comparator>  
+<pre class="language-cpp"><code>template &lt;typename Key, class Comparator&gt;  
 class SkipList {
 public:
   explicit SkipList(Comparator cmp, Arena* arena);
-  void Insert(const Key& key);
-  bool Contains(const Key& key) const;
+  void Insert(const Key&amp; key);
+  bool Contains(const Key&amp; key) const;
 private:
   Comparator const compare_;  
   Arena* const arena_;  // Arena used for allocations of nodes  
   Node* const head_;
   // Modified only by Insert().  Read racily by readers, but stale  
   // values are ok.  
-  std::atomic<int> max_height_;  // Height of the entire list  
+  std::atomic&lt;int&gt; max_height_;  // Height of the entire list  
   // Read/written only by Insert().  
   Random rnd_;
 }</code></pre>
 <p class="text-align-justify"><strong>跳表节点定义</strong></p>
-<pre class="language-cpp"><code>template <typename Key, class Comparator>  
-struct SkipList<Key, Comparator>::Node {
-  explicit Node(const Key& k) : key(k) {}
+<pre class="language-cpp"><code>template &lt;typename Key, class Comparator&gt;  
+struct SkipList&lt;Key, Comparator&gt;::Node {
+  explicit Node(const Key&amp; k) : key(k) {}
   Key const key;
 
 private:
   // Array of length equal to the node height.  next_[0] is lowest level link.
-  std::atomic<Node*> next_[1];
+  std::atomic&lt;Node*&gt; next_[1];
 }</code></pre>
 <ul><li><code>key</code> 存储节点实际的值</li>
 <li><code>next_</code> 数组中每个指针指向横向的邻居节点</li></ul>
 <p class="text-align-justify">memtable 对跳表模板实际使用的实际类型为：</p>
-<pre class="language-cpp"><code>typedef SkipList<const char*, KeyComparator> Table;</code></pre>
+<pre class="language-cpp"><code>typedef SkipList&lt;const char*, KeyComparator&gt; Table;</code></pre>
 <p class="text-align-justify">对 Key - <code>char*</code> 的实际编码方式：</p>
 <pre class="language-cpp"><code>class MemTableInserter : public WriteBatch::Handler {  
  public:  
   SequenceNumber sequence_;  
   MemTable* mem_;  
   
-  void Put(const Slice& key, const Slice& value) override {  
-    mem_->Add(sequence_, kTypeValue, key, value);  // 插入
+  void Put(const Slice&amp; key, const Slice&amp; value) override {  
+    mem_-&gt;Add(sequence_, kTypeValue, key, value);  // 插入
     sequence_++;  
   }  
-  void Delete(const Slice& key) override {  
-    mem_->Add(sequence_, kTypeDeletion, key, Slice());  // 删除
+  void Delete(const Slice&amp; key) override {  
+    mem_-&gt;Add(sequence_, kTypeDeletion, key, Slice());  // 删除
     sequence_++;  
   }  
 };
 
-void MemTable::Add(SequenceNumber s, ValueType type, const Slice& key,  
-                   const Slice& value) {  
+void MemTable::Add(SequenceNumber s, ValueType type, const Slice&amp; key,  
+                   const Slice&amp; value) {  
   // Format of an entry is concatenation of:  
   //  key_size     : varint32 of internal_key.size()
   //  key bytes    : char[internal_key.size()]
-  //  tag          : uint64((sequence << 8) | type)
+  //  tag          : uint64((sequence &lt;&lt; 8) | type)
   //  value_size   : varint32 of value.size()
   //  value bytes  : char[value.size()]
   size_t key_size = key.size();  
@@ -2636,7 +2722,7 @@ void MemTable::Add(SequenceNumber s, ValueType type, const Slice& key,
   char* p = EncodeVarint32(buf, internal_key_size);  
   std::memcpy(p, key.data(), key_size);  
   p += key_size;  
-  EncodeFixed64(p, (s << 8) | type);  
+  EncodeFixed64(p, (s &lt;&lt; 8) | type);  
   p += 8;  
   p = EncodeVarint32(p, val_size);  
   std::memcpy(p, value.data(), val_size);  
@@ -2652,7 +2738,7 @@ void MemTable::Add(SequenceNumber s, ValueType type, const Slice& key,
 <p class="text-align-justify"><code>KeyComparator</code> 的定义：</p>
 <pre class="language-cpp"><code>struct KeyComparator {  
   const InternalKeyComparator comparator;  
-  explicit KeyComparator(const InternalKeyComparator& c) : comparator(c) {}  
+  explicit KeyComparator(const InternalKeyComparator&amp; c) : comparator(c) {}  
   int operator()(const char* a, const char* b) const;  //
 };
 
@@ -2671,28 +2757,28 @@ class InternalKeyComparator : public Comparator {
  public:  
   explicit InternalKeyComparator(const Comparator* c) : user_comparator_(c) {}  
   const char* Name() const override;  
-  int Compare(const Slice& a, const Slice& b) const override;  
+  int Compare(const Slice&amp; a, const Slice&amp; b) const override;  
   void FindShortestSeparator(std::string* start,  
-                             const Slice& limit) const override;  
+                             const Slice&amp; limit) const override;  
   void FindShortSuccessor(std::string* key) const override;  
   
   const Comparator* user_comparator() const { return user_comparator_; }  
   
-  int Compare(const InternalKey& a, const InternalKey& b) const;  
+  int Compare(const InternalKey&amp; a, const InternalKey&amp; b) const;  
 };
 
-int InternalKeyComparator::Compare(const Slice& akey, const Slice& bkey) const {  
+int InternalKeyComparator::Compare(const Slice&amp; akey, const Slice&amp; bkey) const {  
   // Order by:  
   //    increasing user key (according to user-supplied comparator)
   //    decreasing sequence number
   //    decreasing type (though sequence# should be enough to disambiguate)
-  int r = user_comparator_->Compare(ExtractUserKey(akey), ExtractUserKey(bkey));  // ExtractUserKey 会忽略 Tag，比较原始 key
+  int r = user_comparator_-&gt;Compare(ExtractUserKey(akey), ExtractUserKey(bkey));  // ExtractUserKey 会忽略 Tag，比较原始 key
   if (r == 0) {  
     const uint64_t anum = DecodeFixed64(akey.data() + akey.size() - 8);  // 取出 Tag
     const uint64_t bnum = DecodeFixed64(bkey.data() + bkey.size() - 8);  // 取出 Tag
-    if (anum > bnum) {  // 比较 Tag（序列号 + 操作类型）
+    if (anum &gt; bnum) {  // 比较 Tag（序列号 + 操作类型）
       r = -1;  
-    } else if (anum < bnum) {  
+    } else if (anum &lt; bnum) {  
       r = +1;  
     }  
   }  
@@ -2706,8 +2792,8 @@ int InternalKeyComparator::Compare(const Slice& akey, const Slice& bkey) const {
 <pre class="language-cpp"><code>// Drop reference count.  Delete if no more references exist.  
 void Unref() {  
   --refs_;  
-  assert(refs_ >= 0);  
-  if (refs_ <= 0) {  
+  assert(refs_ &gt;= 0);  
+  if (refs_ &lt;= 0) {  
     delete this;  
   }  
 }</code></pre>]]></description>
@@ -3119,8 +3205,8 @@ AllowAllParametersOfDeclarationOnNextLine: false</code></pre>
 <img src='https://i.loli.net/2020/07/14/ONwUsrlhLmIq8BW.jpg' title='' alt='' width='100%'/>
 <p class="text-align-justify">其中的 队列 实际使用的是 <a href='https://github.com/LMAX-Exchange/disruptor'>Disruptor</a>，多生产者单消费者模式：</p>
 <pre class="language-java"><code>ThreadFactory factory = new ThreadFactoryBuilder().setNameFormat(name).setDaemon(true).build();
-Disruptor<Event<T>>  disruptor = new Disruptor<>(Event<T>::new, bufferSize, factory, ProducerType.MULTI, new SleepingWaitStrategy());
-disruptor.handleEventsWith((Event<T> event, long sequence, boolean endOfBatch) -> {
+Disruptor&lt;Event&lt;T&gt;&gt;  disruptor = new Disruptor&lt;&gt;(Event&lt;T&gt;::new, bufferSize, factory, ProducerType.MULTI, new SleepingWaitStrategy());
+disruptor.handleEventsWith((Event&lt;T&gt; event, long sequence, boolean endOfBatch) -&gt; {
     consumer.accept(event.value, endOfBatch);
     event.value = null;
 });</code></pre>
@@ -3142,7 +3228,7 @@ disruptor.handleEventsWith((Event<T> event, long sequence, boolean endOfBatch) -
     // 默认 200
     int counter = retries;
 
-    while ((availableSequence = dependentSequence.get()) < sequence) {
+    while ((availableSequence = dependentSequence.get()) &lt; sequence) {
       counter = applyWaitMethod(barrier, counter);
     }
 
@@ -3152,11 +3238,11 @@ disruptor.handleEventsWith((Event<T> event, long sequence, boolean endOfBatch) -
 <pre class="language-java"><code>private int applyWaitMethod(final SequenceBarrier barrier, int counter) throws AlertException {
     barrier.checkAlert();
 
-    if (counter > 100)
+    if (counter &gt; 100)
     {
         --counter;
     }
-    else if (counter > 0)
+    else if (counter &gt; 0)
     {
         --counter;
         Thread.yield();
@@ -3172,7 +3258,7 @@ disruptor.handleEventsWith((Event<T> event, long sequence, boolean endOfBatch) -
 }</code></pre>
 <p class="text-align-justify"><a href='https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/locks/LockSupport.html#parkNanos-long-'>LockSupport.parkNanos</a> 方法的作用简单而言即让当前线程睡眠 sleepTimeNs 纳秒。</p>
 <p class="text-align-justify">Disruptor 作为一个任务队列，自带一个线程池，线程池的线程工厂即构造方法传入的 factory，线程数量等于 <a href='https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/dsl/Disruptor.java#L165'>disruptor.handleEventsWith</a> 调用时传入的回调方法数量，handleEventsWith 的参数数量不定:</p>
-<pre class="language-java"><code>public final EventHandlerGroup<T> handleEventsWith(final EventHandler<? super T>... handlers)</code></pre>
+<pre class="language-java"><code>public final EventHandlerGroup&lt;T&gt; handleEventsWith(final EventHandler&lt;? super T&gt;... handlers)</code></pre>
 <p class="text-align-justify">18个 Disruptor 实例，每个实例有一个消费者线程，消费者线程不断检查队列中是否有新的 <code>Event&lt;T&gt;</code> 任务需要处理，如果有，则调用 EventHandler 回调方法进行处理，否则睡眠 sleepTimeNs 纳秒。</p>
 <p class="text-align-justify">到此，结合监控指标，可以大致猜测：由于 sleepTimeNs 较小，导致多个线程的状态不断在 <code>运行</code>、<code>睡眠</code>、<code>等待调度</code> 之间切换，线程上下文切换非常频繁。</p>
 <p class="text-align-justify">围绕 LockSupport.parkNanos 编写一个测试程序，来复现这个问题：</p>
@@ -3185,8 +3271,8 @@ public class Test {
 
   public static void main(String[] args) throws InterruptedException {
     ExecutorService tp = Executors.newFixedThreadPool(18);
-    for (int idx = 0; idx < 18; idx++) {
-      tp.submit(() -> {
+    for (int idx = 0; idx &lt; 18; idx++) {
+      tp.submit(() -&gt; {
         while (true) {
           LockSupport.parkNanos(100);
         }
@@ -3640,13 +3726,13 @@ p.start()</code></pre>
 import BackgroundScheduler
 
 scheduler = BackgroundScheduler()
-scheduler.add_join(func, 'interval', seconds=1)
+scheduler.add_join(func, &apos;interval&apos;, seconds=1)
 scheduler.start()</code></pre>
 <p class="text-align-justify">因为对于 Python 应用，通常会使用 gunicorn 这种 WSGI HTTP 服务器以多进程启动多个应用实例，提升请求吞吐能力。但是对于定时任务我们希望只有一个实例，对此，如果使用 gunicorn，可以基于它的 preload 机制来实现：</p>
 <pre class="language-python"><code># wsgi.py
 import app
 
-if __name__ == "__main__":
+if __name__ == &quot;__main__&quot;:
     app.run()</code></pre>
 <pre class="language-text"><code># 注意其中的 --preload 参数
 gunicorn --workers=4 --preload --log-level=info --access-logfile=access.log -b 0.0.0.0:8080 wsgi:app</code></pre>
@@ -3657,14 +3743,14 @@ gunicorn --workers=4 --preload --log-level=info --access-logfile=access.log -b 0
         def wrapper(*args, **kwargs):
             count = 0
             exception = None
-            while count < times:
+            while count &lt; times:
                 try:
                     return f(*args, **kwargs)
                 except Exception as e:
                     exception = e
                     count += 1
-                    logging.exception("Try {} times".format(count))
-                    if (sleep_then_try_seconds is not None) and count < times:
+                    logging.exception(&quot;Try {} times&quot;.format(count))
+                    if (sleep_then_try_seconds is not None) and count &lt; times:
                         time.sleep(sleep_then_try_seconds)
             raise exception
         return wrapper
@@ -3708,7 +3794,7 @@ with_db(conf.db.connect())(delete_task_from_job_queue)(task_id)</code></pre>
         if self.begin is None:
             self.begin = timeit.default_timer()
         self.cond_true = self.condition()
-        self.timeout_false = self.timeout <= 0 or (timeit.default_timer() - self.begin) < self.timeout
+        self.timeout_false = self.timeout &lt;= 0 or (timeit.default_timer() - self.begin) &lt; self.timeout
         return self.cond_true and self.timeout_false
 
     def is_timeout(self):
@@ -3725,10 +3811,10 @@ if cond.is_timeout():
 <p class="text-align-justify">当前应用处于什么环境，可以通过环境变量来配置，应用初始化时最先检测当前处于什么环境，之后的初始化流程就可以依据环境配置来加载配置，定制应用行为。</p>
 <pre class="language-python"><code># conf/__init__.py
 class AppConfig(object):
-    app_env = os.getenv('APP_ENV', 'development')
-    is_prod = app_env == 'production'
-    is_dev = app_env == 'development'
-    is_testing = app_env == 'testing'
+    app_env = os.getenv(&apos;APP_ENV&apos;, &apos;development&apos;)
+    is_prod = app_env == &apos;production&apos;
+    is_dev = app_env == &apos;development&apos;
+    is_testing = app_env == &apos;testing&apos;
     
     # 其余应用配置项
     ...
@@ -3737,7 +3823,7 @@ conf = AppConfig()
 
 
 def _load_config_by_env(env: str):
-    '''
+    &apos;&apos;&apos;
     不同环境加载不同的配置文件
     配置目录结构：
     conf/
@@ -3745,13 +3831,13 @@ def _load_config_by_env(env: str):
         development.py
         production.py
         testing.py
-    '''
-    module = importlib.import_module('conf.{}'.format(env))
-    if not hasattr(module, 'Config'):
-        logging.warning('Not find {} config'.format(env))
+    &apos;&apos;&apos;
+    module = importlib.import_module(&apos;conf.{}&apos;.format(env))
+    if not hasattr(module, &apos;Config&apos;):
+        logging.warning(&apos;Not find {} config&apos;.format(env))
         return
-    for name, value in getattr(module, 'Config').__dict__.items():
-        if name.startswith('__'):
+    for name, value in getattr(module, &apos;Config&apos;).__dict__.items():
+        if name.startswith(&apos;__&apos;):
             continue
         conf.__dict__[name] = value</code></pre>
 <pre class="language-python"><code># 根据环境配置日志级别
@@ -3761,23 +3847,23 @@ logging.basicConfig(format=consts.LOG_FORMAT, level=log_level)</code></pre>
 <p class="text-align-justify">日志是问题排查的主要信息来源，所以日志记录得好不好，很关键。</p>
 <pre class="language-python"><code># https://github.com/python/cpython/blob/3.7/Lib/logging/__init__.py#L457
 # 日志时间 - 日志级别 - 代码文件路径 - 行号 - 进程 ID - 线程名称 - 日志内容
-LOG_FORMAT = '%(asctime)-15s - %(levelname)s - %(pathname)s - %(lineno)d - %(process)d - %(threadName)s - %(message)s'</code></pre>
+LOG_FORMAT = &apos;%(asctime)-15s - %(levelname)s - %(pathname)s - %(lineno)d - %(process)d - %(threadName)s - %(message)s&apos;</code></pre>
 <h4>6、API 规范与异常提示</h4>
 <p class="text-align-justify">为了统一前端 API 响应处理，有必要对 API 响应体的结构指定标准。以我个人的习惯，所有从应用代码中返回的响应，HTTP 状态码都应该是 200，具体当前 API 请求成功还是失败，如果失败，失败的原因是什么都应该包含在响应体中，响应体大致的结构为：</p>
 <pre class="language-json"><code>{
-    "code": ...,
-    "msg": "...",
-    "data": ...
+    &quot;code&quot;: ...,
+    &quot;msg&quot;: &quot;...&quot;,
+    &quot;data&quot;: ...
 }</code></pre>
 <p class="text-align-justify">code 表示请求处理失败时，data 字段可选，code 表示请求处理成功时，msg 字段可选。</p>
 <p class="text-align-justify">前端配合对响应体进行统一检测和提示：</p>
-<pre class="language-javascript"><code>import { notification } from 'antd';
+<pre class="language-javascript"><code>import { notification } from &apos;antd&apos;;
 
 function defaultHTTPCodeHandler(response) {
-  if (response.status >= 400) {
+  if (response.status &gt;= 400) {
     // 注意 clone
-    response.clone().text().then(respBody => {
-      notification.error({message: 'API 异常响应', description: `${response.status}, ${respBody}`, duration: null});
+    response.clone().text().then(respBody =&gt; {
+      notification.error({message: &apos;API 异常响应&apos;, description: `${response.status}, ${respBody}`, duration: null});
       console.log(`${response.status}, ${respBody}`);
     });
   }
@@ -3786,10 +3872,10 @@ function defaultHTTPCodeHandler(response) {
 function defaultMsgCodeHandler(response) {
   if (response.status === 200) {
     // 注意 clone
-    response.clone().json().then(jsonBody => {
+    response.clone().json().then(jsonBody =&gt; {
       // 0、200、10000 都属于成功响应
-      if (jsonBody !== undefined && jsonBody.code !== undefined && jsonBody.code !== 0 && jsonBody.code !== 200 && jsonBody.code != 10000) {
-        notification.error({message: '请求失败', description: `${jsonBody.code}, ${jsonBody.msg}`, duration: null});
+      if (jsonBody !== undefined &amp;&amp; jsonBody.code !== undefined &amp;&amp; jsonBody.code !== 0 &amp;&amp; jsonBody.code !== 200 &amp;&amp; jsonBody.code != 10000) {
+        notification.error({message: &apos;请求失败&apos;, description: `${jsonBody.code}, ${jsonBody.msg}`, duration: null});
         console.log(`${jsonBody.code}, ${jsonBody.msg}`);
       }
     });
@@ -3800,33 +3886,33 @@ function defaultMsgCodeHandler(response) {
   const host = myHost();
   let urlPrefix = host;
   // 自带 host，则不额外补充 host 前缀
-  if (url.startsWith("http://") || url.startsWith("https://")) {
-    urlPrefix = '';
+  if (url.startsWith(&quot;http://&quot;) || url.startsWith(&quot;https://&quot;)) {
+    urlPrefix = &apos;&apos;;
   }
   const httpCodeHandler = httpCodeCallback === undefined ? defaultHTTPCodeHandler : httpCodeCallback;
   const msgCodeHandler = msgCodeCallback === undefined ? defaultMsgCodeHandler : msgCodeCallback;
   // 对于线上环境或者测试环境，不跨域
   if (host === PROD_ENV_HOST || host === TEST_ENV_HOST) {
     const promise = fetch(urlPrefix + url, init);
-    promise.then((response) => httpCodeHandler(response));
-    promise.then((response) => msgCodeHandler(response));
+    promise.then((response) =&gt; httpCodeHandler(response));
+    promise.then((response) =&gt; msgCodeHandler(response));
     return promise;
   }
   // 对于本地测试环境，跨域访问预发环境 API 数据，方便测试
   let corsInit = {
-    credentials: 'include',
-    mode: 'cors',
-    redirect: 'follow',
+    credentials: &apos;include&apos;,
+    mode: &apos;cors&apos;,
+    redirect: &apos;follow&apos;,
   };
   if (init !== undefined) {
     corsInit = { ...corsInit, ...init };
   }
-  if (urlPrefix !== '') {
+  if (urlPrefix !== &apos;&apos;) {
     urlPrefix = TEST_ENV_HOST;
   }
   const promise = fetch(urlPrefix + url, corsInit);
-  promise.then((response) => httpCodeHandler(response));
-  promise.then((response) => msgCodeHandler(response));
+  promise.then((response) =&gt; httpCodeHandler(response));
+  promise.then((response) =&gt; msgCodeHandler(response));
   return promise;
 }</code></pre>
 <p class="text-align-justify">其中为了方便本地开发测试，允许本地开发环境跨域访问测试环境（最好不要直接跨越访问生产环境），并且自动区分，corsFetch 调用方无感知。</p>]]></description>
@@ -3859,45 +3945,45 @@ Californium-SR32</code></pre>
 <h3>1.3 如何获取 Reactor</h3>
 <h4>1.3.1 以 Maven 管理依赖包</h4>
 <p class="text-align-justify">Maven 原生支持 BOM 模型概念。首先，在你的 <code>pom.xml</code> 文件添加如下代码片段来引入 BOM：</p>
-<pre class="language-xml"><code><dependencyManagement> 
-    <dependencies>
-        <dependency>
-            <groupId>io.projectreactor</groupId>
-            <artifactId>reactor-bom</artifactId>
-            <version>Bismuth-RELEASE</version>
-            <type>pom</type>
-            <scope>import</scope>
-        </dependency>
-    </dependencies>
-</dependencyManagement></code></pre>
+<pre class="language-xml"><code>&lt;dependencyManagement&gt; 
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;io.projectreactor&lt;/groupId&gt;
+            &lt;artifactId&gt;reactor-bom&lt;/artifactId&gt;
+            &lt;version&gt;Bismuth-RELEASE&lt;/version&gt;
+            &lt;type&gt;pom&lt;/type&gt;
+            &lt;scope&gt;import&lt;/scope&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+&lt;/dependencyManagement&gt;</code></pre>
 <p class="text-align-justify">如果顶部标签（<code>dependencyManagement</code>）已经存在，则只添加上面该标签的内部内容。</p>
 <p class="text-align-justify">接下来，将依赖包添加到项目中，和一般依赖包一样，不过没有 <code>&lt;version&gt;</code>，如下所示：</p>
-<pre class="language-xml"><code><dependencies>
-    <dependency>
-        <groupId>io.projectreactor</groupId>
-        <artifactId>reactor-core</artifactId> 
-    </dependency>
-    <dependency>
-        <groupId>io.projectreactor</groupId>
-        <artifactId>reactor-test</artifactId> 
-        <scope>test</scope>
-    </dependency>
-</dependencies></code></pre>
+<pre class="language-xml"><code>&lt;dependencies&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;io.projectreactor&lt;/groupId&gt;
+        &lt;artifactId&gt;reactor-core&lt;/artifactId&gt; 
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;io.projectreactor&lt;/groupId&gt;
+        &lt;artifactId&gt;reactor-test&lt;/artifactId&gt; 
+        &lt;scope&gt;test&lt;/scope&gt;
+    &lt;/dependency&gt;
+&lt;/dependencies&gt;</code></pre>
 <h4>1.3.2 以 Gradle 管理依赖包</h4>
 <p class="text-align-justify">Gradle 核心并不支持 Maven BOM，不过可以借助 Spring 的 <a href='https://github.com/spring-gradle-plugins/dependency-management-plugin'>gradle-dependency-management</a> 插件。</p>
 <p class="text-align-justify">首先，应用插件，如下所示：</p>
 <pre class="language-gradle"><code>plugins {
-    id "io.spring.dependency-management" version "1.0.6.RELEASE"
+    id &quot;io.spring.dependency-management&quot; version &quot;1.0.6.RELEASE&quot;
 }</code></pre>
 <p class="text-align-justify">然后使用它来引入 BOM，如下所示：</p>
 <pre class="language-gradle"><code>dependencyManagement {
      imports {
-          mavenBom "io.projectreactor:reactor-bom:Bismuth-RELEASE"
+          mavenBom &quot;io.projectreactor:reactor-bom:Bismuth-RELEASE&quot;
      }
 }</code></pre>
 <p class="text-align-justify">最后将依赖添加到项目中，无需指定版本号，如下所示：</p>
 <pre class="language-gradle"><code>dependencies {
-     compile 'io.projectreactor:reactor-core' 
+     compile &apos;io.projectreactor:reactor-core&apos; 
 }</code></pre>
 <h2>2. 反应式编程简介</h2>
 <p class="text-align-justify">Reactor 是反应式编程范式的一个实现。反应式编程的定义归纳起来，如下所示：</p>
@@ -3926,12 +4012,12 @@ Californium-SR32</code></pre>
 <p class="text-align-justify">多个回调难以组合使用，容易导致代码难以阅读和维护（就是所谓的“回调地狱”）。</p>
 <p class="text-align-justify">来看一个例子：在界面上为用户显示他最喜爱的5个物件，如果用户还没有任何喜欢的物件，则给出建议物件。这个逻辑涉及3个服务（第一个服务提供物件 ID，第二个服务获取物件的详细信息，第三个服务提供建议物件的详细信息），如下所示：</p>
 <p class="text-align-justify"><em>回调地域的示例</em></p>
-<pre class="language-java"><code>userService.getFavorites(userId, new Callback<List<String>>() { // 1
-    public void onSuccess(List<String> list) { // 2
+<pre class="language-java"><code>userService.getFavorites(userId, new Callback&lt;List&lt;String&gt;&gt;() { // 1
+    public void onSuccess(List&lt;String&gt; list) { // 2
         if (list.isEmpty()) { // 3
-            suggestionService.getSuggestions(new Callback<List<Favorite>>() {
-                public void onSuccess(List<Favorite> list) { // 4
-                    UiUtils.submitOnUiThread(() -> { // 5
+            suggestionService.getSuggestions(new Callback&lt;List&lt;Favorite&gt;&gt;() {
+                public void onSuccess(List&lt;Favorite&gt; list) { // 4
+                    UiUtils.submitOnUiThread(() -&gt; { // 5
                         list.stream()
                             .limit(5)
                             .forEach(uiList::show); // 6
@@ -3945,10 +4031,10 @@ Californium-SR32</code></pre>
         } else {
             list.stream() // 8
                 .limit(5)
-                .forEach(favId -> favoriteService.getDetails(favId, // 9
-                    new Callback<Favorite>() {
+                .forEach(favId -&gt; favoriteService.getDetails(favId, // 9
+                    new Callback&lt;Favorite&gt;() {
                         public void onSuccess(Favorite details) {
-                            UiUtils.submitOnUiThread(() -> uiList.show(details));
+                            UiUtils.submitOnUiThread(() -&gt; uiList.show(details));
                         }
 
                         public void onError(Throwable error) {
@@ -4004,31 +4090,31 @@ Californium-SR32</code></pre>
 <li>不支持惰性计算。</li>
 <li>对多个值的处理和高级错误处理缺乏支持。</li></ul>
 <p class="text-align-justify">来看看另一个例子：先获取一个 ID 列表，然后根据 ID 获取一个名字以及获取一个统计数值，再将名字和统计数值组合起来使用，这几个步骤都必须是异步的。如下示例以一组 <code>CompletableFuture</code> 来实现这个逻辑：</p>
-<pre class="language-java"><code>CompletableFuture<List<String>> ids = ifhIds(); // 1
+<pre class="language-java"><code>CompletableFuture&lt;List&lt;String&gt;&gt; ids = ifhIds(); // 1
 
-CompletableFuture<List<String>> results = ids.thenComposeAsync(l -> { // 2
-    Stream<CompletableFuture<String>> zip = 
-            l.stream().map(i -> { // 3
-                CompletableFuture<String> nameTask = ifhName(i); // 4
-                CompletableFuture<Integer> statTask = ifhStat(i); // 5
-                return nameTask.thenCombineAsync(statTask, (name, stat) -> "Name " + name + " has stats " + stat); // 6
+CompletableFuture&lt;List&lt;String&gt;&gt; results = ids.thenComposeAsync(l -&gt; { // 2
+    Stream&lt;CompletableFuture&lt;String&gt;&gt; zip = 
+            l.stream().map(i -&gt; { // 3
+                CompletableFuture&lt;String&gt; nameTask = ifhName(i); // 4
+                CompletableFuture&lt;Integer&gt; statTask = ifhStat(i); // 5
+                return nameTask.thenCombineAsync(statTask, (name, stat) -&gt; &quot;Name &quot; + name + &quot; has stats &quot; + stat); // 6
             });
-    List<CompletableFuture<String>> combinationList = zip.collect(Collectors.toList()); // 7
-    CompletableFuture<String>[] combinationArray = combinationList.toArray(new CompletableFuture[combinationList.size()]);
+    List&lt;CompletableFuture&lt;String&gt;&gt; combinationList = zip.collect(Collectors.toList()); // 7
+    CompletableFuture&lt;String&gt;[] combinationArray = combinationList.toArray(new CompletableFuture[combinationList.size()]);
     
-    CompletableFuture<Void> allDone = CompletableFuture.allOf(combinationArray); // 8
-    return allDone.thenApply(v -> combinationList.stream()
+    CompletableFuture&lt;Void&gt; allDone = CompletableFuture.allOf(combinationArray); // 8
+    return allDone.thenApply(v -&gt; combinationList.stream()
                     .map(CompletableFuture::join) // 9
                     .collect(Collectors.toList()));
 });
 
-List<String> results = result.join(); // 10
+List&lt;String&gt; results = result.join(); // 10
 assertThat(results).contains(
-		"Name NameJoe has stats 103",
-		"Name NameBart has stats 104",
-		"Name NameHenry has stats 105",
-		"Name NameNicole has stats 106",
-		"Name NameABSLAJNFOAJNFOANFANSF has stats 121");</code></pre>
+		&quot;Name NameJoe has stats 103&quot;,
+		&quot;Name NameBart has stats 104&quot;,
+		&quot;Name NameHenry has stats 105&quot;,
+		&quot;Name NameNicole has stats 106&quot;,
+		&quot;Name NameABSLAJNFOAJNFOANFANSF has stats 121&quot;);</code></pre>
 <ol><li>一开始获得一个 <code>Future</code> 结果 - 为后续处理提供一个 <code>id</code> 列表。</li>
 <li>一旦获得 <code>id</code> 列表就可以开始进一步的异步处理。</li>
 <li>逐个处理列表中的元素。</li>
@@ -4040,26 +4126,26 @@ assertThat(results).contains(
 <li>此处的特殊之处在于：在（<code>allOf</code> 返回的）<code>CompletableFuture&lt;Void&gt;</code> 对象表示的异步任务结束时，遍历 <code>Future</code> 对象列表（combinationList），使用 <code>join()</code> 方法（此次不会阻塞，因为 <code>allOf</code> 会确保所有异步任务都已完成）获取收集异步任务结果。</li></ol>
 <p class="text-align-justify">10. 触发执行整个异步处理流水线（调用 <code>join()</code> 方法），然而等着异步处理完成并返回一个结果列表，就可以进行断言判断了。</p>
 <p class="text-align-justify">Reactor 自带了很多组合算子，可以简化这个处理过程的实现，如下所示：</p>
-<pre class="language-java"><code>Flux<String> ids = ifhrIds(); // 1
+<pre class="language-java"><code>Flux&lt;String&gt; ids = ifhrIds(); // 1
 
-Flux<String> combinations = 
-        ids.flatMap(id -> { // 2
-            Mono<String> nameTask = ifhrName(id); // 3
-            Mono<Integer> statTask = ifhrStat(id); // 4
+Flux&lt;String&gt; combinations = 
+        ids.flatMap(id -&gt; { // 2
+            Mono&lt;String&gt; nameTask = ifhrName(id); // 3
+            Mono&lt;Integer&gt; statTask = ifhrStat(id); // 4
             
             return nameTask.zipWith(statTask, // 5
-                    (name, stat) -> "Name " + name + " has stats " + stat);
+                    (name, stat) -&gt; &quot;Name &quot; + name + &quot; has stats &quot; + stat);
         });
         
-Mono<List<String>> result = combinations.collectList(); // 6
+Mono&lt;List&lt;String&gt;&gt; result = combinations.collectList(); // 6
 
-List<String> results = result.block(); // 7
+List&lt;String&gt; results = result.block(); // 7
 assertThat(results).containsExactly( // 8
-    "Name NameJoe has stats 103",
-    "Name NameBart has stats 104",
-    "Name NameHenry has stats 105",
-    "Name NameNicole has stats 106",
-    "Name NameABSLAJNFOAJNFOANFANSF has stats 121"
+    &quot;Name NameJoe has stats 103&quot;,
+    &quot;Name NameBart has stats 104&quot;,
+    &quot;Name NameHenry has stats 105&quot;,
+    &quot;Name NameNicole has stats 106&quot;,
+    &quot;Name NameABSLAJNFOAJNFOANFANSF has stats 121&quot;
 );</code></pre>
 <ol><li>这次，一开始我们得到一个异步提供的字符串序列（<code>ids</code>）（一个 <code>Flux&lt;String&gt;</code> 对象）。</li>
 <li>对于序列中的每个元素，异步处理两次（在 <code>flatMap</code> 的 lambda 参数值中）。</li>
@@ -4087,42 +4173,42 @@ assertThat(results).containsExactly( // 8
 <h3>3.3 创建一个 Flux 或 Mono 并进行订阅的一些简单方法</h3>
 <p class="text-align-justify"><code>Flux</code> 和 <code>Mono</code> 的类中包含大量的工厂方法，上手使用 Reactor 最简单的方式是从中选择一个用起来。</p>
 <p class="text-align-justify">例如，创建一个 <code>String</code> 序列，可以逐个列举出这些字符串，或者将这些字符串放到一个集合中，然后基于这个集合创建一个 Flux，如下所示：</p>
-<pre class="language-java"><code>Flux<String> seq1 = Flux.just("foo", "bar", "foobar");
+<pre class="language-java"><code>Flux&lt;String&gt; seq1 = Flux.just(&quot;foo&quot;, &quot;bar&quot;, &quot;foobar&quot;);
 
-List<String> iterable = Arrays.asList("foo", "bar", "foobar");
-Flux<String> seq2 = Flux.fromIterable(iterable);</code></pre>
+List&lt;String&gt; iterable = Arrays.asList(&quot;foo&quot;, &quot;bar&quot;, &quot;foobar&quot;);
+Flux&lt;String&gt; seq2 = Flux.fromIterable(iterable);</code></pre>
 <p class="text-align-justify">其它一些工厂方法的使用示例如下所示：</p>
-<pre class="language-java"><code>Mono<String> noData = Mono.empty();
-Mono<String> data = Mono.just("foo");
-Flux<Integer> numbersFromFiveToSeven = Flux.range(5, 3);</code></pre>
+<pre class="language-java"><code>Mono&lt;String&gt; noData = Mono.empty();
+Mono&lt;String&gt; data = Mono.just(&quot;foo&quot;);
+Flux&lt;Integer&gt; numbersFromFiveToSeven = Flux.range(5, 3);</code></pre>
 <p class="text-align-justify">对于订阅操作，<code>Flux</code> 和 <code>Mono</code> 借助了 Java 8 的 lambda 表达式。有大量 <code>.subscribe()</code> 的重载方法/变种方法（variants）可选选择使用，使用 lambda 表达式来实现回调的不同组合，如下所示是这些方法的签名：</p>
 <p class="text-align-justify"><em>Flux 中基于 lambda 表达式的订阅方法变种</em></p>
 <pre class="language-java"><code>subscribe();
 
-subscribe(Consumer<? super T> consumer);
+subscribe(Consumer&lt;? super T&gt; consumer);
 
-subscribe(Consumer<? super T> consumer,
-          Consumer<? super Throwable> errorConsumer);
+subscribe(Consumer&lt;? super T&gt; consumer,
+          Consumer&lt;? super Throwable&gt; errorConsumer);
 
-subscribe(Consumer<? super T> consumer,
-          Consumer<? super Throwable> errorConsumer,
+subscribe(Consumer&lt;? super T&gt; consumer,
+          Consumer&lt;? super Throwable&gt; errorConsumer,
           Runnable completeConsumer);
 
-subscribe(Consumer<? super T> consumer,
-          Consumer<? super Throwable> errorConsumer,
+subscribe(Consumer&lt;? super T&gt; consumer,
+          Consumer&lt;? super Throwable&gt; errorConsumer,
           Runnable completeConsumer,
-          Consumer<? super Subscription> subscriptionConsumer);</code></pre>
+          Consumer&lt;? super Subscription&gt; subscriptionConsumer);</code></pre>
 <blockquote><p class="text-align-justify">这些订阅方法都会返回一个订阅操作的引用，当不再需要更多的数据时，可以使用这个引用来取消订阅。一旦取消，数据源就应该停止产出数据，并清理使用的所有资源。这一 “取消并清理” 行为在 Reactor 中以通用的 <code>Disposable</code> 接口来表现。</p></blockquote>
 <h4>3.3.1 lambda 表达式的替代方案：BaseSubscriber</h4>
 <p class="text-align-justify"><code>Flux</code> 和 <code>Mono</code> 提供了一个相比上面那么订阅方法更通用的 <code>subscribe</code> 方法，其参数是一个完整的 <code>Subscriber</code> 实例，而不是根据几个 lambda 表达式组合出一个 <code>Subscriber</code> 实例。为了方便实现这样的一个 <code>Subscriber</code>，Reactor 提供了一个名为 <code>BaseSubscriber</code> 的可扩展的抽象类。</p>
 <p class="text-align-justify">下面来实现一个，我们将其命名为 <code>SampleSubscriber</code>。如下示例演示了如何将其应用到一个 <code>Flux</code> 序列上：</p>
-<pre class="language-java"><code>SampleSubscriber<Integer> ss = new SampleSubscriber<Integer>();
-Flux<Integer> ints = Flux.range(1, 4);
+<pre class="language-java"><code>SampleSubscriber&lt;Integer&gt; ss = new SampleSubscriber&lt;Integer&gt;();
+Flux&lt;Integer&gt; ints = Flux.range(1, 4);
 //
-ints.subscribe(i -> System.out.println(i),
-    error -> System.err.println("Error " + error),
-    () -> {System.out.println("Done");},
-    s -> s.request(10));
+ints.subscribe(i -&gt; System.out.println(i),
+    error -&gt; System.err.println(&quot;Error &quot; + error),
+    () -&gt; {System.out.println(&quot;Done&quot;);},
+    s -&gt; s.request(10));
 //
 ints.subscribe(ss);</code></pre>
 <p class="text-align-justify">如下示例演示了 <code>SampleSubscriber</code> 继承自 <code>BaseSubscriber</code> 的一个最简化实现：</p>
@@ -4131,10 +4217,10 @@ ints.subscribe(ss);</code></pre>
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.BaseSubscriber;
 
-public class SampleSubscriber<T> extends BaseSubscriber<T> {
+public class SampleSubscriber&lt;T&gt; extends BaseSubscriber&lt;T&gt; {
 
 	public void hookOnSubscribe(Subscription subscription) {
-		System.out.println("Subscribed");
+		System.out.println(&quot;Subscribed&quot;);
 		request(1);
 	}
 
@@ -4153,8 +4239,8 @@ public class SampleSubscriber<T> extends BaseSubscriber<T> {
 <li>调用 <code>toIterable()</code> 或 <code>toStream()</code> 进行遍历</li></ul>
 <p class="text-align-justify">对首个请求进行定制的最简单方式是以一个 <code>BaseSubscriber</code> 派生类实例来 <code>subscribe</code>，派生类重写 <code>BaseSubscriber</code> 的 <code>hookOnSubscribe</code> 方法，如下所示：</p>
 <pre class="language-java"><code>Flux.range(1, 10)
-    .doOnRequest(r -> System.out.println("request of " + r))
-    .subscribe(new BaseSubscriber<Integer>() {
+    .doOnRequest(r -&gt; System.out.println(&quot;request of &quot; + r))
+    .subscribe(new BaseSubscriber&lt;Integer&gt;() {
 
       @Override
       public void hookOnSubscribe(Subscription subscription) {
@@ -4163,7 +4249,7 @@ public class SampleSubscriber<T> extends BaseSubscriber<T> {
 
       @Override
       public void hookOnNext(Integer integer) {
-        System.out.println("Cancelling after having received " + integer);
+        System.out.println(&quot;Cancelling after having received &quot; + integer);
         cancel();
       }
     });</code></pre>
@@ -4186,10 +4272,10 @@ Cancelling after having received 1</code></pre>
 <p class="text-align-justify"><code>generate</code> 方法变种的这个应该是最有用的：允许保持一个状态，在调用接收方的 <code>next</code> 方法时可以基于这个状态来决定下发什么数据。那么这个生成器函数就成了一个 <code>BiFunction&lt;S, SynchronousSink&lt;T&gt;, S&gt;</code> 实例，其中 <code>&lt;S&gt;</code> 即是状态对象的类型。对于初始状态，可以提供一个 <code>Supplier&lt;S&gt;</code> 来获取，这样生成器函数每轮调用都会返回一个新的状态。</p>
 <p class="text-align-justify">例如，可以使用一个 <code>int</code> 实例作为状态：</p>
 <pre class="language-java"><code>// 基于状态的 generate 方法使用示例
-Flux<String> flux = Flux.generate(
-    () -> 0, // 1
-    (state, sink) -> {
-        sink.next("3 x " + state + " = " + 3*state); // 2
+Flux&lt;String&gt; flux = Flux.generate(
+    () -&gt; 0, // 1
+    (state, sink) -&gt; {
+        sink.next(&quot;3 x &quot; + state + &quot; = &quot; + 3*state); // 2
         if (state == 10) sink.complete(); // 3
         return state + 1; // 4
     });</code></pre>
@@ -4198,39 +4284,39 @@ Flux<String> flux = Flux.generate(
 <li>基于状态决定何时可以停止流/序列。</li>
 <li>返回一个新状态，下次调用时可以使用（除非在这次调用时已经终止序列）。</li></ol>
 <p class="text-align-justify">也可以使用一个 <code>&lt;S&gt;</code> 类型的可变对象。比如，上面的示例可以使用一个 <code>AtomicLong</code> 实例作为状态来重写，每轮调用都会改变它的值：</p>
-<pre class="language-java"><code>Flux<String> flux = Flux.generate(
+<pre class="language-java"><code>Flux&lt;String&gt; flux = Flux.generate(
     AtomicLong::new,
-    (state, sink) -> {
+    (state, sink) -&gt; {
         long i = state.getAndIncrement();
-        sink.next("3 x " + i + " = " + 3*i);
+        sink.next(&quot;3 x &quot; + i + &quot; = &quot; + 3*i);
         if (i == 10) sink.complete();
         return state;
     });</code></pre>
 <blockquote><p class="text-align-justify">如果状态对象在序列终止时需要清理一些资源，则应该使用 <code>generate(Supplier&lt;S&gt;, BiFunction, Consumer&lt;S&gt;)</code> 变种方法来清理最后的状态实例。</p></blockquote>
 <p class="text-align-justify">如下示例使用的 <code>generate</code> 方法接受一个 <code>Consumer</code> 类型参数：</p>
-<pre class="language-java"><code>Flux<String> flux = Flux.generate(
+<pre class="language-java"><code>Flux&lt;String&gt; flux = Flux.generate(
     AtomicLong::new,
-    (state, sink) -> {
+    (state, sink) -&gt; {
         long i = state.getAndIncrement();
-        sink.next("3 x " + i + " = " + 3*i);
+        sink.next(&quot;3 x &quot; + i + &quot; = &quot; + 3*i);
         if (i == 10) sink.complete();
         return state;
-    }, (state) -> System.out.println("state: " + state));</code></pre>
+    }, (state) -&gt; System.out.println(&quot;state: &quot; + state));</code></pre>
 <h4>3.4.2 异步多线程的 create</h4>
 <p class="text-align-justify"><code>create</code> 是动态创建一个 <code>Flux</code> 的更高级的方式，适用于每轮下发多个数据，甚至是从多个线程中下发数据。</p>
 <p class="text-align-justify">这个方法会向回调方法传入一个 <code>FluxSink</code> 实例参数，在回调方法体中可以调用这个参数的 <code>next</code>、<code>error</code> 和 <code>complete</code> 方法。与 <code>generate</code> 不同，它没有基于状态的变种方法。另外，回调方法中，可以多线程地触发事件（trigger multi-threaded events）。</p>
 <blockquote><p class="text-align-justify"><code>create</code> 非常适用于将一个已有的 API （比如：一个基于监听器的异步 API）桥接到反应式上下文中。</p></blockquote>
 <blockquote><p class="text-align-justify"><code>create</code> 并不会自动并行化执行你的代码，也不会让处理过程自动变成异步的，即使它可以配合异步 API 使用。如果在 <code>create</code> 的 lambda 表达式中发生阻塞，就会存在死锁或者其它副作用的风险。即使借助 <code>subscribeOn</code>，也要当心 <code>create</code> lambda 表达式中长时间的阻塞（比如无限循环调用 <code>sink.next(t)</code>）锁住流水线处理： （译注：异步的）数据请求可能根本得不到执行，因为（译注：线程池只有一个线程）同一个线程一直被无限循环占用着。使用 <code>subscribeOn(Scheduler, false)</code> 变种方法：<code>requestOnSeparateThread = false</code> 将使用 <code>Scheduler</code> 的线程来执行 <code>create</code> 方法的回调，在原始的线程中执行 <code>request</code>，从而让数据仍然可以流动起来。（译注：此处逻辑有点绕，也可能是因为 subscribeOn 方法本身语义就不太直观）。</p></blockquote>
 <p class="text-align-justify">假设我们要使用一个基于监听器的 API，它按块处理数据，提供两类事件：（1）来了一块数据，（2）处理可以结束了（终止事件），如下 <code>MyEventListener</code> 接口定义所示：</p>
-<pre class="language-java"><code>interface MyEventListener<T> {
-    void onDataChunk(List<T> chunk);
+<pre class="language-java"><code>interface MyEventListener&lt;T&gt; {
+    void onDataChunk(List&lt;T&gt; chunk);
     void processComplete();
 }</code></pre>
 <p class="text-align-justify">我们使用 <code>create</code> 将这个 API 桥接到一个 <code>Flux&lt;T&gt;</code> 实例上：</p>
-<pre class="language-java"><code>Flux<String> bridge = Flux.create(sink -> {
+<pre class="language-java"><code>Flux&lt;String&gt; bridge = Flux.create(sink -&gt; {
     myEventProcessor.register(  // 4
-        new MyEventListener<String>() { // 1
-            public void onDataChunk(List<String> chunk) {
+        new MyEventListener&lt;String&gt;() { // 1
+            public void onDataChunk(List&lt;String&gt; chunk) {
                 for(String s : chunk) {
                     sink.next(s); // 2
                 }
@@ -4254,11 +4340,11 @@ Flux<String> flux = Flux.generate(
 <blockquote><p class="text-align-justify"><code>Mono</code> 也有一个 <code>create</code> 生成器方法。Mono 的 create 方法传入回调的 <code>MonoSink</code> 参数不允许下发多个消息，在第一个消息之后它会丢弃所有的消息。</p></blockquote>
 <h4>3.4.3 异步单线程的 push</h4>
 <p class="text-align-justify"><code>push</code> 的功能介于 <code>generate</code> 和 <code>create</code> 之间，适用于处理来自单个生产者的事件。<code>push</code> 也可以是异步的，也可以使用 <code>create</code> 支持的超限策略来管理反压，然而，同时（at a time）只能有一个生产线程调用 <code>next</code>。</p>
-<pre class="language-java"><code>Flux<String> bridge = Flux.push(sink -> {
+<pre class="language-java"><code>Flux&lt;String&gt; bridge = Flux.push(sink -&gt; {
     myEventProcessor.register(
-        new SingleThreadEventListener<String>() { // 1
+        new SingleThreadEventListener&lt;String&gt;() { // 1
             
-            public void onDataChunk(List<String> chunk) {
+            public void onDataChunk(List&lt;String&gt; chunk) {
                 for (String s: chunk) {
                     sink.next(s); // 2
                 }
@@ -4282,19 +4368,19 @@ Flux<String> flux = Flux.generate(
 <p class="text-align-justify">多数 Reactor 算子，比如 <code>create</code>，都遵从 <strong>推/拉（push/pull）</strong> 混合模型。这意味着尽管大部分的处理过程都是异步的（暗指“推”的方式），也存在小部分逻辑是 <em>拉（pull）</em>方式：数据请求。</p>
 <p class="text-align-justify">消费者从数据源<em>拉取</em>数据，意指：数据源在消费者首次请求后才会发出数据，然后只有要数据就会推送给消费者，不过数据量不会超过消费者请求的量。</p>
 <p class="text-align-justify"><code>push()</code> 和 <code>create()</code> 都可以配置（set up）一个 <code>onRequest</code> 事件消费者来管理请求量，并且确保仅当存在已发起的请求，数据才会推送给下游。</p>
-<pre class="language-java"><code>Flux<String> bridge = Flux.create(sink -> {
+<pre class="language-java"><code>Flux&lt;String&gt; bridge = Flux.create(sink -&gt; {
     myMessageProcessor.register(
-        new MyMessageListener<String>() {
+        new MyMessageListener&lt;String&gt;() {
             
-            public void onMessage(List<String> messages) {
+            public void onMessage(List&lt;String&gt; messages) {
                 for (String s: messages) {
                     sink.next(s); // 3
                 }
             }
         }
     );
-    sink.onRequest(n -> {
-        List<String> messages = myMessageProcessor.getHistory(n); // 1
+    sink.onRequest(n -&gt; {
+        List&lt;String&gt; messages = myMessageProcessor.getHistory(n); // 1
         for (String s: messages) {
             sink.next(s); // 2
         }
@@ -4309,11 +4395,11 @@ Flux<String> flux = Flux.generate(
 <p class="text-align-justify">model），而是，让开发者按需决定是否使用并发。然而，Reactor 也提供一些功能方便开启并发。</p>
 <p class="text-align-justify">获取到一个 <code>Flux</code> 或 <code>Mono</code> 处理流，并不意味着它在一个专用（dedicated）的线程（<code>Thread</code>） 中运行。相反，多数算子也是运行在前一个算子运行的线程中。除非特意指定，首个（topmost）算子（数据源）就运行在执行 <code>subscribe()</code> 方法调用的线程中。如下示例在一个新建线程中运行一个 <code>Mono</code> 处理流。</p>
 <pre class="language-java"><code>public static void main(String[] args) {
-    final Mono<String> mono = Mono.just("Hello "); // 1
+    final Mono&lt;String&gt; mono = Mono.just(&quot;Hello &quot;); // 1
     
-    new Thread(() -> mono
-        .map(msg -> msg + "thread ")
-        .subscribe(v -> // 2 
+    new Thread(() -&gt; mono
+        .map(msg -&gt; msg + &quot;thread &quot;)
+        .subscribe(v -&gt; // 2 
             System.out.println(v + Thread.currentThread().getName()) // 3
         )
     ).join();
@@ -4335,7 +4421,7 @@ Flux<String> flux = Flux.generate(
 <p class="text-align-justify"></p>
 <p class="text-align-justify">如果自定义调度器所创建的线程实例实现了 <code>NonBlocking</code> 标记性接口（marker interface），那么这个调度器也可以被标记为”仅适用于非阻塞性使用（non blocking only）“。</p></blockquote>
 <p class="text-align-justify">某些算子默认会从 <code>Schedulers</code> 选择一个特定的调度器来使用（通常也支持选择其他的）。例如，调用工厂方法 <code>Flux.interval(Duration.ofMills(300))</code> 会生成一个 <code>Flux&lt;Long&gt;</code> 实例 - 每 300 ms 输出一个滴答事件。这个方法底层实现默认使用 <code>Schedulers.parallel()</code>。如下代码行演示了如何将调度器修改成类似于 <code>Schedulers.single()</code> 的调度器新实例：</p>
-<pre class="language-java"><code>Flux.interval(Duration.ofMillis(300), Schedulers.newSingle("test"));</code></pre>
+<pre class="language-java"><code>Flux.interval(Duration.ofMillis(300), Schedulers.newSingle(&quot;test&quot;));</code></pre>
 <p class="text-align-justify">Reactor 提供了两种方式来切换反应式链中的执行上下文（或者说 <code>调度器</code>）：<code>publishOn</code> 和 <code>subscribeOn</code>。两者都是接受一个 <code>Scheduler</code> 类型参数并将执行上下文切换到这个调度器。不过，链中 <code>publishOn</code> 所处的位置很关键，而 <code>subscribeOn</code> 处于哪个位置都无所谓。要理解这个差别的原因，得先理解 <a href='https://projectreactor.io/docs/core/release/reference/#reactive.subscribe'>订阅之前实际什么都没有发生</a>。</p>
 <p class="text-align-justify">Reactor，串接算子，就是将很多 <code>Flux</code> 和 <code>Mono</code> 的实现一个套一个，逐层封装。一旦订阅，就创建了一个 <code>Subscriber</code> 对象链，沿链回溯即可找到第一个发布者。这些实现细节是隐藏在接口背后，开发者可见的是最外层的那个 <code>Flux</code>（或 <code>Mono</code>）以及 <code>Subscription</code>（译注：Reactor 中 Subscription 是一个接口类型，是 <code>Subscriber</code> 接口中 <code>onSubscribe</code> 方法参数的类型 - <code>public void onSubscribe(Subscription s)</code>，用于向生产者请求数据 或者 取消订阅），但这些算子特定的链中消费者是幕后功臣。</p>
 <p class="text-align-justify">有了上面这些认知，现在我们可以进一步了解 <code>publishOn</code> 和 <code>subscribeOn</code> 这两个算子：</p>
@@ -4344,15 +4430,15 @@ Flux<String> flux = Flux.generate(
 <ul><li>将执行上下文切换到 <code>Scheduler</code> 选择的一个线程上</li>
 <li>根据规范（as per the specification），<code>onNext</code> 是按时序依次调用下发事件的，所以是占用一个线程（译注：这句不太理解，onNext happen in sequence, so this uses up a single thread）</li>
 <li>除非算子工作在一个特定的 <code>Scheduler</code> 上（译注：某些算子的内部实现决定了这一点），<code>publishOn</code> 之后的算子都是在同一个线程上执行</li></ul>
-<pre class="language-java"><code>Scheduler s = Schedulers.newParallel("parallel-scheduler", 4); // 1
+<pre class="language-java"><code>Scheduler s = Schedulers.newParallel(&quot;parallel-scheduler&quot;, 4); // 1
 
-final Flux<String> flux = Flux
+final Flux&lt;String&gt; flux = Flux
     .range(1, 2)
-    .map(i -> 10 + i) // 2
+    .map(i -&gt; 10 + i) // 2
     .publishOn(s) // 3
-    .map(i -> "value " + i); // 4
+    .map(i -&gt; &quot;value &quot; + i); // 4
 
-new Thread(() -> flux.subscribe(System.out::println));</code></pre>
+new Thread(() -&gt; flux.subscribe(System.out::println));</code></pre>
 <ol><li>创建一个新的 <code>Scheduler</code>，内含 4 个线程</li>
 <li>第一个 <code>map</code> 运行在 <第5步> 的匿名线程上</li>
 <li><code>publishOn</code> 将整个序列的后续处理切换到从 <第1步> 选出的线程上</li>
@@ -4363,15 +4449,15 @@ new Thread(() -> flux.subscribe(System.out::println));</code></pre>
 <ul><li>从订阅操作发生时整个算子链所在的线程切换到新的线程</li>
 <li>从指定 <code>Scheduler</code> 中选择一个线程</li></ul>
 <blockquote><p class="text-align-justify">只有链中最早的 <code>subscribeOn</code> 调用会发生实际作用。</p></blockquote>
-<pre class="language-java"><code>Scheduler s = Schedulers.newParallel("parallel-scheduler", 4); // 1
+<pre class="language-java"><code>Scheduler s = Schedulers.newParallel(&quot;parallel-scheduler&quot;, 4); // 1
 
-final Flux<String> flux = Flux
+final Flux&lt;String&gt; flux = Flux
     .range(1, 2)
-    .map(i -> 10 + i) // 2
+    .map(i -&gt; 10 + i) // 2
     .subscribeOn(s) // 3
-    .map(i -> "value " + i); // 4
+    .map(i -&gt; &quot;value &quot; + i); // 4
 
-new Thread(() -> flux.subscribe(System.out::println)); // 5 </code></pre>
+new Thread(() -&gt; flux.subscribe(System.out::println)); // 5 </code></pre>
 <ol><li>创建一个新的 <code>Scheduler</code>，内含 4 个线程</li>
 <li>第一个 <code>map</code> 运行在这 4 个线程中的某个线程上</li>
 <li>...因为 <code>subscribeOn</code> 将整个序列处理链从订阅操作发生时的执行上下文（第5步）切换到了新的上下文</li>
@@ -4389,13 +4475,13 @@ new Thread(() -> flux.subscribe(System.out::println)); // 5 </code></pre>
 <p class="text-align-justify">对比如下两个示例，第一个示例的代码如下所示：</p>
 <pre class="language-java"><code>Flux.range(1, 10)
     .parallel(2) // 1
-    .subscribe(i -> System.out.println(Thread.currentThread().getName() + " -> " + i));</code></pre>
+    .subscribe(i -&gt; System.out.println(Thread.currentThread().getName() + &quot; -&gt; &quot; + i));</code></pre>
 <ol><li>这里强制指定了“轨道”数量，而不依赖于 CPU 核数。</li></ol>
 <p class="text-align-justify">第二个示例的代码如下所示：</p>
 <pre class="language-java"><code>Flux.range(1, 10)
     .parallel(2)
     .runOn(Schedulers.parallel())
-    .subscribe(i -> System.out.println(Thread.currentThread().getName() + " -> " + i));</code></pre>
+    .subscribe(i -&gt; System.out.println(Thread.currentThread().getName() + &quot; -&gt; &quot; + i));</code></pre>
 <p class="text-align-justify">第一个示例输出如下内容：</p>
 <pre class="language-text"><code>main -&gt; 1
 main -&gt; 2
@@ -4455,8 +4541,8 @@ System.out.println(mockedList.get(1));</code></pre>
 
 // 调用 size() 方法时，返回 10
 when(mockedList.size()).willReturn(10);
-when(mockedList.get(0)).willReturn("Hello World!");
-when(mockedList.get(1)).thenReturn("您好！");
+when(mockedList.get(0)).willReturn(&quot;Hello World!&quot;);
+when(mockedList.get(1)).thenReturn(&quot;您好！&quot;);
 
 // 输出 10
 System.out.println(mockedList.size());
@@ -4468,8 +4554,8 @@ System.out.println(mockedList.get(1));</code></pre>
 <pre class="language-java"><code>import static org.junit.Assert.assertEquals;
 
 assertEquals(10, mockedList.size());
-assertEquals("Hello World!", mockedList.get(0));
-assertEquals("您好！", mockedList.get(1));</code></pre>
+assertEquals(&quot;Hello World!&quot;, mockedList.get(0));
+assertEquals(&quot;您好！&quot;, mockedList.get(1));</code></pre>
 <p class="text-align-justify">断言方法非常多，不仅仅只是 assertEquals。</p>
 <p class="text-align-justify">对于同一个方法，可以模拟多次调用返回不同的值：</p>
 <pre class="language-java"><code>// 会覆盖之前 mock 的行为：when(mockedList.size()).willReturn(10);
@@ -4493,24 +4579,24 @@ assertEquals(1000, iterator.next());</code></pre>
 <p class="text-align-justify">还可以模拟异常抛出：</p>
 <pre class="language-java"><code>List mockedList = mock(List.class);
 
-when(mockedList.get(-1000)).thenThrow(new RuntimeException("参数异常！"));
+when(mockedList.get(-1000)).thenThrow(new RuntimeException(&quot;参数异常！&quot;));
 try {
     mockedList.get(-1000);
 } catch (Exception e) {
     assertTrue(e instanceof RuntimeException);
-    assertEquals("参数异常！", e.getMessage());
+    assertEquals(&quot;参数异常！&quot;, e.getMessage());
 }</code></pre>
 <p class="text-align-justify">也可以基于复杂的逻辑来构造返回值：</p>
 <pre class="language-java"><code>import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-List<Integer> mockedList = mock(List.class);
+List&lt;Integer&gt; mockedList = mock(List.class);
 when(mockedList.get(anyInt())).thenAnswer(new EchoAnswer());
 
 assertTrue(1 == mockedList.get(1));
 assertTrue(10 == mockedList.get(10));
 
-public class EchoAnswer implements Answer<Integer> {
+public class EchoAnswer implements Answer&lt;Integer&gt; {
 
     public Integer answer(InvocationOnMock var) {
         return var.getArgument(0);
@@ -4531,13 +4617,13 @@ import static org.mockito.Mockito.doReturn;
 
 ArrayList mockedList = mock(ArrayList.class);
 // clear 方法无返回值
-doThrow(new RuntimeException("清除失败")).when(mockedList).clear();
+doThrow(new RuntimeException(&quot;清除失败&quot;)).when(mockedList).clear();
 
 try {
     mockedList.clear();
 } catch (Exception e) {
     assertTrue(e instanceof RuntimeException);
-    assertEquals("清除失败", e.getMessage());
+    assertEquals(&quot;清除失败&quot;, e.getMessage());
 }
 
 // 没有意义，因为没法使用 断言 来验证，实际运行时会抛异常
@@ -4559,7 +4645,7 @@ assertEquals(100, mockedList.get(1000));</code></pre>
 <p class="text-align-justify">可用的参数匹配器，见 org.mockito.ArgumentMatchers 类的静态方法列表，也可以自己实现 ArgumentMatcher 接口：</p>
 <pre class="language-java"><code>package org.mockito;
 
-public interface ArgumentMatcher<T> {
+public interface ArgumentMatcher&lt;T&gt; {
     boolean matches(T var1);
 }</code></pre>
 <pre class="language-java"><code>import org.mockito.ArgumentMatcher;
@@ -4572,10 +4658,10 @@ assertEquals(10, mockedList.get(1));
 assertEquals(10, mockedList.get(99));
 assertEquals(null, mockedList.get(100));
 
-public class LimitedInt implements ArgumentMatcher<Integer> {
+public class LimitedInt implements ArgumentMatcher&lt;Integer&gt; {
 
     public boolean matches(Integer var) {
-        return var > 0 && var < 100;
+        return var &gt; 0 &amp;&amp; var &lt; 100;
     }
 }</code></pre>
 <p class="text-align-justify">如果被模拟的方法包含多个参数，那么这些参数要么全部使用匹配器，要么全部不使用。</p>
@@ -4615,7 +4701,7 @@ public class Caller {
     List list;
 
     public void run(int count) {
-        for (int idx=0; idx < count; idx++) {
+        for (int idx=0; idx &lt; count; idx++) {
             list.size();
         }
         //
@@ -4658,7 +4744,7 @@ caller.setList(mockedlist);
 caller.run();
 
 // 捕获 mockedList.add 的调用参数
-ArgumentCaptor<Integer> argumentCaptor = ArgumentCaptor.forClass(Integer.class);
+ArgumentCaptor&lt;Integer&gt; argumentCaptor = ArgumentCaptor.forClass(Integer.class);
 verify(mockedlist).add(argumentCaptor.capture());
 assertTrue(100 == argumentCaptor.getValue());
 
@@ -4674,8 +4760,8 @@ public class Caller {
 <p class="text-align-justify">前面的内容都是以 mock 为例，我们再来说说 spy，与 mock 的区别：</p>
 <p class="text-align-justify">mock 出来的对象是一个完全假的对象，但 spy 通常是基于一个具体的类或类实例，对其篡改某些方法，对于被篡改方法之外的方法，其行为都和调用真实对象的方法一样，不过并没有调用真实对象的方法，也不会对真实对象产生影响：</p>
 <pre class="language-java"><code>// 基于一个实际的类实例
-List<Integer> realList = new ArrayList<>(10);
-List<Integer> spy = spy(realList);
+List&lt;Integer&gt; realList = new ArrayList&lt;&gt;(10);
+List&lt;Integer&gt; spy = spy(realList);
         
 spy.add(1);
 
@@ -4687,7 +4773,7 @@ assertEquals(1, spy.size());
 assertTrue(1 == realList.get(0));
 assertTrue(1 == spy.get(0));</code></pre>
 <p class="text-align-justify">也可以基于一个具体的类来构造 spy，但这样无法使用带参数的构造方法，也无法指定类型参数：</p>
-<pre class="language-java"><code>List<Integer> = spy(ArrayList.class);
+<pre class="language-java"><code>List&lt;Integer&gt; = spy(ArrayList.class);
 assertEquals(0, spy.size());
 spy.add(100);
 assertEquals(1, spy.size());
@@ -4715,10 +4801,10 @@ import static org.junit.Assert.assertTrue;
 public class testTester {
 
     @Mock
-    private List<Integer> mocked;
+    private List&lt;Integer&gt; mocked;
 
     @Spy
-    private ArrayList<Integer> spyed;
+    private ArrayList&lt;Integer&gt; spyed;
 
     @Test
     public void test() {
@@ -4791,11 +4877,11 @@ public class testTester {
             <description><![CDATA[<p class="text-align-justify">2015年，我们在青云平台上实现了“百度云观测”应用。青云应用本质上是一个 iframe，在向 iframe 服务方发送的请求中会携带一些数据，青云平台会使用<code>Base64 URL</code>对这些数据进行编码，其提供的编码解码算法示例如下：</p>
 <pre class="language-php"><code>// php版本
 function base64_URL_encode($data) {
-  return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+  return rtrim(strtr(base64_encode($data), &apos;+/&apos;, &apos;-_&apos;), &apos;=&apos;);
 }
 function base64_URL_decode($data) {
-  return base64_decode(str_pad(strtr($data, '-_', '+/'), 
-                            strlen($data) % 4, '=', STR_PAD_RIGHT));
+  return base64_decode(str_pad(strtr($data, &apos;-_&apos;, &apos;+/&apos;), 
+                            strlen($data) % 4, &apos;=&apos;, STR_PAD_RIGHT));
 }</code></pre>
 <p class="text-align-justify">可以看出，<code>Base64 URL</code> 是标准 Base64 编码的一个变种，分别用 <code>-</code>、<code>_</code> 替换标准 Base64 编码结果中的 <code>+</code> 、 <code>/</code> ，并删除结果最后的 <code>=</code> 。</p>
 <p class="text-align-justify">在实现 “百度云观测” 青云应用时，我在想：</p>
@@ -4964,7 +5050,7 @@ function base64_URL_decode($data) {
 <p class="text-align-justify">这条SQL的完整语句为：</p>
 <pre class="language-sql"><code>SELECT h.host,p.result,p.update_time FROM Pixiu p 
     JOIN Host h USING(host_id) 
-    WHERE result!='[]'
+    WHERE result!=&apos;[]&apos;
     ORDER BY update_time DESC</code></pre>
 <ul><li>字段 p.result 的类型为 <code>mediumtext NOT NULL</code></li>
 <li>字段 p.update_time 的类型为：</li></ul>
@@ -4991,9 +5077,9 @@ function base64_URL_decode($data) {
 <p class="text-align-justify"><em>介绍threading/multiprocessing、生产者/消费者的真实示例代码：</em></p>
 <pre class="language-python"><code># coding: utf-8
 # Example.py
-'''
+&apos;&apos;&apos;
 标准的多线程生产者/消费者模式
-'''
+&apos;&apos;&apos;
 
 import time 
 import threading 
@@ -5009,13 +5095,13 @@ class Consumer(threading.Thread):
       # queue.get() 会阻塞当前线程，直到获取到一个数据项
       msg = self._queue.get() 
       # 检查当前消息是否是个“毒药丸”
-      if isinstance(msg, str) and msg == 'quit':
+      if isinstance(msg, str) and msg == &apos;quit&apos;:
         # 如果是，则退出循环
         break
       # “处理” (这里是打印)从队列中取出的数据项
-      print "I'm a thread, and I received %s!!" % msg
+      print &quot;I&apos;m a thread, and I received %s!!&quot; % msg
     # 我始终是这么的友好
-    print 'Bye byes!'
+    print &apos;Bye byes!&apos;
 
 
 def Producer():
@@ -5030,19 +5116,19 @@ def Producer():
   # 变量，用于追踪开始的时间
   start_time = time.time() 
   # 在5秒之内
-  while time.time() - start_time < 5: 
+  while time.time() - start_time &lt; 5: 
     # “生产”一块工作，放入队列中，由消费者来处理
-    queue.put('something at %s' % time.time())
+    queue.put(&apos;something at %s&apos; % time.time())
     # 睡眠一会儿，以避免过多的消息
     time.sleep(1)
 
   # 这是杀死线程的“毒药丸”方式
-  queue.put('quit')
+  queue.put(&apos;quit&apos;)
   # 等待线程关闭
   worker.join()
 
 
-if __name__ == '__main__':
+if __name__ == &apos;__main__&apos;:
   Producer()</code></pre>
 <p class="text-align-justify">嗯...闻闻，代码中一股子Java的气息。</p>
 <p class="text-align-justify">我不想让大家觉得好像我认为生产者/消费者是处理线程/多进程的错误方式 - 因为确实不是。实际上，对多种问题来说，这种方式非常适合。然而，我认为：对于日常的脚本程序来说，这种方式并非是最有用的。</p>
@@ -5052,9 +5138,9 @@ if __name__ == '__main__':
 <p class="text-align-justify">基于此，下一件你想要做的事情就是搞一个工作者类的池，来加速你的Python程序。在关于线程的IBM教程中，给出了一个示例代码，以下是其变种。这是一个常见的应用场景 - 在多个线程上分配获取网页的任务。</p>
 <pre class="language-python"><code># coding: utf-8
 # Example2.py
-'''
+&apos;&apos;&apos;
 一个更加实际的线程池示例
-'''
+&apos;&apos;&apos;
 
 import time 
 import threading 
@@ -5069,16 +5155,16 @@ class Consumer(threading.Thread):
   def run(self):
     while True: 
       content = self._queue.get() 
-      if isinstance(content, str) and content == 'quit':
+      if isinstance(content, str) and content == &apos;quit&apos;:
         break
       response = urllib2.urlopen(content)
-    print 'Bye byes!'
+    print &apos;Bye byes!&apos;
 
 
 def Producer():
   urls = [
-    'http://www.python.org', 'http://www.yahoo.com'
-    'http://www.scala.org', 'http://www.google.com'
+    &apos;http://www.python.org&apos;, &apos;http://www.yahoo.com&apos;
+    &apos;http://www.scala.org&apos;, &apos;http://www.google.com&apos;
     # 等等... 
   ]
   queue = Queue.Queue()
@@ -5090,11 +5176,11 @@ def Producer():
     queue.put(url)
   # 加入毒药丸
   for worker in worker_threads:
-    queue.put('quit')
+    queue.put(&apos;quit&apos;)
   for worker in worker_threads:
     worker.join()
 
-  print 'Done! Time taken: {}'.format(time.time() - start_time)
+  print &apos;Done! Time taken: {}&apos;.format(time.time() - start_time)
 
 def build_worker_pool(queue, size):
   workers = []
@@ -5104,13 +5190,13 @@ def build_worker_pool(queue, size):
     workers.append(worker)
   return workers
 
-if __name__ == '__main__':
+if __name__ == &apos;__main__&apos;:
   Producer()</code></pre>
 <p class="text-align-justify">奏效了，但是你看看这些代码！准备（setup）方法、一组要追踪的线程，最糟糕的是，若有任何地方易发生死锁，就会产生一堆的join状态说明。自此，一切只会更复杂！</p>
 <p class="text-align-justify">到目前为止，完成了些什么？啥都没有。上面的代码纯粹只是把所有东西像用纸糊起来一样（Just about everything in the above code is pure plumbing，如何翻译？）。这是另一种公式化的写法，也易发生错误（嘿，在写这个代码时，我甚至忘了在队列对象上调用task_done()（我懒得去解决这个问题然后再搞个截图）），付出很多，得到的却很少。幸运的是，我们有更好的方式。</p>
 <h2>引入：Map</h2>
 <p class="text-align-justify">Map是一个酷酷的小东西，也是在Python代码轻松引入并行的关键。对此不熟悉的人会认为map是从函数式语言（如Lisp）借鉴来的东西。map是一个函数 - 将另一个函数映射到一个序列上。例如：</p>
-<pre class="language-python"><code>urls = ['http://www.yahoo.com', 'http://www.reddit.com']
+<pre class="language-python"><code>urls = [&apos;http://www.yahoo.com&apos;, &apos;http://www.reddit.com&apos;]
 results = map(urllib2.urlopen, urls)</code></pre>
 <p class="text-align-justify">这段代码在传入序列的每个元素上应用方法<em>urlopen</em>，并将所有结果存入一个列表中。大致与下面这段代码的逻辑相当：</p>
 <pre class="language-python"><code>results = []
@@ -5140,19 +5226,19 @@ pool = ThreadPool()</code></pre>
 from multiprocessing.dummy import Pool as ThreadPool 
 
 urls = [
-  'http://www.python.org', 
-  'http://www.python.org/about/',
-  'http://www.onlamp.com/pub/a/python/2003/04/17/metaclasses.html',
-  'http://www.python.org/doc/',
-  'http://www.python.org/download/',
-  'http://www.python.org/getit/',
-  'http://www.python.org/community/',
-  'https://wiki.python.org/moin/',
-  'http://planet.python.org/',
-  'https://wiki.python.org/moin/LocalUserGroups',
-  'http://www.python.org/psf/',
-  'http://docs.python.org/devguide/',
-  'http://www.python.org/community/awards/'
+  &apos;http://www.python.org&apos;, 
+  &apos;http://www.python.org/about/&apos;,
+  &apos;http://www.onlamp.com/pub/a/python/2003/04/17/metaclasses.html&apos;,
+  &apos;http://www.python.org/doc/&apos;,
+  &apos;http://www.python.org/download/&apos;,
+  &apos;http://www.python.org/getit/&apos;,
+  &apos;http://www.python.org/community/&apos;,
+  &apos;https://wiki.python.org/moin/&apos;,
+  &apos;http://planet.python.org/&apos;,
+  &apos;https://wiki.python.org/moin/LocalUserGroups&apos;,
+  &apos;http://www.python.org/psf/&apos;,
+  &apos;http://docs.python.org/devguide/&apos;,
+  &apos;http://www.python.org/community/awards/&apos;
   # 等等...
   ]
 
@@ -5201,12 +5287,12 @@ results = pool.map(urllib2.urlopen, urls)</code></pre>
 from PIL import Image
 
 SIZE = (75,75)
-SAVE_DIRECTORY = 'thumbs'
+SAVE_DIRECTORY = &apos;thumbs&apos;
 
 def get_image_paths(folder):
   return (os.path.join(folder, f) 
       for f in os.listdir(folder) 
-      if 'jpeg' in f)
+      if &apos;jpeg&apos; in f)
 
 def create_thumbnail(filename): 
   im = Image.open(filename)
@@ -5215,9 +5301,9 @@ def create_thumbnail(filename):
   save_path = os.path.join(base, SAVE_DIRECTORY, fname)
   im.save(save_path)
 
-if __name__ == '__main__':
+if __name__ == &apos;__main__&apos;:
   folder = os.path.abspath(
-    '11_18_2013_R000_IQM_Big_Sur_Mon__e10d1958e7b766c3e840')
+    &apos;11_18_2013_R000_IQM_Big_Sur_Mon__e10d1958e7b766c3e840&apos;)
   os.mkdir(os.path.join(folder, SAVE_DIRECTORY))
 
   images = get_image_paths(folder)
@@ -5231,12 +5317,12 @@ if __name__ == '__main__':
 from PIL import Image
 
 SIZE = (75,75)
-SAVE_DIRECTORY = 'thumbs'
+SAVE_DIRECTORY = &apos;thumbs&apos;
 
 def get_image_paths(folder):
   return (os.path.join(folder, f) 
       for f in os.listdir(folder) 
-      if 'jpeg' in f)
+      if &apos;jpeg&apos; in f)
 
 def create_thumbnail(filename): 
   im = Image.open(filename)
@@ -5245,9 +5331,9 @@ def create_thumbnail(filename):
   save_path = os.path.join(base, SAVE_DIRECTORY, fname)
   im.save(save_path)
 
-if __name__ == '__main__':
+if __name__ == &apos;__main__&apos;:
   folder = os.path.abspath(
-    '11_18_2013_R000_IQM_Big_Sur_Mon__e10d1958e7b766c3e840')
+    &apos;11_18_2013_R000_IQM_Big_Sur_Mon__e10d1958e7b766c3e840&apos;)
   os.mkdir(os.path.join(folder, SAVE_DIRECTORY))
 
   images = get_image_paths(folder)
@@ -5422,16 +5508,16 @@ if __name__ == '__main__':
 <p class="text-align-justify">Goroutine非常轻量，除了为之分配的栈空间，其所占用的内存空间微乎其微。并且其栈空间在开始时非常小，之后随着堆存储空间的按需分配或释放而变化。内部实现上，goroutine会在多个操作系统线程上多路复用。如果一个goroutine阻塞了一个操作系统线程，例如：等待输入，这个线程上的其他goroutine就会迁移到其他线程，这样能继续运行。开发者并不需要关心/担心这些细节。</p>
 <p class="text-align-justify">下面所示程序会输出“Hello from main goroutine”。也可能会输出“Hello from another goroutine”，具体依赖于两个goroutine哪个先结束。</p>
 <pre class="language-golang"><code>func main() {
-    go fmt.Println("Hello from another goroutine")
-    fmt.Println("Hello from main goroutine")
+    go fmt.Println(&quot;Hello from another goroutine&quot;)
+    fmt.Println(&quot;Hello from main goroutine&quot;)
 
     // 至此，程序运行结束，
     // 所有活跃的goroutine被杀死
 }</code></pre>
 <p class="text-align-justify">接下来的这个程序，多数情况下，会输出“Hello from main goroutine”和“Hello from another goroutine”，输出的顺序不确定。但还有另一个可能性是：第二个goroutine运行得极其慢，在程序结束之前都没来得及输出相应的消息。</p>
 <pre class="language-golang"><code>func main() {
-    go fmt.Println("Hello from another goroutine")
-    fmt.Println("Hello from main goroutine")
+    go fmt.Println(&quot;Hello from another goroutine&quot;)
+    fmt.Println(&quot;Hello from main goroutine&quot;)
 
     time.Sleep(time.Second)        // 等待1秒，等另一个goroutine结束
 }</code></pre>
@@ -5441,18 +5527,18 @@ if __name__ == '__main__':
 func Publish(text string, delay time.Duration) {
     go func() {
         time.Sleep(delay)
-        fmt.Println("BREAKING NEWS:", text)
+        fmt.Println(&quot;BREAKING NEWS:&quot;, text)
     }()    // 注意这里的括号。必须调用匿名函数
 }</code></pre>
 <p class="text-align-justify">你可能会这样使用<code>Publish</code>函数：</p>
 <pre class="language-golang"><code>func main() {
-    Publish("A goroutine starts a new thread of execution.", 5*time.Second)
-    fmt.Println("Let’s hope the news will published before I leave.")
+    Publish(&quot;A goroutine starts a new thread of execution.&quot;, 5*time.Second)
+    fmt.Println(&quot;Let’s hope the news will published before I leave.&quot;)
 
     // 等待发布新闻
     time.Sleep(10 * time.Second)
 
-    fmt.Println("Ten seconds later: I’m leaving now.")
+    fmt.Println(&quot;Ten seconds later: I’m leaving now.&quot;)
 }</code></pre>
 <p class="text-align-justify">这个程序，绝大多数情况下，会输出以下三行，顺序固定，每行输出之间相隔5秒。</p>
 <pre class="language-text"><code>$ go run publish1.go
@@ -5464,40 +5550,40 @@ Ten seconds later: I’m leaving now.</code></pre>
 <img src='https://yourbasic.org/golang/sushi-conveyor-belt.jpg' title='Sushi conveyor belt' alt='Sushi conveyor belt' width='100%'/>
 <p class="text-align-justify"><a href='http://golang.org/ref/spec#Channel_types'>管道</a>是Go语言的一个构件，提供一种机制用于两个goroutine之间通过传递一个指定类型的值来同步运行和通讯。操作符<code>&lt;-</code>用于指定管道的方向，发送或接收。如果未指定方向，则为双向管道。</p>
 <pre class="language-golang"><code>chan Sushi        // 可用来发送和接收Sushi类型的值
-chan<- float64    // 仅可用来发送float64类型的值
-<-chan int        // 仅可用来接收int类型的值</code></pre>
+chan&lt;- float64    // 仅可用来发送float64类型的值
+&lt;-chan int        // 仅可用来接收int类型的值</code></pre>
 <p class="text-align-justify">管道是引用类型，基于make函数来分配。</p>
 <pre class="language-golang"><code>ic := make(chan int)    // 不带缓冲的int类型管道
 wc := make(chan *Work, 10)    // 带缓冲的Work类型指针管道</code></pre>
 <p class="text-align-justify">如果通过管道发送一个值，则将<code>&lt;-</code>作为二元操作符使用。通过管道接收一个值，则将其作为一元操作符使用：</p>
-<pre class="language-golang"><code>ic <- 3        // 往管道发送3
-work := <-wc    // 从管道接收一个指向Work类型值的指针</code></pre>
+<pre class="language-golang"><code>ic &lt;- 3        // 往管道发送3
+work := &lt;-wc    // 从管道接收一个指向Work类型值的指针</code></pre>
 <p class="text-align-justify">如果管道不带缓冲，发送方会阻塞直到接收方从管道中接收了值。如果管道带缓冲，发送方则会阻塞直到发送的值被拷贝到缓冲区内；如果缓冲区已满，则意味着需要等待直到某个接收方获取到一个值。接收方在有值可以接收之前会一直阻塞。</p>
 <p class="text-align-justify"><strong>关闭管道（Close）</strong></p>
 <p class="text-align-justify"><a href='http://golang.org/ref/spec#Close'>close</a> 函数标志着不会再往某个管道发送值。在调用<code>close</code>之后，并且在之前发送的值都被接收后，接收操作会返回一个零值，不会阻塞。一个多返回值的接收操作会额外返回一个布尔值用来指示返回的值是否发送操作传递的。</p>
 <pre class="language-golang"><code>ch := make(chan string)
 go func() {
-    ch <- "Hello!"
+    ch &lt;- &quot;Hello!&quot;
     close(ch)
 }()
-fmt.Println(<-ch)    // 输出字符串"Hello!"
-fmt.Println(<-ch)    // 输出零值 - 空字符串""，不会阻塞
-fmt.Println(<-ch)    // 再次打印输出空字符串""
-v, ok := <-ch        // 变量v的值为空字符串""，变量ok的值为false</code></pre>
+fmt.Println(&lt;-ch)    // 输出字符串&quot;Hello!&quot;
+fmt.Println(&lt;-ch)    // 输出零值 - 空字符串&quot;&quot;，不会阻塞
+fmt.Println(&lt;-ch)    // 再次打印输出空字符串&quot;&quot;
+v, ok := &lt;-ch        // 变量v的值为空字符串&quot;&quot;，变量ok的值为false</code></pre>
 <p class="text-align-justify">一个带有<code>range</code>子句的<code>for</code>语句会依次读取发往管道的值，直到该管道关闭：</p>
 <pre class="language-golang"><code>func main() {
     // 译注：要想运行该示例，需要先定义类型Sushi，如type Sushi string
-    var ch <-chan Sushi = Producer()
+    var ch &lt;-chan Sushi = Producer()
     for s := range ch {
-        fmt.Println("Consumed", s)
+        fmt.Println(&quot;Consumed&quot;, s)
     }
 }
 
-func Producer() <-chan Sushi {
+func Producer() &lt;-chan Sushi {
     ch := make(chan Sushi)
     go func(){
-        ch <- Sushi("海老握り")    // Ebi nigiri
-        ch <- Sushi("鮪とろ握り") // Toro nigiri
+        ch &lt;- Sushi(&quot;海老握り&quot;)    // Ebi nigiri
+        ch &lt;- Sushi(&quot;鮪とろ握り&quot;) // Toro nigiri
         close(ch)
     }()
     return ch
@@ -5506,11 +5592,11 @@ func Producer() <-chan Sushi {
 <p class="text-align-justify">下一个示例中，我们让<code>Publish</code>函数返回一个管道 - 用于在发布text变量值时广播一条消息：</p>
 <pre class="language-golang"><code>// 在给定时间过期时，Publish函数会打印text变量值到标准输出
 // 在text变量值发布后，该函数会关闭管道wait
-func Publish(text string, delay time.Duration) (wait <-chan struct{}) {
+func Publish(text string, delay time.Duration) (wait &lt;-chan struct{}) {
     ch := make(chan struct{})
     go func() {
         time.Sleep(delay)
-        fmt.Println("BREAKING NEWS:", text)
+        fmt.Println(&quot;BREAKING NEWS:&quot;, text)
         close(ch)    // 广播 - 一个关闭的管道都会发送一个零值
     }()
     return ch
@@ -5518,10 +5604,10 @@ func Publish(text string, delay time.Duration) (wait <-chan struct{}) {
 <p class="text-align-justify">注意：我们使用了一个空结构体的管道：<code>struct{}</code>。这明确地指明该管道仅用于发信号，而不是传递数据。</p>
 <p class="text-align-justify">我们可能会这样使用这个函数：</p>
 <pre class="language-golang"><code>func main() {
-    wait := Publish("Channels let goroutines communicate.", 5*time.Second)
-    fmt.Println("Waiting for the news...")
-    <-wait
-    fmt.Println("The news is out, time to leave.")
+    wait := Publish(&quot;Channels let goroutines communicate.&quot;, 5*time.Second)
+    fmt.Println(&quot;Waiting for the news...&quot;)
+    &lt;-wait
+    fmt.Println(&quot;The news is out, time to leave.&quot;)
 }</code></pre>
 <p class="text-align-justify">这个程序会按指定的顺序输出以下三行内容。最后一行在新闻（news）一出就会立即输出。</p>
 <pre class="language-text"><code>$ go run publish2.go
@@ -5531,11 +5617,11 @@ The news is out, time to leave.</code></pre>
 <h3>4. 死锁</h3>
 <img src='https://yourbasic.org/golang/traffic-jam.jpg' title='traffic jam' alt='traffic jam' width='100%'/>
 <p class="text-align-justify">现在我们在<code>Publish</code>函数中引入一个bug：</p>
-<pre class="language-golang"><code>func Publish(text string, delay time.Duration) (wait <-chan struct{}) {
+<pre class="language-golang"><code>func Publish(text string, delay time.Duration) (wait &lt;-chan struct{}) {
     ch := make(chan struct{})
     go func() {
         time.Sleep(delay)
-        fmt.Println("BREAKING NEWS:", text)
+        fmt.Println(&quot;BREAKING NEWS:&quot;, text)
         // 译注：注意这里将close函数调用注释掉了
         //close(ch)
     }()
@@ -5543,11 +5629,11 @@ The news is out, time to leave.</code></pre>
 }</code></pre>
 <p class="text-align-justify">主程序还是像之前一样开始运行：输出第一行，然后等待5秒，这时<code>Publish</code>函数开启的goroutine会输出突发新闻（breaking news），然后退出，留下主goroutine独自等待。</p>
 <pre class="language-golang"><code>func main() {
-    wait := Publish("Channels let goroutines communicate.", 5*time.Second)
-    fmt.Println("Waiting for the news...")
+    wait := Publish(&quot;Channels let goroutines communicate.&quot;, 5*time.Second)
+    fmt.Println(&quot;Waiting for the news...&quot;)
     // 译注：注意下面这一句
-    <-wait
-    fmt.Println("The news is out, time to leave.")
+    &lt;-wait
+    fmt.Println(&quot;The news is out, time to leave.&quot;)
 }</code></pre>
 <p class="text-align-justify">此刻之后，程序无法再继续往下执行。众所周知，这种情形即为死锁。</p>
 <blockquote><p class="text-align-justify">死锁是线程之间相互等待，其中任何一个都无法向前运行的情形。</p></blockquote>
@@ -5582,7 +5668,7 @@ created by addtimer
     }()
     // 译注：注意下面这一行
     n++ // 另一次冲突的访问
-    <-wait
+    &lt;-wait
     fmt.Println(n) // 输出：未指定
 }</code></pre>
 <p class="text-align-justify">代码中的两个goroutine（假设命名为<code>g1</code>和<code>g2</code>）参与了一次竞争，我们无法获知操作会以何种顺序发生。以下是诸多可能中的一种：</p>
@@ -5602,9 +5688,9 @@ created by addtimer
     go func() {
         n := 0 // 仅为一个goroutine可见的局部变量.
         n++
-        ch <- n // 数据从一个goroutine离开...
+        ch &lt;- n // 数据从一个goroutine离开...
     }()
-    n := <-ch   // ...然后安全到达另一个goroutine.
+    n := &lt;-ch   // ...然后安全到达另一个goroutine.
     n++
     fmt.Println(n) // 输出: 2
 }</code></pre>
@@ -5645,7 +5731,7 @@ func lockItUp() {
         close(wait)
     }()
     n.Add(1) // 另一个并发访问
-    <-wait
+    &lt;-wait
     fmt.Println(n.Value()) // 输出: 2
 }</code></pre>
 <h3>7. 检测数据竞争</h3>
@@ -5654,7 +5740,7 @@ func lockItUp() {
     var wg sync.WaitGroup
     wg.Add(5)
     // 译注：注意下面这行代码中的i++
-    for i := 0; i < 5; i++ {
+    for i := 0; i &lt; 5; i++ {
         go func() {
             // 注意下一行代码会输出什么？为什么？
             fmt.Print(i) // 6个goroutine共享变量i
@@ -5669,7 +5755,7 @@ func lockItUp() {
 <pre class="language-golang"><code>func correct() {
     var wg sync.WaitGroup
     wg.Add(5)
-    for i := 0; i < 5; i++ {
+    for i := 0; i &lt; 5; i++ {
         go func(n int) { // 使用局部变量
             fmt.Print(n)
             wg.Done()
@@ -5683,7 +5769,7 @@ func lockItUp() {
 <pre class="language-golang"><code>func alsoCorrect() {
     var wg sync.WaitGroup
     wg.Add(5)
-    for i := 0; i < 5; i++ {
+    for i := 0; i &lt; 5; i++ {
         n := i // 为每个闭包创建一个独有的变量
         go func() {
             fmt.Print(n)
@@ -5734,13 +5820,13 @@ exit status 66</code></pre>
 <p class="text-align-justify"><a href='http://golang.org/ref/spec#Select_statements'>select语句</a>是Go语言并发工具集中的终极工具。select用于从一组可能的通讯中选择一个进一步处理。如果任意一个通讯都可以进一步处理，则从中随机选择一个，执行对应的语句。否则，如果又没有默认分支（default case），select语句则会阻塞，直到其中一个通讯完成。</p>
 <p class="text-align-justify">以下是一个玩具示例，演示<code>select</code>语句如何用于实现一个随机数生成器：</p>
 <pre class="language-golang"><code>// RandomBits函数 返回一个管道，用于产生一个比特随机序列
-func RandomBits() <-chan int {
+func RandomBits() &lt;-chan int {
     ch := make(chan int)
     go func() {
         for {
             select {
-            case ch <- 0: // 注意：分支没有对应的处理语句
-            case ch <- 1:
+            case ch &lt;- 0: // 注意：分支没有对应的处理语句
+            case ch &lt;- 1:
             }
         }
     }()
@@ -5748,17 +5834,17 @@ func RandomBits() <-chan int {
 }</code></pre>
 <p class="text-align-justify">下面是相对更加实际一点的例子：如何使用select语句为一个操作设置一个时间限制。代码会输出变量news的值或者超时消息，具体依赖于两个接收语句哪个先执行：</p>
 <pre class="language-golang"><code>select {
-case news := <-NewsAgency:
+case news := &lt;-NewsAgency:
     fmt.Println(news)
-case <-time.After(time.Minute):
-    fmt.Println("Time out: no news in one minute.")
+case &lt;-time.After(time.Minute):
+    fmt.Println(&quot;Time out: no news in one minute.&quot;)
 }</code></pre>
 <p class="text-align-justify">函数 <a href='http://golang.org/pkg/time/#After'>time.After</a> 是Go语言标准库的一部分；它会在等待指定时间后将当前的时间发送到返回的管道中。</p>
 <h3>9. 综合所有示例</h3>
 <p class="text-align-justify">花点时间认真研究一下这个示例。如果你完全理解，也就对Go语言中并发的应用方式有了全面的掌握。</p>
 <p class="text-align-justify">这个程序演示了如何将管道用于被任意数量的goroutine发送和接收数据，也演示了如何将select语句用于从多个通讯中选择一个。</p>
 <pre class="language-golang"><code>func main() {
-    people := []string{"Anna", "Bob", "Cody", "Dave", "Eva"}
+    people := []string{&quot;Anna&quot;, &quot;Bob&quot;, &quot;Cody&quot;, &quot;Dave&quot;, &quot;Eva&quot;}
     match := make(chan string, 1) // 为一个未匹配的发送操作提供空间
     wg := new(sync.WaitGroup)
     wg.Add(len(people))
@@ -5767,8 +5853,8 @@ case <-time.After(time.Minute):
     }
     wg.Wait()
     select {
-    case name := <-match:
-        fmt.Printf("No one received %s’s message.\n", name)
+    case name := &lt;-match:
+        fmt.Printf(&quot;No one received %s’s message.\n&quot;, name)
     default:
         // 没有待处理的发送操作
     }
@@ -5777,9 +5863,9 @@ case <-time.After(time.Minute):
 // 函数Seek 发送一个name到match管道或从match管道接收一个peer，结束时通知wait group
 func Seek(name string, match chan string, wg *sync.WaitGroup) {
     select {
-    case peer := <-match:
-        fmt.Printf("%s sent a message to %s.\n", peer, name)
-    case match <- name:
+    case peer := &lt;-match:
+        fmt.Printf(&quot;%s sent a message to %s.\n&quot;, peer, name)
+    case match &lt;- name:
         // 等待某个goroutine接收我的消息
     }
     wg.Done()
@@ -5799,12 +5885,12 @@ No one received Dave’s message.</code></pre>
 <pre class="language-golang"><code>type Vector []float64
 
 // 函数Convolve 计算 w = u * v，其中 w[k] = Σ u[i]*v[j], i + j = k
-// 先决条件：len(u) > 0, len(v) > 0
+// 先决条件：len(u) &gt; 0, len(v) &gt; 0
 func Convolve(u, v Vector) (w Vector) {
     n := len(u) + len(v) - 1
     w = make(Vector, n)
 
-    for k := 0; k < n; k++ {
+    for k := 0; k &lt; n; k++ {
         w[k] = mul(u, v, k)
     }
     return
@@ -5814,7 +5900,7 @@ func Convolve(u, v Vector) (w Vector) {
 func mul(u, v Vector, k int) (res float64) {
     n := min(k+1, len(u))
     j := min(k, len(v)-1)
-    for i := k - j; i < n; i, j = i+1, j-1 {
+    for i := k - j; i &lt; n; i, j = i+1, j-1 {
         res += u[i] * v[j]
     }
     return
@@ -5825,19 +5911,19 @@ func mul(u, v Vector, k int) (res float64) {
     w = make(Vector, n)
 
     // 将 w 切分成花费 ~100μs-1ms 用于计算的工作单元
-    size := max(1, 1<<20/n)
+    size := max(1, 1&lt;&lt;20/n)
 
     wg := new(sync.WaitGroup)
     wg.Add(1 + (n-1)/size)
-    for i := 0; i < n && i >= 0; i += size { // 整型溢出后 i < 0
+    for i := 0; i &lt; n &amp;&amp; i &gt;= 0; i += size { // 整型溢出后 i &lt; 0
         j := i + size
-        if j > n || j < 0 { // 整型溢出后 j < 0
+        if j &gt; n || j &lt; 0 { // 整型溢出后 j &lt; 0
             j = n
         }
 
         // 这些goroutine共享内存，但是只读
         go func(i, j int) {
-            for k := i; k < j; k++ {
+            for k := i; k &lt; j; k++ {
                 w[k] = mul(u, v, k)
             }
             wg.Done()
@@ -6547,25 +6633,25 @@ d9976cfe0430557885d162927dd70186d0f521e8</code></pre>
 <h2><code>string.format()</code> 基础</h2>
 <p class="text-align-justify">如下是两个基本字符串替换的示例，符号 <code>{}</code></p>
 <p class="text-align-justify">是替换变量的占位符。若没有指定格式，则直接将变量值作为字符串插入。</p>
-<pre class="language-python"><code>s1 = "so much depends upon {}".format("a red wheel barrow")
-s2 = "glazed with {} water beside the {} chickens".format("rain", "white")</code></pre>
+<pre class="language-python"><code>s1 = &quot;so much depends upon {}&quot;.format(&quot;a red wheel barrow&quot;)
+s2 = &quot;glazed with {} water beside the {} chickens&quot;.format(&quot;rain&quot;, &quot;white&quot;)</code></pre>
 <p class="text-align-justify">你也可以使用变量的位置数值，在字符串中改变它们，进行格式化时，会更加灵活。如果搞错了顺序，你可以轻易地修正而不需要打乱所有的变量。</p>
-<pre class="language-python"><code>s1 = " {0} is better than {1} ".format("emacs", "vim")
-s2 = " {1} is better than {0} ".format("emacs", "vim")</code></pre>
+<pre class="language-python"><code>s1 = &quot; {0} is better than {1} &quot;.format(&quot;emacs&quot;, &quot;vim&quot;)
+s2 = &quot; {1} is better than {0} &quot;.format(&quot;emacs&quot;, &quot;vim&quot;)</code></pre>
 <h2>更老的格式字符串符号"%"</h2>
 <p class="text-align-justify">Python 2.6 之前，格式字符串的使用方法相对更简单些，虽然其能够接收的参数数量有限制。这些方法在 Python 3.3 中仍然有效，但已有含蓄的警告称将完全淘汰这些方法，目前还没有明确的时间进度表。<a href='http://www.python.org/dev/peps/pep-3101/'>PEP-3101</a></p>
 <p class="text-align-justify"><strong>格式化浮点数：</strong></p>
 <pre class="language-python"><code>pi = 3.14159
-print(" pi = %1.2f ", % pi)</code></pre>
+print(&quot; pi = %1.2f &quot;, % pi)</code></pre>
 <p class="text-align-justify"><strong>多个替换值</strong></p>
-<pre class="language-python"><code>s1 = "cats"
-s2 = "dogs"
-s3 = " %s and %s living together" % (s1, s2)</code></pre>
+<pre class="language-python"><code>s1 = &quot;cats&quot;
+s2 = &quot;dogs&quot;
+s3 = &quot; %s and %s living together&quot; % (s1, s2)</code></pre>
 <p class="text-align-justify"><strong>没有足够的参数</strong></p>
 <p class="text-align-justify">使用老的格式化方法，我经常犯错“TypeError: not enough arguments for formating string”，因为我数错了替换变量的数量，编写如下这样的代码很容易漏掉变量。</p>
-<pre class="language-python"><code>set =  (%s, %s, %s, %s, %s, %s, %s, %s) " % (a,b,c,d,e,f,g,h,i)</code></pre>
+<pre class="language-python"><code>set =  (%s, %s, %s, %s, %s, %s, %s, %s) &quot; % (a,b,c,d,e,f,g,h,i)</code></pre>
 <p class="text-align-justify">对于新的Python格式字符串，可以使用编号的参数，这样你就不需要统计有多少个参数。</p>
-<pre class="language-python"><code>set = set = " ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}) ".format(a,b,c,d,e,f,g)</code></pre>
+<pre class="language-python"><code>set = set = &quot; ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}) &quot;.format(a,b,c,d,e,f,g)</code></pre>
 <h2>更多<code>.format()</code>的格式字符串方法</h2>
 <p class="text-align-justify"><code>format()</code> 函数提供了相当多的附加特性和功能，如下是一些有用的使用 <code>.format()</code> 的技巧。</p>
 <p class="text-align-justify"><strong>命名参数</strong></p>
@@ -6583,9 +6669,9 @@ s3 = " %s and %s living together" % (s1, s2)</code></pre>
 <p class="text-align-justify"><strong>将格式作为函数来使用</strong></p>
 <p class="text-align-justify">可以将<code>.format()</code>用作函数，这就允许在代码中将普通文本和格式区分开来。例如，你可以在程序的开头包含所有需要使用的格式，然后在后面使用。这也是一种处理国际化的好方法，国际化不仅要求不同的文本，且常常要求不同的数字格式。</p>
 <pre class="language-python"><code>## 定义格式
-email_f = "Your email address was {email}".format
+email_f = &quot;Your email address was {email}&quot;.format
 ### 在另一个地方使用
-print(email_f(email="bob@example.com"))</code></pre>
+print(email_f(email=&quot;bob@example.com&quot;))</code></pre>
 <p class="text-align-justify">感谢 <a href='http://www.reddit.com/r/Python/comments/174e1i/python_string_format_cookbook/c82ot0h'>earthboundkid</a> 在 reddit 上提供这一技巧。</p>
 <h2>其他技巧</h2>
 <p class="text-align-justify"><strong>转义大括号</strong></p>
@@ -6648,27 +6734,27 @@ print(email_f(email="bob@example.com"))</code></pre>
 <h2>函数是一等对象</h2>
 <p class="text-align-justify">Python中，所有东西都是对象。这意味着可以通过名字引用函数，以及像其他对象那样传递。例如：</p>
 <pre class="language-python"><code>def traveling_function():
-    print "Here I am!"
+    print &quot;Here I am!&quot;
 
 function_dict = {
-    "func": traveling_function
+    &quot;func&quot;: traveling_function
 }
 
-trav_func = function_dict['func']
+trav_func = function_dict[&apos;func&apos;]
 trav_func()
-# >> Here I am!</code></pre>
+# &gt;&gt; Here I am!</code></pre>
 <p class="text-align-justify"><code>traveling_function</code> 被赋值给 <code>function_dict</code> 字典中键 <code>func</code> 的值，仍旧可以正常调用。</p>
 <h2>一等函数允许高阶函数</h2>
 <p class="text-align-justify">我们可以像其他对象那样传递函数。可以将函数作为值传递给字典，放在列表中，或者作为对象的属性进行赋值。那为什么不能作为参数传给另一个函数呢？当然可以！如果一个函数接受另一个函数作为其参数或者返回另一个函数，则称之为高阶函数。</p>
 <pre class="language-python"><code>def self_absorbed_function():
-    return "I'm an amazing function!"
+    return &quot;I&apos;m an amazing function!&quot;
 
 def printer(func):
-    print "The function passed to me says: " + func()
+    print &quot;The function passed to me says: &quot; + func()
 
 # Call `printer` and give it `self_absorbed_function` as an argument
 printer(self_absorbed_function)
-# >>> The function passed to me says: I'm an amazing function!</code></pre>
+# &gt;&gt;&gt; The function passed to me says: I&apos;m an amazing function!</code></pre>
 <p class="text-align-justify">现在你也看到函数可以作为参数传给另一个函数，而且传给函数的函数还可以调用。这允许我们创建一些有意思的函数，例如装饰器。</p>
 <h2>装饰器基础</h2>
 <p class="text-align-justify">本质上，装饰器就是一个以另一个函数为参数的函数。大多数情况下，它们会返回所包装函数的一个修改版本。来看个我们能想到的最简单的装饰器---同一性（identity）装饰器，或许对我们理解装饰器的工作原理有所帮助。</p>
@@ -6678,14 +6764,14 @@ printer(self_absorbed_function)
     return wrapper
 
 def a_function():
-    print "I'm a normal function."
+    print &quot;I&apos;m a normal function.&quot;
 
 # `decorated_function` 是 `identity_function` 返回的函数，也就是嵌套函数 `wrapper`
 decorated_function = identity_function(a_function)
 
 # 如下调用 `identity_function` 返回的函数
 decorated_function()
-# >>> I'm a normal function</code></pre>
+# &gt;&gt;&gt; I&apos;m a normal function</code></pre>
 <p class="text-align-justify">这里， <code>identity_decorator</code> 根本没有修改它包装的函数，只是简单地返回一个函数（wrapper），这个函数在被调用之时，会去调用原来作为 <code>identity_decorator</code> 参数的函数。这是个没有用处的装饰器！</p>
 <p class="text-align-justify">关于 <code>identity_decorator</code> 的有趣之处是 <code>wrapper</code> 能够访问变量 <code>func</code> ，即使 <code>func</code> 并非是它的参数。这归因于闭包。</p>
 <h2>闭包</h2>
@@ -6696,23 +6782,23 @@ decorated_function()
 <pre class="language-python"><code>def logging_decorator(func):
     def wrapper():
         wrapper.count += 1
-        print "The function I modify has been called {0} time(s)".format(wrapper.count)
+        print &quot;The function I modify has been called {0} time(s)&quot;.format(wrapper.count)
         func()
     wrapper.count = 0
     return wrapper
 
 def a_function():
-    print "I'm a normal function."
+    print &quot;I&apos;m a normal function.&quot;
 
 modified_function = logging_decorator(a_function)
 
 modified_function()
-# >>> The function I modify has been called 1 time(s).
-# >>> I'm a normal function.
+# &gt;&gt;&gt; The function I modify has been called 1 time(s).
+# &gt;&gt;&gt; I&apos;m a normal function.
 
 modified_function()
-# >>> The function I modify has been called 2 time(s).
-# >>> I'm a normal function.</code></pre>
+# &gt;&gt;&gt; The function I modify has been called 2 time(s).
+# &gt;&gt;&gt; I&apos;m a normal function.</code></pre>
 <p class="text-align-justify">我们说装饰器会修改函数，这样来想对理解也是有帮助的。但如例子所见， <code>logging_decorator</code> 返回的是一个类似于 <code>a_function</code> 的新函数，只是多了一个日志特性。</p>
 <p class="text-align-justify">上例中， <code>logging_decorator</code> 不仅接受一个函数作为参数，并且返回一个函数， <code>wrapper</code> 。每次 <code>logging_decorator</code> 返回的函数得到调用，它就对 <code>wrapper.count</code> 的值加1，打印出来，然后调用 <code>logging_decorator</code> 包装的函数。</p>
 <p class="text-align-justify">你也许正疑惑为什么我们的计数器是 <code>wrapper</code> 的一个属性而不是一个普通的变量。难道 <code>wrapper</code> 的闭包环境不是让我们访问在其局部作用域中声明的任意变量么？是的，但有个问题。Python中，闭包允许对其函数作用域链中任一变量的进行任意读操作，但只允许对可变对象（列表、字典、等等）进行写操作。整数在Python中是非可变对象，因此我们不能修改 <code>wrapper</code> 内部整型变量的值。相反，我们将计数器作为 <code>wrapper</code> 的一个属性---一个可变对象，因此可以随我们自己增大它的值。</p>
@@ -6721,7 +6807,7 @@ modified_function()
 <pre class="language-python"><code># In the previous example, we used our decorator function by passing the
 # function we wanted to modify to it, and assigning the result to a variable
 def some_function():
-    print "I'm happiest when decorated."
+    print &quot;I&apos;m happiest when decorated.&quot;
 
 # Here we will make the assigned variable the same name as the wrapped function
 some_function = logging_decorator(some_function)</code></pre>
@@ -6729,7 +6815,7 @@ some_function = logging_decorator(some_function)</code></pre>
 <pre class="language-python"><code># We can achieve the exact same thing with this syntax:
 @logging_decorator
 def some_function():
-    print "I'm happiest when decorated"</code></pre>
+    print &quot;I&apos;m happiest when decorated&quot;</code></pre>
 <p class="text-align-justify">使用装饰器语法，鸟瞰其中发生的事情：</p>
 <ol><li>解释器到达被装饰的函数，编译 <code>some_function</code>，并将其命名为 'some_function'。</li>
 <li>然后将该函数传递给装饰行中指定的装饰器函数（ <code>logging_function</code> ）。</li>
@@ -6753,21 +6839,21 @@ def some_function():
 
 # `args` within the function will be a tuple of any arguments we pass
 # which can be used within the function like any other tuple
-function_with_many_arguments('hello', 123, True)
-# >>> ('hello', 123, True)</code></pre>
+function_with_many_arguments(&apos;hello&apos;, 123, True)
+# &gt;&gt;&gt; (&apos;hello&apos;, 123, True)</code></pre>
 <hr>
 <pre class="language-python"><code>def function_with_3_parameters(num, boolean, string):
-    print "num is " + str(num)
-    print "boolean is " + str(boolean)
-    print "string is " + string
+    print &quot;num is &quot; + str(num)
+    print &quot;boolean is &quot; + str(boolean)
+    print &quot;string is &quot; + string
 
-arg_list = [1, False, 'decorators']
+arg_list = [1, False, &apos;decorators&apos;]
 
 # arg_list will be expanded into 3 positional arguments by the `*` symbol
 function_with_3_parameters(*arg_list)
-# >>> num is 1
-# >>> boolean is False
-# >>> string is decorators</code></pre>
+# &gt;&gt;&gt; num is 1
+# &gt;&gt;&gt; boolean is False
+# &gt;&gt;&gt; string is decorators</code></pre>
 <p class="text-align-justify">重述一遍：在形参列表中， <code>*args</code>会将一系列的参数压缩进一个名为'args'的元组，而在实参列表中， <code>*args</code> 会将一个可迭代的参数数据结构展开为一系列的位置实参应用于函数。</p>
 <p class="text-align-justify">如你所见在实参展开的例子中， <code>*</code> 符号可与'args'之外的名字一起使用。当压缩/展开一般的参数列表，使用 <code>*args</code> 的形式仅仅是一种惯例。</p>
 <ul><li><code>**kwargs</code> 与 <code>*args</code> 的行为类似，但用于关键字参数而非位置参数。如果在函数的形参列表中使用 <code>**kwargs</code> ，它会收集函数收到的所有额外关键字参数，放入一个字典中。如果用于函数的实参列表，它会将一个字典展开为一系列的关键字参数。</li></ul>
@@ -6775,16 +6861,16 @@ function_with_3_parameters(*arg_list)
 <pre class="language-python"><code>def funtion_with_many_keyword_args(**kwargs):
     print kwargs
 
-function_with_many_keyword_args(a='apples', b='bananas', c='cantalopes')
-# >> {'a':'apples', 'b':'bananas', 'c':'cantalopes'}</code></pre>
+function_with_many_keyword_args(a=&apos;apples&apos;, b=&apos;bananas&apos;, c=&apos;cantalopes&apos;)
+# &gt;&gt; {&apos;a&apos;:&apos;apples&apos;, &apos;b&apos;:&apos;bananas&apos;, &apos;c&apos;:&apos;cantalopes&apos;}</code></pre>
 <hr>
-<pre class="language-python"><code>def multiply_name(count=0, name=''):
+<pre class="language-python"><code>def multiply_name(count=0, name=&apos;&apos;):
     print name * count
 
-arg_dict = {'count': 3, 'name': 'Brian'}
+arg_dict = {&apos;count&apos;: 3, &apos;name&apos;: &apos;Brian&apos;}
 
 multiply_name(**arg_dict)
-# >> BrianBrianBrian</code></pre>
+# &gt;&gt; BrianBrianBrian</code></pre>
 <p class="text-align-justify">既然你理解了 <code>*args</code> 与 <code>**kwargs</code> 的工作原理，那么我们就继续研究一个你会发现很有用的装饰器。</p>
 <h2>缓存制表（Memoization）</h2>
 <p class="text-align-justify">缓存制表是避免潜在的昂贵的重复计算的一种方法，通过缓存函数每次执行的结果来实现。这样，下一次函数以相同的参数执行，就可以从缓存中获取返回结果，不需要再次计算结果。</p>
@@ -6810,7 +6896,7 @@ def an_expensive_function(arg1, arg2, arg3):
 <p class="text-align-justify">需要提醒的是：缓存制表仅适用于纯函数。也就是说给定一个特定的参数设置，函数确定总会产生相同的结果。如果函数依赖于不作为参数传递的全局变量、I/O、或者其它任意可能影响返回值的东西，缓存制表会产生令人迷惑的结果！并且，一个纯函数不会有任何副作用。因此，如果你的函数会增大一个计数器，或者调用另一个对象的方法，或者其它任意不在函数的返回结果中表示的东西，当结果是从缓存中返回时，副作用操作并不会得到执行。</p>
 <h2>类的装饰器</h2>
 <p class="text-align-justify">最初，我们说装饰器是一个修改另一个函数的函数，但其实它们可以用于修改类或者方法。对类进行装饰并不常见，但某些情况下作为元类(metaclass)的一个替代，类的装饰器是一个有用的工具。</p>
-<pre class="language-python"><code>foo = ['important', 'foo', 'stuff']
+<pre class="language-python"><code>foo = [&apos;important&apos;, &apos;foo&apos;, &apos;stuff&apos;]
 
 def add_foo(klass):
     klass.foo = foo
@@ -6824,7 +6910,7 @@ class Person(object):
 brian = Person()
 
 print brian.foo
-# >> ['important', 'foo', 'stuff']</code></pre>
+# &gt;&gt; [&apos;important&apos;, &apos;foo&apos;, &apos;stuff&apos;]</code></pre>
 <p class="text-align-justify">现在，类 <code>Person</code> 的任一对象都有一个超级重要的 <code>foo</code></p>
 <p class="text-align-justify">属性！注意，因为我们装饰的是一个类，所以装饰器返回的不是一个函数，而是一个类。更新一下装饰器的定义：</p>
 <blockquote><p class="text-align-justify">装饰器是一个修改函数、或方法、或类的函数。</p></blockquote>
@@ -6840,10 +6926,10 @@ print brian.foo
 
 @IdentityDecorator
 def a_function():
-    print "I'm a normal function."
+    print &quot;I&apos;m a normal function.&quot;
 
 a_function()
-# >> I'm a normal function.</code></pre>
+# &gt;&gt; I&apos;m a normal function.</code></pre>
 <p class="text-align-justify">如下是上例中发生的事情：</p>
 <ul><li>当 <code>IdentityDecorator</code> 装饰 <code>a_function</code> 时，它的行为就和装饰器函数一样。这个代码片段等价于上例中的装饰器语法： <code>a_function = IdentityDecorator(a_function)</code> 。调用（实例化）该装饰器类时，需将其装饰的函数作为一个实参传递给它。</li>
 <li>实例化 <code>IdentityDecorator</code> 之时，会以被装饰的函数作为实参调用初始化函数 <code>__init__</code> 。本例中，初始化函数所做的事情就是将被装饰函数赋值给一个属性，这样之后就可以通过其它方法进行调用。</li>
@@ -6858,24 +6944,24 @@ def argumentative_decorator(gift):
     def func_wrapper(func):
         @wraps(func)
         def returned_wrapper(*args, **kwargs):
-             print "I don't like this " + gift + "you gave me!"
+             print &quot;I don&apos;t like this &quot; + gift + &quot;you gave me!&quot;
              return func(gift, *args, **kwargs)
         return returned_wrapper
     return func_wrapper
 
-@argumentative_decorator("sweater")
+@argumentative_decorator(&quot;sweater&quot;)
 def grateful_function(gift):
-    print "I love the " + gift + "!Thank you!"
+    print &quot;I love the &quot; + gift + &quot;!Thank you!&quot;
 
 grateful_function()
-# >> I don't like this sweater you gave me!
-# >> I love the sweater! Thank you!</code></pre>
+# &gt;&gt; I don&apos;t like this sweater you gave me!
+# &gt;&gt; I love the sweater! Thank you!</code></pre>
 <p class="text-align-justify">我们来看看如果不使用装饰器语法这个装饰器函数是如何工作的：</p>
 <pre class="language-python"><code># If we tried to invoke without an argument:
 grateful_function = argumentative_function(grateful_function)
 
 # But when given an argument, the pattern changes to:
-grateful_function = argumentative_decorator("sweater")(grateful_function)</code></pre>
+grateful_function = argumentative_decorator(&quot;sweater&quot;)(grateful_function)</code></pre>
 <p class="text-align-justify">需要注意的地方是：当给定参数，首先仅以那些参数调用装饰器---被包装的函数并不在参数中。装饰器调用返回后，装饰器要包装的函数被传递给装饰器初始调用返回的函数（本例中，为 <code>argumentative_decorator(&quot;sweater&quot;)</code> 的返回值）。</p>
 <p class="text-align-justify">逐步地：</p>
 <ol><li>解释器到达被装饰函数之处，编译 <code>grateful_function</code> ，并将其绑定到名字'grateful_function'。</li>
@@ -6887,13 +6973,13 @@ grateful_function = argumentative_decorator("sweater")(grateful_function)</code>
 <p class="text-align-justify">有多种方式让装饰器接受可选参数。根据你是想使用位置参数、关键字参数还是两者皆是，需要使用稍微不同的模式。如下我将展示一种接受一个可选关键字参数的方式：</p>
 <pre class="language-python"><code>from functools import wraps
 
-GLOBAL_NAME = "Brian"
+GLOBAL_NAME = &quot;Brian&quot;
 
 def print_name(function=None, name=GLOBAL_NAME):
     def actual_decorator(function):
         @wraps(function)
         def returned_func(*args, **kwargs):
-            print "My name is " + name
+            print &quot;My name is &quot; + name
             return function(*args, **kwargs)
         return returned_func
 
@@ -6907,34 +6993,34 @@ def print_name(function=None, name=GLOBAL_NAME):
 
 @print_name
 def a_function():
-    print "I like the name!"
+    print &quot;I like the name!&quot;
 
-@print_name(name='Matt')
+@print_name(name=&apos;Matt&apos;)
 def another_function():
-    print "Hey, that's new!"
+    print &quot;Hey, that&apos;s new!&quot;
 
 a_function()
-# >> My name is Brian
-# >> I like that name!
+# &gt;&gt; My name is Brian
+# &gt;&gt; I like that name!
 
 another_function()
-# >> My name is Matt
-# >> Hey, that's new!</code></pre>
+# &gt;&gt; My name is Matt
+# &gt;&gt; Hey, that&apos;s new!</code></pre>
 <p class="text-align-justify">如果我们传递关键字参数 <code>name</code> 给 <code>print_name</code>，那么它的行为就与前一个例子中的 <code>argumentative_decorator</code> 相似。即，首先以 <code>name</code> 为参调用 <code>print_name</code> 。然后，将待包装的函数传递给首次调用返回的函数。</p>
 <p class="text-align-justify">如果我们没有提供 <code>name</code> 实参， <code>print_name</code> 的行为就与前面我们看到的不带参数的装饰器一样。装饰器仅以待包装的函数作为唯一的参数进行调用。</p>
 <p class="text-align-justify"><code>print_name</code> 支持两种可能性。它会检查是否收到作为参数的被包装函数。如果没有，则返回函数</p>
 <p class="text-align-justify"><code>waiting_for_func</code>，该函数可以被包装函数作为参数进行调用。如果收到被包装函数作为参数，则跳过中间步骤，直接调用 <code>actual_decorator</code> 。</p>
 <h2>串接装饰器</h2>
 <p class="text-align-justify">现在来探索一下今天要讲的最后一个装饰器的特性：串接。你可以在任意给定的函数之上堆叠使用多个装饰器， 这种构建函数的方式与使用多重继承构建类相类似。不过最好不要疯狂使用这种特性。</p>
-<pre class="language-python"><code>@print_name('Sam')
+<pre class="language-python"><code>@print_name(&apos;Sam&apos;)
 @logging_decorator
 def some_function():
-    print "I'm the wrapped function!"
+    print &quot;I&apos;m the wrapped function!&quot;
 
 some_function()
-# >> My name is Sam
-# >> The function I modify has been called 1 time(s).
-# >> I'm the wrapped function!</code></pre>
+# &gt;&gt; My name is Sam
+# &gt;&gt; The function I modify has been called 1 time(s).
+# &gt;&gt; I&apos;m the wrapped function!</code></pre>
 <p class="text-align-justify">当你串接使用装饰器时，它们堆叠的顺序是自底向上的。将被包装的函数 <code>some_function</code> 经编译后传递给它之上的第一个装饰器（ <code>logging_decorator</code> ）。然后第一个装饰器的返回值被传递给第二个装饰器。依此逐个应用链上每个装饰器。</p>
 <p class="text-align-justify">因为我们使用的两个装饰器都是 <code>print</code> 一个值，然后执行传递给它们的函数，这意味着当调用被包装函数时，链中的最后一个装饰器 <code>print_name</code> 打印输出中的第一行。</p>
 <h2>总结</h2>
@@ -6977,7 +7063,7 @@ some_function()
             # try to get the cached result
             return stored_results[args]
         except KeyError:
-            # nothing was cached for those args. let's fix that.
+            # nothing was cached for those args. let&apos;s fix that.
             result = stored_results[args] = fn(*args)
             return result
     return memoized</code></pre>
@@ -6995,7 +7081,7 @@ def fib(n):
 <pre class="language-python"><code>def make_verbose(fn):
     def verbose(*args):
         # will print (e.g.) fib(5)
-        print '%s(%s)' % (fb.__name__, ', '.join(repr(arg) for arg in args))
+        print &apos;%s(%s)&apos; % (fb.__name__, &apos;, &apos;.join(repr(arg) for arg in args))
         return fn(*args)   # actually call the decorated function
 
     return verbose</code></pre>
@@ -7009,11 +7095,11 @@ def fib(n):
     return n if n in [0, 1] else fib(n - 2) + fib(n - 1)
 fib = memoize(make_verbose(fib))</code></pre>
 <p class="text-align-justify">有趣的是，Python并没有限制你在@符号后只能写一个函数名：你也可以调用一个函数，从而能够高效地传递参数给装饰器。假设我们并不满足于简单的memoization，还想将函数的结果存储到<a href='http://memcached.org/'>memcached</a>中。如果你已经写了一个 <code>memcached</code> 装饰器函数，那么可以(例如)传递一个服务器地址给它:</p>
-<pre class="language-python"><code>@memcached('127.0.0.1:11211')
+<pre class="language-python"><code>@memcached(&apos;127.0.0.1:11211&apos;)
 def fib(n):
     return n if n in [0, 1] else fib(n - 2) + fib(n - 1)</code></pre>
 <p class="text-align-justify">非装饰器语法的写法会如下展开:</p>
-<pre class="language-python"><code>fib = memcached('127.0.0.1:11211')(fib)</code></pre>
+<pre class="language-python"><code>fib = memcached(&apos;127.0.0.1:11211&apos;)(fib)</code></pre>
 <p class="text-align-justify">Python配备有一些作为装饰器使用的非常有用的函数。例如，Python有一个 <code>classmethod</code> 函数，可以创建大致类似于java的静态方法:</p>
 <pre class="language-python"><code>class Foo(object):
     SOME_CLASS_CONSTANT = 42
@@ -7024,11 +7110,11 @@ def fib(n):
         # subclass of Foo, `cls` would be that subclass instead.
         return cls.SOME_CLASS_CONSTANT + value
 
-Foo.add_to_my_constant(10)  # => 52
+Foo.add_to_my_constant(10)  # =&gt; 52
 
 # unlike in Java, you can also call a classmethod on an instance
 f = Foo()
-f.add_to_my_constant(10)    # => 52</code></pre>
+f.add_to_my_constant(10)    # =&gt; 52</code></pre>
 <h2>旁注：文档字符串</h2>
 <p class="text-align-justify">Python函数可以包含更多的信息，而不仅仅是代码：它们也包含有用的帮助信息，比如函数名称，文档字符串:</p>
 <pre class="language-text"><code>&gt;&gt;&gt; def fib(n):

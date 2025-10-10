@@ -90,8 +90,8 @@ System.out.println(mockedList.get(1));</code></pre>
 
 // 调用 size() 方法时，返回 10
 when(mockedList.size()).willReturn(10);
-when(mockedList.get(0)).willReturn("Hello World!");
-when(mockedList.get(1)).thenReturn("您好！");
+when(mockedList.get(0)).willReturn(&quot;Hello World!&quot;);
+when(mockedList.get(1)).thenReturn(&quot;您好！&quot;);
 
 // 输出 10
 System.out.println(mockedList.size());
@@ -103,8 +103,8 @@ System.out.println(mockedList.get(1));</code></pre>
 <pre class="language-java"><code>import static org.junit.Assert.assertEquals;
 
 assertEquals(10, mockedList.size());
-assertEquals("Hello World!", mockedList.get(0));
-assertEquals("您好！", mockedList.get(1));</code></pre>
+assertEquals(&quot;Hello World!&quot;, mockedList.get(0));
+assertEquals(&quot;您好！&quot;, mockedList.get(1));</code></pre>
 <p class="text-align-justify">断言方法非常多，不仅仅只是 assertEquals。</p>
 <p class="text-align-justify">对于同一个方法，可以模拟多次调用返回不同的值：</p>
 <pre class="language-java"><code>// 会覆盖之前 mock 的行为：when(mockedList.size()).willReturn(10);
@@ -128,24 +128,24 @@ assertEquals(1000, iterator.next());</code></pre>
 <p class="text-align-justify">还可以模拟异常抛出：</p>
 <pre class="language-java"><code>List mockedList = mock(List.class);
 
-when(mockedList.get(-1000)).thenThrow(new RuntimeException("参数异常！"));
+when(mockedList.get(-1000)).thenThrow(new RuntimeException(&quot;参数异常！&quot;));
 try {
     mockedList.get(-1000);
 } catch (Exception e) {
     assertTrue(e instanceof RuntimeException);
-    assertEquals("参数异常！", e.getMessage());
+    assertEquals(&quot;参数异常！&quot;, e.getMessage());
 }</code></pre>
 <p class="text-align-justify">也可以基于复杂的逻辑来构造返回值：</p>
 <pre class="language-java"><code>import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-List<Integer> mockedList = mock(List.class);
+List&lt;Integer&gt; mockedList = mock(List.class);
 when(mockedList.get(anyInt())).thenAnswer(new EchoAnswer());
 
 assertTrue(1 == mockedList.get(1));
 assertTrue(10 == mockedList.get(10));
 
-public class EchoAnswer implements Answer<Integer> {
+public class EchoAnswer implements Answer&lt;Integer&gt; {
 
     public Integer answer(InvocationOnMock var) {
         return var.getArgument(0);
@@ -166,13 +166,13 @@ import static org.mockito.Mockito.doReturn;
 
 ArrayList mockedList = mock(ArrayList.class);
 // clear 方法无返回值
-doThrow(new RuntimeException("清除失败")).when(mockedList).clear();
+doThrow(new RuntimeException(&quot;清除失败&quot;)).when(mockedList).clear();
 
 try {
     mockedList.clear();
 } catch (Exception e) {
     assertTrue(e instanceof RuntimeException);
-    assertEquals("清除失败", e.getMessage());
+    assertEquals(&quot;清除失败&quot;, e.getMessage());
 }
 
 // 没有意义，因为没法使用 断言 来验证，实际运行时会抛异常
@@ -194,7 +194,7 @@ assertEquals(100, mockedList.get(1000));</code></pre>
 <p class="text-align-justify">可用的参数匹配器，见 org.mockito.ArgumentMatchers 类的静态方法列表，也可以自己实现 ArgumentMatcher 接口：</p>
 <pre class="language-java"><code>package org.mockito;
 
-public interface ArgumentMatcher<T> {
+public interface ArgumentMatcher&lt;T&gt; {
     boolean matches(T var1);
 }</code></pre>
 <pre class="language-java"><code>import org.mockito.ArgumentMatcher;
@@ -207,10 +207,10 @@ assertEquals(10, mockedList.get(1));
 assertEquals(10, mockedList.get(99));
 assertEquals(null, mockedList.get(100));
 
-public class LimitedInt implements ArgumentMatcher<Integer> {
+public class LimitedInt implements ArgumentMatcher&lt;Integer&gt; {
 
     public boolean matches(Integer var) {
-        return var > 0 && var < 100;
+        return var &gt; 0 &amp;&amp; var &lt; 100;
     }
 }</code></pre>
 <p class="text-align-justify">如果被模拟的方法包含多个参数，那么这些参数要么全部使用匹配器，要么全部不使用。</p>
@@ -250,7 +250,7 @@ public class Caller {
     List list;
 
     public void run(int count) {
-        for (int idx=0; idx < count; idx++) {
+        for (int idx=0; idx &lt; count; idx++) {
             list.size();
         }
         //
@@ -293,7 +293,7 @@ caller.setList(mockedlist);
 caller.run();
 
 // 捕获 mockedList.add 的调用参数
-ArgumentCaptor<Integer> argumentCaptor = ArgumentCaptor.forClass(Integer.class);
+ArgumentCaptor&lt;Integer&gt; argumentCaptor = ArgumentCaptor.forClass(Integer.class);
 verify(mockedlist).add(argumentCaptor.capture());
 assertTrue(100 == argumentCaptor.getValue());
 
@@ -309,8 +309,8 @@ public class Caller {
 <p class="text-align-justify">前面的内容都是以 mock 为例，我们再来说说 spy，与 mock 的区别：</p>
 <p class="text-align-justify">mock 出来的对象是一个完全假的对象，但 spy 通常是基于一个具体的类或类实例，对其篡改某些方法，对于被篡改方法之外的方法，其行为都和调用真实对象的方法一样，不过并没有调用真实对象的方法，也不会对真实对象产生影响：</p>
 <pre class="language-java"><code>// 基于一个实际的类实例
-List<Integer> realList = new ArrayList<>(10);
-List<Integer> spy = spy(realList);
+List&lt;Integer&gt; realList = new ArrayList&lt;&gt;(10);
+List&lt;Integer&gt; spy = spy(realList);
         
 spy.add(1);
 
@@ -322,7 +322,7 @@ assertEquals(1, spy.size());
 assertTrue(1 == realList.get(0));
 assertTrue(1 == spy.get(0));</code></pre>
 <p class="text-align-justify">也可以基于一个具体的类来构造 spy，但这样无法使用带参数的构造方法，也无法指定类型参数：</p>
-<pre class="language-java"><code>List<Integer> = spy(ArrayList.class);
+<pre class="language-java"><code>List&lt;Integer&gt; = spy(ArrayList.class);
 assertEquals(0, spy.size());
 spy.add(100);
 assertEquals(1, spy.size());
@@ -350,10 +350,10 @@ import static org.junit.Assert.assertTrue;
 public class testTester {
 
     @Mock
-    private List<Integer> mocked;
+    private List&lt;Integer&gt; mocked;
 
     @Spy
-    private ArrayList<Integer> spyed;
+    private ArrayList&lt;Integer&gt; spyed;
 
     @Test
     public void test() {

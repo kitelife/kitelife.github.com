@@ -89,45 +89,45 @@ Californium-SR32</code></pre>
 <h3>1.3 如何获取 Reactor</h3>
 <h4>1.3.1 以 Maven 管理依赖包</h4>
 <p class="text-align-justify">Maven 原生支持 BOM 模型概念。首先，在你的 <code>pom.xml</code> 文件添加如下代码片段来引入 BOM：</p>
-<pre class="language-xml"><code><dependencyManagement> 
-    <dependencies>
-        <dependency>
-            <groupId>io.projectreactor</groupId>
-            <artifactId>reactor-bom</artifactId>
-            <version>Bismuth-RELEASE</version>
-            <type>pom</type>
-            <scope>import</scope>
-        </dependency>
-    </dependencies>
-</dependencyManagement></code></pre>
+<pre class="language-xml"><code>&lt;dependencyManagement&gt; 
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;io.projectreactor&lt;/groupId&gt;
+            &lt;artifactId&gt;reactor-bom&lt;/artifactId&gt;
+            &lt;version&gt;Bismuth-RELEASE&lt;/version&gt;
+            &lt;type&gt;pom&lt;/type&gt;
+            &lt;scope&gt;import&lt;/scope&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+&lt;/dependencyManagement&gt;</code></pre>
 <p class="text-align-justify">如果顶部标签（<code>dependencyManagement</code>）已经存在，则只添加上面该标签的内部内容。</p>
 <p class="text-align-justify">接下来，将依赖包添加到项目中，和一般依赖包一样，不过没有 <code>&lt;version&gt;</code>，如下所示：</p>
-<pre class="language-xml"><code><dependencies>
-    <dependency>
-        <groupId>io.projectreactor</groupId>
-        <artifactId>reactor-core</artifactId> 
-    </dependency>
-    <dependency>
-        <groupId>io.projectreactor</groupId>
-        <artifactId>reactor-test</artifactId> 
-        <scope>test</scope>
-    </dependency>
-</dependencies></code></pre>
+<pre class="language-xml"><code>&lt;dependencies&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;io.projectreactor&lt;/groupId&gt;
+        &lt;artifactId&gt;reactor-core&lt;/artifactId&gt; 
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;io.projectreactor&lt;/groupId&gt;
+        &lt;artifactId&gt;reactor-test&lt;/artifactId&gt; 
+        &lt;scope&gt;test&lt;/scope&gt;
+    &lt;/dependency&gt;
+&lt;/dependencies&gt;</code></pre>
 <h4>1.3.2 以 Gradle 管理依赖包</h4>
 <p class="text-align-justify">Gradle 核心并不支持 Maven BOM，不过可以借助 Spring 的 <a href='https://github.com/spring-gradle-plugins/dependency-management-plugin'>gradle-dependency-management</a> 插件。</p>
 <p class="text-align-justify">首先，应用插件，如下所示：</p>
 <pre class="language-gradle"><code>plugins {
-    id "io.spring.dependency-management" version "1.0.6.RELEASE"
+    id &quot;io.spring.dependency-management&quot; version &quot;1.0.6.RELEASE&quot;
 }</code></pre>
 <p class="text-align-justify">然后使用它来引入 BOM，如下所示：</p>
 <pre class="language-gradle"><code>dependencyManagement {
      imports {
-          mavenBom "io.projectreactor:reactor-bom:Bismuth-RELEASE"
+          mavenBom &quot;io.projectreactor:reactor-bom:Bismuth-RELEASE&quot;
      }
 }</code></pre>
 <p class="text-align-justify">最后将依赖添加到项目中，无需指定版本号，如下所示：</p>
 <pre class="language-gradle"><code>dependencies {
-     compile 'io.projectreactor:reactor-core' 
+     compile &apos;io.projectreactor:reactor-core&apos; 
 }</code></pre>
 <h2>2. 反应式编程简介</h2>
 <p class="text-align-justify">Reactor 是反应式编程范式的一个实现。反应式编程的定义归纳起来，如下所示：</p>
@@ -156,12 +156,12 @@ Californium-SR32</code></pre>
 <p class="text-align-justify">多个回调难以组合使用，容易导致代码难以阅读和维护（就是所谓的“回调地狱”）。</p>
 <p class="text-align-justify">来看一个例子：在界面上为用户显示他最喜爱的5个物件，如果用户还没有任何喜欢的物件，则给出建议物件。这个逻辑涉及3个服务（第一个服务提供物件 ID，第二个服务获取物件的详细信息，第三个服务提供建议物件的详细信息），如下所示：</p>
 <p class="text-align-justify"><em>回调地域的示例</em></p>
-<pre class="language-java"><code>userService.getFavorites(userId, new Callback<List<String>>() { // 1
-    public void onSuccess(List<String> list) { // 2
+<pre class="language-java"><code>userService.getFavorites(userId, new Callback&lt;List&lt;String&gt;&gt;() { // 1
+    public void onSuccess(List&lt;String&gt; list) { // 2
         if (list.isEmpty()) { // 3
-            suggestionService.getSuggestions(new Callback<List<Favorite>>() {
-                public void onSuccess(List<Favorite> list) { // 4
-                    UiUtils.submitOnUiThread(() -> { // 5
+            suggestionService.getSuggestions(new Callback&lt;List&lt;Favorite&gt;&gt;() {
+                public void onSuccess(List&lt;Favorite&gt; list) { // 4
+                    UiUtils.submitOnUiThread(() -&gt; { // 5
                         list.stream()
                             .limit(5)
                             .forEach(uiList::show); // 6
@@ -175,10 +175,10 @@ Californium-SR32</code></pre>
         } else {
             list.stream() // 8
                 .limit(5)
-                .forEach(favId -> favoriteService.getDetails(favId, // 9
-                    new Callback<Favorite>() {
+                .forEach(favId -&gt; favoriteService.getDetails(favId, // 9
+                    new Callback&lt;Favorite&gt;() {
                         public void onSuccess(Favorite details) {
-                            UiUtils.submitOnUiThread(() -> uiList.show(details));
+                            UiUtils.submitOnUiThread(() -&gt; uiList.show(details));
                         }
 
                         public void onError(Throwable error) {
@@ -234,31 +234,31 @@ Californium-SR32</code></pre>
 <li>不支持惰性计算。</li>
 <li>对多个值的处理和高级错误处理缺乏支持。</li></ul>
 <p class="text-align-justify">来看看另一个例子：先获取一个 ID 列表，然后根据 ID 获取一个名字以及获取一个统计数值，再将名字和统计数值组合起来使用，这几个步骤都必须是异步的。如下示例以一组 <code>CompletableFuture</code> 来实现这个逻辑：</p>
-<pre class="language-java"><code>CompletableFuture<List<String>> ids = ifhIds(); // 1
+<pre class="language-java"><code>CompletableFuture&lt;List&lt;String&gt;&gt; ids = ifhIds(); // 1
 
-CompletableFuture<List<String>> results = ids.thenComposeAsync(l -> { // 2
-    Stream<CompletableFuture<String>> zip = 
-            l.stream().map(i -> { // 3
-                CompletableFuture<String> nameTask = ifhName(i); // 4
-                CompletableFuture<Integer> statTask = ifhStat(i); // 5
-                return nameTask.thenCombineAsync(statTask, (name, stat) -> "Name " + name + " has stats " + stat); // 6
+CompletableFuture&lt;List&lt;String&gt;&gt; results = ids.thenComposeAsync(l -&gt; { // 2
+    Stream&lt;CompletableFuture&lt;String&gt;&gt; zip = 
+            l.stream().map(i -&gt; { // 3
+                CompletableFuture&lt;String&gt; nameTask = ifhName(i); // 4
+                CompletableFuture&lt;Integer&gt; statTask = ifhStat(i); // 5
+                return nameTask.thenCombineAsync(statTask, (name, stat) -&gt; &quot;Name &quot; + name + &quot; has stats &quot; + stat); // 6
             });
-    List<CompletableFuture<String>> combinationList = zip.collect(Collectors.toList()); // 7
-    CompletableFuture<String>[] combinationArray = combinationList.toArray(new CompletableFuture[combinationList.size()]);
+    List&lt;CompletableFuture&lt;String&gt;&gt; combinationList = zip.collect(Collectors.toList()); // 7
+    CompletableFuture&lt;String&gt;[] combinationArray = combinationList.toArray(new CompletableFuture[combinationList.size()]);
     
-    CompletableFuture<Void> allDone = CompletableFuture.allOf(combinationArray); // 8
-    return allDone.thenApply(v -> combinationList.stream()
+    CompletableFuture&lt;Void&gt; allDone = CompletableFuture.allOf(combinationArray); // 8
+    return allDone.thenApply(v -&gt; combinationList.stream()
                     .map(CompletableFuture::join) // 9
                     .collect(Collectors.toList()));
 });
 
-List<String> results = result.join(); // 10
+List&lt;String&gt; results = result.join(); // 10
 assertThat(results).contains(
-		"Name NameJoe has stats 103",
-		"Name NameBart has stats 104",
-		"Name NameHenry has stats 105",
-		"Name NameNicole has stats 106",
-		"Name NameABSLAJNFOAJNFOANFANSF has stats 121");</code></pre>
+		&quot;Name NameJoe has stats 103&quot;,
+		&quot;Name NameBart has stats 104&quot;,
+		&quot;Name NameHenry has stats 105&quot;,
+		&quot;Name NameNicole has stats 106&quot;,
+		&quot;Name NameABSLAJNFOAJNFOANFANSF has stats 121&quot;);</code></pre>
 <ol><li>一开始获得一个 <code>Future</code> 结果 - 为后续处理提供一个 <code>id</code> 列表。</li>
 <li>一旦获得 <code>id</code> 列表就可以开始进一步的异步处理。</li>
 <li>逐个处理列表中的元素。</li>
@@ -270,26 +270,26 @@ assertThat(results).contains(
 <li>此处的特殊之处在于：在（<code>allOf</code> 返回的）<code>CompletableFuture&lt;Void&gt;</code> 对象表示的异步任务结束时，遍历 <code>Future</code> 对象列表（combinationList），使用 <code>join()</code> 方法（此次不会阻塞，因为 <code>allOf</code> 会确保所有异步任务都已完成）获取收集异步任务结果。</li></ol>
 <p class="text-align-justify">10. 触发执行整个异步处理流水线（调用 <code>join()</code> 方法），然而等着异步处理完成并返回一个结果列表，就可以进行断言判断了。</p>
 <p class="text-align-justify">Reactor 自带了很多组合算子，可以简化这个处理过程的实现，如下所示：</p>
-<pre class="language-java"><code>Flux<String> ids = ifhrIds(); // 1
+<pre class="language-java"><code>Flux&lt;String&gt; ids = ifhrIds(); // 1
 
-Flux<String> combinations = 
-        ids.flatMap(id -> { // 2
-            Mono<String> nameTask = ifhrName(id); // 3
-            Mono<Integer> statTask = ifhrStat(id); // 4
+Flux&lt;String&gt; combinations = 
+        ids.flatMap(id -&gt; { // 2
+            Mono&lt;String&gt; nameTask = ifhrName(id); // 3
+            Mono&lt;Integer&gt; statTask = ifhrStat(id); // 4
             
             return nameTask.zipWith(statTask, // 5
-                    (name, stat) -> "Name " + name + " has stats " + stat);
+                    (name, stat) -&gt; &quot;Name &quot; + name + &quot; has stats &quot; + stat);
         });
         
-Mono<List<String>> result = combinations.collectList(); // 6
+Mono&lt;List&lt;String&gt;&gt; result = combinations.collectList(); // 6
 
-List<String> results = result.block(); // 7
+List&lt;String&gt; results = result.block(); // 7
 assertThat(results).containsExactly( // 8
-    "Name NameJoe has stats 103",
-    "Name NameBart has stats 104",
-    "Name NameHenry has stats 105",
-    "Name NameNicole has stats 106",
-    "Name NameABSLAJNFOAJNFOANFANSF has stats 121"
+    &quot;Name NameJoe has stats 103&quot;,
+    &quot;Name NameBart has stats 104&quot;,
+    &quot;Name NameHenry has stats 105&quot;,
+    &quot;Name NameNicole has stats 106&quot;,
+    &quot;Name NameABSLAJNFOAJNFOANFANSF has stats 121&quot;
 );</code></pre>
 <ol><li>这次，一开始我们得到一个异步提供的字符串序列（<code>ids</code>）（一个 <code>Flux&lt;String&gt;</code> 对象）。</li>
 <li>对于序列中的每个元素，异步处理两次（在 <code>flatMap</code> 的 lambda 参数值中）。</li>
@@ -317,42 +317,42 @@ assertThat(results).containsExactly( // 8
 <h3>3.3 创建一个 Flux 或 Mono 并进行订阅的一些简单方法</h3>
 <p class="text-align-justify"><code>Flux</code> 和 <code>Mono</code> 的类中包含大量的工厂方法，上手使用 Reactor 最简单的方式是从中选择一个用起来。</p>
 <p class="text-align-justify">例如，创建一个 <code>String</code> 序列，可以逐个列举出这些字符串，或者将这些字符串放到一个集合中，然后基于这个集合创建一个 Flux，如下所示：</p>
-<pre class="language-java"><code>Flux<String> seq1 = Flux.just("foo", "bar", "foobar");
+<pre class="language-java"><code>Flux&lt;String&gt; seq1 = Flux.just(&quot;foo&quot;, &quot;bar&quot;, &quot;foobar&quot;);
 
-List<String> iterable = Arrays.asList("foo", "bar", "foobar");
-Flux<String> seq2 = Flux.fromIterable(iterable);</code></pre>
+List&lt;String&gt; iterable = Arrays.asList(&quot;foo&quot;, &quot;bar&quot;, &quot;foobar&quot;);
+Flux&lt;String&gt; seq2 = Flux.fromIterable(iterable);</code></pre>
 <p class="text-align-justify">其它一些工厂方法的使用示例如下所示：</p>
-<pre class="language-java"><code>Mono<String> noData = Mono.empty();
-Mono<String> data = Mono.just("foo");
-Flux<Integer> numbersFromFiveToSeven = Flux.range(5, 3);</code></pre>
+<pre class="language-java"><code>Mono&lt;String&gt; noData = Mono.empty();
+Mono&lt;String&gt; data = Mono.just(&quot;foo&quot;);
+Flux&lt;Integer&gt; numbersFromFiveToSeven = Flux.range(5, 3);</code></pre>
 <p class="text-align-justify">对于订阅操作，<code>Flux</code> 和 <code>Mono</code> 借助了 Java 8 的 lambda 表达式。有大量 <code>.subscribe()</code> 的重载方法/变种方法（variants）可选选择使用，使用 lambda 表达式来实现回调的不同组合，如下所示是这些方法的签名：</p>
 <p class="text-align-justify"><em>Flux 中基于 lambda 表达式的订阅方法变种</em></p>
 <pre class="language-java"><code>subscribe();
 
-subscribe(Consumer<? super T> consumer);
+subscribe(Consumer&lt;? super T&gt; consumer);
 
-subscribe(Consumer<? super T> consumer,
-          Consumer<? super Throwable> errorConsumer);
+subscribe(Consumer&lt;? super T&gt; consumer,
+          Consumer&lt;? super Throwable&gt; errorConsumer);
 
-subscribe(Consumer<? super T> consumer,
-          Consumer<? super Throwable> errorConsumer,
+subscribe(Consumer&lt;? super T&gt; consumer,
+          Consumer&lt;? super Throwable&gt; errorConsumer,
           Runnable completeConsumer);
 
-subscribe(Consumer<? super T> consumer,
-          Consumer<? super Throwable> errorConsumer,
+subscribe(Consumer&lt;? super T&gt; consumer,
+          Consumer&lt;? super Throwable&gt; errorConsumer,
           Runnable completeConsumer,
-          Consumer<? super Subscription> subscriptionConsumer);</code></pre>
+          Consumer&lt;? super Subscription&gt; subscriptionConsumer);</code></pre>
 <blockquote><p class="text-align-justify">这些订阅方法都会返回一个订阅操作的引用，当不再需要更多的数据时，可以使用这个引用来取消订阅。一旦取消，数据源就应该停止产出数据，并清理使用的所有资源。这一 “取消并清理” 行为在 Reactor 中以通用的 <code>Disposable</code> 接口来表现。</p></blockquote>
 <h4>3.3.1 lambda 表达式的替代方案：BaseSubscriber</h4>
 <p class="text-align-justify"><code>Flux</code> 和 <code>Mono</code> 提供了一个相比上面那么订阅方法更通用的 <code>subscribe</code> 方法，其参数是一个完整的 <code>Subscriber</code> 实例，而不是根据几个 lambda 表达式组合出一个 <code>Subscriber</code> 实例。为了方便实现这样的一个 <code>Subscriber</code>，Reactor 提供了一个名为 <code>BaseSubscriber</code> 的可扩展的抽象类。</p>
 <p class="text-align-justify">下面来实现一个，我们将其命名为 <code>SampleSubscriber</code>。如下示例演示了如何将其应用到一个 <code>Flux</code> 序列上：</p>
-<pre class="language-java"><code>SampleSubscriber<Integer> ss = new SampleSubscriber<Integer>();
-Flux<Integer> ints = Flux.range(1, 4);
+<pre class="language-java"><code>SampleSubscriber&lt;Integer&gt; ss = new SampleSubscriber&lt;Integer&gt;();
+Flux&lt;Integer&gt; ints = Flux.range(1, 4);
 //
-ints.subscribe(i -> System.out.println(i),
-    error -> System.err.println("Error " + error),
-    () -> {System.out.println("Done");},
-    s -> s.request(10));
+ints.subscribe(i -&gt; System.out.println(i),
+    error -&gt; System.err.println(&quot;Error &quot; + error),
+    () -&gt; {System.out.println(&quot;Done&quot;);},
+    s -&gt; s.request(10));
 //
 ints.subscribe(ss);</code></pre>
 <p class="text-align-justify">如下示例演示了 <code>SampleSubscriber</code> 继承自 <code>BaseSubscriber</code> 的一个最简化实现：</p>
@@ -361,10 +361,10 @@ ints.subscribe(ss);</code></pre>
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.BaseSubscriber;
 
-public class SampleSubscriber<T> extends BaseSubscriber<T> {
+public class SampleSubscriber&lt;T&gt; extends BaseSubscriber&lt;T&gt; {
 
 	public void hookOnSubscribe(Subscription subscription) {
-		System.out.println("Subscribed");
+		System.out.println(&quot;Subscribed&quot;);
 		request(1);
 	}
 
@@ -383,8 +383,8 @@ public class SampleSubscriber<T> extends BaseSubscriber<T> {
 <li>调用 <code>toIterable()</code> 或 <code>toStream()</code> 进行遍历</li></ul>
 <p class="text-align-justify">对首个请求进行定制的最简单方式是以一个 <code>BaseSubscriber</code> 派生类实例来 <code>subscribe</code>，派生类重写 <code>BaseSubscriber</code> 的 <code>hookOnSubscribe</code> 方法，如下所示：</p>
 <pre class="language-java"><code>Flux.range(1, 10)
-    .doOnRequest(r -> System.out.println("request of " + r))
-    .subscribe(new BaseSubscriber<Integer>() {
+    .doOnRequest(r -&gt; System.out.println(&quot;request of &quot; + r))
+    .subscribe(new BaseSubscriber&lt;Integer&gt;() {
 
       @Override
       public void hookOnSubscribe(Subscription subscription) {
@@ -393,7 +393,7 @@ public class SampleSubscriber<T> extends BaseSubscriber<T> {
 
       @Override
       public void hookOnNext(Integer integer) {
-        System.out.println("Cancelling after having received " + integer);
+        System.out.println(&quot;Cancelling after having received &quot; + integer);
         cancel();
       }
     });</code></pre>
@@ -416,10 +416,10 @@ Cancelling after having received 1</code></pre>
 <p class="text-align-justify"><code>generate</code> 方法变种的这个应该是最有用的：允许保持一个状态，在调用接收方的 <code>next</code> 方法时可以基于这个状态来决定下发什么数据。那么这个生成器函数就成了一个 <code>BiFunction&lt;S, SynchronousSink&lt;T&gt;, S&gt;</code> 实例，其中 <code>&lt;S&gt;</code> 即是状态对象的类型。对于初始状态，可以提供一个 <code>Supplier&lt;S&gt;</code> 来获取，这样生成器函数每轮调用都会返回一个新的状态。</p>
 <p class="text-align-justify">例如，可以使用一个 <code>int</code> 实例作为状态：</p>
 <pre class="language-java"><code>// 基于状态的 generate 方法使用示例
-Flux<String> flux = Flux.generate(
-    () -> 0, // 1
-    (state, sink) -> {
-        sink.next("3 x " + state + " = " + 3*state); // 2
+Flux&lt;String&gt; flux = Flux.generate(
+    () -&gt; 0, // 1
+    (state, sink) -&gt; {
+        sink.next(&quot;3 x &quot; + state + &quot; = &quot; + 3*state); // 2
         if (state == 10) sink.complete(); // 3
         return state + 1; // 4
     });</code></pre>
@@ -428,39 +428,39 @@ Flux<String> flux = Flux.generate(
 <li>基于状态决定何时可以停止流/序列。</li>
 <li>返回一个新状态，下次调用时可以使用（除非在这次调用时已经终止序列）。</li></ol>
 <p class="text-align-justify">也可以使用一个 <code>&lt;S&gt;</code> 类型的可变对象。比如，上面的示例可以使用一个 <code>AtomicLong</code> 实例作为状态来重写，每轮调用都会改变它的值：</p>
-<pre class="language-java"><code>Flux<String> flux = Flux.generate(
+<pre class="language-java"><code>Flux&lt;String&gt; flux = Flux.generate(
     AtomicLong::new,
-    (state, sink) -> {
+    (state, sink) -&gt; {
         long i = state.getAndIncrement();
-        sink.next("3 x " + i + " = " + 3*i);
+        sink.next(&quot;3 x &quot; + i + &quot; = &quot; + 3*i);
         if (i == 10) sink.complete();
         return state;
     });</code></pre>
 <blockquote><p class="text-align-justify">如果状态对象在序列终止时需要清理一些资源，则应该使用 <code>generate(Supplier&lt;S&gt;, BiFunction, Consumer&lt;S&gt;)</code> 变种方法来清理最后的状态实例。</p></blockquote>
 <p class="text-align-justify">如下示例使用的 <code>generate</code> 方法接受一个 <code>Consumer</code> 类型参数：</p>
-<pre class="language-java"><code>Flux<String> flux = Flux.generate(
+<pre class="language-java"><code>Flux&lt;String&gt; flux = Flux.generate(
     AtomicLong::new,
-    (state, sink) -> {
+    (state, sink) -&gt; {
         long i = state.getAndIncrement();
-        sink.next("3 x " + i + " = " + 3*i);
+        sink.next(&quot;3 x &quot; + i + &quot; = &quot; + 3*i);
         if (i == 10) sink.complete();
         return state;
-    }, (state) -> System.out.println("state: " + state));</code></pre>
+    }, (state) -&gt; System.out.println(&quot;state: &quot; + state));</code></pre>
 <h4>3.4.2 异步多线程的 create</h4>
 <p class="text-align-justify"><code>create</code> 是动态创建一个 <code>Flux</code> 的更高级的方式，适用于每轮下发多个数据，甚至是从多个线程中下发数据。</p>
 <p class="text-align-justify">这个方法会向回调方法传入一个 <code>FluxSink</code> 实例参数，在回调方法体中可以调用这个参数的 <code>next</code>、<code>error</code> 和 <code>complete</code> 方法。与 <code>generate</code> 不同，它没有基于状态的变种方法。另外，回调方法中，可以多线程地触发事件（trigger multi-threaded events）。</p>
 <blockquote><p class="text-align-justify"><code>create</code> 非常适用于将一个已有的 API （比如：一个基于监听器的异步 API）桥接到反应式上下文中。</p></blockquote>
 <blockquote><p class="text-align-justify"><code>create</code> 并不会自动并行化执行你的代码，也不会让处理过程自动变成异步的，即使它可以配合异步 API 使用。如果在 <code>create</code> 的 lambda 表达式中发生阻塞，就会存在死锁或者其它副作用的风险。即使借助 <code>subscribeOn</code>，也要当心 <code>create</code> lambda 表达式中长时间的阻塞（比如无限循环调用 <code>sink.next(t)</code>）锁住流水线处理： （译注：异步的）数据请求可能根本得不到执行，因为（译注：线程池只有一个线程）同一个线程一直被无限循环占用着。使用 <code>subscribeOn(Scheduler, false)</code> 变种方法：<code>requestOnSeparateThread = false</code> 将使用 <code>Scheduler</code> 的线程来执行 <code>create</code> 方法的回调，在原始的线程中执行 <code>request</code>，从而让数据仍然可以流动起来。（译注：此处逻辑有点绕，也可能是因为 subscribeOn 方法本身语义就不太直观）。</p></blockquote>
 <p class="text-align-justify">假设我们要使用一个基于监听器的 API，它按块处理数据，提供两类事件：（1）来了一块数据，（2）处理可以结束了（终止事件），如下 <code>MyEventListener</code> 接口定义所示：</p>
-<pre class="language-java"><code>interface MyEventListener<T> {
-    void onDataChunk(List<T> chunk);
+<pre class="language-java"><code>interface MyEventListener&lt;T&gt; {
+    void onDataChunk(List&lt;T&gt; chunk);
     void processComplete();
 }</code></pre>
 <p class="text-align-justify">我们使用 <code>create</code> 将这个 API 桥接到一个 <code>Flux&lt;T&gt;</code> 实例上：</p>
-<pre class="language-java"><code>Flux<String> bridge = Flux.create(sink -> {
+<pre class="language-java"><code>Flux&lt;String&gt; bridge = Flux.create(sink -&gt; {
     myEventProcessor.register(  // 4
-        new MyEventListener<String>() { // 1
-            public void onDataChunk(List<String> chunk) {
+        new MyEventListener&lt;String&gt;() { // 1
+            public void onDataChunk(List&lt;String&gt; chunk) {
                 for(String s : chunk) {
                     sink.next(s); // 2
                 }
@@ -484,11 +484,11 @@ Flux<String> flux = Flux.generate(
 <blockquote><p class="text-align-justify"><code>Mono</code> 也有一个 <code>create</code> 生成器方法。Mono 的 create 方法传入回调的 <code>MonoSink</code> 参数不允许下发多个消息，在第一个消息之后它会丢弃所有的消息。</p></blockquote>
 <h4>3.4.3 异步单线程的 push</h4>
 <p class="text-align-justify"><code>push</code> 的功能介于 <code>generate</code> 和 <code>create</code> 之间，适用于处理来自单个生产者的事件。<code>push</code> 也可以是异步的，也可以使用 <code>create</code> 支持的超限策略来管理反压，然而，同时（at a time）只能有一个生产线程调用 <code>next</code>。</p>
-<pre class="language-java"><code>Flux<String> bridge = Flux.push(sink -> {
+<pre class="language-java"><code>Flux&lt;String&gt; bridge = Flux.push(sink -&gt; {
     myEventProcessor.register(
-        new SingleThreadEventListener<String>() { // 1
+        new SingleThreadEventListener&lt;String&gt;() { // 1
             
-            public void onDataChunk(List<String> chunk) {
+            public void onDataChunk(List&lt;String&gt; chunk) {
                 for (String s: chunk) {
                     sink.next(s); // 2
                 }
@@ -512,19 +512,19 @@ Flux<String> flux = Flux.generate(
 <p class="text-align-justify">多数 Reactor 算子，比如 <code>create</code>，都遵从 <strong>推/拉（push/pull）</strong> 混合模型。这意味着尽管大部分的处理过程都是异步的（暗指“推”的方式），也存在小部分逻辑是 <em>拉（pull）</em>方式：数据请求。</p>
 <p class="text-align-justify">消费者从数据源<em>拉取</em>数据，意指：数据源在消费者首次请求后才会发出数据，然后只有要数据就会推送给消费者，不过数据量不会超过消费者请求的量。</p>
 <p class="text-align-justify"><code>push()</code> 和 <code>create()</code> 都可以配置（set up）一个 <code>onRequest</code> 事件消费者来管理请求量，并且确保仅当存在已发起的请求，数据才会推送给下游。</p>
-<pre class="language-java"><code>Flux<String> bridge = Flux.create(sink -> {
+<pre class="language-java"><code>Flux&lt;String&gt; bridge = Flux.create(sink -&gt; {
     myMessageProcessor.register(
-        new MyMessageListener<String>() {
+        new MyMessageListener&lt;String&gt;() {
             
-            public void onMessage(List<String> messages) {
+            public void onMessage(List&lt;String&gt; messages) {
                 for (String s: messages) {
                     sink.next(s); // 3
                 }
             }
         }
     );
-    sink.onRequest(n -> {
-        List<String> messages = myMessageProcessor.getHistory(n); // 1
+    sink.onRequest(n -&gt; {
+        List&lt;String&gt; messages = myMessageProcessor.getHistory(n); // 1
         for (String s: messages) {
             sink.next(s); // 2
         }
@@ -539,11 +539,11 @@ Flux<String> flux = Flux.generate(
 <p class="text-align-justify">model），而是，让开发者按需决定是否使用并发。然而，Reactor 也提供一些功能方便开启并发。</p>
 <p class="text-align-justify">获取到一个 <code>Flux</code> 或 <code>Mono</code> 处理流，并不意味着它在一个专用（dedicated）的线程（<code>Thread</code>） 中运行。相反，多数算子也是运行在前一个算子运行的线程中。除非特意指定，首个（topmost）算子（数据源）就运行在执行 <code>subscribe()</code> 方法调用的线程中。如下示例在一个新建线程中运行一个 <code>Mono</code> 处理流。</p>
 <pre class="language-java"><code>public static void main(String[] args) {
-    final Mono<String> mono = Mono.just("Hello "); // 1
+    final Mono&lt;String&gt; mono = Mono.just(&quot;Hello &quot;); // 1
     
-    new Thread(() -> mono
-        .map(msg -> msg + "thread ")
-        .subscribe(v -> // 2 
+    new Thread(() -&gt; mono
+        .map(msg -&gt; msg + &quot;thread &quot;)
+        .subscribe(v -&gt; // 2 
             System.out.println(v + Thread.currentThread().getName()) // 3
         )
     ).join();
@@ -565,7 +565,7 @@ Flux<String> flux = Flux.generate(
 <p class="text-align-justify"></p>
 <p class="text-align-justify">如果自定义调度器所创建的线程实例实现了 <code>NonBlocking</code> 标记性接口（marker interface），那么这个调度器也可以被标记为”仅适用于非阻塞性使用（non blocking only）“。</p></blockquote>
 <p class="text-align-justify">某些算子默认会从 <code>Schedulers</code> 选择一个特定的调度器来使用（通常也支持选择其他的）。例如，调用工厂方法 <code>Flux.interval(Duration.ofMills(300))</code> 会生成一个 <code>Flux&lt;Long&gt;</code> 实例 - 每 300 ms 输出一个滴答事件。这个方法底层实现默认使用 <code>Schedulers.parallel()</code>。如下代码行演示了如何将调度器修改成类似于 <code>Schedulers.single()</code> 的调度器新实例：</p>
-<pre class="language-java"><code>Flux.interval(Duration.ofMillis(300), Schedulers.newSingle("test"));</code></pre>
+<pre class="language-java"><code>Flux.interval(Duration.ofMillis(300), Schedulers.newSingle(&quot;test&quot;));</code></pre>
 <p class="text-align-justify">Reactor 提供了两种方式来切换反应式链中的执行上下文（或者说 <code>调度器</code>）：<code>publishOn</code> 和 <code>subscribeOn</code>。两者都是接受一个 <code>Scheduler</code> 类型参数并将执行上下文切换到这个调度器。不过，链中 <code>publishOn</code> 所处的位置很关键，而 <code>subscribeOn</code> 处于哪个位置都无所谓。要理解这个差别的原因，得先理解 <a href='https://projectreactor.io/docs/core/release/reference/#reactive.subscribe'>订阅之前实际什么都没有发生</a>。</p>
 <p class="text-align-justify">Reactor，串接算子，就是将很多 <code>Flux</code> 和 <code>Mono</code> 的实现一个套一个，逐层封装。一旦订阅，就创建了一个 <code>Subscriber</code> 对象链，沿链回溯即可找到第一个发布者。这些实现细节是隐藏在接口背后，开发者可见的是最外层的那个 <code>Flux</code>（或 <code>Mono</code>）以及 <code>Subscription</code>（译注：Reactor 中 Subscription 是一个接口类型，是 <code>Subscriber</code> 接口中 <code>onSubscribe</code> 方法参数的类型 - <code>public void onSubscribe(Subscription s)</code>，用于向生产者请求数据 或者 取消订阅），但这些算子特定的链中消费者是幕后功臣。</p>
 <p class="text-align-justify">有了上面这些认知，现在我们可以进一步了解 <code>publishOn</code> 和 <code>subscribeOn</code> 这两个算子：</p>
@@ -574,15 +574,15 @@ Flux<String> flux = Flux.generate(
 <ul><li>将执行上下文切换到 <code>Scheduler</code> 选择的一个线程上</li>
 <li>根据规范（as per the specification），<code>onNext</code> 是按时序依次调用下发事件的，所以是占用一个线程（译注：这句不太理解，onNext happen in sequence, so this uses up a single thread）</li>
 <li>除非算子工作在一个特定的 <code>Scheduler</code> 上（译注：某些算子的内部实现决定了这一点），<code>publishOn</code> 之后的算子都是在同一个线程上执行</li></ul>
-<pre class="language-java"><code>Scheduler s = Schedulers.newParallel("parallel-scheduler", 4); // 1
+<pre class="language-java"><code>Scheduler s = Schedulers.newParallel(&quot;parallel-scheduler&quot;, 4); // 1
 
-final Flux<String> flux = Flux
+final Flux&lt;String&gt; flux = Flux
     .range(1, 2)
-    .map(i -> 10 + i) // 2
+    .map(i -&gt; 10 + i) // 2
     .publishOn(s) // 3
-    .map(i -> "value " + i); // 4
+    .map(i -&gt; &quot;value &quot; + i); // 4
 
-new Thread(() -> flux.subscribe(System.out::println));</code></pre>
+new Thread(() -&gt; flux.subscribe(System.out::println));</code></pre>
 <ol><li>创建一个新的 <code>Scheduler</code>，内含 4 个线程</li>
 <li>第一个 <code>map</code> 运行在 <第5步> 的匿名线程上</li>
 <li><code>publishOn</code> 将整个序列的后续处理切换到从 <第1步> 选出的线程上</li>
@@ -593,15 +593,15 @@ new Thread(() -> flux.subscribe(System.out::println));</code></pre>
 <ul><li>从订阅操作发生时整个算子链所在的线程切换到新的线程</li>
 <li>从指定 <code>Scheduler</code> 中选择一个线程</li></ul>
 <blockquote><p class="text-align-justify">只有链中最早的 <code>subscribeOn</code> 调用会发生实际作用。</p></blockquote>
-<pre class="language-java"><code>Scheduler s = Schedulers.newParallel("parallel-scheduler", 4); // 1
+<pre class="language-java"><code>Scheduler s = Schedulers.newParallel(&quot;parallel-scheduler&quot;, 4); // 1
 
-final Flux<String> flux = Flux
+final Flux&lt;String&gt; flux = Flux
     .range(1, 2)
-    .map(i -> 10 + i) // 2
+    .map(i -&gt; 10 + i) // 2
     .subscribeOn(s) // 3
-    .map(i -> "value " + i); // 4
+    .map(i -&gt; &quot;value &quot; + i); // 4
 
-new Thread(() -> flux.subscribe(System.out::println)); // 5 </code></pre>
+new Thread(() -&gt; flux.subscribe(System.out::println)); // 5 </code></pre>
 <ol><li>创建一个新的 <code>Scheduler</code>，内含 4 个线程</li>
 <li>第一个 <code>map</code> 运行在这 4 个线程中的某个线程上</li>
 <li>...因为 <code>subscribeOn</code> 将整个序列处理链从订阅操作发生时的执行上下文（第5步）切换到了新的上下文</li>
@@ -619,13 +619,13 @@ new Thread(() -> flux.subscribe(System.out::println)); // 5 </code></pre>
 <p class="text-align-justify">对比如下两个示例，第一个示例的代码如下所示：</p>
 <pre class="language-java"><code>Flux.range(1, 10)
     .parallel(2) // 1
-    .subscribe(i -> System.out.println(Thread.currentThread().getName() + " -> " + i));</code></pre>
+    .subscribe(i -&gt; System.out.println(Thread.currentThread().getName() + &quot; -&gt; &quot; + i));</code></pre>
 <ol><li>这里强制指定了“轨道”数量，而不依赖于 CPU 核数。</li></ol>
 <p class="text-align-justify">第二个示例的代码如下所示：</p>
 <pre class="language-java"><code>Flux.range(1, 10)
     .parallel(2)
     .runOn(Schedulers.parallel())
-    .subscribe(i -> System.out.println(Thread.currentThread().getName() + " -> " + i));</code></pre>
+    .subscribe(i -&gt; System.out.println(Thread.currentThread().getName() + &quot; -&gt; &quot; + i));</code></pre>
 <p class="text-align-justify">第一个示例输出如下内容：</p>
 <pre class="language-text"><code>main -&gt; 1
 main -&gt; 2
